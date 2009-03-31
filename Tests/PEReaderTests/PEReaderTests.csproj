@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A6BABD10-C384-4F9F-93D7-99B935A41719}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ModuleReaderTests</RootNamespace>
+    <AssemblyName>ModuleReaderTests</AssemblyName>
+    <WarningLevel>4</WarningLevel>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>.\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>.\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="arch-msil, Version=0.63.61101.0, Culture=neutral, PublicKeyToken=3330ea3d34fd0fe8, processorArchitecture=IA64" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\WINDOWS\assembly\GAC_MSIL\Microsoft.VisualStudio.QualityTools.UnitTestFramework\8.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="MRW_Assembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
+    <Reference Include="MRW_CppAssembly, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86" />
+    <Reference Include="MRW_ILAsmAssembly, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="MRW_TestAssembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="vjslib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyModuleTests.cs" />
+    <Compile Include="MethodBodyTests.cs" />
+    <Compile Include="ModuleReaderTests.cs" />
+    <Compile Include="PrettyPrinter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="TestModules\MRW_Assembly.cs" />
+    <None Include="TestModules\MRW_Module1.cs" />
+    <None Include="TestModules\MRW_Module2.cs" />
+    <None Include="TestModules\MRW_TestAssembly.cs" />
+    <Compile Include="TypeMemberTests.cs" />
+    <Compile Include="TypeTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestModules\arch-msil.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestModules\MRW_Assembly.dll" />
+    <Content Include="TestModules\MRW_CppAssembly.cpp" />
+    <Content Include="TestModules\MRW_CppAssembly.dll" />
+    <Content Include="TestModules\MRW_ILAsmAssembly.dll" />
+    <Content Include="TestModules\MRW_TestAssembly.dll" />
+    <Content Include="TestModules\vjslib.dll">
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestModules\build.cmd" />
+    <None Include="TestModules\MRW_ILAsmAssembly.il" />
+    <None Include="TestModules\MRW_Module1.netmodule" />
+    <None Include="TestModules\MRW_Module2.netmodule" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">
+      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
+      <Name>PEReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+</Project>
