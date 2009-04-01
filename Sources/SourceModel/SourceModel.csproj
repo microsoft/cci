@@ -42,6 +42,9 @@
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\Common\Include\Version.cs">
+      <Link>Build\Version.cs</Link>
+    </Compile>
     <Compile Include="DummyObjects.cs" />
     <Compile Include="Implementations.cs" />
     <Compile Include="Interfaces.cs" />
