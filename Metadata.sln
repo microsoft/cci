@@ -32,17 +32,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoundtripTests", "Tests\RoundtripTests\RoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D367F38D}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 1
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://tfs10.codeplex.com/
-		SccProjectUniqueName0 = Tests\\RoundtripTests\\RoundtripTests.csproj
-		SccProjectTopLevelParentUniqueName0 = Metadata.sln
-		SccProjectName0 = Tests/RoundtripTests
-		SccAuxPath0 = https://tfs10.codeplex.com
-		SccLocalPath0 = Tests\\RoundtripTests
-		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		NightlyDebug|Any CPU = NightlyDebug|Any CPU
