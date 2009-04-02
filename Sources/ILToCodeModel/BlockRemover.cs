@@ -1,0 +1,37 @@
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (C) Microsoft Corporation.  All Rights Reserved.
+//
+//-----------------------------------------------------------------------------
+using System.Collections.Generic;
+
+namespace Microsoft.Cci.ILToCodeModel {
+
+  internal class BlockRemover : BaseCodeTraverser {
+
+    public override void Visit(IBlockStatement block) {
+      BasicBlock blockStatement = (BasicBlock)block;
+      List<IStatement> flatListOfStatements = new List<IStatement>();
+      this.Flatten(blockStatement, flatListOfStatements);
+      blockStatement.Statements = flatListOfStatements;
+    }
+
+    private void Flatten(BasicBlock blockStatement, List<IStatement> flatListOfStatements) {
+      foreach (IStatement statement in blockStatement.Statements){
+        BasicBlock/*?*/ nestedBlock = statement as BasicBlock;
+        if (nestedBlock != null) {
+          if (nestedBlock.LocalVariables == null || nestedBlock.LocalVariables.Count == 0)
+            this.Flatten(nestedBlock, flatListOfStatements);
+          else {
+            this.Visit(nestedBlock);
+            flatListOfStatements.Add(nestedBlock);
+          }
+        } else {
+          this.Visit(statement);
+          flatListOfStatements.Add(statement);
+        }
+      }
+    }
+
+  }
+}

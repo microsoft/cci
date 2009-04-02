@@ -1,0 +1,1342 @@
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (C) Microsoft Corporation.  All Rights Reserved.
+//
+//-----------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.Contracts;
+
+namespace Microsoft.Cci.ILToCodeModel {
+  public sealed class SourceMethodBody : ISourceMethodBody {
+
+    internal readonly ContractProvider/*?*/ contractProvider;
+    internal readonly IMetadataHost host;
+    internal readonly IMethodBody ilMethodBody;
+    internal readonly INameTable nameTable;
+    internal readonly PdbReader/*?*/ pdbReader;
+    internal readonly IPlatformType platformType;
+    internal List<ILocalDefinition> localVariables;
+    bool sawReadonly;
+    bool sawTailCall;
+    bool sawVolatile;
+    byte alignment;
+    bool contractsOnly = false;
+
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader) {
+      this.ilMethodBody = ilMethodBody;
+      this.host = host;
+      this.contractProvider = contractProvider;
+      this.nameTable = host.NameTable;
+      this.pdbReader = pdbReader;
+      this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
+      this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
+      this.localVariables = new List<ILocalDefinition>(ilMethodBody.LocalVariables);
+    }
+
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly) 
+      : this(ilMethodBody, host, contractProvider, pdbReader) { 
+      this.contractsOnly = contractsOnly; 
+    }
+
+    public IBlockStatement Block {
+      get {
+        if (this.block == null)
+          this.block = this.CreateDecompiledBlock();
+        return this.block;
+      }
+    }
+    IBlockStatement/*?*/ block;
+
+    #region IMethodBody Members
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public System.Collections.Generic.IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
+      get { return this.ilMethodBody.OperationExceptionInformation; }
+    }
+
+    public bool LocalsAreZeroed {
+      get { return this.ilMethodBody.LocalsAreZeroed; }
+    }
+
+    public IEnumerable<ILocalDefinition> LocalVariables {
+      get { return this.localVariables.AsReadOnly(); }
+    }
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.ilMethodBody.MethodDefinition; }
+    }
+
+    public IEnumerable<IOperation> Operations {
+      get { return this.ilMethodBody.Operations; }
+    }
+
+    public ushort MaxStack {
+      get { return this.ilMethodBody.MaxStack; }
+    }
+
+    public IEnumerable<ITypeDefinition> PrivateHelperTypes {
+      get { return this.ilMethodBody.PrivateHelperTypes; }
+    }
+
+    #endregion
+
+    private Dictionary<uint, BasicBlock> blockFor = new Dictionary<uint, BasicBlock>();
+
+    private int ConvertToInt(Expression expression) {
+      CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
+      if (cc == null) return 0; //TODO: error
+      IConvertible/*?*/ ic = cc.Value as IConvertible;
+      if (ic == null) return 0; //TODO: error
+      switch (ic.GetTypeCode()){
+        case TypeCode.SByte:
+        case TypeCode.Byte:
+        case TypeCode.Int16:
+        case TypeCode.UInt16:
+        case TypeCode.Int32:
+          return ic.ToInt32(null);
+        case TypeCode.Int64:
+          return (int)ic.ToInt64(null); //TODO: error
+        case TypeCode.UInt32:
+        case TypeCode.UInt64:
+          return (int)ic.ToUInt64(null); //TODO: error
+      }
+      return 0; //TODO: error
+    }
+
+    private Expression ConvertToUnsigned(Expression expression) {
+      CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
+      if (cc == null) return expression;
+      IConvertible/*?*/ ic = cc.Value as IConvertible;
+      if (ic == null) return expression;
+      switch (ic.GetTypeCode()) {
+        case TypeCode.SByte:
+          cc.Value = (byte)ic.ToSByte(null); cc.Type = this.platformType.SystemUInt8; break;
+        case TypeCode.Int16:
+          cc.Value = (ushort)ic.ToInt16(null); cc.Type = this.platformType.SystemUInt16; break;
+        case TypeCode.Int32:
+          cc.Value = (uint)ic.ToInt32(null); cc.Type = this.platformType.SystemUInt32; break;
+        case TypeCode.Int64:
+          cc.Value = (ulong)ic.ToInt64(null); cc.Type = this.platformType.SystemUInt64; break;
+      }
+      return expression;
+    }
+
+    private void CreateBlocksForBranchTargets() {
+      foreach (IOperation ilOperation in this.ilMethodBody.Operations) {
+        switch (ilOperation.OperationCode) {
+          case OperationCode.Beq:
+          case OperationCode.Beq_S:
+          case OperationCode.Bge:
+          case OperationCode.Bge_S:
+          case OperationCode.Bge_Un:
+          case OperationCode.Bge_Un_S:
+          case OperationCode.Bgt:
+          case OperationCode.Bgt_S:
+          case OperationCode.Bgt_Un:
+          case OperationCode.Bgt_Un_S:
+          case OperationCode.Ble:
+          case OperationCode.Ble_S:
+          case OperationCode.Ble_Un:
+          case OperationCode.Ble_Un_S:
+          case OperationCode.Blt:
+          case OperationCode.Blt_S:
+          case OperationCode.Blt_Un:
+          case OperationCode.Blt_Un_S:
+          case OperationCode.Bne_Un:
+          case OperationCode.Bne_Un_S:
+          case OperationCode.Br:
+          case OperationCode.Br_S:
+          case OperationCode.Brfalse:
+          case OperationCode.Brfalse_S:
+          case OperationCode.Brtrue:
+          case OperationCode.Brtrue_S:
+          case OperationCode.Leave:
+          case OperationCode.Leave_S:
+            this.GetOrCreateBlock((uint)ilOperation.Value, true);
+            break;
+          case OperationCode.Switch: {
+              uint[] branches = (uint[])ilOperation.Value;
+              foreach (uint targetAddress in branches)
+                this.GetOrCreateBlock(targetAddress, true);
+            }
+            break;
+        }
+      }
+    }
+
+    private void CreateBlocksForExceptionHandlers(){
+      foreach (IOperationExceptionInformation exinfo in this.ilMethodBody.OperationExceptionInformation) {
+        BasicBlock bb = this.GetOrCreateBlock(exinfo.TryStartOffset, false);
+        bb.NumberOfTryBlocksStartingHere++;
+        bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
+        bb.ExceptionInformation = exinfo;
+        if (exinfo.HandlerKind == HandlerKind.Filter)
+          this.GetOrCreateBlock(exinfo.FilterDecisionStartOffset, false);
+      }
+    }
+
+    private void CreateBlocksForLexicalScopes() {
+      if (this.pdbReader == null) return;
+      foreach (ILocalScope localScope in this.pdbReader.GetLocalScopes(this.ilMethodBody)) {
+        BasicBlock block = this.GetOrCreateBlock(localScope.Offset, false);
+        block.LocalVariables = new List<ILocalDefinition>(this.pdbReader.GetVariablesInScope(localScope));
+        block.EndOffset = localScope.Offset+localScope.Length;
+        this.GetOrCreateBlock(block.EndOffset, false);
+      }
+    }
+
+    private IBlockStatement CreateDecompiledBlock() {
+      this.CreateBlocksForLexicalScopes();
+      this.CreateBlocksForBranchTargets();
+      this.CreateBlocksForExceptionHandlers();
+      BasicBlock result = this.GetOrCreateBlock(0, false);
+      BasicBlock currentBlock = result;
+      int lastContractOffset = 0; // dummy value
+      if (this.contractsOnly) {
+        lastContractOffset = OffsetOfLastContractCallOrNegativeOne(this.ilMethodBody.Operations);
+        if (lastContractOffset == -1) return result;
+      }
+      while (this.operationEnumerator.MoveNext()) {
+        IOperation currentOperation = this.operationEnumerator.Current;
+        if (this.contractsOnly && currentOperation.Offset > (uint)lastContractOffset) break;
+        if (currentOperation.Offset > 0 && this.blockFor.ContainsKey(currentOperation.Offset)) {
+          this.TurnOperandStackIntoPushStatements(currentBlock);
+          BasicBlock newBlock = this.GetOrCreateBlock(currentOperation.Offset, false);
+          currentBlock.Statements.Add(newBlock);
+          currentBlock = newBlock;
+        }
+        this.ParseInstruction(currentBlock);
+      }
+      this.TurnOperandStackIntoPushStatements(currentBlock);
+      return this.Transform(result);
+    }
+
+    private int OffsetOfLastContractCallOrNegativeOne(IEnumerable<IOperation> operations) {
+      List<IOperation> instrs = new List<IOperation>(Operations);
+      for (int i = instrs.Count - 1; 0 <= i; i--) {
+        IOperation op = instrs[i];
+        if (op.OperationCode != OperationCode.Call) continue;
+        IMethodReference method = op.Value as IMethodReference;
+        if (method == null) continue;
+        var methodName = method.Name.Value;
+        if (TypeHelper.TypesAreEquivalent(method.ContainingType, method.ContainingType.PlatformType.SystemDiagnosticsContractsContract)
+          && !(methodName.Equals("Assert") || methodName.Equals("Assume"))
+          ) return (int)op.Offset;
+      }
+      return -1; // not found
+    }
+
+    private IBlockStatement Transform(BasicBlock rootBlock) {
+      new PatternDecompiler(this).Visit(rootBlock);
+      new RemoveBranchConditionLocals(this).Visit(rootBlock);
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
+      new Unstacker(this).Visit(rootBlock);
+      new ControlFlowDecompiler(this.host.PlatformType).Visit(rootBlock);
+      new BlockRemover().Visit(rootBlock);
+      new DeclarationAdder().Visit(rootBlock);
+      new EmptyStatementRemover().Visit(rootBlock);
+      IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
+      if (this.contractProvider != null)
+        result = new ContractExtractor(this, this.contractProvider).Visit(result);
+      result = new AssertAssumeExtractor(this).Visit(result);
+      return result;
+    }
+
+    private void TurnOperandStackIntoPushStatements(BasicBlock currentBlock) {
+      int insertPoint = currentBlock.Statements.Count;
+      while (this.operandStack.Count > 0) {
+        Expression operand = this.PopOperandStack();
+        MethodCall/*?*/ call = operand as MethodCall;
+        if (call != null && call.MethodToCall.Type.TypeCode == PrimitiveTypeCode.Void) {
+          ExpressionStatement expressionStatement = new ExpressionStatement();
+          expressionStatement.Expression = operand;
+          currentBlock.Statements.Insert(insertPoint, expressionStatement);
+        } else {
+          Push push = new Push();
+          push.ValueToPush = operand;
+          currentBlock.Statements.Insert(insertPoint, push);
+        }
+      }
+    }
+
+    private BasicBlock GetOrCreateBlock(uint offset, bool addLabel) {
+      BasicBlock result;
+      if (!this.blockFor.TryGetValue(offset, out result)) {
+        result = new BasicBlock(offset);
+        this.blockFor.Add(offset, result);
+      }
+      if (addLabel && result.Statements.Count == 0) {
+        LabeledStatement label = new LabeledStatement();
+        label.Label = this.nameTable.GetNameFor("IL_"+offset.ToString("x4"));
+        label.Statement = new EmptyStatement();
+        result.Statements.Add(label);
+        this.targetStatementFor.Add(offset, label);
+      }
+      return result;
+    }
+
+    private ILabeledStatement GetTargetStatement(object label) {
+      LabeledStatement result;
+      if (label is uint && this.targetStatementFor.TryGetValue((uint)label, out result)) return result;
+      return CodeDummy.LabeledStatement;
+    }
+
+    private Expression ParseAddition(OperationCode currentOpcode) {
+      Addition addition = new Addition();
+      addition.CheckOverflow = currentOpcode != OperationCode.Add;
+      if (currentOpcode == OperationCode.Add_Ovf_Un)
+        return this.ParseUnsignedBinaryOperation(addition);
+      else
+        return this.ParseBinaryOperation(addition);
+    }
+
+    private Expression ParseAddressOf(IOperation currentOperation) {
+      AddressableExpression addressableExpression = new AddressableExpression() { Definition = currentOperation.Value };
+      if (addressableExpression.Definition == null) {
+        Debug.Assert(currentOperation.OperationCode == OperationCode.Ldarg || currentOperation.OperationCode == OperationCode.Ldarga_S);
+        addressableExpression.Definition = new ThisReference();
+      }
+      if (currentOperation.OperationCode == OperationCode.Ldflda || currentOperation.OperationCode == OperationCode.Ldvirtftn)
+        addressableExpression.Instance = this.PopOperandStack();
+      return new AddressOf() { Expression = addressableExpression };
+    }
+
+    private Expression ParseAddressDereference(IOperation currentOperation) {
+      AddressDereference result = new AddressDereference();
+      result.Address = this.PopOperandStack();
+      result.Alignment = this.alignment;
+      result.IsVolatile = this.sawVolatile;
+      this.alignment = 0;
+      this.sawVolatile = false;
+      return result;
+    }
+
+    private Expression ParseArrayCreate(IOperation currentOperation) {
+      IArrayTypeReference arrayType = (IArrayTypeReference)currentOperation.Value;
+      CreateArray result = new CreateArray();
+      result.ElementType = arrayType.ElementType;
+      result.Rank = arrayType.Rank;
+      result.Type = arrayType;
+      if (currentOperation.OperationCode == OperationCode.Array_Create_WithLowerBound) {
+        for (uint i = 0; i < arrayType.Rank; i++)
+          result.LowerBounds.Add(this.ConvertToInt(this.PopOperandStack()));
+        result.LowerBounds.Reverse();
+      }
+      for (uint i = 0; i < arrayType.Rank; i++)
+        result.Sizes.Add(this.PopOperandStack());
+      result.Sizes.Reverse();
+      return result;
+    }
+
+    private Expression ParseArrayElementAddres(IOperation currentOperation) {
+      AddressOf result = new AddressOf();
+      result.ObjectControlsMutability = this.sawReadonly;
+      AddressableExpression addressableExpression = new AddressableExpression();
+      result.Expression = addressableExpression;
+      ArrayIndexer indexer = this.ParseArrayIndexer(currentOperation);
+      addressableExpression.Definition = indexer;
+      addressableExpression.Instance = indexer.IndexedObject;
+      this.sawReadonly = false;
+      return result;
+    }
+
+    private ArrayIndexer ParseArrayIndexer(IOperation currentOperation) {
+      uint rank = 1;
+      IArrayTypeReference/*?*/ arrayType = currentOperation.Value as IArrayTypeReference;
+      if (arrayType != null) rank = arrayType.Rank;
+      ArrayIndexer result = new ArrayIndexer();
+      for (uint i = 0; i < rank; i++)
+        result.Indices.Add(this.PopOperandStack());
+      result.Indices.Reverse();
+      result.IndexedObject = this.PopOperandStack();
+      return result;
+    }
+
+    private Statement ParseArraySet(IOperation currentOperation) {
+      ExpressionStatement result = new ExpressionStatement();
+      Assignment assignment = new Assignment();
+      result.Expression = assignment;
+      assignment.Source = this.PopOperandStack();
+      TargetExpression targetExpression = new TargetExpression();
+      assignment.Target = targetExpression;
+      ArrayIndexer indexer = this.ParseArrayIndexer(currentOperation);
+      targetExpression.Definition = indexer;
+      targetExpression.Instance = indexer.IndexedObject;
+      return result;
+    }
+
+    private Statement ParseAssignment(IOperation currentOperation) {
+      TargetExpression target = new TargetExpression();
+      target.Alignment = this.alignment;
+      target.Definition = currentOperation.Value;
+      target.IsVolatile = this.sawVolatile;
+      Assignment assignment = new Assignment();
+      assignment.Target = target;
+      assignment.Source = this.PopOperandStack();
+      ExpressionStatement result = new ExpressionStatement();
+      result.Expression = assignment;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Stfld:
+          target.Instance = this.PopOperandStack();
+          break;
+        case OperationCode.Stelem:
+        case OperationCode.Stelem_I:
+        case OperationCode.Stelem_I1:
+        case OperationCode.Stelem_I2:
+        case OperationCode.Stelem_I4:
+        case OperationCode.Stelem_I8:
+        case OperationCode.Stelem_R4:
+        case OperationCode.Stelem_R8:
+        case OperationCode.Stelem_Ref:
+          ArrayIndexer indexer = this.ParseArrayIndexer(currentOperation);
+          target.Definition = indexer;
+          target.Instance = indexer.IndexedObject;
+          break;
+        case OperationCode.Stind_I:
+        case OperationCode.Stind_I1:
+        case OperationCode.Stind_I2:
+        case OperationCode.Stind_I4:
+        case OperationCode.Stind_I8:
+        case OperationCode.Stind_R4:
+        case OperationCode.Stind_R8:
+        case OperationCode.Stind_Ref:
+        case OperationCode.Stobj:
+          AddressDereference addressDereference = new AddressDereference();
+          addressDereference.Address = this.PopOperandStack();
+          addressDereference.Alignment = this.alignment;
+          addressDereference.IsVolatile = this.sawVolatile;
+          target.Definition = addressDereference;
+          break;
+        case OperationCode.Stloc:
+        case OperationCode.Stloc_0:
+        case OperationCode.Stloc_1:
+        case OperationCode.Stloc_2:
+        case OperationCode.Stloc_3:
+        case OperationCode.Stloc_S:
+          this.numberOfAssignments[(ILocalDefinition)assignment.Target.Definition] =
+            this.numberOfAssignments.ContainsKey((ILocalDefinition)assignment.Target.Definition) ?
+            this.numberOfAssignments[(ILocalDefinition)assignment.Target.Definition] + 1 :
+            1;
+          break;
+      }
+      this.alignment = 0;
+      this.sawVolatile = false;
+      return result;
+    }
+
+    internal readonly Dictionary<ILocalDefinition, int> numberOfAssignments = new Dictionary<ILocalDefinition, int>();
+
+    private BinaryOperation ParseBinaryOperation(BinaryOperation binaryOperation) {
+      binaryOperation.RightOperand = this.PopOperandStack();
+      binaryOperation.LeftOperand = this.PopOperandStack();
+      return binaryOperation;
+    }
+
+    private Expression ParseBinaryOperation(OperationCode currentOpcode) {
+      switch (currentOpcode) {
+        default:
+          Debug.Assert(false);
+          goto case OperationCode.Xor;
+        case OperationCode.Add:
+        case OperationCode.Add_Ovf:
+        case OperationCode.Add_Ovf_Un:
+          return this.ParseAddition(currentOpcode);
+        case OperationCode.And:
+          return this.ParseBinaryOperation(new BitwiseAnd());
+        case OperationCode.Ceq:
+          return this.ParseBinaryOperation(new Equality());
+        case OperationCode.Cgt:
+          return this.ParseBinaryOperation(new GreaterThan());
+        case OperationCode.Cgt_Un:
+          return this.ParseUnsignedBinaryOperation(new GreaterThan());
+        case OperationCode.Clt:
+          return this.ParseBinaryOperation(new LessThan());
+        case OperationCode.Clt_Un:
+          return this.ParseUnsignedBinaryOperation(new LessThan());
+        case OperationCode.Div:
+          return this.ParseBinaryOperation(new Division());
+        case OperationCode.Div_Un:
+          return this.ParseUnsignedBinaryOperation(new Division());
+        case OperationCode.Mul:
+        case OperationCode.Mul_Ovf:
+        case OperationCode.Mul_Ovf_Un:
+          return this.ParseMultiplication(currentOpcode);
+        case OperationCode.Or:
+          return this.ParseBinaryOperation(new BitwiseOr());
+        case OperationCode.Rem:
+          return this.ParseBinaryOperation(new Modulus());
+        case OperationCode.Rem_Un:
+          return this.ParseUnsignedBinaryOperation(new Modulus());
+        case OperationCode.Shl:
+          return this.ParseBinaryOperation(new LeftShift());
+        case OperationCode.Shr:
+          return this.ParseBinaryOperation(new RightShift());
+        case OperationCode.Shr_Un:
+          RightShift shrun = new RightShift();
+          shrun.RightOperand = this.PopOperandStack();
+          shrun.LeftOperand = this.PopOperandStackAsUnsigned();
+          return shrun;
+        case OperationCode.Sub:
+        case OperationCode.Sub_Ovf:
+        case OperationCode.Sub_Ovf_Un:
+          return this.ParseSubtraction(currentOpcode);
+        case OperationCode.Xor:
+          return this.ParseBinaryOperation(new ExclusiveOr());
+      }
+    }
+
+    private Statement ParseBinaryConditionalBranch(IOperation currentOperation) {
+      BinaryOperation condition;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Beq:
+        case OperationCode.Beq_S:
+          condition = this.ParseBinaryOperation(new Equality());
+          break;
+        case OperationCode.Bge:
+        case OperationCode.Bge_S:
+          condition = this.ParseBinaryOperation(new GreaterThanOrEqual());
+          break;
+        case OperationCode.Bge_Un:
+        case OperationCode.Bge_Un_S:
+          condition = this.ParseUnsignedBinaryOperation(new GreaterThanOrEqual());
+          break;
+        case OperationCode.Bgt:
+        case OperationCode.Bgt_S:
+          condition = this.ParseBinaryOperation(new GreaterThan());
+          break;
+        case OperationCode.Bgt_Un:
+        case OperationCode.Bgt_Un_S:
+          condition = this.ParseUnsignedBinaryOperation(new GreaterThan());
+          break;
+        case OperationCode.Ble:
+        case OperationCode.Ble_S:
+          condition = this.ParseBinaryOperation(new LessThanOrEqual());
+          break;
+        case OperationCode.Ble_Un:
+        case OperationCode.Ble_Un_S:
+          condition = this.ParseUnsignedBinaryOperation(new LessThanOrEqual());
+          break;
+        case OperationCode.Blt:
+        case OperationCode.Blt_S:
+          condition = this.ParseBinaryOperation(new LessThan());
+          break;
+        case OperationCode.Blt_Un:
+        case OperationCode.Blt_Un_S:
+          condition = this.ParseUnsignedBinaryOperation(new LessThan());
+          break;
+        case OperationCode.Bne_Un:
+        case OperationCode.Bne_Un_S:
+        default:
+          condition = this.ParseBinaryOperation(new NotEquality());
+          break;
+      }
+      GotoStatement gotoStatement = new GotoStatement();
+      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      ConditionalStatement ifStatement = new ConditionalStatement();
+      ifStatement.Condition = condition;
+      ifStatement.TrueBranch = gotoStatement;
+      ifStatement.FalseBranch = new EmptyStatement();
+      return ifStatement;
+    }
+
+    private Expression ParseBoundExpression(IOperation currentOperation) {
+      if (currentOperation.Value == null)
+        return new ThisReference();
+      BoundExpression result = new BoundExpression();
+      result.Alignment = this.alignment;
+      result.Definition = currentOperation.Value;
+      result.IsVolatile = this.sawVolatile;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Ldfld:
+          result.Instance = this.PopOperandStack();
+          break;
+        case OperationCode.Ldloc:
+        case OperationCode.Ldloc_0:
+        case OperationCode.Ldloc_1:
+        case OperationCode.Ldloc_2:
+        case OperationCode.Ldloc_3:
+        case OperationCode.Ldloc_S:
+          this.numberOfReferences[result.Definition] =
+            this.numberOfReferences.ContainsKey(result.Definition) ?
+            this.numberOfReferences[result.Definition] + 1 :
+            1;
+          break;
+      }
+      this.alignment = 0;
+      this.sawVolatile = false;
+      return result;
+    }
+
+    internal readonly Dictionary<object, int> numberOfReferences = new Dictionary<object, int>();
+
+    private MethodCall ParseCall(IOperation currentOperation) {
+      IMethodReference methodRef = (IMethodReference)currentOperation.Value;
+      MethodCall result = new MethodCall();
+      result.IsTailCall = this.sawTailCall;
+      foreach (var par in methodRef.Parameters)
+        result.Arguments.Add(this.PopOperandStack());
+      foreach (var par in methodRef.ExtraParameters)
+        result.Arguments.Add(this.PopOperandStack());
+      result.Arguments.Reverse();
+      result.IsVirtualCall = currentOperation.OperationCode == OperationCode.Callvirt;
+      result.MethodToCall = methodRef;
+      if ((methodRef.CallingConvention & CallingConvention.HasThis) != 0)
+        result.ThisArgument = this.PopOperandStack();
+      else
+        result.IsStaticCall = true;
+      this.sawTailCall = false;
+      return result;
+    }
+
+    private Expression ParseCastIfPossible(IOperation currentOperation) {
+      CastIfPossible result = new CastIfPossible();
+      result.ValueToCast = this.PopOperandStack();
+      result.TargetType = (ITypeReference)currentOperation.Value;
+      return result;
+    }
+
+    private Expression ParseCompileTimeConstant(IOperation currentOperation) {
+      CompileTimeConstant result = new CompileTimeConstant();
+      result.Value = currentOperation.Value;
+      result.Type = this.platformType.SystemInt32;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Ldc_I4_0: result.Value = 0; break;
+        case OperationCode.Ldc_I4_1: result.Value = 1; break;
+        case OperationCode.Ldc_I4_2: result.Value = 2; break;
+        case OperationCode.Ldc_I4_3: result.Value = 3; break;
+        case OperationCode.Ldc_I4_4: result.Value = 4; break;
+        case OperationCode.Ldc_I4_5: result.Value = 5; break;
+        case OperationCode.Ldc_I4_6: result.Value = 6; break;
+        case OperationCode.Ldc_I4_7: result.Value = 7; break;
+        case OperationCode.Ldc_I4_8: result.Value = 8; break;
+        case OperationCode.Ldc_I4_M1: result.Value = -1; break;
+        case OperationCode.Ldc_I8: result.Type = this.platformType.SystemInt64; break;
+        case OperationCode.Ldc_R4: result.Type = this.platformType.SystemFloat32; break;
+        case OperationCode.Ldc_R8: result.Type = this.platformType.SystemFloat64; break;
+        case OperationCode.Ldnull: result.Type = this.platformType.SystemObject; break;
+        case OperationCode.Ldstr: result.Type = this.platformType.SystemString; break;
+      }
+      return result;
+    }
+
+    private Expression ParseConversion(IOperation currentOperation) {
+      Conversion result = new Conversion();
+      Expression valueToConvert = this.PopOperandStack();
+      result.ValueToConvert = valueToConvert;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Conv_R_Un:
+          result.ValueToConvert = this.ConvertToUnsigned(valueToConvert); break;
+        case OperationCode.Conv_Ovf_I_Un:
+        case OperationCode.Conv_Ovf_I1_Un:
+        case OperationCode.Conv_Ovf_I2_Un:
+        case OperationCode.Conv_Ovf_I4_Un:
+        case OperationCode.Conv_Ovf_I8_Un:
+        case OperationCode.Conv_Ovf_U_Un:
+        case OperationCode.Conv_Ovf_U1_Un:
+        case OperationCode.Conv_Ovf_U2_Un:
+        case OperationCode.Conv_Ovf_U4_Un:
+        case OperationCode.Conv_Ovf_U8_Un:
+          result.ValueToConvert = this.ConvertToUnsigned(valueToConvert); 
+          result.CheckNumericRange = true;  break;
+        case OperationCode.Conv_Ovf_I:
+        case OperationCode.Conv_Ovf_I1:
+        case OperationCode.Conv_Ovf_I2:
+        case OperationCode.Conv_Ovf_I4:
+        case OperationCode.Conv_Ovf_I8:
+        case OperationCode.Conv_Ovf_U:
+        case OperationCode.Conv_Ovf_U1:
+        case OperationCode.Conv_Ovf_U2:
+        case OperationCode.Conv_Ovf_U4:
+        case OperationCode.Conv_Ovf_U8:
+          result.CheckNumericRange = true; break;
+      }
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Box:
+          result.TypeAfterConversion = this.platformType.SystemObject; break;
+        case OperationCode.Castclass:
+          result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
+        case OperationCode.Conv_I:
+        case OperationCode.Conv_Ovf_I:
+        case OperationCode.Conv_Ovf_I_Un:
+          result.TypeAfterConversion = this.platformType.SystemIntPtr; break;
+        case OperationCode.Conv_I1:
+        case OperationCode.Conv_Ovf_I1:
+        case OperationCode.Conv_Ovf_I1_Un:
+          result.TypeAfterConversion = this.platformType.SystemInt8; break;
+        case OperationCode.Conv_I2:
+        case OperationCode.Conv_Ovf_I2:
+        case OperationCode.Conv_Ovf_I2_Un:
+          result.TypeAfterConversion = this.platformType.SystemInt16; break;
+        case OperationCode.Conv_I4:
+        case OperationCode.Conv_Ovf_I4:
+        case OperationCode.Conv_Ovf_I4_Un:
+          result.TypeAfterConversion = this.platformType.SystemInt32; break;
+        case OperationCode.Conv_I8:
+        case OperationCode.Conv_Ovf_I8:
+        case OperationCode.Conv_Ovf_I8_Un:
+          result.TypeAfterConversion = this.platformType.SystemInt64; break;
+        case OperationCode.Conv_U:
+        case OperationCode.Conv_Ovf_U:
+        case OperationCode.Conv_Ovf_U_Un:
+          result.TypeAfterConversion = this.platformType.SystemUIntPtr; break;
+        case OperationCode.Conv_U1:
+        case OperationCode.Conv_Ovf_U1:
+        case OperationCode.Conv_Ovf_U1_Un:
+          result.TypeAfterConversion = this.platformType.SystemUInt8; break;
+        case OperationCode.Conv_U2:
+        case OperationCode.Conv_Ovf_U2:
+        case OperationCode.Conv_Ovf_U2_Un:
+          result.TypeAfterConversion = this.platformType.SystemUInt16; break;
+        case OperationCode.Conv_U4:
+        case OperationCode.Conv_Ovf_U4:
+        case OperationCode.Conv_Ovf_U4_Un:
+          result.TypeAfterConversion = this.platformType.SystemUInt32; break;
+        case OperationCode.Conv_U8:
+        case OperationCode.Conv_Ovf_U8:
+        case OperationCode.Conv_Ovf_U8_Un:
+          result.TypeAfterConversion = this.platformType.SystemUInt64; break;
+        case OperationCode.Conv_R_Un:
+          result.TypeAfterConversion = this.platformType.SystemFloat64; break; //TODO: need a type for Float80+
+        case OperationCode.Conv_R4:
+          result.TypeAfterConversion = this.platformType.SystemFloat32; break;
+        case OperationCode.Conv_R8:
+          result.TypeAfterConversion = this.platformType.SystemFloat64; break;
+        case OperationCode.Unbox:
+          result.TypeAfterConversion = ManagedPointerType.GetManagedPointerType(valueToConvert.Type, this.host.InternFactory); break;
+        case OperationCode.Unbox_Any:
+          result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
+      }
+      return result;
+    }
+
+    private Expression ParseCopyObject() {
+      AddressDereference source = new AddressDereference();
+      source.Address = this.PopOperandStack();
+      AddressDereference addressDeref = new AddressDereference();
+      addressDeref.Address = this.PopOperandStack();
+      TargetExpression target = new TargetExpression();
+      target.Definition = addressDeref;
+      Assignment result = new Assignment();
+      result.Source = source;
+      result.Target = target;
+      return result;
+    }
+
+    private Expression ParseCreateObjectInstance(IOperation currentOperation) {
+      CreateObjectInstance result = new CreateObjectInstance();
+      result.MethodToCall = (IMethodReference)currentOperation.Value;
+      foreach (var par in result.MethodToCall.Parameters)
+        result.Arguments.Add(this.PopOperandStack());
+      result.Arguments.Reverse();
+      return result;
+    }
+
+    private Statement ParseEndfilter() {
+      EndFilter result = new EndFilter();
+      result.FilterResult = this.PopOperandStack();
+      return result;
+    }
+
+    private Expression ParseGetTypeOfTypedReference() {
+      GetTypeOfTypedReference result = new GetTypeOfTypedReference();
+      result.TypedReference = this.PopOperandStack();
+      return result;
+    }
+
+    private Expression ParseGetValueOfTypedReference(IOperation currentOperation) {
+      GetValueOfTypedReference result = new GetValueOfTypedReference();
+      result.TargetType = (ITypeReference)currentOperation.Value;
+      result.TypedReference = this.PopOperandStack();
+      return result;
+    }
+
+    private Statement ParseInitObject(IOperation currentOperation) {
+      Assignment assignment = new Assignment();
+      assignment.Target = new TargetExpression() { Definition = new AddressDereference() { Address = this.PopOperandStack() } };
+      assignment.Source = new DefaultValue() { DefaultValueType = (ITypeReference)currentOperation.Value };
+      return new ExpressionStatement() { Expression = assignment };
+    }
+
+    private Expression ParseMakeTypedReference(IOperation currentOperation) {
+      MakeTypedReference result = new MakeTypedReference();
+      Expression operand  = this.PopOperandStack();
+      operand.Type = ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory);
+      result.Operand = operand;
+      return result;
+    }
+
+    private Expression ParseMultiplication(OperationCode currentOpcode) {
+      Multiplication multiplication = new Multiplication();
+      multiplication.CheckOverflow = currentOpcode != OperationCode.Mul;
+      if (currentOpcode == OperationCode.Mul_Ovf_Un)
+        return this.ParseUnsignedBinaryOperation(multiplication);
+      else
+        return this.ParseBinaryOperation(multiplication);
+    }
+
+    private Expression ParsePointerCall(IOperation currentOperation) {
+      IFunctionPointerTypeReference funcPointerRef = (IFunctionPointerTypeReference)currentOperation.Value;
+      PointerCall result = new PointerCall();
+      result.IsTailCall = this.sawTailCall;
+      Expression pointer = this.PopOperandStack();
+      pointer.Type = funcPointerRef;
+      foreach (var par in funcPointerRef.Parameters)
+        result.Arguments.Add(this.PopOperandStack());
+      result.Arguments.Reverse();
+      result.Pointer = pointer;
+      this.sawTailCall = false;
+      return result;
+    }
+
+    private Statement ParsePop() {
+      ExpressionStatement result = new ExpressionStatement();
+      result.Expression = this.PopOperandStack();
+      return result;
+    }
+
+    /// <summary>
+    /// Parse instructions and put them into an expression tree until an assignment, void call, branch target, or branch is encountered.
+    /// Returns true if the parsed statement is last of the current basic block. This happens when the next statement is a branch
+    /// target, or if the parsed statement could transfers control to anything but the following statement.
+    /// </summary>
+    private void ParseInstruction(BasicBlock currentBlock) {
+      Statement/*?*/ statement = null;
+      Expression/*?*/ expression = null;
+      IOperation currentOperation = this.operationEnumerator.Current;
+      OperationCode currentOpcode = currentOperation.OperationCode;
+      switch (currentOpcode) {
+        case OperationCode.Add:
+        case OperationCode.Add_Ovf:
+        case OperationCode.Add_Ovf_Un:
+        case OperationCode.And:
+        case OperationCode.Ceq:
+        case OperationCode.Cgt:
+        case OperationCode.Cgt_Un:
+        case OperationCode.Clt:
+        case OperationCode.Clt_Un:
+        case OperationCode.Div:
+        case OperationCode.Div_Un:
+        case OperationCode.Mul:
+        case OperationCode.Mul_Ovf:
+        case OperationCode.Mul_Ovf_Un:
+        case OperationCode.Or:
+        case OperationCode.Rem:
+        case OperationCode.Rem_Un:
+        case OperationCode.Shl:
+        case OperationCode.Shr:
+        case OperationCode.Shr_Un:
+        case OperationCode.Sub:
+        case OperationCode.Sub_Ovf:
+        case OperationCode.Sub_Ovf_Un:
+        case OperationCode.Xor:
+          expression = this.ParseBinaryOperation(currentOpcode);
+          break;
+
+        case OperationCode.Arglist:
+          expression = new RuntimeArgumentHandleExpression();
+          break;
+
+        case OperationCode.Array_Addr:
+        case OperationCode.Ldelema:
+          expression = this.ParseArrayElementAddres(currentOperation);
+          break;
+
+        case OperationCode.Array_Create:
+        case OperationCode.Array_Create_WithLowerBound:
+        case OperationCode.Newarr:
+          expression = this.ParseArrayCreate(currentOperation);
+          break;
+
+        case OperationCode.Array_Get:
+        case OperationCode.Ldelem:
+        case OperationCode.Ldelem_I:
+        case OperationCode.Ldelem_I1:
+        case OperationCode.Ldelem_I2:
+        case OperationCode.Ldelem_I4:
+        case OperationCode.Ldelem_I8:
+        case OperationCode.Ldelem_R4:
+        case OperationCode.Ldelem_R8:
+        case OperationCode.Ldelem_Ref:
+        case OperationCode.Ldelem_U1:
+        case OperationCode.Ldelem_U2:
+        case OperationCode.Ldelem_U4:
+          expression = this.ParseArrayIndexer(currentOperation);
+          break;
+
+        case OperationCode.Array_Set:
+          statement = this.ParseArraySet(currentOperation);
+          break;
+
+        case OperationCode.Beq:
+        case OperationCode.Beq_S:
+        case OperationCode.Bge:
+        case OperationCode.Bge_S:
+        case OperationCode.Bge_Un:
+        case OperationCode.Bge_Un_S:
+        case OperationCode.Bgt:
+        case OperationCode.Bgt_S:
+        case OperationCode.Bgt_Un:
+        case OperationCode.Bgt_Un_S:
+        case OperationCode.Ble:
+        case OperationCode.Ble_S:
+        case OperationCode.Ble_Un:
+        case OperationCode.Ble_Un_S:
+        case OperationCode.Blt:
+        case OperationCode.Blt_S:
+        case OperationCode.Blt_Un:
+        case OperationCode.Blt_Un_S:
+        case OperationCode.Bne_Un:
+        case OperationCode.Bne_Un_S:
+          statement = this.ParseBinaryConditionalBranch(currentOperation);
+          break;
+
+        case OperationCode.Box:
+          expression = this.ParseConversion(currentOperation);
+          break;
+
+        case OperationCode.Br:
+        case OperationCode.Br_S:
+        case OperationCode.Leave:
+        case OperationCode.Leave_S:
+          statement = this.ParseUnconditionalBranch(currentOperation);
+          break;
+
+        case OperationCode.Break:
+          statement = new DebuggerBreakStatement();
+          break;
+
+        case OperationCode.Brfalse:
+        case OperationCode.Brfalse_S:
+        case OperationCode.Brtrue:
+        case OperationCode.Brtrue_S:
+          statement = this.ParseUnaryConditionalBranch(currentOperation);
+          break;
+
+        case OperationCode.Call:
+        case OperationCode.Callvirt:
+          MethodCall call = this.ParseCall(currentOperation);
+          if (call.MethodToCall.Type.TypeCode == PrimitiveTypeCode.Void) {
+            call.Locations.Add(currentOperation.Location); // turning it into a statement prevents the location from being attached to the expresssion
+            ExpressionStatement es = new ExpressionStatement();
+            es.Expression = call;
+            statement = es;
+          } else
+            expression = call;
+          break;
+
+        case OperationCode.Calli:
+          expression = this.ParsePointerCall(currentOperation);
+          break;
+
+        case OperationCode.Castclass:
+        case OperationCode.Conv_I:
+        case OperationCode.Conv_I1:
+        case OperationCode.Conv_I2:
+        case OperationCode.Conv_I4:
+        case OperationCode.Conv_I8:
+        case OperationCode.Conv_Ovf_I:
+        case OperationCode.Conv_Ovf_I_Un:
+        case OperationCode.Conv_Ovf_I1:
+        case OperationCode.Conv_Ovf_I1_Un:
+        case OperationCode.Conv_Ovf_I2:
+        case OperationCode.Conv_Ovf_I2_Un:
+        case OperationCode.Conv_Ovf_I4:
+        case OperationCode.Conv_Ovf_I4_Un:
+        case OperationCode.Conv_Ovf_I8:
+        case OperationCode.Conv_Ovf_I8_Un:
+        case OperationCode.Conv_Ovf_U:
+        case OperationCode.Conv_Ovf_U_Un:
+        case OperationCode.Conv_Ovf_U1:
+        case OperationCode.Conv_Ovf_U1_Un:
+        case OperationCode.Conv_Ovf_U2:
+        case OperationCode.Conv_Ovf_U2_Un:
+        case OperationCode.Conv_Ovf_U4:
+        case OperationCode.Conv_Ovf_U4_Un:
+        case OperationCode.Conv_Ovf_U8:
+        case OperationCode.Conv_Ovf_U8_Un:
+        case OperationCode.Conv_R_Un:
+        case OperationCode.Conv_R4:
+        case OperationCode.Conv_R8:
+        case OperationCode.Conv_U:
+        case OperationCode.Conv_U1:
+        case OperationCode.Conv_U2:
+        case OperationCode.Conv_U4:
+        case OperationCode.Conv_U8:
+        case OperationCode.Unbox:
+        case OperationCode.Unbox_Any:
+          expression = this.ParseConversion(currentOperation);
+          break;
+
+        case OperationCode.Ckfinite:
+          this.PopOperandStack();
+          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          //TODO: need a code model statement for this instruction.
+          break;
+
+        case OperationCode.Constrained_:
+          //This prefix is redundant and is not represented in the code model.
+          break;
+
+        case OperationCode.Cpblk:
+          //TODO: need to capture this in the code model
+          this.PopOperandStack();
+          this.PopOperandStack();
+          this.PopOperandStack();
+          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          break;
+
+        case OperationCode.Cpobj:
+          expression = this.ParseCopyObject();
+          break;
+
+        case OperationCode.Dup:
+          expression = new Dup();
+          break;
+
+        case OperationCode.Endfilter:
+          statement = this.ParseEndfilter();
+          break;
+
+        case OperationCode.Endfinally:
+          statement = new EndFinally();
+          break;
+
+        case OperationCode.Initblk:
+          //TODO: need to capture this in the code model
+          this.PopOperandStack();
+          this.PopOperandStack();
+          this.PopOperandStack();
+          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          break;
+
+        case OperationCode.Initobj:
+          statement = this.ParseInitObject(currentOperation);
+          break;
+
+        case OperationCode.Isinst:
+          expression = this.ParseCastIfPossible(currentOperation);
+          break;
+
+        case OperationCode.Jmp:
+          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          //TODO: need a code model statement for this instruction.
+          break;
+
+        case OperationCode.Ldarg:
+        case OperationCode.Ldarg_0:
+        case OperationCode.Ldarg_1:
+        case OperationCode.Ldarg_2:
+        case OperationCode.Ldarg_3:
+        case OperationCode.Ldarg_S:
+        case OperationCode.Ldloc:
+        case OperationCode.Ldloc_0:
+        case OperationCode.Ldloc_1:
+        case OperationCode.Ldloc_2:
+        case OperationCode.Ldloc_3:
+        case OperationCode.Ldloc_S:
+        case OperationCode.Ldfld:
+        case OperationCode.Ldsfld:
+          expression = this.ParseBoundExpression(currentOperation);
+          break;
+
+        case OperationCode.Ldarga:
+        case OperationCode.Ldarga_S:
+        case OperationCode.Ldflda:
+        case OperationCode.Ldsflda:
+        case OperationCode.Ldloca:
+        case OperationCode.Ldloca_S:
+        case OperationCode.Ldftn:
+        case OperationCode.Ldvirtftn:
+          expression = this.ParseAddressOf(currentOperation);
+          break;
+
+        case OperationCode.Ldc_I4:
+        case OperationCode.Ldc_I4_0:
+        case OperationCode.Ldc_I4_1:
+        case OperationCode.Ldc_I4_2:
+        case OperationCode.Ldc_I4_3:
+        case OperationCode.Ldc_I4_4:
+        case OperationCode.Ldc_I4_5:
+        case OperationCode.Ldc_I4_6:
+        case OperationCode.Ldc_I4_7:
+        case OperationCode.Ldc_I4_8:
+        case OperationCode.Ldc_I4_M1:
+        case OperationCode.Ldc_I4_S:
+        case OperationCode.Ldc_I8:
+        case OperationCode.Ldc_R4:
+        case OperationCode.Ldc_R8:
+        case OperationCode.Ldnull:
+        case OperationCode.Ldstr:
+          expression = this.ParseCompileTimeConstant(currentOperation);
+          break;
+
+        case OperationCode.Ldind_I:
+        case OperationCode.Ldind_I1:
+        case OperationCode.Ldind_I2:
+        case OperationCode.Ldind_I4:
+        case OperationCode.Ldind_I8:
+        case OperationCode.Ldind_R4:
+        case OperationCode.Ldind_R8:
+        case OperationCode.Ldind_Ref:
+        case OperationCode.Ldind_U1:
+        case OperationCode.Ldind_U2:
+        case OperationCode.Ldind_U4:
+        case OperationCode.Ldobj:
+          expression = this.ParseAddressDereference(currentOperation);
+          break;
+
+        case OperationCode.Ldlen:
+          expression = this.ParseVectorLength();
+          break;
+
+        case OperationCode.Ldtoken:
+          expression = this.ParseToken(currentOperation);
+          break;
+
+        case OperationCode.Localloc:
+          expression = this.ParseStackArrayCreate();
+          break;
+
+        case OperationCode.Mkrefany:
+          expression = this.ParseMakeTypedReference(currentOperation);
+          break;
+
+        case OperationCode.Neg:
+          expression = this.ParseUnaryOperation(new UnaryNegation());
+          break;
+
+        case OperationCode.Not:
+          expression = this.ParseUnaryOperation(new OnesComplement());
+          break;
+
+        case OperationCode.Newobj:
+          expression = this.ParseCreateObjectInstance(currentOperation);
+          break;
+
+        case OperationCode.No_:
+          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          //TODO: need object model support
+          break;
+
+        case OperationCode.Nop:
+          statement = new EmptyStatement();
+          break;
+
+        case OperationCode.Pop:
+          statement = this.ParsePop();
+          break;
+
+        case OperationCode.Readonly_:
+          this.sawReadonly = true;
+          break;
+
+        case OperationCode.Refanytype:
+          expression = this.ParseGetTypeOfTypedReference();
+          break;
+
+        case OperationCode.Refanyval:
+          expression = this.ParseGetValueOfTypedReference(currentOperation);
+          break;
+
+        case OperationCode.Ret:
+          statement = this.ParseReturn();
+          break;
+
+        case OperationCode.Rethrow:
+          statement = new RethrowStatement();
+          break;
+
+        case OperationCode.Sizeof:
+          expression = this.ParseSizeOf(currentOperation);
+          break;
+
+        case OperationCode.Starg:
+        case OperationCode.Starg_S:
+        case OperationCode.Stelem:
+        case OperationCode.Stelem_I:
+        case OperationCode.Stelem_I1:
+        case OperationCode.Stelem_I2:
+        case OperationCode.Stelem_I4:
+        case OperationCode.Stelem_I8:
+        case OperationCode.Stelem_R4:
+        case OperationCode.Stelem_R8:
+        case OperationCode.Stelem_Ref:
+        case OperationCode.Stfld:
+        case OperationCode.Stind_I:
+        case OperationCode.Stind_I1:
+        case OperationCode.Stind_I2:
+        case OperationCode.Stind_I4:
+        case OperationCode.Stind_I8:
+        case OperationCode.Stind_R4:
+        case OperationCode.Stind_R8:
+        case OperationCode.Stind_Ref:
+        case OperationCode.Stloc:
+        case OperationCode.Stloc_0:
+        case OperationCode.Stloc_1:
+        case OperationCode.Stloc_2:
+        case OperationCode.Stloc_3:
+        case OperationCode.Stloc_S:
+        case OperationCode.Stobj:
+        case OperationCode.Stsfld:
+          statement = this.ParseAssignment(currentOperation);
+          break;
+
+        case OperationCode.Switch:
+          statement = this.ParseSwitchInstruction(currentOperation);
+          break;
+
+        case OperationCode.Tail_:
+          this.sawTailCall = true;
+          break;
+
+        case OperationCode.Throw:
+          statement = this.ParseThrow();
+          break;
+
+        case OperationCode.Unaligned_:
+          this.alignment = (byte)currentOperation.Value;
+          break;
+
+        case OperationCode.Volatile_:
+          this.sawVolatile = true;
+          break;
+
+      }
+      if (expression != null) {
+        expression.Locations.Add(currentOperation.Location);
+        this.operandStack.Push(expression);
+      } else if (statement != null) {
+        this.TurnOperandStackIntoPushStatements(currentBlock);
+        currentBlock.Statements.Add(statement);
+        statement.Locations.Add(currentOperation.Location);
+      }
+    }
+
+    private Statement ParseReturn() {
+      ReturnStatement result = new ReturnStatement();
+      if (this.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void)
+        result.Expression = this.PopOperandStack();
+      return result;
+    }
+
+    private Expression ParseSizeOf(IOperation currentOperation) {
+      SizeOf result = new SizeOf();
+      result.TypeToSize = (ITypeReference)currentOperation.Value;
+      return result;
+    }
+
+    private Expression ParseStackArrayCreate() {
+      StackArrayCreate result = new StackArrayCreate();
+      result.Size = this.PopOperandStack();
+      return result;
+    }
+
+    private Expression ParseSubtraction(OperationCode currentOpcode) {
+      Subtraction subtraction = new Subtraction();
+      subtraction.CheckOverflow = currentOpcode != OperationCode.Sub;
+      if (currentOpcode == OperationCode.Sub_Ovf_Un)
+        return this.ParseUnsignedBinaryOperation(subtraction);
+      else
+        return this.ParseBinaryOperation(subtraction);
+    }
+
+    private Statement ParseSwitchInstruction(IOperation operation) {
+      SwitchInstruction result = new SwitchInstruction();
+      result.switchExpression = this.PopOperandStack();
+      uint[] branches = (uint[])operation.Value;
+      foreach (uint targetAddress in branches) {
+        BasicBlock bb = this.GetOrCreateBlock(targetAddress, true);
+        bb.StartsSwitchCase = true;
+        result.switchCases.Add(bb);
+      }
+      return result;
+    }
+
+    private Statement ParseThrow() {
+      ThrowStatement result = new ThrowStatement();
+      result.Exception = this.PopOperandStack();
+      return result;
+    }
+
+    private Expression ParseToken(IOperation currentOperation) {
+      TokenOf result = new TokenOf();
+      result.Definition = currentOperation.Value;
+      return result;
+    }
+
+    private Statement ParseUnaryConditionalBranch(IOperation currentOperation) {
+      Expression condition = this.PopOperandStack();
+      GotoStatement gotoStatement = new GotoStatement();
+      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      ConditionalStatement ifStatement = new ConditionalStatement();
+      ifStatement.Condition = condition;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Brfalse:
+        case OperationCode.Brfalse_S:
+          ifStatement.TrueBranch = new EmptyStatement();
+          ifStatement.FalseBranch = gotoStatement;
+          break;
+        case OperationCode.Brtrue:
+        case OperationCode.Brtrue_S:
+        default:
+          ifStatement.TrueBranch = gotoStatement;
+          ifStatement.FalseBranch = new EmptyStatement();
+          break;
+      }
+      return ifStatement;
+    }
+
+    private Statement ParseUnconditionalBranch(IOperation currentOperation) {
+      GotoStatement gotoStatement = new GotoStatement();
+      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      return gotoStatement;
+    }
+
+    private BinaryOperation ParseUnsignedBinaryOperation(BinaryOperation binaryOperation) {
+      binaryOperation.RightOperand = this.PopOperandStackAsUnsigned();
+      binaryOperation.LeftOperand = this.PopOperandStackAsUnsigned();
+      return binaryOperation;
+    }
+
+    private Expression ParseUnaryOperation(UnaryOperation unaryOperation) {
+      unaryOperation.Operand = this.PopOperandStack();
+      return unaryOperation;
+    }
+
+    private Expression ParseVectorLength() {
+      VectorLength result = new VectorLength();
+      result.Vector = this.PopOperandStack();
+      return result;
+    }
+
+    private Stack<Expression> operandStack = new Stack<Expression>();
+
+    private IEnumerator<IOperation> operationEnumerator;
+
+    private Expression PopOperandStack() {
+      if (this.operandStack.Count == 0)
+        return new Pop();
+      else
+        return this.operandStack.Pop();
+    }
+
+    private Expression PopOperandStackAsUnsigned() {
+      Expression result;
+      if (this.operandStack.Count == 0)
+        return new PopAsUnsigned();
+      else
+        result = this.operandStack.Pop();
+      return this.ConvertToUnsigned(result);
+    }
+
+    private Dictionary<uint, LabeledStatement> targetStatementFor = new Dictionary<uint, LabeledStatement>();
+
+  }
+}
