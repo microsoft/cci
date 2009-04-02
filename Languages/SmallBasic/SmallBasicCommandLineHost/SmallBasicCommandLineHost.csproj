@@ -1,0 +1,98 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D0E55EAA-DE6D-4899-A906-E526588511BC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SmallBasicCommandLineHost</RootNamespace>
+    <AssemblyName>SmallBasicCommandLineHost</AssemblyName>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PeReader\PeReader.csproj">
+      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
+      <Name>PeReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PeWriter\PeWriter.csproj">
+      <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
+      <Name>PeWriter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\SourceModel\SourceModel.csproj">
+      <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
+      <Name>SourceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Sources\AstsProjectedAsCodeModel\AstsProjectedAsCodeModel.csproj">
+      <Project>{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}</Project>
+      <Name>AstsProjectedAsCodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Sources\CodeModel\CodeModel.csproj">
+      <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
+      <Name>CodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Library\FluidLibrary.csproj">
+      <Project>{D4AA96BD-4CAF-4C97-93C6-BD031AC45FE4}</Project>
+      <Name>FluidLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SmallBasic\SmallBasic.csproj">
+      <Project>{C60A2A70-E194-41EF-8711-6A96CFB43C22}</Project>
+      <Name>SmallBasic</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

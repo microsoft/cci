@@ -1,0 +1,91 @@
+ConsoleWindow.WriteLine("Hello")
+`
+Hello
+`
+hello = "Hello"
+ConsoleWindow.WriteLine(hello)
+`
+Hello
+`
+for i = 1 to 2
+  ConsoleWindow.WriteLine(i)
+next
+`
+1
+2
+`
+for i = 1 to 4
+  if i > 2
+    ConsoleWindow.WriteLine(i)
+  endif
+next
+`
+3
+4
+`
+for i = 1 to 4
+  if i > 2
+    ConsoleWindow.WriteLine(i)
+  else
+    ConsoleWindow.WriteLine(i*10)  
+  endif
+next
+`
+10
+20
+3
+4
+`
+for i = 1 to 2
+  gosub printI
+next
+return
+
+printI:
+ConsoleWindow.WriteLine(i)
+return
+`
+1
+2
+`
+for i = 1 to 20 step 5
+  ConsoleWindow.WriteLine(i)
+next
+`
+1
+6
+11
+16
+`
+i = 1
+goto hello if i > 0
+
+ConsoleWindow.WriteLine("oops")
+goto done
+
+hello:
+ConsoleWindow.WriteLine("hello")
+
+done:
+`
+hello
+`
+i = 0
+do while i < 2
+  ConsoleWindow.WriteLine(i)
+  i = i + 1
+loop
+`
+0
+1
+`
+str = "abc"
+ConsoleWindow.WriteLine(str.ToCharArray()[0])
+`
+a
+`
+str = "abc"
+ConsoleWindow.WriteLine(str[0])
+`
+a
+`

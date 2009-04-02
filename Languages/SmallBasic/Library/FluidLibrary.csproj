@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Language>C#</Language>
+    <AssemblyName>FluidLibrary</AssemblyName>
+    <TargetName>$(AssemblyName)</TargetName>
+    <TargetType>Library</TargetType>
+    <RootNamespace>$(AssemblyName)</RootNamespace>
+    <OutputPath>.\bin\debug\</OutputPath>
+    <ProjectGuid>{D4AA96BD-4CAF-4C97-93C6-BD031AC45FE4}</ProjectGuid>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\debug\FluidLibrary.XML</DocumentationFile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="ConsoleTextColor.cs" />
+    <Compile Include="ConsoleWindow.cs" />
+    <Compile Include="Desktop.cs" />
+    <Compile Include="Flickr.cs" />
+    <Compile Include="GraphicsWindow.cs" />
+    <Compile Include="ImageList.cs" />
+    <Compile Include="Math.cs" />
+    <Compile Include="Misc.cs" />
+    <Compile Include="Mouse.cs" />
+    <Compile Include="NativeHelper.cs" />
+    <Compile Include="NetworkHelper.cs" />
+    <Compile Include="NumberHelper.cs" />
+    <Compile Include="TextHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
