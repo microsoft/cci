@@ -1,0 +1,105 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A9103DDA-3A93-441A-8326-6EB20518C251}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CSharpSourceEmitter</RootNamespace>
+    <AssemblyName>CSharpSourceEmitter</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <StartupObject>
+    </StartupObject>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BaseTypeOrInterfaceSourceEmitter.cs" />
+    <Compile Include="BaseTypesAndInterfacesListSourceEmitter.cs" />
+    <Compile Include="BaseSourceEmitter.cs" />
+    <Compile Include="ExpressionSourceEmitter.cs" />
+    <Compile Include="FieldSourceEmitter.cs" />
+    <Compile Include="GenericTypeParametersListSourceEmitter.cs" />
+    <Compile Include="GenericTypeParameterSourceEmitter.cs" />
+    <Compile Include="ICSharpSourceEmitter.cs" />
+    <Compile Include="MemberBaseSourceEmitter.cs" />
+    <Compile Include="MethodSourceEmitter.cs" />
+    <Compile Include="NamespaceSourceEmitter.cs" />
+    <Compile Include="PropertySourceEmitter.cs" />
+    <Compile Include="StatementSourceEmitter.cs" />
+    <Compile Include="TypeDefinitionSourceEmitter.cs" />
+    <Compile Include="ParameterListSourceEmitter.cs" />
+    <Compile Include="ParameterSourceEmitter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SourceEmitterOutputConsole.cs" />
+    <Compile Include="SourceEmitterContext.cs" />
+    <Compile Include="ISourceEmitterOutput.cs" />
+    <Compile Include="SourceEmitterOutputString.cs" />
+    <Compile Include="TypeReferenceSourceEmitter.cs" />
+    <Compile Include="TypeSourceEmitter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CSharp3.0.Felt.Annotated.language" />
+    <None Include="CSharp3.0.Felt.language" />
+    <None Include="CSharpSourceEmitter.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\metadata\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\metadata\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\metadata\Sources\SourceModel\SourceModel.csproj">
+      <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
+      <Name>SourceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
+      <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
+      <Name>CodeModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

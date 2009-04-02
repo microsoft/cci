@@ -1,0 +1,2771 @@
+#
+# Langauge Specification for C# 3.0
+#
+
+#
+# Lexical Specification
+#
+
+#
+# Special macros used in the creation of other tokens
+#
+
+$SimpleNewLine              =   <\n|\r>
+$NewLine                    =   <${SimpleNewLine}|(\r\n)>
+$Asterisk                   =   <\*>
+$NotAsterisk                =   <[^${Asterisk}]>
+$Asterisks                  =   <${Asterisk}+>
+$DecimalDigit               =   <[0-9]>
+$HexadecimalDigit           =   <${DecimalDigit}|[a-f]|[A-F]>
+$IntegerSuffix              =   <U|u|L|l|UL|Ul|uL|ul|LU|Lu|lU|lu>
+$RealSuffix                 =   <F|f|D|d|M|m>
+$Exponent                   =   <(e|E)(+|-)?${DecimalDigit}+>
+$Apostrophe                 =   <\'>
+$Quote                      =   <\">
+$BackSlash                  =   <\\>
+$Dot                        =   <\.>
+$SimpleEscape               =   <${BackSlash}(${Apostrophe}|${Quote}|${BackSlash}|0|a|b|f|n|r|t|v)>
+$UnicodeSmallEscape         =   <${BackSlash}u(${HexadecimalDigit}){4,4}>
+$UnicodeLongEscape          =   <${BackSlash}U(${HexadecimalDigit}){8,8}>
+$UnicodeEscape              =   <${UnicodeSmallEscape}|${UnicodeLongEscape}>
+$HexadecimalEscape          =   <${BackSlash}x(${HexadecimalDigit}){1,4}>
+$SimpleCharacter            =   <[^${BackSlash}${SimpleNewLine}${Apostrophe}]>
+$SimpleStringCharacter      =   <[^${BackSlash}${SimpleNewLine}${Quote}]>
+$CharacterLiteralCharacter  =   <${HexadecimalEscape}|${SimpleEscape}|${UnicodeEscape}|${SimpleCharacter}>
+$StringCharacter            =   <${HexadecimalEscape}|${SimpleEscape}|${UnicodeEscape}|${SimpleStringCharacter}>
+
+$AsciiRange                 =   <[\u0000-\u007f]>
+$NonAsciiRange              =   <[^${AsciiRange}]>
+$AsciiLetters               =   <[a-zA-Z]>
+
+$AsciiIdentifierStartCharacter  =   <${AsciiLetters}|_>
+$AsciiIdentifierPartCharacter   =   <${AsciiIdentifierStartCharacter}|${DecimalDigit}>
+
+$PotentialIdentifierStartCharacter =  <${AsciiIdentifierStartCharacter}|${UnicodeEscape}|${NonAsciiRange}>
+$PotentialIdentifierPartCharacter  =  <${PotentialIdentifierStartCharacter}|${DecimalDigit}>
+
+#
+# Tokens
+#
+
+WhiteSpace                      =   <[ \t\f\v\u001a]+>
+
+Comment
+SingleLineComment   :   Comment =   <//[^${SimpleNewLine}]*>
+MultiLineComment    :   Comment
+
+#
+# For the comment rules, i use ${Asterisk} since i find \* hard to read.
+# However, in the character classes, i leave them as * since you don't
+# need to escape them.  If you have a problem with this then feel free
+# to change this.
+#
+# Also, these regexps were created by tools that wesdyer and i wrote.
+# I've munged them slightly in the below versions ot make them more
+# concise.
+#
+# i.e.   : ([^*/][^*]* "*" | "*" )
+# becomes: ([^*/][^*]*)? "*"
+#
+# this is purely a stylistic point, feel free to convert back if you want.
+
+# scary, but here's the regex: "/*" [^*]* "*" ([^*/][^*]* "*" | "*" )* "/"
+
+TerminatedMultiLineComment      :   MultiLineComment    =
+    </${Asterisk}[^*]*${Asterisk}(([^*/][^*]*)?${Asterisk})*/>
+
+#scary, but here's the regex:
+#
+#       "/*" [^*]*
+# or    "/*" [^*]* "*" ([^*/][^*]* "*" | "*")* ([^*/][^*]*)?
+
+#
+# We represent unterminated multi-line comments in our token specification.
+# That way if the user just types /* we'll parse it out as a comment no matter
+# what, instead of parsing it as "slash" and "asterisk" if it's incomplete.
+# Technically this means we'll incorrectly lex/parse:  foo /* bar
+# (i.e. foo divided by the dereference of bar), however no one will care at all
+#
+
+UnterminatedMultiLineComment    :   MultiLineComment    =
+    <(/${Asterisk}[^*]*)|(/${Asterisk}[^*]*${Asterisk}(([^*/][^*]*)?${Asterisk})*([^*/][^*]*)?)>
+
+#                       ^
+#The "or" is here       |
+#
+
+NewLine                             =   <${NewLine}>
+
+ContextualKeyword           :   Identifier
+GetContextualKeyword        :   ContextualKeyword   =   <get>
+SetContextualKeyword        :   ContextualKeyword   =   <set>
+WhereContextualKeyword      :   ContextualKeyword   =   <where>
+PartialContextualKeyword    :   ContextualKeyword   =   <partial>
+AddContextualKeyword        :   ContextualKeyword   =   <add>
+RemoveContextualKeyword     :   ContextualKeyword   =   <remove>
+AliasContextualKeyword      :   ContextualKeyword   =   <alias>
+AssemblyContextualKeyword   :   ContextualKeyword   =   <assembly>
+ModuleContextualKeyword     :   ContextualKeyword   =   <module>
+YieldContextualKeyword      :   ContextualKeyword   =   <yield>
+FieldContextualKeyword      :   ContextualKeyword   =   <field>
+MethodContextualKeyword     :   ContextualKeyword   =   <method>
+ParamContextualKeyword      :   ContextualKeyword   =   <param>
+PropertyContextualKeyword   :   ContextualKeyword   =   <property>
+TypeContextualKeyword       :   ContextualKeyword   =   <type>
+TypevarContextualKeyword    :   ContextualKeyword   =   <typevar>
+AscendingContextualKeyword  :   ContextualKeyword   =   <ascending>
+ByContextualKeyword         :   ContextualKeyword   =   <by>
+DescendingContextualKeyword :   ContextualKeyword   =   <descending>
+FromContextualKeyword       :   ContextualKeyword   =   <from>
+GroupContextualKeyword      :   ContextualKeyword   =   <group>
+IntoContextualKeyword       :   ContextualKeyword   =   <into>
+OrderByContextualKeyword    :   ContextualKeyword   =   <orderby>
+SelectContextualKeyword     :   ContextualKeyword   =   <select>
+
+
+Literal
+
+NullLiteral                         :   Literal             =   <null>
+
+BooleanLiteral                      :   Literal
+TrueBooleanLiteral                  :   BooleanLiteral      =   <true>
+FalseBooleanLiteral                 :   BooleanLiteral      =   <false>
+
+IntegerLiteral                      :   Literal
+DecimalIntegerLiteral               :   IntegerLiteral      =   <${DecimalDigit}+${IntegerSuffix}?>
+HexadecimalIntegerLiteral           :   IntegerLiteral      =   <0(x|X)${HexadecimalDigit}+${IntegerSuffix}?>
+
+CharacterLiteral
+TerminatedCharacterLiteral          :   CharacterLiteral    =   <${Apostrophe}${CharacterLiteralCharacter}${Apostrophe}>
+UnterminatedCharacterLiteral        :   CharacterLiteral    =   <${Apostrophe}>
+
+StringLiteral                       :   Literal
+RegularStringLiteral                :   StringLiteral       =   <${Quote}${StringCharacter}*${Quote}>
+VerbatimStringLiteral               :   StringLiteral       =   <\@${Quote}([^\"]|(${Quote}${Quote}))*${Quote}>
+
+#
+# We represent unterminated string tokens directly in the lexical specification
+# so that: "
+# will get tokenized into a string token instead of into an invalid token.
+#
+
+UnterminatedRegularStringLiteral    :   StringLiteral       =   <${Quote}${StringCharacter}*>
+UnterminatedVerbatimStringLiteral   :   StringLiteral       =   <\@${Quote}([^\"]|(${Quote}${Quote}))*>
+
+
+#
+# I merged the lexer rules here.  In the spec there are the rules:
+#   decimal-digits   .   decimal-digits   exponent-partopt   real-type-suffixopt
+#                    .   decimal-digits   exponent-partopt   real-type-suffixopt
+#
+# I merged that into
+#
+#   decimal-digitsopt.   decimal-digits   exponent-partopt   real-type-suffixopt
+#
+
+RealLiteral                 :   Literal =
+    <(${DecimalDigit}*${Dot}${DecimalDigit}+${Exponent}?${RealSuffix}?)|(${DecimalDigit}+${Exponent}${RealSuffix}?)|(${DecimalDigit}+${RealSuffix})>
+
+
+Punctuator
+LeftCurly           :   Punctuator  =   <"{">
+RightCurly          :   Punctuator  =   <"}">
+LeftSquare          :   Punctuator  =   <"[">
+RightSquare         :   Punctuator  =   <"]">
+LeftParenthesis     :   Punctuator  =   <"(">
+RightParenthesis    :   Punctuator  =   <")">
+Dot                 :   Punctuator  =   <".">
+Comma               :   Punctuator  =   <",">
+Colon               :   Punctuator  =   <":">
+Semicolon           :   Punctuator  =   <";">
+
+
+Operator
+Plus                :   Operator    =   <"+">
+Minus               :   Operator    =   <"-">
+Asterisk            :   Operator    =   <"*">
+Slash               :   Operator    =   <"/">
+Percent             :   Operator    =   <"%">
+Ampersand           :   Operator    =   <"&">
+VerticalLine        :   Operator    =   <"|">
+Caret               :   Operator    =   <"^">
+Bang                :   Operator    =   <"!">
+Tilde               :   Operator    =   <"~">
+Equals              :   Operator    =   <"=">
+LessThan            :   Operator    =   <"<">
+GreaterThan         :   Operator    =   <">">
+Question            :   Operator    =   <"?">
+QuestionQuestion    :   Operator    =   <"??">
+ColonColon          :   Operator    =   <"::">
+Increment           :   Operator    =   <"++">
+Decrement           :   Operator    =   <"--">
+LogicalAnd          :   Operator    =   <"&&">
+LogicalOr           :   Operator    =   <"||">
+Arrow               :   Operator    =   <"->">
+LambdaArrow         :   Operator    =   <"=>">
+EqualsEquals        :   Operator    =   <"==">
+NotEquals           :   Operator    =   <"!=">
+LessThanEquals      :   Operator    =   <"<=">
+GreaterThanEquals   :   Operator    =   <">=">
+PlusEquals          :   Operator    =   <"+=">
+MinusEquals         :   Operator    =   <"-=">
+AsteriskEquals      :   Operator    =   <"*=">
+SlashEquals         :   Operator    =   <"/=">
+PercentEquals       :   Operator    =   <"%=">
+AmpersandEquals     :   Operator    =   <"&=">
+VerticalLineEquals  :   Operator    =   <"|=">
+CaretEquals         :   Operator    =   <"^=">
+LeftShift           :   Operator    =   <"<<">
+LeftShiftEquals     :   Operator    =   <"<<=">
+
+Keyword
+AbstractKeyword     : Keyword = <abstract>
+AsKeyword           : Keyword = <as>
+BaseKeyword         : Keyword = <base>
+BoolKeyword         : Keyword = <bool>
+BreakKeyword        : Keyword = <break>
+ByteKeyword         : Keyword = <byte>
+CaseKeyword         : Keyword = <case>
+CatchKeyword        : Keyword = <catch>
+CharKeyword         : Keyword = <char>
+CheckedKeyword      : Keyword = <checked>
+ClassKeyword        : Keyword = <class>
+ConstKeyword        : Keyword = <const>
+ContinueKeyword     : Keyword = <continue>
+DecimalKeyword      : Keyword = <decimal>
+DefaultKeyword      : Keyword = <default>
+DelegateKeyword     : Keyword = <delegate>
+DoKeyword           : Keyword = <do>
+DoubleKeyword       : Keyword = <double>
+ElseKeyword         : Keyword = <else>
+EnumKeyword         : Keyword = <enum>
+EventKeyword        : Keyword = <event>
+ExplicitKeyword     : Keyword = <explicit>
+ExternKeyword       : Keyword = <extern>
+FinallyKeyword      : Keyword = <finally>
+FixedKeyword        : Keyword = <fixed>
+FloatKeyword        : Keyword = <float>
+ForKeyword          : Keyword = <for>
+ForeachKeyword      : Keyword = <foreach>
+GotoKeyword         : Keyword = <goto>
+IfKeyword           : Keyword = <if>
+ImplicitKeyword     : Keyword = <implicit>
+InKeyword           : Keyword = <in>
+IntKeyword          : Keyword = <int>
+InterfaceKeyword    : Keyword = <interface>
+InternalKeyword     : Keyword = <internal>
+IsKeyword           : Keyword = <is>
+LockKeyword         : Keyword = <lock>
+LongKeyword         : Keyword = <long>
+NamespaceKeyword    : Keyword = <namespace>
+NewKeyword          : Keyword = <new>
+ObjectKeyword       : Keyword = <object>
+OperatorKeyword     : Keyword = <operator>
+OutKeyword          : Keyword = <out>
+OverrideKeyword     : Keyword = <override>
+ParamsKeyword       : Keyword = <params>
+PrivateKeyword      : Keyword = <private>
+ProtectedKeyword    : Keyword = <protected>
+PublicKeyword       : Keyword = <public>
+ReadonlyKeyword     : Keyword = <readonly>
+RefKeyword          : Keyword = <ref>
+ReturnKeyword       : Keyword = <return>
+SbyteKeyword        : Keyword = <sbyte>
+SealedKeyword       : Keyword = <sealed>
+ShortKeyword        : Keyword = <short>
+SizeofKeyword       : Keyword = <sizeof>
+StackallocKeyword   : Keyword = <stackalloc>
+StaticKeyword       : Keyword = <static>
+StringKeyword       : Keyword = <string>
+StructKeyword       : Keyword = <struct>
+SwitchKeyword       : Keyword = <switch>
+ThisKeyword         : Keyword = <this>
+ThrowKeyword        : Keyword = <throw>
+TryKeyword          : Keyword = <try>
+TypeofKeyword       : Keyword = <typeof>
+UintKeyword         : Keyword = <uint>
+UlongKeyword        : Keyword = <ulong>
+UncheckedKeyword    : Keyword = <unchecked>
+UnsafeKeyword       : Keyword = <unsafe>
+UshortKeyword       : Keyword = <ushort>
+UsingKeyword        : Keyword = <using>
+VirtualKeyword      : Keyword = <virtual>
+VoidKeyword         : Keyword = <void>
+VolatileKeyword     : Keyword = <volatile>
+WhileKeyword        : Keyword = <while>
+
+#
+# Pre-processor support
+#
+
+NumberSign      =   <\#>
+
+#
+# This is a token that the lexer will never generate itself.  However, there
+# will be a hand written portion of the pre-processor parser that will combine
+# consecutive regions of ordinary tokens into a "CodeSection" token.
+#
+
+CodeSection
+
+
+#
+# Contextual keywords
+#
+
+DefineContextualKeyword     :   ContextualKeyword   =   <define>
+UndefContextualKeyword      :   ContextualKeyword   =   <undef>
+ElifContextualKeyword       :   ContextualKeyword   =   <elif>
+EndifContextualKeyword      :   ContextualKeyword   =   <endif>
+ErrorContextualKeyword      :   ContextualKeyword   =   <error>
+WarningContextualKeyword    :   ContextualKeyword   =   <warning>
+RegionContextualKeyword     :   ContextualKeyword   =   <region>
+EndregionContextualKeyword  :   ContextualKeyword   =   <endregion>
+PragmaContextualKeyword     :   ContextualKeyword   =   <pragma>
+LineContextualKeyword       :   ContextualKeyword   =   <line>
+
+#
+# Identifiers have the lowest priority.  They're only valid if nothing else
+# matched first.  Unicode handling is fairly tricky.  So if we see any unicode
+# in the file, we defer to a hand written scanner in that case.
+#
+
+Identifier
+
+SimpleIdentifier    :   Identifier  =
+    <@*${AsciiIdentifierStartCharacter}${AsciiIdentifierPartCharacter}*>
+
+<@*${PotentialIdentifierStartCharacter}>
+    { return ScanUnicodeToken(data, textBuffer); }
+
+<@*${AsciiIdentifierStartCharacter}${AsciiIdentifierPartCharacter}*${PotentialIdentifierPartCharacter}>
+    { return ScanUnicodeToken(data, textBuffer); }
+
+#
+# This token will match if all previous tokens fail to match.  It's so we can
+# always consume input even if it contains errors according to the C# lexical
+# specification
+#
+
+Message = <.>
+
+%%
+
+#
+# Syntactical Specification
+#
+
+%Ignore WhiteSpace
+
+%EndScope RightCurly
+%EndScope RightParenthesis
+%EndScope RightSquare
+%EndScope GreaterThan
+%EndScope NumberSign, EndifContextualKeyword, NewLine
+%EndScope NumberSign, EndregionContextualKeyword, NewLine
+
+%Sync LeftCurly
+%Sync RightCurly
+%Sync Semicolon
+%Sync AbstractKeyword
+%Sync BreakKeyword
+%Sync CaseKeyword
+%Sync CatchKeyword
+%Sync ClassKeyword
+%Sync ConstKeyword
+%Sync ContinueKeyword
+%Sync DoKeyword
+%Sync ElseKeyword
+%Sync EnumKeyword
+%Sync EventKeyword
+%Sync ExplicitKeyword
+%Sync ExternKeyword
+%Sync FinallyKeyword
+%Sync FixedKeyword
+%Sync ForKeyword
+%Sync ForeachKeyword
+%Sync GotoKeyword
+%Sync IfKeyword
+%Sync ImplicitKeyword
+%Sync InterfaceKeyword
+%Sync InternalKeyword
+%Sync LockKeyword
+%Sync NamespaceKeyword
+%Sync OperatorKeyword
+%Sync OverrideKeyword
+%Sync PrivateKeyword
+%Sync ProtectedKeyword
+%Sync PublicKeyword
+%Sync ReadonlyKeyword
+%Sync ReturnKeyword
+%Sync SealedKeyword
+%Sync StaticKeyword
+%Sync StructKeyword
+%Sync SwitchKeyword
+%Sync ThrowKeyword
+%Sync TryKeyword
+%Sync UnsafeKeyword
+%Sync UsingKeyword
+%Sync VirtualKeyword
+%Sync VolatileKeyword
+%Sync WhileKeyword
+%Sync NumberSign
+
+#
+# Locations where we can jump start the parser
+#
+
+%Start FullyQualifiedName
+%Start Type
+%Start NamespaceDeclaration
+%Start TypeDeclaration
+%Start MemberDeclaration
+%Start Expression
+%Start Statement
+%Start PreProcessorCompilationUnit
+%Start PreProcessorExpression
+
+
+#
+# C# Grammar starts here.
+#
+
+
+CSharpCompilationUnit:
+    ExternAliasList
+    UsingDirectiveList
+    GlobalAttributeSectionList
+    NamespaceMemberDeclarationList
+;
+
+
+ExternAliasList:
+        (BinaryExternAliasList) ExternAliasList ExternAlias
+    |   (EmptyExternAliasList)
+;
+
+
+ExternAlias:
+    ExternKeyword AliasContextualKeyword Name Semicolon
+;
+
+
+UsingDirectiveList:
+        (BinaryUsingDirectiveList) UsingDirectiveList UsingDirective
+    |   (EmptyUsingDirectiveList)
+;
+
+
+UsingDirective:
+        (UsingAliasDirective)
+            UsingKeyword
+            Name
+            Equals=EqualsToken
+            FullyQualifiedName
+            Semicolon
+    |   (UsingNamespaceDirective)
+            UsingKeyword
+            DottedName
+            Semicolon
+;
+
+
+AttributeSectionList:
+        (BinaryAttributeSectionList) AttributeSectionList AttributeSection
+    |   (EmptyAttributeSectionList)
+;
+
+
+AttributeSection:
+        LeftSquare
+        OptionalAttributeTarget
+        AttributeList
+        RightSquare
+;
+
+
+OptionalAttributeTarget:
+        (SomeAttributeTarget) AttributeTarget
+    |   (NoneAttributeTarget)
+;
+
+
+AttributeTarget:
+    Target Colon
+;
+
+
+Target:
+        (EventTarget)    EventKeyword
+    |   (FieldTarget)    FieldContextualKeyword
+    |   (MethodTarget)   MethodContextualKeyword
+    |   (ParamTarget)    ParamContextualKeyword
+    |   (PropertyTarget) PropertyContextualKeyword
+    |   (ReturnTarget)   ReturnKeyword
+    |   (TypeTarget)     TypeContextualKeyword
+    |   (TypevarTarget)  TypevarContextualKeyword
+;
+
+
+GlobalAttributeSectionList:
+        (BinaryGlobalAttributeSectionList) GlobalAttributeSectionList GlobalAttributeSection
+    |   (EmptyGlobalAttributeSectionList)
+;
+
+
+GlobalAttributeSection:
+        LeftSquare
+        GlobalAttributeTarget
+        Colon
+        AttributeList
+#TODO:  OptionalComma
+        RightSquare
+;
+
+
+GlobalAttributeTarget:
+        (AssemblyGlobalAttributeTarget) AssemblyContextualKeyword
+    |   (ModuleGlobalAttributeTarget)   ModuleContextualKeyword
+;
+
+
+AttributeList:
+        (BinaryAttributeList) AttributeList Comma Attribute
+    |   (SingleAttributeList) Attribute
+;
+
+
+# When we see the comma, we're not sure if which of the following rules we're taking:
+#
+#   (BinaryAttributeList) Attribute Comma AttributeList
+#   (AssemblyGlobalAttributeSection) LeftSquare AssemblyContextualKeyword Colon AttributeList OptionalComma RightSquare
+#
+# i.e. the comma might be part of the regular attribute chain, or it might be
+# the optional last one that we allow.
+#%OnConflict ShiftComma, ReduceSingleAttributeList Prefer ShiftComma
+
+
+Attribute:
+    FullyQualifiedName OptionalAttributeArguments
+;
+
+
+OptionalAttributeArguments:
+        (SomeAttributeArguments) AttributeArguments
+    |   (NoneAttributeArguments)
+;
+
+
+AttributeArguments:
+    LeftParenthesis OptionalAttributeArgumentList RightParenthesis
+;
+
+
+OptionalAttributeArgumentList:
+        (SomeAttributeArgumentList) AttributeArgumentList
+    |   (NoneAttributeArgumentList)
+;
+
+
+AttributeArgumentList:
+        (BinaryAttributeArgumentList) AttributeArgumentList Comma AttributeArgument
+    |   (SingleAttributeArgumentList) AttributeArgument
+;
+
+
+AttributeArgument:
+        (DummyPositionalAttributeArgument) Expression
+    |   (NamedAttributeArgument)
+            Name
+            Equals=EqualsToken
+            Expression
+;
+
+
+OptionalComma:
+        (SomeComma) Comma
+    |   (NoneComma)
+;
+
+
+NamespaceMemberDeclarationList:
+        (BinaryNamespaceMemberDeclarationList) NamespaceMemberDeclarationList NamespaceMemberDeclaration
+    |   (EmptyNamespaceMemberDeclarationList)
+;
+
+
+NamespaceMemberDeclaration:
+        (DummyNamespaceDeclaration) NamespaceDeclaration
+    |   (DummyTypeDeclaration)      TypeDeclaration
+;
+
+
+NamespaceDeclaration:
+        NamespaceKeyword
+        DottedName
+        LeftCurly
+        ExternAliasList
+        UsingDirectiveList
+        NamespaceMemberDeclarationList
+        RightCurly
+        OptionalSemicolon
+;
+
+
+TypeDeclaration:
+        (DummyClassDeclaration)     ClassDeclaration
+    |   (DummyInterfaceDeclaration) InterfaceDeclaration
+    |   (DummyStructDeclaration)    StructDeclaration
+    |   (DummyEnumDeclaration)      EnumDeclaration
+    |   (DummyDelegateDeclaration)  DelegateDeclaration
+;
+
+
+InterfaceDeclaration:
+        AttributeSectionList
+        ModifierList
+        OptionalPartial
+        InterfaceKeyword
+        Name
+        OptionalTypeParameters
+        OptionalBaseSpecification
+        ConstraintClauseList
+        LeftCurly
+        MemberDeclarationList
+        RightCurly
+        OptionalSemicolon
+;
+
+
+StructDeclaration:
+        AttributeSectionList
+        ModifierList
+        OptionalPartial
+        StructKeyword
+        Name
+        OptionalTypeParameters
+        OptionalBaseSpecification
+        ConstraintClauseList
+        LeftCurly
+        MemberDeclarationList
+        RightCurly
+        OptionalSemicolon
+;
+
+
+DelegateDeclaration:
+        AttributeSectionList
+        ModifierList
+        DelegateKeyword
+        Type
+        Name
+        OptionalTypeParameters
+        LeftParenthesis
+        OptionalParameterList
+        RightParenthesis
+        ConstraintClauseList
+        Semicolon
+;
+
+
+ConstraintClauseList:
+        (BinaryConstraintClauseList) ConstraintClauseList ConstraintClause
+    |   (EmptyConstraintClauseList)
+;
+
+
+ConstraintClause:
+        WhereContextualKeyword
+        Name
+        Colon
+        ConstraintList
+;
+
+
+ConstraintList:
+        (BinaryConstraintList) ConstraintList Comma Constraint
+    |   (SingleConstraintList) Constraint
+;
+
+
+Constraint:
+        (ClassConstraint)   ClassKeyword
+    |   (StructConstraint)  StructKeyword
+    |   (NewConstraint)     NewKeyword LeftParenthesis RightParenthesis
+    |   (TypeConstraint)    FullyQualifiedName
+;
+
+
+OptionalParameterList:
+        (SomeParameterList) ParameterList
+    |   (NoneParameterList)
+;
+
+
+ParameterList:
+        (BinaryParameterList) ParameterList Comma Parameter
+    |   (SingleParameterList) Parameter
+;
+
+
+Parameter:
+        OptionalParameterModifier
+        Type
+        Name
+;
+
+
+OptionalParameterModifier:
+        (SomeParameterModifier) ParameterModifier
+    |   (NoneParameterModifier)
+;
+
+
+ParameterModifier:
+        (RefParameterModifier)      RefKeyword
+    |   (OutParameterModifier)      OutKeyword
+    |   (ParamsParameterModifier)   ParamsKeyword
+    |   (ThisParameterModifier)     ThisKeyword
+;
+
+
+EnumDeclaration:
+        AttributeSectionList
+        ModifierList
+        EnumKeyword
+        Name
+        OptionalEnumBase
+        LeftCurly
+        OptionalEnumMemberDeclarationList
+        OptionalComma
+        RightCurly
+        OptionalSemicolon
+;
+
+
+OptionalEnumMemberDeclarationList:
+#todo: trailing comma
+        (SomeEnumMemberDeclarationList) EnumMemberDeclarationList
+    |   (NoneEnumMemberDeclarationList)
+;
+
+
+EnumMemberDeclarationList:
+        (BinaryEnumMemberDeclarationList) EnumMemberDeclarationList Comma EnumMemberDeclaration
+    |   (SingleEnumMemberDeclarationList) EnumMemberDeclaration
+;
+
+
+EnumMemberDeclaration:
+        (ImplicitValueEnumMemberDeclaration)
+            AttributeSectionList
+            Name
+    |   (ExplicitValueEnumMemberDeclaration)
+            AttributeSectionList
+            Name
+            Equals=EqualsToken
+            Expression
+;
+
+
+OptionalEnumBase:
+        (SomeEnumBase) EnumBase
+    |   (NoneEnumBase)
+;
+
+
+EnumBase:
+    (IntegralEnumBase) Colon IntegralType
+;
+
+
+ClassDeclaration:
+        AttributeSectionList
+        ModifierList
+        OptionalPartial
+        ClassKeyword
+        Name
+        OptionalTypeParameters
+        OptionalBaseSpecification
+        ConstraintClauseList
+        LeftCurly
+        MemberDeclarationList
+        RightCurly
+        OptionalSemicolon
+;
+
+
+OptionalBaseSpecification:
+        (SomeBaseSpecification) BaseSpecification
+    |   (NoneBaseSpecification)
+;
+
+
+BaseSpecification:
+    Colon FullyQualifiedNameList
+;
+
+
+FullyQualifiedNameList:
+        (BinaryFullyQualifiedNameList)FullyQualifiedNameList Comma FullyQualifiedName
+    |   (SingleFullyQualifiedNameList) FullyQualifiedName
+;
+
+
+OptionalGenericArgumentList:
+        (SomeGenericArgumentList) GenericArgumentList
+    |   (NoneGenericArgumentList)
+;
+
+
+#
+# This rule allows us to parse out both: <a,b,c> and <,,>.  That means that at
+# parse time we'll parse out Foo<a,b,c>.Bar<,,> as a legal type name.  That's
+# ok, we'll just weed that out during a later semantic pass
+#
+
+GenericArgumentList:
+        (TypeArgumentList)  LessThan TypeList  GreaterThan
+    |   (CommaArgumentList) LessThan CommaList GreaterThan
+;
+
+
+TypeList:
+        (BinaryTypeList) TypeList Comma Type
+    |   (SingleTypeList) Type
+;
+
+
+OptionalTypeParameters:
+        (SomeTypeParameterList) TypeParameters
+    |   (NoneTypeParameterList)
+;
+
+
+TypeParameters:
+    LessThan TypeParameterList GreaterThan
+;
+
+
+TypeParameterList:
+        (BinaryTypeParameterList) TypeParameterList Comma TypeParameter
+    |   (SingleTypeParameterList) TypeParameter
+;
+
+
+TypeParameter:
+    AttributeSectionList Name
+;
+
+
+OptionalPartial:
+        (SomePartial) PartialContextualKeyword
+    |   (NonePartial)
+;
+
+
+ModifierList:
+        (BinaryModifierList) ModifierList Modifier
+    |   (EmptyModifierList)
+;
+
+
+Modifier:
+        (AbstractModifier ) AbstractKeyword
+    |   (ExternModifier   ) ExternKeyword
+    |   (InternalModifier ) InternalKeyword
+    |   (NewModifier      ) NewKeyword
+    |   (OverrideModifier ) OverrideKeyword
+    |   (PrivateModifier  ) PrivateKeyword
+    |   (ProtectedModifier) ProtectedKeyword
+    |   (PublicModifier   ) PublicKeyword
+    |   (ReadonlyModifier ) ReadonlyKeyword
+    |   (SealedModifier   ) SealedKeyword
+    |   (StaticModifier   ) StaticKeyword
+    |   (UnsafeModifier   ) UnsafeKeyword
+    |   (VirtualModifier  ) VirtualKeyword
+    |   (VolatileModifier ) VolatileKeyword
+;
+
+
+MemberDeclarationList:
+        (BinaryMemberDeclarationList) MemberDeclarationList MemberDeclaration
+    |   (EmptyMemberDeclarationList)
+;
+
+
+MemberDeclaration:
+        (DummyConstantDeclaration)      ConstantDeclaration
+    |   (DummyFieldDeclaration)         FieldDeclaration
+    |   (DummyMethodDeclaration)        MethodDeclaration
+    |   (DummyPropertyDeclaration)      PropertyDeclaration
+    |   (DummyEventDeclaration)         EventDeclaration
+    |   (DummyIndexerDeclaration)       IndexerDeclaration
+    |   (DummyOperatorDeclaration)      OperatorDeclaration
+    |   (DummyConstructorDeclaration)   ConstructorDeclaration
+    |   (DummyFinalizerDeclaration)     FinalizerDeclaration
+    |   (DummyTypeDeclaration1)         TypeDeclaration
+;
+
+
+FinalizerDeclaration:
+        AttributeSectionList
+        ModifierList
+        Tilde
+        Name
+        LeftParenthesis
+        RightParenthesis
+        Body
+;
+
+
+OperatorDeclaration:
+        (DummyConversionOperatorDeclaration) ConversionOperatorDeclaration
+    |   (DummyOverloadedOperatorDeclaration) OverloadedOperatorDeclaration
+;
+
+
+OverloadedOperatorDeclaration:
+        AttributeSectionList
+        ModifierList
+        Type
+        OperatorKeyword
+        OverloadableOperator
+        LeftParenthesis
+        ParameterList
+        RightParenthesis
+        Body
+;
+
+
+OverloadableOperator:
+        (PlusOperator)              Plus
+    |   (MinusOperator)             Minus
+    |   (BangOperator)              Bang
+    |   (TildeOperator)             Tilde
+    |   (IncrementOperator)         Increment
+    |   (DecrementOperator)         Decrement
+    |   (TrueOperator)              TrueBooleanLiteral
+    |   (FalseOperator)             FalseBooleanLiteral
+    |   (AsteriskOperator)          Asterisk
+    |   (SlashOperator)             Slash
+    |   (PercentOperator)           Percent
+    |   (AmpersandOperator)         Ampersand
+    |   (VerticalLineOperator)      VerticalLine
+    |   (CaretOperator)             Caret
+    |   (LeftShiftOperator)         LeftShift
+    |   (RightShiftOperator)        GreaterThan=GreaterThan1 GreaterThan=GreaterThan2
+    |   (EqualsEqualsOperator)      EqualsEquals
+    |   (NotEqualsOperator)         NotEquals
+    |   (GreaterThanOperator)       GreaterThan
+    |   (LessThanOperator)          LessThan
+    |   (GreaterThanEqualsOperator) GreaterThanEquals
+    |   (LessThanEqualsOperator)    LessThanEquals
+;
+
+
+ConversionOperatorDeclaration:
+        (ImplicitConversionOperatorDeclaration)
+            AttributeSectionList
+            ModifierList
+            ImplicitKeyword
+            OperatorKeyword
+            Type=ToType
+            LeftParenthesis
+            Type=FromType
+            Name
+            RightParenthesis
+            Body
+
+    |   (ExplicitConversionOperatorDeclaration)
+            AttributeSectionList
+            ModifierList
+            ExplicitKeyword
+            OperatorKeyword
+            Type=ToType
+            LeftParenthesis
+            Type=FromType
+            Name
+            RightParenthesis
+            Body
+;
+
+
+IndexerDeclaration:
+        AttributeSectionList
+        ModifierList
+        Type
+        OptionalExplicitInterface
+        ThisKeyword
+        LeftSquare
+        ParameterList
+        RightSquare
+        LeftCurly
+        PropertyAccessorList
+        RightCurly
+;
+
+
+EventDeclaration:
+        (FieldEventDeclaration)
+            AttributeSectionList
+            ModifierList
+            EventKeyword
+            Type
+            VariableDeclaratorList
+            Semicolon
+
+    |   (PropertyEventDeclaration)
+            AttributeSectionList
+            ModifierList
+            EventKeyword
+            Type
+            OptionalExplicitInterface
+            Name
+            LeftCurly
+            EventAccessorList
+            RightCurly
+;
+
+
+EventAccessorList:
+        (BinaryEventAccessorList) EventAccessorList EventAccessor
+    |   (EmptyEventAccessorList)
+;
+
+
+EventAccessor:
+        (AddAccessor)       AttributeSectionList ModifierList AddContextualKeyword Body
+    |   (RemoveAccessor)    AttributeSectionList ModifierList RemoveContextualKeyword Body
+;
+
+
+PropertyDeclaration:
+        AttributeSectionList
+        ModifierList
+        Type
+        OptionalExplicitInterface
+        Name
+        LeftCurly
+        PropertyAccessorList
+        RightCurly
+;
+
+
+PropertyAccessorList:
+        (BinaryPropertyAccessorList) PropertyAccessorList PropertyAccessor
+    |   (EmptyPropertyAccessorList)
+;
+
+
+PropertyAccessor:
+        (GetAccessor) AttributeSectionList ModifierList GetContextualKeyword Body
+    |   (SetAccessor) AttributeSectionList ModifierList SetContextualKeyword Body
+;
+
+
+MethodDeclaration:
+        AttributeSectionList
+        ModifierList					{ MethodDeclarationModifierList(IMethodDeclaration) }
+        Type
+        OptionalExplicitInterface
+        Name
+        OptionalTypeParameters
+        LeftParenthesis
+        OptionalParameterList
+        RightParenthesis
+        ConstraintClauseList
+        Body
+;
+
+
+OptionalExplicitInterface:
+        (SomeExplicitInterface) ExplicitInterface
+    |   (NoneExplicitInterface)
+;
+
+
+ExplicitInterface:
+    FullyQualifiedName Dot
+;
+
+
+FieldDeclaration:
+        AttributeSectionList
+        ModifierList
+        Type
+        VariableDeclaratorList
+        Semicolon
+;
+
+
+ConstantDeclaration:
+        AttributeSectionList
+        ModifierList
+        ConstKeyword
+        Type
+        ConstantDeclaratorList
+        Semicolon
+;
+
+
+ConstructorDeclaration:
+        AttributeSectionList
+        ModifierList
+        Name
+        LeftParenthesis
+        OptionalParameterList
+        RightParenthesis
+        OptionalConstructorInitializer
+        Body
+;
+
+
+OptionalConstructorInitializer:
+        (SomeConstructorInitializer) ConstructorInitializer
+    |   (NoneConstructorInitializer)
+;
+
+
+ConstructorInitializer:
+        (BaseConstructorInitializer) Colon BaseKeyword LeftParenthesis OptionalArgumentList RightParenthesis
+    |   (ThisConstructorInitializer) Colon ThisKeyword LeftParenthesis OptionalArgumentList RightParenthesis
+;
+
+
+OptionalArgumentList:
+        (SomeArgumentList) ArgumentList
+    |   (NoneArgumentList)
+;
+
+
+ArgumentList:
+        (BinaryArgumentList) ArgumentList Comma Argument
+    |   (SingleArgumentList) Argument
+;
+
+
+Argument:
+    OptionalArgumentModifier Expression
+;
+
+
+OptionalArgumentModifier:
+        (SomeArgumentModifier) ArgumentModifier
+    |   (NoneArgumentModifier)
+;
+
+
+ArgumentModifier:
+        (RefArgumentModifier) RefKeyword
+    |   (OutArgumentModifier) OutKeyword
+;
+
+
+Body:
+        (BlockBody) Block
+    |   (EmptyBody) Semicolon
+;
+
+
+OptionalSemicolon:
+        (SomeSemicolon) Semicolon
+    |   (NoneSemicolon)
+;
+
+
+Statement:
+        (LabeledStatement)          Name Colon Statement
+    |   (DummyEmbeddedStatement)    EmbeddedStatement
+    |   (DummyDeclarationStatement) DeclarationStatement
+;
+
+
+DeclarationStatement:
+        (LocalVariableDeclarationStatement)         LocalVariableDeclaration Semicolon
+    |   (LocalConstantVariableDeclarationStatement) ConstKeyword LocalConstantDeclaration Semicolon
+;
+
+
+LocalConstantDeclaration:
+    Type ConstantDeclaratorList
+;
+
+
+ConstantDeclaratorList:
+        (BinaryConstantDeclaratorList) ConstantDeclaratorList Comma ConstantDeclarator
+    |   (SingleConstantDeclaratorList) ConstantDeclarator
+;
+
+
+ConstantDeclarator:
+        Name
+        Equals=EqualsToken
+        Expression
+;
+
+
+LocalVariableDeclaration:
+        Type VariableDeclaratorList
+;
+
+
+VariableDeclaratorList:
+        (BinaryVariableDeclaratorList) VariableDeclaratorList Comma VariableDeclarator
+    |   (SingleVariableDeclaratorList) VariableDeclarator
+;
+
+
+VariableDeclarator:
+        (UninitializedVariableDeclarator) Name
+    |   (InitializedVariableDeclarator)
+            Name
+            Equals=EqualsToken
+            VariableInitializer
+;
+
+
+EmbeddedStatement:
+        (BlockStatement)            Block
+    |   (EmptyStatement)            Semicolon
+    |   (ExpressionStatement)       StatementExpression Semicolon
+    |   (WhileStatement)            WhileKeyword LeftParenthesis Expression RightParenthesis EmbeddedStatement
+    |   (DoStatement)               DoKeyword EmbeddedStatement WhileKeyword LeftParenthesis Expression RightParenthesis Semicolon
+    |   (BreakStatement)            BreakKeyword Semicolon
+    |   (ContinueStatement)         ContinueKeyword Semicolon
+    |   (ReturnStatement)           ReturnKeyword OptionalExpression Semicolon
+    |   (ThrowStatement)            ThrowKeyword  OptionalExpression Semicolon
+    |   (GotoIdentifierStatement)   GotoKeyword Name Semicolon
+    |   (GotoCaseStatement)         GotoKeyword CaseKeyword Expression Semicolon
+    |   (GotoDefaultStatement)      GotoKeyword DefaultKeyword Semicolon
+    |   (LockStatement)             LockKeyword LeftParenthesis Expression RightParenthesis EmbeddedStatement
+    |   (CheckedStatement)          CheckedKeyword Block
+    |   (UncheckedStatement)        UncheckedKeyword Block
+    |   (UnsafeStatement)           UnsafeKeyword Block
+    |   (UsingStatement)            UsingKeyword LeftParenthesis ResourceAcquisition RightParenthesis EmbeddedStatement
+    |   (IfStatement)               IfKeyword LeftParenthesis Expression RightParenthesis EmbeddedStatement
+    |   (YieldBreakStatement)       YieldContextualKeyword BreakKeyword Semicolon
+    |   (YieldReturnStatement)      YieldContextualKeyword ReturnKeyword Expression Semicolon
+    |   (IfElseStatement)
+            IfKeyword
+            LeftParenthesis
+            Expression
+            RightParenthesis
+            EmbeddedStatement=TrueStatement
+            ElseKeyword
+            EmbeddedStatement=FalseStatement
+
+    |   (SwitchStatement)
+            SwitchKeyword
+            LeftParenthesis
+            Expression
+            RightParenthesis
+            LeftCurly
+            SwitchSectionList
+            RightCurly
+
+    |   (ForStatement)
+            ForKeyword
+            LeftParenthesis
+            OptionalForInitializer
+            Semicolon=Semicolon1
+            OptionalExpression
+            Semicolon=Semicolon2
+            OptionalStatementExpressionList
+            RightParenthesis
+            EmbeddedStatement
+
+    |   (ForeachStatement)
+            ForeachKeyword
+            LeftParenthesis
+            Type
+            Name
+            InKeyword
+            Expression
+            RightParenthesis
+            EmbeddedStatement
+
+    |   (TryStatement)
+            TryKeyword
+            Block
+            CatchClauseList
+            OptionalFinallyClause
+
+     |  (FixedStatement)
+            FixedKeyword
+            LeftParenthesis
+            Type
+            FixedPointerDeclaratorList
+            RightParenthesis
+            EmbeddedStatement
+;
+
+
+FixedPointerDeclaratorList:
+        (BinaryFixedPointerDeclaratorList) FixedPointerDeclaratorList Comma FixedPointerDeclarator
+    |   (SingleFixedPointerDeclaratorList) FixedPointerDeclarator
+;
+
+
+FixedPointerDeclarator:
+        Name
+        Equals=EqualsToken
+        Expression
+;
+
+
+ResourceAcquisition:
+        (DummyExpressionResourceAcquisition)                 Expression
+    |   (DummyLocalVariableDeclarationResourceAcquisition)   LocalVariableDeclaration
+;
+
+
+CatchClauseList:
+        (BinaryCatchClauseList) CatchClauseList CatchClause
+    |   (EmptyCatchClauseList)
+;
+
+
+CatchClause:
+        (SpecificCatchClause)          CatchKeyword LeftParenthesis FullyQualifiedName Name RightParenthesis Block
+    |   (SpecificAnonymousCatchClause) CatchKeyword LeftParenthesis FullyQualifiedName            RightParenthesis Block
+    |   (GeneralCatchClause)           CatchKeyword Block
+;
+
+
+OptionalFinallyClause:
+        (SomeFinallyClause) FinallyClause
+    |   (NoneFinallyClause)
+;
+
+
+FinallyClause:
+    FinallyKeyword Block
+;
+
+
+OptionalForInitializer:
+        (SomeForInitializer) ForInitializer
+    |   (NoneForInitializer)
+;
+
+
+ForInitializer:
+        (DummyStatementExpressionList)  StatementExpressionList
+    |   (DummyLocalVariableDeclaration) LocalVariableDeclaration
+;
+
+
+OptionalStatementExpressionList:
+        (SomeStatementExpressionList) StatementExpressionList
+    |   (NoneStatementExpressionList)
+;
+
+
+StatementExpressionList:
+        (BinaryStatementExpressionList) StatementExpressionList Comma StatementExpression
+    |   (SingleStatementExpressionList) StatementExpression
+;
+
+
+StatementExpression:
+        (DummyInvocationExpression3)        InvocationExpression
+    |   (DummyObjectCreationExpression3)    ObjectCreationExpression
+    |   (DummyAssignmentExpression2)        AssignmentExpression
+    |   (DummyPostIncrementExpression3)     PostIncrementExpression
+    |   (DummyPostDecrementExpression3)     PostDecrementExpression
+    |   (DummyPreIncrementExpression3)      PreIncrementExpression
+    |   (DummyPreDecrementExpression3)      PreDecrementExpression
+;
+
+
+Block:
+    LeftCurly OptionalStatementList RightCurly
+;
+
+
+SwitchSectionList:
+        (BinarySwitchSectionList) SwitchSectionList SwitchSection
+    |   (EmptySwitchSectionList)
+;
+
+
+SwitchSection:
+    SwitchLabelList StatementList
+;
+
+
+SwitchLabelList:
+        (BinarySwitchLabelList) SwitchLabelList SwitchLabel
+    |   (SingleSwitchLabelList) SwitchLabel
+;
+
+
+SwitchLabel:
+        (CaseLabel)     CaseKeyword Expression Colon
+    |   (DefaultLabel)  DefaultKeyword Colon
+;
+
+
+OptionalExpression:
+        (SomeExpression) Expression
+    |   (NoneExpression)
+;
+
+
+OptionalStatementList:
+        (SomeStatementList) StatementList
+    |   (NoneStatementList)
+;
+
+
+StatementList:
+        (BinaryStatementList) StatementList Statement
+    |   (SingleStatementList) Statement
+;
+
+
+Expression:
+        (DummyAssignmentExpression)    AssignmentExpression
+    |   (DummyNonAssignmentExpression) NonAssignmentExpression
+;
+
+
+NonAssignmentExpression:
+        (DummyConditionalExpression) ConditionalExpression
+    |   (DummyLambdaExpression)      LambdaExpression
+    |   (DummyQueryExpression)       QueryExpression
+;
+
+
+LambdaExpression:
+        (DummyParameterListLambdaExpression)   ParameterListLambdaExpression
+    |   (DummySingleParameterLambdaExpression) SingleParameterLambdaExpression
+;
+
+
+ParameterListLambdaExpression:
+    LeftParenthesis OptionalLambdaParameterList RightParenthesis LambdaArrow LambdaExpressionBody
+;
+
+
+OptionalLambdaParameterList:
+        (SomeLambdaParameterList) LambdaParameterList
+    |   (NoneLambdaParameterList)
+;
+
+
+LambdaParameterList:
+        (ExplicitlyTypedLambdaParameterList) ParameterList
+    |   (DummyImplicitlyTypedLambdaParameterList) ImplicitlyTypedLambdaParameterList
+;
+
+
+ImplicitlyTypedLambdaParameterList:
+        (BinaryImplicitlyTypedLambdaParameterList) ImplicitlyTypedLambdaParameterList Comma Name
+    |   (SingleImplicitlyTypedLambdaParameterList) Name
+;
+
+
+SingleParameterLambdaExpression:
+    Name LambdaArrow LambdaExpressionBody
+;
+
+
+LambdaExpressionBody:
+        (DummyLambdaExpressionBodyExpression) Expression
+    |   (DummyLambdaExpressionBodyBlock)      Block
+;
+
+
+QueryExpression:
+    FromClause QueryBody
+;
+
+
+FromClause:
+    FromContextualKeyword FromGeneratorList
+;
+
+
+FromGeneratorList:
+        (BinaryFromGeneratorList) FromGeneratorList Comma FromGenerator
+    |   (SingleFromGeneratorList) FromGenerator
+;
+
+
+FromGenerator:
+    Name InKeyword Expression
+;
+
+
+QueryBody:
+    OptionalFromOrWhereClauseList OptionalOrderByClause SelectOrGroupClause OptionalIntoClause
+;
+
+
+OptionalFromOrWhereClauseList:
+        (SomeFromOrWhereClauseList) FromOrWhereClauseList
+    |   (NoneFromOrWhereClauseList)
+;
+
+
+FromOrWhereClauseList:
+        (BinaryFromOrWhereClauseList) FromOrWhereClauseList FromOrWhereClause
+    |   (SingleFromOrWhereClauseList) FromOrWhereClause
+;
+
+
+FromOrWhereClause:
+        (DummyFromClause)  FromClause
+    |   (DummyWhereClause) WhereClause
+;
+
+
+WhereClause:
+    WhereContextualKeyword Expression
+;
+
+
+OptionalOrderByClause:
+        (SomeOrderByClause) OrderByClause
+    |   (NoneOrderByClause)
+;
+
+
+OrderByClause:
+    OrderByContextualKeyword OrderingClauseList
+;
+
+
+OrderingClauseList:
+        (BinaryOrderingClassesList) OrderingClauseList Comma OrderingClause
+    |   (SingleOrderingClauseList)  OrderingClause
+;
+
+
+OrderingClause:
+    Expression OptionalOrderingDirection
+;
+
+
+OptionalOrderingDirection:
+        (SomeOrderingDirection) OrderingDirection
+    |   (NoneOrderingDirection)
+;
+
+
+OrderingDirection:
+        (DummyAscendingContextualKeyword)  AscendingContextualKeyword
+    |   (DummyDescendingContextualKeyword) DescendingContextualKeyword
+;
+
+
+SelectOrGroupClause:
+        (SelectClause)     SelectContextualKeyword Expression
+    |   (GroupClause)
+            GroupContextualKeyword
+            Expression=GroupExpression
+            ByContextualKeyword
+            Expression=ByExpression
+;
+
+
+OptionalIntoClause:
+        (SomeIntoClause) IntoClause
+    |   (NoneIntoClause)
+;
+
+
+IntoClause:
+    IntoContextualKeyword Name QueryBody
+;
+
+
+ConditionalExpression:
+        (DummyNullCoalescingExpression) NullCoalescingExpression
+    |   (TernaryExpression)
+            NullCoalescingExpression
+            Question
+            Expression=TrueExpression
+            Colon
+            Expression=FalseExpression
+;
+
+
+NullCoalescingExpression:
+        (DummyConditionalOrExpression)      ConditionalOrExpression
+    |   (BinaryNullCoalescingExpression)    ConditionalOrExpression QuestionQuestion NullCoalescingExpression
+;
+
+
+ConditionalOrExpression:
+        (DummyConditionalAndExpression) ConditionalAndExpression
+    |   (BinaryConditionalOrExpression) ConditionalOrExpression LogicalOr ConditionalAndExpression
+;
+
+
+ConditionalAndExpression:
+        (DummyInclusiveOrExpression)        InclusiveOrExpression
+    |   (BinaryConditionalAndExpression)    ConditionalAndExpression LogicalAnd InclusiveOrExpression
+;
+
+
+InclusiveOrExpression:
+        (DummyExclusiveOrExpression)    ExclusiveOrExpression
+    |   (BinaryInclusiveOrExpression)   InclusiveOrExpression VerticalLine ExclusiveOrExpression
+;
+
+
+ExclusiveOrExpression:
+        (DummyAndExpression)            AndExpression
+    |   (BinaryExclusiveOrExpression)   ExclusiveOrExpression Caret AndExpression
+;
+
+
+AndExpression:
+        (DummyEqualityExpression)   EqualityExpression
+    |   (BinaryAndExpression)       AndExpression Ampersand EqualityExpression
+;
+
+
+EqualityExpression:
+        (DummyRelationalExpression)     RelationalExpression
+    |   (EqualsEqualityExpression)      EqualityExpression EqualsEquals RelationalExpression
+    |   (NotEqualsEqualityExpression)   EqualityExpression NotEquals    RelationalExpression
+;
+
+
+RelationalExpression:
+        (DummyShiftExpression)                  ShiftExpression
+    |   (LessThanRelationalExpression)          RelationalExpression LessThan           ShiftExpression
+    |   (GreaterThanRelationalExpression)       RelationalExpression GreaterThan        ShiftExpression
+    |   (LessThanEqualsRelationalExpression)    RelationalExpression LessThanEquals     ShiftExpression
+    |   (GreaterThanEqualsRelationalExpression) RelationalExpression GreaterThanEquals  ShiftExpression
+    |   (IsRelationalExpression)                RelationalExpression IsKeyword Type
+    |   (AsRelationalExpression)                RelationalExpression AsKeyword Type
+;
+
+
+ShiftExpression:
+        (DummyAdditiveExpression)   AdditiveExpression
+    |   (LeftShiftExpression)       ShiftExpression LeftShift AdditiveExpression
+    |   (RightShiftExpression)
+            ShiftExpression
+            GreaterThan=GreaterThan1
+            GreaterThan=GreaterThan2
+            AdditiveExpression
+;
+
+
+AdditiveExpression:
+        (DummyMultiplicativeExpression) MultiplicativeExpression
+    |   (PlusAdditiveExpression)        AdditiveExpression Plus  MultiplicativeExpression
+    |   (MinusAdditiveExpression)       AdditiveExpression Minus MultiplicativeExpression
+;
+
+
+MultiplicativeExpression:
+        (DummyUnaryExpression)              UnaryExpression
+    |   (AsteriskMultiplicativeExpression)  MultiplicativeExpression Asterisk UnaryExpression
+    |   (SlashMultiplicativeExpression)     MultiplicativeExpression Slash    UnaryExpression
+    |   (PercentMultiplicativeExpression)   MultiplicativeExpression Percent  UnaryExpression
+;
+
+
+AssignmentExpression:
+        (EqualsAssignmentExpression)              UnaryExpression Equals=EqualsToken            Expression
+    |   (PlusEqualsAssignmentExpression)          UnaryExpression PlusEquals                    Expression
+    |   (MinusEqualsAssignmentExpression)         UnaryExpression MinusEquals                   Expression
+    |   (AsteriskEqualsAssignmentExpression)      UnaryExpression AsteriskEquals                Expression
+    |   (SlashEqualsAssignmentExpression)         UnaryExpression SlashEquals                   Expression
+    |   (PercentEqualsAssignmentExpression)       UnaryExpression PercentEquals                 Expression
+    |   (AmpersandEqualsAssignmentExpression)     UnaryExpression AmpersandEquals               Expression
+    |   (VerticalLineEqualsAssignmentExpression)  UnaryExpression VerticalLineEquals            Expression
+    |   (CaretEqualsAssignmentExpression)         UnaryExpression CaretEquals                   Expression
+    |   (LeftShiftEqualsAssignmentExpression)     UnaryExpression LeftShiftEquals               Expression
+    |   (RightShiftEqualsAssignmentExpression)    UnaryExpression GreaterThan GreaterThanEquals Expression
+;
+
+
+UnaryExpression:
+        (DummyPrimaryExpression)        PrimaryExpression
+    |   (AmpersandUnaryExpression)      Ampersand   UnaryExpression
+    |   (AsteriskUnaryExpression)       Asterisk    UnaryExpression
+    |   (PlusUnaryExpression)           Plus        UnaryExpression
+    |   (MinusUnaryExpression)          Minus       UnaryExpression
+    |   (BangUnaryExpression)           Bang        UnaryExpression
+    |   (TildeUnaryExpression)          Tilde       UnaryExpression
+    |   (DummyPreIncrementExpression)   PreIncrementExpression
+    |   (DummyPreDecrementExpression)   PreDecrementExpression
+    |   (CastExpression)                LeftParenthesis Type RightParenthesis UnaryExpression
+;
+
+
+PreIncrementExpression:
+    Increment UnaryExpression
+;
+
+
+PreDecrementExpression:
+    Decrement UnaryExpression
+;
+
+
+PrimaryExpression:
+        (DummyPrimaryNoArrayCreationExpression) PrimaryNoArrayCreationExpression
+    |   (DummyArrayCreationExpression)          ArrayCreationExpression
+;
+
+
+ArrayCreationExpression:
+        (NonArrayTypeArrayCreation)
+            NewKeyword
+            NonArrayType
+            LeftSquare
+            ExpressionList
+            RightSquare
+            OptionalRankSpecifierList
+            OptionalArrayInitializer
+    |   (ArrayTypeArrayCreation)
+            NewKeyword
+            ArrayType
+            ArrayInitializer
+    |   (ImplicitlyTypedArrayCreation)
+            NewKeyword
+            LeftSquare
+            RightSquare
+            ArrayInitializer
+;
+
+
+OptionalArrayInitializer:
+        (SomeArrayInitializer) ArrayInitializer
+    |   (NoneArrayInitializer)
+;
+
+
+ArrayInitializer:
+        LeftCurly
+        OptionalVariableInitializerList
+        OptionalComma
+        RightCurly
+;
+
+
+OptionalVariableInitializerList:
+        (SomeVariableInitializerList) VariableInitializerList
+    |   (NoneVariableInitializerList)
+;
+
+
+VariableInitializerList:
+        (BinaryVariableInitializerList) VariableInitializerList Comma VariableInitializer
+    |   (EmptyVariableInitializerList)  VariableInitializer
+;
+
+
+VariableInitializer:
+        (ExpressionVariableInitializer) Expression
+    |   (ArrayVariableInitializer)      ArrayInitializer
+    |   (StackallocVariableInitializer) StackallocKeyword NonArrayType LeftSquare Expression RightSquare
+;
+
+
+ExpressionList:
+        (BinaryExpressionList) ExpressionList Comma Expression
+    |   (SingleExpressionList) Expression
+;
+
+
+PrimaryNoArrayCreationExpression:
+        (DummyLiteralExpression)            LiteralExpression
+    |   (SimpleNameExpression)              GenericName
+    |   (ParenthesizedExpression)           LeftParenthesis Expression RightParenthesis
+    |   (DummyMemberAccess)                 MemberAccess
+    |   (DummyPointerMemberAccess)          PointerMemberAccess
+    |   (DummyInvocationExpression)         InvocationExpression
+    |   (ElementAccessExpression)           PrimaryNoArrayCreationExpression LeftSquare OptionalArgumentList RightSquare
+    |   (ThisAccessExpression)              ThisKeyword
+    |   (BaseAccessExpression)              BaseKeyword
+    |   (DummyPostIncrementExpression)      PostIncrementExpression
+    |   (DummyPostDecrementExpression)      PostDecrementExpression
+    |   (DummyObjectCreationExpression)     ObjectCreationExpression
+    |   (SizeofExpression)                  SizeofKeyword LeftParenthesis Type RightParenthesis
+    |   (TypeofExpression)                  TypeofKeyword LeftParenthesis Type RightParenthesis
+    |   (CheckedExpression)                 CheckedKeyword LeftParenthesis Expression RightParenthesis
+    |   (UncheckedExpression)               UncheckedKeyword LeftParenthesis Expression RightParenthesis
+    |   (DefaultValueExpression)            DefaultKeyword LeftParenthesis Type RightParenthesis
+    |   (AnonymousMethodExpression)         DelegateKeyword OptionalAnonymousMethodParameterList Block
+    |   (AnonymousObjectCreationExpression) NewKeyword AnonymousObjectInitializer
+;
+
+
+AnonymousObjectInitializer:
+    LeftCurly OptionalMemberDeclaratorList RightCurly
+;
+
+
+OptionalMemberDeclaratorList:
+        (SomeMemberDeclaratorList) MemberDeclaratorList
+    |   (NoneMemberDeclaratorList)
+;
+
+
+MemberDeclaratorList:
+        (BinaryMemberDeclaratorList) MemberDeclaratorList Comma MemberDeclarator
+    |   (SingleMemberDeclaratorList) MemberDeclarator
+;
+
+
+MemberDeclarator:
+        (SimpleNameMemberDeclarator)   Name
+    |   (MemberAccessMemberDeclarator) MemberAccess
+    |   (InitializedMemberDeclrator)   Name Equals=EqualsToken Expression
+;
+
+
+ObjectCreationExpression:
+        (ParameterizedObjectCreationExpression)
+            NewKeyword
+            Type
+            LeftParenthesis
+            OptionalArgumentList
+            RightParenthesis
+            OptionalObjectOrCollectionInitializer
+
+    |   (ParameterLessObjectCreationExpression)
+            NewKeyword
+            NonArrayType
+            ObjectOrCollectionInitializer
+;
+
+
+OptionalObjectOrCollectionInitializer:
+        (SomeObjectOrCollectionInitializer) ObjectOrCollectionInitializer
+    |   (NoneObjectOrCollectionInitializer)
+;
+
+
+ObjectOrCollectionInitializer:
+        (DummyObjectInitializer)     ObjectInitializer
+    |   (DummyCollectionInitializer) CollectionInitializer
+;
+
+
+ObjectInitializer:
+    LeftCurly OptionalMemberInitializerList RightCurly
+;
+
+
+OptionalMemberInitializerList:
+        (SomeMemberInitializerList) MemberInitializerList
+    |   (NoneMemberInitializerList)
+;
+
+
+MemberInitializerList:
+        (BinaryMemberInitializerList) MemberInitializerList Comma MemberInitializer
+    |   (SingleMemberInitializerList) MemberInitializer
+;
+
+
+MemberInitializer:
+    Name Equals=EqualsToken InitializerValue
+;
+
+
+InitializerValue:
+        (ExpressionInitializerValue)         Expression
+    |   (ObjectOrCollectionInitializerValue) ObjectOrCollectionInitializer
+;
+
+
+CollectionInitializer:
+    LeftCurly OptionalElementInitializerList RightCurly
+;
+
+
+OptionalElementInitializerList:
+        (SomeElementInitializerList) ElementInitializerList
+    |   (NoneElementInitializerList)
+;
+
+
+ElementInitializerList:
+        (BinaryElementInitializerList) ElementInitializerList Comma ElementInitializer
+    |   (SingleElementInitializerList) ElementInitializer
+;
+
+
+ElementInitializer:
+    NonAssignmentExpression
+;
+
+
+InvocationExpression:
+    PrimaryExpression LeftParenthesis OptionalArgumentList RightParenthesis
+;
+
+
+PostIncrementExpression:
+    PrimaryExpression Increment
+;
+
+
+PostDecrementExpression:
+    PrimaryExpression Decrement
+;
+
+
+PointerMemberAccess:
+        (PrimaryExpressionPointerMemberAccess) PrimaryExpression                      Arrow GenericName
+    |   (BuiltInTypePointerMemberAccess)       BuiltInType                            Arrow GenericName
+    |   (QualifiedAliasPointerMemberAccess)    Name=Alias ColonColon Name Arrow GenericName
+;
+
+
+MemberAccess:
+        (PrimaryExpressionMemberAccess) PrimaryExpression         Dot GenericName
+    |   (BuiltInTypeMemberAccess)       BuiltInType               Dot GenericName
+    |   (QualifiedAliasMemberAccess)    Alias GenericName=Type    Dot GenericName=Member
+;
+
+
+OptionalAnonymousMethodParameterList:
+        (SomeAnonymousMethodParameterList) AnonymousMethodParameterList
+    |   (NoneAnonymousMethodParameterList)
+;
+
+
+LiteralExpression:
+        (NullLiterealExpression)                NullLiteral
+    |   (TrueBooleanLiteralExpression)          TrueBooleanLiteral
+    |   (FalseBooleanLiteralExpression)         FalseBooleanLiteral
+    |   (DecimalIntegerLiteralExpression)       DecimalIntegerLiteral
+    |   (HexadecimalIntegerLiteralExpression)   HexadecimalIntegerLiteral
+    |   (CharacterLiteralExpression)            TerminatedCharacterLiteral
+    |   (RegularStringLiteralExpression)        RegularStringLiteral
+    |   (VerbatimStringLiteralExpression)       VerbatimStringLiteral
+    |   (RealLiteralExpression)                 RealLiteral
+;
+
+
+DottedName:
+        (SingleDottedName) Name
+    |   (BinaryDottedName) DottedName Dot Name
+;
+
+
+FullyQualifiedName:
+        OptionalAlias
+        GenericNameList
+;
+
+
+GenericNameList:
+        (BinaryGenericNameList) GenericNameList Dot GenericName
+    |   (SingleGenericNameList) GenericName
+;
+
+
+GenericName:
+        Name
+        OptionalGenericArgumentList
+;
+
+
+OptionalAlias:
+        (SomeAlias) Alias
+    |   (NoneAlias)
+;
+
+
+Alias:
+    Name ColonColon
+;
+
+
+AnonymousMethodParameterList:
+    LeftParenthesis OptionalParameterList RightParenthesis
+;
+
+
+#
+# Start by parsing a some basic type out, and then add as many [,,] specifiers
+# as possible.  We don't define the rank specifiers recursively
+# (like: Type -> Type RankSpecifier), because this will generate a tree balanced
+# in the wrong direction.  i.e. int[][,][,,] should generate:
+#
+# []
+# [,]
+# [,,]
+# int
+#
+# but the recursive description will generate:
+#
+# [,,]
+# [,]
+# []
+# int
+#
+
+Type:
+        (DummyArrayType)    ArrayType
+    |   (DummyNonArrayType) NonArrayType
+;
+
+
+ArrayType:
+    NonArrayType RankSpecifierList
+;
+
+
+#
+# Pointer types *are* defined recursively.  We get the right tree in this case
+#
+
+NonArrayType:
+        (PointerType)           NonArrayType Asterisk
+    |   (DummyNonPointerType)   NonPointerType
+;
+
+
+NonPointerType:
+        (NullableType)          UnderlyingType Question
+    |   (DummyUnderlyingType)   UnderlyingType
+;
+
+
+UnderlyingType:
+        (DummyBuiltInType)          BuiltInType
+    |   (FullyQualifiedNameType)    FullyQualifiedName
+;
+
+
+BuiltInType:
+        (DummySimpleType)   SimpleType
+    |   (StringType)        StringKeyword
+    |   (ObjectType)        ObjectKeyword
+    |   (VoidType)          VoidKeyword
+;
+
+
+SimpleType:
+        (DummyNumericType)  NumericType
+    |   (BoolType)          BoolKeyword
+;
+
+
+NumericType:
+        (DummyIntegralType)         IntegralType
+    |   (DummyFloatingPointType)    FloatingPointType
+    |   (DecimalType)               DecimalKeyword
+;
+
+
+IntegralType:
+        (BypeType)      ByteKeyword
+    |   (CharType)      CharKeyword
+    |   (IntType)       IntKeyword
+    |   (LongType)      LongKeyword
+    |   (SbyteType)     SbyteKeyword
+    |   (ShortType)     ShortKeyword
+    |   (UintType)      UintKeyword
+    |   (UlongType)     UlongKeyword
+    |   (UshortType)    UshortKeyword
+;
+
+
+FloatingPointType:
+        (DoubleType)    DoubleKeyword
+    |   (FloatType)     FloatKeyword
+;
+
+
+OptionalRankSpecifierList:
+        (SomeRankSpecifierList) RankSpecifierList
+    |   (NoneRankSpecifierList)
+;
+
+
+RankSpecifierList:
+        (BinaryRankSpecifierList) RankSpecifierList RankSpecifier
+    |   (SingleRankSpecifierList) RankSpecifier
+;
+
+
+RankSpecifier:
+    LeftSquare CommaList RightSquare
+;
+
+
+CommaList:
+        (BinaryCommaList) CommaList Comma
+    |   (EmptyCommaList)
+;
+
+
+Name:
+        (WrappedSimpleIdentifierToken)              SimpleIdentifier
+    |   (WrappedGetContextualKeywordToken)          GetContextualKeyword
+    |   (WrappedSetContextualKeywordToken)          SetContextualKeyword
+    |   (WrappedWhereContextualKeywordToken)        WhereContextualKeyword
+    |   (WrappedPartialContextualKeywordToken)      PartialContextualKeyword
+    |   (WrappedAddContextualKeywordToken)          AddContextualKeyword
+    |   (WrappedRemoveContextualKeywordToken)       RemoveContextualKeyword
+    |   (WrappedAliasContextualKeywordToken)        AliasContextualKeyword
+    |   (WrappedAssemblyContextualKeywordToken)     AssemblyContextualKeyword
+    |   (WrappedModuleContextualKeywordToken)       ModuleContextualKeyword
+    |   (WrappedYieldContextualKeywordToken)        YieldContextualKeyword
+    |   (WrappedFieldContextualKeywordToken)        FieldContextualKeyword
+    |   (WrappedMethodContextualKeywordToken)       MethodContextualKeyword
+    |   (WrappedParamContextualKeywordToken)        ParamContextualKeyword
+    |   (WrappedPropertyContextualKeywordToken)     PropertyContextualKeyword
+    |   (WrappedTypeContextualKeywordToken)         TypeContextualKeyword
+    |   (WrappedTypevarContextualKeywordToken)      TypevarContextualKeyword
+    |   (WrappedDefineContextualKeywordToken)       DefineContextualKeyword
+    |   (WrappedUndefContextualKeywordToken)        UndefContextualKeyword
+    |   (WrappedElifContextualKeywordToken)         ElifContextualKeyword
+    |   (WrappedEndifContextualKeywordToken)        EndifContextualKeyword
+    |   (WrappedErrorContextualKeywordToken)        ErrorContextualKeyword
+    |   (WrappedWarningContextualKeywordToken)      WarningContextualKeyword
+    |   (WrappedRegionContextualKeywordToken)       RegionContextualKeyword
+    |   (WrappedEndregionContextualKeywordToken)    EndregionContextualKeyword
+    |   (WrappedPragmaContextualKeywordToken)       PragmaContextualKeyword
+    |   (WrappedLineContextualKeywordToken)         LineContextualKeyword
+    |   (WrappedAscendingContextualKeyword)         AscendingContextualKeyword
+    |   (WrappedByContextualKeyword)                ByContextualKeyword
+    |   (WrappedDescendingContextualKeyword)        DescendingContextualKeyword
+    |   (WrappedFromContextualKeyword)              FromContextualKeyword
+    |   (WrappedGroupContextualKeyword)             GroupContextualKeyword
+    |   (WrappedIntoContextualKeyword)              IntoContextualKeyword
+    |   (WrappedOrderByContextualKeyword)           OrderByContextualKeyword
+    |   (WrappedSelectContextualKeyword)            SelectContextualKeyword
+;
+
+
+QueryComprehensionContextualKeyword:
+        (WrappedAscendingQueryComprehensionContextualKeyword)  AscendingContextualKeyword
+    |   (WrappedByQueryComprehensionContextualKeyword)         ByContextualKeyword
+    |   (WrappedDescendingQueryComprehensionContextualKeyword) DescendingContextualKeyword
+    |   (WrappedFromQueryComprehensionContextualKeyword)       FromContextualKeyword
+    |   (WrappedGroupQueryComprehensionContextualKeyword)      GroupContextualKeyword
+    |   (WrappedIntoQueryComprehensionContextualKeyword)       IntoContextualKeyword
+    |   (WrappedOrderByQueryComprehensionContextualKeyword)    OrderByContextualKeyword
+    |   (WrappedSelectQueryComprehensionContextualKeyword)     SelectContextualKeyword
+    |   (WrappedWhereQueryComprehensionContextualKeyword)      WhereContextualKeyword
+;
+
+
+#
+# Named attribute argument look exactly like assignment expressions.  That
+# causes an abiguity with the AttributeArgument.  So, when we see am equals we
+# prefer the latter
+#
+
+%OnConflict ShiftEquals, ReduceNoneGenericArgumentList Prefer ShiftEquals
+
+
+#
+# Optional comma allowed after the members of an enum
+#
+#%OnConflict ShiftComma, ReduceSomeEnumMemberDeclarationList Run ShiftCommaVsReduceSomeEnumMemberDeclarationList
+%OnConflict ShiftComma, ReduceSomeEnumMemberDeclarationList Resolve
+
+#
+# Optional comma allowed for array initializers
+#
+
+%OnConflict ShiftComma, ReduceSomeVariableInitializerList Resolve
+
+#
+#We've defined "ModifierList" as including the "extern" keyword.  That's because
+#We need a single "modifiers" rule that will work for both types and members.
+#(if we didn't have that then we'd have a ton of ambiguity between nested types
+#and members of a type).  However, "extern" can never be part of modifiers for a
+#type.  So if we ever see an "extern" keyword in a namespace context, we always
+#shift the token since it's only legal in an extern alias.
+#
+
+%OnConflict ShiftExternKeyword, ReduceEmptyUsingDirectiveList Prefer ShiftExternKeyword
+
+
+#
+# This is the standard if/else ambiguity.
+#
+
+%OnConflict ShiftElseKeyword, ReduceIfStatement Prefer ShiftElseKeyword
+
+#
+# Query comprehensions have a similar ambiguity with if/else statements.  If you
+# have:
+#   from ... from ... into blah
+# You need to decide if "into" belongs to the inner or outer query
+# comprehension.  Like if/else, we have it bind to the nearest owner by
+# immediately shifting it.
+#
+
+%OnConflict ShiftIntoContextualKeyword, ReduceNoneIntoClause Prefer ShiftIntoContextualKeyword
+
+#
+# We have the rule:
+#   object-or-collection-initializer:
+#       object-initializer
+#       collection-initializer
+#
+# However: {} is a legal object intializer and a legal collection initializer.
+# Either is fine, so we just arbitrarily object-initializer
+#
+
+%OnConflict ReduceNoneMemberInitializerList, ReduceNoneElementInitializerList Prefer ReduceNoneMemberInitializerList
+
+#
+# If you have:
+#   ( string
+#
+# Then you could be seeing one of many things.
+#   1) the start of a cast       : (string)
+#   2) the start of an expression: (string.Empty)
+#   3) the start of a lambda     : (string s) => ...
+#
+# Just resolve
+
+%OnConflict ShiftStringKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftObjectKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftVoidKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftBoolKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftDecimalKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftByteKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftCharKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftIntKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftLongKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftSbyteKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftShortKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftUintKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftUlongKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftUshortKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftDoubleKeyword, ReduceNoneParameterModifier Resolve
+%OnConflict ShiftFloatKeyword, ReduceNoneParameterModifier Resolve
+
+#
+# If you have:
+#   ( Foo
+#
+# Then you could be seeing one of many things.
+#   1) the start of a cast       : (Foo::Bar) or (Foo) or (Foo.Bar<...>), etc.
+#   2) the start of an expression: (Foo.Bar())
+#   3) the start of a lambda     : (Foo ... ) => ...
+#
+# Just resolve
+
+%OnConflict ShiftName, ReduceNoneParameterModifier, ReduceNoneAlias Resolve
+
+#
+# If you have:
+#   (a)
+#
+# Then on the right paren, we don't know what we're reducing 'a' to.  Just let
+# glr take over here.
+#
+
+%OnConflict ReduceSingleImplicitlyTypedLambdaParameterList, ReduceNoneGenericArgumentList Resolve
+
+#
+# If you have:
+#   from where
+#
+# then it's unclear if you're starting a query comprehension or if you're
+# declaring a variable called "where" of type "from".  Just resolve it with GLR
+#
+
+%OnConflict ShiftQueryComprehensionContextualKeyword, ReduceWrappedFromContextualKeyword Resolve
+
+
+#
+# There are conflicts with "default" because of "default(T)" and "default:" It's
+# pretty easy to determine which is which with just a little bit of lookhead
+#
+
+%OnConflict ShiftDefaultKeyword, ReduceSwitchSection Resolve
+
+
+#
+# This may be the conflict that you get when you see:
+# foo is int ? bar : baz
+#
+# When you see the ? you need to know if it's int?  or if it's part of the
+# ternary.  We let the GLR algorithm take care of this since it should resolve
+# the problem very quickly
+#
+
+%OnConflict ShiftQuestion, ReduceDummyUnderlyingType Resolve
+
+#
+# I believe that this is due to the ambiguity between global attributes and
+# attributes for a type.  We should be able to write a disambiguation method
+# with just 1-2 lookahead to figure out what to do here.
+#
+
+%OnConflict ShiftLeftSquare, ReduceEmptyNamespaceMemberDeclarationList Resolve
+
+
+#
+# These all have to do with attribute targets.  A simple lookahead will resolve
+# the ambiguity.
+#
+
+%OnConflict ShiftFieldContextualKeyword,    ReduceNoneAttributeTarget    Resolve
+%OnConflict ShiftMethodContextualKeyword,   ReduceNoneAttributeTarget    Resolve
+%OnConflict ShiftParamContextualKeyword,    ReduceNoneAttributeTarget    Resolve
+%OnConflict ShiftPropertyContextualKeyword, ReduceNoneAttributeTarget    Resolve
+%OnConflict ShiftTypeContextualKeyword,     ReduceNoneAttributeTarget    Resolve
+%OnConflict ShiftTypevarContextualKeyword,  ReduceNoneAttributeTarget    Resolve
+
+#
+# I think these are all due to the ambiguity on explicit interface implementation
+#
+%OnConflict ShiftDot,                   ReduceFullyQualifiedName                        Resolve
+
+#
+# This one is due to Expression->MemberAccess.
+#
+
+%OnConflict ShiftName, ReduceAlias Resolve
+%OnConflict ShiftName, ReduceSomeAlias Resolve
+%OnConflict ShiftName, ReduceNoneAlias Resolve
+%OnConflict ShiftName, ReduceNoneExplicitInterface, ReduceNoneAlias Resolve
+
+
+#
+# I don't get these.  They have something to do with
+#   %Start Expression
+#   %Start Statement
+# But for the life of me i can't figure out why'd they be ambiguous since for
+# statement it would be an error to not see semicolon following these.
+#
+
+%OnConflict ReduceDummyInvocationExpression3,       ReduceDummyInvocationExpression     Resolve
+%OnConflict ReduceDummyObjectCreationExpression3,   ReduceDummyObjectCreationExpression Resolve
+%OnConflict ReduceDummyPostIncrementExpression3,    ReduceDummyPostIncrementExpression  Resolve
+%OnConflict ReduceDummyPostDecrementExpression3,    ReduceDummyPostDecrementExpression  Resolve
+%OnConflict ReduceDummyPreIncrementExpression3,     ReduceDummyPreIncrementExpression   Resolve
+%OnConflict ReduceDummyPreDecrementExpression3,     ReduceDummyPreDecrementExpression   Resolve
+
+#
+# Review these to determine what causes the ambiguities, and what's the best way
+# to address them.  (i.e. "change the grammar to eliminate them, or decide the
+# appropriate conflict resolution strategy)
+#
+
+%OnConflict ShiftGreaterThan,  ReduceDummyUnaryExpression                   Resolve
+%OnConflict ShiftGreaterThan,  ReduceDummyShiftExpression                   Resolve
+%OnConflict ShiftGreaterThan,  ReduceLessThanRelationalExpression           Resolve
+%OnConflict ShiftGreaterThan,  ReduceGreaterThanRelationalExpression        Resolve
+%OnConflict ShiftGreaterThan,  ReduceLessThanEqualsRelationalExpression     Resolve
+%OnConflict ShiftGreaterThan,  ReduceGreaterThanEqualsRelationalExpression  Resolve
+
+
+%OnConflict ShiftLessThan, ReduceNoneGenericArgumentList Resolve
+
+
+#
+# C# PreProcessor Grammar starts here
+#
+
+#
+# C# PreProcessor Conflicts
+#
+
+#
+# I believe that these should always be reduces.  Verify.
+#
+
+%OnConflict ShiftNumberSign, ReduceNonePreProcessorElseSection  Resolve
+%OnConflict ShiftNumberSign, ReducePreProcessorElseSection      Resolve
+%OnConflict ShiftNumberSign, ReducePreProcessorElifSection      Resolve
+%OnConflict ShiftNumberSign, ReducePreProcessorIfSection        Resolve
+
+
+PreProcessorCompilationUnit:
+    InputLineList
+;
+
+
+InputLineList:
+        (BinaryInputLineList) InputLineList InputLine
+    |   (EmptyInputLineList)
+;
+
+
+InputLine:
+        (PreProcessorDirectiveLine) PreProcessorDirective
+    |   (DummyCodeSection) CodeSection
+;
+
+
+PreProcessorDirective:
+        (DummyPreProcessorDeclaration)
+            PreProcessorDeclaration
+
+    |   (PreProcessorConditional)
+            PreProcessorIfSection
+            PreProcessorElifSectionList
+            OptionalPreProcessorElseSection
+            PreProcessorEndifSection
+
+    |   (PreProcessorLine)
+            NumberSign
+            LineContextualKeyword
+            LineIndicator
+            OptionalSingleLineComment
+            NewLine
+
+    |   (PreProcessorErrorDiagnostic)
+            NumberSign
+            ErrorContextualKeyword
+            PreProcessorMessageList
+            NewLine
+
+    |   (PreProcessorWarningDiagnostic)
+            NumberSign
+            WarningContextualKeyword
+            PreProcessorMessageList
+            NewLine
+
+    |   (PreProcessorRegion)
+            PreProcessorStartRegion
+            InputLineList
+            PreProcessorEndRegion
+
+    |   (PreProcessorPragma)
+            NumberSign
+            PragmaContextualKeyword
+            PreProcessorMessageList
+            NewLine
+;
+
+
+PreProcessorStartRegion:
+    NumberSign
+    RegionContextualKeyword
+    PreProcessorMessageList
+    NewLine
+;
+
+
+PreProcessorEndRegion:
+    NumberSign
+    EndregionContextualKeyword
+    PreProcessorMessageList
+    NewLine
+;
+
+
+PreProcessorMessageList:
+        (BinaryPreProcessorMessageList) PreProcessorMessageList PreProcessorMessage
+    |   (EmptyPreProcessorMessageList)
+;
+
+
+PreProcessorMessage:
+        (WrappedMessageToken) Message
+    |   (DummyNonNumberSign)  NonNumberSign
+    |   (DummyNumberSign)     NumberSign
+;
+
+
+LineIndicator:
+        (ExplicitLineIndicator)
+            DecimalIntegerLiteral
+            OptionalRegularStringLiteral
+            OptionalSingleLineComment
+            NewLine
+    |   (IdentifierLineIndicator)
+            Name
+            OptionalSingleLineComment
+            NewLine
+#    |   (KeywordLineIndicator)
+;
+
+
+OptionalRegularStringLiteral:
+        (SomeRegularStringLiteral) RegularStringLiteral
+    |   (NoneRegularStringLiteral)
+;
+
+
+PreProcessorIfSection:
+    NumberSign
+    IfKeyword
+    PreProcessorExpression
+    OptionalSingleLineComment
+    NewLine
+    InputLineList
+;
+
+
+PreProcessorElifSectionList:
+        (BinaryPreProcessorElifSectionList)
+            PreProcessorElifSectionList
+            PreProcessorElifSection
+    |   (EmptyPreProcessorElifSectionList)
+;
+
+
+PreProcessorElifSection:
+    NumberSign
+    ElifContextualKeyword
+    PreProcessorExpression
+    OptionalSingleLineComment
+    NewLine
+    InputLineList
+;
+
+
+OptionalPreProcessorElseSection:
+        (SomePreProcessorElseSection) PreProcessorElseSection
+    |   (NonePreProcessorElseSection)
+;
+
+
+PreProcessorElseSection:
+    NumberSign
+    ElseKeyword
+    OptionalSingleLineComment
+    NewLine
+    InputLineList
+;
+
+
+PreProcessorEndifSection:
+    NumberSign
+    EndifContextualKeyword
+    OptionalSingleLineComment
+    NewLine
+;
+
+
+PreProcessorExpression:
+    PreProcessorOrExpression
+;
+
+
+PreProcessorOrExpression:
+        (DummyPreProcessorAndExpression) PreProcessorAndExpression
+     |  (BinaryPreProcessorOrExpression)
+            PreProcessorOrExpression=Left
+            LogicalOr
+            PreProcessorAndExpression=Right
+;
+
+
+PreProcessorAndExpression:
+        (DummyPreProcessorEqualityExpression) PreProcessorEqualityExpression
+     |  (BinaryPreProcessorAndExpression)
+            PreProcessorAndExpression=Left
+            LogicalAnd
+            PreProcessorEqualityExpression=Right
+;
+
+
+PreProcessorEqualityExpression:
+        (DummyPreProcessorUnaryExpression)   PreProcessorUnaryExpression
+
+    |   (PreProcessorEqualsEqualsExpression)
+            PreProcessorEqualityExpression=Left
+            EqualsEquals
+            PreProcessorUnaryExpression=Right
+
+    |   (PreProcessorNotEqualsExpression)
+            PreProcessorEqualityExpression=Left
+            NotEquals
+            PreProcessorUnaryExpression=Right
+;
+
+
+PreProcessorUnaryExpression:
+        (DummyPreProcessorPrimaryExpression) PreProcessorPrimaryExpression
+    |   (PreProcessorBangExpression)
+            Bang
+            PreProcessorUnaryExpression=Expression
+;
+
+
+PreProcessorPrimaryExpression:
+        (PreProcessorTrueExpression)              TrueBooleanLiteral
+    |   (PreProcessorFalseExpression)             FalseBooleanLiteral
+    |   (PreProcessorConditionalSymbolExpression) ConditionalSymbol
+    |   (PreProcessorParenthesizedExpression)
+            LeftParenthesis
+            PreProcessorExpression=Expression
+            RightParenthesis
+;
+
+
+PreProcessorDeclaration:
+        (PreProcessorDefineDeclaration)
+            NumberSign
+            DefineContextualKeyword
+            ConditionalSymbol
+            OptionalSingleLineComment
+            NewLine
+    |   (PreProcessorUndefDeclaration)
+            NumberSign
+            UndefContextualKeyword
+            ConditionalSymbol
+            OptionalSingleLineComment
+            NewLine
+;
+
+
+ConditionalSymbol:
+        (IdentifierConditionalSymbol)   Name
+#    |   (KeywordConditionalSymbol)     Keyword
+    |   (NullConditionalSymbol)         NullLiteral
+;
+
+
+OptionalSingleLineComment:
+        (SomeSingleLineComment) SingleLineComment
+    |   (NoneSingleLineComment)
+;
+
+
+NonNumberSign:
+        (DummyName) Name
+    |   (WrappedTerminatedMultiLineCommentToken) TerminatedMultiLineComment
+    |   (WrappedUnterminatedMultiLineCommentToken) UnterminatedMultiLineComment
+    |   (WrappedSingleLineCommentToken) SingleLineComment
+    |   (WrappedNullLiteralToken) NullLiteral
+    |   (WrappedTrueBooleanLiteralToken) TrueBooleanLiteral
+    |   (WrappedFalseBooleanLiteralToken) FalseBooleanLiteral
+    |   (WrappedDecimalIntegerLiteralToken) DecimalIntegerLiteral
+    |   (WrappedHexadecimalIntegerLiteralToken) HexadecimalIntegerLiteral
+    |   (WrappedTerminatedCharacterLiteralToken) TerminatedCharacterLiteral
+    |   (WrappedUnterminatedCharacterLiteralToken) UnterminatedCharacterLiteral
+    |   (WrappedRegularStringLiteralToken) RegularStringLiteral
+    |   (WrappedVerbatimStringLiteralToken) VerbatimStringLiteral
+    |   (WrappedUnterminatedRegularStringLiteralToken) UnterminatedRegularStringLiteral
+    |   (WrappedUnterminatedVerbatimStringLiteralToken) UnterminatedVerbatimStringLiteral
+    |   (WrappedRealLiteralToken) RealLiteral
+    |   (WrappedLeftCurlyToken) LeftCurly
+    |   (WrappedRightCurlyToken) RightCurly
+    |   (WrappedLeftSquareToken) LeftSquare
+    |   (WrappedRightSquareToken) RightSquare
+    |   (WrappedLeftParenthesisToken) LeftParenthesis
+    |   (WrappedRightParenthesisToken) RightParenthesis
+    |   (WrappedDotToken) Dot
+    |   (WrappedCommaToken) Comma
+    |   (WrappedColonToken) Colon
+    |   (WrappedSemicolonToken) Semicolon
+    |   (WrappedPlusToken) Plus
+    |   (WrappedMinusToken) Minus
+    |   (WrappedAsteriskToken) Asterisk
+    |   (WrappedSlashToken) Slash
+    |   (WrappedPercentToken) Percent
+    |   (WrappedAmpersandToken) Ampersand
+    |   (WrappedVerticalLineToken) VerticalLine
+    |   (WrappedCaretToken) Caret
+    |   (WrappedBangToken) Bang
+    |   (WrappedTildeToken) Tilde
+    |   (WrappedEqualsToken) Equals=EqualsToken
+    |   (WrappedLessThanToken) LessThan
+    |   (WrappedGreaterThanToken) GreaterThan
+    |   (WrappedQuestionToken) Question
+    |   (WrappedQuestionQuestionToken) QuestionQuestion
+    |   (WrappedColonColonToken) ColonColon
+    |   (WrappedIncrementToken) Increment
+    |   (WrappedDecrementToken) Decrement
+    |   (WrappedLogicalAndToken) LogicalAnd
+    |   (WrappedLogicalOrToken) LogicalOr
+    |   (WrappedArrowToken) Arrow
+    |   (WrappedEqualsEqualsToken) EqualsEquals
+    |   (WrappedNotEqualsToken) NotEquals
+    |   (WrappedLessThanEqualsToken) LessThanEquals
+    |   (WrappedGreaterThanEqualsToken) GreaterThanEquals
+    |   (WrappedPlusEqualsToken) PlusEquals
+    |   (WrappedMinusEqualsToken) MinusEquals
+    |   (WrappedAsteriskEqualsToken) AsteriskEquals
+    |   (WrappedSlashEqualsToken) SlashEquals
+    |   (WrappedPercentEqualsToken) PercentEquals
+    |   (WrappedAmpersandEqualsToken) AmpersandEquals
+    |   (WrappedVerticalLineEqualsToken) VerticalLineEquals
+    |   (WrappedCaretEqualsToken) CaretEquals
+    |   (WrappedLeftShiftToken) LeftShift
+    |   (WrappedLeftShiftEqualsToken) LeftShiftEquals
+    |   (WrappedAbstractKeywordToken) AbstractKeyword
+    |   (WrappedAsKeywordToken) AsKeyword
+    |   (WrappedBaseKeywordToken) BaseKeyword
+    |   (WrappedBoolKeywordToken) BoolKeyword
+    |   (WrappedBreakKeywordToken) BreakKeyword
+    |   (WrappedByteKeywordToken) ByteKeyword
+    |   (WrappedCaseKeywordToken) CaseKeyword
+    |   (WrappedCatchKeywordToken) CatchKeyword
+    |   (WrappedCharKeywordToken) CharKeyword
+    |   (WrappedCheckedKeywordToken) CheckedKeyword
+    |   (WrappedClassKeywordToken) ClassKeyword
+    |   (WrappedConstKeywordToken) ConstKeyword
+    |   (WrappedContinueKeywordToken) ContinueKeyword
+    |   (WrappedDecimalKeywordToken) DecimalKeyword
+    |   (WrappedDefaultKeywordToken) DefaultKeyword
+    |   (WrappedDelegateKeywordToken) DelegateKeyword
+    |   (WrappedDoKeywordToken) DoKeyword
+    |   (WrappedDoubleKeywordToken) DoubleKeyword
+    |   (WrappedElseKeywordToken) ElseKeyword
+    |   (WrappedEnumKeywordToken) EnumKeyword
+    |   (WrappedEventKeywordToken) EventKeyword
+    |   (WrappedExplicitKeywordToken) ExplicitKeyword
+    |   (WrappedExternKeywordToken) ExternKeyword
+    |   (WrappedFinallyKeywordToken) FinallyKeyword
+    |   (WrappedFixedKeywordToken) FixedKeyword
+    |   (WrappedFloatKeywordToken) FloatKeyword
+    |   (WrappedForKeywordToken) ForKeyword
+    |   (WrappedForeachKeywordToken) ForeachKeyword
+    |   (WrappedGotoKeywordToken) GotoKeyword
+    |   (WrappedIfKeywordToken) IfKeyword
+    |   (WrappedImplicitKeywordToken) ImplicitKeyword
+    |   (WrappedInKeywordToken) InKeyword
+    |   (WrappedIntKeywordToken) IntKeyword
+    |   (WrappedInterfaceKeywordToken) InterfaceKeyword
+    |   (WrappedInternalKeywordToken) InternalKeyword
+    |   (WrappedIsKeywordToken) IsKeyword
+    |   (WrappedLockKeywordToken) LockKeyword
+    |   (WrappedLongKeywordToken) LongKeyword
+    |   (WrappedNamespaceKeywordToken) NamespaceKeyword
+    |   (WrappedNewKeywordToken) NewKeyword
+    |   (WrappedObjectKeywordToken) ObjectKeyword
+    |   (WrappedOperatorKeywordToken) OperatorKeyword
+    |   (WrappedOutKeywordToken) OutKeyword
+    |   (WrappedOverrideKeywordToken) OverrideKeyword
+    |   (WrappedParamsKeywordToken) ParamsKeyword
+    |   (WrappedPrivateKeywordToken) PrivateKeyword
+    |   (WrappedProtectedKeywordToken) ProtectedKeyword
+    |   (WrappedPublicKeywordToken) PublicKeyword
+    |   (WrappedReadonlyKeywordToken) ReadonlyKeyword
+    |   (WrappedRefKeywordToken) RefKeyword
+    |   (WrappedReturnKeywordToken) ReturnKeyword
+    |   (WrappedSbyteKeywordToken) SbyteKeyword
+    |   (WrappedSealedKeywordToken) SealedKeyword
+    |   (WrappedShortKeywordToken) ShortKeyword
+    |   (WrappedSizeofKeywordToken) SizeofKeyword
+    |   (WrappedStackallocKeywordToken) StackallocKeyword
+    |   (WrappedStaticKeywordToken) StaticKeyword
+    |   (WrappedStringKeywordToken) StringKeyword
+    |   (WrappedStructKeywordToken) StructKeyword
+    |   (WrappedSwitchKeywordToken) SwitchKeyword
+    |   (WrappedThisKeywordToken) ThisKeyword
+    |   (WrappedThrowKeywordToken) ThrowKeyword
+    |   (WrappedTryKeywordToken) TryKeyword
+    |   (WrappedTypeofKeywordToken) TypeofKeyword
+    |   (WrappedUintKeywordToken) UintKeyword
+    |   (WrappedUlongKeywordToken) UlongKeyword
+    |   (WrappedUncheckedKeywordToken) UncheckedKeyword
+    |   (WrappedUnsafeKeywordToken) UnsafeKeyword
+    |   (WrappedUshortKeywordToken) UshortKeyword
+    |   (WrappedUsingKeywordToken) UsingKeyword
+    |   (WrappedVirtualKeywordToken) VirtualKeyword
+    |   (WrappedVoidKeywordToken) VoidKeyword
+    |   (WrappedVolatileKeywordToken) VolatileKeyword
+    |   (WrappedWhileKeywordToken) WhileKeyword
+;

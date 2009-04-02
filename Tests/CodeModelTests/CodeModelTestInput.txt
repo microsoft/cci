@@ -1,0 +1,202 @@
+namespace CodeModelTestInput
+{
+    public class Class1
+    {
+        public  Class1()
+        {
+            this.object();
+            return;
+
+        }
+
+        public void Method1()
+        {
+            byte[] Bytes = new byte[3] {1, 2, 255};
+            ushort[] UShorts = new ushort[3] {1, 255, 65535};
+            uint[] UInts = new uint[3] {255, 65535, 4294967295};
+            ulong[] ULongs = new ulong[4] {255, 65535, 4294967295, 18446744073709551615};
+            sbyte[] SBytes = new sbyte[5] {-128, 1, 2, 3, 127};
+            short[] Shorts = new short[3] {-128, -32768, 32767};
+            int[] Ints = new int[3] {-128, -32768, -2147483648};
+            long[] Longs = new long[4] {-128, -32768, -2147483648, -9223372036854775808};
+            char[] Chars = new char[3] {a, b, c};
+            return;
+
+        }
+
+        private static void Method10(int x)
+        {
+            int[] a = new int[((x > 0) ? x : 5)];
+            return;
+
+        }
+
+        private static void Method11(int x)
+        {
+            int[][] a = null;
+            a[0] = new int[((x > 0) ? x : 5)];
+            return;
+
+        }
+
+        private static bool Method12(int x)
+        {
+            switch((x - 1)){
+                case 0:
+                    goto IL_001d;
+                case 1:
+                case 2:
+                case 3:
+                    goto IL_0021;
+            }
+        IL_001d:
+            bool local_0 = 0;
+            goto IL_0029;
+        IL_0021:
+            local_0 = 1;
+            goto IL_0029;
+            local_0 = 0;
+        IL_0029:
+            return local_0;
+
+        }
+
+        public void Method2()
+        {
+            byte[] local_11 = new byte[1];
+            local_11[0] = 255;
+            byte[] Bytes = local_11;
+            ushort[] local_12 = new ushort[1];
+            local_12[0] = 65535;
+            ushort[] UShorts = local_12;
+            uint[] local_13 = new uint[1];
+            local_13[0] = -1;
+            uint[] UInts = local_13;
+            ulong[] local_14 = new ulong[1];
+            local_14[0] = -1;
+            ulong[] ULongs = local_14;
+            sbyte[] local_15 = new sbyte[1];
+            local_15[0] = -128;
+            sbyte[] SBytes = local_15;
+            short[] local_16 = new short[1];
+            local_16[0] = -32768;
+            short[] Shorts = local_16;
+            int[] local_17 = new int[1];
+            local_17[0] = -2147483648;
+            int[] Ints = local_17;
+            long[] local_18 = new long[1];
+            local_18[0] = -9223372036854775808;
+            long[] Longs = local_18;
+            char[] local_19 = new char[1];
+            local_19[0] = 97;
+            char[] Chars = local_19;
+            bool[] local_20 = new bool[1];
+            local_20[0] = 1;
+            bool[] Bools = local_20;
+            decimal[] local_21 = new decimal[1];
+            local_21[0] = new decimal(11, 0, 0, 0, 1);
+            decimal[] Decimals = local_21;
+            return;
+
+        }
+
+        private void Method3()
+        {
+            int j;
+            int i = 1;
+            if ((i == 1))
+            {
+                j = 2;
+            }
+            else
+            {
+                j = 3;
+            }
+            int k = (i + j);
+            return;
+
+        }
+
+        private bool Method4(int[] xs, int x)
+        {
+            return Microsoft.Contracts.Contract.ForAll<int>(xs, delegate (int i) {
+                return (i < x);
+
+            });
+
+        }
+
+        private void Method5(int[] xs, int x)
+        {
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            return;
+
+        }
+
+        private void Method6(int[] xs, int x)
+        {
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            if ((0 < xs.Length))
+            {
+                xs[0] = x;
+            }
+            return;
+
+        }
+
+        private void Method7(int[] xs, int x)
+        {
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            if ((0 < xs.Length))
+            {
+                xs[0] = x;
+            }
+            else
+            {
+                xs = new int[3];
+            }
+            return;
+
+        }
+
+        private void Method8(int[] xs, int x)
+        {
+            if ((0 < xs.Length))
+            {
+                xs[0] = x;
+            }
+            else
+            {
+                xs = new int[3];
+            }
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            return;
+
+        }
+
+        private void Method9(int[] xs, int x)
+        {
+            if (!((0 >= xs.Length) || ((x < xs.Length) == 0)))
+            {
+                xs[x] = 3;
+            }
+            return;
+
+        }
+
+    }
+
+}
+
