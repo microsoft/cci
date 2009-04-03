@@ -206,11 +206,19 @@ namespace Microsoft.Cci {
     }
     Dictionary<ITypeDefinition, IExpression> closureInstanceFor = new Dictionary<ITypeDefinition, IExpression>();
 
+    private MethodReference CompilerGeneratedCtor {
+      get {
+        if (this.compilerGeneratedCtor == null)
+          this.compilerGeneratedCtor =  new MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
+             CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
+        return this.compilerGeneratedCtor;
+      }
+    }
+    private MethodReference/*?*/ compilerGeneratedCtor;
+
     private NestedTypeDefinition CreateClosureClass() {
-      MethodReference compilerGeneratedCtor = new MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
-        CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
       CustomAttribute compilerGeneratedAttribute = new CustomAttribute();
-      compilerGeneratedAttribute.Constructor = compilerGeneratedCtor;
+      compilerGeneratedAttribute.Constructor = this.CompilerGeneratedCtor;
 
       NestedTypeDefinition result = new NestedTypeDefinition();
       this.cache.Add(result, result);
@@ -251,9 +259,7 @@ namespace Microsoft.Cci {
     }
 
     private MethodDefinition CreateDefaultConstructorFor(NestedTypeDefinition closureClass) {
-      IMethodReference objectCtor = new MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis, 
-        this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
-      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new BaseClassReference(), MethodToCall = objectCtor, Type = this.host.PlatformType.SystemVoid };
+      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new BaseClassReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
       ExpressionStatement baseConstructorCallStatement = new ExpressionStatement() { Expression = baseConstructorCall };
       List<IStatement> statements = new List<IStatement>();
       statements.Add(baseConstructorCallStatement);
@@ -290,6 +296,16 @@ namespace Microsoft.Cci {
       result.MethodDefinition = method;
       return result;
     }
+
+    private MethodReference ObjectCtor {
+      get {
+        if (this.objectCtor == null)
+          this.objectCtor = new MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis,
+             this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
+        return this.objectCtor;
+      }
+    }
+    private MethodReference/*?*/ objectCtor;
 
     static ISourceToILConverter ProvideSourceToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) {
       return new PreNormalizedCodeModelToILConverter(host, sourceLocationProvider, contractProvider);
