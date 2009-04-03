@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SmallBasicCommandLineHost</RootNamespace>
-    <AssemblyName>SmallBasicCommandLineHost</AssemblyName>
+    <AssemblyName>sbc</AssemblyName>
     <SccProjectName>
     </SccProjectName>
     <SccLocalPath>
@@ -58,6 +58,10 @@
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PdbWriter\PdbWriter.csproj">
+      <Project>{6D83F687-ABB5-40B3-915E-CA53DA0EB7F3}</Project>
+      <Name>PdbWriter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
       <Name>PeReader</Name>
@@ -73,6 +77,10 @@
     <ProjectReference Include="..\..\..\Ast\Sources\AstsProjectedAsCodeModel\AstsProjectedAsCodeModel.csproj">
       <Project>{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}</Project>
       <Name>AstsProjectedAsCodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Sources\CodeModelNormalizer\CodeModelNormalizer.csproj">
+      <Project>{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}</Project>
+      <Name>CodeModelNormalizer</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>

@@ -46,19 +46,11 @@ namespace Microsoft.Cci.SmallBasic {
       SmallBasicAssembly assem = new SmallBasicAssembly(name, Path.GetFullPath(fileName), hostEnvironment, options, assemblyReferences, moduleReferences, programSources);
       SmallBasicCompilationHelper helper = new SmallBasicCompilationHelper(assem.Compilation);
       programSources.Add(new SmallBasicDocument(helper, name, Path.GetFullPath(fileName), instream));
-      //ISourceLocationProvider sourceLocationProvider = assem.Compilation.SourceLocationProvider;
-      //ILocalScopeProvider localScopeProvider = assem.Compilation.LocalScopeProvider;
-      //PeWriter.WritePeToStream(assem, hostEnvironment, File.Create(Path.ChangeExtension(fileName, "exe1")));
-
-      //CodeModelToCciOne.MetadataMapper mapper = new CodeModelToCciOne.MetadataMapper();
-      //mapper.Visit(assem);
-      //CodeModelToCciOne.ConvertCodeModelToCciOne converter = new CodeModelToCciOne.ConvertCodeModelToCciOne(assem.Compilation, mapper.metadataMap);
-      //try {
-      //  converter.Visit(assem);
-      //} catch {
-      //  return;
-      //}
-      //converter.WriteAssembly(null);
+      var exeFile = File.Create(Path.ChangeExtension(fileName, "exe"));
+      var sourceLocationProvider = assem.Compilation.SourceLocationProvider;
+      //var localScopeProvider = assem.Compilation.LocalScopeProvider;
+      var pdbWriter = new PdbWriter(Path.ChangeExtension(fileName, "pdb"), sourceLocationProvider);
+      PeWriter.WritePeToStream(assem, hostEnvironment, exeFile, sourceLocationProvider, null, pdbWriter);
     }
 
     private static void RunSuite(string suiteName) {
@@ -176,9 +168,7 @@ namespace Microsoft.Cci.SmallBasic {
           System.Diagnostics.TextWriterTraceListener myWriter = new System.Diagnostics.TextWriterTraceListener(System.Console.Out);
           System.Diagnostics.Debug.Listeners.Add(myWriter);
           try {
-            int returnCode = RunTest(hostEnvironment, Path.GetFileNameWithoutExtension(suiteName), source.ToString(), actualOutput, compilerParameters, testCaseParameters);
-            if (returnCode != 0)
-              actualOutput.Append("Non zero return code: "+returnCode);
+            RunTest(hostEnvironment, Path.GetFileNameWithoutExtension(suiteName), source.ToString(), actualOutput, compilerParameters, testCaseParameters);
           } catch (Exception e) {
             actualOutput.Append(e.Message);
           }
@@ -222,36 +212,23 @@ namespace Microsoft.Cci.SmallBasic {
       }
     }
 
-    private static int RunTest(HostEnvironment hostEnvironment, string suiteName, string test, StringBuilder actualOutput, List<string> compilerParameters, List<string> testCaseParameters) {
+    private static void RunTest(HostEnvironment hostEnvironment, string suiteName, string test, StringBuilder actualOutput, List<string> compilerParameters, List<string> testCaseParameters) {
       IName name = hostEnvironment.NameTable.GetNameFor(suiteName);
       IDictionary<string, string> options = new Dictionary<string, string>();
       List<IAssemblyReference> assemblyReferences = new List<IAssemblyReference>();
       List<IModuleReference> moduleReferences = new List<IModuleReference>();
       assemblyReferences.Add(hostEnvironment.LoadAssembly(hostEnvironment.CoreAssemblySymbolicIdentity));
       assemblyReferences.Add((IAssembly)hostEnvironment.LoadUnitFrom(typeof(Microsoft.SmallBasic.Library.ConsoleWindow).Assembly.Location));
-      IUnit unit;
       SmallBasicAssembly/*?*/ assem = null;
       SmallBasicCompilationHelper helper;
-      /* if (hostEnvironment.previousDocument != null && compilerParameters.Contains("/incremental")) {
-        unit = hostEnvironment.GetIncrementalUnit(test);
-        helper = (SmallBasicCompilationHelper)hostEnvironment.previousDocument.CompilationPart.Helper;
-      } else { */
       List<SmallBasicDocument> programSources = new List<SmallBasicDocument>(1);
       assem = new SmallBasicAssembly(name, "", hostEnvironment, options, assemblyReferences, moduleReferences, programSources);
       helper = new SmallBasicCompilationHelper(assem.Compilation);
       programSources.Add(hostEnvironment.previousDocument = new SmallBasicDocument(helper, name, "", test));
-      unit = assem;
-      //}
-      //if (assem != null && assem.EntryPoint.ResolvedMethod != Dummy.Method) {
-      //  CodeModelToCciOne.MetadataMapper mapper = new CodeModelToCciOne.MetadataMapper();
-      //  mapper.Visit(assem);
-      //  CodeModelToCciOne.ConvertCodeModelToCciOne converter = new CodeModelToCciOne.ConvertCodeModelToCciOne(assem.Compilation, mapper.metadataMap);
-      //  try {
-      //    converter.Visit(assem);
-      //  } catch { return -1; }
-      //  return converter.RunAssembly(true); //TODO: pass in test case parameters
-      //}
-      return -1;
+      var memStream = new MemoryStream();
+      PeWriter.WritePeToStream(assem, hostEnvironment, memStream);
+      var runtimeAssembly = System.Reflection.Assembly.Load(memStream.ToArray());
+      runtimeAssembly.EntryPoint.Invoke(null, null);
     }
 
     private static void HandleErrors(object sender, Microsoft.Cci.ErrorEventArgs args) {
@@ -283,17 +260,6 @@ namespace Microsoft.Cci.SmallBasic {
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(loc, this)));
 
     }
-
-    //internal IUnit GetIncrementalUnit(string newText) {
-    //  string[] lines = newText.Split('$');
-    //  if (lines.Length != 4) return Dummy.Unit;
-    //  string prefix = lines[0];
-    //  string textToReplace = lines[1];
-    //  string replacement = lines[2];
-    //  ISourceDocumentEdit edit = this.previousDocument.GetDocumentEdit(prefix.Length, textToReplace.Length, replacement);
-    //  this.previousDocument = (SourceDocument)edit.SourceDocumentAfterEdit;
-    //  return this.previousDocument.CompilationPart.Compilation.Result;
-    //}
 
     internal SmallBasicDocument/*?*/ previousDocument;
 
