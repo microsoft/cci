@@ -19,9 +19,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.condition = CodeDummy.Expression;
     }
 
-    public AssertStatement(IAssertStatement assertStatement) 
-      : base(assertStatement)
-    {
+    public AssertStatement(IAssertStatement assertStatement)
+      : base(assertStatement) {
       this.condition = assertStatement.Condition;
       this.hasBeenVerified = assertStatement.HasBeenVerified;
     }
@@ -78,10 +77,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
   }
-  
+
   public class BlockStatement : Statement, IBlockStatement {
 
-    public BlockStatement(){
+    public BlockStatement() {
       this.statements = new List<IStatement>();
       this.useCheckedArithmetic = false;
     }
@@ -186,7 +185,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region ICatchClause Members
 
-    IEnumerable<ILocation> ICatchClause.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -676,7 +675,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IStatement Members
 
-    IEnumerable<ILocation> IStatement.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.Locations.AsReadOnly(); }
     }
 
@@ -731,7 +730,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.body.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> ISwitchCase.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -840,7 +839,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region ITryCatchFinallyStatement Members
 
     IEnumerable<ICatchClause> ITryCatchFinallyStatement.CatchClauses {
-      get { return this.catchClauses.AsReadOnly(); } 
+      get { return this.catchClauses.AsReadOnly(); }
     }
 
     #endregion

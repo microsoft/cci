@@ -117,7 +117,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public AssumeStatement(BlockStatement containingBlock, AssumeStatement template)
-      : base(containingBlock, template){
+      : base(containingBlock, template) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
     }
 
@@ -642,8 +642,7 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    public bool IsEmpty
-    {
+    public bool IsEmpty {
       get { return this.statements.Count == 0; }
     }
 
@@ -1083,7 +1082,7 @@ namespace Microsoft.Cci.Ast {
           IStatement/*?*/ s = blockStatement.SingletonStatement;
           if (s != null) return s;
         }
-        return this.TrueBranch; 
+        return this.TrueBranch;
       }
     }
 
@@ -1726,7 +1725,7 @@ namespace Microsoft.Cci.Ast {
           if (TypeHelper.TypesAreEquivalent(cast.TargetType.ResolvedType, this.PlatformType.SystemVoid))
             return cast.ValueToCast.ProjectAsIExpression();
         }
-        return this.Expression.ProjectAsIExpression(); 
+        return this.Expression.ProjectAsIExpression();
       }
     }
 
@@ -1748,7 +1747,7 @@ namespace Microsoft.Cci.Ast {
     /// of the explicit code in the constructor is executed.
     /// </summary>
     public FieldInitializerStatement()
-      : base (SourceDummy.SourceLocation) {
+      : base(SourceDummy.SourceLocation) {
     }
 
     /// <summary>
@@ -2784,8 +2783,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="name">The name of the variable.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated expression.</param>
     public QuantifierVariable(TypeExpression type, NameDeclaration name, ISourceLocation sourceLocation)
-      : base(sourceLocation)
-    {
+      : base(sourceLocation) {
       this.type = type;
       this.name = name;
     }
@@ -2881,8 +2879,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="initialValue">The value, if any, to assign to the local as its initial value. May be null.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated expression.</param>
     public FixedPointerDeclaration(NameDeclaration name, Expression initialValue, ISourceLocation sourceLocation)
-      : base(true, true, name, initialValue, sourceLocation)
-    {
+      : base(true, true, name, initialValue, sourceLocation) {
     }
     /// <summary>
     /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
@@ -3210,7 +3207,7 @@ namespace Microsoft.Cci.Ast {
     IExpression/*?*/ ILocalDeclarationStatement.InitialValue {
       get {
         if (this.InitialValue == null) return null;
-        return this.ConvertedInitialValue.ProjectAsIExpression(); 
+        return this.ConvertedInitialValue.ProjectAsIExpression();
       }
     }
 
@@ -3255,7 +3252,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="declarations">The individual local declarations making up the statement. The collection has at least one element.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated statement.</param>
     public LocalDeclarationsStatement(bool isConstant, bool isReadOnly, bool mayInferType, TypeExpression/*?*/ typeExpression, List<LocalDeclaration> declarations, ISourceLocation sourceLocation)
-      : base(sourceLocation) 
+      : base(sourceLocation)
       //^ requires typeExpression == null ==> mayInferType; //TODO: get rid of the flag and use nullness of typeExpression instead.
     {
       int flags = 0;
@@ -3429,7 +3426,7 @@ namespace Microsoft.Cci.Ast {
     /// The compile time value of the definition, if it is a local constant.
     /// </summary>
     public CompileTimeConstant CompileTimeValue {
-      get 
+      get
         //^ requires this.IsConstant;
       {
         return this.LocalDeclaration.CompileTimeValue;
@@ -3530,7 +3527,7 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    IEnumerable<ILocation> ILocalDefinition.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.LocalDeclaration.SourceLocation); }
     }
 
@@ -3768,9 +3765,9 @@ namespace Microsoft.Cci.Ast {
     /// The resulting call expression. This is derived from EventToRaise and Arguments.
     /// </summary>
     public IMethodCall MethodCall {
-      get { 
+      get {
         //TODO: implement this
-        return CodeDummy.MethodCall; 
+        return CodeDummy.MethodCall;
       }
     }
 
@@ -4531,8 +4528,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 
     /// </summary>
-    public LanguageSpecificCompilationHelper Helper
-    {
+    public LanguageSpecificCompilationHelper Helper {
       [DebuggerNonUserCode]
       get { return this.ContainingSwitchStatement.Helper; }
     }

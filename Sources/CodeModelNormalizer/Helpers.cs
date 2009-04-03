@@ -96,7 +96,7 @@ namespace Microsoft.Cci {
 
     #region IExpression Members
 
-    IEnumerable<ILocation> IExpression.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 

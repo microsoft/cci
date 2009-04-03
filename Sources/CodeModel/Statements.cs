@@ -60,7 +60,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents a catch clause of a try-catch statement or a try-catch-finally statement. 
   /// </summary>
-  public interface ICatchClause {
+  public interface ICatchClause : IObjectWithLocations {
     /// <summary>
     /// The statements within the catch clause.
     /// </summary>
@@ -81,11 +81,6 @@ namespace Microsoft.Cci {
     /// May be null, in which case any exception of ExceptionType will cause the handler to execute.
     /// </summary>
     IExpression/*?*/ FilterCondition { get; }
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IStatement instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
 
   }
 
@@ -112,7 +107,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Terminates execution of the loop body containing this statement directly or indirectly and continues on to the loop exit condition test.
   /// </summary>
-  public interface IContinueStatement : IStatement {    
+  public interface IContinueStatement : IStatement {
   }
 
   /// <summary>
@@ -309,7 +304,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An executable statement.
   /// </summary>
-  public interface IStatement : IErrorCheckable {
+  public interface IStatement : IErrorCheckable, IObjectWithLocations {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -318,17 +313,12 @@ namespace Microsoft.Cci {
     /// </summary>
     void Dispatch(ICodeVisitor visitor);
 
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IStatement instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
-
   }
 
   /// <summary>
   /// An object representing a switch case.
   /// </summary>
-  public interface ISwitchCase  {
+  public interface ISwitchCase : IObjectWithLocations {
 
     /// <summary>
     /// The statements representing this switch case.
@@ -344,16 +334,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// True if this case will be branched to for all values where no other case is applicable. Only of of these is legal per switch statement.
+    /// True if this case will be branched to for all values where no other case is applicable. Only one of of these is legal per switch statement.
     /// </summary>
     bool IsDefault {
       get;
     }
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IStatement instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
 
   }
 

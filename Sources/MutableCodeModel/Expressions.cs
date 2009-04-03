@@ -120,10 +120,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public ushort Alignment {
       get { return this.alignment; }
-      set 
+      set
         //^ requires value == 1 || value == 2 || value == 4;
-      { 
-        this.alignment = value; 
+      {
+        this.alignment = value;
       }
     }
     ushort alignment;
@@ -155,8 +155,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.returnValueIsByRef = false;
     }
 
-    public AnonymousDelegate(IAnonymousDelegate anonymousDelegate) 
-      : base (anonymousDelegate) {
+    public AnonymousDelegate(IAnonymousDelegate anonymousDelegate)
+      : base(anonymousDelegate) {
       this.body = anonymousDelegate.Body;
       this.callingConvention = anonymousDelegate.CallingConvention;
       this.parameters = new List<IParameterDefinition>(anonymousDelegate.Parameters);
@@ -251,7 +251,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       set {
         if (value is Conditional) {
         }
-        this.indexedObject = value; 
+        this.indexedObject = value;
       }
     }
     IExpression indexedObject;
@@ -303,7 +303,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.target = value; }
     }
     ITargetExpression target;
- 
+
   }
 
   public sealed class BaseClassReference : Expression, IBaseClassReference {
@@ -319,7 +319,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       visitor.Visit(this);
     }
 
-   }
+  }
 
   /// <summary>
   /// A binary operation performed on a left and right operand.
@@ -444,12 +444,12 @@ namespace Microsoft.Cci.MutableCodeModel {
         //^^ ensures result == 1 || result == 2 || result == 4;
       {
         //^ assume this.alignment == 1 || this.alignment == 2 || this.alignment == 4;
-        return this.alignment; 
+        return this.alignment;
       }
-      set 
+      set
         //^ requires value == 1 || value == 2 || value == 4;
-      { 
-        this.alignment = value; 
+      {
+        this.alignment = value;
       }
     }
     //^ [SpecPublic]
@@ -475,8 +475,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool IsUnaligned {
       get
         //^^ ensures result == (this.alignment != 1 && this.alignment != 2 && this.alignment != 4; )
-      { 
-        return this.alignment != 1 && this.alignment != 2 && this.alignment != 4; 
+      {
+        return this.alignment != 1 && this.alignment != 2 && this.alignment != 4;
       }
     }
 
@@ -631,10 +631,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IMetadataExpression Members
 
-    IEnumerable<ILocation> IMetadataExpression.Locations {
-      get { return ((IExpression)this).Locations; }
-    }
-
     ITypeReference IMetadataExpression.Type {
       get { return this.Type; }
     }
@@ -679,7 +675,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     IExpression resultIfTrue;
 
-   }
+  }
 
   public abstract class ConstructorOrMethodCall : Expression {
 
@@ -824,10 +820,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IMetadataExpression Members
 
-    IEnumerable<ILocation> IMetadataExpression.Locations {
-      get { return ((IExpression)this).Locations; }
-    }
-
     ITypeReference IMetadataExpression.Type {
       get { return this.Type; }
     }
@@ -857,8 +849,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.instance; }
       set
         //^ requires this.MethodToCallViaDelegate.ResolvedMethod.IsStatic <==> value == null;
-      { 
-        this.instance = value; 
+      {
+        this.instance = value;
       }
     }
     IExpression/*?*/ instance;
@@ -992,8 +984,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return false;
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return false; }
     }
 
@@ -1014,7 +1005,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IExpression Members
 
-    IEnumerable<ILocation> IExpression.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -1201,8 +1192,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     public MethodCall(IMethodCall methodCall)
-      : base(methodCall) 
-    {
+      : base(methodCall) {
       this.isVirtualCall = methodCall.IsVirtualCall;
       this.isStaticCall = methodCall.IsStaticCall;
       if (!methodCall.IsStaticCall) {
@@ -1219,14 +1209,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool IsVirtualCall {
       get
         //^ ensures result ==> this.MethodToCall.ResolvedMethod.IsVirtual;
-      { 
+      {
         //^ assume false;
-        return this.isVirtualCall; 
+        return this.isVirtualCall;
       }
       set
         //^ requires value ==> this.MethodToCall.ResolvedMethod.IsVirtual;
-      { 
-        this.isVirtualCall = value; 
+      {
+        this.isVirtualCall = value;
       }
     }
     bool isVirtualCall;
@@ -1335,12 +1325,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Returns either null or the parameter or property or field that corresponds to this argument.
     /// </summary>
-    public object/*?*/ ResolvedDefinition{
+    public object/*?*/ ResolvedDefinition {
       get { return this.resolvedDefinition; }
       set
         //^ requires value == null || value is IParameterDefinition || value is IPropertyDefinition || value is IFieldDefinition;
-      { 
-        this.resolvedDefinition = value; 
+      {
+        this.resolvedDefinition = value;
       }
     }
     object/*?*/ resolvedDefinition;
@@ -1365,10 +1355,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     void IMetadataExpression.Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
-    }
-
-    IEnumerable<ILocation> IMetadataExpression.Locations {
-      get { return ((IExpression)this).Locations; }
     }
 
     ITypeReference IMetadataExpression.Type {
@@ -1396,7 +1382,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   public sealed class OldValue : Expression, IOldValue {
-    
+
     public OldValue() {
       this.expression = CodeDummy.Expression;
     }
@@ -1529,7 +1515,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public ReturnValue() {
     }
 
-    public ReturnValue (IReturnValue returnValue)
+    public ReturnValue(IReturnValue returnValue)
       : base(returnValue) {
     }
 
@@ -1679,8 +1665,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.definition; }
       set
         //^ requires value == null || value is ILocalDefinition || value is IParameterDefinition || value is IFieldDefinition || value is IArrayIndexer || value is IAddressDereference;
-      { 
-        this.definition = value; 
+      {
+        this.definition = value;
       }
     }
     object/*?*/ definition;
@@ -1770,10 +1756,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     void IMetadataExpression.Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
-    }
-
-    IEnumerable<ILocation> IMetadataExpression.Locations {
-      get { return ((IExpression)this).Locations; }
     }
 
     ITypeReference IMetadataExpression.Type {

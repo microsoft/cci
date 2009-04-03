@@ -1305,7 +1305,7 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
         foreach (TypeDeclaration declaration in this.TypeDeclarations)
           yield return declaration.SourceLocation;

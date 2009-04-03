@@ -452,7 +452,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression results in a value of some type.
   /// </summary>
-  public interface IExpression : IErrorCheckable {
+  public interface IExpression : IErrorCheckable, IObjectWithLocations {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -460,11 +460,6 @@ namespace Microsoft.Cci {
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
     void Dispatch(ICodeVisitor visitor);
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IExpression instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
 
     /// <summary>
     /// The type of value the expression will evaluate to, as determined at compile time.
@@ -847,8 +842,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// An instance of IFieldReference, IMethodReference or ITypeReference.
     /// </summary>
-    object Definition { 
-      get; 
+    object Definition {
+      get;
       //^ ensures result is IFieldReference || result is IMethodReference || result is ITypeReference;
     }
   }
