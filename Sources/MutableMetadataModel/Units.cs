@@ -59,7 +59,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Identifies the culture associated with the assembly. Typically specified for sattelite assemblies with localized resources.
     /// Empty if not specified.
     /// </summary>
-    public string Culture { 
+    public string Culture {
       get { return this.culture; }
       set { this.culture = value; }
     }
@@ -72,7 +72,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly.
     /// </summary>
-    public List<IAliasForType> ExportedTypes { 
+    public List<IAliasForType> ExportedTypes {
       get { return this.exportedTypes; }
       set { this.exportedTypes = value; }
     }
@@ -279,7 +279,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.unifiedAssemblyIdentity = value; }
     }
     AssemblyIdentity unifiedAssemblyIdentity;
-    
+
     #region IAssemblyReference Members
 
     IEnumerable<IName> IAssemblyReference.Aliases {
@@ -474,7 +474,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public bool Requires32bits {
       get { return this.requires32bits; }
-      set { this.requires32bits = value;  }
+      set { this.requires32bits = value; }
     }
     bool requires32bits;
 
@@ -701,11 +701,11 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public IRootUnitNamespace UnitNamespaceRoot {
       get { return this.unitNamespaceRoot; }
-      set 
+      set
         //^ requires value.Unit == this;
         //^ requires value.RootOwner == this;
-      { 
-        this.unitNamespaceRoot = value; 
+      {
+        this.unitNamespaceRoot = value;
       }
     }
     IRootUnitNamespace unitNamespaceRoot;
@@ -737,7 +737,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.locations = new List<ILocation>(unitReference.Locations);
       this.name = unitReference.Name;
     }
-    
+
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
@@ -772,7 +772,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 

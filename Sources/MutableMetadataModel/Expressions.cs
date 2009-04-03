@@ -122,8 +122,8 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public abstract void Dispatch(IMetadataVisitor visitor);
 
-    public bool HasErrors() { 
-      return false; 
+    public bool HasErrors() {
+      return false;
     }
 
     public List<ILocation> Locations {
@@ -141,7 +141,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IMetadataExpression Members
 
 
-    IEnumerable<ILocation> IMetadataExpression.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 

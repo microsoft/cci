@@ -99,7 +99,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -196,9 +196,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<IParameterTypeInformation> parameters;
 
     public override ITypeDefinition ResolvedType {
-      get { 
+      get {
         return new FunctionPointerType(this.callingConvention, this.returnValueIsByRef, this.type, this.returnValueCustomModifiers.AsReadOnly(), this.parameters.AsReadOnly(),
-        this.extraArgumentTypes.AsReadOnly(), this.InternFactory); 
+        this.extraArgumentTypes.AsReadOnly(), this.InternFactory);
       }
     }
 
@@ -400,7 +400,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         //^ requires value ==> !this.MustBeValueType;
       {
         if (value)
-          this.flags |= TypeDefinition.Flags.MustBeReferenceType; 
+          this.flags |= TypeDefinition.Flags.MustBeReferenceType;
         else
           this.flags &= ~TypeDefinition.Flags.MustBeReferenceType;
       }
@@ -410,9 +410,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return (this.flags & TypeDefinition.Flags.MustBeValueType) != 0; }
       set
         //^ requires value ==> !this.MustBeReferenceType;
-      { 
+      {
         if (value)
-          this.flags |= TypeDefinition.Flags.MustBeValueType; 
+          this.flags |= TypeDefinition.Flags.MustBeValueType;
         else
           this.flags &= ~TypeDefinition.Flags.MustBeValueType;
       }
@@ -420,9 +420,9 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public bool MustHaveDefaultConstructor {
       get { return (this.flags & TypeDefinition.Flags.MustHaveDefaultConstructor) != 0; }
-      set { 
+      set {
         if (value)
-          this.flags |= TypeDefinition.Flags.MustHaveDefaultConstructor; 
+          this.flags |= TypeDefinition.Flags.MustHaveDefaultConstructor;
         else
           this.flags &= ~TypeDefinition.Flags.MustHaveDefaultConstructor;
       }
@@ -430,7 +430,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public TypeParameterVariance Variance {
       get { return (TypeParameterVariance)((int)this.flags>>4) & TypeParameterVariance.Mask; }
-      set { 
+      set {
         this.flags &= (TypeDefinition.Flags)~((int)TypeParameterVariance.Mask<<4);
         this.flags |= (TypeDefinition.Flags)((int)(value&TypeParameterVariance.Mask)<<4);
       }
@@ -1301,7 +1301,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       MustBeReferenceType=0x00008000,
       MustBeValueType=0x00004000,
       MustHaveDefaultConstructor=0x00002000,
-      MangleName = 0x00001000,
+      MangleName=0x00001000,
       None=0x00000000,
     }
     internal Flags flags;
@@ -1589,7 +1589,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.privateHelperMembers = new List<ITypeDefinitionMember>(this.template.PrivateHelperMembers);
           this.template = Dummy.Type;
         }
-        return this.privateHelperMembers; 
+        return this.privateHelperMembers;
       }
       set { this.privateHelperMembers = value; }
     }
@@ -1689,7 +1689,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -1846,11 +1846,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool IsValueType {
       get {
         if (this.originalReference != null) return this.originalReference.IsValueType;
-        return this.isValueType; 
+        return this.isValueType;
       }
       set {
         this.originalReference = null;
-        this.isValueType = value; 
+        this.isValueType = value;
       }
     }
     bool isValueType;
@@ -1887,7 +1887,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 

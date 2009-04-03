@@ -118,7 +118,7 @@ namespace Microsoft.Cci {
     public IModule ResolvedModule {
       get {
         if (this.ResolvedAssembly == Dummy.Assembly) return Dummy.Module;
-        return this.ResolvedAssembly; 
+        return this.ResolvedAssembly;
       }
     }
 
@@ -347,7 +347,7 @@ namespace Microsoft.Cci {
     public IUnit ResolvedUnit {
       get {
         if (this.ResolvedModule == Dummy.Module) return Dummy.Unit;
-        return this.ResolvedModule; 
+        return this.ResolvedModule;
       }
     }
 
@@ -555,7 +555,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
@@ -634,7 +634,7 @@ namespace Microsoft.Cci {
       IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
       for (int i = 0, n = names.Length-1; i < n; i++)
         ns = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor(names[i]));
-      return new NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor(names[names.Length-1]), genericParameterCount, false, isValueType, typeCode); 
+      return new NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor(names[names.Length-1]), genericParameterCount, false, isValueType, typeCode);
     }
 
     /// <summary>
@@ -1579,7 +1579,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 

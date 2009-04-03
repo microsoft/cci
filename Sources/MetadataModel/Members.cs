@@ -150,7 +150,7 @@ namespace Microsoft.Cci {
     /// This field is mapped to an explicitly initialized (static) memory location.
     /// </summary>
     bool IsMapped {
-      get; 
+      get;
       // ^ ensures result ==> this.IsStatic;
       //^ ensures !result || this.IsStatic;
     }
@@ -188,7 +188,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Specifies how this field is marshalled when it is accessed from unmanaged code.
     /// </summary>
-    IMarshallingInformation MarshallingInformation { 
+    IMarshallingInformation MarshallingInformation {
       get;
       //^ requires this.IsMarshalledExplicitly;
     }
@@ -224,7 +224,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The Field being referred to.
     /// </summary>
-    IFieldDefinition ResolvedField { get;}
+    IFieldDefinition ResolvedField { get; }
 
   }
 
@@ -261,7 +261,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Handler kind for this SEH info
     /// </summary>
-    HandlerKind HandlerKind { get;}
+    HandlerKind HandlerKind { get; }
 
     /// <summary>
     /// If HandlerKind == HandlerKind.Catch, this is the type of expection to catch. If HandlerKind == HandlerKind.Filter, this is System.Object.
@@ -272,33 +272,33 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Label instruction corresponding to the start of try block
     /// </summary>
-    uint TryStartOffset { get;}
+    uint TryStartOffset { get; }
 
     /// <summary>
     /// Label instruction corresponding to the end of try block
     /// </summary>
-    uint TryEndOffset { get;}
+    uint TryEndOffset { get; }
 
     /// <summary>
     /// Label instruction corresponding to the start of filter decision block
     /// </summary>
-    uint FilterDecisionStartOffset { get;}
+    uint FilterDecisionStartOffset { get; }
 
     /// <summary>
     /// Label instruction corresponding to the start of handler block
     /// </summary>
-    uint HandlerStartOffset { get;}
+    uint HandlerStartOffset { get; }
 
     /// <summary>
     /// Label instruction corresponding to the end of handler block
     /// </summary>
-    uint HandlerEndOffset { get;}
+    uint HandlerEndOffset { get; }
   }
 
   /// <summary>
   /// An object that represents a local variable or constant.
   /// </summary>
-  public interface ILocalDefinition : INamedEntity {
+  public interface ILocalDefinition : INamedEntity, IObjectWithLocations {
 
     /// <summary>
     /// The compile time value of the definition, if it is a local constant.
@@ -324,7 +324,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The local variable has custom modifiers.
     /// </summary>
-    bool IsModified { get;}
+    bool IsModified { get; }
 
     /// <summary>
     /// True if the value referenced by the local must not be moved by the actions of the garbage collector.
@@ -335,11 +335,6 @@ namespace Microsoft.Cci {
     /// True if the local contains a managed pointer (for example a reference to a local variable or a reference to a field of an object).
     /// </summary>
     bool IsReference { get; }
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IReference instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
 
     /// <summary>
     /// The type of the local.
@@ -387,7 +382,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The local variables of the method.
     /// </summary>
-    IEnumerable<ILocalDefinition> LocalVariables { get;}
+    IEnumerable<ILocalDefinition> LocalVariables { get; }
 
     /// <summary>
     /// Definition of method whose body this is.
@@ -408,7 +403,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
-    ushort MaxStack { get;}
+    ushort MaxStack { get; }
 
     /// <summary>
     /// Any types that are implicitly defined in order to implement the body semantics.
@@ -435,8 +430,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// If the method is generic then this list contains the type parameters.
     /// </summary>
-    IEnumerable<IGenericMethodParameter> GenericParameters { 
-      get; 
+    IEnumerable<IGenericMethodParameter> GenericParameters {
+      get;
       //^ requires this.IsGeneric;
     }
 
@@ -556,8 +551,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the method may be overridden (or if it is an override).
     /// </summary>
-    bool IsVirtual { 
-      get; 
+    bool IsVirtual {
+      get;
       //^ ensures result ==> !this.IsStatic;
     }
 
@@ -622,8 +617,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A compile time constant value that should be supplied as the corresponding argument value by callers that do not explicitly specify an argument value for this parameter.
     /// </summary>
-    IMetadataConstant DefaultValue { 
-      get; 
+    IMetadataConstant DefaultValue {
+      get;
       //^ requires this.HasDefaultValue;
     }
 
@@ -743,7 +738,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Calling convention of the signature.
     /// </summary>
-    CallingConvention CallingConvention { get;}
+    CallingConvention CallingConvention { get; }
 
     /// <summary>
     /// The parameters forming part of this signature.
@@ -802,12 +797,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A reference to the containing type of the referenced type member.
     /// </summary>
-    ITypeReference ContainingType { get;}
+    ITypeReference ContainingType { get; }
 
     /// <summary>
     /// The type definition member this reference resolves to.
     /// </summary>
-    ITypeDefinitionMember ResolvedTypeDefinitionMember { get;}
+    ITypeDefinitionMember ResolvedTypeDefinitionMember { get; }
   }
 
   /// <summary>
@@ -958,8 +953,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The method being referred to.
     /// </summary>
-    IMethodDefinition ResolvedMethod { 
-      get; 
+    IMethodDefinition ResolvedMethod {
+      get;
       //^ ensures this is IMethodDefinition ==> result == this;
     }
 
@@ -994,7 +989,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the generic method of which this method is an instance.
     /// </summary>
-    IMethodReference GenericMethod { 
+    IMethodReference GenericMethod {
       get;
       //^ ensures result.ResolvedMethod.IsGeneric;
     }
@@ -1015,7 +1010,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The name of the method.
     /// </summary>
-    new IName Name { get;}
+    new IName Name { get; }
   }
 
 }

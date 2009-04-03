@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Microsoft.Cci {
 
-    /// <summary>
+  /// <summary>
   /// Helper class for computing information from the structure of ITypeDefinitionMember instances.
   /// </summary>
   public static class MemberHelper {
@@ -145,7 +145,7 @@ namespace Microsoft.Cci {
     /// of assigning offset. For example, a struct and a union in C may be different. 
     /// </summary>
     /// <param name="field">The field whose offset is to returned. The field must not be static.</param>
-    public static uint GetFieldOffset(IFieldDefinition field) 
+    public static uint GetFieldOffset(IFieldDefinition field)
       //^ requires !field.IsStatic; 
     {
       ITypeDefinition typeDefinition = field.ContainingTypeDefinition;
@@ -356,7 +356,7 @@ namespace Microsoft.Cci {
     /// The number of generic parameters of the referenced method. Zero if the referenced method is not generic.
     /// </summary>
     public ushort GenericParameterCount {
-      get 
+      get
         //^^ ensures !this.IsGeneric ==> result == 0;
         //^^ ensures this.IsGeneric ==> result > 0;
       { return this.genericParameterCount; }
@@ -372,7 +372,7 @@ namespace Microsoft.Cci {
     /// Returns the unique interned key associated with the referenced method.
     /// </summary>
     public uint InternedKey {
-      get { 
+      get {
         if (this.internedKey == 0)
           this.internedKey = this.host.InternFactory.GetMethodInternedKey(this);
         return this.internedKey;
@@ -455,7 +455,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
@@ -522,7 +522,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
-     bool IParameterTypeInformation.IsByReference {
+    bool IParameterTypeInformation.IsByReference {
       get { return false; }
     }
 
@@ -530,7 +530,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
- }
+  }
 
   /// <summary>
   /// An object that compares to instances of IParameterTypeInformation for equality.

@@ -76,7 +76,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression that can be represented directly in metadata.
   /// </summary>
-  public interface IMetadataExpression {
+  public interface IMetadataExpression : IObjectWithLocations {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -84,16 +84,6 @@ namespace Microsoft.Cci {
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
     void Dispatch(IMetadataVisitor visitor);
-
-    /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    bool HasErrors();
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IExpression instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
 
     /// <summary>
     /// The type of value the expression represents.

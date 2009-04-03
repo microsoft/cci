@@ -148,7 +148,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public uint BitLength {
       get { return (uint)this.bitLength; }
-      set { this.bitLength = (int)value;  }
+      set { this.bitLength = (int)value; }
     }
     int bitLength;
 
@@ -355,7 +355,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -419,7 +419,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
-    }    
+    }
 
     #region IContainerMember<INamespaceDefinition> Members
 
@@ -492,13 +492,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     public IMethodDefinition DefiningMethod {
-      get { 
-        return this.definingMethod; 
+      get {
+        return this.definingMethod;
       }
       set
         //^ requires value.IsGeneric;
-      { 
-        this.definingMethod = value; 
+      {
+        this.definingMethod = value;
       }
     }
     IMethodDefinition definingMethod;
@@ -610,7 +610,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.customModifiers.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> ILocalDefinition.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -1038,7 +1038,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     public bool IsStaticConstructor {
-      get { return this.IsSpecialName && this.Name.Value.Equals(".cctor"); } 
+      get { return this.IsSpecialName && this.Name.Value.Equals(".cctor"); }
     }
 
     public bool IsSynchronized {
@@ -1062,11 +1062,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     public bool IsVirtual {
-      get { 
+      get {
         //^ assume !this.IsStatic;
-        return (this.flags & 0x00000080) != 0; 
+        return (this.flags & 0x00000080) != 0;
       }
-      set 
+      set
         //^ requires value ==> !this.IsStatic;
       {
         if (value)
@@ -1358,7 +1358,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool returnValueIsModified;
 
     public override string ToString() {
-      return MemberHelper.GetMethodSignature(this, 
+      return MemberHelper.GetMethodSignature(this,
         NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName);
     }
 
@@ -1397,7 +1397,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -1583,7 +1583,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -1990,13 +1990,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     IName name;
 
     public override string ToString() {
-      return MemberHelper.GetMemberSignature(this, 
+      return MemberHelper.GetMemberSignature(this,
         NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName|NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
     }
 
     public TypeMemberVisibility Visibility {
       get { return (TypeMemberVisibility)this.flags & TypeMemberVisibility.Mask; }
-      set { 
+      set {
         this.flags &= (int)~TypeMemberVisibility.Mask;
         this.flags |= (int)(value & TypeMemberVisibility.Mask);
       }
@@ -2020,7 +2020,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 

@@ -88,12 +88,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The binary document for which this is the memory block
     /// </summary>
-    IBinaryDocument BinaryDocument { get;}
+    IBinaryDocument BinaryDocument { get; }
 
     /// <summary>
     /// The pointer to the start of Memory block
     /// </summary>
-    byte* Pointer { get;}
+    byte* Pointer { get; }
 
     /// <summary>
     /// Length of the memory block
@@ -144,7 +144,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The identity of the assembly containing the core system types such as System.Object.
     /// </summary>
-    AssemblyIdentity CoreAssemblySymbolicIdentity { get;}
+    AssemblyIdentity CoreAssemblySymbolicIdentity { get; }
 
     /// <summary>
     /// Finds the assembly that matches the given identifier among the already loaded set of assemblies,
@@ -169,7 +169,7 @@ namespace Microsoft.Cci {
     /// The association is based on the identities of the entities and the factory does not retain
     /// references to the given metadata model objects.
     /// </summary>
-    IInternFactory InternFactory { get;}
+    IInternFactory InternFactory { get; }
 
     /// <summary>
     /// A collection of references to types from the core platform, such as System.Object and System.String.
@@ -266,8 +266,7 @@ namespace Microsoft.Cci {
   /// </summary>
   /// <typeparam name="MemberType">The type of member contained by the Members collection of this container.</typeparam>
   public interface IContainer<MemberType>
-    where MemberType : class
-  {
+    where MemberType : class {
     /// <summary>
     /// The collection of contained members.
     /// </summary>
@@ -287,7 +286,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The name of the entity.
     /// </summary>
-    new IName Name { get;}
+    new IName Name { get; }
   }
 
   /// <summary>
@@ -299,7 +298,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object corresponding to reference to a metadata entity such as a type or a field.
   /// </summary>
-  public interface IReference {
+  public interface IReference : IObjectWithLocations {
 
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.
@@ -312,11 +311,6 @@ namespace Microsoft.Cci {
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
     void Dispatch(IMetadataVisitor visitor);
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this IReference instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get; }
 
   }
 
@@ -399,18 +393,14 @@ namespace Microsoft.Cci {
   /// A collection of named members, with routines to search the collection.
   /// </summary>
   public interface IScope<MemberType>
-    where MemberType : class, INamedEntity
-  {
+    where MemberType : class, INamedEntity {
 
     /// <summary>
     /// Return true if the given member instance is a member of this scope.
     /// </summary>
     //^ [Pure]
     bool Contains(MemberType/*!*/ member);
-    // ^ ensures result == exists{MemberType mem in this.Members; mem == member}; //TODO: Spec# problem
-// error CS1604: Cannot assign to 'mem' because it is read-only
-// error CS103: The name 'mem' does not exist in the current context
-// error CS103: The name 'member' does not exist in the current context
+    // ^ ensures result == exists{MemberType mem in this.Members; mem == member};
 
     /// <summary>
     /// Returns the list of members with the given name that also satisfy the given predicate.
@@ -456,18 +446,30 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// Implemented by types whose instances are usually derived from documents.
+  /// </summary>
+  public interface IObjectWithLocations {
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    IEnumerable<ILocation> Locations { get; }
+
+  }
+
+  /// <summary>
   /// Represents a location in IL operation stream.
   /// </summary>
   public interface IILLocation : ILocation {
     /// <summary>
     /// Method definition of the IL.
     /// </summary>
-    IMethodDefinition MethodDefinition { get;}
+    IMethodDefinition MethodDefinition { get; }
 
     /// <summary>
     /// Offset into the IL Stream.
     /// </summary>
-    uint Offset { get;}
+    uint Offset { get; }
   }
 
   /// <summary>

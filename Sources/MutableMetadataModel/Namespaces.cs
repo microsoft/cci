@@ -266,8 +266,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.Unit; }
     }
 
-    #endregion  
-  
+    #endregion
+
     #region INamespaceDefinition Members
 
 
@@ -291,7 +291,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -360,7 +360,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes.AsReadOnly(); }
     }
 
-    IEnumerable<ILocation> IReference.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.locations.AsReadOnly(); }
     }
 
