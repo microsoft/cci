@@ -1,0 +1,3524 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="ResMimeType">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="Version">
+    <value>1.0.0.0</value>
+  </resheader>
+  <resheader name="Reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=1.0.3102.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="Writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=1.0.3102.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="PrivateOrProtectedNamespaceElement">
+    <value>Namespace elements cannot be explicitly declared as private or protected.</value>
+    <comment>1527</comment>
+  </data>
+  <data name="NoArglistInIndexers">
+    <value>__arglist is not allowed in indexers.</value>
+    <comment>0237</comment>
+  </data>
+  <data name="NoArglistInDelegates">
+    <value>__arglist is not allowed in delegates.</value>
+    <comment>0235</comment>
+  </data>
+  <data name="NoCommentEnd">
+    <value>End-of-file found, '*/' expected.</value>
+    <comment>1035</comment>
+  </data>
+  <data name="NewOnNamespaceElement">
+    <value>Keyword new not allowed on namespace elements.</value>
+    <comment>1530</comment>
+  </data>
+  <data name="DuplicateModifier">
+    <value>Duplicate '{0}' modifier.</value>
+    <comment>1004</comment>
+  </data>
+  <data name="ConflictingProtectionModifier">
+    <value>More than one protection modifier.</value>
+    <comment>0107</comment>
+  </data>
+  <data name="ExpectedLeftBrace">
+    <value>{ expected.</value>
+    <comment>1514</comment>
+  </data>
+  <data name="ExpectedIdentifier">
+    <value>Identifier expected.</value>
+    <comment>1001</comment>
+  </data>
+  <data name="InvalidArglistConstructContext">
+    <value>The __arglist construct is valid only within a variable argument method.</value>
+    <comment>0190</comment>
+  </data>
+  <data name="InvalidModifier">
+    <value>The modifier '{0}' is not valid for this item.</value>
+    <comment>0106</comment>
+  </data>
+  <data name="ExpectedSemicolon">
+    <value>; expected.</value>
+    <comment>1002</comment>
+  </data>
+  <data name="ExpectedRightBrace">
+    <value>} expected.</value>
+    <comment>1513</comment>
+  </data>
+  <data name="ExpectedRightParenthesis">
+    <value>) expected.</value>
+    <comment>1026</comment>
+  </data>
+  <data name="ExpectedRightBracket">
+    <value>] expected.</value>
+  </data>
+  <data name="DuplicateAccessor">
+    <value>Property accessor already defined.</value>
+    <comment>1007</comment>
+  </data>
+  <data name="GetOrSetExpected">
+    <value>A get or set accessor expected.</value>
+    <comment>1014</comment>
+  </data>
+  <data name="ClosingTagMismatch">
+    <value>Expected &lt;/{0}&gt;.</value>
+  </data>
+  <data name="UnexpectedToken">
+    <value>Did not expect '{0}'.</value>
+  </data>
+  <data name="NoSuchAttribute">
+    <value>Element '{0}' does not have an attribute '{1}'.</value>
+  </data>
+  <data name="NoSuchElement">
+    <value>Element '{0}' does not have a child element '{1}'.</value>
+  </data>
+  <data name="InvalidAxisSpecifier">
+    <value>'{0}' is not a valid axis specifier.</value>
+  </data>
+  <data name="InvalidPathExpression">
+    <value>Invalid Path Expression.</value>
+  </data>
+  <data name="ExpectedElement">
+    <value>Expected element '{0}'.</value>
+  </data>
+  <data name="InvalidExprTerm">
+    <value>Invalid expression term '{0}'.</value>
+    <comment>1525</comment>
+  </data>
+  <data name="SingleTypeNameNotFound">
+    <value>The type or namespace name '{0}' could not be found (are you missing a using directive or an assembly reference?)</value>
+    <comment>0246</comment>
+  </data>
+  <data name="NoDefaultConstructor">
+    <value>Type '{0}' does not have a parameterless constructor.</value>
+  </data>
+  <data name="AbstractNotVirtual">
+    <value>The abstract method '{0}' cannot be marked virtual.</value>
+    <comment>0503</comment>
+  </data>
+  <data name="CannotMarkAbstractPropertyVirtual">
+    <value>The abstract property '{0}' cannot be marked virtual.</value>
+  </data>
+  <data name="CannotMarkOverrideMethodNewOrVirtual">
+    <value>The method '{0}' marked as override cannot be marked as new or virtual.</value>
+    <comment>0113</comment>
+  </data>
+  <data name="CannotMarkOverridePropertyNewOrVirtual">
+    <value>The property '{0}' marked as override cannot be marked as new or virtual.</value>
+  </data>
+  <data name="NoImplicitConversion">
+    <value>Cannot implicitly convert type '{0}' to '{1}'.</value>
+    <comment>0029</comment>
+  </data>
+  <data name="IsAlwaysFalse">
+    <value>The given expression is never of the provided ('{0}') type.</value>
+    <comment>0184</comment>
+  </data>
+  <data name="WrongNameForDestructor">
+    <value>Name of destructor must match name of class.</value>
+    <comment>0574</comment>
+  </data>
+  <data name="StaticConstant">
+    <value>The constant '{0}' cannot be marked static.</value>
+    <comment>0504</comment>
+  </data>
+  <data name="WrongParsForBinOp">
+    <value>Overloaded binary operator '{0}' only takes two parameters.</value>
+    <comment>1534</comment>
+  </data>
+  <data name="WrongParsForUnaryOp">
+    <value>Overloaded unary operator '{0}' only takes one parameter.</value>
+  </data>
+  <data name="BadDirectivePlacement">
+    <value>Preprocessor directives must appear as the first non-whitespace character on a line.</value>
+    <comment>1040</comment>
+  </data>
+  <data name="PPDefFollowsToken">
+    <value>Cannot define/undefine preprocessor symbols after first token in file.</value>
+    <comment>1032</comment>
+  </data>
+  <data name="EndOfPPLineExpected">
+    <value>Single-line comment or end-of-line expected.</value>
+    <comment>1025</comment>
+  </data>
+  <data name="ErrorDirective">
+    <value>#error: '{0}'.</value>
+    <comment>1029</comment>
+  </data>
+  <data name="WarningDirective">
+    <value>#warning: '{0}'.</value>
+    <comment>1030</comment>
+  </data>
+  <data name="IntOverflow">
+    <value>Integral constant is too large.</value>
+    <comment>1021</comment>
+  </data>
+  <data name="EndRegionDirectiveExpected">
+    <value>#endregion directive expected.</value>
+    <comment>1038</comment>
+  </data>
+  <data name="UnexpectedDirective">
+    <value>Unexpected preprocessor directive.</value>
+    <comment>1028</comment>
+  </data>
+  <data name="EndifDirectiveExpected">
+    <value>#endif directive expected.</value>
+    <comment>1027</comment>
+  </data>
+  <data name="PPDirectiveExpected">
+    <value>Preprocessor directive expected.</value>
+    <comment>1024</comment>
+  </data>
+  <data name="InvalidPreprocExpr">
+    <value>Invalid preprocessor expression.</value>
+    <comment>1517</comment>
+  </data>
+  <data name="InvalidMemberDecl">
+    <value>Invalid token '{0}' in class, struct, or interface member declaration.</value>
+    <comment>1519</comment>
+  </data>
+  <data name="ConstOutOfRange">
+    <value>Constant value '{0}' cannot be converted to a '{1}'.</value>
+    <comment>0031</comment>
+  </data>
+  <data name="NameNotInContext">
+    <value>The name '{0}' does not exist in the current context.</value>
+    <comment>0103</comment>
+  </data>
+  <data name="LowercaseEllSuffix">
+    <value>The 'l' suffix is easily confused with the digit '1' -- use 'L' for clarity.</value>
+    <comment>0078</comment>
+  </data>
+  <data name="IsAlwaysTrue">
+    <value>The given expression is always of the provided ('{0}') type.</value>
+    <comment>0183</comment>
+  </data>
+  <data name="IllegalEscape">
+    <value>Unrecognized escape sequence.</value>
+    <comment>1009</comment>
+  </data>
+  <data name="LiteralDoubleCast">
+    <value>Literal of type double cannot be implicitly converted to type '{0}'; use an '{1}' suffix to create a literal of this type.</value>
+    <comment>0664</comment>
+  </data>
+  <data name="ExpectedSingleQuote">
+    <value>' expected.</value>
+  </data>
+  <data name="NewlineInConst">
+    <value>Newline in constant.</value>
+    <comment>1010</comment>
+  </data>
+  <data name="IsBinaryFile">
+    <value>'{0}' is a binary file instead of a source code file.</value>
+    <comment>2015</comment>
+  </data>
+  <data name="InternalCompilerError">
+    <value>Internal compiler error: {0}.</value>
+    <comment>0001</comment>
+  </data>
+  <data name="DuplicateResponseFile">
+    <value>Response file '{0}' included multiple times.</value>
+    <comment>2014</comment>
+  </data>
+  <data name="BadCodePage">
+    <value>Code page '{0}' is invalid or not installed.</value>
+    <comment>2021</comment>
+  </data>
+  <data name="UnknownOption">
+    <value>Unknown compiler option '{0}'.</value>
+    <comment>5000</comment>
+  </data>
+  <data name="OutputWriteFailed">
+    <value>Could not write to output file '{0}' -- '{1}'.</value>
+    <comment>0016</comment>
+  </data>
+  <data name="DuplicateLabel">
+    <value>The label '{0}' is a duplicate.</value>
+    <comment>0140</comment>
+  </data>
+  <data name="MultipleEntryPoints">
+    <value>Program '{1}' has more than one entry point defined: '{0}'.</value>
+    <comment>0017</comment>
+  </data>
+  <data name="NoExplicitConversion">
+    <value>Cannot convert type '{0}' to '{1}'.</value>
+    <comment>0030</comment>
+  </data>
+  <data name="NoEntryPoint">
+    <value>Program '{0}' does not contain a static 'Main' method suitable for an entry point.</value>
+    <comment>5001</comment>
+  </data>
+  <data name="SourceFileNotRead">
+    <value>Source file '{0}' could not be read. {1}</value>
+    <comment>2001</comment>
+  </data>
+  <data name="Win32ResourceFileNotRead">
+    <value>Win32 resource file '{0}' could not be read. {1}</value>
+    <comment>2002</comment>
+  </data>
+  <data name="BatchFileNotRead">
+    <value>Option batch file '{0}' could not be read. {1}</value>
+    <comment>2003</comment>
+  </data>
+  <data name="TypeNameNotFound">
+    <value>The type or namespace name '{1}' does not exist in the namespace '{0}' (are you missing an assembly reference?)</value>
+    <comment>0234</comment>
+  </data>
+  <data name="NoSources">
+    <value>No inputs specified.</value>
+    <comment>2008</comment>
+  </data>
+  <data name="FatalError">
+    <value>fatal error CS{0}: </value>
+  </data>
+  <data name="Error">
+    <value>error {0}: </value>
+  </data>
+  <data name="Warning">
+    <value>warning {0}: </value>
+  </data>
+  <data name="LocalDuplicate">
+    <value>A local variable named '{0}' is already defined in this scope.</value>
+    <comment>0128</comment>
+  </data>
+  <data name="LocalConstDuplicate">
+    <value>A local constant named '{0}' is already defined in this scope.</value>
+  </data>
+  <data name="LocalShadowsOuterDeclaration">
+    <value>A local variable named '{0}' cannot be declared in this scope because it would give a different meaning to '{0}', which is already used in a 'parent or current' scope to denote something else.</value>
+    <comment>0136</comment>
+  </data>
+  <data name="DuplicateNameInClass">
+    <value>The type '{1}' already contains a definition for '{0}'.</value>
+    <comment>0102</comment>
+  </data>
+  <data name="RelatedErrorLocation">
+    <value>(Location of symbol related to previous error.)</value>
+    <comment>10002</comment>
+  </data>
+  <data name="DuplicateParamName">
+    <value>The parameter name '{0}' is a duplicate.</value>
+    <comment>0100</comment>
+  </data>
+  <data name="InvalidMainSig">
+    <value>'{0}' has the wrong signature to be an entry point.</value>
+    <comment>0028</comment>
+  </data>
+  <data name="MemberAlreadyExists">
+    <value>Type '{1}' already defines a member called '{0}' with the same parameter types.</value>
+    <comment>0111</comment>
+  </data>
+  <data name="EmptyCharConst">
+    <value>Empty character literal.</value>
+    <comment>1011</comment>
+  </data>
+  <data name="SyntaxError">
+    <value>Syntax error, '{0}' expected.</value>
+    <comment>1003</comment>
+  </data>
+  <data name="TooManyCharsInConst">
+    <value>Too many characters in character literal.</value>
+    <comment>1012</comment>
+  </data>
+  <data name="ExpectedDoubleQuote">
+    <value>" expected.</value>
+  </data>
+  <data name="UnescapedSingleQuote">
+    <value>''' is not a valid character literal, use '\'' instead.</value>
+  </data>
+  <data name="DuplicateNameInNS">
+    <value>The namespace '{1}' already contains a definition for '{0}'.</value>
+    <comment>0101</comment>
+  </data>
+  <data name="NoSuchMember">
+    <value>'{0}' does not contain a definition for '{1}'.</value>
+    <comment>0117</comment>
+  </data>
+  <data name="BadAccess">
+    <value>'{0}' is inaccessible due to its protection level.</value>
+    <comment>0122</comment>
+  </data>
+  <data name="PtrExpected">
+    <value>The * or -&gt; operator must be applied to a pointer.</value>
+    <comment>0193</comment>
+  </data>
+  <data name="AmbigContext">
+    <value>'{0}' is an ambiguous reference.</value>
+    <comment>0104</comment>
+  </data>
+  <data name="RelatedErrorModule">
+    <value>{0}: (Location of symbol related to previous error.)</value>
+    <comment>10003</comment>
+  </data>
+  <data name="BadProtectedAccess">
+    <value>Cannot access protected member '{0}' via a qualifier of type '{1}'; the qualifier must be of type '{2}' (or derived from it).</value>
+    <comment>1540</comment>
+  </data>
+  <data name="BadVisBaseClass">
+    <value>Inconsistent accessibility: base class '{0}' is less accessible than class '{1}'.</value>
+    <comment>0060</comment>
+  </data>
+  <data name="WrongNestedThis">
+    <value>Cannot access a nonstatic member of outer type '{0}' via nested type '{1}'.</value>
+    <comment>0038</comment>
+  </data>
+  <data name="ForwardReferenceToLocal">
+    <value>Use of '{0}' precedes declaration.</value>
+  </data>
+  <data name="LabelNotFound">
+    <value>No such label '{0}' within the scope of the goto statement.</value>
+    <comment>0159</comment>
+  </data>
+  <data name="NewRequired">
+    <value>The keyword new is required on '{0}' because it hides inherited member '{1}'.</value>
+    <comment>0108</comment>
+  </data>
+  <data name="DuplicateUsing">
+    <value>The using directive for '{0}' appeared previously in this namespace.</value>
+    <comment>0105</comment>
+  </data>
+  <data name="NewNotRequired">
+    <value>The member '{0}' does not hide an inherited member. The new keyword is not required.</value>
+    <comment>0109</comment>
+  </data>
+  <data name="CircConstValue">
+    <value>The evaluation of the constant value for '{0}' involves a circular definition.</value>
+    <comment>0110</comment>
+  </data>
+  <data name="StaticNotVirtual">
+    <value>A static member '{0}' cannot be marked as override, virtual, or abstract.</value>
+    <comment>0112</comment>
+  </data>
+  <data name="RelatedWarningLocation">
+    <value>(Location of symbol related to previous warning.)</value>
+  </data>
+  <data name="RelatedWarningModule">
+    <value>{0}: (Location of symbol related to previous warning.)</value>
+  </data>
+  <data name="AssgLvalueExpected">
+    <value>The left-hand side of an assignment must be a variable, property or indexer.</value>
+    <comment>0131</comment>
+  </data>
+  <data name="StaticConstParam">
+    <value>A static constructor must be parameterless.</value>
+    <comment>0132</comment>
+  </data>
+  <data name="NotConstantExpression">
+    <value>The expression being assigned to '{0}' must be constant.</value>
+    <comment>0133</comment>
+  </data>
+  <data name="IllegalQualifiedNamespace">
+    <value>Cannot use qualified namespace names in nested namespace declarations.</value>
+    <comment>0134</comment>
+  </data>
+  <data name="NameIllegallyOverrides">
+    <value>'{1}' conflicts with the declaration '{0}'.</value>
+    <comment>0135</comment>
+  </data>
+  <data name="LocalIllegallyOverrides">
+    <value>A local variable named '{0}' cannot be declared in this scope because it would give a different meaning to '{0}', which is already used in a '{1}' scope to denote something else.</value>
+    <comment>0136</comment>
+  </data>
+  <data name="BadUsingNamespace">
+    <value>A using namespace directive can only be applied to namespaces; '{0}' is a class not a namespace.</value>
+    <comment>0138</comment>
+  </data>
+  <data name="NoBreakOrCont">
+    <value>No enclosing loop out of which to break or continue.</value>
+    <comment>0139</comment>
+  </data>
+  <data name="NewOrOverrideExpected">
+    <value>'{0}' hides inherited member '{1}'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.</value>
+    <comment>0114</comment>
+  </data>
+  <data name="OverrideNotExpected">
+    <value>'{0}': no suitable method found to override.</value>
+    <comment>0115</comment>
+  </data>
+  <data name="NamespaceUnexpected">
+    <value>A namespace does not directly contain members such as fields or methods.</value>
+    <comment>0116</comment>
+  </data>
+  <data name="BadSKknown">
+    <value>'{0}' is a '{1}' but is used like a '{2}'.</value>
+    <comment>0118</comment>
+  </data>
+  <data name="BadSKunknown">
+    <value>'{0}' denotes a 'class' which is not valid in the given context.</value>
+    <comment>0119</comment>
+  </data>
+  <data name="ObjectRequired">
+    <value>An object reference is required for the nonstatic field, method, or property '{0}'.</value>
+    <comment>0120</comment>
+  </data>
+  <data name="AmbigCall">
+    <value>The call is ambiguous between the following methods or properties: '{0}' and '{1}'.</value>
+    <comment>0121</comment>
+  </data>
+  <data name="BadArgCount">
+    <value>No overload for method '{0}' takes '{1}' arguments.</value>
+    <comment>1501</comment>
+  </data>
+  <data name="ConstantExpected">
+    <value>A constant value is expected.</value>
+    <comment>0150</comment>
+  </data>
+  <data name="IntegralTypeValueExpected">
+    <value>A value of an integral type expected.</value>
+    <comment>0151</comment>
+  </data>
+  <data name="DuplicateCaseLabel">
+    <value>The label '{0}' already occurs in this switch statement.</value>
+    <comment>0152</comment>
+  </data>
+  <data name="InvalidGotoCase">
+    <value>A goto case is only valid inside a switch statement.</value>
+    <comment>0153</comment>
+  </data>
+  <data name="PropertyLacksGet">
+    <value>The property or indexer '{0}' cannot be used in this context because it lacks the get accessor.</value>
+    <comment>0154</comment>
+  </data>
+  <data name="BadExceptionType">
+    <value>The type caught or thrown must be derived from System.Exception.</value>
+    <comment>0155</comment>
+  </data>
+  <data name="BadEmptyThrow">
+    <value>A throw statement with no arguments is not allowed outside of a catch clause.</value>
+    <comment>0156</comment>
+  </data>
+  <data name="BadFinallyLeave">
+    <value>Control cannot leave the body of a finally clause.</value>
+    <comment>0157</comment>
+  </data>
+  <data name="LabelShadow">
+    <value>The label '{0}' shadows another label by the same name in a contained scope.</value>
+    <comment>0158</comment>
+  </data>
+  <data name="CStyleArray">
+    <value>Syntax error, bad array declarator. To declare a managed array the rank specifier precedes the variable's identifier.</value>
+    <comment>0650</comment>
+  </data>
+  <data name="VacuousIntegralComp">
+    <value>Comparison to integral constant is useless; the constant is outside the range of type '{0}'.</value>
+    <comment>0652</comment>
+  </data>
+  <data name="AbstractAttributeClass">
+    <value>Cannot apply attribute class '{0}' because it is abstract.</value>
+    <comment>0653</comment>
+  </data>
+  <data name="BadUseOfMethod">
+    <value>Method '{0}' referenced without parentheses.</value>
+    <comment>0654</comment>
+  </data>
+  <data name="BadNamedAttributeArgumentType">
+    <value>'{0}' may not be initialized in an attribute argument list because its type is not a valid attribute parameter type.</value>
+    <comment>0655</comment>
+  </data>
+  <data name="MissingPredefinedMember">
+    <value>Missing compiler required member '{0}.{1}'.</value>
+    <comment>0656</comment>
+  </data>
+  <data name="AttributeLocationOnBadDeclaration">
+    <value>'{0}' is not a valid attribute location for this declaration. Valid attribute locations for this declaration are '{1}'.</value>
+    <comment>0657</comment>
+  </data>
+  <data name="InvalidAttributeLocation">
+    <value>'{0}' is not a recognized attribute location. All attributes in this block will be ignored.</value>
+    <comment>0658</comment>
+  </data>
+  <data name="EqualsWithoutGetHashCode">
+    <value>'{0}' overrides Object.Equals(object o) but does not override Object.GetHashCode().</value>
+    <comment>0659</comment>
+  </data>
+  <data name="UseDefViolationField">
+    <value>Use of possibly unassigned field '{0}'.</value>
+    <comment>0170</comment>
+  </data>
+  <data name="UnassignedThis">
+    <value>Field '{0}' must be fully assigned before control leaves the constructor.</value>
+    <comment>0171</comment>
+  </data>
+  <data name="AmbigQM">
+    <value>Type of conditional expression can't be determined because '{0}' and '{1}' both implicitly convert to each other.</value>
+    <comment>0172</comment>
+  </data>
+  <data name="InvalidQM">
+    <value>Type of conditional expression can't be determined because there is no implicit conversion between '{0}' and '{1}'.</value>
+    <comment>0173</comment>
+  </data>
+  <data name="NoBaseClass">
+    <value>A base class is required for a base reference.</value>
+    <comment>0174</comment>
+  </data>
+  <data name="BaseIllegal">
+    <value>Use of keyword base is not valid in this context.</value>
+    <comment>0175</comment>
+  </data>
+  <data name="ObjectProhibited">
+    <value>Static member '{0}' cannot be accessed with an instance reference; qualify it with a type name instead.</value>
+    <comment>0176</comment>
+  </data>
+  <data name="ParamUnassigned">
+    <value>The out parameter '{0}' must be assigned to before control leaves the current method.</value>
+    <comment>0177</comment>
+  </data>
+  <data name="InvalidArray">
+    <value>Incorrectly structured array initializer.</value>
+    <comment>0178</comment>
+  </data>
+  <data name="ExternHasBody">
+    <value>'{0}' cannot be extern and declare a body.</value>
+    <comment>0179</comment>
+  </data>
+  <data name="AbstractAndExtern">
+    <value>'{0}' cannot be both extern and abstract.</value>
+    <comment>0180</comment>
+  </data>
+  <data name="AbstractHasBody">
+    <value>'{0}' cannot declare a body because it is marked abstract.</value>
+    <comment>0500</comment>
+  </data>
+  <data name="ConcreteMissingBody">
+    <value>'{0}' must declare a body because it is not marked abstract or extern.</value>
+    <comment>0501</comment>
+  </data>
+  <data name="AbstractAndSealed">
+    <value>'{0}' cannot be both abstract and sealed.</value>
+    <comment>0502</comment>
+  </data>
+  <data name="CantOverrideNonFunction">
+    <value>'{0}' : cannot override; '{1}' is not a function.</value>
+    <comment>0505</comment>
+  </data>
+  <data name="CantOverrideNonVirtual">
+    <value>'{0}' : cannot override inherited member '{1}' because it is not marked virtual, abstract, or override.</value>
+    <comment>0506</comment>
+  </data>
+  <data name="CantChangeAccessOnOverride">
+    <value>'{0}': cannot change access modifiers when overriding '{2}' inherited member '{1}'.</value>
+    <comment>0507</comment>
+  </data>
+  <data name="CantChangeReturnTypeOnOverride">
+    <value>'{0}': cannot change return type when overriding inherited member '{1}'.</value>
+    <comment>0508</comment>
+  </data>
+  <data name="CantDeriveFromSealedClass">
+    <value>'{1}' : cannot inherit from sealed class '{0}'.</value>
+    <comment>0509</comment>
+  </data>
+  <data name="BadVisReturnType">
+    <value>Inconsistent accessibility: return type '{0}' is less accessible than method '{1}'.</value>
+    <comment>0050</comment>
+  </data>
+  <data name="BadVisParamType">
+    <value>Inconsistent accessibility: parameter type '{0}' is less accessible than method '{1}'.</value>
+    <comment>0051</comment>
+  </data>
+  <data name="BadVisFieldType">
+    <value>Inconsistent accessibility: field type '{0}' is less accessible than field '{1}'.</value>
+    <comment>0052</comment>
+  </data>
+  <data name="BadVisPropertyType">
+    <value>Inconsistent accessibility: property type '{0}' is less accessible than property '{1}'.</value>
+    <comment>0053</comment>
+  </data>
+  <data name="BadVisIndexerReturn">
+    <value>Inconsistent accessibility: indexer return type '{0}' is less accessible than indexer '{1}'.</value>
+    <comment>0054</comment>
+  </data>
+  <data name="BadVisIndexerParam">
+    <value>Inconsistent accessibility: parameter type '{0}' is less accessible than indexer '{1}'.</value>
+    <comment>0055</comment>
+  </data>
+  <data name="BadVisOpReturn">
+    <value>Inconsistent accessibility: return type '{0}' is less accessible than operator '{1}'.</value>
+    <comment>0056</comment>
+  </data>
+  <data name="BadVisOpParam">
+    <value>Inconsistent accessibility: parameter type '{0}' is less accessible than operator '{1}'.</value>
+    <comment>0057</comment>
+  </data>
+  <data name="BadVisDelegateReturn">
+    <value>Inconsistent accessibility: return type '{0}' is less accessible than delegate '{1}'.</value>
+    <comment>0058</comment>
+  </data>
+  <data name="BadVisDelegateParam">
+    <value>Inconsistent accessibility: parameter type '{0}' is less accessible than delegate '{1}'.</value>
+    <comment>0059</comment>
+  </data>
+  <data name="BadVisBaseInterface">
+    <value>Inconsistent accessibility: base interface '{0}' is less accessible than interface '{1}'.</value>
+    <comment>0061</comment>
+  </data>
+  <data name="RequiredAttribute">
+    <value>Required attribute names {1} is missing from element {0}.</value>
+  </data>
+  <data name="AmbiguousAssignment">
+    <value>Assignment of type '{1}' is ambiguous on type {0}.</value>
+  </data>
+  <data name="InvalidTextInElement">
+    <value>Invalid text in element '{0}'.</value>
+  </data>
+  <data name="InvalidTextInElementExpecting">
+    <value>Invalid text in element '{0}', expecting ({1}).</value>
+  </data>
+  <data name="InvalidElementContentNone">
+    <value>Invalid content '{1}' in element '{0}', the content for this element is already complete.</value>
+  </data>
+  <data name="InvalidContentExpecting">
+    <value>Invalid content '{1}' in element '{0}', expecting ({2}).</value>
+  </data>
+  <data name="InvalidElementContent">
+    <value>Invalid content for element '{0}'.</value>
+  </data>
+  <data name="IncompleteContentExpecting">
+    <value>Content for element '{0}' is incomplete.  Expecting ({1}).</value>
+  </data>
+  <data name="NonDeterministic">
+    <value>Content model for element '{0}' is non-deterministic at member '{1}'.</value>
+  </data>
+  <data name="NonDeterministicAny">
+    <value>Content model for element '{0}' is non-deterministic because of xsd:any element construct.</value>
+  </data>
+  <data name="InvalidWhitespaceInEmpty">
+    <value>Invalid whitespace in empty element '{0}'.</value>
+  </data>
+  <data name="InvalidElementInEmpty">
+    <value>Invalid element '{0}' in empty element '{1}'.</value>
+  </data>
+  <data name="InvalidElementInTextOnly">
+    <value>Invalid element '{0}' in text-only element '{1}'.</value>
+  </data>
+  <data name="AbstractInConcreteClass">
+    <value>'{0}' is abstract but it is contained in nonabstract class '{1}'.</value>
+    <comment>0513</comment>
+  </data>
+  <data name="StaticConstructorWithExplicitConstructorCall">
+    <value>A static constructor cannot have an explicit this or base constructor call.</value>
+    <comment>0514</comment>
+  </data>
+  <data name="StaticConstructorWithAccessModifiers">
+    <value>Access modifiers are not allowed on static constructors.</value>
+    <comment>0515</comment>
+  </data>
+  <data name="RecursiveConstructorCall">
+    <value>Constructor '{0}' cannot call itself.</value>
+    <comment>0516</comment>
+  </data>
+  <data name="ObjectCallingBaseConstructor">
+    <value>'{0}' has no base class and cannot call a base constructor.</value>
+    <comment>0517</comment>
+  </data>
+  <data name="PredefinedTypeNotFound">
+    <value>The predefined type '{0}' is not defined or imported.</value>
+    <comment>0518</comment>
+  </data>
+  <data name="PredefinedTypeBadNamespace">
+    <value>'{0}' conflicts with a predefined namespace.</value>
+    <comment>0519</comment>
+  </data>
+  <data name="PredefinedTypeBadType">
+    <value>'{0}' conflicts with a predefined type.</value>
+    <comment>0520</comment>
+  </data>
+  <data name="StructWithBaseConstructorCall">
+    <value>'{0}': structs cannot call base class constructors.</value>
+    <comment>0522</comment>
+  </data>
+  <data name="StructLayoutCycle">
+    <value>Struct member '{0}' of type '{1}' causes a cycle in the structure layout.</value>
+    <comment>0523</comment>
+  </data>
+  <data name="InterfacesCannotContainTypes">
+    <value>Interfaces cannot declare types.</value>
+    <comment>0524</comment>
+  </data>
+  <data name="NonInterfaceInInterfaceList">
+    <value>'{0}' : type in interface list is not an interface.</value>
+    <comment>0527</comment>
+  </data>
+  <data name="DuplicateInterfaceInBaseList">
+    <value>'{0}' is already listed in interface list.</value>
+    <comment>0528</comment>
+  </data>
+  <data name="CycleInInterfaceInheritance">
+    <value>Inherited interface '{0}' causes a cycle in the interface hierarchy of '{1}'.</value>
+    <comment>0529</comment>
+  </data>
+  <data name="InterfaceMemberHasBody">
+    <value>'{0}': interface members cannot have a definition.</value>
+    <comment>0531</comment>
+  </data>
+  <data name="HidingAbstractMethod">
+    <value>'{0}' hides inherited abstract member '{1}'.</value>
+    <comment>0533</comment>
+  </data>
+  <data name="UnimplementedAbstractMethod">
+    <value>'{0}' does not implement inherited abstract member '{1}'.</value>
+    <comment>0534</comment>
+  </data>
+  <data name="UnimplementedInterfaceMember">
+    <value>'{0}' does not implement interface member '{1}'.</value>
+    <comment>0535</comment>
+  </data>
+  <data name="CloseUnimplementedInterfaceMember">
+    <value>'{0}' does not implement interface member '{1}'. '{2}' is either static, not public, or has the wrong return type.</value>
+    <comment>0536</comment>
+  </data>
+  <data name="ObjectCantHaveBases">
+    <value>The class System.Object cannot have a base class or implement an interface.</value>
+    <comment>0537</comment>
+  </data>
+  <data name="ExplicitInterfaceImplementationNotInterface">
+    <value>'{0}' in explicit interface declaration is not an interface.</value>
+    <comment>0538</comment>
+  </data>
+  <data name="InterfaceMemberNotFound">
+    <value>'{0}' in explicit interface declaration does not match a member of interface '{1}'.</value>
+    <comment>0539</comment>
+  </data>
+  <data name="ClassDoesntImplementInterface">
+    <value>'{0}': containing class does not implement interface '{1}'.</value>
+    <comment>0540</comment>
+  </data>
+  <data name="ExplicitInterfaceImplementationInNonClassOrStruct">
+    <value>'{0}': explicit interface declaration can only be declared in a class or struct.</value>
+    <comment>0541</comment>
+  </data>
+  <data name="MemberNameSameAsType">
+    <value>'{0}': member names cannot be the same as their enclosing type.</value>
+    <comment>0542</comment>
+  </data>
+  <data name="EnumeratorOverflow">
+    <value>'{0}': the enumerator value is too large to fit in its type.</value>
+    <comment>0543</comment>
+  </data>
+  <data name="CantOverrideNonProperty">
+    <value>'{0}' : cannot override; '{1}' is not a property.</value>
+    <comment>0544</comment>
+  </data>
+  <data name="NoGetToOverride">
+    <value>'{0}': cannot override because '{1}' does not have an overridable get accessor.</value>
+    <comment>0545</comment>
+  </data>
+  <data name="NoSetToOverride">
+    <value>'{0}': cannot override because '{1}' does not have an overridable set accessor.</value>
+    <comment>0546</comment>
+  </data>
+  <data name="PropertyCantHaveVoidType">
+    <value>'{0}' : property or indexer cannot have void type.</value>
+    <comment>0547</comment>
+  </data>
+  <data name="PropertyWithNoAccessors">
+    <value>'{0}' : property or indexer must have at least one accessor.</value>
+    <comment>0548</comment>
+  </data>
+  <data name="NewVirtualInSealed">
+    <value>New virtual member in a sealed class.</value>
+    <comment>0549</comment>
+  </data>
+  <data name="ExplicitPropertyAddingAccessor">
+    <value>'{0}' adds an accessor not found in interface member '{1}'.</value>
+    <comment>0550</comment>
+  </data>
+  <data name="ExplicitPropertyMissingAccessor">
+    <value>Explicit interface implementation '{0}' is missing accessor '{1}'.</value>
+    <comment>0551</comment>
+  </data>
+  <data name="ConversionWithInterface">
+    <value>'{0}': user-defined conversion to/from interface.</value>
+    <comment>0552</comment>
+  </data>
+  <data name="ConversionWithBase">
+    <value>'{0}': user-defined conversion to/from base class.</value>
+    <comment>0553</comment>
+  </data>
+  <data name="ConversionWithDerived">
+    <value>'{0}': user-defined conversion to/from derived class.</value>
+    <comment>0554</comment>
+  </data>
+  <data name="IdentityConversion">
+    <value>User-defined operator cannot take an object of the enclosing type and convert to an object of the enclosing type.</value>
+    <comment>0555</comment>
+  </data>
+  <data name="ConversionNotInvolvingContainedType">
+    <value>User-defined conversion must convert to or from the enclosing type.</value>
+    <comment>0556</comment>
+  </data>
+  <data name="DuplicateConversionInClass">
+    <value>Duplicate user-defined conversion in class '{0}'.</value>
+    <comment>0557</comment>
+  </data>
+  <data name="OperatorsMustBeStatic">
+    <value>User-defined operators '{0}' must be declared static and public.</value>
+    <comment>0558</comment>
+  </data>
+  <data name="BadIncDecSignature">
+    <value>The parameter and return type for ++ or -- operator must be the containing type.</value>
+    <comment>0559</comment>
+  </data>
+  <data name="CantOverrideAccessor">
+    <value>Accessor '{0}' : cannot override '{1}' because it is hidden by '{2}'.</value>
+    <comment>0560</comment>
+  </data>
+  <data name="CantOverrideSpecialMethod">
+    <value>'{0}' : cannot override '{1}' because it is a special compiler-generated method.</value>
+    <comment>0561</comment>
+  </data>
+  <data name="BadUnaryOperatorSignature">
+    <value>The parameter of a unary operator must be the containing type.</value>
+    <comment>0562</comment>
+  </data>
+  <data name="BadBinaryOperatorSignature">
+    <value>One of the parameters of a binary operator must be the containing type.</value>
+    <comment>0563</comment>
+  </data>
+  <data name="InterfacesCantContainOperators">
+    <value>Interfaces cannot contain operators.</value>
+    <comment>0567</comment>
+  </data>
+  <data name="StructsCantContainDefaultContructor">
+    <value>Structs cannot contain explicit parameterless constructors.</value>
+    <comment>0568</comment>
+  </data>
+  <data name="CantOverrideBogusMethod">
+    <value>'{0}' : cannot override '{1}' because it is not a method.</value>
+    <comment>0569</comment>
+  </data>
+  <data name="BindToBogus">
+    <value>'{0}' references a type not supported by the language.</value>
+    <comment>0570</comment>
+  </data>
+  <data name="CantCallSpecialMethod">
+    <value>'{0}': cannot explicitly call operator or accessor.</value>
+    <comment>0571</comment>
+  </data>
+  <data name="BadTypeReference">
+    <value>'{0}': cannot reference a type through an expression; try '{1}' instead.</value>
+    <comment>0572</comment>
+  </data>
+  <data name="FieldInitializerInStruct">
+    <value>'{0}': cannot have instance field initializers in structs.</value>
+    <comment>0573</comment>
+  </data>
+  <data name="BadDestructorName">
+    <value>Name of destructor must match name of class.</value>
+    <comment>0574</comment>
+  </data>
+  <data name="OnlyClassesCanContainDestructors">
+    <value>Only class types can contain destructors.</value>
+    <comment>0575</comment>
+  </data>
+  <data name="ConflictAliasAndMember">
+    <value>Namespace '{0}' already contains a type definition for '{1}'.</value>
+    <comment>0576</comment>
+  </data>
+  <data name="ConditionalOnSpecialMethod">
+    <value>Conditional not valid on '{0}' because it is a constructor, destructor, operator, or explicit interface implementation.</value>
+    <comment>0577</comment>
+  </data>
+  <data name="ConditionalMustReturnVoid">
+    <value>Conditional not valid on '{0}' because its return type is not void.</value>
+    <comment>0578</comment>
+  </data>
+  <data name="DuplicateAttribute">
+    <value>Duplicate '{0}' attribute.</value>
+    <comment>0579</comment>
+  </data>
+  <data name="TooManyArgumentsToAttribute">
+    <value>Too many unnamed arguments to attribute '{0}'.</value>
+    <comment>0580</comment>
+  </data>
+  <data name="NamedArgumentToAttribute">
+    <value>Named arguments not allowed on attribute '{0}'.</value>
+    <comment>0581</comment>
+  </data>
+  <data name="ConditionalOnInterfaceMethod">
+    <value>Conditional not valid on interface members.</value>
+    <comment>0582</comment>
+  </data>
+  <data name="OperatorCantReturnVoid">
+    <value>User-defined operators cannot return void.</value>
+    <comment>0590</comment>
+  </data>
+  <data name="InvalidAttributeArgument">
+    <value>Invalid value for argument to '{0}' attribute.</value>
+    <comment>0591</comment>
+  </data>
+  <data name="AttributeOnBadSymbolType">
+    <value>Attribute '{0}' is not valid on this declaration type. It is valid on '{1}' declarations only.</value>
+    <comment>0592</comment>
+  </data>
+  <data name="FloatOverflow">
+    <value>Floating-point constant is outside the range of type '{0}'.</value>
+    <comment>0594</comment>
+  </data>
+  <data name="ComImportWithoutUuidAttribute">
+    <value>The Guid attribute must be specified with the ComImport attribute.</value>
+    <comment>0596</comment>
+  </data>
+  <data name="TooFewArgumentsToAttribute">
+    <value>Too few unnamed arguments for attribute '{0}'.</value>
+    <comment>0597</comment>
+  </data>
+  <data name="InvalidNamedArgument">
+    <value>Invalid value for named attribute argument '{0}'.</value>
+    <comment>0599</comment>
+  </data>
+  <data name="AssgReadonlyProp">
+    <value>Property or indexer '{0}' cannot be assigned to -- it is read only.</value>
+    <comment>0200</comment>
+  </data>
+  <data name="ArgsInvalid">
+    <value>The __arglist construct is valid only within a variable argument method.</value>
+    <comment>0190</comment>
+  </data>
+  <data name="AssgReadonly">
+    <value>A readonly field cannot be assigned to (except in a constructor or a variable initializer).</value>
+    <comment>0191</comment>
+  </data>
+  <data name="RefReadonly">
+    <value>A readonly field cannot be passed ref or out (except in a constructor).</value>
+    <comment>0192</comment>
+  </data>
+  <data name="PtrIndexSingle">
+    <value>A pointer must be indexed by only one value.</value>
+    <comment>0196</comment>
+  </data>
+  <data name="ByRefNonAgileField">
+    <value>Cannot pass '{0}' as ref or out, because '%1!ls!' is a marshal-by-reference class.</value>
+    <comment>0197</comment>
+  </data>
+  <data name="AssgReadonlyStatic">
+    <value>A static readonly field cannot be assigned to (except in a static constructor or a variable initializer).</value>
+    <comment>0198</comment>
+  </data>
+  <data name="RefReadonlyStatic">
+    <value>A static readonly field cannot be passed ref or out (except in a static constructor).</value>
+    <comment>0199</comment>
+  </data>
+  <data name="AmbigBinaryOps">
+    <value>Operator '{0}' is ambiguous on operands of type '{1}' and '{2}'.</value>
+    <comment>0034</comment>
+  </data>
+  <data name="AmbigUnaryOp">
+    <value>Operator '{0}' is ambiguous on an operand of type '{1}'.</value>
+    <comment>0035</comment>
+  </data>
+  <data name="InAttrOnOutParam">
+    <value>An out parameter cannot have the in attribute.</value>
+    <comment>0036</comment>
+  </data>
+  <data name="ValueCantBeNull">
+    <value>Cannot convert null to '{0}' because it is a value type.</value>
+    <comment>0037</comment>
+  </data>
+  <data name="NoExplicitBuiltinConv">
+    <value>Cannot convert type '{0}' to '{1}' via a built-in conversion.</value>
+    <comment>0039</comment>
+  </data>
+  <data name="SizeofUnsafe">
+    <value>'{0}' does not have a predefined size, therefore sizeof can only be used in an unsafe context (consider using System.Runtime.InteropServices.Marshal.SizeOf).</value>
+    <comment>0233</comment>
+  </data>
+  <data name="MemberNeedsType">
+    <value>Class, struct, or interface method must have a return type.</value>
+    <comment>1520</comment>
+  </data>
+  <data name="NonDeterministicAssign">
+    <value>Cannot assign member '{1}' of type '{0}' because the content model is non-deterministic.</value>
+  </data>
+  <data name="DebugContentModel">
+    <value>Content model is '{0}'.</value>
+  </data>
+  <data name="BadBinaryOps">
+    <value>Operator '{0}' cannot be applied to operands of type '{1}' and '{2}'.</value>
+    <comment>0019</comment>
+  </data>
+  <data name="IntDivByZero">
+    <value>Division by constant zero.</value>
+    <comment>0020</comment>
+  </data>
+  <data name="BadIndexLHS">
+    <value>Cannot apply indexing with [] to an expression of type '{0}'.</value>
+    <comment>0021</comment>
+  </data>
+  <data name="BadIndexCount">
+    <value>Wrong number of indices inside [], expected '{0}'.</value>
+    <comment>0022</comment>
+  </data>
+  <data name="BadUnaryOp">
+    <value>Operator '{0}' cannot be applied to operand of type '{1}'.</value>
+    <comment>0023</comment>
+  </data>
+  <data name="NoStdLib">
+    <value>Standard library file '{0}' could not be found.</value>
+    <comment>0025</comment>
+  </data>
+  <data name="ThisInStaticMeth">
+    <value>Keyword this is not valid in a static property, static method, or static field initializer.</value>
+    <comment>0026</comment>
+  </data>
+  <data name="ThisInBadContext">
+    <value>Keyword this is not available in the current context.</value>
+    <comment>0027</comment>
+  </data>
+  <data name="CantIncludeDirectory">
+    <value>Invalid include option: '{0}' -- cannot include directories.</value>
+    <comment>1541</comment>
+  </data>
+  <data name="AddModuleAssembly">
+    <value>'{0}' cannot be added to this assembly because it already is an assembly; use '/r' option instead.</value>
+    <comment>1542</comment>
+  </data>
+  <data name="ModuleNotScoped">
+    <value>Added module '{0}' has unresolved reference to type '{1}'.</value>
+    <comment>1543</comment>
+  </data>
+  <data name="ModuleNotAdded">
+    <value>Added module '{0}' references module '{1}' which was not added.</value>
+    <comment>1544</comment>
+  </data>
+  <data name="BindToBogusProp2">
+    <value>Property, indexer, or event '{0}' is not supported by the language; try directly calling accessor methods '{1}' or '{2}'.</value>
+    <comment>1545</comment>
+  </data>
+  <data name="BindToBogusProp1">
+    <value>Property, indexer, or event '{0}' is not supported by the language; try directly calling accessor method '{1}'.</value>
+    <comment>1546</comment>
+  </data>
+  <data name="NoVoidHere">
+    <value>Keyword 'void' cannot be used in this context.</value>
+    <comment>1547</comment>
+  </data>
+  <data name="CryptoFailed">
+    <value>Cryptographic failure while signing assembly '{0}' -- '{1}'.</value>
+    <comment>1548</comment>
+  </data>
+  <data name="CryptoNotFound">
+    <value>Appropriate cryptographic service not found.</value>
+    <comment>1549</comment>
+  </data>
+  <data name="DebugInitFile">
+    <value>Unexpected error creating debug information file '{0}' -- '{1}'.</value>
+    <comment>0042</comment>
+  </data>
+  <data name="EventNeedsBothAccessors">
+    <value>'{0}' : event property must have both add and remove accessors.</value>
+    <comment>0065</comment>
+  </data>
+  <data name="EventNotDelegate">
+    <value>'{0}': event must be of a delegate type.</value>
+    <comment>0066</comment>
+  </data>
+  <data name="UnreferencedEvent">
+    <value>The event '{0}' is never used.</value>
+    <comment>0067</comment>
+  </data>
+  <data name="InterfaceEventInitializer">
+    <value>'{0}': event in interface cannot have initializer.</value>
+    <comment>0068</comment>
+  </data>
+  <data name="EventPropertyInInterface">
+    <value>'{0}': event in interface cannot have add or remove accessors.</value>
+    <comment>0069</comment>
+  </data>
+  <data name="BadEventUsage">
+    <value>The event '{0}' can only appear on the left hand side of += or -= (except when used from within the type '{1}').</value>
+    <comment>0070</comment>
+  </data>
+  <data name="ExplicitEventFieldImpl">
+    <value>An explicit interface implementation of an event must use property syntax.</value>
+    <comment>0071</comment>
+  </data>
+  <data name="CantOverrideNonEvent">
+    <value>'{0}' : cannot override; '{1}' is not an event.</value>
+    <comment>0072</comment>
+  </data>
+  <data name="AddRemoveMustHaveBody">
+    <value>An add or remove accessor must have a body.</value>
+    <comment>0073</comment>
+  </data>
+  <data name="AbstractEventInitializer">
+    <value>'{0}': abstract event cannot have an initializer.</value>
+    <comment>0074</comment>
+  </data>
+  <data name="PossibleBadNegCast">
+    <value>To cast a negative value, you must enclose the value in parentheses.</value>
+    <comment>0075</comment>
+  </data>
+  <data name="ReservedEnumerator">
+    <value>The enumerator name '{0}' is reserved and cannot be used.</value>
+    <comment>0076</comment>
+  </data>
+  <data name="AsMustHaveReferenceType">
+    <value>The as operator must be used with a reference type ('{0}' is a value type).</value>
+    <comment>0077</comment>
+  </data>
+  <data name="BadEventUsageNoField">
+    <value>The event '{0}' can only appear on the left hand side of += or -=.</value>
+    <comment>0079</comment>
+  </data>
+  <data name="BadBaseType">
+    <value>Invalid base type.</value>
+    <comment>1521</comment>
+  </data>
+  <data name="EmptySwitch">
+    <value>Empty switch block.</value>
+    <comment>1522</comment>
+  </data>
+  <data name="StmtNotInCase">
+    <value>The keyword case or default must precede code in switch block.</value>
+    <comment>1523</comment>
+  </data>
+  <data name="ExpectedEndTry">
+    <value>Expected catch or finally.</value>
+    <comment>1524</comment>
+  </data>
+  <data name="BadNewExpr">
+    <value>A new expression requires () or [] or {} after the type.</value>
+    <comment>1526</comment>
+  </data>
+  <data name="BadVarDecl">
+    <value>Expected ; or = (cannot specify constructor arguments in declaration).</value>
+    <comment>1528</comment>
+  </data>
+  <data name="UsingAfterElements">
+    <value>A using clause must precede all other namespace elements.</value>
+    <comment>1529</comment>
+  </data>
+  <data name="NoMemory">
+    <value>Out of memory.</value>
+    <comment>0003</comment>
+  </data>
+  <data name="WarningAsError">
+    <value>Warning treated as error.</value>
+    <comment>0004</comment>
+  </data>
+  <data name="MissingOptionArg">
+    <value>Compiler option '{0}' must be followed by an argument.</value>
+    <comment>0005</comment>
+  </data>
+  <data name="NoMetadataFile">
+    <value>Metadata file '{0}' could not be found.</value>
+    <comment>0006</comment>
+  </data>
+  <data name="MetadataImportFailure">
+    <value>Unexpected error reading metadata from file '{0}' -- '{1}'.</value>
+    <comment>0008</comment>
+  </data>
+  <data name="NamespaceTypeConflict">
+    <value>Cannot declare a namespace and a type both named '{0}'.</value>
+    <comment>0010</comment>
+  </data>
+  <data name="CantImportBase">
+    <value>Referenced class '{0}' has base class or interface '{1}' defined in an assembly that is not referenced.  You must add a reference to assembly '{2}'.</value>
+    <comment>0011</comment>
+  </data>
+  <data name="NoTypeDef">
+    <value>The type '{0}' is defined in an assembly that is not referenced. You must add a reference to assembly '{1}'.</value>
+    <comment>0012</comment>
+  </data>
+  <data name="MetadataEmitFailure">
+    <value>Unexpected error writing metadata to file '{0}' -- '{1}'.</value>
+    <comment>0013</comment>
+  </data>
+  <data name="MetadataCantOpenFile">
+    <value>Metadata file '{0}' could not be opened -- '{1}'.</value>
+    <comment>0009</comment>
+  </data>
+  <data name="RequiredFileNotFound">
+    <value>Required file '{0}' could not be found.</value>
+    <comment>0014</comment>
+  </data>
+  <data name="ClassNameTooLong">
+    <value>The name of type '{0}' is too long.</value>
+    <comment>0015</comment>
+  </data>
+  <data name="UnimplementedOp">
+    <value>Operator '{0}' is not yet implemented.</value>
+    <comment>0018</comment>
+  </data>
+  <data name="IllegalStatement">
+    <value>Only assignment, call, increment, decrement, and new object expressions can be used as a statement.</value>
+    <comment>0201</comment>
+  </data>
+  <data name="BadGetEnumerator">
+    <value>The call to GetEnumerator must return a class or a struct, not '{0}'.</value>
+    <comment>0202</comment>
+  </data>
+  <data name="TooManyLocals">
+    <value>Only 65535 locals are allowed.</value>
+    <comment>0203</comment>
+  </data>
+  <data name="AbstractBaseCall">
+    <value>Cannot call an abstract base member: '{0}'.</value>
+    <comment>0205</comment>
+  </data>
+  <data name="RefReadonlyProperty">
+    <value>A readonly property or indexer may not be passed as an out or ref parameter.</value>
+    <comment>0206</comment>
+  </data>
+  <data name="ManagedAddr">
+    <value>Cannot take the address of, get the size of, or declare a pointer to a managed type ('{0}').</value>
+    <comment>0208</comment>
+  </data>
+  <data name="BadFixedInitType">
+    <value>The type of locals declared in a fixed statement must be a pointer type.</value>
+    <comment>0209</comment>
+  </data>
+  <data name="FixedMustInit">
+    <value>You must provide an initializer in a fixed or using statement declaration.</value>
+    <comment>0210</comment>
+  </data>
+  <data name="InvalidAddrOp">
+    <value>Cannot take the address of the given expression.</value>
+    <comment>0211</comment>
+  </data>
+  <data name="FixedNeeded">
+    <value>You can only take the address of unfixed expression inside of a fixed statement initializer.</value>
+    <comment>0212</comment>
+  </data>
+  <data name="FixedNotNeeded">
+    <value>You do not need to use the fixed statement to take the address of an already fixed expression.</value>
+    <comment>0213</comment>
+  </data>
+  <data name="UnsafeNeeded">
+    <value>Pointers and fixed buffers may only be used in an unsafe context.</value>
+    <comment>0214</comment>
+  </data>
+  <data name="OpTFRetType">
+    <value>The return type of operator True or False must be bool.</value>
+    <comment>0215</comment>
+  </data>
+  <data name="OperatorNeedsMatch">
+    <value>The operator '{0}' requires a matching operator '{1}' to also be defined.</value>
+    <comment>0216</comment>
+  </data>
+  <data name="BadBoolOp">
+    <value>In order to be applicable as a short circuit operator a user-defined logical operator ('{0}') must have the same return type as the type of its 2 parameters.</value>
+    <comment>0217</comment>
+  </data>
+  <data name="MustHaveOpTF">
+    <value>The type ('{0}') must contain declarations of operator true and operator false.</value>
+    <comment>0218</comment>
+  </data>
+  <data name="UnreferencedVarAssg">
+    <value>The variable '{0}' is assigned but its value is never used.</value>
+    <comment>0219</comment>
+  </data>
+  <data name="CheckedOverflow">
+    <value>The operation overflows at compile time.</value>
+    <comment>0220</comment>
+  </data>
+  <data name="ConstOutOfRangeChecked">
+    <value>Constant value '{0}' cannot be converted to a '{1}' (use 'unchecked' syntax to override).</value>
+    <comment>0221</comment>
+  </data>
+  <data name="VarargsAndParams">
+    <value>A method cannot both have a params parameter and varargs.</value>
+    <comment>0224</comment>
+  </data>
+  <data name="ParamsMustBeArray">
+    <value>The params parameter must be a single dimensional array.</value>
+    <comment>0225</comment>
+  </data>
+  <data name="IllegalArglist">
+    <value>An __arglist expression may only appear inside of a call or new expression.</value>
+    <comment>0226</comment>
+  </data>
+  <data name="IllegalUnsafe">
+    <value>Unsafe code may only appear if compiling with /unsafe.</value>
+    <comment>0227</comment>
+  </data>
+  <data name="NoAccessibleMember">
+    <value>'{0}' does not contain a definition for '{1}', or it is not accessible.</value>
+    <comment>0228</comment>
+  </data>
+  <data name="AmbigMethProp">
+    <value>Ambiguity between '{0}' and '{1}'.</value>
+    <comment>0229</comment>
+  </data>
+  <data name="CompileCancelled">
+    <value>Compilation cancelled by user.</value>
+    <comment>1600</comment>
+  </data>
+  <data name="MethodArgCantBeRefAny">
+    <value>Method or delegate parameter cannot be of type '{0}'.</value>
+    <comment>1601</comment>
+  </data>
+  <data name="MultipleLocalTypeDefs">
+    <value>'{0}' is already defined in this assembly.</value>
+    <comment>1602</comment>
+  </data>
+  <data name="UnnamedOutputAndIncr">
+    <value>Incremental build requires a target name specified with /out.</value>
+    <comment>1603</comment>
+  </data>
+  <data name="AssgReadonlyLocal">
+    <value>Cannot assign to '{0}' because it is read-only.</value>
+    <comment>1604</comment>
+  </data>
+  <data name="RefReadonlyLocal">
+    <value>Cannot pass '{0}' as a ref or out argument because it is read-only.</value>
+    <comment>1605</comment>
+  </data>
+  <data name="ALinkCloseFailed">
+    <value>Assembly signing failed; output may not be signed -- {0}.</value>
+    <comment>1606</comment>
+  </data>
+  <data name="ALinkWarn">
+    <value>Assembly generation -- {0}.</value>
+    <comment>1607</comment>
+  </data>
+  <data name="CantUseRequiredAttribute">
+    <value>The RequiredAttribute attribute is not permitted on C# types.</value>
+    <comment>1608</comment>
+  </data>
+  <data name="NoModifiersOnAccessor">
+    <value>Modifiers cannot be placed on property or event accessor declarations.</value>
+    <comment>1609</comment>
+  </data>
+  <data name="DeleteAutoResFailed">
+    <value>Unable to delete temporary file {0} used for default Win32 resource -- {1}.</value>
+    <comment>1610</comment>
+  </data>
+  <data name="ParamsCantBeRefOut">
+    <value>The params parameter cannot be declared as ref or out.</value>
+    <comment>1611</comment>
+  </data>
+  <data name="ReturnNotLValue">
+    <value>Cannot modify the return value of '{0}' because it is not a variable.</value>
+    <comment>1612</comment>
+  </data>
+  <data name="MissingCoClass">
+    <value>The managed coclass wrapper class '{0}' for interface '{1}' is invalid or cannot be found (are you missing an assembly reference?)</value>
+    <comment>1613</comment>
+  </data>
+  <data name="BadArgTypes">
+    <value>The best overloaded method match for '{0}' has some invalid arguments.</value>
+    <comment>1502</comment>
+  </data>
+  <data name="BadArgType">
+    <value>Argument '{0}': cannot convert from '{1}' to '{2}'.</value>
+    <comment>1503</comment>
+  </data>
+  <data name="NoSourceFile">
+    <value>Source file '{0}' could not be opened ('{1}').</value>
+    <comment>1504</comment>
+  </data>
+  <data name="CantRefResource">
+    <value>Cannot link resource file '{0}' when building a module.</value>
+    <comment>1507</comment>
+  </data>
+  <data name="ResourceNotUnique">
+    <value>Resource identifier '{0}' has already been used in this assembly.</value>
+    <comment>1508</comment>
+  </data>
+  <data name="ImportNonAssembly">
+    <value>Referenced file '{0}' is not an assembly; use '/addmodule' option instead.</value>
+    <comment>1509</comment>
+  </data>
+  <data name="RefLvalueExpected">
+    <value>A ref or out argument must be an lvalue.</value>
+    <comment>1510</comment>
+  </data>
+  <data name="BaseInStaticMeth">
+    <value>Keyword base is not available in a static method.</value>
+    <comment>1511</comment>
+  </data>
+  <data name="BaseInBadContext">
+    <value>Keyword base is not available in the current context.</value>
+    <comment>1512</comment>
+  </data>
+  <data name="InExpected">
+    <value>'in' expected.</value>
+    <comment>1515</comment>
+  </data>
+  <data name="BadTokenInType">
+    <value>Expected class, delegate, enum, interface, or struct.</value>
+    <comment>1518</comment>
+  </data>
+  <data name="BadAttributeParam">
+    <value>An attribute argument must be a constant expression, typeof expression or array creation expression.</value>
+    <comment>0182</comment>
+  </data>
+  <data name="LockNeedsReference">
+    <value>'{0}' is not a reference type as required by the lock statement.</value>
+    <comment>0185</comment>
+  </data>
+  <data name="NullNotValid">
+    <value>Use of null is not valid in this context.</value>
+    <comment>0186</comment>
+  </data>
+  <data name="NoSuchOperator">
+    <value>No such operator '{0}' defined for type '{1}'.</value>
+    <comment>0187</comment>
+  </data>
+  <data name="UseDefViolationThis">
+    <value>The this object cannot be used before all of its fields are assigned to.</value>
+    <comment>0188</comment>
+  </data>
+  <data name="EqualityOpWithoutEquals">
+    <value>'{0}' defines operator == or operator != but does not override Object.Equals(object o).</value>
+    <comment>0660</comment>
+  </data>
+  <data name="EqualityOpWithoutGetHashCode">
+    <value>'{0}' defines operator == or operator != but does not override Object.GetHashCode().</value>
+    <comment>0661</comment>
+  </data>
+  <data name="OutAttrOnRefParam">
+    <value>'{0}' cannot specify only Out attribute on a ref parameter. Use both In and Out attributes, or neither.</value>
+    <comment>0662</comment>
+  </data>
+  <data name="OverloadRefOut">
+    <value>'{0}' cannot define overloaded methods which differ only on ref and out.</value>
+    <comment>0663</comment>
+  </data>
+  <data name="IncorrectBooleanAssg">
+    <value>Assignment in conditional expression is always constant; did you mean to use '==' instead of '='?</value>
+    <comment>0665</comment>
+  </data>
+  <data name="ProtectedInStruct">
+    <value>'{0}' : new protected member declared in struct.</value>
+    <comment>0666</comment>
+  </data>
+  <data name="InconsistantIndexerNames">
+    <value>Two indexers have different names; the IndexerName attribute must be used with the same name on every indexer within a type.</value>
+    <comment>0668</comment>
+  </data>
+  <data name="ComImportWithUserCtor">
+    <value>A class with the ComImport attribute cannot have a user-defined constructor.</value>
+    <comment>0669</comment>
+  </data>
+  <data name="FieldCantHaveVoidType">
+    <value>Field cannot have void type.</value>
+    <comment>0670</comment>
+  </data>
+  <data name="NonObsoleteOverridingObsolete">
+    <value>Member '{0}' overrides obsolete member '{1}'. Add the Obsolete attribute to '{0}'.</value>
+    <comment>0672</comment>
+  </data>
+  <data name="SystemVoid">
+    <value>System.Void cannot be used from C# -- use typeof(void) to get the void type object.</value>
+    <comment>0673</comment>
+  </data>
+  <data name="ExplicitParamArray">
+    <value>Do not use 'System.ParamArrayAttribute'. Use the 'params' keyword instead.</value>
+    <comment>0674</comment>
+  </data>
+  <data name="BitwiseOrSignExtend">
+    <value>Bitwise-or operator used on a sign-extended operand; consider casting to a smaller unsigned type first.</value>
+    <comment>0675</comment>
+  </data>
+  <data name="VolatileByRef">
+    <value>'{0}': a reference to a volatile field will not be treated as volatile.</value>
+    <comment>0420</comment>
+  </data>
+  <data name="VolatileStruct">
+    <value>'{0}': a volatile field can not be of the type '{1}'.</value>
+    <comment>0677</comment>
+  </data>
+  <data name="VolatileAndReadonly">
+    <value>'{0}': a field can not be both volatile and readonly.</value>
+    <comment>0678</comment>
+  </data>
+  <data name="BadForeachDecl">
+    <value>Type and identifier are both required in a foreach statement.</value>
+    <comment>0230</comment>
+  </data>
+  <data name="ParamsOrVarargsMustBeLast">
+    <value>A params or __arglist parameter must be the last parameter in a formal parameter list.</value>
+    <comment>0231</comment>
+  </data>
+  <data name="VarargDelegate">
+    <value>__arglist is not allowed in delegates.</value>
+    <comment>0235</comment>
+  </data>
+  <data name="FieldInitRefNonstatic">
+    <value>A field initializer cannot reference the nonstatic field, method, or property '{0}'.</value>
+    <comment>0236</comment>
+  </data>
+  <data name="VarargIndexer">
+    <value>__arglist is not allowed in indexers.</value>
+    <comment>0237</comment>
+  </data>
+  <data name="SealedNonOverride">
+    <value>'{0}' cannot be sealed because it is not an override.</value>
+    <comment>0238</comment>
+  </data>
+  <data name="CantOverrideSealed">
+    <value>'{0}' : cannot override inherited member '{1}' because it is sealed.</value>
+    <comment>0239</comment>
+  </data>
+  <data name="MemberAbstractSealed">
+    <value>'{0}' cannot be both abstract and sealed.</value>
+    <comment>0240</comment>
+  </data>
+  <data name="NoDefaultArgs">
+    <value>Default parameter specifiers are not permitted.</value>
+    <comment>0241</comment>
+  </data>
+  <data name="VoidError">
+    <value>The operation in question is undefined on void pointers.</value>
+    <comment>0242</comment>
+  </data>
+  <data name="ConditionalOnOverride">
+    <value>Conditional not valid on '{0}' because it is an override method.</value>
+    <comment>0243</comment>
+  </data>
+  <data name="PointerInAsOrIs">
+    <value>"is" or "as" are not valid on pointer types.</value>
+    <comment>0244</comment>
+  </data>
+  <data name="CallingFinalizeDeprecated">
+    <value>Destructors and object.Finalize cannot be called directly.  Consider calling IDisposable.Dispose if available.</value>
+    <comment>0245</comment>
+  </data>
+  <data name="NegativeStackAllocSize">
+    <value>Cannot use a negative size with stackalloc.</value>
+    <comment>0247</comment>
+  </data>
+  <data name="NegativeArraySize">
+    <value>Cannot create an array with a negative size.</value>
+    <comment>0248</comment>
+  </data>
+  <data name="OverrideFinalizeDeprecated">
+    <value>Do not override object.Finalize.  Instead, provide a destructor.</value>
+    <comment>0249</comment>
+  </data>
+  <data name="CallingBaseFinalizeDeprecated">
+    <value>Do not directly call your base class Finalize method. It is called automatically from your destructor.</value>
+    <comment>0250</comment>
+  </data>
+  <data name="NegativeArrayIndex">
+    <value>Indexing an array with a negative index (array indices always start at zero).</value>
+    <comment>0251</comment>
+  </data>
+  <data name="BadRefCompareLeft">
+    <value>Possible unintended reference comparison; to get a value comparison, cast the left hand side to type '{0}'.</value>
+    <comment>0252</comment>
+  </data>
+  <data name="BadRefCompareRight">
+    <value>Possible unintended reference comparison; to get a value comparison, cast the right hand side to type '{0}'.</value>
+    <comment>0253</comment>
+  </data>
+  <data name="BadCastInFixed">
+    <value>The right hand side of a fixed statement assignment may not be a cast expression.</value>
+    <comment>0254</comment>
+  </data>
+  <data name="StackallocInCatchFinally">
+    <value>stackalloc may not be used in a catch or finally block.</value>
+    <comment>0255</comment>
+  </data>
+  <data name="IndexerNeedsParam">
+    <value>Indexers must have at least one parameter.</value>
+    <comment>1551</comment>
+  </data>
+  <data name="BadArraySyntax">
+    <value>Array type specifier, [], must appear before parameter name.</value>
+    <comment>1552</comment>
+  </data>
+  <data name="BadOperatorSyntax">
+    <value>Declaration is not valid; use '{0} operator &lt;dest-type&gt; (...' instead.</value>
+    <comment>1553</comment>
+  </data>
+  <data name="BadOperatorSyntax2">
+    <value>Declaration is not valid; use '&lt;type&gt; {0} (...' instead.</value>
+    <comment>1554</comment>
+  </data>
+  <data name="MainClassNotFound">
+    <value>Could not find '{0}' specified for Main method.</value>
+    <comment>1555</comment>
+  </data>
+  <data name="MainClassNotClass">
+    <value>'{0}' specified for Main method must be a valid class or struct.</value>
+    <comment>1556</comment>
+  </data>
+  <data name="MainClassWrongFile">
+    <value>Cannot use '{0}' for Main method because it is in a different output file.</value>
+    <comment>1557</comment>
+  </data>
+  <data name="NoMainInClass">
+    <value>'{0}' does not have a suitable Main method.</value>
+    <comment>1558</comment>
+  </data>
+  <data name="MainClassIsImport">
+    <value>Cannot use '{0}' for Main method because it is imported.</value>
+    <comment>1559</comment>
+  </data>
+  <data name="FileNameTooLong">
+    <value>Filename specified for #line is too long.</value>
+    <comment>1560</comment>
+  </data>
+  <data name="OutputNeedsName">
+    <value>Outputs without source must have the /out option specified.</value>
+    <comment>1562</comment>
+  </data>
+  <data name="OutputNeedsInput">
+    <value>Output '{0}' does not have any source files.</value>
+    <comment>1563</comment>
+  </data>
+  <data name="MethodReturnCantBeRefAny">
+    <value>Method or delegate cannot return type '{0}'.</value>
+    <comment>1564</comment>
+  </data>
+  <data name="CantHaveWin32ResAndIcon">
+    <value>Conflicting options specified:  Win32 resource file; Win32 icon.</value>
+    <comment>1565</comment>
+  </data>
+  <data name="CantReadResource">
+    <value>Error reading resource file '{0}' -- '{1}'.</value>
+    <comment>1566</comment>
+  </data>
+  <data name="AutoResGen">
+    <value>Error generating Win32 resource: {0}.</value>
+    <comment>1567</comment>
+  </data>
+  <data name="DocFileGen">
+    <value>Error generating XML documentation file '{0}' ('{1}').</value>
+    <comment>1569</comment>
+  </data>
+  <data name="XMLParseError">
+    <value>XML comment on '{0}' has badly formed XML -- '{1}'.</value>
+    <comment>1570</comment>
+  </data>
+  <data name="DuplicateParamTag">
+    <value>XML comment on '{0}' has a duplicate param tag for '{1}'.</value>
+    <comment>1571</comment>
+  </data>
+  <data name="UnmatchedParamTag">
+    <value>XML comment on '{0}' has a param tag for '{1}', but there is no parameter by that name.</value>
+    <comment>1572</comment>
+  </data>
+  <data name="MissingParamTag">
+    <value>Parameter '{0}' has no matching param tag in XML comment (but other parameters do).</value>
+    <comment>1573</comment>
+  </data>
+  <data name="BadXMLRef">
+    <value>XML comment on '{0}' has cref attribute '{1}' that could not be found.</value>
+    <comment>1574</comment>
+  </data>
+  <data name="BadStackAllocExpr">
+    <value>A stackalloc expression requires [] after type.</value>
+    <comment>1575</comment>
+  </data>
+  <data name="InvalidLineNumber">
+    <value>The line number specified for #line directive is missing or invalid.</value>
+    <comment>1576</comment>
+  </data>
+  <data name="ALinkFailed">
+    <value>Assembly generation failed -- {0}.</value>
+    <comment>1577</comment>
+  </data>
+  <data name="MissingPPFile">
+    <value>Filename, single-line comment or end-of-line expected.</value>
+    <comment>1578</comment>
+  </data>
+  <data name="ForEachMissingMember">
+    <value>foreach statement cannot operate on variables of type '{0}' because '{1}' does not contain a public definition for '{2}'.</value>
+    <comment>1579</comment>
+  </data>
+  <data name="BadXMLRefParamType">
+    <value>Invalid type for parameter '{0}' in XML comment cref attribute.</value>
+    <comment>1580</comment>
+  </data>
+  <data name="BadXMLRefReturnType">
+    <value>Invalid return type in XML comment cref attribute.</value>
+    <comment>1581</comment>
+  </data>
+  <data name="BadWin32Res">
+    <value>'{0}' is not a valid Win32 resource file.</value>
+    <comment>1583</comment>
+  </data>
+  <data name="BadXMLRefSyntax">
+    <value>XML comment on '{0}' has syntactically incorrect cref attribute '{1}'.</value>
+    <comment>1584</comment>
+  </data>
+  <data name="BadModifierLocation">
+    <value>Member modifier '{0}' must precede the member type and name.</value>
+    <comment>1585</comment>
+  </data>
+  <data name="MissingArraySize">
+    <value>Array creation must have array size or array initializer.</value>
+    <comment>1586</comment>
+  </data>
+  <data name="UnprocessedXMLComment">
+    <value>XML comment is not placed on a valid language element.</value>
+    <comment>1587</comment>
+  </data>
+  <data name="CantGetCORSystemDir">
+    <value>Cannot determine common language runtime directory -- '{0}'.</value>
+    <comment>1588</comment>
+  </data>
+  <data name="FailedInclude">
+    <value>Unable to include XML fragment '{0}' of file '{1}' -- {2}.</value>
+    <comment>1589</comment>
+  </data>
+  <data name="InvalidInclude">
+    <value>Invalid XML include element -- {0}.</value>
+    <comment>1590</comment>
+  </data>
+  <data name="MissingXMLComment">
+    <value>Missing XML comment for publicly visible type or member '{0}'.</value>
+    <comment>1591</comment>
+  </data>
+  <data name="XMLParseIncludeError">
+    <value>Badly formed XML in included comments file -- '{0}'.</value>
+    <comment>1592</comment>
+  </data>
+  <data name="BadDelArgCount">
+    <value>Delegate '{0}' does not take '{1}' arguments.</value>
+    <comment>1593</comment>
+  </data>
+  <data name="BadDelArgTypes">
+    <value>Delegate '{0}' has some invalid arguments.</value>
+    <comment>1594</comment>
+  </data>
+  <data name="MultipleTypeDefs">
+    <value>'{0}' is defined in multiple places; using definition from '{1}'.</value>
+    <comment>1595</comment>
+  </data>
+  <data name="DocFileGenAndIncr">
+    <value>XML documentation not updated during this incremental rebuild; use /incremental- to update XML documentation.</value>
+    <comment>1596</comment>
+  </data>
+  <data name="XMLParserNotFound">
+    <value>XML parser could not be loaded for the following reason: '{0}'. The XML documentation file '{1}' will not be generated.</value>
+    <comment>1598</comment>
+  </data>
+  <data name="UnexpectedSemicolon">
+    <value>Semicolon after method or accessor block is not valid.</value>
+    <comment>1597</comment>
+  </data>
+  <data name="FeatureNYI2">
+    <value>The feature you are attempting to use, '{0}', has not been implemented. Please refrain from using it until a later time.</value>
+    <comment>0189</comment>
+  </data>
+  <data name="EOFExpected">
+    <value>Type or namespace definition, or end-of-file expected.</value>
+    <comment>1022</comment>
+  </data>
+  <data name="BadEmbeddedStmt">
+    <value>Embedded statement cannot be a declaration or labeled statement.</value>
+    <comment>1023</comment>
+  </data>
+  <data name="DllImportOnInvalidMethod">
+    <value>The DllImport attribute must be specified on a method marked 'static' and 'extern'.</value>
+    <comment>0601</comment>
+  </data>
+  <data name="FeatureDeprecated">
+    <value>The feature '{0}' is deprecated. Please use '{1}' instead'.</value>
+    <comment>0602</comment>
+  </data>
+  <data name="NameAttributeOnOverride">
+    <value>Cannot set the IndexerName attribute on an indexer marked override.</value>
+    <comment>0609</comment>
+  </data>
+  <data name="FieldCantBeRefAny">
+    <value>Field or property cannot be of type '{0}'.</value>
+    <comment>0610</comment>
+  </data>
+  <data name="ArrayElementCantBeRefAny">
+    <value>Array elements cannot be of type '{0}'.</value>
+    <comment>0611</comment>
+  </data>
+  <data name="DeprecatedSymbol">
+    <value>'{0}' is obsolete.</value>
+    <comment>0612</comment>
+  </data>
+  <data name="NotAnAttributeClass">
+    <value>'{0}': is not an attribute class.</value>
+    <comment>0616</comment>
+  </data>
+  <data name="BadNamedAttributeArgument">
+    <value>'{0}' is not a valid named attribute argument. Named attribute arguments must be fields which are not readonly, static or const, or read-write properties which are not static.</value>
+    <comment>0617</comment>
+  </data>
+  <data name="DeprecatedSymbolStr">
+    <value>'{0}' is obsolete: '{1}'.</value>
+    <comment>0618</comment>
+  </data>
+  <data name="IndexerCantHaveVoidType">
+    <value>Indexers cannot have void type.</value>
+    <comment>0620</comment>
+  </data>
+  <data name="VirtualPrivate">
+    <value>'{0}' : virtual or abstract members cannot be private.</value>
+    <comment>0621</comment>
+  </data>
+  <data name="ArrayInitToNonArrayType">
+    <value>Can only use array initializer expressions to assign to array types. Try using a new expression instead.</value>
+    <comment>0622</comment>
+  </data>
+  <data name="ArrayInitInBadPlace">
+    <value>Array initializers can only be used in a variable or field initializer. Try using a new expression instead.</value>
+    <comment>0623</comment>
+  </data>
+  <data name="MissingStructOffset">
+    <value>'{0}': instance field types marked with StructLayout(LayoutKind.Explicit) must have a FieldOffset attribute.</value>
+    <comment>0625</comment>
+  </data>
+  <data name="ExternMethodNoImplementation">
+    <value>Method, operator, or accessor '{0}' is marked external and has no attributes on it. Consider adding a DllImport attribute to specify the external implementation.</value>
+    <comment>0626</comment>
+  </data>
+  <data name="ProtectedInSealed">
+    <value>'{0}' : new protected member declared in sealed class.</value>
+    <comment>0628</comment>
+  </data>
+  <data name="InterfaceImplementedByConditional">
+    <value>Conditional member '{0}' cannot implement interface member '{1}'.</value>
+    <comment>0629</comment>
+  </data>
+  <data name="IndexerWithRefParam">
+    <value>Indexers can't have ref or out parameters.</value>
+    <comment>0631</comment>
+  </data>
+  <data name="NamedAttrArgIsReadOnlyProperty">
+    <value>'{0}' : Named attribute argument can't be a read only property.</value>
+    <comment>0632</comment>
+  </data>
+  <data name="BadArgumentToNameAttribute">
+    <value>The argument to the IndexerName attribute must be a valid identifier.</value>
+    <comment>0633</comment>
+  </data>
+  <data name="OnlyValidOnCustomMarshaller">
+    <value>'{0}' : argument only valid for marshal of type System.Interop.UnmanagedType.CustomMarshaller.</value>
+    <comment>0634</comment>
+  </data>
+  <data name="MissingComTypeOrMarshaller">
+    <value>'{0}' : System.Interop.UnmanagedType.CustomMarshaller requires named arguments ComType and Marshal.</value>
+    <comment>0635</comment>
+  </data>
+  <data name="StructOffsetOnBadStruct">
+    <value>The FieldOffset attribute can only be placed on members of types marked with the StructLayout(LayoutKind.Explicit).</value>
+    <comment>0636</comment>
+  </data>
+  <data name="StructOffsetOnBadField">
+    <value>The FieldOffset attribute is not allowed on static or const fields.</value>
+    <comment>0637</comment>
+  </data>
+  <data name="AttributeUsageOnNonAttributeClass">
+    <value>'{0}' : attribute is only valid on classes derived from System.Attribute.</value>
+    <comment>0641</comment>
+  </data>
+  <data name="PossibleMistakenNullStatement">
+    <value>Possible mistaken null statement.</value>
+    <comment>0642</comment>
+  </data>
+  <data name="DuplicateNamedAttributeArgument">
+    <value>'{0}' duplicate named attribute argument.</value>
+    <comment>0643</comment>
+  </data>
+  <data name="DeriveFromEnumOrValueType">
+    <value>'{1}' cannot inherit from special class '{0}'.</value>
+    <comment>0644</comment>
+  </data>
+  <data name="IdentifierTooLong">
+    <value>Identifier too long.</value>
+    <comment>0645</comment>
+  </data>
+  <data name="DefaultMemberOnIndexedType">
+    <value>Cannot specify the DefaultMember attribute on type containing an indexer.</value>
+    <comment>0646</comment>
+  </data>
+  <data name="CustomAttributeError">
+    <value>Error emitting '{0}' -- argument '{1}' is invalid.</value>
+    <comment>0647</comment>
+  </data>
+  <data name="BogusType">
+    <value>'{0}' is a type not supported by the language.</value>
+    <comment>0648</comment>
+  </data>
+  <data name="UnassignedInternalField">
+    <value>Field '{0}' is never assigned to, and will always have its default value {1}.</value>
+    <comment>0649</comment>
+  </data>
+  <data name="InvalidCall">
+    <value>No overload for '{1}' matches delegate '{0}'.</value>
+    <comment>0123</comment>
+  </data>
+  <data name="RetObjectRequired">
+    <value>An object of a type convertible to '{0}' is required.</value>
+    <comment>0126</comment>
+  </data>
+  <data name="RetNoObjectRequired">
+    <value>Since '{0}' returns void, a return keyword must not be followed by an object expression.</value>
+    <comment>0127</comment>
+  </data>
+  <data name="IdentifierExpectedKW">
+    <value>Identifier expected, '{0}' is a keyword.</value>
+    <comment>1041</comment>
+  </data>
+  <data name="SemiOrLBraceExpected">
+    <value>{ or ; expected.</value>
+    <comment>1043</comment>
+  </data>
+  <data name="MultiTypeInDeclaration">
+    <value>Cannot use more than one type in a for, using, fixed, or declaration statement.</value>
+    <comment>1044</comment>
+  </data>
+  <data name="AddOrRemoveExpected">
+    <value>An add or remove accessor expected.</value>
+    <comment>1055</comment>
+  </data>
+  <data name="DontUseInvoke">
+    <value>Invoke cannot be called directly on a delegate.</value>
+    <comment>1533</comment>
+  </data>
+  <data name="BadUnOpArgs">
+    <value>Overloaded unary operator '{0}' only takes one parameter.</value>
+    <comment>1535</comment>
+  </data>
+  <data name="NoVoidParameter">
+    <value>Invalid parameter type 'void'.</value>
+    <comment>1536</comment>
+  </data>
+  <data name="DuplicateAlias">
+    <value>The using alias '{1}' appeared previously in this namespace.</value>
+    <comment>1537</comment>
+  </data>
+  <data name="CLSNoVarArgs">
+    <value>Methods with variable arguments are not CLS-compliant.</value>
+    <comment>3000</comment>
+  </data>
+  <data name="CLSBadArgType">
+    <value>Argument type '{0}' is not CLS-compliant.</value>
+    <comment>3001</comment>
+  </data>
+  <data name="CLSBadReturnType">
+    <value>Return type of '{0}' is not CLS-compliant.</value>
+    <comment>3002</comment>
+  </data>
+  <data name="CLSBadFieldPropType">
+    <value>Type of '{0}' is not CLS-compliant.</value>
+    <comment>3003</comment>
+  </data>
+  <data name="CLSBadUnicode">
+    <value>Mixed and decomposed Unicode characters are not CLS-compliant.</value>
+    <comment>3004</comment>
+  </data>
+  <data name="CLSBadIdentifierCase">
+    <value>Identifier '{0}' differing only in case is not CLS-compliant.</value>
+    <comment>3005</comment>
+  </data>
+  <data name="CLSOverloadRefOut">
+    <value>Overloaded method '{0}' differing only in ref or out is not CLS-compliant.</value>
+    <comment>3006</comment>
+  </data>
+  <data name="CLSBadIdentifier">
+    <value>Identifier '{0}' is not CLS-compliant.</value>
+    <comment>3008</comment>
+  </data>
+  <data name="CLSBadBase">
+    <value>'{0}': base type '{1}' is not CLS-compliant.</value>
+    <comment>3009</comment>
+  </data>
+  <data name="CLSBadInterfacemember">
+    <value>'{0}': CLS-compliant interfaces must have CLS-compliant members.</value>
+    <comment>3010</comment>
+  </data>
+  <data name="CLSNoAbstractMembers">
+    <value>'{0}': only CLS-compliant members can be abstract.</value>
+    <comment>3011</comment>
+  </data>
+  <data name="CLSNotOnModules">
+    <value>You must specify the CLSCompliant attribute on the assembly, not the module, to enable CLS compliance checking.</value>
+    <comment>3012</comment>
+  </data>
+  <data name="CLSModuleMissingCLS">
+    <value>Added module is not CLS-compliant, or is missing CLSCompliant attribute.</value>
+    <comment>3013</comment>
+  </data>
+  <data name="CLSAssemblyNotCLS">
+    <value>'{0}' cannot be marked as CLS compliant because the assembly is not marked as compliant.</value>
+    <comment>3014</comment>
+  </data>
+  <data name="CLSBadAttributeType">
+    <value>'{0}' has no accessible constructors which use only CLS compliant types.</value>
+    <comment>3015</comment>
+  </data>
+  <data name="CLSArrayArgumentToAttribute">
+    <value>Arrays as attribute arguments is not CLS-compliant.</value>
+    <comment>3016</comment>
+  </data>
+  <data name="UnreachableCatch">
+    <value>A previous catch clause already catches all exceptions of this or a super type ('{0}').</value>
+    <comment>0160</comment>
+  </data>
+  <data name="ReturnExpected">
+    <value>'{0}': not all code paths return a value.</value>
+    <comment>0161</comment>
+  </data>
+  <data name="UnreachableCode">
+    <value>Unreachable code detected.</value>
+    <comment>0162</comment>
+  </data>
+  <data name="SwitchFallThrough">
+    <value>Control cannot fall through from one case label ('{0}') to another.</value>
+    <comment>0163</comment>
+  </data>
+  <data name="UnreferencedLabel">
+    <value>This label has not been referenced.</value>
+    <comment>0164</comment>
+  </data>
+  <data name="UseDefViolation">
+    <value>Use of unassigned local variable '{0}'.</value>
+    <comment>0165</comment>
+  </data>
+  <data name="SwitchFallInto">
+    <value>Control cannot fall through from one case label to another ('{0}').</value>
+    <comment>0166</comment>
+  </data>
+  <data name="NoInvoke">
+    <value>The delegate '{0}' is missing the Invoke method.</value>
+    <comment>0167</comment>
+  </data>
+  <data name="UnreferencedVar">
+    <value>The variable '{0}' is declared but never used.</value>
+    <comment>0168</comment>
+  </data>
+  <data name="UnreferencedField">
+    <value>The private field '{0}' is never used.</value>
+    <comment>0169</comment>
+  </data>
+  <data name="TypeExpected">
+    <value>Type expected.</value>
+    <comment>1031</comment>
+  </data>
+  <data name="ExpectedDotOrParen">
+    <value>( or . expected.</value>
+    <comment>1036</comment>
+  </data>
+  <data name="OvlOperatorExpected">
+    <value>Overloadable operator expected.</value>
+    <comment>1037</comment>
+  </data>
+  <data name="UnterminatedStringLit">
+    <value>Unterminated string literal.</value>
+    <comment>1039</comment>
+  </data>
+  <data name="NoConstructors">
+    <value>The type '{0}' has no constructors defined.</value>
+    <comment>0143</comment>
+  </data>
+  <data name="NoNewAbstract">
+    <value>Cannot create an instance of the abstract class or interface '{0}'.</value>
+    <comment>0144</comment>
+  </data>
+  <data name="ConstValueRequired">
+    <value>A const field requires a value to be provided.</value>
+    <comment>0145</comment>
+  </data>
+  <data name="CircularBase">
+    <value>Circular dependency between '{1}' and '{0}'.</value>
+    <comment>0146</comment>
+  </data>
+  <data name="BadDelegateConstructor">
+    <value>The delegate '{0}' does not have a valid constructor.</value>
+    <comment>0148</comment>
+  </data>
+  <data name="MethodNameExpected">
+    <value>Method name expected.</value>
+    <comment>0149</comment>
+  </data>
+  <data name="InvalidNumber">
+    <value>Invalid number.</value>
+    <comment>1013</comment>
+  </data>
+  <data name="ClassTypeExpected">
+    <value>An object, string, or class type expected.</value>
+    <comment>1015</comment>
+  </data>
+  <data name="NamedArgumentExpected">
+    <value>Named attribute argument expected.</value>
+    <comment>1016</comment>
+  </data>
+  <data name="TooManyCatches">
+    <value>Try statement already has a default catch block.</value>
+    <comment>1017</comment>
+  </data>
+  <data name="ThisOrBaseExpected">
+    <value>Keyword this or base expected.</value>
+    <comment>1018</comment>
+  </data>
+  <data name="OvlUnaryOperatorExpected">
+    <value>Overloadable unary operator expected.</value>
+    <comment>1019</comment>
+  </data>
+  <data name="OvlBinaryOperatorExpected">
+    <value>Overloadable binary operator expected.</value>
+    <comment>1020</comment>
+  </data>
+  <data name="IntegralTypeExpected">
+    <value>Type byte, sbyte, short, ushort, int, uint, long, or ulong expected.</value>
+    <comment>1008</comment>
+  </data>
+  <data name="IllegalPointerType">
+    <value>Indirection to managed type is not valid.</value>
+    <comment>1005</comment>
+  </data>
+  <data name="InvalidTextWithReason">
+    <value>Invalid text in element. {0}.</value>
+  </data>
+  <data name="DeprecatedSymbolStrError">
+    <value>'{0}' is obsolete: '{1}'.</value>
+    <comment>0619</comment>
+  </data>
+  <data name="DeprecatedSymbolError">
+    <value>'{0}' is obsolete.</value>
+    <comment>0613</comment>
+  </data>
+  <data name="CannotInstantiateTypeConverter">
+    <value>Cannot instantiate '{0}'. Try moving it to a separate assembly.</value>
+  </data>
+  <data name="DuplicateMemberInLiteral">
+    <value>Member '{0}' has already been specified.</value>
+  </data>
+  <data name="FactorySignatureHasBody">
+    <value>Interface factory method cannot have a definition.</value>
+  </data>
+  <data name="AbstractField">
+    <value>The modifier 'abstract' is not valid on fields. Try using a property instead.</value>
+    <comment>0681</comment>
+  </data>
+  <data name="BogusExplicitImpl">
+    <value>'{0}' cannot implement '{1}' because it uses a type not supported by the language.</value>
+    <comment>0682</comment>
+  </data>
+  <data name="ExplicitMethodImplAccessor">
+    <value>'{0}' explicit method implementation cannot implement '{1}' because it is an accessor.</value>
+    <comment>0683</comment>
+  </data>
+  <data name="CoClassWithoutComImport">
+    <value>'{0}' interface marked with 'CoClassAttribute' not marked with 'ComImportAttribute'.</value>
+    <comment>0684</comment>
+  </data>
+  <data name="ConditionalWithOutParam">
+    <value>Conditional member '{0}' cannot have an out parameter.</value>
+    <comment>0685</comment>
+  </data>
+  <data name="AccessorImplementingMethod">
+    <value>Accessor '{0}' cannot implement interface member '{1}' for type '{2}'. Use an explicit interface implementation.</value>
+    <comment>0686</comment>
+  </data>
+  <data name="TypeAsExpression">
+    <value>A type or namespace name is only permitted as part of a member access expression.</value>
+    <comment>0687</comment>
+  </data>
+  <data name="LinkDemandOnOverride">
+    <value>'{0}' has a link demand, but overrides or implements '{1}' which does not have a link demand. A security hole may exist.</value>
+    <comment>0688</comment>
+  </data>
+  <data name="DerivingFromATyVar">
+    <value>Cannot derive from '{0}' because it is a type variable.</value>
+    <comment>0689</comment>
+  </data>
+  <data name="MalformedMetadata">
+    <value>Input file '{0}' contains invalid metadata.</value>
+    <comment>0690</comment>
+  </data>
+  <data name="BadArity">
+    <value>'{0}' type not found. '{1}' has the wrong number of type parameters.</value>
+    <comment>0691</comment>
+  </data>
+  <data name="DuplicateTypeParameter">
+    <value>Duplicate type parameter '{0}'.</value>
+    <comment>0692</comment>
+  </data>
+  <data name="TypeParameterSameAsOuterTypeParameter">
+    <value>Type parameter '{0}' has same name as type parameter from outer type '{1}'.</value>
+    <comment>0693</comment>
+  </data>
+  <data name="TypeVariableSameAsParent">
+    <value>Type parameter '{0}' has same name as containing type, method, or typedef.</value>
+    <comment>0694</comment>
+  </data>
+  <data name="ImplementingMultipleInterfaceInstantiations">
+    <value>'{0}' cannot implement both '{1}' and '{2}' because they are different instantiations of the same interface type.</value>
+    <comment>0695</comment>
+  </data>
+  <data name="ExternOnGeneric">
+    <value>'{0}' extern members cannot be contained in generic types.</value>
+    <comment>0696</comment>
+  </data>
+  <data name="ExternOnGenericMethod">
+    <value>'{0}' generic methods cannot be extern.</value>
+    <comment>0697</comment>
+  </data>
+  <data name="GenericDerivingFromAttribute">
+    <value>A generic type cannot derive from '{0}' because it is an attribute class.</value>
+    <comment>0698</comment>
+  </data>
+  <data name="TyVarNotFoundInConstraint">
+    <value>'{0}' does not define type parameter '{1}'.</value>
+    <comment>0699</comment>
+  </data>
+  <data name="TyVarAsBound">
+    <value>'{0}' naked type variables cannot be used as bounds.</value>
+    <comment>0700</comment>
+  </data>
+  <data name="BadBoundType">
+    <value>'{0}' is not a valid bound. Bounds must be interfaces or non sealed classes.</value>
+    <comment>0701</comment>
+  </data>
+  <data name="SpecialTypeAsBound">
+    <value>Bound cannot be special class '{0}'.</value>
+    <comment>0702</comment>
+  </data>
+  <data name="BadVisBound">
+    <value>Inconsistent accessibility: bound type '{0}' is less accessible than '{1}'.</value>
+    <comment>0703</comment>
+  </data>
+  <data name="LookupInTypeVariable">
+    <value>Cannot do member lookup in '{0}' because it is a type variable.</value>
+    <comment>0704</comment>
+  </data>
+  <data name="LookupInPointerType">
+    <value>Cannot do member lookup in '{0}' because it is a pointer type.</value>
+    <comment>0705</comment>
+  </data>
+  <data name="AssignmentExpressionInTuple">
+    <value>Assignment expression not allowed in this context, (enclose the expression in parentheses).</value>
+  </data>
+  <data name="TupleIndexExpected">
+    <value>Integer literal between 0 and {0} expected.</value>
+  </data>
+  <data name="SealedTypeIsAlreadyInvariant">
+    <value>Type '{0}' is already non substitutable, except for null, since it is sealed. Consider using the type expression '{0}!' to denote the exclusion of null.</value>
+  </data>
+  <data name="ValueTypeIsAlreadyInvariant">
+    <value>Type '{0}' is already non substitutable since it is a value type.</value>
+  </data>
+  <data name="ValueTypeIsAlreadyNonNull">
+    <value>Type '{0}' already cannot be null since it is a value type.</value>
+  </data>
+  <data name="RedundantBox">
+    <value>Type '{0}' can already be null.</value>
+  </data>
+  <data name="BadBox">
+    <value>Type '{0}' explicitly excludes null, did you intended to undo this?</value>
+  </data>
+  <data name="RedundantStream">
+    <value>Type '{0}' is already a stream.</value>
+  </data>
+  <data name="BadStream">
+    <value>Type '{0}' explicitly excludes null, did you intended to undo this?</value>
+  </data>
+  <data name="BadNonNull">
+    <value>Type '{0}' explicitly includes null, did you intended to undo this?</value>
+  </data>
+  <data name="BadNonNullOnStream">
+    <value>Type '{0}' explicitly includes empty streams, did you intended to undo this?</value>
+  </data>
+  <data name="RedundantNonNull">
+    <value>Type '{0}' already cannot be null.</value>
+  </data>
+  <data name="BadNonEmptyStream">
+    <value>Type '{0}' explicitly includes empty streams, did you intended to undo this?</value>
+  </data>
+  <data name="BadStreamOnNonNullStream">
+    <value>Type '{0}' explicitly excludes empty streams, did you intended to undo this?</value>
+  </data>
+  <data name="BadTypeInferenceToVoid">
+    <value>Cannot infer type from void expression.</value>
+  </data>
+  <data name="InvalidElementExpression">
+    <value>Expression of type '{0}' does not match expected content type '{1}'.</value>
+  </data>
+  <data name="ContentModelNotSupported">
+    <value>Error validating type '{0}'. Mixing sequence/choice particles with other public members is not supported yet.</value>
+  </data>
+  <data name="QueryNotSupported">
+    <value>Query operation not supported in this context.</value>
+  </data>
+  <data name="QueryNoMatch">
+    <value>'{0}' has no member matching '{1}'.</value>
+  </data>
+  <data name="QueryIsCyclic">
+    <value>Query operation is cyclic.</value>
+  </data>
+  <data name="QueryBadAggregate">
+    <value>The aggregate '{0}' is not defined for '{1}'.</value>
+  </data>
+  <data name="QueryBadAggregateForm">
+    <value>The type '{0}' is not a proper aggregate.</value>
+  </data>
+  <data name="QueryAmbiguousContextName">
+    <value>The name '{0}' is defined in both the iteration context and the surrounding scope.  You can disambiguate by qualifying the name with 'it' or 'this'.</value>
+  </data>
+  <data name="QueryBadGroupList">
+    <value>The selection does not have any valid grouping expressions.</value>
+  </data>
+  <data name="QueryBadOrderList">
+    <value>The selection does not contain a valid ordering list.</value>
+  </data>
+  <data name="QueryBadProjectionList">
+    <value>The selection does not contain a valid projection list.</value>
+  </data>
+  <data name="QueryBadQuantifier">
+    <value>A quantifier can only occur as part of a boolean expression.</value>
+  </data>
+  <data name="QueryBadQuantifiedExpression">
+    <value>A quantifier can only occur as part of a boolean expression.</value>
+  </data>
+  <data name="QueryBadDeleteList">
+    <value>The delete target can not be empty when there is more than one source.</value>
+  </data>
+  <data name="QueryBadDifferenceTypes">
+    <value>Cannot perform set difference between type '{0}' and type '{1}'.</value>
+  </data>
+  <data name="QueryBadInsertList">
+    <value>The insert operator does not have a valid list of assignments.</value>
+  </data>
+  <data name="QueryBadIntersectionTypes">
+    <value>Cannot perform set intersection between type '{0}' and type '{1}'.</value>
+  </data>
+  <data name="QueryBadLimit">
+    <value>The selection does not contain a valid limit expression.</value>
+  </data>
+  <data name="QueryBadOrderItem">
+    <value>Ordering expressions can only occur in the order-by expression list.</value>
+  </data>
+  <data name="QueryBadUnionTypes">
+    <value>Cannot perform set union between type '{0}' and type '{1}'.</value>
+  </data>
+  <data name="QueryBadUpdateList">
+    <value>The upate operator does not have a valid list of assignments.</value>
+  </data>
+  <data name="QueryBadTypeFilter">
+    <value>The type filter does not have a valid constriant.</value>
+  </data>
+  <data name="QueryNoContext">
+    <value>Reference to a non-existent context.</value>
+  </data>
+  <data name="QueryNotScalar">
+    <value>The expression does not evaluate to a single value.</value>
+  </data>
+  <data name="QueryNotStream">
+    <value>The expression does not evaluate to a stream of multiple values.</value>
+  </data>
+  <data name="QueryProjectionThroughTypeUnion">
+    <value>The projection involves a path through a type union.</value>
+  </data>
+  <data name="QueryNotAddStream">
+    <value>The type '{0}' does not support inserting elements of type '{1}'.</value>
+  </data>
+  <data name="QueryNotDeleteStream">
+    <value>The type '{0}' does not support deleting elements of type '{1}'.</value>
+  </data>
+  <data name="QueryNotInsertStream">
+    <value>The type '{0}' does not support inserting elements of type '{1}'.</value>
+  </data>
+  <data name="QueryNotUpdateStream">
+    <value>The type '{0}' does not support updating elements of type '{1}'.</value>
+  </data>
+  <data name="QueryNotTransacted">
+    <value>A transaction can only be commited or rolled back from within a transaction block.</value>
+  </data>
+  <data name="QueryNotTransactable">
+    <value>The type '{0}' does not implement IDbTransactable.</value>
+  </data>
+  <data name="QueryNoNestedTransaction">
+    <value>Nested transactions are not supported.</value>
+  </data>
+  <data name="FieldInitializerInElementGroup">
+    <value>Field initializers are not allowed inside sequence or choice declarations.</value>
+  </data>
+  <data name="CannotYieldFromCatchClause">
+    <value>It is not possible to suspend an iterator inside an exception handler.</value>
+  </data>
+  <data name="CannotYieldFromTryBlock">
+    <value>It is not possible to suspend an iterator inside a try block.</value>
+  </data>
+  <data name="QueryBadLimitForNotPercent">
+    <value>Integer literal is expected for top expression when percent is not specified.</value>
+  </data>
+  <data name="QueryBadLimitNotLiteral">
+    <value>Literal is expected for top expression.</value>
+  </data>
+  <data name="BadTupleIndex">
+    <value>Bad tuple index, expected an integer in the range 0 to {0}.</value>
+  </data>
+  <data name="AttributeInElementGroup">
+    <value>Custom attributes are not allowed inside sequence and choice constructs.</value>
+  </data>
+  <data name="AmbiguousLiteralExpression">
+    <value>Embedded expression of type '{1}' is ambiguous on element '{0}'. Expecting ({2}).</value>
+  </data>
+  <data name="Usage">
+    <value>
+
+                        - MISCELLANEOUS -
+@&lt;file&gt;                 Read response file for more options
+/help                   Display this usage message (Short form: /?)
+/noconfig               Do not auto include CSC.RSP file
+      
+                        - STATIC VERIFICATION -
+/verify                 Perform static verification as part of the compilation.
+/verifyopt:&lt;option list&gt; Options to pass through to the static verification.
+</value>
+  </data>
+  <data name="InstanceMemberInStaticClass">
+    <value>'{0}': cannot declare instance members in a static class</value>
+    <comment>0708</comment>
+  </data>
+  <data name="StaticBaseClass">
+    <value>'{1}': Cannot derive from static class '{0}'</value>
+    <comment>0709</comment>
+  </data>
+  <data name="ConstructorInStaticClass">
+    <value>Static classes cannot have instance constructors</value>
+    <comment>0710</comment>
+  </data>
+  <data name="DestructorInStaticClass">
+    <value>Static classes cannot contain destructors</value>
+    <comment>0711</comment>
+  </data>
+  <data name="InstantiatingStaticClass">
+    <value>Cannot create an instance of the static class '{0}'</value>
+    <comment>0712</comment>
+  </data>
+  <data name="StaticDerivedFromNonObject">
+    <value>Static class '{1}' cannot derive from type '{0}'. Static classes must derive from object.</value>
+    <comment>0713</comment>
+  </data>
+  <data name="StaticClassInterfaceImpl">
+    <value>'{0}': static classes cannot implement interfaces</value>
+    <comment>0714</comment>
+  </data>
+  <data name="OperatorInStaticClass">
+    <value>'{0}': static classes cannot contain user-defined operators</value>
+    <comment>0715</comment>
+  </data>
+  <data name="ConvertToStaticClass">
+    <value>Cannot convert to static type '{0}'</value>
+    <comment>0716</comment>
+  </data>
+  <data name="ConstraintIsStaticClass">
+    <value>'{0}': static classes cannot be used as constraints</value>
+    <comment>0717</comment>
+  </data>
+  <data name="GenericArgIsStaticClass">
+    <value>'{0}': static types cannot be used as generic arguments</value>
+    <comment>0718</comment>
+  </data>
+  <data name="ArrayOfStaticClass">
+    <value>'{0}': array elements cannot be of static type</value>
+    <comment>0719</comment>
+  </data>
+  <data name="IndexerInStaticClass">
+    <value>'{0}': cannot declare indexers in a static class</value>
+    <comment>0720</comment>
+  </data>
+  <data name="ParameterIsStaticClass">
+    <value>'{0}': static types cannot be used as parameters</value>
+    <comment>0721</comment>
+  </data>
+  <data name="ReturnTypeIsStaticClass">
+    <value>'{0}': static types cannot be used as return types</value>
+    <comment>0722</comment>
+  </data>
+  <data name="VarDeclIsStaticClass">
+    <value>Cannot declare variable of static type '{0}'</value>
+    <comment>0723</comment>
+  </data>
+  <data name="MissingPartial">
+    <value>Missing partial modifier on declaration of type '{0}'; another partial declaration of this type exists</value>
+    <comment>0260</comment>
+  </data>
+  <data name="PartialTypeKindConflict">
+    <value>Partial declarations of '{0}' must be all classes, all structs, or all interfaces</value>
+    <comment>0261</comment>
+  </data>
+  <data name="PartialModifierConflict">
+    <value>Partial declarations of '{0}' have conflicting accessibility modifiers</value>
+    <comment>0262</comment>
+  </data>
+  <data name="PartialMultipleBases">
+    <value>Partial declarations of '{0}' must not specify different base classes</value>
+    <comment>0263</comment>
+  </data>
+  <data name="PartialWrongTypeParams">
+    <value>Partial declarations of '{0}' are inconsistent in number and/or names of type parameters</value>
+    <comment>0264</comment>
+  </data>
+  <data name="PartialWrongConstraints">
+    <value>Partial declarations of '{0}' have inconsistent constraints for type parameter '{1}'</value>
+    <comment>0265</comment>
+  </data>
+  <data name="NoImplicitConvCast">
+    <value>Cannot implicitly convert type '{0}' to '{1}'. An explicit conversion exists (are you missing a cast?)</value>
+    <comment>0266</comment>
+  </data>
+  <data name="PartialMisplaced">
+    <value>The partial modifier can only appear immediately before 'class', 'struct', or 'interface'</value>
+    <comment>0267</comment>
+  </data>
+  <data name="ImportedCircularBase">
+    <value>Imported type '{0}' is invalid.  It contains a circular base class dependency.</value>
+    <comment>0268</comment>
+  </data>
+  <data name="UseDefViolationOut">
+    <value>Use of unassigned out parameter '{0}'</value>
+    <comment>0269</comment>
+  </data>
+  <data name="ArraySizeInDeclaration">
+    <value>Array size cannot be specified in a variable declaration (try initializing with a 'new' expression)</value>
+    <comment>0270</comment>
+  </data>
+  <data name="InaccessibleGetter">
+    <value>The property or indexer '{0}' cannot be used in this context because the get accessor is inaccessible</value>
+    <comment>0271</comment>
+  </data>
+  <data name="InaccessibleSetter">
+    <value>The property or indexer '{0}' cannot be used in this context because the set accessor is inaccessible</value>
+    <comment>0272</comment>
+  </data>
+  <data name="InvalidPropertyAccessMod">
+    <value>The accessibility modifier of the '{0}' accessor must be more restrictive than the property or indexer '{1}'</value>
+    <comment>0273</comment>
+  </data>
+  <data name="DuplicatePropertyAccessMods">
+    <value>Cannot specify accessibility modifiers for both accessors of the property or indexer '{0}'</value>
+    <comment>0274</comment>
+  </data>
+  <data name="PropertyAccessModInInterface">
+    <value>'{0}': accessibility modifiers may not be used on accessors in an interface</value>
+    <comment>0275</comment>
+  </data>
+  <data name="AccessModMissingAccessor">
+    <value>'{0}': accessibility modifiers on accessors may only be used if the property or indexer has both a get and a set accessor</value>
+    <comment>0276</comment>
+  </data>
+  <data name="UnimplementedInterfaceAccessor">
+    <value>'{0}' does not implement interface member '{1}'. '{2}' is not public</value>
+    <comment>0277</comment>
+  </data>
+  <data name="NoNewTyvar">
+    <value>Cannot create an instance of the variable type '%1!ls!' because it doesn't have the new() constraint</value>
+    <comment>0304</comment>
+  </data>
+  <data name="BadArity2">
+    <value>Using the generic {2} '{0}' requires '{1}' type arguments</value>
+    <comment>0305</comment>
+  </data>
+  <data name="BadTypeArgument">
+    <value>The type '{0}' may not be used as a type argument</value>
+    <comment>0306</comment>
+  </data>
+  <data name="TypeArgsNotAllowed">
+    <value>The {0} '{1}' cannot be used with type arguments</value>
+    <comment>0307</comment>
+  </data>
+  <data name="HasNoTypeVars">
+    <value>The non-generic {1} '{0}' cannot be used with type arguments</value>
+    <comment>0308</comment>
+  </data>
+  <data name="GenericConstraintNotSatisfied">
+    <value>The type '{0}' must be convertible to '{1}' in order to use it as parameter '{2}' in the generic type or method '{3}'</value>
+    <comment>0309</comment>
+  </data>
+  <data name="NewConstraintNotSatisfied">
+    <value>The type '{0}' must have a public parameterless constructor in order to use it as parameter '{1}' in the generic type or method '{2}'</value>
+    <comment>0310</comment>
+  </data>
+  <data name="GlobalSingleTypeNameNotFound">
+    <value>The type or namespace name '{0}' could not be found in the global namespace (are you missing an assembly reference?)</value>
+    <comment>0400</comment>
+  </data>
+  <data name="NewBoundMustBeLast">
+    <value>The new() constraint must be last</value>
+    <comment>0401</comment>
+  </data>
+  <data name="MainCantBeGeneric">
+    <value>'{0}': an entry point cannot be generic or in a generic type</value>
+    <comment>0402</comment>
+  </data>
+  <data name="TypeVarCantBeNull">
+    <value>Cannot convert null to type parameter '{0}' because it could be a value type. Consider using '{0}.default' instead.</value>
+    <comment>0403</comment>
+  </data>
+  <data name="AttributeCantBeGeneric">
+    <value>'&lt;' unexpected : attributes cannot be generic</value>
+    <comment>0404</comment>
+  </data>
+  <data name="DuplicateBound">
+    <value>Duplicate constraint '{0}' for type parameter '{1}'</value>
+    <comment>0405</comment>
+  </data>
+  <data name="ClassBoundNotFirst">
+    <value>'{0}': the class constraint for '{1}' must come before any other constraints</value>
+    <comment>0406</comment>
+  </data>
+  <data name="BadRetType">
+    <value>'{1} {0}' has the wrong return type</value>
+    <comment>0407</comment>
+  </data>
+  <data name="OverloadUnified">
+    <value>'{0}' cannot define overloaded members that may unify for some type parameter substitutions</value>
+    <comment>0408</comment>
+  </data>
+  <data name="DuplicateConstraintClause">
+    <value>A constraint clause has already been specified for type parameter '{0}'</value>
+    <comment>0409</comment>
+  </data>
+  <data name="WrongSignature">
+    <value>No overload for '{0}' has the correct parameter types</value>
+    <comment>0410</comment>
+  </data>
+  <data name="CantInferMethTypeArgs">
+    <value>The type arguments for method '{0}' cannot be inferred from the usage. Try specifying the type arguments explicitly.</value>
+    <comment>0411</comment>
+  </data>
+  <data name="LocalSameNameAsTypeParam">
+    <value>'{0}': a parameter or local variable cannot have the same name as a method type parameter</value>
+    <comment>0412</comment>
+  </data>
+  <data name="AsWithTypeVar">
+    <value>The type parameter '{0}' doesn't have a class constraint so cannot be used with the 'as' operator</value>
+    <comment>0413</comment>
+  </data>
+  <data name="UnreferencedFieldAssg">
+    <value>The private field '{0}' is assigned but its value is never used</value>
+    <comment>0414</comment>
+  </data>
+  <data name="BadIndexerNameAttr">
+    <value>The '{0}' attribute is valid only on an indexer that is not an explicit interface member declaration</value>
+    <comment>0415</comment>
+  </data>
+  <data name="AttrArgWithTypeVars">
+    <value>'{0}': an attribute argument cannot use type parameters</value>
+    <comment>0416</comment>
+  </data>
+  <data name="NewTyvarWithArgs">
+    <value>'{0}': cannot provide arguments when creating an instance of a variable type</value>
+    <comment>0417</comment>
+  </data>
+  <data name="AbstractSealedStatic">
+    <value>An abstract class cannot be sealed or static</value>
+    <comment>0418</comment>
+  </data>
+  <data name="AmbiguousXMLReference">
+    <value>Ambiguous reference in cref attribute: '{0}'. Assuming '{1}', but could have also matched other overloads including '{2}'.</value>
+    <comment>0419</comment>
+  </data>
+  <data name="IllegalParams">
+    <value>params is not valid in this context</value>
+    <comment>0421</comment>
+  </data>
+  <data name="IncrSwitchObsolete">
+    <value>The /incremental switch is no longer supported</value>
+    <comment>0422</comment>
+  </data>
+  <data name="ComImportWithImpl">
+    <value>Since '{1}' has the ComImport attribute, '{0}' must be extern or abstract</value>
+    <comment>0423</comment>
+  </data>
+  <data name="ComImportWithBase">
+    <value>'{0}': a class with the ComImport attribute can't specify a base class</value>
+    <comment>0424</comment>
+  </data>
+  <data name="OverrideDifferentConstraints">
+    <value>The constraints for type parameter '{0}' of method '{1}' must match the constraints for type parameter '{2}' of method '{3}'</value>
+    <comment>0425</comment>
+  </data>
+  <data name="DottedTypeNameNotFoundInAgg">
+    <value>The type name '{0}' does not exist in the type '{1}'</value>
+    <comment>0426</comment>
+  </data>
+  <data name="MethGrpToNonDel">
+    <value>Cannot convert method group '{0}' to non-delegate type '{1}'. Did you intend to invoke the method?</value>
+    <comment>0428</comment>
+  </data>
+  <data name="UnreachableExpr">
+    <value>Unreachable expression code detected</value>
+    <comment>0429</comment>
+  </data>
+  <data name="BadExternAlias">
+    <value>The extern alias '{0}' was not specified in a /reference option</value>
+    <comment>0430</comment>
+  </data>
+  <data name="ColColWithTypeAlias">
+    <value>Can't use alias '{0}' with '::' since the alias references a type. Use '.' instead.</value>
+    <comment>0431</comment>
+  </data>
+  <data name="AliasNotFound">
+    <value>Alias '{0}' not found</value>
+    <comment>0432</comment>
+  </data>
+  <data name="SameFullNameAggAgg">
+    <value>The type '{1}' exists in both '{0}' and '{2}'</value>
+    <comment>0433</comment>
+  </data>
+  <data name="SameFullNameNsAgg">
+    <value>The namespace '{1}' in '{0}' conflicts with the type '{3}' in '{2}'</value>
+    <comment>0434</comment>
+  </data>
+  <data name="SameFullNameThisNsAgg">
+    <value>The namespace '{1}' in '{0}' conflicts with the imported type '{3}' in '{2}'. Using the namespace.</value>
+    <comment>0435</comment>
+  </data>
+  <data name="SameFullNameThisAggAgg">
+    <value>The type '{1}' in '{0}' conflicts with the imported type '{3}' in '{2}'. Using the one in '{0}'.</value>
+    <comment>0436</comment>
+  </data>
+  <data name="SameFullNameThisAggNs">
+    <value>The type '{1}' in '{0}' conflicts with the imported namespace '{3}' in '{2}'. Using the type.</value>
+    <comment>0437</comment>
+  </data>
+  <data name="SameFullNameThisAggThisNs">
+    <value>The type '{1}' in '{0}' conflicts with the namespace '{3}' in '{2}'.</value>
+    <comment>0438</comment>
+  </data>
+  <data name="ExternAfterElements">
+    <value>An extern alias declaration must precede all other namespace elements</value>
+    <comment>0439</comment>
+  </data>
+  <data name="GlobalAliasDefn">
+    <value>Defining an alias named 'global' is ill-advised since 'global::' always references the global namespace and not an alias</value>
+    <comment>0440</comment>
+  </data>
+  <data name="SealedStaticClass">
+    <value>A class cannot be both static and sealed</value>
+    <comment>0441</comment>
+  </data>
+  <data name="PrivateAbstractAccessor">
+    <value>'{0}': abstract properties cannot have private accessors</value>
+    <comment>0442</comment>
+  </data>
+  <data name="ValueExpected">
+    <value>Syntax error, value expected</value>
+    <comment>0443</comment>
+  </data>
+  <data name="UnexpectedPredefTypeLoc">
+    <value>Predefined type '{0}' was not found in '{1}' but was found in '{2}'</value>
+    <comment>0444</comment>
+  </data>
+  <data name="UnboxNotLValue">
+    <value>Cannot modify the result of an unboxing conversion</value>
+    <comment>0445</comment>
+  </data>
+  <data name="AnonMethGrpInForEach">
+    <value>Foreach cannot operate on a '{0}'. Did you intend to invoke the '{0}'?</value>
+    <comment>0446</comment>
+  </data>
+  <data name="AmbiguousAttribute">
+    <value>'{0}' is ambiguous between '{1}' and '{2}'; use either '@{0}' or '{0}Attribute'</value>
+    <comment>1614</comment>
+  </data>
+  <data name="BadArgExtraRef">
+    <value>Argument '{0}' should not be passed with the '{1}' keyword</value>
+    <comment>1615</comment>
+  </data>
+  <data name="CmdOptionConflictsSource">
+    <value>Option '{0}' overrides '{1}' given in source</value>
+    <comment>1616</comment>
+  </data>
+  <data name="BadCompatMode">
+    <value>Invalid option '{0}' for /langversion; must be v7.0, ISO-1, v7.1, v8.0, or none</value>
+    <comment>1617</comment>
+  </data>
+  <data name="DelegateOnConditional">
+    <value>Cannot create delegate with '{0}' because it has a Conditional attribute</value>
+    <comment>1618</comment>
+  </data>
+  <data name="CantMakeTempFile">
+    <value>Cannot create temporary file '{0}' -- {1}</value>
+    <comment>1619</comment>
+  </data>
+  <data name="BadArgRef">
+    <value>Argument '{0}' must be passed with the '{1}' keyword</value>
+    <comment>1620</comment>
+  </data>
+  <data name="YieldInAnonMeth">
+    <value>The yield statement cannot be used inside anonymous method blocks</value>
+    <comment>1621</comment>
+  </data>
+  <data name="ReturnInIterator">
+    <value>Cannot return a value from iterators. Use the yield statement to return a value, or yield break to end the iteration</value>
+    <comment>1622</comment>
+  </data>
+  <data name="BadIteratorArgType">
+    <value>Iterators cannot have ref or out parameters</value>
+    <comment>1623</comment>
+  </data>
+  <data name="BadIteratorReturn">
+    <value>The body of '{0}' cannot be an iterator block because '{1}' is not an iterator interface type</value>
+    <comment>1624</comment>
+  </data>
+  <data name="BadYieldInFinally">
+    <value>Cannot yield in the body of a finally clause</value>
+    <comment>1625</comment>
+  </data>
+  <data name="BadYieldInTryOfCatch">
+    <value>Cannot yield a value in the body of a try block with a catch clause</value>
+    <comment>1626</comment>
+  </data>
+  <data name="EmptyYield">
+    <value>Expression expected after yield return</value>
+    <comment>1627</comment>
+  </data>
+  <data name="AnonDelegateCantUse">
+    <value>Cannot use ref or out parameter '{0}' inside an anonymous method block</value>
+    <comment>1628</comment>
+  </data>
+  <data name="IllegalInnerUnsafe">
+    <value>Unsafe code may not appear in iterators</value>
+    <comment>1629</comment>
+  </data>
+  <data name="BadWatsonMode">
+    <value>Invalid option '{0}' for /errorreport; must be prompt, send, or none</value>
+    <comment>1630</comment>
+  </data>
+  <data name="BadYieldInCatch">
+    <value>Cannot yield a value in the body of a catch clause</value>
+    <comment>1631</comment>
+  </data>
+  <data name="BadDelegateLeave">
+    <value>Control cannot leave the body of an anonymous method</value>
+    <comment>1632</comment>
+  </data>
+  <data name="IllegalPragma">
+    <value>Unrecognized #pragma directive</value>
+    <comment>1633</comment>
+  </data>
+  <data name="IllegalPPWarning">
+    <value>Expected disable or restore</value>
+    <comment>1634</comment>
+  </data>
+  <data name="BadRestoreNumber">
+    <value>Cannot restore warning 'CS{0}' because it was disabled globally</value>
+    <comment>1635</comment>
+  </data>
+  <data name="VarargsIterator">
+    <value>__arglist is not allowed in parameter list of iterators</value>
+    <comment>1636</comment>
+  </data>
+  <data name="UnsafeIteratorArgType">
+    <value>Iterators cannot have unsafe parameters or yield types</value>
+    <comment>1637</comment>
+  </data>
+  <data name="ReservedIdentifier2">
+    <value>'{0}' is a reserved identifier and cannot be used when ISO language version mode is used</value>
+    <comment>1638</comment>
+  </data>
+  <data name="BadCoClassSig">
+    <value>The managed coclass wrapper class signature '{0}' for interface '{1}' is not a valid class name signature</value>
+    <comment>1639</comment>
+  </data>
+  <data name="MultipleIEnumOfT">
+    <value>foreach statement cannot operate on variables of type '{0}' because it implements multiple instantiations of '{1}', try casting to a specific interface instantiation</value>
+    <comment>1640</comment>
+  </data>
+  <data name="FixedDimsRequired">
+    <value>A fixed buffer field must have a constant array size</value>
+    <comment>1641</comment>
+  </data>
+  <data name="FixedNotInStruct">
+    <value>Fixed buffer fields may only be members of structs</value>
+    <comment>1642</comment>
+  </data>
+  <data name="AnonymousReturnExpected">
+    <value>Anonymous method of type '{0}': not all code paths return a value</value>
+    <comment>1643</comment>
+  </data>
+  <data name="NonECMAFeature">
+    <value>Feature '{0}' cannot be used because it is not part of the standardized ISO C# language specification</value>
+    <comment>1644</comment>
+  </data>
+  <data name="NonECMAFeatureOK">
+    <value>Feature '{0}' is not part of the standardized ISO C# language specification, and may not be accepted by other compilers</value>
+    <comment>1645</comment>
+  </data>
+  <data name="ExpectedVerbatimLiteral">
+    <value>Keyword, identifier, or string expected after verbatim specifier: @</value>
+    <comment>1646</comment>
+  </data>
+  <data name="StackOverflow">
+    <value>An expression is too long or complex to compile near '{0}'</value>
+    <comment>1647</comment>
+  </data>
+  <data name="AssgReadonly2">
+    <value>Members of readonly field '{0}' cannot be modified (except in a constructor or a variable initializer)</value>
+    <comment>1648</comment>
+  </data>
+  <data name="RefReadonly2">
+    <value>Members of readonly field '{0}' cannot be passed ref or out (except in a constructor)</value>
+    <comment>1649</comment>
+  </data>
+  <data name="AssgReadonlyStatic2">
+    <value>Fields of static readonly field '{0}' cannot be assigned to (except in a static constructor or a variable initializer)</value>
+    <comment>1650</comment>
+  </data>
+  <data name="RefReadonlyStatic2">
+    <value>Fields of static readonly field '{0}' cannot be passed ref or out (except in a static constructor)</value>
+    <comment>1651</comment>
+  </data>
+  <data name="AssgReadonlyLocal2">
+    <value>Cannot modify members of '{0}' because it is read-only</value>
+    <comment>1652</comment>
+  </data>
+  <data name="RefReadonlyLocal2">
+    <value>Cannot pass fields of '{0}' as a ref or out argument because it is read-only</value>
+    <comment>1653</comment>
+  </data>
+  <data name="AssgReadonlyLocal2Cause">
+    <value>Cannot modify members of '{0}' because it is a '{1}'</value>
+    <comment>1654</comment>
+  </data>
+  <data name="RefReadonlyLocal2Cause">
+    <value>Cannot pass fields of '{0}' as a ref or out argument because it is a '{1}'</value>
+    <comment>1655</comment>
+  </data>
+  <data name="AssgReadonlyLocalCause">
+    <value>Cannot assign to '{0}' because it is a '{1}'</value>
+    <comment>1656</comment>
+  </data>
+  <data name="RefReadonlyLocalCause">
+    <value>Cannot pass '{0}' as a ref or out argument because it is a '{1}'</value>
+    <comment>1657</comment>
+  </data>
+  <data name="ErrorOverride">
+    <value>{0}. See also error CS{1}</value>
+    <comment>1658</comment>
+  </data>
+  <data name="AnonMethToNonDel">
+    <value>Cannot convert anonymous method block to type '{0}' because it is not a delegate type</value>
+    <comment>1660</comment>
+  </data>
+  <data name="CantConvAnonMethParams">
+    <value>Cannot convert anonymous method block to delegate type '{0}' because the specified block's parameter types do not match the delegate parameter types</value>
+    <comment>1661</comment>
+  </data>
+  <data name="CantConvAnonMethReturns">
+    <value>Cannot convert anonymous method block to delegate type '{0}' because some of the return types in the block are not implicitly convertible to the delegate return type</value>
+    <comment>1662</comment>
+  </data>
+  <data name="IllegalFixedType">
+    <value>Fixed sized buffer type must be one of the following: byte, short, int, long, char, sbyte, ushort, uint, ulong, float or double</value>
+    <comment>1663</comment>
+  </data>
+  <data name="FixedOverflow">
+    <value>Fixed sized buffer of length '{0}' and type '{1}' is too big</value>
+    <comment>1664</comment>
+  </data>
+  <data name="InvalidFixedArraySize">
+    <value>Fixed sized buffers must have a length greater than zero</value>
+    <comment>1665</comment>
+  </data>
+  <data name="FixedBufferNotFixed">
+    <value>You cannot use fixed sized buffers contained in unfixed expressions. Try using the fixed statement.</value>
+    <comment>1666</comment>
+  </data>
+  <data name="AttributeNotOnAccessor">
+    <value>Attribute '{0}' is not valid on property or event accessors. It is valid on '{1}' declarations only.</value>
+    <comment>1667</comment>
+  </data>
+  <data name="InvalidSearchPathDir">
+    <value>Invalid search path '{0}' specified in '{1}' -- '{2}'</value>
+    <comment>1668</comment>
+  </data>
+  <data name="IllegalAnonVarArgs">
+    <value>__arglist is not allowed in the parameter list of an anonymous method</value>
+    <comment>1669</comment>
+  </data>
+  <data name="IllegalAnonParams">
+    <value>params is not allowed in the parameter list of an anonymous method</value>
+    <comment>1670</comment>
+  </data>
+  <data name="BadModifiersOnNamespace">
+    <value>A namespace declaration cannot have modifiers or attributes</value>
+    <comment>1671</comment>
+  </data>
+  <data name="BadPlatformType">
+    <value>Invalid option '{0}' for /platform; must be portable, x86, ia64 or amd64</value>
+    <comment>1672</comment>
+  </data>
+  <data name="ThisStructNotInAnonMeth">
+    <value>Anonymous methods inside structs cannot access instance members of 'this'. Consider copying 'this' to a local variable outside the anonymous method and using the local instead</value>
+    <comment>1673</comment>
+  </data>
+  <data name="NoConvToIDisp">
+    <value>'{0}': types used in a using statement must have a suiteable Dispose method or be implicitly convertible to 'System.IDisposable'</value>
+    <comment>1674</comment>
+  </data>
+  <data name="InvalidGenericEnum">
+    <value>Enums cannot have type parameters</value>
+    <comment>1675</comment>
+  </data>
+  <data name="BadParamRef">
+    <value>Parameter '{0}' must be declared with the '{1}' keyword</value>
+    <comment>1676</comment>
+  </data>
+  <data name="BadParamExtraRef">
+    <value>Parameter '{0}' should not be declared with the '{1}' keyword</value>
+    <comment>1677</comment>
+  </data>
+  <data name="BadParamType">
+    <value>Parameter '{0}' is declared as type '{1}' but should be '{2}'</value>
+    <comment>1678</comment>
+  </data>
+  <data name="BadExternIdentifier">
+    <value>Invalid extern alias for '/reference'; '{0}' is not a valid identifier</value>
+    <comment>1679</comment>
+  </data>
+  <data name="AliasMissingFile">
+    <value>Invalid reference alias option: '{0}=' -- missing filename</value>
+    <comment>1680</comment>
+  </data>
+  <data name="GlobalExternAlias">
+    <value>You cannot redefine the global extern alias</value>
+    <comment>1681</comment>
+  </data>
+  <data name="MissingTypeNested">
+    <value>Reference to type '{0}' claims it is nested within '{1}', but it could not be found</value>
+    <comment>1682</comment>
+  </data>
+  <data name="MissingTypeInSource">
+    <value>Reference to type '{0}' claims it is defined in this assembly, but it is not defined in source or any added modules</value>
+    <comment>1683</comment>
+  </data>
+  <data name="MissingTypeInAssembly">
+    <value>Reference to type '{0}' claims it is defined in '{1}', but it could not be found</value>
+    <comment>1684</comment>
+  </data>
+  <data name="MultiplePredefTypes">
+    <value>The predefined type '{0}' is defined in multiple assemblies in the global alias; using definition from '{1}'</value>
+    <comment>1685</comment>
+  </data>
+  <data name="LocalCantBeFixedAndHoisted">
+    <value>Local '{0}' cannot have it's address taken and be used inside an anonymous method block</value>
+    <comment>1686</comment>
+  </data>
+  <data name="TooManyLinesForDebugger">
+    <value>Source file has exceeded the limit of 16,707,565 lines representable in the PDB, debug information will be incorrect.</value>
+    <comment>1687</comment>
+  </data>
+  <data name="CantConvAnonMethNoParams">
+    <value>Cannot convert anonymous method block without a parameter list to delegate type '{0}' because it has one or more out parameters</value>
+    <comment>1688</comment>
+  </data>
+  <data name="ConditionalOnNonAttributeClass">
+    <value>Attribute '{0}' is only valid on methods or attribute classes</value>
+    <comment>1689</comment>
+  </data>
+  <data name="CallOnNonAgileField">
+    <value>Cannot call methods, properties, or indexers on '{0}' because it is a value type member of a marshal-by-reference class</value>
+    <comment>1690</comment>
+  </data>
+  <data name="IllegalPPChecksum">
+    <value>Invalid #pragma checksum syntax; should be #pragma checksum "filename" "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}" "XXXX..."</value>
+    <comment>1691</comment>
+  </data>
+  <data name="ConflictingChecksum">
+    <value>Different checksum values given for '%1!ls!'</value>
+    <comment>1692</comment>
+  </data>
+  <data name="AssumedMatchThis">
+    <value>Assembly reference '{0}' does not match the final assembly name is '{1}'</value>
+    <comment>1693</comment>
+  </data>
+  <data name="NotAType">
+    <value>Not a type</value>
+  </data>
+  <data name="UseSwitchInsteadOfAttribute">
+    <value>Use command line option '{0}' or appropriate project settings instead of '{1}'</value>
+    <comment>1699</comment>
+  </data>
+  <data name="AssemblyKeyFileMissing">
+    <value>Error reading key file '{0}' -- The system cannot find the path specified.</value>
+  </data>
+  <data name="NoSuchFile">
+    <value>File '{0}' does not exist</value>
+    <comment>2005</comment>
+  </data>
+  <data name="InvalidData">
+    <value>The data is invalid</value>
+  </data>
+  <data name="Win32IconFileNotRead">
+    <value>Could not read icon file '{0}'. {1}</value>
+  </data>
+  <data name="AbstractMethodTemplate">
+    <value>The specified target platform does not allow generic methods to be abstract</value>
+  </data>
+  <data name="AbstractInterfaceMethod">
+    <value>The specified target platform does not allow interfaces to have generic methods</value>
+  </data>
+  <data name="InterfacesCannotContainFields">
+    <value>Interfaces cannot contain fields</value>
+    <comment>0525</comment>
+  </data>
+  <data name="InterfacesCannotContainConstructors">
+    <value>Interfaces cannot contain constructors</value>
+    <comment>0526</comment>
+  </data>
+  <data name="ExpectedLeftParenthesis">
+    <value>( expected</value>
+  </data>
+  <data name="ExpectedExpression">
+    <value>expression expected</value>
+  </data>
+  <data name="CheckedExceptionNotInThrowsClause">
+    <value>The checked exception '{0}' can be thrown but is not listed in the throws clause for method '{1}'.</value>
+  </data>
+  <data name="ThrowsEnsuresOnConstructor">
+    <value>'throws' contracts on constructors are not allowed to have an 'ensures' condition. </value>
+  </data>
+  <data name="ExpressionIsAlreadyOfThisType">
+    <value>Expression is already of type '{0}'.</value>
+  </data>
+  <data name="CannotCoerceNullToNonNullType">
+    <value>Null cannot be used where a non-null value is expected</value>
+  </data>
+  <data name="CoercionToNonNullTypeMightFail">
+    <value>Conversion to '{0}' fails if the value is null</value>
+  </data>
+  <data name="ReceiverMightBeNull">
+    <value>Receiver might be null (of type '{0}')</value>
+  </data>
+  <data name="OnlyStructsAndClassesCanHaveInvariants">
+    <value>Only classes and structs can have invariants </value>
+  </data>
+  <data name="UpToMustBeSuperType">
+    <value>'{0}' must be a super class of '{1}' </value>
+  </data>
+  <data name="UpToMustBeClass">
+    <value>'{0}' must be a class</value>
+  </data>
+  <data name="MustSupportComprehension">
+    <value>'{0}' must support IList</value>
+  </data>
+  <data name="MustResolveToType">
+    <value>Expression did not resolve to a type</value>
+  </data>
+  <data name="MemberMustBePureForMethodContract">
+    <value>The member '{0}' must be pure, confined or state independent (custom attributes Contracts.Pure, Contracts.Confined or Contracts.StateIndependent).</value>
+  </data>
+  <data name="MemberMustBePureForInvariant">
+    <value>The member '{0}' must be confined or state independent (custom attributes Contracts.Confined or Contracts.StateIndependent).</value>
+  </data>
+  <data name="RequiresNotAllowedInOverride">
+    <value>'{0}' : requires clause not allowed in override.</value>
+  </data>
+  <data name="ContractNotAllowedInExplicitInterfaceImplementation">
+    <value>'{0}' : requires, ensures, throws or modifies not allowed in explicit interface implementation.</value>
+  </data>
+  <data name="CannotAddThrowsSet">
+    <value>'{0}' : Cannot add any type to this method's throws set. The method it is overriding does not have any throws clauses.</value>
+  </data>
+  <data name="CannotWeakenThrowsSet">
+    <value>'{0}' : Cannot add '{1}' to this method's throws set. The method it is overriding does not include this type.</value>
+  </data>
+  <data name="DuplicateThrowsType">
+    <value>'{0}' : Throws sets cannot have duplicates.</value>
+  </data>
+  <data name="UncheckedExceptionInThrowsClause">
+    <value>'{0}' : Cannot specify an unchecked exception in a throws clause.</value>
+  </data>
+  <data name="RequiresNotAllowedInInterfaceImplementation">
+    <value>Requires not allowed in interface implementation of '{0}'.</value>
+  </data>
+  <data name="EnsuresInInterfaceNotInMethod">
+    <value>cannot implicitly implement '{0}'. ensures can not be propagated to '{1}'.</value>
+  </data>
+  <data name="ModelMemberUseNotAllowedInContext">
+    <value>The member '{0}' cannot be used outside a contract or another model member. </value>
+  </data>
+  <data name="TypeMustSupportIntCoercions">
+    <value>Both arguments of .. must support the implicit coercions to int (System.Int32). </value>
+  </data>
+  <data name="CannotInjectContractFromInterface">
+    <value>Cannot add the contract from '{0}' to this type. </value>
+  </data>
+  <data name="CheckedExceptionInRequiresOtherwiseClause">
+    <value>Cannot specify a checked exception in an otherwise clause. </value>
+  </data>
+  <data name="ContractInheritanceRulesViolated">
+    <value>The contract inheritance rules are violated between '{0}' and '{1}'. </value>
+  </data>
+  <data name="ReceiverCannotBeNull">
+    <value>Receiver must not be null (of type '{0}')</value>
+  </data>
+  <data name="UseOfNullPointer">
+    <value>Using null pointer{0}</value>
+  </data>
+  <data name="UseOfPossiblyNullPointer">
+    <value>Using possibly null pointer{0}</value>
+  </data>
+  <data name="InvalidCompilerOptionArgument">
+    <value>Invalid option argument: {0}</value>
+  </data>
+  <data name="CaseFallThrough">
+    <value>Control cannot fall through from this case label to another</value>
+  </data>
+  <data name="TypeOfExprMustBeGuardedClass">
+    <value>Type of expression must be guarded class</value>
+  </data>
+  <data name="CannotLoadShadowedAssembly">
+    <value>cannot load shadowed assembly {0}</value>
+  </data>
+  <data name="TypeMissingInShadowedAssembly">
+    <value>extern method is in type {0}, which is not found in shadowed assembly</value>
+  </data>
+  <data name="MethodMissingInShadowedAssembly">
+    <value>extern method {0} not found in shadowed assembly</value>
+  </data>
+  <data name="NonNullFieldNotInitializedBeforeConstructorCall">
+    <value>The non-null field {0} must be initialized before base constructor call</value>
+  </data>
+  <data name="NonNullFieldNotInitializedByDefaultConstructor">
+    <value>The non-null field {0} is not initialized by the default constructor</value>
+  </data>
+  <data name="ModifiesNotAllowedInOverride">
+    <value>'{0}' : modifies clause not allowed in override.</value>
+  </data>
+  <data name="NoSuchMethod">
+    <value>No such method</value>
+  </data>
+  <data name="CouldNotLoadPluginType">
+    <value>Plugin type '{0}' could not be loaded.</value>
+  </data>
+  <data name="CouldNotInstantiatePluginType">
+    <value>Could not create an instance of plugin type '{0}'.</value>
+  </data>
+  <data name="PluginTypeMustAlreadyBeCompiled">
+    <value>Plugin type '{0}' cannot be compiled as part of the compilation into which it plugs in to.</value>
+  </data>
+  <data name="PluginTypeMustImplementIPlugin">
+    <value>Plugin type '{0}' does not implement interface Microsoft.SpecSharp.IPlugin</value>
+  </data>
+  <data name="PluginCrash">
+    <value>Plugin type '{0}' threw exception '{1}'.\nStack: {2}</value>
+  </data>
+  <data name="OtherwiseExpressionMustBeNonNull">
+    <value>otherwise expression must be of a non-null type</value>
+  </data>
+  <data name="OtherwiseExpressionMustBeType">
+    <value>otherwise clause must be a type</value>
+  </data>
+  <data name="AttrOnTypeArg">
+    <value>Attributes cannot be used on type arguments, only on type parameters</value>
+    <comment>0447</comment>
+  </data>
+  <data name="BadIncDecRetType">
+    <value>The return type for ++ or -- operator must be the containing type or derived from the containing type</value>
+    <comment>0448</comment>
+  </data>
+  <data name="RefValBoundMustBeFirst">
+    <value>The 'class' or 'struct' constraint must come before any other constraints</value>
+    <comment>0449</comment>
+  </data>
+  <data name="RefValBoundWithClass">
+    <value>'{0}': Cannot specify both a constraint class and the 'class' or 'struct' constraint</value>
+    <comment>0450</comment>
+  </data>
+  <data name="NewBoundWithVal">
+    <value>The 'new()' constraint cannot be used with the 'struct' constraint</value>
+    <comment>0451</comment>
+  </data>
+  <data name="RefConstraintNotSatisfied">
+    <value>The type '{0}' must be a reference type in order to use it as parameter '{1}' in the generic type or method '{2}'</value>
+    <comment>0452</comment>
+  </data>
+  <data name="ValConstraintNotSatisfied">
+    <value>The type '{0}' must be a non-nullable value type in order to use it as parameter '{1}' in the generic type or method '{2}'</value>
+    <comment>0453</comment>
+  </data>
+  <data name="CircularConstraint">
+    <value>Circular constraint dependency involving '{0}' and '{1}'</value>
+    <comment>0454</comment>
+  </data>
+  <data name="BaseConstraintConflict">
+    <value>Type parameter '{0}' inherits conflicting constraints '{1}' and '{2}'</value>
+    <comment>0455</comment>
+  </data>
+  <data name="ConWithValCon">
+    <value>Type parameter '{0}' has the 'struct' constraint so '{1}' cannot be used as a constraint for '{2}'</value>
+    <comment>0456</comment>
+  </data>
+  <data name="AmbigUDConv">
+    <value>Ambiguous user defined conversions '{0}' and '{1}' when converting from '{2}' to '{3}'</value>
+    <comment>0457</comment>
+  </data>
+  <data name="AlwaysNull">
+    <value>The result of the expression is always 'null' of type '{0}'</value>
+    <comment>0458</comment>
+  </data>
+  <data name="AddrOnReadOnlyLocal">
+    <value>Cannot take the address of a read-only local variable</value>
+    <comment>0459</comment>
+  </data>
+  <data name="OverrideWithConstraints">
+    <value>Constraints for override and explicit interface implementation methods are inherited from the base method so cannot be specified directly</value>
+    <comment>0460</comment>
+  </data>
+  <data name="AmbigOverride">
+    <value>The inherited members '{0}' and '{1}' have the same signature in type '{2}' so can't be overridden</value>
+    <comment>0462</comment>
+  </data>
+  <data name="DecConstError">
+    <value>Evaluation of the decimal constant expression failed with error: '{0}'</value>
+    <comment>0463</comment>
+  </data>
+  <data name="CmpAlwaysFalse">
+    <value>Comparing with null of type '{0}' always produces 'false'</value>
+    <comment>0464</comment>
+  </data>
+  <data name="FinalizeMethod">
+    <value>Introducing a 'Finalize' method can interfere with destructor invocation. Did you intend to declare a destructor?</value>
+    <comment>0465</comment>
+  </data>
+  <data name="ExplicitImplParams">
+    <value>'{0}' should not have a params parameter since '{1}' doesn't</value>
+    <comment>0466</comment>
+  </data>
+  <data name="AmbigLookupMeth">
+    <value>Ambiguity between method '{0}' and non-method '{1}'. Using method group.</value>
+    <comment>0467</comment>
+  </data>
+  <data name="SameFullNameThisAggThisAgg">
+    <value>Ambiguity between {0} '{1}' and {2} '{3}'</value>
+    <comment>0468</comment>
+  </data>
+  <data name="GotoCaseShouldConvert">
+    <value>The 'goto case' value is not implicitly convertible to type '{0}'</value>
+    <comment>0469</comment>
+  </data>
+  <data name="MethodImplementingAccessor">
+    <value>Method '{0}' cannot implement interface accessor '{1}' for type '{2}'. Use an explicit interface implementation.</value>
+    <comment>0470</comment>
+  </data>
+  <data name="TypeArgsNotAllowedAmbig">
+    <value>The {0} '{1}' is not a generic method. If you intended an expression list, use parentheses around the &lt; expression.</value>
+    <comment>0471</comment>
+  </data>
+  <data name="ubExprIsConstBool">
+    <value>The result of the expression is always '{0}' since a value of type '{1}' is never equal to 'null' of type '{2}'</value>
+    <comment>0472</comment>
+  </data>
+  <data name="AnonMethNotAllowed">
+    <value>Expression cannot contain anonymous methods</value>
+    <comment>1706</comment>
+  </data>
+  <data name="GeneralComprehensionsNotAllowedInMethodContracts">
+    <value>General comprehensions are not currently supported in method contracts.</value>
+  </data>
+  <data name="StrictReadonlyAssignment">
+    <value>Assignments to [StrictReadonly] fields must occur prior to base class construction</value>
+  </data>
+  <data name="StrictReadonlyNotReadonly">
+    <value>A [StrictReadonly] field must be declared readonly</value>
+  </data>
+  <data name="StrictReadonlyStatic">
+    <value>A field must not be declared both static and [StrictReadonly]</value>
+  </data>
+    <data name="StrictReadonlyMultipleAssignment">
+        <value>Assignment to [StrictReadonly] field that may already have been assigned is not allowed</value>
+    </data>
+  <data name="WritingPackedObject">
+    <value>The object '{0}' must be exposed before its fields can be written</value>
+  </data>
+  <data name="ExposingExposedObject">
+    <value>Cannot expose an already exposed object</value>
+  </data>
+  <data name="DontKnowIfCanExposeObject">
+    <value>Object not known to be exposable</value>
+  </data>
+  <data name="UnknownEntity">
+    <value>{0} is not a valid XML character entity.</value>
+  </data>
+  <data name="GenericWarning">
+    <value>{0}</value>
+  </data>
+  <data name="StoreIntoLessDelayedLocation">
+    <value>Cannot store delayed value into non-delayed location.</value>
+  </data>
+  <data name="AccessThroughDelayedReference">
+    <value>Cannot read from a delayed reference.</value>
+  </data>
+  <data name="AccessThroughDelayedThisInConstructor">
+    <value>Cannot read from "this" in a delayed constructor (consider adding [NotDelayed] on method).</value>
+  </data>
+  <data name="NonNullFieldNotInitializedAtEndOfDelayedConstructor">
+    <value>The non-null field {0} must be initialized by the end of the delayed constructor</value>
+  </data>
+  <data name="BaseMultipleInitialization">
+    <value>Possible duplicate constructor call</value>
+  </data>
+  <data name="BaseNotInitialized">
+    <value>Some code paths do not initialize the base class</value>
+  </data>
+  <data name="ActualCannotBeDelayed">
+    <value>Delayed actual argument is not compatible with non-delayed formal parameter</value>
+  </data>
+  <data name="ActualMustBeDelayed">
+    <value>Actual argument must be delayed</value>
+  </data>
+  <data name="ReceiverCannotBeDelayed">
+    <value>Delayed receiver is not compatible with non-delayed method</value>
+  </data>
+  <data name="ReceiverMustBeDelayed">
+    <value>Receiver must be delayed</value>
+  </data>
+  <data name="DelayedReferenceByReference">
+    <value>Cannot pass a delayed reference by reference</value>
+  </data>
+  <data name="DelayedRefParameter">
+    <value>ref or out parameter cannot be delayed</value>
+  </data>
+  <data name="DelayedStructConstructor">
+    <value>Struct constructors cannot be delayed</value>
+  </data>
+  <data name="NamedParameters">
+    <value>Named Parameters...</value>
+  </data>
+</root>

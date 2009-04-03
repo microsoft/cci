@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6E762516-E7E3-4267-93BF-457666D4F9E6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>SpecSharpTests</RootNamespace>
+    <AssemblyName>SpecSharpTests</AssemblyName>
+    <WarningLevel>4</WarningLevel>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>.\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>.\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Engine, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\WINDOWS\assembly\GAC_MSIL\Microsoft.VisualStudio.QualityTools.UnitTestFramework\8.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="t.bat" />
+    <None Include="test.cs" />
+    <Compile Include="MSBuildCompiler.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTest1.cs" />
+    <Compile Include="SourceTraverserTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Ast\Sources\AstsProjectedAsCodeModel\AstsProjectedAsCodeModel.csproj">
+      <Project>{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}</Project>
+      <Name>AstsProjectedAsCodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PeReader\PeReader.csproj">
+      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
+      <Name>PeReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\SourceModel\SourceModel.csproj">
+      <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
+      <Name>SourceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Sources\CodeModel\CodeModel.csproj">
+      <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
+      <Name>CodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpLiteCommandLineHost\CSharpLiteCommandLineHost.csproj">
+      <Project>{0255FB0C-31EE-46CF-94A9-E3787331D9CA}</Project>
+      <Name>CSharpLiteCommandLineHost</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpLite\CSharpLite.csproj">
+      <Project>{B855D039-8A27-419D-9A81-86FF93227E30}</Project>
+      <Name>CSharpLite</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="suite" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="system.more">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+</Project>

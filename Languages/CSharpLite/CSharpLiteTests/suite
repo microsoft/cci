@@ -1,0 +1,6326 @@
+using System;
+  
+class B {
+  protected internal static int intI {
+    get {
+      return 2;
+    }
+  }
+}
+
+class D: B {
+  public static int F() {
+    return B.intI;        
+  }
+}
+  
+class MyTest {
+  static int Main() {
+    if (D.F() == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+using System;
+  
+class B {
+  protected internal static int intI = 2;
+}
+
+class D: B {
+  public static int F() {
+    return B.intI;        
+  }
+}
+  
+class MyTest {
+  static int Main() {
+    if (D.F() == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+using System;
+  
+class B {
+  protected static int intI = 2;
+}
+
+class D: B {
+  public static int F() {
+    return B.intI;        
+  }
+}
+  
+class MyTest {
+  static int Main() {
+    if (D.F() == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+using System;
+  
+class B {
+  protected internal static int F() {
+    return 2;
+  }
+}
+
+class D: B {
+  new public static int F() {
+    return B.F();        
+  }
+}
+  
+class MyTest {
+  static int Main() {
+    if (D.F() == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+using System;
+  
+class B {
+  protected static int F() {
+    return 2;
+  }
+}
+
+class D: B {
+  new public static int F() {
+    return B.F();        
+  }
+}
+  
+class MyTest {
+  static int Main() {
+    if (D.F() == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  private static int intI = 2; 
+
+  public static int Main() {
+    if (intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  private class TestClass {
+    public int intI = 2;
+    public static int Main() {
+      TestClass tc = new TestClass();
+      if (tc.intI == 2) {
+        return 0;
+      }
+      else {
+        return 1;
+      }
+    }
+  }
+}
+`
+`
+public class Outer {
+  static internal int intI = 2;
+}
+
+public class MyClass {
+  public static int Main() {
+    if (Outer.intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  internal class TestClass {
+    public int intI = 2;
+  }
+}
+
+public class MyClass {
+  public static int Main() {
+    Outer.TestClass TC = new Outer.TestClass();
+    if (TC.intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+internal class TestClass {
+  public int intI = 2;
+}
+
+public class MyClass {
+  public static int Main() {
+    TestClass TC = new TestClass();
+    if (TC.intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected class TestClass {
+    public int intI = 2;
+  }
+}
+
+public class MyClass : Outer {
+  public static int Main() {
+    Outer.TestClass tc = new Outer.TestClass();
+    if (tc.intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected static int intI = 2; 
+}
+
+public class MyClass : Outer {
+  public static int Main() {
+    if (intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected class TestClass {
+    public int intI = 2;
+  }
+}
+
+public class MyClass : Outer {
+  public static int Main() {
+    TestClass tc = new TestClass();
+    if (tc.intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected static int intI = 2; 
+
+  public static int Main() {
+    if (intI == 2) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected class TestClass {
+    public int intI = 2;
+    public static int Main() {
+      TestClass tc = new TestClass();
+      if (tc.intI == 2) {
+        return 0;
+      }
+      else {
+        return 1;
+      }
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected static internal int intI = 2;
+}
+
+public class MyClass {
+  public static int Main() {
+    if (Outer.intI == 2) {    
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected internal class TestClass {
+    public int intI = 2;
+  }
+}
+
+public class MyClass {
+  public static int Main() {
+    Outer.TestClass tc = new Outer.TestClass();
+    if (tc.intI == 2) {    
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class TestClass {
+  public static int intI = 2;
+}
+
+public class MyClass {
+  public static int Main() {
+    if (TestClass.intI == 2) {    
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Outer {
+  public class TestClass {
+    public int intI = 2;
+  }
+}
+
+public class MyClass {
+  public static int Main() {
+    Outer.TestClass tc = new Outer.TestClass();
+    if (tc.intI == 2) {    
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+`
+`
+public class Test {}
+
+public class MyClass {
+
+  internal MyClass(Test T) {
+    
+  }
+
+  public static int Main() {
+    return 0;
+  }
+  
+}
+`
+`
+public class Test {}
+
+public class MyClass {
+
+  public static int operator + (MyClass MyInt, Test MyInt2) {
+    return 1;
+  }
+
+  public static int Main() {
+    return 0;
+  }
+  
+}
+`
+`
+public class Test {}
+
+public class MyClass {
+
+  public static Test operator + (MyClass MyInt, MyClass MyInt2) {
+    return new Test();
+  }
+
+  public static int Main() {
+    return 0;
+  }
+  
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  internal int this[Test T] {
+    get {
+      return 1;
+    }
+  }  
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  internal Test this[int intI] {
+    get {
+      return new Test();
+    }
+  }  
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  protected Test MyTest {
+    get {
+      return new Test();
+    }
+  }  
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  private void MyMeth(Test T) {}  
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  private Test MyMeth() {
+    return new Test();
+  }  
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public enum Test {aa = 1}
+
+  protected internal Test MyTest = Test.aa;
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public enum Test {aa = 1}
+
+  internal const Test MyTest = Test.aa;
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  internal delegate void MyDelegate(Test T);
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  public class Test {}
+
+  protected delegate Test MyDelegate();
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+
+}
+`
+`
+public class Outer {
+
+  protected interface MyBase {}
+  private interface MyInter : MyBase {}
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+
+  internal interface MyBase {}
+  protected internal interface MyInter : MyBase {}
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+
+  protected internal interface MyBase {}
+  internal interface MyInter : MyBase {}
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+
+  protected interface MyBase {}
+  protected internal interface MyInter : MyBase {}
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+
+  protected internal interface MyBase {}
+  protected interface MyInter : MyBase {}
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+
+  public interface MyBase {}
+  protected internal interface MyInter : MyBase {}
+
+  public class MyClass {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public interface MyBase {}
+internal interface MyInter : MyBase {}
+
+public class MyClass {
+  public static int Main() {
+    return 0;
+  }
+}
+`
+`
+public class Outer {
+  internal class MyBase {}
+  private class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected class MyBase {}
+  private class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected internal class MyBase {}
+  private class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected internal class MyBase {}
+  internal class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  protected internal class MyBase {}
+  protected class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  public class MyBase {}
+  protected internal class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  public class MyBase {}
+  internal class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  public class MyBase {}
+  protected class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class Outer {
+  public class MyBase {}
+  private class MyClass : MyBase {
+    public static int Main() {
+      return 0;
+    }
+  }
+}
+`
+`
+public class MyBase {}
+internal class MyClass : MyBase {
+  public static int Main() {
+    return 0;
+  }
+}
+`
+`
+class MyClass 
+{
+    class nested { }
+    class nested<T> { }
+    class nested<T, U> { }
+
+    public static int Main() {
+    return 0;
+  }
+}
+`
+`
+public class MyClass {
+  static int Main() {
+    if (Main(null, 2) == 2) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+  static int Main(string[] args, int i) {
+    return i;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int result = 0;
+
+    int[][] arr1 = new int[3][] {new int[] {1,2}, new int[] {3,4}, new int[] {8,9}};
+    if (arr1.Rank != 1)
+      result = 1;
+
+    int[][][][] arr2 = new int[3][][][] { new int[][][] {  new int[][] {  new int[] {5,6}  }, new int[][] {  new int[] {4,4}  }  },
+                        new int[][][] {  new int[][] {  new int[] {2,3}  }, new int[][] {  new int[] {8,7}  }  },
+                        new int[][][] {  new int[][] {  new int[] {4,4}  }, new int[][] {  new int[] {2,1}  }  }  };
+    if (arr2.Rank != 1)
+      result = 2;
+
+    int[][] arr3 = new int[3][] {new int[] {4,3}, new int[] {40,34}, new int[] {93,29}};
+    if (arr3.Rank != 1)
+      result = 3;
+
+    return result;
+  }
+}
+`
+`
+class Test {
+  static int Main() {
+    int result = 0;
+
+    // The following test the .Length property
+
+    int[][] arr1 = new int[3][] { new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5, 8 } };
+    if (arr1.Length != 3)
+      result += 1;
+
+    int[][] arr2 = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 } };
+    if (arr2.Length != 2)
+      result += 2;
+
+    int[][][] arr3 = new int[2][][] { new int[][] { new int[] {1,2,3}, new int[] {4,5,6} },
+                      new int[][] { new int[] {7,8,9}, new int[] {10,11,12} } };
+    if (arr3.Length != 2)
+      result += 3;
+
+    int[][] arr4 = new int[0][];
+    if (arr4.Length != 0)
+      result += 4;
+
+    // The following test the .GetLength(Int32 dimension) method
+
+    int[][] arr5 = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 } };
+    if (arr5.GetLength(0) != 2)
+      result += 50;
+    try {
+      result += 10000;
+      if (arr5.GetLength(1) != 2)
+        result += 51;
+    } catch (System.IndexOutOfRangeException) {
+      result -= 10000;
+    }
+
+    int[][][] arr6 = new int[2][][] { new int[][] { new int[] {1,2,3}, new int[] {4,5,6} },
+                      new int[][] { new int[] {7,8,9}, new int[] {10,11,12} } };
+    if (arr6.GetLength(0) != 2)
+      result += 60;
+
+    return result;
+  }
+}
+`
+`
+class Test {
+  static int Main() {
+    int[][] arr = new int[][] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } };
+    int current = 1;
+
+    foreach (int[] outer in arr) {
+      foreach (int i in outer) {
+        if (i != current++)
+          return 1;
+      }
+    }
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr  = new int[][] {};
+
+    if (arr.Length == 0)
+      return 0;
+    else
+      return 1;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr  = new int[0][] {};
+
+    if (arr.Length == 0)
+      return 0;
+    else
+      return 1;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    char[][] arr;
+    arr = new char[][] {new char[] {'1','2'}, new char[] {'3','4'}, new char[] {'5','6'}};
+
+    int result = 0;
+    
+    // verify all elements were assigned correctly
+    char counter = '1';
+    for (int x = 0; x < 3; x++)
+    {
+      for (int y = 0; y < 2; y++)
+      {
+        if (arr[x][y] != counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    if (arr.Length != 3)
+      result = 1;
+
+    return result;
+  }
+}
+`
+`
+using System;
+
+class A
+{
+  public static int Main()
+  {
+    string[][] arr;
+    arr = new string[3][] {new string[] {"one","two"},
+                 new string[] {"three","four"},
+                 new string[] {"five","six"}};
+
+    int x = 0;
+
+    if (!arr[0][0].Equals("one"))
+      x = 1;
+    if (!arr[0][1].Equals("two"))
+      x = 1;
+    if (!arr[1][0].Equals("three"))
+      x = 1;
+    if (!arr[1][1].Equals("four"))
+      x = 1;
+    if (!arr[2][0].Equals("five"))
+      x = 1;
+    if (!arr[2][1].Equals("six"))
+      x = 1;
+
+    if (arr.Length != 3)
+      x = 1;
+
+    return x;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    float[][] arr = new float[][] {new float[] {(float)1.0,(float)2.0},
+                     new float[] {(float)3.0,(float)4.0},
+                     new float[] {(float)5.0,(float)6.0}};
+
+    int result = 0;
+    
+    // verify all elements were assigned correctly
+    int counter = 1;
+    for (int x = 0; x < 3; x++)
+    {
+      for (int y = 0; y < 2; y++)
+      {
+        if (arr[x][y] != (float)counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    if (arr.Length != 3)
+      result = 1;
+
+    return result;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    double[][] arr = {new double[] {1.0,2.0}, new double[] {3.0,4.0}, new double[] {5.0,6.0}};
+
+    int result = 0;
+    
+    // verify all elements were assigned correctly
+    int counter = 1;
+    for (int x = 0; x < 3; x++)
+    {
+      for (int y = 0; y < 2; y++)
+      {
+        if (arr[x][y] != (double)counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    return result;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    short[][] arr = {new short[] {1,2}, new short[] {3,4},new short[] {5,6}};
+
+    int result = 0;
+    
+    // verify all elements were assigned correctly
+    int counter = 1;
+    for (int x = 0; x < 3; x++)
+    {
+      for (int y = 0; y < 2; y++)
+      {
+        if (arr[x][y] != (short)counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    return result;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr = {new int[] {1,2}, new int[] {3,4}, new int[] {5,6}};
+
+    int result = 0;
+    
+    // verify all elements were assigned correctly
+    int counter = 1;
+    for (int x = 0; x < 3; x++)
+    {
+      for (int y = 0; y < 2; y++)
+      {
+        if (arr[x][y] != counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    return result;
+  }
+}
+`
+`
+using System;
+
+class A {
+  public static int Main() {
+    string[][] arr = new string[3][] {new string[] {"one","two"},
+                      new string[] {"three","four"},
+                      new string[] {"five","six"}};
+
+    int x = 0;
+
+    if (!arr[0][0].Equals("one"))
+      x = 1;
+    if (!arr[0][1].Equals("two"))
+      x = 1;
+    if (!arr[1][0].Equals("three"))
+      x = 1;
+    if (!arr[1][1].Equals("four"))
+      x = 1;
+    if (!arr[2][0].Equals("five"))
+      x = 1;
+    if (!arr[2][1].Equals("six"))
+      x = 1;
+
+    return x;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    decimal[][] arr = new decimal[3][] {new decimal[] {(decimal)1.0,(decimal)2.0},
+                        new decimal[] {(decimal)3.0,(decimal)4.0},
+                      new decimal[] {(decimal)5.0,(decimal)6.0}};
+
+    int result = 0;
+
+    // verify all elements were assigned correctly
+    int counter = 1;
+    for (int x = 0; x < 3; x++) {
+      for (int y = 0; y < 2; y++) {
+        if (arr[x][y] != (decimal)counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    return result;
+  }
+}
+`
+`
+using System;
+
+class A {
+  const int myLength = 3;
+
+  public static int Main() {
+    int[][] arr = new int[myLength][] { new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5, 6 } };
+
+    int result = 0;
+
+    // verify all elements were assigned correctly
+    int counter = 1;
+    for (int x = 0; x < myLength; x++) {
+      for (int y = 0; y < 2; y++) {
+        if (arr[x][y] != counter)
+          result = 1;
+        counter++;
+      }
+    }
+
+    return result;
+  }
+}
+`
+`
+class A {
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  int d = 4;
+
+  void MyMethod() {
+    int[][] TestArray = new int[][] { new int[] { a, b }, new int[] { c, d } };
+
+  }
+
+  static void Main() {
+    A a = new A();
+    a.MyMethod();
+  }
+}
+`
+`
+class A {
+  int[][] TestArray1 = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 } };
+
+  static void Main() {
+    int[][] TestArray2 = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 } };
+  }
+}
+`
+`
+class X {
+  public static void Main() {
+    int[][][][][] x = null;
+
+    x = new int[5][][][][];
+    for (int a = 0; a < 5; a++) {
+      x[a] = new int[9][][][];
+      for (int b = 0; b < 9; b++) {
+        x[a][b] = new int[4][][];
+        for (int c = 0; c < 4; c++) {
+          x[a][b][c] = new int[7][];
+          for (int d = 0; d < 7; d++) {
+            x[a][b][c][d] = new int[12];
+          }
+        }
+      }
+    }
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr1 = new int[5UL][];    
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr1 = new int[5L][];    
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr1 = new int[5U][];    
+
+    return 0;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    char x = 'a';
+    int[][] arr1 = new int[x][];
+
+    char y = 'b';
+    int[][] arr2 = new int[y][];
+
+    return 0;
+  }
+}
+`
+`
+using System;
+
+class Test {
+  static int Main() {
+    try {
+      int[][] arr = new int[ulong.MaxValue][];
+      arr[0] = new int[10];
+      arr[0][0] = 5;
+    } catch (OverflowException) { 
+    } catch (OutOfMemoryException) { }
+
+    return 0;
+  }
+}
+`
+`
+using System;
+
+class Test {
+  static int Main() {
+    try {
+      int[][] arr = new int[2147483648][];
+      arr[0] = new int[10];
+      arr[0][0] = 5;
+    } catch (OverflowException) { 
+    } catch (OutOfMemoryException) { }
+
+    return 0;
+  }
+}
+`
+`
+class Test {
+  static int Main() {
+    try {
+      int[][] arr = new int[2147483647][];
+      arr[0] = new int[10];
+      arr[0][0] = 5;
+    } catch (System.OutOfMemoryException) { }
+
+    return 0;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[0][];
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    bool[][] arr = new bool[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new bool[3];
+
+    arr[3][2] = true;
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    decimal[][] arr = new decimal[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new decimal[6];
+
+    arr[3][5] = (decimal)1.00;
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    float[][] arr = new float[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new float[19];
+
+    arr[3][17] = (float)1.00;
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    double[][] arr = new double[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new double[2];
+
+    arr[3][1] = 5.42;
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    char[][] arr = new char[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new char[5];
+
+    arr[3][4] = 'c';
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    long[][] arr = new long[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new long[2];
+
+    arr[3][0] = (long)5;
+
+    return 0;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    short[][] arr = new short[6][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new short[6];
+
+    arr[3][3] = (short)5;
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    byte[][] arr = new byte[2][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new byte[2];
+
+    arr[0][0] = (byte)5;
+
+    return 0;
+  }
+}
+`
+`
+class A
+{
+  public static int Main()
+  {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[3];
+
+    arr[3][1] = 5;
+
+    return 0;
+  }
+}
+`
+`
+class myClass {
+  public int x;
+  public int y;
+}
+
+class A {
+  public static int Main() {
+    myClass[][] arr = new myClass[2][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new myClass[3];
+
+    for (int a=0; a < 2; a++)
+      for (int b=0; b < 3; b++)
+        arr[a][b] = new myClass();
+
+    myClass mc = new myClass();
+    mc.x = 4;
+    mc.y = 5;
+
+    arr[1][1] = mc;
+
+    if (arr[1][1].x == 4 && arr[1][1].y == 5)
+      return 0;
+
+    return 1;
+  }
+}
+`
+`
+struct myStruct {
+  public int x;
+  public int y;
+}
+
+class A {
+  public static int Main() {
+    myStruct[][] arr = new myStruct[3][];
+    for (int a = 0; a < arr.Length; a++)
+      arr[a] = new myStruct[2];
+
+    myStruct ms;
+    ms.x = 4;
+    ms.y = 5;
+
+    arr[2][0] = ms;
+
+    if (arr[2][0].x == 4 && arr[2][0].y == 5)
+      return 0;
+
+    return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr1 = new int[2][] { new int[] { 1, 2 }, new int[] { 3, 4 } };
+    int[][] arr2 = new int[4][] { new int[] { 5, 6 }, new int[] { 7, 8 }, new int[] { 9, 10 }, new int[] { 11, 12 } };
+
+    arr1[1][1] = arr2[3][0];
+
+    if (arr1[1][1] == 11)
+      return 0;
+
+    return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[3][] { new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5, 6 } };
+
+    arr[2][1] = arr[1][0];
+
+    if (arr[2][1] == 3)
+      return 0;
+
+    return 1;
+  }
+}
+`
+`
+class Test {
+  public static int ElementTaker(out int val) {
+    val = 5;
+    return val;
+  }
+
+  static int Main() {
+    int[][] arr = new int[3][] { new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5, 6 } };
+
+    if (ElementTaker(out arr[2][1]) != 5)
+      return 1;
+
+    if (arr[2][1] != 5)
+      return 2;
+
+    return 0;
+  }
+}
+`
+`
+class Test {
+  public static int ElementTaker(ref int val) {
+    val += 5;
+    return val;
+  }
+
+  static int Main() {
+    int[][] arr = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5, 6 } };
+
+    if (ElementTaker(ref arr[2][1]) != 11)
+      return 1;
+
+    if (arr[2][1] != 11)
+      return 2;
+
+    return 0;
+  }
+}
+`
+`
+class Test {
+  public static int ElementTaker(int val) {
+    return val;
+  }
+
+  static int Main() {
+    int[][] arr = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 }, new int[] { 5, 6 } };
+
+    if (ElementTaker(arr[2][1]) != 6)
+      return 1;
+
+    return 0;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int x;
+
+    int[][] arr1 = new int[10][];
+    for (x = 0; x < arr1.Length; x++)
+      arr1[x] = new int[2];
+
+    double[][] arr2 = new double[5][];
+    for (x = 0; x < arr2.Length; x++)
+      arr2[x] = new double[3];
+
+    float[][] arr3;
+    char[][] arr4;
+
+    arr3 = new float[1][];
+    for (x = 0; x < arr3.Length; x++)
+      arr3[x] = new float[1];
+
+    arr4 = new char[0][];
+    for (x = 0; x < arr4.Length; x++)
+      arr4[x] = new char[0];
+
+    // reset x to zero
+    x = 0;
+
+    if (arr1.Length != 10)
+      x = 1;
+    if (arr1[5].Length != 2)
+      x = 1;
+    if (arr2.Length != 5)
+      x = 1;
+    if (arr2[3].Length != 3)
+      x = 1;
+    if (arr3.Length != 1)
+      x = 1;
+    if (arr3[0].Length != 1)
+      x = 1;
+    if (arr4.Length != 0)
+      x = 1;
+
+    return x;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    char[][] arr = new char[3][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new char[3];
+
+    arr[0][0] = 'C';
+    arr[0][1] = 'a';
+    arr[0][2] = 't';
+    arr[1][0] = 'D';
+    arr[1][1] = 'o';
+    arr[1][2] = 'g';
+    arr[2][0] = 'T';
+    arr[2][1] = 'o';
+    arr[2][2] = 'p';
+
+    int result = 0;
+
+    if (arr[0][0] != 'C') result = 1;
+    if (arr[0][1] != 'a') result = 1;
+    if (arr[0][2] != 't') result = 1;
+    if (arr[1][0] != 'D') result = 1;
+    if (arr[1][1] != 'o') result = 1;
+    if (arr[1][2] != 'g') result = 1;
+    if (arr[2][0] != 'T') result = 1;
+    if (arr[2][1] != 'o') result = 1;
+    if (arr[2][2] != 'p') result = 1;
+
+    return result;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[6];
+
+    for (int a = 0; a < arr.Length; a++)
+      for (int b = 0; b < arr[a].Length; b++)
+        arr[a][b] = a*b;
+
+    int result = 0;
+    for (int x = 0; x < arr.Length; x++)
+      for (int y = 0; y < arr[x].Length; y++)
+        if (arr[x][y] != x*y)
+          result = 1;
+
+    return result;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[9];
+
+    arr[3][7] = 100;
+
+    long idx = 3L;
+
+    if (arr[idx][7] == 100)
+      return 0;
+    else
+      return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[7][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[9];
+
+    arr[3][5] = 100;
+
+    char idx = (char)3;
+
+    if (arr[idx][5] == 100)
+      return 0;
+    else
+      return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[5];
+
+    arr[2][3] = 100;
+
+    short idx = 3;
+
+    if (arr[2][idx] == 100)
+      return 0;
+    else
+      return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[5];
+
+    try {
+      arr[1][-1] = 5;
+    } catch (System.IndexOutOfRangeException) {
+      return 0;
+    }
+
+    return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[5];
+
+    try {
+      arr[-1][1] = 5;
+    } catch (System.IndexOutOfRangeException) {
+      return 0;
+    }
+
+    return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    int[][] arr = new int[5][];
+    for (int x = 0; x < arr.Length; x++)
+      arr[x] = new int[5];
+
+    arr[0][0] = 5;
+
+    if (arr[0][0] == 5)
+      return 0;
+    else
+      return 1;
+  }
+}
+`
+`
+interface InterfaceT {
+  int TestMethodT();
+}
+
+interface InterfaceS : InterfaceT {
+  int TestMethodS();
+}
+
+class MyClassT : InterfaceT {
+  public int x;
+  public virtual int TestMethodT() {
+    return 0;
+  }
+}
+
+class MyClassS : InterfaceS {
+  public int x;
+  public virtual int TestMethodS() {
+    return 0;
+  }
+  public virtual int TestMethodT() {
+    return 0;
+  }
+}
+
+class ArrayCovariance
+{
+  public static int Main()
+  {
+    InterfaceS[] ifs = new InterfaceS[10];
+    InterfaceT[] ift = new InterfaceT[10];
+    MyClassS cs = new MyClassS();
+    MyClassT ct = new MyClassT();
+
+    for (int x = 0; x < 10; x++)
+    {  
+      ifs[x] = new MyClassS();
+      ift[x] = new MyClassT();
+    }
+
+    ift = ifs;
+
+    return 0;
+  }
+}
+`
+`
+interface InterfaceT {
+  int TestMethod();
+}
+
+class MyClassS : InterfaceT {
+  public int x;
+  public virtual int TestMethod() {
+    return 0;
+  }
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    InterfaceT[] it = new InterfaceT[10];
+    MyClassS[] cs = new MyClassS[10];
+
+    for (int x = 0; x < 10; x++) {
+      it[x] = new MyClassS();
+      cs[x] = new MyClassS();
+    }
+
+    it = cs;
+
+    return 0;
+  }
+}
+`
+`
+class ClassT {
+  public int x;
+}
+
+class ClassS : ClassT {
+  public int y;
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    ClassS[] cs = new ClassS[10];
+    ClassT[] ct = new ClassT[10];
+
+
+    for (int x = 0; x < 10; x++) {
+      cs[x] = new ClassS();
+      ct[x] = new ClassT();
+    }
+
+    ct = cs;
+
+    return 0;
+  }
+}
+`
+`
+interface MyInterface {
+  int testmethod();
+}
+
+class MyClass : MyInterface {
+  public virtual int testmethod() {
+    System.Console.WriteLine("MyClass::testmethod()");
+    return 0;
+  }
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    MyInterface[] inst = new MyInterface[10];
+
+    for (int x = 0; x < 10; x++) {
+      inst[x] = new MyClass();
+    }
+
+    object[] o = new object[10];
+
+    o = inst;
+
+    return 0;
+  }
+}
+`
+`
+class MyClass {
+  public int x;
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    MyClass[] mc = new MyClass[10];
+
+    for (int x = 0; x < 10; x++) {
+      mc[x] = new MyClass();
+      System.Console.WriteLine(x);
+      mc[x].x = x;
+    }
+
+    object[] o = new object[10];
+
+    o = mc;
+
+    for (int x = 0; x < 10; x++) {
+      System.Console.WriteLine(((MyClass)o[x]).x);
+    }
+
+    return 0;
+  }
+}
+`
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+`
+interface InterfaceS {
+  int TestMethodS();
+}
+
+interface InterfaceT : InterfaceS {
+  int TestMethodT();
+}
+
+class MyClass : InterfaceS, InterfaceT {
+  public int x;
+  public virtual int TestMethodS() {
+    return 0;
+  }
+  public virtual int TestMethodT() {
+    return 0;
+  }
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    InterfaceS[] ifs = new InterfaceT[10];
+    InterfaceT[] ift = new InterfaceT[10];
+
+    MyClass mc = new MyClass();
+
+    for (int x = 0; x < 10; x++) {
+      ifs[x] = new MyClass();
+      ift[x] = new MyClass();
+    }
+
+    ift = (InterfaceT[])ifs;
+
+    return 0;
+  }
+}
+`
+`
+class ClassS {
+  public int x;
+}
+
+class ClassT : ClassS {
+  public int y;
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    ClassS[] cs = new ClassT[10];
+    ClassT[] ct = new ClassT[10];
+
+    for (int x = 0; x < 10; x++) {
+      cs[x] = new ClassT();
+      ct[x] = new ClassT();
+    }
+
+    ct = (ClassT[])cs;
+
+    return 0;
+  }
+}
+`
+`
+interface MyInterface {
+  int testmethod();
+}
+
+class MyClass : MyInterface {
+  public virtual int testmethod() {
+    System.Console.WriteLine("MyClass::testmethod()");
+    return 0;
+  }
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    MyInterface[] inst = new MyInterface[10];
+
+    for (int x = 0; x < 10; x++) {
+      inst[x] = new MyClass();
+    }
+
+    object[] o = new MyClass[10];
+
+    inst = (MyClass[])o;
+
+    return 0;
+  }
+}
+`
+`
+class MyClass {
+  public int x;
+}
+
+class ArrayCovariance {
+  public static int Main() {
+    MyClass[] mc = new MyClass[10];
+
+    for (int x = 0; x < 10; x++) {
+      mc[x] = new MyClass();
+      System.Console.WriteLine(x);
+      mc[x].x = x;
+    }
+
+    object[] o = new MyClass[10];
+
+    mc = (MyClass[])o;
+
+    return 0;
+  }
+}
+`
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+`
+using System;
+
+class Queue {
+  int next;
+  int prev;
+}
+
+class Test {
+  public static int Main() {
+    string[] stringArr = new string[10];
+    object[] objectArr = stringArr;
+
+    objectArr[0] = "hello";
+
+    try {
+      objectArr[1] = new Queue();
+    } catch (ArrayTypeMismatchException) {
+      return 0;
+    }
+    return 1;
+  }
+}
+`
+`
+using System;
+
+class Test {
+  static void Fill(object[] array, int index, int count, object value) {
+    for (int i = index; i < index + count; i++)
+      array[i] = value;
+  }
+
+  public static int Main() {
+    string[] strings = new string[100];
+    Fill(strings, 0, 100, "Undefined");
+    Fill(strings, 0, 10, null);
+
+    try {
+      Fill(strings, 90, 10, 0);
+    } catch (ArrayTypeMismatchException) {
+      return 0;
+    }
+
+    return 1;
+  }
+}
+`
+`
+class Test {
+
+  const long result = 1 + 1;
+
+  public static int Main() {
+    return (int)Test.result - 2;
+  }
+}
+`
+`
+class Test {
+
+  const int result = 1 + 1;
+
+  public static int Main() {
+    return Test.result - 2;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    string s = null;
+    string t = "ok";
+    string x = s ?? t ?? "nok";
+    if (x == "ok") return 0;
+    return 1;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    string s = null;
+    string t = null;
+    string x = s ?? t ?? "ok";
+    if (x == "ok") return 0;
+    return 1;
+  }
+}
+`
+`
+class Test {
+  public bool b;
+  public string s;
+
+  public Test(bool b, string s) {
+    this.b = b;
+    this.s = s;
+  }
+
+  public static bool operator true(Test x) {
+    System.Console.WriteLine("op_True "+x.s);
+    return x.b;
+  }
+
+  public static bool operator false(Test x) {
+    System.Console.WriteLine("op_False "+x.s);
+    return !x.b;
+  }
+
+  public static Test operator &(Test x, Test y) {
+    System.Console.WriteLine("op_BitwiseAnd(" + x.s + ", " + y.s + ")");
+    return new Test(x.b & y.b, x.s + "&" + y.s);
+  }
+
+  public static int Main() {
+    Test t = new Test(true, "true");
+    Test f = new Test(false, "false");
+    if (f && t) return 1;
+    if (t && t) {
+      if (t && f) return 1;
+    }
+    return 0;
+  }
+}
+`
+op_False false
+op_True false
+op_False true
+op_BitwiseAnd(true, true)
+op_True true&true
+op_False true
+op_BitwiseAnd(true, false)
+op_True true&false
+`
+class Test {
+  public bool b;
+  public string s;
+
+  public Test(bool b, string s) {
+    this.b = b;
+    this.s = s;
+  }
+
+  public static bool operator true(Test x) {
+    System.Console.WriteLine("op_True "+x.s);
+    return x.b;
+  }
+
+  public static bool operator false(Test x) {
+    System.Console.WriteLine("op_False "+x.s);
+    return !x.b;
+  }
+
+  public static Test operator |(Test x, Test y) {
+    System.Console.WriteLine("op_BitwiseOr(" + x.s + ", " + y.s + ")");
+    return new Test(x.b | y.b, x.s + "|" + y.s);
+  }
+
+  public static int Main() {
+    Test t = new Test(true, "true");
+    Test f = new Test(false, "false");
+    if (f || f) return 1;
+    if (f || t) {
+      if (t || f) return 0;
+    }
+    return 2;
+  }
+}
+`
+op_True false
+op_BitwiseOr(false, false)
+op_True false|false
+op_True false
+op_BitwiseOr(false, true)
+op_True false|true
+op_True true
+op_True true
+`
+class Test {
+  public static bool BadFunc(bool result, string s) {
+    System.Console.WriteLine(s);
+    return result;
+  }
+
+  public static int Main() {
+    if (BadFunc(false, "one") || BadFunc(false, "two")) return 1;
+    if (BadFunc(false, "three") || BadFunc(true, "four")) {
+      if (BadFunc(true, "five") || BadFunc(false, "six")) return 0;
+    }
+    return 2;
+  }
+}
+`
+one
+two
+three
+four
+five
+`
+class Test {
+  public static bool BadFunc(bool result, string s) {
+    System.Console.WriteLine(s);
+    return result;
+  }
+
+  public static int Main() {
+    if (BadFunc(true, "one") && BadFunc(false, "two")) return 1;
+    if (BadFunc(false, "three") && BadFunc(true, "four")) return 1;
+    return 0;
+  }
+}
+`
+one
+two
+three
+`
+class Test {
+  public static int Main() {
+    int i = 0;
+    return i++;
+  }
+}
+`
+`
+class Test {
+  public static int Echo(int i) {
+    System.Console.WriteLine(i);
+    return 0;
+  }
+
+  public static int Main() {
+    decimal[] one = new decimal[1];
+    one[0] = 1m;
+    decimal two = 2m;
+    if (one[Echo(0)]++ == two) return 1;
+    if (one[Echo(1)]-- != two) return 1;
+    return 0;
+  }
+}
+`
+0
+1
+`
+class Test {
+  public static int Main() {
+    decimal one = 1m;
+    decimal two = 2m;
+    if (one++ == two) return 1;
+    if (one-- != two) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+  public static int Echo(int i) {
+    System.Console.WriteLine(i);
+    return 0;
+  }
+
+  public static int Main() {
+    decimal[] one = new decimal[1];
+    one[0] = 1m;
+    decimal two = 2m;
+    if (++one[Echo(0)] != two) return 1;
+    if (--one[Echo(1)] == two) return 1;
+    return 0;
+  }
+}
+`
+0
+1
+`
+class Test {
+  public static int Main() {
+    decimal one = 1m;
+    decimal two = 2m;
+    if (++one != two) return 1;
+    if (--one == two) return 1;
+    return 0;
+  }
+}
+`
+`
+struct MyNum {
+  int i;
+
+  private MyNum(int i) {
+    this.i = i;
+  }
+  public static implicit operator MyNum(int i) { return new MyNum(i); }
+  public static explicit operator int(MyNum n) { return n.i; }
+}
+
+class Test {
+  public static void Main() {
+    int? x = 1;
+    MyNum? ch = x;
+    x = (int?)ch;
+  }
+}
+`
+`
+class Test {
+  public static int Main() {
+    Test f = null;
+    Test g = ~f;
+    if (f == ~g) return 1;
+    return 0;
+  }
+}
+`
+(4,14)-(4,16): error: Operator '~' cannot be applied to operand of type 'Test'.
+(5,14)-(5,16): error: Operator '~' cannot be applied to operand of type 'Test'.
+`
+enum foo { bar, bas, bat }
+
+class Test {
+  public static int Main() {
+    foo f = foo.bar;
+    foo g = ~f;
+    if (f == ~g) return 0;
+    return 1;
+  }
+}
+`
+`
+class MyClass {
+
+  public static int Main() {
+    decimal test1 = 1;
+    if (!test1) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+`
+(5,9)-(5,15): error: Operator '!' cannot be applied to operand of type 'decimal'.
+`
+class MyClass {
+
+  public static int Main() {
+    bool test1 = false;
+    if (!test1) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+`
+`
+class MyClass {
+
+  public static int Main() {
+    ulong test1 = 1;
+    ulong test2 = -test1;
+    if (test1 == test2) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+}
+`
+(5,19)-(5,25): error: Operator '-' cannot be applied to operand of type 'ulong'.
+`
+class MyClass {
+
+  public static int Main() {
+    decimal test1 = 2m;
+    decimal test2 = -test1;
+    if (test2 == -2m) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+`
+`
+class MyClass {
+
+  public static int Main() {
+    long test1 = 2L;
+    long test2 = -test1;
+    if (test2 == -2L) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+`
+`
+class MyClass {
+
+  public static int Main() {
+    decimal test1 = 2m;
+    decimal test2 = +test1;
+    if (test2 == 2m) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+`
+`
+class MyClass {
+
+  public static int Main() {
+    string test1 = "2";
+    int test2 = +test1;
+    if (test2 == 2) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+}
+`
+(5,17)-(5,23): error: Operator '+' cannot be applied to operand of type 'string'.
+`
+class MyClass {
+
+  public static int Main() {
+    int test1 = 2;
+    int test2 = +test1;
+    if (test2 == 2) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+`
+`
+using System;
+
+public class Gen<T> {
+  public static T AsT(object t) {    
+    return t as T;
+  }
+}
+
+
+public class Test {
+
+
+  public static int Main() {
+    string s = Gen<string>.AsT("string");
+    string t = Gen<string>.AsT(1);
+
+    if (s != "string") return 1;
+    if (t != null) return 1;
+    return 0;
+
+  }
+
+}
+`
+`
+using System;
+
+public interface MyInter { }
+
+public class TestClass {
+  public TestClass() { }
+}
+
+public class MyClass {
+
+
+  public static int Main() {
+    TestClass tc = new TestClass();
+    bool b = tc is MyInter;
+    if (b == false) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = 1;
+    foo b = foo.bas;
+    foo c = b - a;
+    return (int)cc;
+  }
+}
+enum foo { bar, bas }
+`
+(7,17)-(7,19): error: The name 'cc' does not exist in the current context.
+`
+class A {
+  public static int Main() {
+    string a = "a";
+    object b = 1;
+    if (a == b) return 1;
+    if (b == a) return 1;
+    return 0;
+  }
+}
+`
+(5,9)-(5,15): warning: Possible unintended reference comparison; to get a value comparison, cast the right hand side to type 'string'.
+(6,9)-(6,15): warning: Possible unintended reference comparison; to get a value comparison, cast the left hand side to type 'string'.
+`
+using System;
+
+class A {
+
+  public A() { }
+
+  public static bool operator == (A a, A b){
+    return true;
+  }
+
+  public static bool operator != (A a, A b) {
+    return true;
+  }
+
+  public override bool Equals(object other) {
+    return true;
+  }
+
+  public override int GetHashCode() {
+    return 0;
+  }
+
+  public static int Main() {
+    A a = new A();
+    object b = null;
+    if (a == b) return 1;
+    if (b == a) return 1;
+    return 0;
+  }
+}
+`
+(26,9)-(26,15): warning: Possible unintended reference comparison; to get a value comparison, cast the right hand side to type 'A'.
+(27,9)-(27,15): warning: Possible unintended reference comparison; to get a value comparison, cast the left hand side to type 'A'.
+`
+class Test {
+  public static int Main() {
+    int? i = null;
+    if (i == null) return 0;
+    return 1;
+  }
+}
+`
+`
+class Test {
+  public static int Main() {
+    int? i = null;
+    if (i != null) return 1;
+    return 0;
+  }
+}
+`
+`
+enum foo { bar, bas, bat }
+
+class Test {
+  public static int Main() {
+    foo f = foo.bar;
+    if (1 == f) return 1;
+    return 0;
+  }
+}
+`
+(6,9)-(6,15): error: Operator '==' cannot be applied to operands of type 'int' and 'foo'.
+`
+enum foo { bar, bas, bat }
+
+class Test {
+  public static int Main() {
+    foo f = foo.bar;
+    if (f == foo.bas) return 1;
+    return 0;
+  }
+}
+`
+`
+class A<T> {
+  public static int Test(object t, T x) {
+    if (t == x) return 1;
+    return 0;
+  }
+}
+
+class Test {
+  public static int Main() {
+    return A<string>.Test(null, null);
+  }
+}
+`
+(3,9)-(3,15): error: Operator '==' cannot be applied to operands of type 'object' and 'T'.
+`
+class A<T> {
+  public static int Test(T t, T x) {
+    if (t == x) return 1;
+    return 0;
+  }
+}
+
+class Test {
+  public static int Main() {
+    return A<string>.Test(null, null);
+  }
+}
+`
+(3,9)-(3,15): error: Operator '==' cannot be applied to operands of type 'T' and 'T'.
+`
+class A<T> {
+  public static int Test(T t) {
+    if (t == null) return 0;
+    return 1;
+  }
+  public static int Test2(T t) {
+    if (null == t) return 0;
+    return 1;
+  }
+}
+
+class Test {
+  public static int Main() {
+    return A<string>.Test(null) + A<object>.Test(null);
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    string a = "a";
+    int b = 1;
+    if (a == bb) return 1;
+    return 0;
+  }
+}
+`
+(5,14)-(5,16): error: The name 'bb' does not exist in the current context.
+`
+class A {
+  public static int Main() {
+    string a = "a";
+    int b = 1;
+    if (aa == b) return 1;
+    return 0;
+  }
+}
+`
+(5,9)-(5,11): error: The name 'aa' does not exist in the current context.
+`
+class A {
+  public static int Main() {
+    ifoo a = null;
+    ibar b = null;
+    if (a == b) return 0;
+    return 1;
+  }
+}
+
+interface ifoo { }
+interface ibar { }
+`
+`
+class A {
+  public static int Main() {
+    string a = "a";
+    int b = 1;
+    if (a == b) return 1;
+    return 0;
+  }
+}
+`
+(5,9)-(5,15): error: Operator '==' cannot be applied to operands of type 'string' and 'int'.
+`
+class A {
+  public static int Main() {
+    string a = "a";
+    string aa = "aa";
+    if (a != aa) return 0;
+    return 1;
+  }
+}
+`
+`
+class A {
+  public static int Main() {
+    string a = "a";
+    string aa = "aa";
+    string apa = a + a;
+    if (aa == apa) return 0;
+    return 1;
+  }
+}
+`
+`
+delegate void PrintString(string s);
+class A {
+  static void PrStr(string s) {
+    System.Console.WriteLine(s);
+  }
+  public static int Main() {
+    PrintString g = PrStr;
+    PrintString h = PrStr;
+    if (h == g) return 0;
+    System.Delegate gd = g;
+    System.Delegate hd = h;
+    if (gd == hd) return 0;
+    return 1;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    uint b = uint.MaxValue;
+    b <<= 1;
+    b >>= 1;
+    if (b == int.MaxValue) return 0;
+    return 1;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    bool b = false;
+    int c = b << 1;
+    return (int)c;
+  }
+}
+`
+(5,13)-(5,19): error: Operator '<<' cannot be applied to operands of type 'bool' and 'int'.
+`
+class Test {
+
+  public static int Main() {
+    bool b = true;
+    int c = b >> 1;
+    return (int)c;
+  }
+}
+`
+(5,13)-(5,19): error: Operator '>>' cannot be applied to operands of type 'bool' and 'int'.
+`
+delegate void PrintString(string s);
+class A {
+  static void PrStr(string s) {
+    System.Console.WriteLine(s);
+  }
+  public static int Main() {
+    PrintString g = PrStr;
+    PrintString h = PrStr - g;
+    if (h == null) return 0;
+    return 1;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    long a = long.MinValue;
+    long b = 1;
+    long c = checked(a - b);
+    if (c != 0L) return 1;
+    return 0;
+  }
+}
+`
+Arithmetic operation resulted in an overflow.
+`
+class Test {
+
+  public static int Main() {
+    ulong a = ulong.MinValue;
+    ulong b = 1;
+    ulong c = checked(a - b);
+    if (c != 0ul) return 1;
+    return 0;
+  }
+}
+`
+Arithmetic operation resulted in an overflow.
+`
+class Test {
+
+  public static int Main() {
+    int a = 1;
+    foo b = foo.bas;
+    foo c = b - a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = 1;
+    foo b = foo.bas;
+    foo c = a - b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = 1;
+    bool b = false;
+    long c = a - b;
+    return (int)c;
+  }
+}
+`
+(6,14)-(6,19): error: Operator '-' cannot be applied to operands of type 'int' and 'bool'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    bool b = true;
+    int c = a % b;
+    return c;
+  }
+}
+`
+(6,13)-(6,18): error: Operator '%' cannot be applied to operands of type 'int' and 'bool'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = a / b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '/' cannot be applied to operands of type 'int' and 'foo'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = a * b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '*' cannot be applied to operands of type 'int' and 'foo'.
+`
+class Test {
+
+  public static int Main() {
+    long a = long.MaxValue;
+    long b = long.MaxValue;
+    long c = checked(a * b);
+    if (c != 1L) return 1;
+    return 0;
+  }
+}
+`
+Arithmetic operation resulted in an overflow.
+`
+class Test {
+
+  public static int Main() {
+    ulong a = ulong.MaxValue;
+    ulong b = ulong.MaxValue;
+    ulong c = checked(a * b);
+    if (c != 1ul) return 1;
+    return 0;
+  }
+}
+`
+Arithmetic operation resulted in an overflow.
+`
+class Test {
+
+  public static int Main() {
+    uint a = 0x80000000;
+    uint b = 0x80000000;
+    uint c = a / b;
+    if (c != 1) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    ushort a = 0x8000;
+    ushort b = 0x8000;
+    ushort c = a / b;
+    if (c != 1) return 1;
+    return 0;
+  }
+}
+`
+(6,16)-(6,21): error: Cannot implicitly convert type 'int' to 'ushort'. An explicit conversion exists (are you missing a cast?)
+`
+class Test {
+
+  public static int Main() {
+    decimal d = 1m;
+    d *= 0m;
+    if (d > 0) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    int d = 0;
+    d /= 1;
+    if (d != 0) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    int d = 1;
+    d %= 1;
+    if (d != 0) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    bool a = false;
+    a |= false;
+    if (a) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    bool a = true;
+    a ^= true;
+    if (a) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    bool a = true;
+    a &= false;
+    if (a) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    bool a = false;
+    bool b = false;
+    bool c = a | b;
+    if (c) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = 0;
+    long b = 0;
+    long c = a | b;
+    return (int)c;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    foo a = foo.bar;
+    foo b = foo.bar;
+    foo c = b | a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = a | b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '|' cannot be applied to operands of type 'int' and 'foo'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = b | a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '|' cannot be applied to operands of type 'foo' and 'int'.
+`
+class Test {
+
+  public static int Main() {
+    bool a = true;
+    bool b = true;
+    bool c = a ^ b;
+    if (c) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = 1;
+    long b = 1;
+    long c = a ^ b;
+    return (int)c;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    foo a = foo.bas;
+    foo b = foo.bas;
+    foo c = b ^ a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = a ^ b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '^' cannot be applied to operands of type 'int' and 'foo'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = b ^ a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '^' cannot be applied to operands of type 'foo' and 'int'.
+`
+class Test {
+
+  public static int Main() {
+    bool a = false;
+    bool b = true;
+    bool c = a & b;
+    if (c) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = 0;
+    long b = 1;
+    long c = a & b;
+    return (int)c;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    foo a = foo.bar;
+    foo b = foo.bas;
+    foo c = b & a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = a & b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '&' cannot be applied to operands of type 'int' and 'foo'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = b & a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+(6,13)-(6,18): error: Operator '&' cannot be applied to operands of type 'foo' and 'int'.
+`
+class A {
+
+  A() {
+  }
+
+  int foo {
+    set {
+      System.Console.WriteLine("called a.foo.set");
+    }
+  }
+
+  public static void Main() {
+    A a = new A();
+    a.foo = 1;
+  }
+}
+`
+called a.foo.set
+`
+class A {
+
+  static int foo;
+
+  public static void Main() {
+    A.foo = 1;
+    System.Console.WriteLine(A.foo);
+  }
+}
+`
+1
+`
+class A {
+
+  static int foo {
+    set {
+      System.Console.WriteLine("called foo.set");
+    }
+  }
+
+  public static void Main() {
+    A.foo = 1;
+  }
+}
+`
+called foo.set
+`
+class A {
+
+  int foo {
+    set { }
+  }
+
+  public static void Main() {
+    A.foo = 1;
+  }
+}
+`
+(8,5)-(8,6): error: An object reference is required for the nonstatic field, method, or property 'A.foo.set'.
+(4,5)-(4,12): (Location of symbol related to previous error.)
+`
+class A {
+
+  A() {
+  }
+
+  static int foo {
+    set { }
+  }
+
+  public static void Main() {
+    A a = new A();
+    a.foo = 1;
+  }
+}
+`
+(12,5)-(12,6): error: Static member 'A.foo.set' cannot be accessed with an instance reference; qualify it with a type name instead.
+(7,5)-(7,12): (Location of symbol related to previous error.)
+`
+class A {
+  public static void Main() {
+    int i;
+    i = "1";
+  }
+}
+`
+(4,9)-(4,12): error: Cannot implicitly convert type 'string' to 'int'.
+`
+delegate void PrintString(string s);
+class A {
+  static void PrStr(string s) {
+    System.Console.WriteLine(s);
+  }
+  public static void Main() {
+    PrintString g = PrStr;
+    PrintString h = PrStr;
+    h += g;
+    h("hello");
+    h -= g;
+    h("there");
+  }
+}
+`
+hello
+hello
+there
+`
+delegate void PrintString(string s);
+class A {
+  static void PrStr(string s) {
+    System.Console.WriteLine(s);
+  }
+  public static void Main() {
+    PrintString g = PrStr;
+    PrintString h = PrStr + g;
+    h("hello");
+    h = h - PrStr;
+    h("there");
+  }
+}
+`
+hello
+hello
+there
+`
+delegate void PrintString(string s);
+class A {
+  static void PrStr(string s) {
+    System.Console.WriteLine(s);
+  }
+  public static void Main() {
+    PrintString f = PrStr;
+    PrintString g = PrStr;
+    PrintString h = f + g;
+    h("hello");
+    h = h - g;
+    h("there");
+  }
+}
+`
+hello
+hello
+there
+`
+using System;
+
+class Test {
+
+  public static void Main() {
+    string a = "a";
+    string b = "b";
+    Console.WriteLine(a + b);
+  }
+}
+`
+ab
+`
+using System;
+
+class Test {
+
+  public static void Main() {
+    int a = 1;
+    string b = "b";
+    Console.WriteLine(b + a);
+  }
+}
+`
+b1
+`
+using System;
+
+class Test {
+
+  public static void Main() {
+    int a = 1;
+    string b = "b";
+    Console.WriteLine(a + b);
+  }
+}
+`
+1b
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = b + a;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    foo b = foo.bas;
+    foo c = a + b;
+    return (int)c;
+  }
+}
+enum foo { bar, bas }
+`
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    bool b = false;
+    long c = a + b;
+    return (int)c;
+  }
+}
+`
+(6,14)-(6,19): error: Operator '+' cannot be applied to operands of type 'int' and 'bool'.
+`
+class Test {
+
+  public static int Main() {
+    int a = -1;
+    long b = 1;
+    long c = a + b;
+    return (int)c;
+  }
+}
+`
+`
+#define BBBBB
+ 
+#if ! AAAAA
+ 
+public class EmptyHashIf {
+  public static void Main() {
+#if BBBBB
+#else
+#endif
+ 
+#if BBBBB
+#else
+    x = 12;
+#endif
+  }
+}
+ 
+#endif
+`
+`
+#if !FOO
+ 
+public class C {
+ 
+    #if KERNEL
+    unsafe
+    #endif
+    public C next;
+}
+ 
+#else
+ 
+class C {
+}
+ 
+#endif
+
+class Test{public static void Main(){}}
+`
+`
+#define RTC_NO_GO
+ 
+using System;
+ 
+class T {
+ 
+ 
+        private void WriteRtc(byte addr, byte val)
+        {
+#if TIMER_NO_GO
+            return true;
+#endif
+        }
+ 
+        public void Start() {
+#if RTC_NO_GO
+ 
+#else
+            // A #else does not work here???
+            //
+            // I've added this random BAD_STATEMENT just to show the 
+            //preprocessing is going through this branch.  
+            BAD_STATEMENT;
+#endif
+        }
+ 
+   public static void Main(){}
+}
+`
+`
+using System;
+
+public class Test
+{
+    public static int Main()
+    {
+  int i = 2;
+
+#if false
+#error false is true?
+#elif true
+  i--;
+#else
+#error Else shouldn't trigger here
+#endif
+
+#if false
+#error false is still true?
+#elif foobar
+#error foobar wasn't supposed to be defined
+#else
+  i--;
+#endif
+
+  return (i > 0 ? 1 : 0);
+    }
+}
+`
+`
+#if BLAH
+ #if FOO
+ using System.IO;
+ #else 
+ using System.IO;
+ #endif
+#else
+ #if FOO
+ using System.IO;
+ #else 
+ using System.IO;
+ #endif
+#endif
+public class Test{
+  public static void Main(){
+  }
+}
+`
+`
+using System;
+
+public class lineTests {
+  public static void Main() {
+#line 13
+    short a = 123456;
+
+#line 6
+    short b = 123456;
+
+#line 33
+    short c = 123456;
+
+#line 13
+    short d = 123456;
+
+#line 6
+    short e = 123456;
+
+#line 33
+    short f = 123456;
+
+#line 13
+    short g = 123456;
+
+#line 6
+    short h = 123456;
+
+#line 33
+    short i = 123456;
+
+#line 13
+    short j = 123456;
+
+#line 6
+    short k = 123456;
+
+#line 33
+    short l = 123456;
+
+#line 13
+    short m = 123456;
+
+#line 6
+    short n = 123456;
+
+#line 33
+    short o = 123456;
+  }
+}
+`
+(13,15)-(13,21): error: Constant value '123456' cannot be converted to a 'short'.
+(6,15)-(6,21): error: Constant value '123456' cannot be converted to a 'short'.
+(33,15)-(33,21): error: Constant value '123456' cannot be converted to a 'short'.
+(13,15)-(13,21): error: Constant value '123456' cannot be converted to a 'short'.
+(6,15)-(6,21): error: Constant value '123456' cannot be converted to a 'short'.
+(33,15)-(33,21): error: Constant value '123456' cannot be converted to a 'short'.
+(13,15)-(13,21): error: Constant value '123456' cannot be converted to a 'short'.
+(6,15)-(6,21): error: Constant value '123456' cannot be converted to a 'short'.
+(33,15)-(33,21): error: Constant value '123456' cannot be converted to a 'short'.
+(13,15)-(13,21): error: Constant value '123456' cannot be converted to a 'short'.
+(6,15)-(6,21): error: Constant value '123456' cannot be converted to a 'short'.
+(33,15)-(33,21): error: Constant value '123456' cannot be converted to a 'short'.
+(13,15)-(13,21): error: Constant value '123456' cannot be converted to a 'short'.
+(6,15)-(6,21): error: Constant value '123456' cannot be converted to a 'short'.
+(33,15)-(33,21): error: Constant value '123456' cannot be converted to a 'short'.
+`
+delegate object StrToObj(string s);
+class A {
+  static string ObjToStr(object x) {
+    return x.ToString();
+  }
+  public static void Main() {
+    StrToObj f = ObjToStr;
+  }
+}
+`
+`
+delegate int D(string s, int i);
+
+class X {
+  public static T F<T>(T s, T t) { return t; }
+
+
+  public static void Main() {
+    D d = F;        
+  }
+}
+`
+(8,11)-(8,12): error: The type arguments for method 'X.F<T>(T, T)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+delegate int D(string s, int i);
+delegate int E();
+
+class X {
+  public static T F<T>(string s, T t) { return t; }
+
+  public static T G<T>() { throw new System.NotImplementedException(); }
+
+  public static void Main() {
+    E e2 = G;        // Error, cannot infer from return type
+  }
+}
+`
+(10,12)-(10,13): error: The type arguments for method 'X.G<T>()' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+delegate int D(string s, int i);
+delegate int E();
+
+class X {
+  public static T F<T>(string s, T t) { return t; }
+
+  public static T G<T>() { throw new System.NotImplementedException(); }
+
+  public static void Main() {
+    D d1 = F<int>;    // Ok, type argument given explicitly
+    //D d2 = F;        // Ok, int inferred as type argument  //TODO: get this working
+    E e1 = G<int>;    // Ok, type argument given explicitly
+  }
+}
+`
+`
+delegate void MyDel(int i);
+
+class Test {
+
+  public static void MyMeth(ref int i) { }
+  public static void MyMeth(int i) { }
+
+  public static void Foo(MyDel md) { }
+
+  public static void Main() {
+    Foo(MyMeth);
+  }
+}
+`
+`
+delegate void MyDel(int i);
+
+class Test {
+
+  public static void Main() {
+    MyDel del = MyMeth;
+  }
+}
+`
+(6,17)-(6,23): error: The name 'MyMeth' does not exist in the current context.
+`
+delegate void MyDel (int i);
+
+class Test {
+
+  Test() { }
+
+  public static void Foo(MyDel md) { }
+  public static void Foo(int i) { }
+
+  public virtual void MyMeth(int i) { }
+  public virtual void MyMeth(char c) {
+    Foo(MyMeth);
+  }
+
+  public static void Main() {
+    Test t = new Test();
+    t.MyMeth('c');
+  }
+}
+`
+`
+delegate void MyDel (int i);
+
+class Test {
+
+  Test() { }
+
+  public virtual void MyMeth(int i) { }
+  public virtual void MyMeth(char c) { }
+
+  public static void Foo(MyDel md) { }
+  public static void Foo(int i) { }
+
+  public static void Main() {
+    Test t = new Test();
+    Foo(t.MyMeth);
+  }
+}
+`
+`
+delegate void MyDel (int i);
+
+class Test {
+
+  Test() { }
+
+  public void MyMeth(int i) { }
+  public void MyMeth(char c) { }
+
+  public static void Foo(MyDel md) { }
+  public static void Foo(int i) { }
+
+  public static void Main() {
+    Test t = new Test();
+    Foo(t.MyMeth);
+  }
+}
+`
+`
+delegate void MyDel (int i);
+
+class Test {
+
+  public static void MyMeth(int i) { }
+  public static void MyMeth(char c) { }
+
+  public static void Foo(MyDel md) { }
+  public static void Foo(int i) { }
+
+  public static void Main() {
+    Foo(MyMeth);
+  }
+}
+`
+`
+using System;
+class Test {
+
+  static EventHandler fum;
+
+  static void FooFum(object sender, EventArgs e) {
+    result = 0;
+  }
+
+  static int result = 1;
+
+  public static int Main() {
+    fum = FooFum;
+    fum(null, null);
+    return result;
+  }
+}
+`
+`
+delegate void MyDel (int i);
+
+class Test {
+
+  public static void MyMeth(int i) { }
+
+  public static void Foo(MyDel md) { }
+  public static void Foo(int i) { }
+
+  public static void Main() {
+    Foo(MyMeth);
+  }
+}
+`
+`
+struct MyNum {
+  int i;
+
+  private MyNum(int i) {
+    this.i = i;
+  }
+  public static implicit operator MyNum(int i) { return new MyNum(i); }
+  public static explicit operator int(MyNum n) { return n.i; }
+}
+
+class Test {
+  public static void Main() {
+    int? x = 1;
+    MyNum? ch = (MyNum)x;
+    x = (int)ch;
+  }
+}
+`
+`
+struct MyNum {
+  int i;
+
+  private MyNum(int i) {
+    this.i = i;
+  }
+  public static implicit operator MyNum(int i) { return new MyNum(i); }
+  public static explicit operator int(MyNum n) { return n.i; }
+}
+
+class Test {
+  public static void Main() {
+    int x = 1;
+    MyNum ch = x;
+    x = (int)ch;
+  }
+}
+`
+`
+class Test {
+  public static void Main() {
+    int? i = 1;
+    decimal? d = i;
+    i = (int?)d;
+  }
+}
+`
+`
+class Test {
+  public static void Main() {
+    int? i = 1;
+    char? ch = (char?)i;
+    i = (int?)ch;
+  }
+}
+`
+`
+class Test {
+  public static void Main() {
+    int? i = 1;
+    int? j = i;
+  }
+}
+`
+`
+class Test {
+  public static void Main() {
+    int? i = 1;
+    char? ch = (char)i;
+    i = (int)ch;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    System.EventHandler evh = null;
+    System.Delegate del = evh;
+    evh = (System.EventHandler)del;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    Test[] tarr = new Test[0];
+    object[] arr = tarr;
+    tarr = (Test[])arr;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    Test[] tarr = new Test[0];
+    System.Array arr = tarr;
+    tarr = (Test[])arr;
+    return 0;
+  }
+}
+`
+`
+using System.Collections.Generic;
+using System.Collections;
+using System;
+
+class Test {
+
+  public static int Main() {
+    Test[] tarr = new Test[0];
+    IList<Test> tlist = tarr;
+    tarr = (Test[])tlist;
+    ICollection<Test> tcoll = tarr;
+    tarr = (Test[])tcoll;
+    IEnumerable<Test> tenum = tarr;
+    tarr = (Test[])tenum;
+    IList tl = tarr;
+    tarr = (Test[])tl;
+    ICollection tc = tarr;
+    tarr = (Test[])tc;
+    IEnumerable te = tarr;
+    tarr = (Test[])te;
+    ICloneable tcloneable = tarr;
+    tarr = (Test[])tcloneable;
+    return 0;
+  }
+}
+`
+`
+interface IBar { }
+
+interface IFoo { }
+
+class Test {
+
+  public static int Main() {
+    IFoo f = null;
+    IBar b = (IBar)f;
+    if (f != b) return 1;
+    return 0;
+  }
+}
+`
+`
+class TestBase { }
+
+interface IFoo { }
+
+class Test {
+
+  public static int Main() {
+    IFoo t = null;
+    TestBase ob = (TestBase)t;
+    if (t != ob) return 1;
+    return 0;
+  }
+}
+`
+`
+class TestBase { }
+
+interface IFoo { }
+
+class Test {
+
+  public static int Main() {
+    TestBase ob = null;
+    IFoo t = (IFoo)ob;
+    if (t != ob) return 1;
+    return 0;
+  }
+}
+`
+`
+class TestBase { }
+
+class Test : TestBase {
+
+  public static int Main() {
+    TestBase ob = null;
+    Test t = (Test)ob;
+    if (t != ob) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    object ob = null;
+    Test t = (Test)ob;
+    if (t != ob) return 1;
+    return 0;
+  }
+}
+`
+`
+enum foo { bar, bas }
+enum foo2 { bar2, bas2 }
+class Test {
+  public static int Main() {
+    foo fum = foo.bar;
+    foo2 fee = (foo2)fum;
+    int i = (int)fum;
+    return i - (int)fee;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    float f = 1.1f;
+    double g = f;
+    decimal d = 1m;
+    long lng = 1L;
+    ulong ulng = 1ul;
+    int i = 1;
+    uint ui = 1u;
+    short s = 1;
+    ushort us = 1;
+    sbyte sb = 1;
+    byte b = 1;
+    char ch = '1';
+
+    checked {
+      d = (decimal)f;
+      lng = (long)f;
+      ulng = (ulong)f;
+      i = (int)f;
+      ui = (uint)f;
+      s = (short)f;
+      us = (ushort)f;
+      sb = (sbyte)f;
+      b = (byte)f;
+      ch = (char)f;
+
+      d = (decimal)g;
+      f = (float)g;
+      lng = (long)g;
+      ulng = (ulong)g;
+      i = (int)g;
+      ui = (uint)g;
+      s = (short)g;
+      us = (ushort)g;
+      sb = (sbyte)g;
+      b = (byte)g;
+      ch = (char)g;
+
+      ulng = (ulong)s;
+      ui = (uint)s;
+      us = (ushort)s;
+      sb = (sbyte)s;
+      b = (byte)s;
+      ch = (char)s;
+
+      ulng = (ulong)i;
+      ui = (uint)i;
+      s = (short)i;
+      us = (ushort)i;
+      sb = (sbyte)i;
+      b = (byte)i;
+      ch = (char)i;
+
+      ulng = (ulong)lng;
+      i = (int)lng;
+      ui = (uint)lng;
+      s = (short)lng;
+      us = (ushort)lng;
+      sb = (sbyte)lng;
+      b = (byte)lng;
+      ch = (char)lng;
+
+      lng = (long)ulng;
+      i = (int)ulng;
+      ui = (uint)ulng;
+      s = (short)ulng;
+      us = (ushort)ulng;
+      sb = (sbyte)ulng;
+      b = (byte)ulng;
+      ch = (char)ulng;
+
+      ulng = (ulong)sb;
+      ui = (uint)sb;
+      us = (ushort)sb;
+      b = (byte)sb;
+      ch = (char)sb;
+
+      s = (short)us;
+      sb = (sbyte)us;
+      b = (byte)us;
+      ch = (char)us;
+
+      i = (int)ui;
+      s = (short)ui;
+      us = (ushort)ui;
+      sb = (sbyte)ui;
+      b = (byte)ui;
+      ch = (char)ui;
+
+      sb = (sbyte)b;
+      ch = (char)b;
+
+      g = (double)d;
+      f = (float)d;
+      lng = (long)d;
+      ulng = (ulong)d;
+      i = (int)d;
+      ui = (uint)d;
+      s = (short)d;
+      us = (ushort)d;
+      sb = (sbyte)d;
+      b = (byte)d;
+      ch = (char)d;
+    }
+
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    float f = 1.1f;
+    double g = f;
+    decimal d = 1m;
+    long lng = 1L;
+    ulong ulng = 1ul;
+    int i = 1;
+    uint ui = 1u;
+    short s = 1;
+    ushort us = 1;
+    sbyte sb = 1;
+    byte b = 1;
+    char ch = '1';
+
+    d = (decimal)f;
+    lng = (long)f;
+    ulng = (ulong)f;
+    i = (int)f;
+    ui = (uint)f;
+    s = (short)f;
+    us = (ushort)f;
+    sb = (sbyte)f;
+    b = (byte)f;
+    ch = (char)f;
+
+    d = (decimal)g;
+    f = (float)g;
+    lng = (long)g;
+    ulng = (ulong)g;
+    i = (int)g;
+    ui = (uint)g;
+    s = (short)g;
+    us = (ushort)g;
+    sb = (sbyte)g;
+    b = (byte)g;
+    ch = (char)g;
+
+    ulng = (ulong)s;
+    ui = (uint)s;
+    us = (ushort)s;
+    sb = (sbyte)s;
+    b = (byte)s;
+    ch = (char)s; 
+   
+    ulng = (ulong)i;
+    ui = (uint)i;
+    s = (short)i;
+    us = (ushort)i;
+    sb = (sbyte)i;
+    b = (byte)i;
+    ch = (char)i;
+
+    ulng = (ulong)lng;
+    i = (int)lng;
+    ui = (uint)lng;
+    s = (short)lng;
+    us = (ushort)lng;
+    sb = (sbyte)lng;
+    b = (byte)lng;
+    ch = (char)lng;
+
+    lng = (long)ulng;
+    i = (int)ulng;
+    ui = (uint)ulng;
+    s = (short)ulng;
+    us = (ushort)ulng;
+    sb = (sbyte)ulng;
+    b = (byte)ulng;
+    ch = (char)ulng;
+
+    ulng = (ulong)sb;
+    ui = (uint)sb;
+    us = (ushort)sb;
+    b = (byte)sb;
+    ch = (char)sb;
+
+    s = (short)us;
+    sb = (sbyte)us;
+    b = (byte)us;
+    ch = (char)us;
+
+    i = (int)ui;
+    s = (short)ui;
+    us = (ushort)ui;
+    sb = (sbyte)ui;
+    b = (byte)ui;
+    ch = (char)ui;
+
+    sb = (sbyte)b;
+    ch = (char)b;
+
+    g = (double)d;
+    f = (float)d;
+    lng = (long)d;
+    ulng = (ulong)d;
+    i = (int)d;
+    ui = (uint)d;
+    s = (short)d;
+    us = (ushort)d;
+    sb = (sbyte)d;
+    b = (byte)d;
+    ch = (char)d;
+
+    return 0;
+  }
+}
+`
+`
+enum E { one, two }
+
+class Test {
+
+  public static int Main() {
+    E? e = 0;
+    object o = e;
+    if (o != null) return 0;
+    return 1;
+  }
+}
+`
+`
+using System;
+class Test {
+  public static void Main() {
+    EventHandler evh = null;
+    Delegate del = evh;
+    ICloneable clon = evh;
+  }
+}
+`
+`
+using System;
+class Test {
+  public static int Main() {
+    IConvertible conv = "abc";
+    object ob = conv;
+    if (ob != conv) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    float f = 1.1f;
+
+    double g = f;
+
+    decimal d = 1m;
+
+    long lng = 1L;
+    d = lng;
+    g = lng;
+    f = lng;
+
+    ulong ulng = 1ul;
+    f = ulng;
+    g = ulng;
+    d = ulng;
+
+    int i = 1;
+    lng = i;
+    d = i;
+    g = i;
+    f = i;
+
+    uint ui = 1u;
+    lng = ui;
+    ulng = ui;
+    f = ui;
+    g = ui;
+    d = ui;
+
+    short s = 1;
+    i = s;
+    lng = s;
+    d = s;
+    g = s;
+    f = s;
+
+    ushort us = 1;
+    i = us;
+    ui = us;
+    lng = us;
+    ulng = us;
+    f = us;
+    g = us;
+    d = us;
+
+    sbyte sb = 1;
+    s = sb;
+    i = sb;
+    lng = sb;
+    d = sb;
+    g = sb;
+    f = sb;
+
+    byte b = 1;
+    s = b;
+    us = b;
+    i = b;
+    ui = b;
+    lng = b;
+    ulng = b;
+    f = b;
+    g = b;
+    d = b;
+
+    char ch = '1';
+    us = ch;
+    i = us;
+    ui = us;
+    lng = us;
+    ulng = us;
+    f = us;
+    g = us;
+    d = us;
+
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  static int foo(object[] a) { return 1; }
+  static int foo(object[,] b) { return 2; }
+
+  public static int Main() {
+    string[] a = null;
+    int i = foo(a);
+    return i-1;
+  }
+}
+`
+`
+struct foo<T> { T t;}
+
+class Test {
+
+  static void Test(foo<int> x, foo<int> y) {
+    x = y;
+  }
+
+  public static int Main() {
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    byte? b = 0;
+    return 0;
+  }
+}
+`
+`
+enum E { one, two }
+
+class Test {
+
+  public static int Main() {
+    E? e = null;
+    E ah = e;
+    return 1;
+  }
+}
+`
+(7,12)-(7,13): error: Cannot implicitly convert type 'E?' to 'E'. An explicit conversion exists (are you missing a cast?)
+`
+enum E { one, two }
+
+class Test {
+
+  public static int Main() {
+    E ah = E.one;
+    E? e = ah;
+    System.Enum en = e;
+    if (en != null) return 0;
+    return 1;
+  }
+}
+`
+`
+enum E { one, two }
+
+class Test {
+
+  public static int Main() {
+    E? e = null;
+    System.Enum en = e;
+    if (en != null) return 1;
+    return 0;
+  }
+}
+`
+`
+class Foo<T> where T : class {
+
+  public static T TestIt() {
+    T t = null;
+    return t;
+  }
+}
+
+class Test {
+
+  public static int Main() {
+    if (Foo<string>.TestIt() != null) return 1;
+    return 0;
+  }
+}
+`
+`
+using System;
+
+class Test {
+
+  public static int Main() {
+    int? i = null;
+    ValueType vt = i;
+    if (vt != null) return 1;
+    return 0;
+  }
+}
+`
+`
+interface IBase {
+}
+
+class Derived : IBase{
+}
+
+class Foo<T, U> where T : U {
+  public static void TestIt(T t) {
+    U u = t;
+    t = (T)u;
+  }
+}
+
+
+class Test {
+
+  public static int Main() {
+    Foo<Derived, IBase>.TestIt(null);
+    return 0;
+  }
+}
+`
+`
+class Base {
+}
+
+class Derived : Base{
+}
+
+class Foo<T, U> where T : Base, U {
+  public static void TestIt(T t) {
+    Base b = t;
+    t = (T)b;
+    U u = t;
+    t = (T)u;
+  }
+}
+
+
+class Test {
+
+  public static int Main() {
+    Foo<Derived, Base>.TestIt(null);
+    return 0;
+  }
+}
+`
+`
+using System;
+
+class Test {
+
+  static int Foo(Delegate c) { return 1; }
+
+  static EventHandler ev;
+
+  public static int Main() {
+    int a = Foo(ev) - 1;
+    return a;
+  }
+}
+`
+`
+using System.Collections.Generic;
+using System.Collections;
+using System;
+
+class Test {
+
+  public static int Main() {
+    Test[] tarr = new Test[0];
+    IList<Test> tlist = tarr;
+    if (tarr != tlist) return 1;
+    ICollection<Test> tcoll = tarr;
+    if (tcoll != tarr) return 1;
+    IEnumerable<Test> tenum = tarr;
+    if (tenum != tarr) return 1;
+    IList tl = tarr;
+    if (tl != tarr) return 1;
+    ICollection tc = tarr;
+    if (tc != tarr) return 1;
+    IEnumerable te = tarr;
+    if (te != tarr) return 1;
+    ICloneable tcloneable = tarr;
+    if (tcloneable != tarr) return 1;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    Test[] tarr = new Test[0];
+    System.Array arr = tarr;
+    if (tarr != arr) return 1;
+    return 0;
+  }
+}
+`
+`
+using System;
+
+class Test {
+
+  static int Foo(ICloneable c) { return 1; }
+
+  static EventHandler ev;
+
+  public static int Main() {
+    int a = Foo(ev) - 1;
+    return a;
+  }
+}
+`
+`
+using System.Collections.Generic;
+class Test {
+
+  static int Foo<T>(IEnumerable<T> t) { return 1; }
+
+  public static int Main() {
+    List<int> lst = new List<int>(0);
+    int a = Foo(lst) - 1;
+    return a;
+  }
+}
+`
+`
+using System.Collections.Generic;
+class Test {
+
+  static int Foo<T>(IEnumerable<T> t) { return 1; }
+
+  public static int Main() {
+    int[] arr = new int[0];
+    int a = Foo(arr) - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  public static int Main() {
+    Test[] tarr = new Test[0];
+    object[] arr = tarr;
+    if (tarr != arr) return 1;
+    return 0;
+  }
+}
+`
+`
+interface IBase { }
+interface IFoo : IBase { }
+
+class Base : IBase {
+  public Base() { }
+}
+
+class Test : Base, IFoo {
+  public Test() { }
+
+  public static int Main() {
+    Test t = new Test();
+    Base b = t;
+    Test t2 = t;
+    IFoo f = t;
+    IBase ib = b;
+    ib = t;
+    ib = f;
+    object ob = t;
+    ob = f;
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(object ob) { return 0; }
+
+  public static int Main() {
+    return Foo(null);
+  }
+}
+`
+`
+enum E { one, two }
+
+class Test {
+
+  static void Foo(E e) { }
+
+  public static int Main() {
+    Foo(0);
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  static void Foo(sbyte sb, byte b, short s, ushort us, int i, uint ui, long l, ulong ul ) {}
+  static void Foo(short s, ushort us, int i, uint ui, long l, ulong ul) { }
+  static void Foo(int i, uint ui, long l, ulong ul) { }
+  static void Foo(long l, ulong ul) { }
+
+  public static int Main() {
+    Foo(1, 1, 1, 1, 1, 1, 1, 1);
+    Foo(256, 256, 256, 256, 256, 256);
+    Foo(0x10000, 0x10000, 0x10000, 0x10000);
+    Foo(0x100000000, 0x100000000);
+    return 0;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(T t) { return 1; }
+
+  public static int Main() {
+    int a = Foo<int>(1) - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(T t, int u) { return 1; }
+  static int Foo<T,U>(T t, U u) { return 2; }
+
+  public static int Main() {
+    int a = Foo<int>(0, 0) - 1;
+    return a;
+  }
+}
+`
+`
+using System.Collections.Generic;
+class Test {
+
+  static int Foo<T>(List<T> t) { return 1; }
+
+  public static int Main() {
+    List<int> lst = new List<int>(0);
+    int a = Foo(lst) - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(T x, T y) { return 1; }
+  static int Foo<T>(T x) { return 2; }
+
+  public static int Main() {
+    int a = Foo(1) - 2;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(params T[] args) { return 1; }
+
+  public static int Main() {
+    int a = Foo(1, 2) - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(T i, T j) { return 1; }
+  static int Foo<T,U>(T i, U j) { return 2; }
+
+  public static int Main() {
+    int a = Foo(1, "2") - 2;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(long i) { return 1; }
+  static int Foo<T>(ulong i) { return 2; }
+
+  public static int Main() {
+    int a = Foo<int>(1) - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(long i) { return 1; }
+  static int Foo(ulong i) { return 2; }
+
+  public static int Main() {
+    int a = Foo(1) - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(int i) { return 1; }
+  static int Foo(uint i) { return 2; }
+
+  public static int Main() {
+    int a = Foo('1') - 1;
+    return a;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(sbyte i) { return 1; }
+  static int Foo(byte i) { return 2; }
+  static int Foo(short i) { return 3; }
+  static int Foo(ushort i) { return 4; }
+
+  public static int Main() {
+    int a = Foo(1) - 1;
+    int b = Foo(1000) - 3;
+    return a*a+b*b;
+  }
+}
+`
+`
+class foo {
+  public foo() { }
+  public int bar(float f) { return 1; }
+  public int bar(decimal m) { return 2; }
+  public int bar(int i) { return 3; }
+}
+
+class Test {
+  public static int Main() {
+    foo f = new foo();
+    int a = f.bar(1) - 3;
+    return a;
+  }
+}
+`
+`
+class foo<T> {
+  public foo() { }
+  public int bar(foo<T> t) { return 1; }
+  public int bar(foo<int> i) { return 2; }
+}
+
+class Test {
+  public static int Main() {
+    foo<int> f = new foo<int>();
+    int a = f.bar(f) - 2;
+    return a;
+  }
+}
+`
+`
+class foo<T> {
+  public foo() { }
+  public int bar(params T[] t) { return 1; }
+  public int bar(params int[] i) { return 2; }
+}
+
+class Test {
+  public static int Main() {
+    foo<int> f = new foo<int>();
+    int a = f.bar(1) - 2;
+    return a;
+  }
+}
+`
+`
+class foo<T> {
+  public foo() { }
+  public int bar(T t) { return 1; }
+  public int bar(int i) { return 2; }
+}
+
+class Test {
+  public static int Main() {
+    foo<int> f = new foo<int>();
+    int a = f.bar(1) - 2;
+    return a;
+  }
+}
+`
+`
+class TBase {
+  public TBase() { }
+  public virtual int foo(int i) { return 1; }
+  public virtual int foo(char c) { return 3; }
+}
+
+class Test : TBase {
+
+  public Test() { }
+
+  public override int foo(int i) { return 2; }
+
+  public static int Main() {
+    Test t = new Test();
+    int a = t.foo(1) - 2;
+    int b = t.foo('1') - 3;
+    return a*a+b*b;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo<T>(int i, T j) { return 1; }
+  static int Foo<T>(T i, T j) { return 2; }
+  static int Foo<T>(long i, T j) { return 3; }
+
+  public static int Main() {
+    int a = Foo(1, 2) - 1;
+    int b = Foo(1L, 2L) - 3;
+    return a*a+b*b;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(int i, int j) { return 1; }
+  static int Foo<T>(T i, T j) { return 2; }
+  static int Foo(long i, long j) { return 3; }
+
+  public static int Main() {
+    int a = Foo(1, 2) - 1;
+    int b = Foo(1L, 2L) - 3;
+    return a*a+b*b;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(int i, int j) { return 1; }
+  static int Foo(int i, int j, int k) { return 2; }
+  static int Foo(int i, int j, params int[] args) { return 3; }
+  static int Foo(int i, params int[] args) { return 4; }
+  static int Foo(int i) { return 5; }
+
+  public static int Main() {
+    int a = Foo(1, 2) - 1;
+    int b = Foo(1, 2, 3) - 2;
+    int c = Foo(1, 2, 3, 4) - 3;
+    int d = Foo(1) - 5;
+    return a*a+b*b+c*c+d*d;
+  }
+}
+`
+`
+class Test {
+
+  static int Foo(int i) { return 1; }
+  static int Foo(int i, params int[] args) { return 2; }
+  static int Foo(int i, int j) { return 3; }
+  static int Foo(int i, int j, params int[] args) { return 4; }
+  static int Foo(int i, int j, int k) { return 5; }
+
+  public static int Main() {
+    int a = Foo(1) - 1;
+    int b = Foo(1, new int[0]) - 2;
+    int c = Foo(1, 2) - 3;
+    int d = Foo(1, 2, new int[0]) - 4;
+    int e = Foo(1, 2, 3) - 5;
+    return a*a+b*b+c*c+d*d+e*e;
+  }
+}
+`
+`
+class Test {
+  public static void Main() {
+    System.Console.WriteLine("Hello");
+  }
+}
+`
+Hello
+`
+class foo{
+  int bar;
+}
+`
+class foo
+{
+    private int bar;
+}
+
+`
+`/incremental
+class foo{
+  int bar;
+$$  char star;
+$
+}
+`
+class foo
+{
+    private int bar;
+    private char star;
+}
+
+`
+using Sys = System;
+class NotANamespace{}
+
+namespace foo{
+  using Sys;
+  using Sys::Collections;
+  using System.Reflection;
+  using Sys::Reflection.Emit;
+  using NoSuchNamespace;
+  using NotANamespace;
+  
+  class c{
+    EventArgs args;
+    ArrayList list;
+    MethodInfo method;
+    MethodBuilder methodBuilder;
+  }  
+}
+`
+class NotANamespace
+{
+}
+
+namespace foo
+{
+    class c
+    {
+        private System.EventArgs args;
+        private System.Collections.ArrayList list;
+        private System.Reflection.MethodInfo method;
+        private System.Reflection.Emit.MethodBuilder methodBuilder;
+    }
+
+}
+
+`
+using System;
+class foo<T,U>{
+  Type t = typeof(foo<,>);
+}
+`
+class foo<T, U>
+{
+    private System.Type t;
+}
+
+`
+abstract class foo<T>{
+  protected abstract void bar<U>(T t, U u);
+}
+`
+abstract class foo<T>
+{
+    protected abstract void bar<U>(T t, U u);
+}
+
+`
+class foo{
+  class bar{}
+  class one{
+    class foo{}
+    class foo2 : global::foo.bar{}
+  }
+}
+class foo<T>{}
+`
+class foo
+{
+    private class bar
+    {
+    }
+
+    private class one
+    {
+        private class foo
+        {
+        }
+
+        private class foo2 : foo.bar
+        {
+        }
+
+    }
+
+}
+
+class foo<T>
+{
+}
+
+`
+class foo : bar::one.two{}
+`
+(1,13)-(1,21): error: Alias 'bar' not found.
+class foo : Microsoft.Cci.DummyType
+{
+}
+
+`
+extern alias bar;
+class foo : bar::one{}
+`
+(1,14)-(1,17): error: The extern alias 'bar' was not specified in a /reference option.
+class foo : Microsoft.Cci.DummyType
+{
+}
+
+`
+namespace xyz{
+class foo {
+  protected class bar1{}
+}
+class foo2 : foo{
+  protected class bar2<T>{}
+}
+class foo3 : foo2{
+  class bar3<T,U>{}
+  class dbar : xyz.foo3.bar1{}
+  class dbar<t> : xyz.foo3.bar2<t>{}
+  class dbar<t,u> : xyz.foo3.bar3<t,u>{}
+  class badbar : xyz.foo3.nobar{}
+}
+}
+`
+namespace xyz
+{
+    class foo
+    {
+        protected class bar1
+        {
+        }
+
+    }
+
+    class foo2 : xyz.foo
+    {
+        protected class bar2<T>
+        {
+        }
+
+    }
+
+    class foo3 : xyz.foo2
+    {
+        private class badbar : Microsoft.Cci.DummyType
+        {
+        }
+
+        private class bar3<T, U>
+        {
+        }
+
+        private class dbar : xyz.foo.bar1
+        {
+        }
+
+        private class dbar<t> : xyz.foo2.bar2<t>
+        {
+        }
+
+        private class dbar<t, u> : xyz.foo3.bar3<t, u>
+        {
+        }
+
+    }
+
+}
+
+`
+class foo{
+  class bar{}
+  class bar<T>{}
+  class bar<T,U>{}
+  class dbar : bar{}
+  class dbar<t> : bar<t>{}
+  class dbar<t,u> : bar<t,u>{}
+}
+`
+class foo
+{
+    private class bar
+    {
+    }
+
+    private class bar<T>
+    {
+    }
+
+    private class bar<T, U>
+    {
+    }
+
+    private class dbar : foo.bar
+    {
+    }
+
+    private class dbar<t> : foo.bar<t>
+    {
+    }
+
+    private class dbar<t, u> : foo.bar<t, u>
+    {
+    }
+
+}
+
+`
+namespace foo{
+  class bar{}
+  class bar<T>{}
+  class bar<T,U>{}
+  class dbar : bar{}
+  class dbar<t> : bar<t>{}
+  class dbar<t,u> : bar<t,u>{}
+}
+`
+namespace foo
+{
+    class bar
+    {
+    }
+
+    class bar<T>
+    {
+    }
+
+    class bar<T, U>
+    {
+    }
+
+    class dbar : foo.bar
+    {
+    }
+
+    class dbar<t> : foo.bar<t>
+    {
+    }
+
+    class dbar<t, u> : foo.bar<t, u>
+    {
+    }
+
+}
+
+`
+namespace foo{
+  using bar = System;
+  class c : bar.Object{}
+}
+namespace foo{
+  namespace bar{
+    class Object{}
+  }
+}
+`
+namespace foo
+{
+    class c : foo.bar.Object
+    {
+    }
+
+    namespace bar
+    {
+        class Object
+        {
+        }
+
+    }
+
+}
+
+`
+namespace doo.foo{
+  class bar{}
+  class one{
+    public class doo{
+      public class foo{
+        public class bar{}
+      }
+    }
+  }
+}
+class two : doo.foo.one{
+  class three : doo.foo.bar{}
+}
+`
+namespace doo
+{
+    namespace foo
+    {
+        class bar
+        {
+        }
+
+        class one
+        {
+            public class doo
+            {
+                public class foo
+                {
+                    public class bar
+                    {
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+class two : doo.foo.one
+{
+    private class three : doo.foo.one.doo.foo.bar
+    {
+    }
+
+}
+
+`
+namespace doo.foo{
+  class bar{}
+  class one{
+    public class doo{
+      public class foo{
+        class bar{}
+      }
+    }
+  }
+}
+class two : doo.foo.one{
+  class three : doo.foo.bar{}
+}
+`
+namespace doo
+{
+    namespace foo
+    {
+        class bar
+        {
+        }
+
+        class one
+        {
+            public class doo
+            {
+                public class foo
+                {
+                    private class bar
+                    {
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+class two : doo.foo.one
+{
+    private class three : doo.foo.one.doo.foo.bar
+    {
+    }
+
+}
+
+`
+namespace foo{
+  class bar{}
+  class one{
+    public class foo{
+      class bar{}
+    }
+  }
+}
+class two : foo.one{
+  class three : foo.bar{}
+}
+`
+namespace foo
+{
+    class bar
+    {
+    }
+
+    class one
+    {
+        public class foo
+        {
+            private class bar
+            {
+            }
+
+        }
+
+    }
+
+}
+
+class two : foo.one
+{
+    private class three : foo.one.foo.bar
+    {
+    }
+
+}
+
+`
+class foo{
+  public class bar{}
+}
+class foo2 : foo.bar{}
+
+`
+class foo
+{
+    public class bar
+    {
+    }
+
+}
+
+class foo2 : foo.bar
+{
+}
+
+`
+namespace foo.bar.bas{
+  class c{}
+}
+class d : foo.bar.bas.c{}
+`
+namespace foo
+{
+    namespace bar
+    {
+        namespace bas
+        {
+            class c
+            {
+            }
+
+        }
+
+    }
+
+}
+
+class d : foo.bar.bas.c
+{
+}
+
+`
+namespace foo{
+  class bar{}
+  class one{
+    class foo{}
+    class foo2 : global::foo.bar{}
+  }
+}
+`
+namespace foo
+{
+    class bar
+    {
+    }
+
+    class one
+    {
+        private class foo
+        {
+        }
+
+        private class foo2 : foo.bar
+        {
+        }
+
+    }
+
+}
+
+`
+namespace foo{
+  class bar{}
+  class one{
+    class two{
+      bar bar;
+    }
+    class bar{}
+  }
+}
+`
+namespace foo
+{
+    class bar
+    {
+    }
+
+    class one
+    {
+        private class bar
+        {
+        }
+
+        private class two
+        {
+            private foo.one.bar bar;
+        }
+
+    }
+
+}
+
+`
+namespace two.foo{
+  class bar{}
+  class one{
+    int foo;
+    foo.bar bar;
+  }
+}
+`
+namespace two
+{
+    namespace foo
+    {
+        class bar
+        {
+        }
+
+        class one
+        {
+            private two.foo.bar bar;
+            private int foo;
+        }
+
+    }
+
+}
+
+`
+namespace foo{
+  class bar{}
+  class one{
+    bar bar;
+  }
+}
+`
+namespace foo
+{
+    class bar
+    {
+    }
+
+    class one
+    {
+        private foo.bar bar;
+    }
+
+}
+
+`
+class foo : System.Object, System.ICloneable{
+}
+`
+class foo : System.ICloneable
+{
+}
+
+`
+public class foo{
+  public class bar : one{
+    public class bas : two{}
+  }
+  public class one{
+    public class two{}
+  }
+} 
+`
+public class foo
+{
+    public class bar : foo.one
+    {
+        public class bas : foo.one.two
+        {
+        }
+
+    }
+
+    public class one
+    {
+        public class two
+        {
+        }
+
+    }
+
+}
+
+`
+public class gen<T>{
+  public class ngen : gen<T>{
+  }
+}
+`
+public class gen<T>
+{
+    public class ngen : gen<T>
+    {
+    }
+
+}
+
+`
+namespace foo{
+  public class c1{}
+  public class c1b{}
+  public class bar{
+     public class c2 : c1{}
+     public class c3 : c1{
+       public class c4 : c1b{}
+     }
+  }
+}
+`
+namespace foo
+{
+    public class c1
+    {
+    }
+
+    public class c1b
+    {
+    }
+
+    public class bar
+    {
+        public class c2 : foo.c1
+        {
+        }
+
+        public class c3 : foo.c1
+        {
+            public class c4 : foo.c1b
+            {
+            }
+
+        }
+
+    }
+
+}
+
+`
+namespace foo{
+  public class c1{}
+  namespace bar{
+     class c2 : c1{}
+  }
+}
+`
+namespace foo
+{
+    public class c1
+    {
+    }
+
+    namespace bar
+    {
+        class c2 : foo.c1
+        {
+        }
+
+    }
+
+}
+
+`
+namespace foo{
+  class c1{}
+  namespace bar{
+     class c2 : c1{}
+  }
+}
+`
+namespace foo
+{
+    class c1
+    {
+    }
+
+    namespace bar
+    {
+        class c2 : foo.c1
+        {
+        }
+
+    }
+
+}
+
+`
+using sys = System;
+class foo : sys::EventArgs{
+}
+`
+class foo : System.EventArgs
+{
+}
+
+`
+using sys = System;
+class foo : sys::bar{
+}
+namespace System{
+  class bar{}
+}
+`
+class foo : System.bar
+{
+}
+
+namespace System
+{
+    class bar
+    {
+    }
+
+}
+
+`
+class Foo { 
+  private int a, b = foo, c; 
+  int d; 
+  int e;
+}
+`
+class Foo
+{
+    private int a;
+    private int b;
+    private int c;
+    private int d;
+    private int e;
+}
+
+`
+class Foo { 
+  foo::A<a.list<blah,g::toto>.foo,bar,baz,int>.B.List<System.Int32> field;
+}
+`
+class Foo
+{
+    private Microsoft.Cci.DummyType field;
+}
+
+`
+class Foo { 
+  public void Foo(a::foo a, int b) { } 
+}
+`
+(2,19)-(2,25): error: Alias 'a' not found.
+class Foo
+{
+    public void Foo(Microsoft.Cci.DummyType a, int b)
+    {
+    }
+
+}
+
+`
+using foo = A.B.C; 
+using bar = A<int>.B.Foo<f>; 
+using c = goo::A<a>.B.C<bool>;
+`
+`
+using A.B.C;
+`
+`
+extern alias foo; 
+extern alias bar;
+`
+`
+namespace Blah { 
+  using foo = List<int>; 
+  using bar = Foo; 
+}
+`
+namespace Blah
+{
+}
+
+`
+namespace A.B.C { 
+  namespace D.E { 
+    using Foo; 
+  }
+}
+`
+namespace A
+{
+    namespace B
+    {
+        namespace C
+        {
+            namespace D
+            {
+                namespace E
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+`
+namespace Blah { 
+  using foo = List<int>; 
+  namespace Toto { 
+    using bar = Foo; 
+  } 
+}
+`
+namespace Blah
+{
+    namespace Toto
+    {
+    }
+
+}
+
+`
+public partial class Foo {  }; 
+class Bar { }
+`
+public class Foo
+{
+}
+
+class Bar
+{
+}
+
+`
+class Foo { 
+  const int i = a, j = d, k = b;
+}
+`
+class Foo
+{
+    private const int i = null;
+    private const int j = null;
+    private const int k = null;
+}
+
+`
+class Foo { 
+  int[] f1; 
+  int[,,,] f2; 
+  int[,][][,,,] f3;
+}
+`
+class Foo
+{
+    private int[] f1;
+    private int[,,,] f2;
+    private int[,][][,,,] f3;
+}
+
+`
+class Foo { 
+  int *f1; 
+  int ** f2;
+}
+`
+class Foo
+{
+    private int* f1;
+    private int** f2;
+}
+
+`
+class Foo { 
+  //void Foo() { if(a) {} else {} } 
+}
+`
+class Foo
+{
+}
+
+`
+class Foo { 
+  //int[] a = new int[] { /*gh*/1,2,3 }; 
+}
+`
+class Foo
+{
+}
+
+`
+using foo = List<int>; 
+using bar = Foo;
+`
+`
+using foo = List<int>;
+`
+`
+using System.IO;
+`
+`
+using System;
+[ObsoleteAttribute]
+class foo{}
+`
+[System.ObsoleteAttribute]
+class foo
+{
+}
+
+`
+namespace foo{}
+`
+namespace foo
+{
+}
+
+`
+namespace foo{}
+namespace foo{}
+`
+namespace foo
+{
+}
+
+`
+namespace foo{
+  namespace bar{}
+}
+namespace foo{
+  namespace bar{}
+}
+`
+namespace foo
+{
+    namespace bar
+    {
+    }
+
+}
+
+`
+namespace foo{
+  namespace bar1{}
+}
+namespace foo{
+  namespace bar2{}
+}
+`
+namespace foo
+{
+    namespace bar1
+    {
+    }
+
+    namespace bar2
+    {
+    }
+
+}
+
+`
+using foo = a.;
+`
+(1,15)-(1,16): error: Identifier expected.
+`
+using foo = ;
+`
+(1,13)-(1,14): error: Identifier expected.
+`
+using foo = goo::;
+`
+(1,18)-(1,19): error: Identifier expected.
+`
+namespace {}
+class {}
+`
+(1,11)-(1,12): error: Identifier expected.
+(2,7)-(2,8): error: Identifier expected.
+namespace 
+{
+}
+
+class 
+{
+}
+
+`
+class foo {
+  public foo() { }
+  public int bar(float f) { return 1; }
+  public int bar(decimal m) { return 2; }
+}
+
+class Test {
+  public static int Main() {
+    foo f = new foo();
+    f.bar(1); //ambiguous, call should not compile
+    return 0;
+  }
+}
+`
+(10,5)-(10,13): error: The call is ambiguous between the following methods or properties: 'foo.bar(System.Single)' and 'foo.bar(System.Decimal)'.
+`
+class Test {
+
+  static int Foo<T>(long i) { return 1; }
+  static int Foo<T>(ulong i) { return 2; }
+
+  public static int Main() {
+    int a = Foob<int>(1) - 1;
+    return a;
+  }
+}
+`
+(7,13)-(7,17): error: The name 'Foob' does not exist in the current context.
+`
+class Test {
+
+  public static int Main() {
+    int a = Foob(1) - 1;
+    return a;
+  }
+}
+`
+(4,13)-(4,17): error: The name 'Foob' does not exist in the current context.
+`
+class Test {
+
+  static int Foob;
+
+  public static int Main() {
+    int a = Foob(1) - 1;
+    return a;
+  }
+}
+`
+(6,13)-(6,17): error: 'Foob' is a 'field' but is used like a 'method'.
+`
+class Test {
+
+  static int Foo<T>(T i, T j) { return 1; }
+
+  public static int Main() {
+    int a = Foo(1, "2");
+    return a;
+  }
+}
+`
+(6,13)-(6,24): error: The type arguments for method 'Test.Foo<T>(T, T)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+class Test {
+
+  static int Foo<T>(T t, params T[] args) { return 1; }
+
+  public static int Main() {
+    int a = Foo(1, "2") - 1;
+    return a;
+  }
+}
+`
+(6,13)-(6,24): error: The type arguments for method 'Test.Foo<T>(T, T[])' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+class Test {
+
+  static int Foo<T>(T t) { return 1; }
+
+  public static int Main() {
+    int a = Foo(null) - 1;
+    return a;
+  }
+}
+`
+(6,13)-(6,22): error: The type arguments for method 'Test.Foo<T>(T)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+class Test {
+
+  static int Foo<T>(T t) { return 1; }
+
+  public static int Main() {
+    int a = Foo(Foo) - 1;
+    return a;
+  }
+}
+`
+(6,13)-(6,21): error: The type arguments for method 'Test.Foo<T>(T)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+class Test {
+
+  static int Foo<T>(T t) { return 1; }
+
+  public static int Main() {
+    int a = Foo(delegate(int i){return i;}) - 1;
+    return a;
+  }
+}
+`
+(6,13)-(6,44): error: The type arguments for method 'Test.Foo<T>(T)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+class Test {
+
+  static int Foo<T>(T t) { return 1; }
+
+  public static int Main() {
+    int a = Foo(i => i+1) - 1;
+    return a;
+  }
+}
+`
+(6,13)-(6,26): error: The type arguments for method 'Test.Foo<T>(T)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+class Test {
+
+  static int Foo<T>(T t) { return 1; }
+
+  public static int Main() {
+    int a = Foo(x) - 1;
+    return a;
+  }
+}
+`
+(6,17)-(6,18): error: The name 'x' does not exist in the current context.
+`
+class Test {
+
+  static int Foo<T>(T[] t) { return 1; }
+
+  public static int Main() {
+    int[,] arr;
+    int a = Foo(arr) - 1;
+    return a;
+  }
+}
+`
+(7,13)-(7,21): error: The type arguments for method 'Test.Foo<T>(T[])' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+using System.Collections.Generic;
+class Test {
+
+  static int Foo<T>(IEnumerator<T> t) { return 1; }
+
+  public static int Main() {
+    int[] arr = new int[0];
+    int a = Foo(arr) - 1;
+    return a;
+  }
+}
+`
+(8,13)-(8,21): error: The type arguments for method 'Test.Foo<T>(System.Collections.Generic.IEnumerator<T>)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+using System.Collections.Generic;
+class Test {
+
+  unsafe static int Foo<T>(int* t) { return 1; }
+
+  public unsafe static int Main() {
+    int* p;
+    int a = Foo(p) - 1;
+    return a;
+  }
+}
+`
+(8,13)-(8,19): error: The type arguments for method 'Test.Foo<T>(int*)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
+`
+sealed class TestBase { }
+
+interface IFoo { }
+
+class Test {
+
+  public static int Main() {
+    IFoo t = null;
+    TestBase ob = (TestBase)t;
+    if (t != ob) return 1;
+    return 0;
+  }
+}
+`
+(9,19)-(9,30): error: Cannot convert type 'IFoo' to 'TestBase'.
+(10,9)-(10,16): error: Operator '!=' cannot be applied to operands of type 'IFoo' and 'TestBase'.
+`
+delegate void MyDel(int i);
+
+class Test {
+
+  public static int MyMeth(int i) { return i; }
+  public static void MyMeth(char c) { }
+
+  public static void Foo(MyDel md) { }
+  public static void Foo(int i) { }
+
+  public static void Main() {
+    Foo(MyMeth);
+  }
+}
+`
+(12,9)-(12,15): error: 'int Test.MyMeth(int)' has the wrong return type.
+`
+delegate void MyDel(int i);
+
+class Test {
+
+  public static int MyMeth(int i) { return i; }
+  public static void MyMeth(char c) { }
+
+  public static void Main() {
+    MyDel del = MyMeth;
+  }
+}
+`
+(9,17)-(9,23): error: 'int Test.MyMeth(int)' has the wrong return type.
+`
+class Program
+{
+  public static void Main() {
+    Foo.F(X.G);
+  }
+}
+
+delegate void F1(string s);
+delegate void F2(object o);
+
+class Foo
+{
+    public static void F(F1 f1){}
+    public static void F(F2 f2){}
+}
+
+class X
+{
+  public static void G(object o) { }
+  public static void G(string s) { }
+}
+`
+(4,5)-(4,15): error: The call is ambiguous between the following methods or properties: 'Foo.F(F1)' and 'Foo.F(F2)'.
+`
+delegate void D1(int i);
+delegate void D2(long l);
+class Program
+{
+  static void M(long l) { }
+
+  public static void Main() {
+    D1 d1 = M;
+    // Error: M is compatible with D1, 
+    // but inconsistent, because the conversion from
+    // int to long is not an implicit reference
+    // conversion.
+  }
+}
+`
+`
+delegate void D1(int i);
+delegate void D2(long l);
+class Program
+{
+  static void M(long l) { }
+  static void F(D1 d) {}
+  static void F(D2 d) {}
+
+  public static void Main() {
+    F(M);  // Error: ambiguity between F(D1) and F(D2). M is
+    // compatible with both D1 and D2. However M is 
+    // consistent with D2, while inconsistent with D1.
+
+  }
+}
+`
+(10,5)-(10,9): error: The call is ambiguous between the following methods or properties: 'Program.F(D1)' and 'Program.F(D2)'.
+`
+using System;
+
+public class Test
+{
+    public static int Main()
+    {
+  int i = 2;
+
+#if false
+#error false is true?
+#elif true
+  i--;
+#else
+#error Else shouldn't trigger here
+#endif
+
+#if false
+#error false is still true?
+#elif foobar
+#error foobar wasn't supposed to be defined
+#else
+  i--;
+#endif
+
+  return (i > 0 ? 1 : 0;
+    }
+}
+`
+(25,24)-(25,25): error: ) expected.
+`
