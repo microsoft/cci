@@ -931,6 +931,7 @@ namespace Microsoft.Cci {
         this.labelFor.Add(labeledStatement.Label.UniqueKey, targetLabel);
       }
       this.generator.MarkLabel(targetLabel);
+      this.Visit(labeledStatement.Statement);
     }
 
     public override void Visit(ILeftShift leftShift) {
@@ -1188,7 +1189,7 @@ namespace Microsoft.Cci {
       this.Visit(switchStatement.Expression);
       uint numberOfCases;
       uint maxValue = this.GetMaxCaseExpressionValueAsUInt(switchStatement.Cases, out numberOfCases);
-      if (numberOfCases == 0) return;
+      if (numberOfCases == 0) { this.generator.Emit(OperationCode.Pop); return; }
       if (maxValue < uint.MaxValue && maxValue/2 < numberOfCases)
         this.GenerateSwitchInstruction(switchStatement.Cases, maxValue);
       //TODO: generate binary search
@@ -2999,6 +3000,10 @@ namespace Microsoft.Cci {
           break;
 
         default:
+          if (sourceType.IsValueType) {
+            this.generator.Emit(OperationCode.Box, sourceType);
+            break;
+          }
           //TODO: conversion from method to (function) pointer
           if (!sourceType.IsValueType && targetType.TypeCode == PrimitiveTypeCode.IntPtr)
             this.generator.Emit(OperationCode.Conv_I);
@@ -3163,6 +3168,18 @@ namespace Microsoft.Cci {
       this.generator.Emit(branchOp, targetLabel);
     }
 
+    private MethodReference DecimalConstructor {
+      get {
+        if (this.decimalConstructor == null)
+          this.decimalConstructor = new MethodReference(this.host, this.host.PlatformType.SystemDecimal,
+             CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0,
+             this.host.PlatformType.SystemInt32, this.host.PlatformType.SystemInt32, this.host.PlatformType.SystemInt32,
+             this.host.PlatformType.SystemBoolean, this.host.PlatformType.SystemUInt8);
+        return this.decimalConstructor;
+      }
+    }
+    private MethodReference/*?*/ decimalConstructor;
+
     private void EmitConstant(IConvertible ic) {
       this.StackSize++;
       if (ic == null)
@@ -3224,6 +3241,23 @@ namespace Microsoft.Cci {
 
           case TypeCode.String:
             this.generator.Emit(OperationCode.Ldstr, ic.ToString(null));
+            return;
+
+          case TypeCode.Decimal:
+            var bits = Decimal.GetBits(ic.ToDecimal(null));
+            this.generator.Emit(OperationCode.Ldc_I4, bits[0]); 
+            this.generator.Emit(OperationCode.Ldc_I4, bits[1]); this.StackSize++;
+            this.generator.Emit(OperationCode.Ldc_I4, bits[2]); this.StackSize++;
+            if (bits[3] >= 0)
+              this.generator.Emit(OperationCode.Ldc_I4_0);
+            else
+              this.generator.Emit(OperationCode.Ldc_I4_1);
+            this.StackSize++;
+            int scale = (bits[3]&0x7FFFFF)>>16;
+            if (scale > 28) scale = 28;
+            this.generator.Emit(OperationCode.Ldc_I4_S, scale); this.StackSize++;
+            this.generator.Emit(OperationCode.Newobj, this.DecimalConstructor);
+            this.StackSize -= 4;
             return;
         }
       }
