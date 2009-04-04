@@ -96,8 +96,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected int flags;
 
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "+"; }
     }
 
@@ -193,8 +192,8 @@ namespace Microsoft.Cci.Ast {
           } else if (overloadMethod is BuiltinMethodDefinition) {
             if (this.Helper.IsPointerType(this.LeftOperand.Type))
               return this.ProjectAsPointerPlusIndex(args, this.Helper.GetPointerTargetType(this.LeftOperand.Type).ResolvedType);
-            else if (this.Helper.IsPointerType(this.RightOperand.Type)) 
-                return this.ProjectAsIndexPlusPointer(args, this.Helper.GetPointerTargetType(this.RightOperand.Type).ResolvedType);
+            else if (this.Helper.IsPointerType(this.RightOperand.Type))
+              return this.ProjectAsIndexPlusPointer(args, this.Helper.GetPointerTargetType(this.RightOperand.Type).ResolvedType);
           }
         }
       }
@@ -277,8 +276,7 @@ namespace Microsoft.Cci.Ast {
         get { return this.addition.Type; }
       }
 
-      public bool IsPure
-      {
+      public bool IsPure {
         get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
 
@@ -931,8 +929,7 @@ namespace Microsoft.Cci.Ast {
       return false;
     }
 
-    private class DerefConstVisitor : BaseCodeVisitor
-    {
+    private class DerefConstVisitor : BaseCodeVisitor {
       public static bool Check(IExpression expr) {
         var visitor = new DerefConstVisitor();
         visitor.Visit(expr);
@@ -1016,8 +1013,7 @@ namespace Microsoft.Cci.Ast {
       return this.Expression.HasSideEffect(reportError);
     }
 
-    protected virtual AddressableExpression CreateAddressableExpr(Expression expr)
-    {
+    protected virtual AddressableExpression CreateAddressableExpr(Expression expr) {
       return new AddressableExpression(expr);
     }
 
@@ -1040,8 +1036,7 @@ namespace Microsoft.Cci.Ast {
             return this.instance;
           }
           Indexer/*?*/ indexer = expression as Indexer;
-          if (indexer != null)
-          {
+          if (indexer != null) {
             QualifiedName qName = indexer.IndexedObject as QualifiedName;
             if (qName != null && qName.Instance == null)
               return null;
@@ -1049,10 +1044,10 @@ namespace Microsoft.Cci.Ast {
               return this.instance = indexer.IndexedObject;
           }
           IFieldDefinition/*?*/ field = this.Definition as IFieldDefinition;
-          if (field != null && !field.IsStatic) 
+          if (field != null && !field.IsStatic)
             return this.instance = new ThisReference(this.ContainingBlock, this.SourceLocation);
           IPropertyDefinition/*?*/ property = this.Definition as IPropertyDefinition;
-          if (property != null && !property.Setter.ResolvedMethod.IsStatic) 
+          if (property != null && !property.Setter.ResolvedMethod.IsStatic)
             return this.instance = new ThisReference(this.ContainingBlock, this.SourceLocation);
           this.instance = this;
         }
@@ -1267,7 +1262,7 @@ namespace Microsoft.Cci.Ast {
     public sealed override ITypeDefinition Type {
       [DebuggerNonUserCode]
       get {
-        if (this.type == null) 
+        if (this.type == null)
           this.type = this.InferType();
         return this.type;
       }
@@ -1715,7 +1710,7 @@ namespace Microsoft.Cci.Ast {
       get {
         if (this.returnType == null)
           this.returnType = TypeExpression.For(this.Helper.GetInvokeMethod(this.delegateType).Type);
-        return this.returnType; 
+        return this.returnType;
       }
     }
     TypeExpression/*?*/ returnType;
@@ -2700,8 +2695,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns an error message stating that the operands of this operation are not of the right type for the operator.
     /// </summary>
-    protected AstErrorMessage GetBinaryBadOperandsTypeErrorMessage()
-    {
+    protected AstErrorMessage GetBinaryBadOperandsTypeErrorMessage() {
       string leftOperandTypeName = this.Helper.GetTypeName(this.LeftOperand.Type);
       string rightOperandTypeName = this.Helper.GetTypeName(this.RightOperand.Type);
       return new AstErrorMessage(this, Error.BadBinaryOperation, this.OperationSymbolForErrorMessage, leftOperandTypeName, rightOperandTypeName);
@@ -3186,8 +3180,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "&"; }
     }
 
@@ -3377,8 +3370,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "|"; }
     }
 
@@ -3416,7 +3408,7 @@ namespace Microsoft.Cci.Ast {
       }
       return null;
     }
-    
+
     /// <summary>
     /// Makes a copy of this expression, changing the ContainingBlock to the given block.
     /// </summary>
@@ -3605,13 +3597,11 @@ namespace Microsoft.Cci.Ast {
       return new BlockExpression(containingBlock, this);
     }
 
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
-        return this.Expression.HasErrors();
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return this.Expression.HasErrors();
     }
 
-    public override bool HasSideEffect(bool reportError)
-    {
+    public override bool HasSideEffect(bool reportError) {
       return this.Expression.HasSideEffect(reportError);
     }
 
@@ -3912,7 +3902,7 @@ namespace Microsoft.Cci.Ast {
       if (this.conversion == null) {
         if (this.ValueToCast.HasErrors() || this.TargetType.HasErrors())
           this.conversion = new DummyExpression(this.SourceLocation);
-        else{
+        else {
           this.conversion = this.Helper.ExplicitConversion(this.ValueToCast, this.TargetType.ResolvedType);
           if (!this.ValueToCast.HasErrors() && !this.TargetType.HasErrors() && this.conversion.HasErrors()) {
             string sourceTypeName = this.Helper.GetTypeName(this.ValueToCast.Type);
@@ -3920,7 +3910,7 @@ namespace Microsoft.Cci.Ast {
             if (this.Helper.ExpressionIsNumericLiteral(this.ValueToCast)) {
               //^ assert this.ValueToCast.Value != null;
               this.Helper.ReportError(new AstErrorMessage(this.ValueToCast, Error.ConstOutOfRange, String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", this.ValueToCast.Value), targetTypeName));
-            }  else {
+            } else {
               this.Helper.ReportError(new AstErrorMessage(this, Error.NoExplicitConversion, sourceTypeName, targetTypeName));
             }
           }
@@ -4706,8 +4696,7 @@ namespace Microsoft.Cci.Ast {
       return this.ValueToConvert.HasErrors();
     }
 
-    public override bool IntegerConversionIsLossless(ITypeDefinition targetType)
-    {
+    public override bool IntegerConversionIsLossless(ITypeDefinition targetType) {
       return base.IntegerConversionIsLossless(targetType);
     }
 
@@ -5001,7 +4990,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="expression">An expression with a non null Value.</param>
     public CompileTimeConstant(Expression expression)
-      : base(expression.CouldBeInterpretedAsNegativeSignedInteger ? ConvertToUnsigned(expression.Value) : expression.Value, expression.SourceLocation) 
+      : base(expression.CouldBeInterpretedAsNegativeSignedInteger ? ConvertToUnsigned(expression.Value) : expression.Value, expression.SourceLocation)
       //^ requires expression.Value != null;
     {
       this.couldBeInterpretedAsNegativeSignedInteger = expression.CouldBeInterpretedAsNegativeSignedInteger;
@@ -5773,8 +5762,7 @@ namespace Microsoft.Cci.Ast {
       return this.PlatformType.SystemBoolean.ResolvedType;
     }
 
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool leftOpIsComparison = this.LeftOperand is Comparison;
       bool rightOpIsComparison = this.RightOperand is Comparison;
       if (leftOpIsComparison || rightOpIsComparison) {
@@ -5862,7 +5850,7 @@ namespace Microsoft.Cci.Ast {
         var rightType = this.ResultIfFalse.Type;
         if (this.Helper.ImplicitConversionExists(this.ResultIfFalse, leftType) &&
             this.Helper.ImplicitConversionExists(this.ResultIfTrue, rightType))
-          this.Helper.ReportError(new AstErrorMessage(this, Error.CannotInferTypeOfConditionalDueToAmbiguity, 
+          this.Helper.ReportError(new AstErrorMessage(this, Error.CannotInferTypeOfConditionalDueToAmbiguity,
             this.Helper.GetTypeName(leftType), this.Helper.GetTypeName(rightType)));
         else
           this.Helper.ReportError(new AstErrorMessage(this, Error.CannotInferTypeOfConditional));
@@ -6030,7 +6018,7 @@ namespace Microsoft.Cci.Ast {
     public sealed override ITypeDefinition Type {
       [DebuggerNonUserCode]
       get {
-        if (this.type == null) 
+        if (this.type == null)
           this.type = this.InferType();
         return this.type;
       }
@@ -7088,7 +7076,7 @@ namespace Microsoft.Cci.Ast {
         CompileTimeConstant elementSize = new CompileTimeConstant(TypeHelper.SizeOfType(this.ElementType.ResolvedType), this.ElementType.SourceLocation);
         Multiplication sizeInBytes = new Multiplication(this.Size, elementSize, this.Size.SourceLocation);
         sizeInBytes.SetContainingExpression(this);
-        return sizeInBytes.ProjectAsIExpression(); 
+        return sizeInBytes.ProjectAsIExpression();
       }
     }
 
@@ -7314,8 +7302,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "/"; }
     }
 
@@ -7709,8 +7696,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "=="; }
     }
 
@@ -7978,8 +7964,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "^"; }
     }
 
@@ -8219,8 +8204,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "^"; }
     }
 
@@ -8437,7 +8421,7 @@ namespace Microsoft.Cci.Ast {
     /// this.Value must be non null.
     /// </summary>
     /// <returns></returns>
-    public virtual CompileTimeConstant GetAsConstant() 
+    public virtual CompileTimeConstant GetAsConstant()
       //^ requires this.Value != null;
     {
       CompileTimeConstant result = new CompileTimeConstant(this);
@@ -8470,8 +8454,7 @@ namespace Microsoft.Cci.Ast {
       return false;
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return !this.HasSideEffect(false); }
     }
 
@@ -8525,9 +8508,9 @@ namespace Microsoft.Cci.Ast {
     /// Returns true if no information is lost if the integer value of this expression is converted to the target integer type.
     /// </summary>
     public virtual bool IntegerConversionIsLossless(ITypeDefinition targetType) {
-      if (TypeHelper.IsSignedPrimitiveInteger(this.Type)){
+      if (TypeHelper.IsSignedPrimitiveInteger(this.Type)) {
         if (!TypeHelper.IsSignedPrimitiveInteger(targetType)) return false;
-      } else if (TypeHelper.IsUnsignedPrimitiveInteger(this.Type)){
+      } else if (TypeHelper.IsUnsignedPrimitiveInteger(this.Type)) {
         if (!TypeHelper.IsUnsignedPrimitiveInteger(targetType)) return false;
       }
       return TypeHelper.SizeOfType(this.Type) <= TypeHelper.SizeOfType(targetType);
@@ -9192,8 +9175,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return ">"; }
     }
 
@@ -9298,8 +9280,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return ">="; }
     }
 
@@ -9458,8 +9439,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "==>"; }
     }
 
@@ -9553,8 +9533,7 @@ namespace Microsoft.Cci.Ast {
       this.indexedObject = template.indexedObject.MakeCopyFor(containingBlock);
     }
 
-    protected virtual Indexer CreateNewIndexerForFactoring(Expression indexedObject, IEnumerable<Expression> indices, ISourceLocation sourceLocation)
-    {
+    protected virtual Indexer CreateNewIndexerForFactoring(Expression indexedObject, IEnumerable<Expression> indices, ISourceLocation sourceLocation) {
       return new Indexer(indexedObject, indices, sourceLocation);
     }
 
@@ -9919,8 +9898,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "\\"; }
     }
 
@@ -10038,8 +10016,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "IsFalse"; }
     }
 
@@ -10130,8 +10107,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "IsTrue"; }
     }
 
@@ -10502,8 +10478,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "<<"; }
     }
 
@@ -10684,8 +10659,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "<"; }
     }
 
@@ -10790,8 +10764,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "<="; }
     }
 
@@ -10993,8 +10966,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "Like"; }
     }
 
@@ -11069,8 +11041,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "&&"; }
     }
 
@@ -11281,8 +11252,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "!"; }
     }
 
@@ -11364,8 +11334,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "||"; }
     }
 
@@ -11708,8 +11677,8 @@ namespace Microsoft.Cci.Ast {
       IEnumerator<Expression> args = this.ConvertedArguments.GetEnumerator();
       List<ITypeReference> parameterTypesForExtraArguments = new List<ITypeReference>();
       ushort i = 0;
-      while (i < nPars) { 
-        i++; args.MoveNext(); 
+      while (i < nPars) {
+        i++; args.MoveNext();
       }
       while (i < nArgs) {
         args.MoveNext();
@@ -12034,7 +12003,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
       FunctionPointerMethod/*?*/ fpMethod = this.ResolvedMethod as FunctionPointerMethod;
-      if (fpMethod != null) 
+      if (fpMethod != null)
         return new PointerCall(((IMethodCall)this).Arguments, this.MethodExpression.ProjectAsIExpression(), this.SourceLocation);
       IArrayTypeReference/*?*/ atr = this.ResolvedMethod.ContainingType as IArrayTypeReference;
       if (atr != null && atr.IsVector) {
@@ -12307,8 +12276,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "%"; }
     }
 
@@ -12516,8 +12484,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "*"; }
     }
 
@@ -13419,8 +13386,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "!="; }
     }
 
@@ -13698,7 +13664,7 @@ namespace Microsoft.Cci.Ast {
       get {
         if (this.type == null)
           this.type = this.InferType();
-        return this.type; 
+        return this.type;
       }
     }
     //^ [Once]
@@ -14085,8 +14051,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "~"; }
     }
 
@@ -14286,7 +14251,7 @@ namespace Microsoft.Cci.Ast {
             string typeName = this.ContainingBlock.Helper.GetTypeName(pqType.TargetType.ResolvedType);
             this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this, Error.NoSuchMember, typeName, this.SimpleName.Name.Value));
           } else {
-            this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this.Qualifier, Error.PointerExpected, RhsToStringForError())); 
+            this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this.Qualifier, Error.PointerExpected, RhsToStringForError()));
           }
         } else {
           if (this.Qualifier.HasErrors()) return true;
@@ -14473,8 +14438,7 @@ namespace Microsoft.Cci.Ast {
       this.elementType = (TypeExpression)template.elementType.MakeCopyFor(containingBlock);
     }
 
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.elementType.HasErrors() || this.elementType == Dummy.Type;
     }
 
@@ -14682,8 +14646,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "--"; }
     }
 
@@ -14746,8 +14709,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "++"; }
     }
 
@@ -14914,9 +14876,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "--"; }
     }
 
@@ -14979,8 +14939,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "++"; }
     }
 
@@ -15734,8 +15693,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Add any additional type parameters the methods used in the projection (named by GetQuantifierName()) might need.
     /// </summary>
-    protected virtual void AddAdditionalTypeParameters(List<TypeExpression> genericInstanceParameters)
-    {
+    protected virtual void AddAdditionalTypeParameters(List<TypeExpression> genericInstanceParameters) {
     }
 
     private QuantifierCall GetCallToQuantifierMethod(Expression forallRef, LocalDeclaration localDeclaration, IEnumerator<LocalDeclarationsStatement> locDeclsEnumerator, IEnumerator<LocalDeclaration> locDeclEnumerator) {
@@ -16138,8 +16096,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return ">>"; }
     }
 
@@ -16318,8 +16275,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "Is"; }
     }
 
@@ -16409,8 +16365,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "IsNot"; }
     }
 
@@ -16518,8 +16473,7 @@ namespace Microsoft.Cci.Ast {
     /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
     /// care not to call any other methods or property/event accessors on the object until after this method has been called.
     /// </summary>
-    public override void SetContainingExpression(Expression containingExpression)
-    {
+    public override void SetContainingExpression(Expression containingExpression) {
       base.SetContainingExpression(containingExpression);
       foreach (Expression arg in convertedArguments) arg.SetContainingExpression(this);
     }
@@ -16815,7 +16769,7 @@ namespace Microsoft.Cci.Ast {
   /// An index expression multiplied by a scale factor, representing a pointer offset.
   /// </summary>
   public class ScaledIndex : Multiplication {
-    
+
     /// <summary>
     /// Allocates an index expression multiplied by a scale factor, representing a pointer offset.
     /// </summary>
@@ -16972,7 +16926,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public bool IgnoreCase {
       get { return this.ignoreCase; }
-    } 
+    }
     private readonly bool ignoreCase;
 
     /// <summary>
@@ -17406,7 +17360,7 @@ namespace Microsoft.Cci.Ast {
     public sealed override ITypeDefinition Type {
       [DebuggerNonUserCode]
       get {
-        if (this.type == null) 
+        if (this.type == null)
           this.type = this.InferType();
         return this.type;
       }
@@ -17726,8 +17680,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "&"; }
     }
 
@@ -17824,8 +17777,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "-"; }
     }
 
@@ -17976,8 +17928,7 @@ namespace Microsoft.Cci.Ast {
         get { return this.subtraction.Type; }
       }
 
-      public bool IsPure
-      {
+      public bool IsPure {
         get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
 
@@ -18556,8 +18507,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "-"; }
     }
 
@@ -18687,8 +18637,7 @@ namespace Microsoft.Cci.Ast {
       get { return this.Operand.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.Operand.HasErrors() || this.Type == Dummy.Type;
     }
 
@@ -18737,8 +18686,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns an error message stating that the operand of this operation is not of the right type for the operator.
     /// </summary>
-    protected IErrorMessage GetUnaryBadOperandErrorMessage()
-    {
+    protected IErrorMessage GetUnaryBadOperandErrorMessage() {
       string operandTypeName = this.Helper.GetTypeName(this.Operand.Type);
       return new AstErrorMessage(this, Error.BadUnaryOperation, this.OperationSymbolForErrorMessage, operandTypeName);
     }
@@ -18987,8 +18935,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="targetType"></param>
     /// <returns></returns>
-    protected object GetConstantOneOfMatchingTypeForIncrementDecrement(ITypeDefinition targetType)
-    {
+    protected object GetConstantOneOfMatchingTypeForIncrementDecrement(ITypeDefinition targetType) {
       if (TypeHelper.TypesAreEquivalent(targetType, this.PlatformType.SystemChar))
         return (char)1;
       else if (TypeHelper.TypesAreEquivalent(targetType, this.PlatformType.SystemInt8))
@@ -19090,8 +19037,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return "+"; }
     }
 
@@ -19317,8 +19263,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns the string used to identify the operator in error messages
     /// </summary>
-    protected override string OperationSymbolForErrorMessage
-    {
+    protected override string OperationSymbolForErrorMessage {
       get { return ">>>"; }
     }
 
@@ -19401,8 +19346,7 @@ namespace Microsoft.Cci.Ast {
   internal sealed class VectorLength : Expression, IVectorLength {
 
     internal VectorLength(Expression vector, ISourceLocation sourceLocation)
-      : base(sourceLocation)
-    {
+      : base(sourceLocation) {
       this.vector = vector;
     }
 
@@ -19448,8 +19392,7 @@ namespace Microsoft.Cci.Ast {
 
   public static class NamespaceHelper {
 
-    public static Expression CreateInSystemDiagnosticsContractsCodeContractExpr(INameTable nameTable, string name)
-    {
+    public static Expression CreateInSystemDiagnosticsContractsCodeContractExpr(INameTable nameTable, string name) {
       SimpleName System = new SimpleName(nameTable.GetNameFor("System"), SourceDummy.SourceLocation, false);
       SimpleName Diagnostics = new SimpleName(nameTable.GetNameFor("Diagnostics"), SourceDummy.SourceLocation, false);
       SimpleName Contracts = new SimpleName(nameTable.GetNameFor("Contracts"), SourceDummy.SourceLocation, false);
@@ -19461,8 +19404,7 @@ namespace Microsoft.Cci.Ast {
       return new QualifiedName(SystemDiagnosticsContractsCodeContract, sName, SourceDummy.SourceLocation);
     }
 
-    public static string SystemDiagnosticsContractsCodeContractString
-    {
+    public static string SystemDiagnosticsContractsCodeContractString {
       get { return "System.Diagnostics.Contracts.CodeContract"; }
     }
   }
