@@ -723,6 +723,7 @@ namespace Microsoft.Cci {
       int i = 0;
       foreach (IExpression elemValue in createArray.Initializers) {
         this.generator.Emit(OperationCode.Dup);
+        this.StackSize++;
         this.EmitConstant(i++);
         this.Visit(elemValue);
         this.StoreVectorElement(createArray.ElementType);
