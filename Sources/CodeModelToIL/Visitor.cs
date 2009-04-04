@@ -13,7 +13,7 @@ namespace Microsoft.Cci {
 
   public class CodeModelToILConverter : BaseCodeAndContractTraverser, ISourceToILConverter {
 
-    public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) 
+    public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider)
       : base(contractProvider) {
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
@@ -173,8 +173,9 @@ namespace Microsoft.Cci {
 
     ushort StackSize {
       get { return this._stackSize; }
-      set { this._stackSize = value; if (value > this.maximumStackSizeNeeded) maximumStackSizeNeeded = value;
-      if (value == ushort.MaxValue) { }
+      set {
+        this._stackSize = value; if (value > this.maximumStackSizeNeeded) maximumStackSizeNeeded = value;
+        if (value == ushort.MaxValue) { }
       }
     }
     ushort _stackSize;
@@ -307,7 +308,7 @@ namespace Microsoft.Cci {
       this.VisitAssignment(assignment, false);
     }
 
-    public virtual void VisitAssignment(IAssignment assignment, bool treatAsStatement){
+    public virtual void VisitAssignment(IAssignment assignment, bool treatAsStatement) {
       object/*?*/ container = assignment.Target.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
       if (local != null) {
@@ -733,7 +734,7 @@ namespace Microsoft.Cci {
 
     public override void Visit(ICreateDelegateInstance createDelegateInstance) {
       IPlatformType platformType = createDelegateInstance.Type.PlatformType;
-      MethodReference constructor = new MethodReference(this.host, createDelegateInstance.Type, CallingConvention.Default|CallingConvention.HasThis, 
+      MethodReference constructor = new MethodReference(this.host, createDelegateInstance.Type, CallingConvention.Default|CallingConvention.HasThis,
         platformType.SystemVoid, this.host.NameTable.Ctor, 0, platformType.SystemObject, platformType.SystemIntPtr);
       if (createDelegateInstance.Instance != null) {
         this.Visit(createDelegateInstance.Instance);
@@ -1267,7 +1268,7 @@ namespace Microsoft.Cci {
           default:
             result = uint.MaxValue;
             break;
-        }          
+        }
       }
       return result;
     }
@@ -1275,7 +1276,7 @@ namespace Microsoft.Cci {
     private List<ISwitchCase> GetSortedListOfSwitchCases(IEnumerable<ISwitchCase> cases) {
       List<ISwitchCase> caseList = new List<ISwitchCase>(cases);
       caseList.Sort(
-        delegate(ISwitchCase x, ISwitchCase y) { 
+        delegate(ISwitchCase x, ISwitchCase y) {
           if (x == y) return 0;
           if (x.IsDefault) return -1;
           if (y.IsDefault) return 1;
@@ -1304,7 +1305,7 @@ namespace Microsoft.Cci {
               if (xvalue == null) return -1;
               if (yvalue == null) return 1;
               return xvalue.GetHashCode() - yvalue.GetHashCode();
-          }          
+          }
         }
       );
       return caseList;
@@ -3064,8 +3065,7 @@ namespace Microsoft.Cci {
         if (methodCall != null) {
           int mkey = methodCall.MethodToCall.Name.UniqueKey;
           if ((mkey == this.host.NameTable.OpEquality.UniqueKey || mkey == this.host.NameTable.OpInequality.UniqueKey) &&
-            TypeHelper.TypesAreEquivalent(methodCall.MethodToCall.ContainingType, methodCall.Type.PlatformType.SystemMulticastDelegate)) 
-          {
+            TypeHelper.TypesAreEquivalent(methodCall.MethodToCall.ContainingType, methodCall.Type.PlatformType.SystemMulticastDelegate)) {
             List<IExpression> operands = new List<IExpression>(methodCall.Arguments);
             if (operands.Count == 2) {
               if (ExpressionHelper.IsNullLiteral(operands[0]))
@@ -3076,7 +3076,7 @@ namespace Microsoft.Cci {
                 branchOp = methodCall.MethodToCall.Name.UniqueKey == this.host.NameTable.OpEquality.UniqueKey ? OperationCode.Brtrue : OperationCode.Brfalse;
             }
           }
-        }else{
+        } else {
           ILogicalNot/*?*/ logicalNot = expression as ILogicalNot;
           if (logicalNot != null) {
             expression = logicalNot.Operand;
@@ -3246,7 +3246,7 @@ namespace Microsoft.Cci {
 
           case TypeCode.Decimal:
             var bits = Decimal.GetBits(ic.ToDecimal(null));
-            this.generator.Emit(OperationCode.Ldc_I4, bits[0]); 
+            this.generator.Emit(OperationCode.Ldc_I4, bits[0]);
             this.generator.Emit(OperationCode.Ldc_I4, bits[1]); this.StackSize++;
             this.generator.Emit(OperationCode.Ldc_I4, bits[2]); this.StackSize++;
             if (bits[3] >= 0)
