@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-public sealed class SpecSharpOptions : FrameworkOptions {
+public sealed class CSharpOptions : FrameworkOptions {
   public List<string> BoogieOptions = new List<string>();
   public List<string> DefinedSymbols = new List<string>();
   public bool RunTestSuite;
@@ -19,14 +19,14 @@ public sealed class SpecSharpOptions : FrameworkOptions {
   public List<string> Z3Options = new List<string>();
 }
 
-public class OptionParser : OptionParser<SpecSharpOptions> {
+public class OptionParser : OptionParser<CSharpOptions> {
 
   private OptionParser(MetadataHostEnvironment hostEnvironment) 
     : base(hostEnvironment)
   {
   }
 
-  public static SpecSharpOptions ParseCommandLineArguments(MetadataHostEnvironment hostEnvironment, IEnumerable<string> arguments) {
+  public static CSharpOptions ParseCommandLineArguments(MetadataHostEnvironment hostEnvironment, IEnumerable<string> arguments) {
     OptionParser parser = new OptionParser(hostEnvironment);
     parser.ParseCommandLineArguments(arguments, true);
     return parser.options;

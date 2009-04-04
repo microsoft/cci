@@ -11,7 +11,7 @@ using System.Text;
 using Microsoft.Cci.Ast;
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
 
   public sealed class XmlScanner {
     //////////////////////////////////////////////////////////////////////
@@ -47,9 +47,6 @@ namespace Microsoft.Cci.SpecSharp {
 
     /// <summary>Keeps track of the document in which the current token originates. Affected by the #line directive.</summary>
     private ISourceLocation sourceLocation; //accessed by parser via CurrentSourceLocation
-
-    /// <summary>When this is true the scanner will not recognize Spec# only keywords.</summary>
-    private bool inCompatibilityMode;
 
     /// <summary>
     /// Used to build the unescaped contents of an identifier when the identifier contains escape sequences. An instance variable because multiple methods are involved.
@@ -91,9 +88,8 @@ namespace Microsoft.Cci.SpecSharp {
 
     private static readonly Keyword ExtendedKeywords = Keyword.InitExtendedKeywords();
 
-    internal XmlScanner(SpecSharpCompilerOptions options, List<IErrorMessage>/*?*/ scannerErrors) {
+    internal XmlScanner(CSharpCompilerOptions options, List<IErrorMessage>/*?*/ scannerErrors) {
       this.scannerErrors = scannerErrors;
-      this.inCompatibilityMode = options.Compatibility;
       this.sourceChars = new char[1];
       this.sourceLocation = Dummy.SourceLocation;
     }
@@ -1152,7 +1148,7 @@ namespace Microsoft.Cci.SpecSharp {
         errorLocation = this.GetSourceLocation(this.endPos - 1, 1);
       else
         errorLocation = this.GetSourceLocation(this.startPos, this.endPos - this.startPos);
-      this.scannerErrors.Add(new SpecSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageParameters));
+      this.scannerErrors.Add(new CSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageParameters));
     }
     internal static int GetHexValue(char hex) {
       int hexValue;
@@ -1210,11 +1206,5 @@ namespace Microsoft.Cci.SpecSharp {
     XmlAttr2,
     /// <summary>The last token was a numeric literal. Used to prevent . from triggering member selection.</summary>
     LastTokenDisablesMemberSelection,
-    /// <summary>Masks out bits that can vary independently of the state in the lower order bits.</summary>
-    StateMask=0xF,
-    /// <summary>Inside a specification comment. Recognize Spec# keywords even if compiling in C# mode.</summary>
-    ExplicitlyInSpecSharp=0x10,
-    /// <summary>True if inside a multi-line specification comment. If true, do not set explicitlyInSpecSharp to false when reaching a line break.</summary>
-    InSpecSharpMultilineComment=0x20
   };
 }

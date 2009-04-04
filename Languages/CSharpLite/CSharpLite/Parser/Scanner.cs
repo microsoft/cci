@@ -11,7 +11,7 @@ using System.Text;
 using Microsoft.Cci.Ast;
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
 
   public sealed class Scanner {
     /// <summary>The character value of the last scanned character literal token.</summary>
@@ -47,7 +47,7 @@ namespace Microsoft.Cci.SpecSharp {
     private bool ignoreComments = true;
 
     /// <summary>True if inside a multi-line specification comment.</summary>
-    private bool inSpecSharpMultilineComment;
+    private bool inCSharpMultilineComment;
 
     /// <summary>An array of linked lists of keywords, to be indexed with the first character of the keyword.</summary>
     private static readonly Keyword/*?*/[] Keywords = Keyword.InitKeywords();
@@ -299,54 +299,21 @@ namespace Microsoft.Cci.SpecSharp {
               break;
             case '/':
               c = this.PeekAheadOneCharacter();
-              //if (c == '^' && this.PeekAheadBy(2) != '^') { // Spec#-lite comment
-              //  // The check on endPos+1 is so that comments that look like //^^^^^^^ ...
-              //  // don't get mistakenly identified as Spec#-lite comments (since no Spec#
-              //  // construct begins with a caret we think this is safe to do).
-              //  // //^ construct, just swallow it and pretend it wasn't there
-              //  this.endPos += 2;
-              //  if (this.ignoreComments) goto nextToken;
-              //  token = Token.SingleLineComment;
-              //  break;
-              //} else {
-                this.SkipSingleLineComment();
-                if (this.ignoreComments) {
-                  if (this.endPos >= this.charsInBuffer) {
-                    token = Token.EndOfFile;
-                    this.tokenIsFirstAfterLineBreak = true;
-                    break; // just break out and return
-                  }
-                  goto nextToken; // read another token this last one was a comment
-                } else {
-                  token = Token.SingleLineComment;
-                  break;
+              this.SkipSingleLineComment();
+              if (this.ignoreComments) {
+                if (this.endPos >= this.charsInBuffer) {
+                  token = Token.EndOfFile;
+                  this.tokenIsFirstAfterLineBreak = true;
+                  break; // just break out and return
                 }
-              //}
+                goto nextToken; // read another token this last one was a comment
+              } else {
+                token = Token.SingleLineComment;
+                break;
+              }
             case '*':
               this.endPos++;
               c = this.GetCurrentChar();
-              //^ assert 0 < this.endPos;
-              //if (c == '^' && this.PeekAheadBy(1) != '^') { // Spec#-lite comment
-              //  // The check on endPos+1 is so that comments that look like /*^^^^^^^ ...
-              //  // don't get mistakenly identified as Spec#-lite comments (since no Spec#
-              //  // construct begins with a caret we think this is safe to do).
-              //  // begin /*^ ... ^*/ construct
-              //  this.endPos += 1;
-              //  goto nextToken;
-              //}
-              //if (c == '!' && this.PeekAheadBy(1) == '*' && this.PeekAheadBy(2) == '/') { // Spec#-lite comment
-              //  // special comment convention for non-null types, "/*!*/" is short for "/*^ ! ^*/"
-              //  token = Token.LogicalNot;
-              //  this.endPos += 3;
-              //  break;
-              //}
-              //if (c == '?' && this.PeekAheadBy(1) == '*' && this.PeekAheadBy(2) == '/') { // Spec#-lite comment
-              //  // special comment convention for non-null types, "/*?*/" is short for "/*^ ? ^*/"
-              //  token = Token.Conditional;
-              //  this.endPos += 3;
-              //  break;
-              //}
-              //^ assume 0 < this.endPos; //follows from previous assert
               if (this.ignoreComments) {
                 int savedEndPos = this.endPos;
                 this.SkipMultiLineComment();
@@ -392,10 +359,10 @@ namespace Microsoft.Cci.SpecSharp {
           }
           break;
         case '^':
-          if (this.inSpecSharpMultilineComment && this.GetCurrentChar() == '*' && this.PeekAheadOneCharacter() == '/') {
+          if (this.inCSharpMultilineComment && this.GetCurrentChar() == '*' && this.PeekAheadOneCharacter() == '/') {
             // end /*^ ... ^*/ construct
             this.endPos += 2;
-            this.inSpecSharpMultilineComment = false;
+            this.inCSharpMultilineComment = false;
             goto nextToken;
           }
           token = Token.BitwiseXor;
@@ -588,7 +555,7 @@ namespace Microsoft.Cci.SpecSharp {
         //^ assume this.sourceLocation.StartIndex+this.offset+this.endPos <= this.sourceLocation.Length; //from invariants
         errorLocation = this.GetSourceLocation(this.offset+this.startPos, this.endPos-this.startPos);
       }
-      this.scannerErrors.Add(new SpecSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageParameters));
+      this.scannerErrors.Add(new CSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageParameters));
     }
 
     //^ [Pure]

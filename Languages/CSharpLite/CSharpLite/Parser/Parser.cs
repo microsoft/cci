@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
   internal class Parser {
     Compilation compilation;
     INameTable nameTable;
@@ -79,7 +79,7 @@ namespace Microsoft.Cci.SpecSharp {
       //^ Token oldToken = this.currentToken;
       if (this.originalScannerAndParserErrors == this.scannerAndParserErrors) {
       }
-      this.scannerAndParserErrors.Add(new SpecSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageParameters));
+      this.scannerAndParserErrors.Add(new CSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageParameters));
       //^ assume this.currentToken == oldToken;
     }
 
@@ -818,7 +818,7 @@ namespace Microsoft.Cci.SpecSharp {
         if (!Parser.IdentifierOrNonReservedKeyword[this.currentToken])
           this.HandleError(Error.ExpectedIdentifier);
         NameDeclaration name = this.ParseNameDeclaration();
-        genericParameters.Add(new SpecSharpGenericTypeParameterDeclaration(attributes, name, (ushort)genericParameters.Count));
+        genericParameters.Add(new CSharpGenericTypeParameterDeclaration(attributes, name, (ushort)genericParameters.Count));
         if (this.currentToken != Token.Comma) break;
         this.GetNextToken();
       }
@@ -845,7 +845,7 @@ namespace Microsoft.Cci.SpecSharp {
     }
 
     private void ParseGenericTypeParameterConstraintsClauses(List<Ast.GenericTypeParameterDeclaration> genericTypeParameters, TokenSet followers)
-      // ^ requires forall{Ast.GenericTypeParameterDeclaration genericTypeParameter in genericTypeParameters; genericTypeParameter is SpecSharpGenericTypeParameterDeclaration};
+      // ^ requires forall{Ast.GenericTypeParameterDeclaration genericTypeParameter in genericTypeParameters; genericTypeParameter is CSharpGenericTypeParameterDeclaration};
       //^ ensures followers[this.currentToken] || this.currentToken == Token.EndOfFile;
     {
       while (this.currentToken == Token.Where) {
@@ -853,16 +853,16 @@ namespace Microsoft.Cci.SpecSharp {
         if (!Parser.IdentifierOrNonReservedKeyword[this.currentToken])
           this.HandleError(Error.ExpectedIdentifier);
         NameDeclaration name = this.ParseNameDeclaration();
-        SpecSharpGenericTypeParameterDeclaration/*?*/ applicableParameter = null;
+        CSharpGenericTypeParameterDeclaration/*?*/ applicableParameter = null;
         foreach (Ast.GenericTypeParameterDeclaration genericTypeParameter in genericTypeParameters)
           if (genericTypeParameter.Name.UniqueKey == name.UniqueKey) {
-            //^ assume genericTypeParameter is SpecSharpGenericTypeParameterDeclaration; //follows from precondition
-            applicableParameter = (SpecSharpGenericTypeParameterDeclaration)genericTypeParameter; 
+            //^ assume genericTypeParameter is CSharpGenericTypeParameterDeclaration; //follows from precondition
+            applicableParameter = (CSharpGenericTypeParameterDeclaration)genericTypeParameter; 
             break; 
           }
         if (applicableParameter == null) {
           this.HandleError(name.SourceLocation, Error.TyVarNotFoundInConstraint);
-          applicableParameter = new SpecSharpGenericTypeParameterDeclaration(null, name, (ushort)genericTypeParameters.Count);
+          applicableParameter = new CSharpGenericTypeParameterDeclaration(null, name, (ushort)genericTypeParameters.Count);
         }
         this.Skip(Token.Colon);
         this.ParseGenericTypeParameterConstraints(applicableParameter, followers|Token.Where);
@@ -870,7 +870,7 @@ namespace Microsoft.Cci.SpecSharp {
       this.SkipTo(followers);
     }
 
-    private void ParseGenericTypeParameterConstraints(SpecSharpGenericTypeParameterDeclaration applicableParameter, TokenSet followers)
+    private void ParseGenericTypeParameterConstraints(CSharpGenericTypeParameterDeclaration applicableParameter, TokenSet followers)
       //^ ensures followers[this.currentToken] || this.currentToken == Token.EndOfFile;
     {
       TokenSet constraintStart = Parser.IdentifierOrNonReservedKeyword|Token.Struct|Token.Class|Token.New;
@@ -1609,7 +1609,7 @@ namespace Microsoft.Cci.SpecSharp {
         if (!Parser.IdentifierOrNonReservedKeyword[this.currentToken])
           this.HandleError(Error.ExpectedIdentifier);
         NameDeclaration name = this.ParseNameDeclaration();
-        genericParameters.Add(new SpecSharpGenericMethodParameterDeclaration(attributes, name, (ushort)genericParameters.Count));
+        genericParameters.Add(new CSharpGenericMethodParameterDeclaration(attributes, name, (ushort)genericParameters.Count));
         if (this.currentToken != Token.Comma) break;
         this.GetNextToken();
       }
@@ -1620,7 +1620,7 @@ namespace Microsoft.Cci.SpecSharp {
     }
 
     private void ParseGenericMethodParameterConstraintsClauses(List<Ast.GenericMethodParameterDeclaration> genericMethodParameters, TokenSet followers)
-      // ^ requires forall{Ast.GenericMethodParameterDeclaration genericMethodParameter in genericMethodParameters; genericMethodParameter is SpecSharpGenericMethodParameterDeclaration};
+      // ^ requires forall{Ast.GenericMethodParameterDeclaration genericMethodParameter in genericMethodParameters; genericMethodParameter is CSharpGenericMethodParameterDeclaration};
       //^ ensures followers[this.currentToken] || this.currentToken == Token.EndOfFile;
     {
       while (this.currentToken == Token.Where) {
@@ -1628,16 +1628,16 @@ namespace Microsoft.Cci.SpecSharp {
         if (!Parser.IdentifierOrNonReservedKeyword[this.currentToken])
           this.HandleError(Error.ExpectedIdentifier);
         NameDeclaration name = this.ParseNameDeclaration();
-        SpecSharpGenericMethodParameterDeclaration/*?*/ applicableParameter = null;
+        CSharpGenericMethodParameterDeclaration/*?*/ applicableParameter = null;
         foreach (Ast.GenericMethodParameterDeclaration genericMethodParameter in genericMethodParameters)
           if (genericMethodParameter.Name.UniqueKey == name.UniqueKey) {
-            //^ assume genericMethodParameter is SpecSharpGenericMethodParameterDeclaration; //follows from precondition
-            applicableParameter = (SpecSharpGenericMethodParameterDeclaration)genericMethodParameter; 
+            //^ assume genericMethodParameter is CSharpGenericMethodParameterDeclaration; //follows from precondition
+            applicableParameter = (CSharpGenericMethodParameterDeclaration)genericMethodParameter; 
             break; 
           }
         if (applicableParameter == null) {
           this.HandleError(name.SourceLocation, Error.TyVarNotFoundInConstraint);
-          applicableParameter = new SpecSharpGenericMethodParameterDeclaration(null, name, (ushort)genericMethodParameters.Count);
+          applicableParameter = new CSharpGenericMethodParameterDeclaration(null, name, (ushort)genericMethodParameters.Count);
         }
         this.Skip(Token.Colon);
         this.ParseGenericMethodParameterConstraints(applicableParameter, followers|Token.Where);
@@ -1645,7 +1645,7 @@ namespace Microsoft.Cci.SpecSharp {
       this.SkipTo(followers);
     }
 
-    private void ParseGenericMethodParameterConstraints(SpecSharpGenericMethodParameterDeclaration applicableParameter, TokenSet followers)
+    private void ParseGenericMethodParameterConstraints(CSharpGenericMethodParameterDeclaration applicableParameter, TokenSet followers)
       //^ ensures followers[this.currentToken] || this.currentToken == Token.EndOfFile;
     {
       TokenSet constraintStart = Parser.IdentifierOrNonReservedKeyword|Token.Struct|Token.Class|Token.New;
@@ -2034,7 +2034,7 @@ namespace Microsoft.Cci.SpecSharp {
       else
         this.Skip(Token.LeftParenthesis);
       while (this.currentToken != closingToken && this.currentToken != Token.EndOfFile){
-        SpecSharpParameterDeclaration parameter = this.ParseParameter((ushort)parameters.Count, closingToken == Token.RightParenthesis, followers|Token.Comma|closingToken);
+        CSharpParameterDeclaration parameter = this.ParseParameter((ushort)parameters.Count, closingToken == Token.RightParenthesis, followers|Token.Comma|closingToken);
         parameters.Add(parameter);
         if (this.currentToken != Token.Comma) break;
         this.GetNextToken();
@@ -2044,7 +2044,7 @@ namespace Microsoft.Cci.SpecSharp {
       this.SkipOverTo(closingToken, followers);
     }
 
-    private SpecSharpParameterDeclaration ParseParameter(ushort index, bool allowRefParameters, TokenSet followers)
+    private CSharpParameterDeclaration ParseParameter(ushort index, bool allowRefParameters, TokenSet followers)
       //^ requires this.currentToken != Token.EndOfFile;
       //^ ensures followers[this.currentToken] || this.currentToken == Token.EndOfFile;
     {
@@ -2085,7 +2085,7 @@ namespace Microsoft.Cci.SpecSharp {
         }
       }
       sctx.UpdateToSpan(name.SourceLocation);
-      SpecSharpParameterDeclaration result = new SpecSharpParameterDeclaration(attributes, type, name, null, index, false, isOut, isParamArray, isRef, sctx);
+      CSharpParameterDeclaration result = new CSharpParameterDeclaration(attributes, type, name, null, index, false, isOut, isParamArray, isRef, sctx);
       this.SkipTo(followers);
       return result;
     }

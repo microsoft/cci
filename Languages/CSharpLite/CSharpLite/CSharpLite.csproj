@@ -7,8 +7,8 @@
     <ProjectGuid>{B855D039-8A27-419D-9A81-86FF93227E30}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Cci.SpecSharp</RootNamespace>
-    <AssemblyName>Microsoft.Cci.SpecSharp</AssemblyName>
+    <RootNamespace>Microsoft.Cci.CSharp</RootNamespace>
+    <AssemblyName>Microsoft.Cci.CSharpLite</AssemblyName>
     <SccProjectName>
     </SccProjectName>
     <SccLocalPath>

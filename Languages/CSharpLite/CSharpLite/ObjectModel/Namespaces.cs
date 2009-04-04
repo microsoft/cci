@@ -9,5 +9,5 @@ using Microsoft.Cci.Ast;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
 }

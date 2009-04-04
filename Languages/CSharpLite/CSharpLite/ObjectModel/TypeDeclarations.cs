@@ -9,10 +9,10 @@ using Microsoft.Cci.Ast;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
-  internal sealed class SpecSharpGenericTypeParameterDeclaration : GenericTypeParameterDeclaration {
+namespace Microsoft.Cci.CSharp {
+  internal sealed class CSharpGenericTypeParameterDeclaration : GenericTypeParameterDeclaration {
 
-    public SpecSharpGenericTypeParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, ushort index)
+    public CSharpGenericTypeParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, ushort index)
       : base(sourceAttributes, name, index, new List<TypeExpression>(), TypeParameterVariance.NonVariant, false, false, false, name.SourceLocation) {
     }
 

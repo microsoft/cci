@@ -6,37 +6,37 @@
 using System.Collections.Generic;
 using System.Resources;
 using Microsoft.Cci.Ast;
-using Microsoft.Cci.SpecSharp.Preprocessing;
+using Microsoft.Cci.CSharp.Preprocessing;
 using System;
 using System.Diagnostics.SymbolStore;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
 
   /// <summary>
-  /// An object that represents a source document, such as file, which is parsed by a Spec# compiler to produce the Spec# specific object model
+  /// An object that represents a source document, such as file, which is parsed by a C# compiler to produce the C# specific object model
   /// from which the language agnostic object model can be obtained.
   /// </summary>
-  public interface ISpecSharpSourceDocument : ISourceDocument {
+  public interface ICSharpSourceDocument : ISourceDocument {
     /// <summary>
-    /// The Spec# compilation part that corresponds to this Spec# source document.
+    /// The C# compilation part that corresponds to this C# source document.
     /// </summary>
-    SpecSharpCompilationPart SpecSharpCompilationPart {
+    CSharpCompilationPart CSharpCompilationPart {
       get;
       // ^ ensures result.SourceLocation.SourceDocument == this;
     }
   }
 
-  public sealed class SpecSharpCompilation : Compilation {
+  public sealed class CSharpCompilation : Compilation {
 
     /// <summary>
     /// Do not use this constructor unless you are implementing the Compilation property of the Module class.
     /// I.e. to construct a Compilation instance, construct a Module instance and use its Compilation property. 
     /// </summary>
-    internal SpecSharpCompilation(ISourceEditHost hostEnvironment, Unit result, SpecSharpOptions options, IEnumerable<CompilationPart> parts)
+    internal CSharpCompilation(ISourceEditHost hostEnvironment, Unit result, CSharpOptions options, IEnumerable<CompilationPart> parts)
       : base(hostEnvironment, result, options)
-      //^ requires result is SpecSharpModule || result is SpecSharpAssembly;
+      //^ requires result is CSharpModule || result is CSharpAssembly;
     {
       this.parts = parts;
     }
@@ -46,26 +46,26 @@ namespace Microsoft.Cci.SpecSharp {
     }
     readonly IEnumerable<CompilationPart> parts;
 
-    internal readonly SpecSharpOptions options = new SpecSharpOptions();
+    internal readonly CSharpOptions options = new CSharpOptions();
 
     public override Compilation UpdateCompilationParts(IEnumerable<CompilationPart> parts) {
-      SpecSharpAssembly/*?*/ oldAssembly = this.Result as SpecSharpAssembly;
+      CSharpAssembly/*?*/ oldAssembly = this.Result as CSharpAssembly;
       if (oldAssembly != null) {
-        SpecSharpAssembly newAssembly = new SpecSharpAssembly(oldAssembly.Name, oldAssembly.Location, this.HostEnvironment, this.options, oldAssembly.AssemblyReferences, oldAssembly.ModuleReferences, parts);
+        CSharpAssembly newAssembly = new CSharpAssembly(oldAssembly.Name, oldAssembly.Location, this.HostEnvironment, this.options, oldAssembly.AssemblyReferences, oldAssembly.ModuleReferences, parts);
         return newAssembly.Compilation;
       }
-      //^ assume this.Result is SpecSharpModule; //follows from constructor precondition and immutability.
-      SpecSharpModule oldModule = (SpecSharpModule)this.Result;
-      SpecSharpModule newModule = new SpecSharpModule(oldModule.Name, oldModule.Location, this.HostEnvironment, this.options, Dummy.Assembly, oldModule.AssemblyReferences, oldModule.ModuleReferences, parts);
+      //^ assume this.Result is CSharpModule; //follows from constructor precondition and immutability.
+      CSharpModule oldModule = (CSharpModule)this.Result;
+      CSharpModule newModule = new CSharpModule(oldModule.Name, oldModule.Location, this.HostEnvironment, this.options, Dummy.Assembly, oldModule.AssemblyReferences, oldModule.ModuleReferences, parts);
       return newModule.Compilation;
     }
   }
 
-  public sealed class SpecSharpCompilationPart : CompilationPart {
+  public sealed class CSharpCompilationPart : CompilationPart {
 
-    public SpecSharpCompilationPart(SpecSharpCompilationHelper helper, ISourceLocation sourceLocation)
+    public CSharpCompilationPart(CSharpCompilationHelper helper, ISourceLocation sourceLocation)
       : base(helper, sourceLocation)
-      //^ requires sourceLocation.SourceDocument is SpecSharpCompositeDocument;
+      //^ requires sourceLocation.SourceDocument is CSharpCompositeDocument;
     {
     }
 
@@ -75,9 +75,9 @@ namespace Microsoft.Cci.SpecSharp {
     {
       if (this.Compilation == targetCompilation) return this;
       ISourceLocation sloc = this.SourceLocation;
-      SpecSharpCompositeDocument/*?*/ oldDocument = sloc.SourceDocument as SpecSharpCompositeDocument;
+      CSharpCompositeDocument/*?*/ oldDocument = sloc.SourceDocument as CSharpCompositeDocument;
       //^ assume oldDocument != null; //follows from constructor precondition and immutability of sloc
-      CompilationPart result = oldDocument.MakeShallowCopyFor(targetCompilation).SpecSharpCompilationPart;
+      CompilationPart result = oldDocument.MakeShallowCopyFor(targetCompilation).CSharpCompilationPart;
       //^ assume result.GetType() == this.GetType();
       return result;
     }
@@ -89,7 +89,7 @@ namespace Microsoft.Cci.SpecSharp {
       //^^ requires edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(sourceLocationBeforeEdit.SourceDocument);
       //^^ ensures result == null || result is NamespaceDeclarationMember || result is NamespaceTypeDeclaration || result is NestedNamespaceDeclaration;
     {
-      SpecSharpCompositeDocument/*?*/ updatedDoc = edit.SourceDocumentAfterEdit as SpecSharpCompositeDocument;
+      CSharpCompositeDocument/*?*/ updatedDoc = edit.SourceDocumentAfterEdit as CSharpCompositeDocument;
       //^ assume updatedDoc != null; //follows from constructor precondition and immutability of this.SourceLocation
       //^ assume updatedDoc.IsUpdatedVersionOf(sourceLocationBeforeEdit.SourceDocument); //follows from precondition
       ISourceLocation updatedSourceLocation = updatedDoc.GetCorrespondingSourceLocation(sourceLocationBeforeEdit);
@@ -107,10 +107,10 @@ namespace Microsoft.Cci.SpecSharp {
 
     public override RootNamespaceDeclaration ParseAsRootNamespace() {
       ISourceLocation sloc = this.SourceLocation;
-      //^ assume sloc.SourceDocument is SpecSharpCompositeDocument;  //follows from constructor precondition and immutability of sloc
-      SpecSharpRootNamespaceDeclaration result = new SpecSharpRootNamespaceDeclaration(this, sloc);
+      //^ assume sloc.SourceDocument is CSharpCompositeDocument;  //follows from constructor precondition and immutability of sloc
+      CSharpRootNamespaceDeclaration result = new CSharpRootNamespaceDeclaration(this, sloc);
       this.rootNamespace = result;
-      List<IErrorMessage> scannerAndParserErrors = ((SpecSharpCompositeDocument)this.SourceLocation.SourceDocument).ScannerAndParserErrors;
+      List<IErrorMessage> scannerAndParserErrors = ((CSharpCompositeDocument)this.SourceLocation.SourceDocument).ScannerAndParserErrors;
       scannerAndParserErrors.Clear();
       Parser parser = new Parser(this.Compilation, this.SourceLocation, scannerAndParserErrors); //TODO: get options from Compilation
       result.Parse(parser, this);
@@ -129,11 +129,11 @@ namespace Microsoft.Cci.SpecSharp {
       //^^ ensures result == null || result is TypeDeclarationMember || result is NestedTypeDeclaration;
     {
       ISourceLocation updatedSourceLocation = edit.SourceDocumentAfterEdit.GetCorrespondingSourceLocation(sourceLocationBeforeEdit); //unsatisfied precondition: requires this.IsUpdatedVersionOf(sourceLocationInPreviousVersionOfDocument.SourceDocument);
-      List<IErrorMessage> scannerAndParserErrors = ((SpecSharpCompositeDocument)edit.SourceDocumentAfterEdit).ScannerAndParserErrors;
+      List<IErrorMessage> scannerAndParserErrors = ((CSharpCompositeDocument)edit.SourceDocumentAfterEdit).ScannerAndParserErrors;
       Parser parser = new Parser(this.Compilation, updatedSourceLocation, scannerAndParserErrors); //TODO: get options from Compilation
       ITypeDeclarationMember/*?*/ result = parser.ParseTypeDeclarationMember(typeName);
       if (result != null) {
-        SpecSharpCompositeDocument sdoc = (SpecSharpCompositeDocument)edit.SourceDocumentAfterEdit;
+        CSharpCompositeDocument sdoc = (CSharpCompositeDocument)edit.SourceDocumentAfterEdit;
         ErrorEventArgs errorEventArguments = new ErrorEventArgs(ErrorReporter.Instance, sdoc.UnpreprocessedDocument.SourceLocation, sdoc.PreprocessorErrors.AsReadOnly());
         this.Compilation.HostEnvironment.ReportErrors(errorEventArguments);
         errorEventArguments = new ErrorEventArgs(ErrorReporter.Instance, updatedSourceLocation, scannerAndParserErrors.AsReadOnly());
@@ -145,7 +145,7 @@ namespace Microsoft.Cci.SpecSharp {
     internal List<IErrorMessage> PreprocessorErrors {
       get {
         ISourceLocation sloc = this.SourceLocation;
-        SpecSharpCompositeDocument/*?*/ sdoc = sloc.SourceDocument as SpecSharpCompositeDocument;
+        CSharpCompositeDocument/*?*/ sdoc = sloc.SourceDocument as CSharpCompositeDocument;
         //^ assume sdoc != null; //follows from constructor precondition and immutability of sloc
         return sdoc.PreprocessorErrors;
       }
@@ -153,18 +153,18 @@ namespace Microsoft.Cci.SpecSharp {
 
     public override RootNamespaceDeclaration RootNamespace {
       get
-        //^ ensures result is SpecSharpRootNamespaceDeclaration;
+        //^ ensures result is CSharpRootNamespaceDeclaration;
       {
         if (this.rootNamespace == null) {
           lock (GlobalLock.LockingObject) {
             if (this.rootNamespace == null) {
               ISourceLocation sloc = this.SourceLocation;
-              //^ assume sloc.SourceDocument is SpecSharpCompositeDocument;  //follows from constructor precondition and immutability of sloc
-              this.rootNamespace = new SpecSharpRootNamespaceDeclaration(this, sloc);
+              //^ assume sloc.SourceDocument is CSharpCompositeDocument;  //follows from constructor precondition and immutability of sloc
+              this.rootNamespace = new CSharpRootNamespaceDeclaration(this, sloc);
             }
           }
         }
-        //^ assume this.rootNamespace is SpecSharpRootNamespaceDeclaration; //The above assignment is the sole initialization of this.rootNamespace
+        //^ assume this.rootNamespace is CSharpRootNamespaceDeclaration; //The above assignment is the sole initialization of this.rootNamespace
         return this.rootNamespace;
       }
     }
@@ -172,7 +172,7 @@ namespace Microsoft.Cci.SpecSharp {
     internal List<IErrorMessage> ScannerAndParserErrors {
       get {
         ISourceLocation sloc = this.SourceLocation;
-        SpecSharpCompositeDocument/*?*/ sdoc = sloc.SourceDocument as SpecSharpCompositeDocument;
+        CSharpCompositeDocument/*?*/ sdoc = sloc.SourceDocument as CSharpCompositeDocument;
         //^ assume sdoc != null; //follows from constructor precondition and immutability of sloc
         return sdoc.ScannerAndParserErrors; 
       }
@@ -183,12 +183,12 @@ namespace Microsoft.Cci.SpecSharp {
     {
       List<CompilationPart> newParts = new List<CompilationPart>(this.Compilation.Parts);
       Compilation newCompilation = this.Compilation.UpdateCompilationParts(newParts);
-      //^ assume this.Helper is SpecSharpCompilationHelper; //The constructor's type signature ensures this.
-      SpecSharpCompilationHelper helper = (SpecSharpCompilationHelper)this.Helper.MakeShallowCopyFor(newCompilation);
-      //^ assume rootNamespace is SpecSharpRootNamespaceDeclaration; //follows from the precondition and the post condition of this.RootNamespace.
+      //^ assume this.Helper is CSharpCompilationHelper; //The constructor's type signature ensures this.
+      CSharpCompilationHelper helper = (CSharpCompilationHelper)this.Helper.MakeShallowCopyFor(newCompilation);
+      //^ assume rootNamespace is CSharpRootNamespaceDeclaration; //follows from the precondition and the post condition of this.RootNamespace.
       ISourceLocation sloc = rootNamespace.SourceLocation;
-      //^ assume sloc.SourceDocument is SpecSharpCompositeDocument; //follows from the precondition of the constructors of SpecSharpRootNamespaceDeclaration.
-      SpecSharpCompilationPart result = new SpecSharpCompilationPart(helper, sloc);
+      //^ assume sloc.SourceDocument is CSharpCompositeDocument; //follows from the precondition of the constructors of CSharpRootNamespaceDeclaration.
+      CSharpCompilationPart result = new CSharpCompilationPart(helper, sloc);
       result.rootNamespace = rootNamespace;
       for (int i = 0, n = newParts.Count; i < n; i++) {
         if (newParts[i] == this) { newParts[i] = result; break; }
@@ -199,7 +199,7 @@ namespace Microsoft.Cci.SpecSharp {
     internal ISourceDocument UnpreprocessedDocument {
       get {
         ISourceLocation sloc = this.SourceLocation;
-        SpecSharpCompositeDocument/*?*/ sdoc = sloc.SourceDocument as SpecSharpCompositeDocument;
+        CSharpCompositeDocument/*?*/ sdoc = sloc.SourceDocument as CSharpCompositeDocument;
         //^ assume sdoc != null; //follows from constructor precondition and immutability of sloc
         return sdoc.UnpreprocessedDocument;
       }
@@ -207,13 +207,13 @@ namespace Microsoft.Cci.SpecSharp {
 
   }
 
-  public sealed class SpecSharpCompilationHelper : LanguageSpecificCompilationHelper {
+  public sealed class CSharpCompilationHelper : LanguageSpecificCompilationHelper {
 
-    public SpecSharpCompilationHelper(Compilation compilation)
-      : base(compilation, "Spec#") {
+    public CSharpCompilationHelper(Compilation compilation)
+      : base(compilation, "C#") {
     }
 
-    private SpecSharpCompilationHelper(Compilation targetCompilation, SpecSharpCompilationHelper template) 
+    private CSharpCompilationHelper(Compilation targetCompilation, CSharpCompilationHelper template) 
       : base(targetCompilation, template) {
     }
 
@@ -222,29 +222,29 @@ namespace Microsoft.Cci.SpecSharp {
       //^^ ensures result.GetType() == this.GetType();
     {
       if (this.Compilation == targetCompilation) return this;
-      return new SpecSharpCompilationHelper(targetCompilation, this);
+      return new CSharpCompilationHelper(targetCompilation, this);
     }
 
   }
 
-  public sealed class SpecSharpUnpreprocessedSourceDocument : PrimarySourceDocument {
+  public sealed class CSharpUnpreprocessedSourceDocument : PrimarySourceDocument {
 
-    public SpecSharpUnpreprocessedSourceDocument(SpecSharpCompilationHelper helper, IName name, string location, System.IO.StreamReader streamReader)
+    public CSharpUnpreprocessedSourceDocument(CSharpCompilationHelper helper, IName name, string location, System.IO.StreamReader streamReader)
       : base(name, location, streamReader) {
       this.helper = helper;
     }
 
-    public SpecSharpUnpreprocessedSourceDocument(SpecSharpCompilationHelper helper, IName name, string location, string text)
+    public CSharpUnpreprocessedSourceDocument(CSharpCompilationHelper helper, IName name, string location, string text)
       : base(name, location, text) {
       this.helper = helper;
     }
 
-    public SpecSharpUnpreprocessedSourceDocument(SpecSharpCompilationHelper helper, string text, SourceDocument previousVersion, int position, int oldLength, int newLength)
+    public CSharpUnpreprocessedSourceDocument(CSharpCompilationHelper helper, string text, SourceDocument previousVersion, int position, int oldLength, int newLength)
       : base(text, previousVersion, position, oldLength, newLength) {
       this.helper = helper;
     }
 
-    readonly SpecSharpCompilationHelper helper;
+    readonly CSharpCompilationHelper helper;
 
     //public override CompilationPart CompilationPart {
     //  get
@@ -268,7 +268,7 @@ namespace Microsoft.Cci.SpecSharp {
       return new PrimarySourceLocation(this, position, length);
     }
 
-    public SpecSharpUnpreprocessedSourceDocument GetUpdatedDocument(int position, int length, string updatedText)
+    public CSharpUnpreprocessedSourceDocument GetUpdatedDocument(int position, int length, string updatedText)
       //^ requires 0 <= position && position < this.Length;
       //^ requires 0 <= length && length <= this.Length;
       //^ requires 0 <= position+length && position+length <= this.Length;
@@ -281,11 +281,11 @@ namespace Microsoft.Cci.SpecSharp {
         length = oldText.Length-position;
       //^ assume 0 <= position+length; //established by the precondition and not changed by the previous two statements.
       string newText = oldText.Substring(0, position)+updatedText+oldText.Substring(position+length);
-      return new SpecSharpUnpreprocessedSourceDocument(this.helper, newText, this, position, length, updatedText.Length);
+      return new CSharpUnpreprocessedSourceDocument(this.helper, newText, this, position, length, updatedText.Length);
     }
 
     public override string SourceLanguage {
-      get { return "Spec#"; }
+      get { return "C#"; }
     }
 
     public override Guid DocumentType {
@@ -301,13 +301,13 @@ namespace Microsoft.Cci.SpecSharp {
     }
   }
 
-  public abstract class SpecSharpCompositeDocument : CompositeSourceDocument {
+  public abstract class CSharpCompositeDocument : CompositeSourceDocument {
 
-    protected SpecSharpCompositeDocument(IName name)
+    protected CSharpCompositeDocument(IName name)
       : base(name) {
     }
 
-    protected SpecSharpCompositeDocument(SourceDocument previousVersion, int position, int oldLength, int newLength)
+    protected CSharpCompositeDocument(SourceDocument previousVersion, int position, int oldLength, int newLength)
       : base(previousVersion, position, oldLength, newLength) {
     }
 
@@ -315,13 +315,13 @@ namespace Microsoft.Cci.SpecSharp {
     /// Makes a shallow copy of this source document (creating a new
     /// </summary>
     //^^ [MustOverride]
-    public abstract SpecSharpCompositeDocument MakeShallowCopyFor(Compilation targetCompilation);
+    public abstract CSharpCompositeDocument MakeShallowCopyFor(Compilation targetCompilation);
 
     internal abstract List<IErrorMessage> PreprocessorErrors { get; }
 
     internal abstract List<IErrorMessage> ScannerAndParserErrors { get; }
 
-    public abstract SpecSharpCompilationPart SpecSharpCompilationPart {
+    public abstract CSharpCompilationPart CSharpCompilationPart {
       get;
         //^^ ensures result.SourceLocation.SourceDocument == this;
         //^ ensures result is CompilationPart;
@@ -331,19 +331,19 @@ namespace Microsoft.Cci.SpecSharp {
 
   }
 
-  public abstract class SpecSharpCompositeDocument<PrimaryDocumentType, VersionType> : SpecSharpCompositeDocument, ISpecSharpSourceDocument 
+  public abstract class CSharpCompositeDocument<PrimaryDocumentType, VersionType> : CSharpCompositeDocument, ICSharpSourceDocument 
     where PrimaryDocumentType : class, IPrimarySourceDocument
   {
 
-    protected SpecSharpCompositeDocument(SpecSharpCompilationHelper helper, PrimaryDocumentType/*!*/ documentToPreprocess)
+    protected CSharpCompositeDocument(CSharpCompilationHelper helper, PrimaryDocumentType/*!*/ documentToPreprocess)
       : base(documentToPreprocess.Name)
     {
       this.helper = helper;
       this.documentToPreprocess = documentToPreprocess;
     }
 
-    protected SpecSharpCompositeDocument(SpecSharpCompilationHelper helper, PrimaryDocumentType/*!*/ documentToPreprocess, PreprocessorInformation/*?*/ preprocessorInformation, 
-      SpecSharpCompositeDocument<PrimaryDocumentType, VersionType> previousVersion, int position, int oldLength, int newLength)
+    protected CSharpCompositeDocument(CSharpCompilationHelper helper, PrimaryDocumentType/*!*/ documentToPreprocess, PreprocessorInformation/*?*/ preprocessorInformation, 
+      CSharpCompositeDocument<PrimaryDocumentType, VersionType> previousVersion, int position, int oldLength, int newLength)
       : base(previousVersion, position, oldLength, newLength)
     {
       this.helper = helper;
@@ -352,10 +352,10 @@ namespace Microsoft.Cci.SpecSharp {
     }
 
     //public override CompilationPart CompilationPart {
-    //  get { return this.SpecSharpCompilationPart; }
+    //  get { return this.CSharpCompilationPart; }
     //}
 
-    public override SpecSharpCompilationPart SpecSharpCompilationPart {
+    public override CSharpCompilationPart CSharpCompilationPart {
       get
         //^^ ensures result.SourceLocation.SourceDocument == this;
         //^ ensures result is CompilationPart;
@@ -364,15 +364,15 @@ namespace Microsoft.Cci.SpecSharp {
           lock (GlobalLock.LockingObject) {
             if (this.specSharpCompilationPart == null) {
               ISourceLocation sloc = this.SourceLocation;
-              //^ assume sloc.SourceDocument is SpecSharpCompositeDocument;
-              this.specSharpCompilationPart = new SpecSharpCompilationPart(this.helper, sloc);
+              //^ assume sloc.SourceDocument is CSharpCompositeDocument;
+              this.specSharpCompilationPart = new CSharpCompilationPart(this.helper, sloc);
             }
           }
         }
         return this.specSharpCompilationPart;
       }
     }
-    private SpecSharpCompilationPart/*?*/ specSharpCompilationPart;
+    private CSharpCompilationPart/*?*/ specSharpCompilationPart;
 
     public PrimaryDocumentType/*!*/ DocumentToPreprocess {
       //^ [Pure]
@@ -391,17 +391,17 @@ namespace Microsoft.Cci.SpecSharp {
     /// <param name="position">The position in this.DocumentToPreprocess, of the first character to be replaced by this edit.</param>
     /// <param name="length">The number of characters in this.DocumentToPreprocess that will be replaced by this edit.</param>
     /// <param name="updatedText">The replacement string.</param>
-    protected ISpecSharpSourceDocument GetUpdatedDocument(int position, int length, string updatedText, VersionType version)
+    protected ICSharpSourceDocument GetUpdatedDocument(int position, int length, string updatedText, VersionType version)
       //^ requires 0 <= position && position < this.DocumentToPreprocess.Length;
       //^ requires 0 <= length && length <= this.DocumentToPreprocess.Length;
       //^ requires 0 <= position+length && position+length <= this.DocumentToPreprocess.Length;
       //^ ensures result.IsUpdatedVersionOf(this);
       //^ ensures result.GetType() == this.GetType();
     {
-      SpecSharpCompositeDocument<PrimaryDocumentType, VersionType> result;
-      List<CompilationPart> nextParts = new List<CompilationPart>(this.SpecSharpCompilationPart.Compilation.Parts);
-      Compilation nextCompilation = this.SpecSharpCompilationPart.Compilation.UpdateCompilationParts(nextParts);
-      SpecSharpCompilationHelper nextHelper = (SpecSharpCompilationHelper)this.Helper.MakeShallowCopyFor(nextCompilation);
+      CSharpCompositeDocument<PrimaryDocumentType, VersionType> result;
+      List<CompilationPart> nextParts = new List<CompilationPart>(this.CSharpCompilationPart.Compilation.Parts);
+      Compilation nextCompilation = this.CSharpCompilationPart.Compilation.UpdateCompilationParts(nextParts);
+      CSharpCompilationHelper nextHelper = (CSharpCompilationHelper)this.Helper.MakeShallowCopyFor(nextCompilation);
       PreprocessorInformation ppInfo = this.PreprocessorInformation;
       foreach (ISourceLocation includedLocation in ppInfo.IncludedLocations) {
         if (includedLocation.StartIndex <= position && position+length <= includedLocation.StartIndex+includedLocation.Length) {
@@ -434,20 +434,20 @@ namespace Microsoft.Cci.SpecSharp {
       EditEventArgs/*?*/ symbolTableEditEventArgs;
       ISourceLocation oldLocationBeforePreprocessing = this.DocumentToPreprocess.GetSourceLocation(position, length);
       ISourceLocation oldLocationAfterPreprocessing = this.GetLocationAfterPreprocessing(oldLocationBeforePreprocessing);
-      SpecSharpSourceDocumentEdit edit = new SpecSharpSourceDocumentEdit(oldLocationAfterPreprocessing, result);
-      edit.compilationPartAfterEdit = result.specSharpCompilationPart = (SpecSharpCompilationPart)this.SpecSharpCompilationPart.UpdateWith(edit, nextParts, out editEventArgs, out symbolTableEditEventArgs);
-      this.Helper.Compilation.HostEnvironment.RegisterAsLatest(result.SpecSharpCompilationPart.Compilation);
+      CSharpSourceDocumentEdit edit = new CSharpSourceDocumentEdit(oldLocationAfterPreprocessing, result);
+      edit.compilationPartAfterEdit = result.specSharpCompilationPart = (CSharpCompilationPart)this.CSharpCompilationPart.UpdateWith(edit, nextParts, out editEventArgs, out symbolTableEditEventArgs);
+      this.Helper.Compilation.HostEnvironment.RegisterAsLatest(result.CSharpCompilationPart.Compilation);
       this.Helper.Compilation.HostEnvironment.ReportEdits(editEventArgs);
       if (symbolTableEditEventArgs != null)
         this.Helper.Compilation.HostEnvironment.ReportSymbolTableEdits(symbolTableEditEventArgs);
       return result;
     }
 
-    internal sealed class SpecSharpSourceDocumentEdit : AstSourceDocumentEdit {
+    internal sealed class CSharpSourceDocumentEdit : AstSourceDocumentEdit {
       /// <summary>
       /// Allocates an object that describes an edit to a source file.
       /// </summary>
-      internal SpecSharpSourceDocumentEdit(ISourceLocation sourceLocationBeforeEdit, ISourceDocument sourceDocumentAfterEdit)
+      internal CSharpSourceDocumentEdit(ISourceLocation sourceLocationBeforeEdit, ISourceDocument sourceDocumentAfterEdit)
         : base(sourceLocationBeforeEdit, sourceDocumentAfterEdit)
         //^ requires sourceDocumentAfterEdit.IsUpdatedVersionOf(sourceLocationBeforeEdit.SourceDocument);
       {
@@ -510,9 +510,9 @@ namespace Microsoft.Cci.SpecSharp {
     /// <summary>
     /// Returns a new preprocessed document of the same type as this document, but using the given helper and underlying document to preprocess.
     /// </summary>
-    /// <param name="helper">A Spec# specific helper object that is used to provide the value of the CompilationPart property.</param>
+    /// <param name="helper">A C# specific helper object that is used to provide the value of the CompilationPart property.</param>
     /// <param name="documentToPreprocess">The unpreprocessed document on which the newly allocated document should be based.</param>
-    protected abstract SpecSharpCompositeDocument<PrimaryDocumentType, VersionType> GetNewVersion(SpecSharpCompilationHelper helper, PrimaryDocumentType documentToPreprocess);
+    protected abstract CSharpCompositeDocument<PrimaryDocumentType, VersionType> GetNewVersion(CSharpCompilationHelper helper, PrimaryDocumentType documentToPreprocess);
     // ^ ensures result.GetType() == this.GetType(); //TODO: this crashes the non null analyzer
 
     /// <summary>
@@ -523,21 +523,21 @@ namespace Microsoft.Cci.SpecSharp {
     /// <param name="updatedText">The replacement string.</param>
     /// <param name="version">A version object (may be null) to associate with the result.</param>
     protected abstract PrimaryDocumentType/*!*/ GetNextVersionOfDocumentToPreprocess(int position, int length, string updatedText, VersionType version);
-    // ^ requires 0 <= position && position < this.DocumentToPreprocess.Length; //Spec# bug: this contract is not fully analyzed by the time it is inherited by the override
+    // ^ requires 0 <= position && position < this.DocumentToPreprocess.Length;
     // ^ requires 0 <= length && length <= this.DocumentToPreprocess.Length;
     // ^ requires 0 <= position+length && position+length <= this.DocumentToPreprocess.Length;
 
     /// <summary>
     /// Returns a new version of this document where the substring designated by position and length has been replaced by the given replacement text.
     /// </summary>
-    /// <param name="helper">A Spec# specific helper object that is used to provide the value of the CompilationPart property.</param>
+    /// <param name="helper">A C# specific helper object that is used to provide the value of the CompilationPart property.</param>
     /// <param name="nextVersionOfDocumentToPreprocess">The unpreprocessed document on which the newly allocated document should be based.</param>
     /// <param name="nextVersionOfPreprocessorInformation">A preprocessing information object that was incrementally derived from it previous version.</param>
     /// <param name="position">The first character in the previous version of the new document that will be changed in the new document.</param>
     /// <param name="oldLength">The number of characters in the previous verion of the new document that will be changed in the new document.</param>
     /// <param name="newLength">The number of replacement characters in the new document. 
     /// (The length of the string that replaces the substring from position to position+length in the previous version of the new document.)</param>
-    protected abstract SpecSharpCompositeDocument<PrimaryDocumentType, VersionType> GetNextVersion(SpecSharpCompilationHelper helper,
+    protected abstract CSharpCompositeDocument<PrimaryDocumentType, VersionType> GetNextVersion(CSharpCompilationHelper helper,
       PrimaryDocumentType nextVersionOfDocumentToPreprocess, PreprocessorInformation/*?*/ nextVersionOfPreprocessorInformation, int position, int oldLength, int newLength);
     // ^ ensures result.GetType() == this.GetType(); //TODO: this crashes the non null analyzer
 
@@ -556,13 +556,13 @@ namespace Microsoft.Cci.SpecSharp {
     private Preprocessor GetAndCacheNewPreprocessor()
       //^ ensures this.preprocessor == result;
     {
-      return this.preprocessor = new Preprocessor(this.DocumentToPreprocess, (SpecSharpOptions)this.SpecSharpCompilationPart.Compilation.Options);
+      return this.preprocessor = new Preprocessor(this.DocumentToPreprocess, (CSharpOptions)this.CSharpCompilationPart.Compilation.Options);
     }
 
-    protected SpecSharpCompilationHelper Helper {
+    protected CSharpCompilationHelper Helper {
       get { return this.helper; }
     }
-    readonly SpecSharpCompilationHelper helper;
+    readonly CSharpCompilationHelper helper;
 
     private Preprocessor Preprocessor {
       get
@@ -617,7 +617,7 @@ namespace Microsoft.Cci.SpecSharp {
     private readonly List<IErrorMessage> scannerAndParserErrors = new List<IErrorMessage>();
 
     public override string SourceLanguage {
-      get { return "Spec#"; }
+      get { return "C#"; }
     }
 
     internal override ISourceDocument UnpreprocessedDocument {
@@ -626,22 +626,22 @@ namespace Microsoft.Cci.SpecSharp {
 
   }
 
-  public sealed class SpecSharpSourceDocument : SpecSharpCompositeDocument<SpecSharpUnpreprocessedSourceDocument, object> {
+  public sealed class CSharpSourceDocument : CSharpCompositeDocument<CSharpUnpreprocessedSourceDocument, object> {
 
-    public SpecSharpSourceDocument(SpecSharpCompilationHelper helper, IName name, string location, System.IO.StreamReader streamReader)
-      : base(helper, new SpecSharpUnpreprocessedSourceDocument(helper, name, location, streamReader)) {
+    public CSharpSourceDocument(CSharpCompilationHelper helper, IName name, string location, System.IO.StreamReader streamReader)
+      : base(helper, new CSharpUnpreprocessedSourceDocument(helper, name, location, streamReader)) {
     }
 
-    public SpecSharpSourceDocument(SpecSharpCompilationHelper helper, IName name, string location, string text)
-      : base(helper, new SpecSharpUnpreprocessedSourceDocument(helper, name, location, text)) {
+    public CSharpSourceDocument(CSharpCompilationHelper helper, IName name, string location, string text)
+      : base(helper, new CSharpUnpreprocessedSourceDocument(helper, name, location, text)) {
     }
 
-    private SpecSharpSourceDocument(SpecSharpCompilationHelper helper, SpecSharpUnpreprocessedSourceDocument documentToPreprocess)
+    private CSharpSourceDocument(CSharpCompilationHelper helper, CSharpUnpreprocessedSourceDocument documentToPreprocess)
       : base(helper, documentToPreprocess) {
     }
 
-    private SpecSharpSourceDocument(SpecSharpCompilationHelper helper, SpecSharpUnpreprocessedSourceDocument nextVersionOfDocumentToPreprocess, PreprocessorInformation/*?*/ nextVersionOfPreprocessorInformation,
-      SpecSharpSourceDocument previousVersion, int position, int oldLength, int newLength)
+    private CSharpSourceDocument(CSharpCompilationHelper helper, CSharpUnpreprocessedSourceDocument nextVersionOfDocumentToPreprocess, PreprocessorInformation/*?*/ nextVersionOfPreprocessorInformation,
+      CSharpSourceDocument previousVersion, int position, int oldLength, int newLength)
       : base(helper, nextVersionOfDocumentToPreprocess, nextVersionOfPreprocessorInformation, previousVersion, position, oldLength, newLength) {
     }
 
@@ -653,7 +653,7 @@ namespace Microsoft.Cci.SpecSharp {
     /// <param name="position">The position in this.DocumentToPreprocess, of the first character to be replaced by this edit.</param>
     /// <param name="length">The number of characters in this.DocumentToPreprocess that will be replaced by this edit.</param>
     /// <param name="updatedText">The replacement string.</param>
-    public ISpecSharpSourceDocument GetUpdatedDocument(int position, int length, string updatedText)
+    public ICSharpSourceDocument GetUpdatedDocument(int position, int length, string updatedText)
       //^ requires 0 <= position && position < this.DocumentToPreprocess.Length;
       //^ requires 0 <= length && length <= this.DocumentToPreprocess.Length;
       //^ requires 0 <= position+length && position+length <= this.DocumentToPreprocess.Length;
@@ -665,38 +665,38 @@ namespace Microsoft.Cci.SpecSharp {
     /// <summary>
     /// Returns a new preprocessed document of the same type as this document, but using the given helper and underlying document to preprocess.
     /// </summary>
-    /// <param name="helper">A Spec# specific helper object that is used to provide the value of the CompilationPart property.</param>
+    /// <param name="helper">A C# specific helper object that is used to provide the value of the CompilationPart property.</param>
     /// <param name="documentToPreprocess">The unpreprocessed document on which the newly allocated document should be based.</param>
-    protected override SpecSharpCompositeDocument<SpecSharpUnpreprocessedSourceDocument, object> GetNewVersion(SpecSharpCompilationHelper helper, SpecSharpUnpreprocessedSourceDocument documentToPreprocess) {
-      return new SpecSharpSourceDocument(helper, documentToPreprocess);
+    protected override CSharpCompositeDocument<CSharpUnpreprocessedSourceDocument, object> GetNewVersion(CSharpCompilationHelper helper, CSharpUnpreprocessedSourceDocument documentToPreprocess) {
+      return new CSharpSourceDocument(helper, documentToPreprocess);
     }
 
-    protected override SpecSharpUnpreprocessedSourceDocument GetNextVersionOfDocumentToPreprocess(int position, int length, string updatedText, object version) 
+    protected override CSharpUnpreprocessedSourceDocument GetNextVersionOfDocumentToPreprocess(int position, int length, string updatedText, object version) 
       //^^ requires 0 <= position && position < this.DocumentToPreprocess.Length;
       //^^ requires 0 <= length && length <= this.DocumentToPreprocess.Length;
       //^^ requires 0 <= position+length && position+length <= this.DocumentToPreprocess.Length;
     {
-      SpecSharpUnpreprocessedSourceDocument documentToPreprocess = this.DocumentToPreprocess;
+      CSharpUnpreprocessedSourceDocument documentToPreprocess = this.DocumentToPreprocess;
       //^ assume 0 <= position && position < documentToPreprocess.Length; //follows from precondition
       //^ assume 0 <= length && length <= this.DocumentToPreprocess.Length; //follows from precondition
       //^ assume 0 <= position+length && position+length <= this.DocumentToPreprocess.Length;
       return documentToPreprocess.GetUpdatedDocument(position, length, updatedText);
     }
 
-    protected override SpecSharpCompositeDocument<SpecSharpUnpreprocessedSourceDocument, object> GetNextVersion(SpecSharpCompilationHelper helper,
-      SpecSharpUnpreprocessedSourceDocument nextVersionOfDocumentToPreprocess, PreprocessorInformation/*?*/ nextVersionOfPreprocessorInformation, int position, int oldLength, int newLength)
+    protected override CSharpCompositeDocument<CSharpUnpreprocessedSourceDocument, object> GetNextVersion(CSharpCompilationHelper helper,
+      CSharpUnpreprocessedSourceDocument nextVersionOfDocumentToPreprocess, PreprocessorInformation/*?*/ nextVersionOfPreprocessorInformation, int position, int oldLength, int newLength)
       //^^ ensures result.GetType() == this.GetType();
     {
-      return new SpecSharpSourceDocument(helper, nextVersionOfDocumentToPreprocess, nextVersionOfPreprocessorInformation, this, position, oldLength, newLength); 
+      return new CSharpSourceDocument(helper, nextVersionOfDocumentToPreprocess, nextVersionOfPreprocessorInformation, this, position, oldLength, newLength); 
     }
 
     /// <summary>
     /// Makes a shallow copy of this source document (creating a new
     /// </summary>
-    public override SpecSharpCompositeDocument MakeShallowCopyFor(Compilation targetCompilation) {
-      SpecSharpCompilationHelper helperCopy = (SpecSharpCompilationHelper)this.Helper.MakeShallowCopyFor(targetCompilation);
+    public override CSharpCompositeDocument MakeShallowCopyFor(Compilation targetCompilation) {
+      CSharpCompilationHelper helperCopy = (CSharpCompilationHelper)this.Helper.MakeShallowCopyFor(targetCompilation);
       PreprocessorInformation/*?*/ nextVersionOfPreprocessorInformation = new PreprocessorInformation(this.DocumentToPreprocess, this.PreprocessorInformation);
-      return new SpecSharpSourceDocument(helperCopy, this.DocumentToPreprocess, nextVersionOfPreprocessorInformation, this, 0, 0, 0);
+      return new CSharpSourceDocument(helperCopy, this.DocumentToPreprocess, nextVersionOfPreprocessorInformation, this, 0, 0, 0);
     }
 
     internal override ISourceDocument UnpreprocessedDocument {
@@ -704,10 +704,10 @@ namespace Microsoft.Cci.SpecSharp {
     }
   }
 
-  public sealed class DummySpecSharpCompilation : Compilation {
+  public sealed class DummyCSharpCompilation : Compilation {
 
-    public DummySpecSharpCompilation(ICompilation compilation, IMetadataHost compilationHost)
-      : base(new DummyEditHostEnvironment(compilationHost), new DummyUnit(compilation, compilationHost), new SpecSharpOptions()) {
+    public DummyCSharpCompilation(ICompilation compilation, IMetadataHost compilationHost)
+      : base(new DummyEditHostEnvironment(compilationHost), new DummyUnit(compilation, compilationHost), new CSharpOptions()) {
     }
 
     protected override List<CompilationPart> GetPartList() {
@@ -733,14 +733,14 @@ namespace Microsoft.Cci.SpecSharp {
     }
   }
 
-  internal sealed class SpecSharpErrorMessage : ErrorMessage {
+  internal sealed class CSharpErrorMessage : ErrorMessage {
 
-    public SpecSharpErrorMessage(ISourceLocation sourceLocation, long code, string messageKey, params string[] messageArguments)
+    public CSharpErrorMessage(ISourceLocation sourceLocation, long code, string messageKey, params string[] messageArguments)
       : base(sourceLocation, code, messageKey, messageArguments) {
     }
 
     public override object ErrorReporter {
-      get { return Microsoft.Cci.SpecSharp.ErrorReporter.Instance; }
+      get { return Microsoft.Cci.CSharp.ErrorReporter.Instance; }
     }
 
     public override string ErrorReporterIdentifier {
@@ -760,12 +760,12 @@ namespace Microsoft.Cci.SpecSharp {
       if (this.SourceLocation.SourceDocument == targetDocument) return this;
       ISourceLocation sloc = this.SourceLocation;
       //^ assume targetDocument.IsUpdatedVersionOf(sloc.SourceDocument); //follows from precondition
-      return new SpecSharpErrorMessage(targetDocument.GetCorrespondingSourceLocation(sloc), this.Code, this.MessageKey, this.MessageArguments());
+      return new CSharpErrorMessage(targetDocument.GetCorrespondingSourceLocation(sloc), this.Code, this.MessageKey, this.MessageArguments());
     }
 
     public override string Message {
       get {
-        ResourceManager resourceManager = new ResourceManager("Microsoft.Cci.SpecSharp.ErrorMessages", this.GetType().Assembly);
+        ResourceManager resourceManager = new ResourceManager("Microsoft.Cci.CSharp.ErrorMessages", this.GetType().Assembly);
         return base.GetMessage(resourceManager);
       }
     }

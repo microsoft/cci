@@ -9,10 +9,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using Microsoft.Cci.Ast;
-using Error = Microsoft.Cci.SpecSharp.Error;
+using Error = Microsoft.Cci.CSharp.Error;
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp.Preprocessing {
+namespace Microsoft.Cci.CSharp.Preprocessing {
 
   internal sealed class Preprocessor {
 
@@ -68,7 +68,7 @@ namespace Microsoft.Cci.SpecSharp.Preprocessing {
     /// </summary>
     /// <param name="documentToProcess">The source document to preprocess.</param>
     /// <param name="options">An object that specifies any preprocessor symbols that are defined as compiler options by the environment.</param>
-    internal Preprocessor(IPrimarySourceDocument documentToProcess, SpecSharpOptions options) {
+    internal Preprocessor(IPrimarySourceDocument documentToProcess, CSharpOptions options) {
       //TODO: use Dictionary<string,string> instead of StringDictionary.
       this.documentToProcess = documentToProcess;
       List<IErrorMessage> errors = this.errors = new List<IErrorMessage>();
@@ -214,7 +214,7 @@ namespace Microsoft.Cci.SpecSharp.Preprocessing {
       //^ requires this.errorIndex < this.fragmentIndex;
     {
       ISourceLocation errorLocation = this.GetSourceLocation(this.errorIndex, this.fragmentIndex-this.errorIndex);
-      this.errors.Add(new SpecSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageArguments));
+      this.errors.Add(new CSharpErrorMessage(errorLocation, (long)error, error.ToString(), messageArguments));
     }
 
     /// <summary>

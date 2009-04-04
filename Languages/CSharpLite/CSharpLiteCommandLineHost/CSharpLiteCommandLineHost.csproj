@@ -7,8 +7,8 @@
     <ProjectGuid>{0255FB0C-31EE-46CF-94A9-E3787331D9CA}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.SpecSharp.CommandLineHost</RootNamespace>
-    <AssemblyName>ssc</AssemblyName>
+    <RootNamespace>Microsoft.CSharp</RootNamespace>
+    <AssemblyName>csl</AssemblyName>
     <SccProjectName>
     </SccProjectName>
     <SccLocalPath>
@@ -45,6 +45,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PdbWriter\PdbWriter.csproj">
+      <Project>{6D83F687-ABB5-40B3-915E-CA53DA0EB7F3}</Project>
+      <Name>PdbWriter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Sources\CodeModelNormalizer\CodeModelNormalizer.csproj">
       <Project>{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}</Project>
       <Name>CodeModelNormalizer</Name>

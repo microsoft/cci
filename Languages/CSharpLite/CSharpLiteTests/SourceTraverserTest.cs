@@ -7,12 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.Cci.SpecSharp;
+using Microsoft.Cci.CSharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Cci.Ast;
 using System.Diagnostics;
 
-namespace SpecSharpTests
+namespace CSharpTests
 {
     /// <summary>
     /// A unit test that invokes the Spec# command line host with a test suite

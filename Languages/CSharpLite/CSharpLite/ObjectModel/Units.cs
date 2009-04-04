@@ -9,7 +9,7 @@ using Microsoft.Cci.Ast;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
 
   internal sealed class DummyUnit : Unit {
 
@@ -20,7 +20,7 @@ namespace Microsoft.Cci.SpecSharp {
     }
 
     public override Compilation Compilation {
-      get { return new DummySpecSharpCompilation(this.compilation, this.compilationHost); }
+      get { return new DummyCSharpCompilation(this.compilation, this.compilationHost); }
     }
     readonly ICompilation compilation;
 
@@ -76,17 +76,17 @@ namespace Microsoft.Cci.SpecSharp {
 
   }
 
-  public sealed class SpecSharpAssembly : Assembly {
+  public sealed class CSharpAssembly : Assembly {
 
-    public SpecSharpAssembly(IName name, string location, ISourceEditHost hostEnvironment, SpecSharpOptions options,
-      IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<IModuleReference> moduleReferences, IEnumerable<SpecSharpSourceDocument> programSources)
+    public CSharpAssembly(IName name, string location, ISourceEditHost hostEnvironment, CSharpOptions options,
+      IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<IModuleReference> moduleReferences, IEnumerable<CSharpSourceDocument> programSources)
       : base(name, location, name, assemblyReferences, moduleReferences, new List<IResourceReference>(0).AsReadOnly(), new List<IFileReference>(0).AsReadOnly()) {
       this.options = options;
       this.hostEnvironment = hostEnvironment;
       this.programSources = programSources;
     }
 
-    internal SpecSharpAssembly(IName name, string location, ISourceEditHost hostEnvironment, SpecSharpOptions options,
+    internal CSharpAssembly(IName name, string location, ISourceEditHost hostEnvironment, CSharpOptions options,
       IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<IModuleReference> moduleReferences, IEnumerable<CompilationPart> compilationParts)
       : base(name, location, name, assemblyReferences, moduleReferences, new List<IResourceReference>(0).AsReadOnly(), new List<IFileReference>(0).AsReadOnly()) {
       this.options = options;
@@ -103,9 +103,9 @@ namespace Microsoft.Cci.SpecSharp {
             if (this.compilation == null) {
               if (this.compilationParts == null) {
                 //^ assume this.programSources != null;
-                this.compilation = new SpecSharpCompilation(this.hostEnvironment, this, this.options, this.ProvideCompilationParts());
+                this.compilation = new CSharpCompilation(this.hostEnvironment, this, this.options, this.ProvideCompilationParts());
               } else
-                this.compilation = new SpecSharpCompilation(this.hostEnvironment, this, this.options, this.compilationParts);
+                this.compilation = new CSharpCompilation(this.hostEnvironment, this, this.options, this.compilationParts);
               //TODO: construct unit sets from references. Associate these with the compilation.
             }
           }
@@ -113,14 +113,13 @@ namespace Microsoft.Cci.SpecSharp {
         return this.compilation;
       }
     }
-    SpecSharpCompilation/*?*/ compilation;
+    CSharpCompilation/*?*/ compilation;
 
     readonly IEnumerable<CompilationPart>/*?*/ compilationParts;
 
     protected override RootUnitNamespace CreateRootNamespace()
       //^^ ensures result.RootOwner == this;
     {
-      //^ assume false; //constructor can't provide the necessary post condition until Spec# non delayed constructors get fixed
       return new RootUnitNamespace(this.Compilation.NameTable.EmptyName, this);
     }
 
@@ -156,26 +155,26 @@ namespace Microsoft.Cci.SpecSharp {
       get { return true; }
     }
 
-    readonly SpecSharpOptions options;
+    readonly CSharpOptions options;
 
-    readonly IEnumerable<SpecSharpSourceDocument>/*?*/ programSources;
+    readonly IEnumerable<CSharpSourceDocument>/*?*/ programSources;
 
     IEnumerable<CompilationPart> ProvideCompilationParts() {
-      IEnumerable<SpecSharpSourceDocument> programSources;
+      IEnumerable<CSharpSourceDocument> programSources;
       if (this.programSources == null)
         yield break;
       else
         programSources = this.programSources;
-      foreach (SpecSharpSourceDocument programSource in programSources)
-        yield return programSource.SpecSharpCompilationPart;
+      foreach (CSharpSourceDocument programSource in programSources)
+        yield return programSource.CSharpCompilationPart;
     }
 
   }
 
-  public sealed class SpecSharpModule : Module {
+  public sealed class CSharpModule : Module {
 
-    public SpecSharpModule(IName name, string location, ISourceEditHost hostEnvironment, SpecSharpOptions options, IAssembly containingAssembly,
-      IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<IModuleReference> moduleReferences, IEnumerable<SpecSharpSourceDocument> programSources)
+    public CSharpModule(IName name, string location, ISourceEditHost hostEnvironment, CSharpOptions options, IAssembly containingAssembly,
+      IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<IModuleReference> moduleReferences, IEnumerable<CSharpSourceDocument> programSources)
       //TODO: pass in information about which assemblies belong to which named unit sets
       : base(name, location, containingAssembly, assemblyReferences, moduleReferences)
     {
@@ -184,7 +183,7 @@ namespace Microsoft.Cci.SpecSharp {
       this.programSources = programSources;
     }
 
-    internal SpecSharpModule(IName name, string location, ISourceEditHost hostEnvironment, SpecSharpOptions options, IAssembly containingAssembly,
+    internal CSharpModule(IName name, string location, ISourceEditHost hostEnvironment, CSharpOptions options, IAssembly containingAssembly,
       IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<IModuleReference> moduleReferences, IEnumerable<CompilationPart> compilationParts)
       //TODO: pass in information about which assemblies belong to which named unit sets
       : base(name, location, containingAssembly, assemblyReferences, moduleReferences) {
@@ -200,22 +199,21 @@ namespace Microsoft.Cci.SpecSharp {
         if (this.compilation == null) {
           if (this.compilationParts == null) {
             //^ assume this.programSources != null;
-            this.compilation = new SpecSharpCompilation(this.hostEnvironment, this, this.options, this.ProvideCompilationParts());
+            this.compilation = new CSharpCompilation(this.hostEnvironment, this, this.options, this.ProvideCompilationParts());
           }else
-            this.compilation = new SpecSharpCompilation(this.hostEnvironment, this, this.options, this.compilationParts);
+            this.compilation = new CSharpCompilation(this.hostEnvironment, this, this.options, this.compilationParts);
           //TODO: construct unit sets from references. Associate these with the compilation.
         }
         return this.compilation;
       }
     }
-    SpecSharpCompilation/*?*/ compilation = null;
+    CSharpCompilation/*?*/ compilation = null;
 
     readonly IEnumerable<CompilationPart>/*?*/ compilationParts;
 
     protected override RootUnitNamespace CreateRootNamespace()
       //^^ ensures result.RootOwner == this;
     {
-      //^ assume false; //constructor can't provide the necessary post condition until Spec# non delayed constructors get fixed
       return new RootUnitNamespace(this.Compilation.NameTable.EmptyName, this);
     }
 
@@ -231,18 +229,18 @@ namespace Microsoft.Cci.SpecSharp {
 
     readonly ISourceEditHost hostEnvironment;
 
-    readonly SpecSharpOptions options;
+    readonly CSharpOptions options;
 
-    readonly IEnumerable<SpecSharpSourceDocument>/*?*/ programSources;
+    readonly IEnumerable<CSharpSourceDocument>/*?*/ programSources;
 
     IEnumerable<CompilationPart> ProvideCompilationParts() {
-      IEnumerable<SpecSharpSourceDocument> programSources;
+      IEnumerable<CSharpSourceDocument> programSources;
       if (this.programSources == null)
         yield break;
       else
         programSources = this.programSources;
-      foreach (SpecSharpSourceDocument programSource in programSources)
-        yield return programSource.SpecSharpCompilationPart;
+      foreach (CSharpSourceDocument programSource in programSources)
+        yield return programSource.CSharpCompilationPart;
     }
 
     public override ModuleIdentity ModuleIdentity {

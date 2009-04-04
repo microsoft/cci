@@ -5,9 +5,9 @@ using System.IO;
 using Microsoft.Build.BuildEngine;
 using Microsoft.Cci;
 using Microsoft.Cci.Ast;
-using Microsoft.Cci.SpecSharp;
+using Microsoft.Cci.CSharp;
 
-namespace SpecSharpTests
+namespace CSharpTests
 {
     internal class CompilerHostEnvironment : SourceEditHostEnvironment
     {
@@ -55,12 +55,12 @@ namespace SpecSharpTests
 
             var projectName = Environment.NameTable.GetNameFor(project.EvaluatedProperties["AssemblyName"].Value);
             var projectPath = project.FullFileName;
-            var compilerOptions = new SpecSharpOptions();
+            var compilerOptions = new CSharpOptions();
             var assemblyReferences = new List<IAssemblyReference>();
             var moduleReferences = new List<IModuleReference>();
-            var programSources = new List<SpecSharpSourceDocument>();
-            var assembly = new SpecSharpAssembly(projectName, projectPath, Environment, compilerOptions, assemblyReferences, moduleReferences, programSources);
-            var helper = new SpecSharpCompilationHelper(assembly.Compilation);
+            var programSources = new List<CSharpSourceDocument>();
+            var assembly = new CSharpAssembly(projectName, projectPath, Environment, compilerOptions, assemblyReferences, moduleReferences, programSources);
+            var helper = new CSharpCompilationHelper(assembly.Compilation);
 
             Compilations[Path.GetFullPath(projectFileName)] = assembly;
 
@@ -91,7 +91,7 @@ namespace SpecSharpTests
             {
                 var location = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(project.FullFileName), item.FinalItemSpec));
                 var name = Environment.NameTable.GetNameFor(location);
-                var programSource = new SpecSharpSourceDocument(helper, name, location, File.ReadAllText(location));
+                var programSource = new CSharpSourceDocument(helper, name, location, File.ReadAllText(location));
                 programSources.Add(programSource);
             }
 

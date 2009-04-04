@@ -3,7 +3,7 @@
 // Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //-----------------------------------------------------------------------------
-namespace Microsoft.Cci.SpecSharp
+namespace Microsoft.Cci.CSharp
 {
 	internal enum Error
 	{

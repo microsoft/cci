@@ -11,7 +11,7 @@ using Microsoft.Cci.Ast;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
   public class CompilerOptions : System.CodeDom.Compiler.CompilerParameters {
     public IDictionary<string,string>/*?*/ AliasesForReferencedAssemblies;
     //public ModuleKindFlags ModuleKind = ModuleKindFlags.ConsoleApplication;
@@ -166,7 +166,7 @@ namespace Microsoft.Cci.SpecSharp {
     ISO1,
     CSharpVersion2,
   }
-  public class SpecSharpCompilerOptions : CompilerOptions {
+  public class CSharpCompilerOptions : CompilerOptions {
     public bool Compatibility; //TODO: make this go away. Use LanguageVersion.
     public bool DummyCompilation;
     public LanguageVersionType LanguageVersion;
@@ -175,13 +175,13 @@ namespace Microsoft.Cci.SpecSharp {
     public bool RunProgramVerifierWhileEditing;
     public List<string>/*?*/ ProgramVerifierCommandLineOptions; // things to pass through to the static verifier
 
-    public SpecSharpCompilerOptions() {
+    public CSharpCompilerOptions() {
     }
 
     //^ [NotDelayed]
-    public SpecSharpCompilerOptions(CompilerOptions options)
+    public CSharpCompilerOptions(CompilerOptions options)
       : base(options) {
-      SpecSharpCompilerOptions/*?*/ coptions = options as SpecSharpCompilerOptions;
+      CSharpCompilerOptions/*?*/ coptions = options as CSharpCompilerOptions;
       if (coptions == null) return;
       this.Compatibility = coptions.Compatibility;
       this.ReferenceTypesAreNonNullByDefault = coptions.ReferenceTypesAreNonNullByDefault;

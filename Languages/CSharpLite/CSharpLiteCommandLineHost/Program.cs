@@ -9,9 +9,9 @@ using System.IO;
 using System.Text;
 using Microsoft.Cci.Ast;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
   
-  public class SpecSharpCommandLineHost {
+  public class CSharpCommandLineHost {
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
@@ -19,7 +19,7 @@ namespace Microsoft.Cci.SpecSharp {
     static void Main(string[] args) {
       HostEnvironment hostEnvironment = new HostEnvironment();
       hostEnvironment.Errors += hostEnvironment.HandleErrors;
-      SpecSharpOptions commandLineOptions = OptionParser.ParseCommandLineArguments(hostEnvironment, args);
+      CSharpOptions commandLineOptions = OptionParser.ParseCommandLineArguments(hostEnvironment, args);
       if (hostEnvironment.hasError) return;
       if (commandLineOptions.DisplayCommandLineHelp)
         DisplayCommandLineHelp();
@@ -29,7 +29,7 @@ namespace Microsoft.Cci.SpecSharp {
         TranslateToExe(commandLineOptions);
     }
 
-    private static bool TranslateToExe(SpecSharpOptions commandLineOptions)
+    private static void TranslateToExe(CSharpOptions commandLineOptions)
       //^ requires commandLineOptions.FileNames.Count > 0;
     {
       HostEnvironment hostEnvironment = new HostEnvironment();
@@ -37,44 +37,23 @@ namespace Microsoft.Cci.SpecSharp {
       hostEnvironment.displayFileName = true;
       List<IAssemblyReference> assemblyReferences = GetAssemblyReferences(commandLineOptions, hostEnvironment);
       List<IModuleReference> moduleReferences = new List<IModuleReference>();
-      List<SpecSharpSourceDocument> programSources = new List<SpecSharpSourceDocument>(1);
+      List<CSharpSourceDocument> programSources = new List<CSharpSourceDocument>(1);
       IName name = hostEnvironment.NameTable.GetNameFor(Path.GetFileNameWithoutExtension(commandLineOptions.FileNames[0]));
-      SpecSharpAssembly assem = new SpecSharpAssembly(name, Path.GetFullPath(name.Value), hostEnvironment, commandLineOptions, assemblyReferences, moduleReferences, programSources);
-      SpecSharpCompilationHelper helper = new SpecSharpCompilationHelper(assem.Compilation);
+      CSharpAssembly assem = new CSharpAssembly(name, Path.GetFullPath(name.Value), hostEnvironment, commandLineOptions, assemblyReferences, moduleReferences, programSources);
+      CSharpCompilationHelper helper = new CSharpCompilationHelper(assem.Compilation);
       foreach (string fileName in commandLineOptions.FileNames) {
         name = hostEnvironment.NameTable.GetNameFor(fileName);
         StreamReader instream = File.OpenText(fileName);
-        programSources.Add(new SpecSharpSourceDocument(helper, name, Path.GetFullPath(fileName), instream));
+        programSources.Add(new CSharpSourceDocument(helper, name, Path.GetFullPath(fileName), instream));
       }
 
-      PeWriter.WritePeToStream(assem, hostEnvironment, File.Create(Path.ChangeExtension(assem.Location, "exe1")));
-
-      //CodeModelNormalizer normalizer = new CodeModelNormalizer(hostEnvironment, null, null, null);
-      //IAssembly normalizedAssem = normalizer.Visit(normalizer.GetMutableCopy(assem));
-      //CodeModelToCciOne.MetadataMapper mapper = new CodeModelToCciOne.MetadataMapper();
-      //mapper.Visit(normalizedAssem);
-      //CodeModelToCciOne.ConvertCodeModelToCciOne converter = new CodeModelToCciOne.ConvertCodeModelToCciOne(assem.Compilation, mapper.metadataMap, assem.Compilation.ContractProvider);
-      //try {
-      //  converter.Visit(normalizedAssem);
-      //} catch {
-      //  return false;
-      //}
-      //CodeModelToCciOne.MetadataMapper mapper = new CodeModelToCciOne.MetadataMapper();
-      //mapper.Visit(assem);
-      //CodeModelToCciOne.ConvertCodeModelToCciOne converter = new CodeModelToCciOne.ConvertCodeModelToCciOne(assem.Compilation, mapper.metadataMap, assem.Compilation.ContractProvider);
-      //try {
-      //  converter.Visit(assem);
-      //} catch {
-      //  return false;
-      //}
-      //if (!hostEnvironment.hasError) {
-      //  converter.WriteAssembly(commandLineOptions.OutputFileName);
-      //  return true;
-      //}
-      return false;
+      var sourceLocationProvider = assem.Compilation.SourceLocationProvider;
+      //var localScopeProvider = assem.Compilation.LocalScopeProvider;
+      var pdbWriter = new PdbWriter(Path.ChangeExtension(assem.Location, "pdb"), sourceLocationProvider);
+      PeWriter.WritePeToStream(assem, hostEnvironment, File.Create(Path.ChangeExtension(assem.Location, "exe")), sourceLocationProvider, null, pdbWriter);
     }
 
-    private static List<IAssemblyReference> GetAssemblyReferences(SpecSharpOptions commandLineOptions, HostEnvironment hostEnvironment) {
+    private static List<IAssemblyReference> GetAssemblyReferences(CSharpOptions commandLineOptions, HostEnvironment hostEnvironment) {
       List<IAssemblyReference> assemblyReferences = new List<IAssemblyReference>();
       assemblyReferences.Add(hostEnvironment.LoadAssembly(hostEnvironment.CoreAssemblySymbolicIdentity));
       foreach (string assemblyReference in commandLineOptions.ReferencedAssemblies) {
@@ -96,12 +75,12 @@ namespace Microsoft.Cci.SpecSharp {
       Console.Out.WriteLine("please write something here");
     }
 
-    static void RunTestSuite(SpecSharpOptions commandLineOptions) {
+    static void RunTestSuite(CSharpOptions commandLineOptions) {
       foreach (string fileName in commandLineOptions.FileNames)
         RunTestSuite(fileName, commandLineOptions);
     }
 
-    static void RunTestSuite(string fileName, SpecSharpOptions commandLineOptions) {
+    static void RunTestSuite(string fileName, CSharpOptions commandLineOptions) {
       if (Directory.Exists(fileName)) {
         int errorCount = 0;
         foreach (FileInfo fi in new DirectoryInfo(fileName).GetFiles("*", SearchOption.AllDirectories)) {
@@ -278,42 +257,30 @@ namespace Microsoft.Cci.SpecSharp {
     private static int RunTest(HostEnvironment hostEnvironment, string suiteName, string test, StringBuilder actualOutput, List<string> compilerParameters, List<string> testCaseParameters) {
       hostEnvironment.hasError = false;
       IName name = hostEnvironment.NameTable.GetNameFor(suiteName);
-      SpecSharpOptions options = new SpecSharpOptions(); //TODO: extract from params
+      CSharpOptions options = new CSharpOptions(); //TODO: extract from params
       List<IAssemblyReference> assemblyReferences = new List<IAssemblyReference>();
       List<IModuleReference> moduleReferences = new List<IModuleReference>();
       assemblyReferences.Add(hostEnvironment.LoadAssembly(hostEnvironment.CoreAssemblySymbolicIdentity));
       IUnit unit;
-      SpecSharpAssembly/*?*/ assem = null;
-      SpecSharpCompilationHelper helper;
+      CSharpAssembly/*?*/ assem = null;
+      CSharpCompilationHelper helper;
       if (hostEnvironment.previousDocument != null && compilerParameters.Contains("/incremental")) {
         unit = hostEnvironment.GetIncrementalUnit(test);
-        helper = (SpecSharpCompilationHelper)hostEnvironment.previousDocument.SpecSharpCompilationPart.Helper;
+        helper = (CSharpCompilationHelper)hostEnvironment.previousDocument.CSharpCompilationPart.Helper;
       } else {
-        List<SpecSharpSourceDocument> programSources = new List<SpecSharpSourceDocument>(1);
-        assem = new SpecSharpAssembly(name, "", hostEnvironment, options, assemblyReferences, moduleReferences, programSources);
-        helper = new SpecSharpCompilationHelper(assem.Compilation);
-        programSources.Add(hostEnvironment.previousDocument = new SpecSharpSourceDocument(helper, name, "", test));
+        List<CSharpSourceDocument> programSources = new List<CSharpSourceDocument>(1);
+        assem = new CSharpAssembly(name, "", hostEnvironment, options, assemblyReferences, moduleReferences, programSources);
+        helper = new CSharpCompilationHelper(assem.Compilation);
+        programSources.Add(hostEnvironment.previousDocument = new CSharpSourceDocument(helper, name, "", test));
         unit = assem;
       }
       if (assem != null && assem.EntryPoint.ResolvedMethod != Dummy.Method) {
-        //CodeModelNormalizer normalizer = new CodeModelNormalizer(hostEnvironment, null, null, null);
-        //IAssembly normalizedAssem = normalizer.Visit(normalizer.GetMutableCopy(assem));
-        //CodeModelToCciOne.MetadataMapper mapper = new CodeModelToCciOne.MetadataMapper();
-        //mapper.Visit(normalizedAssem);
-        //CodeModelToCciOne.ConvertCodeModelToCciOne converter = new CodeModelToCciOne.ConvertCodeModelToCciOne(assem.Compilation, mapper.metadataMap);
-        //try {
-        //  converter.Visit(normalizedAssem);
-        //} catch { return -1; }
-        //CodeModelToCciOne.MetadataMapper mapper = new CodeModelToCciOne.MetadataMapper();
-        //mapper.Visit(assem);
-        //CodeModelToCciOne.ConvertCodeModelToCciOne converter = new CodeModelToCciOne.ConvertCodeModelToCciOne(assem.Compilation, mapper.metadataMap);
-        //try {
-        //  converter.Visit(assem);
-        //} catch { return -1; }
-        //if (!hostEnvironment.hasError)
-        //  return converter.RunAssembly(false); //TODO: pass in test case parameters
-        //else
-          return 0;
+        var memStream = new MemoryStream();
+        PeWriter.WritePeToStream(assem, hostEnvironment, memStream);
+        var runtimeAssembly = System.Reflection.Assembly.Load(memStream.ToArray());
+        object result = runtimeAssembly.EntryPoint.Invoke(null, null);
+        if (result is int) return (int)result;
+        return 0;
       }
 
       BaseCodeTraverser traverser = new BaseCodeTraverser();
@@ -413,11 +380,11 @@ namespace Microsoft.Cci.SpecSharp {
       string prefix = lines[0];
       string textToReplace = lines[1];
       string replacement = lines[2];
-      ISpecSharpSourceDocument updatedDocument = this.previousDocument.GetUpdatedDocument(prefix.Length, textToReplace.Length, replacement);
-      return updatedDocument.SpecSharpCompilationPart.Compilation.Result;
+      ICSharpSourceDocument updatedDocument = this.previousDocument.GetUpdatedDocument(prefix.Length, textToReplace.Length, replacement);
+      return updatedDocument.CSharpCompilationPart.Compilation.Result;
     }
 
-    internal SpecSharpSourceDocument/*?*/ previousDocument;
+    internal CSharpSourceDocument/*?*/ previousDocument;
 
     protected override AssemblyIdentity GetCoreAssemblySymbolicIdentity() {
       return this.mscorlibIdentity;

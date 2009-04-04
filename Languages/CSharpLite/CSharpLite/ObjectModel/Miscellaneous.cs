@@ -9,7 +9,7 @@ using Microsoft.Cci.Ast;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
   class ErrorReporter : ISymbolSyntaxErrorsReporter {
     private ErrorReporter() { }
     internal static readonly ErrorReporter Instance = new ErrorReporter();

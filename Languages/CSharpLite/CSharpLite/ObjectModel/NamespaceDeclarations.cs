@@ -9,19 +9,19 @@ using Microsoft.Cci.Ast;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.SpecSharp {
+namespace Microsoft.Cci.CSharp {
 
-  internal sealed class SpecSharpRootNamespaceDeclaration : RootNamespaceDeclaration {
+  internal sealed class CSharpRootNamespaceDeclaration : RootNamespaceDeclaration {
 
-    internal SpecSharpRootNamespaceDeclaration(SpecSharpCompilationPart compilationPart, ISourceLocation sourceLocation)
+    internal CSharpRootNamespaceDeclaration(CSharpCompilationPart compilationPart, ISourceLocation sourceLocation)
       : base(compilationPart, sourceLocation) 
-      //^ requires sourceLocation.SourceDocument is SpecSharpCompositeDocument;
+      //^ requires sourceLocation.SourceDocument is CSharpCompositeDocument;
     {
     }
 
-    internal SpecSharpRootNamespaceDeclaration(ISourceLocation sourceLocation)
+    internal CSharpRootNamespaceDeclaration(ISourceLocation sourceLocation)
       : base(null, sourceLocation)
-      //^ requires sourceLocation.SourceDocument is SpecSharpCompositeDocument;
+      //^ requires sourceLocation.SourceDocument is CSharpCompositeDocument;
     {
     }
 
@@ -31,8 +31,8 @@ namespace Microsoft.Cci.SpecSharp {
       if (this.isInitialized) return;
       lock (GlobalLock.LockingObject) {
         if (this.isInitialized) return;
-        //^ assume this.CompilationPart is SpecSharpCompilationPart; //The constructor ensures this
-        SpecSharpCompilationPart cp = (SpecSharpCompilationPart)this.CompilationPart;
+        //^ assume this.CompilationPart is CSharpCompilationPart; //The constructor ensures this
+        CSharpCompilationPart cp = (CSharpCompilationPart)this.CompilationPart;
         Parser parser = new Parser(this.Compilation, this.SourceLocation, cp.ScannerAndParserErrors); //TODO: get options from Compilation
         this.Parse(parser);
         this.SetContainingNodes();
@@ -57,7 +57,7 @@ namespace Microsoft.Cci.SpecSharp {
       //^ assume this.members != null;
     }
 
-    internal void Parse(Parser parser, SpecSharpCompilationPart compilationPart) {
+    internal void Parse(Parser parser, CSharpCompilationPart compilationPart) {
       this.Parse(parser);
       this.compilationPart = compilationPart;
       this.SetContainingNodes();
@@ -68,7 +68,7 @@ namespace Microsoft.Cci.SpecSharp {
       //^^ requires edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDocument);
       //^^ ensures result.GetType() == this.GetType();
     {
-      SpecSharpRootNamespaceDeclaration result = new SpecSharpRootNamespaceDeclaration(edit.SourceDocumentAfterEdit.GetCorrespondingSourceLocation(this.SourceLocation));
+      CSharpRootNamespaceDeclaration result = new CSharpRootNamespaceDeclaration(edit.SourceDocumentAfterEdit.GetCorrespondingSourceLocation(this.SourceLocation));
       result.members = members;
       result.isInitialized = true;
       result.compilationPart = this.CompilationPart.UpdateRootNamespace(result);
