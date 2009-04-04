@@ -6466,7 +6466,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public IEnumerable<Expression> ConvertedSizes {
       get {
-        int i = 1;
+        int i = 0;
         foreach (Expression size in this.Sizes) {
           if (this.Helper.ImplicitConversionExists(size, this.PlatformType.SystemUInt32.ResolvedType))
             yield return this.Helper.ImplicitConversion(size, this.PlatformType.SystemUInt32.ResolvedType);
@@ -6481,7 +6481,15 @@ namespace Microsoft.Cci.Ast {
           i++;
         }
         while (i < this.Rank) {
-          yield return new CompileTimeConstant(this.GetDimensionSizeFromInitializers(i), true, SourceDummy.SourceLocation);
+          ulong d = this.GetDimensionSizeFromInitializers(i);
+          object o = null;
+          if (d <= int.MaxValue) o = (int)d;
+          else if (d <= uint.MaxValue) o = (uint)d;
+          else if (d <= long.MaxValue) o = (long)d;
+          else o = d;
+          var s = new CompileTimeConstant(o, true, SourceDummy.SourceLocation);
+          s.SetContainingExpression(this);
+          yield return s;
           i++;
         }
       }
