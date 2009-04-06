@@ -98,7 +98,7 @@ namespace Microsoft.Cci {
     /// Begins the part of a filter handler that is invoked on the second pass if the filter condition returns true on the first pass.
     /// </summary>
     public void BeginFilterBody() {
-      ILGeneratorLabel handlerStart = new ILGeneratorLabel();
+      ILGeneratorLabel handlerStart = new ILGeneratorLabel(false);
       this.MarkLabel(handlerStart);
       this.handlers[handlers.Count-1].HandlerStart = handlerStart;
     }
@@ -106,7 +106,7 @@ namespace Microsoft.Cci {
     private ExceptionHandler BeginHandler(HandlerKind kind)
       //^ requires InTryBody;
     {
-      ILGeneratorLabel handlerStart = new ILGeneratorLabel();
+      ILGeneratorLabel handlerStart = new ILGeneratorLabel(false);
       this.MarkLabel(handlerStart);
       TryBody currentTryBody = this.tryBodyStack.Peek();
       ExceptionHandler handler = new ExceptionHandler(kind, currentTryBody, handlerStart);
@@ -130,7 +130,7 @@ namespace Microsoft.Cci {
     public void BeginTryBody()
       //^ ensures InTryBody;
     {
-      ILGeneratorLabel tryBodyStart = new ILGeneratorLabel();
+      ILGeneratorLabel tryBodyStart = new ILGeneratorLabel(false);
       this.MarkLabel(tryBodyStart);
       this.tryBodyStack.Push(new TryBody(tryBodyStart));
     }
@@ -255,7 +255,7 @@ namespace Microsoft.Cci {
         Operation previousOp = this.operations[this.operations.Count-1];
         if (previousOp.OperationCode == (OperationCode)int.MaxValue) {
           ILGeneratorLabel labelOfBranch = (ILGeneratorLabel)previousOp.value;
-          labelOfBranch.alias = label;
+          if (labelOfBranch.mayAlias) labelOfBranch.alias = label;
         }
       }
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), label));
@@ -380,7 +380,7 @@ namespace Microsoft.Cci {
     {
       this.tryBodyStack.Pop();
       if (this.handlers.Count > 0) {
-        ILGeneratorLabel handlerEnd = new ILGeneratorLabel();
+        ILGeneratorLabel handlerEnd = new ILGeneratorLabel(false);
         this.MarkLabel(handlerEnd);
         for (int i = this.handlers.Count-1; i >= 0; i--) {
           if (this.handlers[i].HandlerEnd == null) {
@@ -595,6 +595,13 @@ namespace Microsoft.Cci {
 
   public sealed class ILGeneratorLabel {
 
+    public ILGeneratorLabel() {
+    }
+
+    internal ILGeneratorLabel(bool mayAlias) {
+      this.mayAlias = mayAlias;
+    }
+
     internal uint Offset {
       get {
         if (this.alias != null) return this.alias.Offset;
@@ -605,6 +612,7 @@ namespace Microsoft.Cci {
     private uint offset;
 
     internal ILGeneratorLabel/*?*/ alias;
+    internal bool mayAlias;
     internal bool labelsReturnInstruction;
   }
 
