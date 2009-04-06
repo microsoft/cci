@@ -1096,28 +1096,26 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Returns the computed size (number of bytes) of a type. May call the SizeOf property of the type.
-    /// Use SizeOfType(ITypeDefinition, bool) to suppress the use of the SizeOf property.
+    /// Use SizeOfType(ITypeReference, bool) to suppress the use of the SizeOf property.
     /// </summary>
-    /// <param name="typeDefinition">The type whose alignment is wanted.</param>
-    //^ [Pure]
-    public static uint SizeOfType(ITypeDefinition typeDefinition) {
-      return SizeOfType(typeDefinition, true);
+    /// <param name="type">The type whose size is wanted. If not a reference to a primitive type, this type must be resolvable.</param>
+    public static uint SizeOfType(ITypeReference type) {
+      return SizeOfType(type, true);
     }
 
     /// <summary>
     /// Returns the computed size (number of bytes) of a type. 
     /// </summary>
-    /// <param name="typeDefinition">The type whose alignment is wanted.</param>
+    /// <param name="type">The type whose size is wanted. If not a reference to a primitive type, this type must be resolvable.</param>
     /// <param name="mayUseSizeOfProperty">If true the SizeOf property of the given type may be evaluated and used
     /// as the result of this routine if not 0. Remember to specify false for this parameter when using this routine in the implementation
     /// of the ITypeDefinition.SizeOf property.</param>
-    //^ [Pure]
-    public static uint SizeOfType(ITypeDefinition typeDefinition, bool mayUseSizeOfProperty) {
-      return SizeOfType(typeDefinition, typeDefinition, mayUseSizeOfProperty);
+    public static uint SizeOfType(ITypeReference type, bool mayUseSizeOfProperty) {
+      return SizeOfType(type, type, mayUseSizeOfProperty);
     }
 
-    private static uint SizeOfType(ITypeDefinition typeDefinition, ITypeDefinition rootType, bool mayUseSizeOfProperty) {
-      switch (typeDefinition.TypeCode) {
+    private static uint SizeOfType(ITypeReference type, ITypeReference rootType, bool mayUseSizeOfProperty) {
+      switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           return sizeof(Boolean);
         case PrimitiveTypeCode.Char:
@@ -1139,26 +1137,26 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt64:
           return sizeof(UInt64);
         case PrimitiveTypeCode.IntPtr:
-          return typeDefinition.PlatformType.PointerSize;
+          return type.PlatformType.PointerSize;
         case PrimitiveTypeCode.UIntPtr:
-          return typeDefinition.PlatformType.PointerSize;
+          return type.PlatformType.PointerSize;
         case PrimitiveTypeCode.Float32:
           return sizeof(Single);
         case PrimitiveTypeCode.Float64:
           return sizeof(Double);
         case PrimitiveTypeCode.Pointer:
-          return typeDefinition.PlatformType.PointerSize;
+          return type.PlatformType.PointerSize;
         case PrimitiveTypeCode.Invalid:
           return 1;
         default:
-          if (typeDefinition.IsEnum) {
-            if (TypeHelper.TypesAreEquivalent(rootType, typeDefinition.UnderlyingType)) return 0;
-            return TypeHelper.SizeOfType(typeDefinition.UnderlyingType.ResolvedType);
+          if (type.IsEnum) {
+            if (TypeHelper.TypesAreEquivalent(rootType, type.ResolvedType.UnderlyingType)) return 0;
+            return TypeHelper.SizeOfType(type.ResolvedType.UnderlyingType);
           }
-          uint result = mayUseSizeOfProperty ? typeDefinition.SizeOf : 0;
+          uint result = mayUseSizeOfProperty ? type.ResolvedType.SizeOf : 0;
           if (result > 0) return result;
-          IEnumerable<ITypeDefinitionMember> members = typeDefinition.Members;
-          if (typeDefinition.Layout == LayoutKind.Sequential) {
+          IEnumerable<ITypeDefinitionMember> members = type.ResolvedType.Members;
+          if (type.ResolvedType.Layout == LayoutKind.Sequential) {
             List<IFieldDefinition> fields = new List<IFieldDefinition>(IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IFieldDefinition>(members));
             fields.Sort(delegate(IFieldDefinition f1, IFieldDefinition f2) { return f1.SequenceNumber - f2.SequenceNumber; });
             members = IteratorHelper.GetConversionEnumerable<IFieldDefinition, ITypeDefinitionMember>(fields);
@@ -1173,7 +1171,7 @@ namespace Microsoft.Cci {
             ITypeDefinition fieldType = field.Type.ResolvedType;
             ushort fieldAlignment;
             if (rootType == fieldType || fieldType.IsReferenceType) 
-              fieldAlignment = typeDefinition.PlatformType.PointerSize;
+              fieldAlignment = type.PlatformType.PointerSize;
             else
               fieldAlignment = (ushort)(TypeHelper.TypeAlignment(fieldType)*8);
             uint fieldSize;
@@ -1191,13 +1189,13 @@ namespace Microsoft.Cci {
               if (bitFieldAlignment > fieldAlignment) fieldAlignment = bitFieldAlignment;
               bitFieldAlignment = 0; bitOffset = 0;
               result = ((result+fieldAlignment-1)/fieldAlignment) * fieldAlignment;
-              fieldSize = TypeHelper.SizeOfType(fieldType)*8;
+              fieldSize = TypeHelper.SizeOfType(field.Type, rootType, mayUseSizeOfProperty)*8;
             }
             result += fieldSize;
           }
           //Convert bit size to bytes and pad to be a multiple of the type alignment.
           result = (result+7)/8;
-          uint typeAlignment = TypeHelper.TypeAlignment(typeDefinition);
+          uint typeAlignment = TypeHelper.TypeAlignment(type);
           return ((result+typeAlignment-1)/typeAlignment) * typeAlignment;
       }
     }
@@ -1207,27 +1205,25 @@ namespace Microsoft.Cci {
     /// May call the Alignment property of the type.
     /// Use TypeAlignment(ITypeDefinition, bool) to suppress the use of the Alignment property.    
     /// </summary>
-    /// <param name="typeDefinition">The type whose alignment is wanted.</param>
-    //^ [Pure]
-    public static ushort TypeAlignment(ITypeDefinition typeDefinition) {
-      return TypeAlignment(typeDefinition, true);
+    /// <param name="type">The type whose size is wanted. If not a reference to a primitive type, this type must be resolvable.</param>
+    public static ushort TypeAlignment(ITypeReference type) {
+      return TypeAlignment(type, true);
     }
 
 
     /// <summary>
     /// Returns the byte alignment that values of the given type ought to have. The result is a power of two and greater than zero.
     /// </summary>
-    /// <param name="typeDefinition">The type whose alignment is wanted.</param>
+    /// <param name="type">The type whose size is wanted. If not a reference to a primitive type, this type must be resolvable.</param>
     /// <param name="mayUseAlignmentProperty">If true the Alignment property of the given type may be inspected and used
     /// as the result of this routine if not 0. Rembmer to specify false for this parameter when using this routine in the implementation
     /// of the ITypeDefinition.Alignment property.</param>
-    //^ [Pure]
-    public static ushort TypeAlignment(ITypeDefinition typeDefinition, bool mayUseAlignmentProperty) {
-      return TypeAlignment(typeDefinition, typeDefinition, mayUseAlignmentProperty);
+    public static ushort TypeAlignment(ITypeReference type, bool mayUseAlignmentProperty) {
+      return TypeAlignment(type, type, mayUseAlignmentProperty);
     }
 
-    private static ushort TypeAlignment(ITypeDefinition typeDefinition, ITypeDefinition rootType, bool mayUseAlignmentProperty) { 
-      switch (typeDefinition.TypeCode) {
+    private static ushort TypeAlignment(ITypeReference type, ITypeReference rootType, bool mayUseAlignmentProperty) { 
+      switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           return sizeof(Boolean);
         case PrimitiveTypeCode.Char:
@@ -1249,31 +1245,31 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt64:
           return sizeof(UInt64);
         case PrimitiveTypeCode.IntPtr:
-          return typeDefinition.PlatformType.PointerSize;
+          return type.PlatformType.PointerSize;
         case PrimitiveTypeCode.UIntPtr:
-          return typeDefinition.PlatformType.PointerSize;
+          return type.PlatformType.PointerSize;
         case PrimitiveTypeCode.Float32:
           return sizeof(Single);
         case PrimitiveTypeCode.Float64:
           return sizeof(Double);
         case PrimitiveTypeCode.Pointer:
-          return typeDefinition.PlatformType.PointerSize;
+          return type.PlatformType.PointerSize;
         case PrimitiveTypeCode.Invalid:
           return 1;
         default:
-          if (typeDefinition.IsEnum) {
-            if (TypeHelper.TypesAreEquivalent(rootType, typeDefinition.UnderlyingType)) return 1;
-            return TypeHelper.TypeAlignment(typeDefinition.UnderlyingType.ResolvedType, rootType, mayUseAlignmentProperty);
+          if (type.IsEnum) {
+            if (TypeHelper.TypesAreEquivalent(rootType, type.ResolvedType.UnderlyingType)) return 1;
+            return TypeHelper.TypeAlignment(type.ResolvedType.UnderlyingType, rootType, mayUseAlignmentProperty);
           }
-          ushort alignment = mayUseAlignmentProperty ? typeDefinition.Alignment : (ushort)0;
+          ushort alignment = mayUseAlignmentProperty ? type.ResolvedType.Alignment : (ushort)0;
           if (alignment > 0) return alignment;
-          foreach (ITypeDefinitionMember member in typeDefinition.Members) {
+          foreach (ITypeDefinitionMember member in type.ResolvedType.Members) {
             IFieldDefinition/*?*/ field = member as IFieldDefinition;
             if (field == null || field.IsStatic) continue;
             ITypeDefinition fieldType = field.Type.ResolvedType;
             ushort fieldAlignment;
             if (fieldType == rootType || fieldType.IsReferenceType) 
-              fieldAlignment = typeDefinition.PlatformType.PointerSize;
+              fieldAlignment = type.PlatformType.PointerSize;
             else
               fieldAlignment = TypeHelper.TypeAlignment(fieldType);
             if (fieldAlignment > alignment) alignment = fieldAlignment;
