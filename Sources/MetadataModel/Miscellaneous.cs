@@ -2525,7 +2525,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Section where the block resides.
     /// </summary>
-    //  Issue: Sections allowed might be arbitrary in which case we would like to give name rather than enum.
     PESectionKind PESectionKind { get;}
 
     /// <summary>
