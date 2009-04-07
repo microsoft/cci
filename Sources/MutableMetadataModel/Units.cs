@@ -105,6 +105,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public override IName ModuleName {
       get { return this.moduleName; }
+      set { this.moduleName = value; }
     }
     IName moduleName;
 
