@@ -482,7 +482,7 @@ namespace Microsoft.Cci {
     }
 
     private void CreateIndicesFor(IMethodDefinition methodDef) {
-      if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal)) return;
+      if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal) && (methodDef.Body == Dummy.MethodBody)) return;
       this.parameterListIndex.Add(methodDef, (uint)this.parameterDefList.Count+1);
       if (methodDef.ReturnValueIsMarshalledExplicitly || IteratorHelper.EnumerableIsNotEmpty(methodDef.ReturnValueAttributes))
         this.parameterDefList.Add(new DummyReturnValueParameter(methodDef));
