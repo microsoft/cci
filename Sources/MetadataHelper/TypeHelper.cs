@@ -1189,7 +1189,7 @@ namespace Microsoft.Cci {
               if (bitFieldAlignment > fieldAlignment) fieldAlignment = bitFieldAlignment;
               bitFieldAlignment = 0; bitOffset = 0;
               result = ((result+fieldAlignment-1)/fieldAlignment) * fieldAlignment;
-              fieldSize = TypeHelper.SizeOfType(field.Type, rootType, mayUseSizeOfProperty)*8;
+              fieldSize = TypeHelper.SizeOfType(field.Type)*8;
             }
             result += fieldSize;
           }
