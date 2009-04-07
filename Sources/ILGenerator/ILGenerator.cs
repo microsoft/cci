@@ -29,6 +29,10 @@ namespace Microsoft.Cci {
     /// Performs one or more extra passes over the list of operations, changing long branches to short if possible and short branches to
     /// long branches if necessary.
     /// </summary>
+    /// <remarks>If any long branches in this.operations could have been short, they are adjusted to be short. 
+    /// This can result in an updated version of this.operations where some branches that had to be long in the previous
+    /// version can now be short as well. Consequently, the adjustment process iterates until no further changes are possible.
+    /// Note that all decisions are made based on the offsets at the start of an iteration. </remarks>
     public void AdjustBranchSizesToBestFit() {
       int adjustment;
       uint numberOfAdjustments;
@@ -54,14 +58,20 @@ namespace Microsoft.Cci {
               operation.value = null;
               continue;
             }
-            bool shortOffsetOk = label.Offset >= oldOffset ? label.Offset-oldOffset <= 127 : oldOffset-label.Offset <= 128;
+            //For backward branches, this test will compare the new offset of the label with the old offset of the current
+            //instruction. This is OK, because the new offset of the label will be less than or equal to its old offset.
+            bool isForwardBranch = label.Offset >= oldOffset;
+            // Short offsets are calculated from the start of the instruction *after* the current instruction, which takes up 2 bytes
+            // (1 for the opcode and 1 for the signed byte).
+            bool shortOffsetOk = isForwardBranch ? label.Offset-(oldOffset+2) <= 127 : (oldOffset+2)-label.Offset <= 128;
             OperationCode oldOpCode = operation.OperationCode;
             if (shortOffsetOk) {
               operation.operationCode = ShortVersionOf(operation.OperationCode);
               if (operation.operationCode != oldOpCode) { numberOfAdjustments++; adjustment -= 3; }
             } else {
-              operation.operationCode = LongVersionOf(operation.OperationCode);
-              if (operation.operationCode != oldOpCode) { numberOfAdjustments++; adjustment += 3; }
+              if (operation.operationCode != LongVersionOf(operation.operationCode))
+                throw new InvalidOperationException(); //A short branch was specified for an offset that is long.
+              //The test for isForwardBranch depends on label offsets only decreasing, so it is not an option to replace the short branch with a long one.
             }
             if (operation.OperationCode == OperationCode.Br_S && operation.offset+2 == label.Offset) {
               //eliminate branch to the next instruction
