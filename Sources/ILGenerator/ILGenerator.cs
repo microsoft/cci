@@ -63,7 +63,7 @@ namespace Microsoft.Cci {
             bool isForwardBranch = label.Offset >= oldOffset;
             // Short offsets are calculated from the start of the instruction *after* the current instruction, which takes up 2 bytes
             // (1 for the opcode and 1 for the signed byte).
-            bool shortOffsetOk = isForwardBranch ? label.Offset-(oldOffset+2) <= 127 : (oldOffset+2)-label.Offset <= 128;
+            bool shortOffsetOk = isForwardBranch ? label.Offset-oldOffset <= 129 : oldOffset-label.Offset <= 126;
             OperationCode oldOpCode = operation.OperationCode;
             if (shortOffsetOk) {
               operation.operationCode = ShortVersionOf(operation.OperationCode);
