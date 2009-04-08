@@ -482,7 +482,7 @@ namespace Microsoft.Cci {
     }
 
     private void CreateIndicesFor(IMethodDefinition methodDef) {
-      if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal) && (methodDef.Body == Dummy.MethodBody)) return;
+      if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal) && (methodDef.Body == Dummy.MethodBody)) return; 
       this.parameterListIndex.Add(methodDef, (uint)this.parameterDefList.Count+1);
       if (methodDef.ReturnValueIsMarshalledExplicitly || IteratorHelper.EnumerableIsNotEmpty(methodDef.ReturnValueAttributes))
         this.parameterDefList.Add(new DummyReturnValueParameter(methodDef));
@@ -4977,6 +4977,11 @@ namespace Microsoft.Cci {
 
     public override void Visit(IAssemblyReference assemblyReference) {
       this.peWriter.GetAssemblyRefIndex(assemblyReference);
+    }
+
+    public override void Visit(IAliasForType aliasForType) {
+      //do not visit the aliased type, it does not get into the type ref table based only on its membership of the exported types collection.
+      this.Visit(aliasForType.Attributes);
     }
 
     public override void Visit(ICustomModifier customModifier) {
