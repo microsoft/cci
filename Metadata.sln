@@ -37,6 +37,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0FC2FA29
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit", "Xunit\Main\xunit\xunit.csproj", "{09EF9917-4B00-4646-8C3F-96EFACC8BF51}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.runner.utility", "Xunit\Main\xunit.runner.utility\xunit.runner.utility.csproj", "{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.console", "Xunit\Main\xunit.console\xunit.console.csproj", "{19C75545-5E0E-4E38-9995-511ED2DF6D30}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -149,6 +153,22 @@ Global
 		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -158,5 +178,7 @@ Global
 		{A6BABD10-C384-4F9F-93D7-99B935A41719} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 		{71B89CE8-CD33-4BC1-A411-4002D367F38D} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 		{09EF9917-4B00-4646-8C3F-96EFACC8BF51} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 	EndGlobalSection
 EndGlobal
