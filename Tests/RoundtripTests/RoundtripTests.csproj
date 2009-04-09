@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{71B89CE8-CD33-4BC1-A411-4002D367F38D}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -11,7 +11,6 @@
     <AssemblyName>RoundtripTests</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,7 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
@@ -52,11 +50,11 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
-      <Name>PEReader</Name>
+      <Name>PeReader</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\PeWriter\PeWriter.csproj">
       <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
-      <Name>PEWriter</Name>
+      <Name>PeWriter</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\MetadataHelper\MetadataHelper.csproj">
       <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
@@ -81,6 +79,10 @@
     <ProjectReference Include="..\..\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Xunit\Main\xunit\xunit.csproj">
+      <Project>{09EF9917-4B00-4646-8C3F-96EFACC8BF51}</Project>
+      <Name>xunit</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -3,63 +3,61 @@ using System.IO;
 using System.Diagnostics;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using Xunit;
 
 using Microsoft.Cci;
 using Microsoft.CSharp;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Cci.MutableCodeModel;
 
-[TestClass]
 public class RoundTripTests {
 
     PdbReader pdbReader;
     PdbWriter pdbWriter;
     HostEnvironment host;
 
-    [TestInitialize]
-    public void Initialize() {
-        Assert.IsTrue(File.Exists(PeVerify.PeVerifyPathv3), "Can't find PEVerify, please update the const.");
+    public RoundTripTests() {
+        Assert.True(File.Exists(PeVerify.PeVerifyPathv3), "Can't find PEVerify, please update the const.");
 
         pdbReader = null;
         pdbWriter = null;
         host = new HostEnvironment();
 
-        Debug.Listeners.Clear();
-        Debug.Listeners.Add(new MyTraceListener());
+       // Debug.Listeners.Clear();
+       // Debug.Listeners.Add(new MyTraceListener());
     }
 
-    [TestMethod]
+    [Fact]
     public void Repro1WithIL() {
         ExtractAndCompile("Repro1.cs");
         RoundTripWithILMutator("Repro1.dll", "Repro1.pdb");
     }
 
-    [TestMethod]
+    [Fact]
     public void Repro3WithIL() {
         ExtractAndCompile("Repro3.cs");
         RoundTripWithILMutator("Repro3.dll", "Repro3.pdb");
     }
 
-   [TestMethod]
+   [Fact]
     public void Repro4WithIL() {
         ExtractAndCompile("Repro4.cs");
         RoundTripWithILMutator("Repro4.dll", "Repro4.pdb");
     }
 
-    [TestMethod]
+    [Fact]
     public void Repro5WithIL() {
         ExtractAndCompile("Repro5.cs");
         RoundTripWithILMutator("Repro5.dll", "Repro5.pdb");
     }
 
-    [TestMethod]
+    [Fact]
     public void Repro6WithIL() {
         ExtractAndCompile("Repro6.cs");
         RoundTripWithILMutator("Repro6.dll", "Repro6.pdb");
     }
 
 
-    [TestMethod]
+    [Fact]
     public void SystemCoreWithIL() {
         ExtractResource("RoundtripTests.TestData.v4.System.Core.dll", "System.Core.dll");
         ExtractResource("RoundtripTests.TestData.v4.System.Core.pdb", "System.Core.pdb");
@@ -67,13 +65,13 @@ public class RoundTripTests {
         RoundTripWithILMutator("System.Core.dll", "System.Core.pdb");
     }
 
-    [TestMethod]
+    [Fact]
     public void Pe2PeNoPdbWithv2() {
         ExtractResource("RoundtripTests.TestData.v2.mscorlib.dll", "mscorlib.dll");
         RoundTripWithILMutator("mscorlib.dll", null);
     }
 
-    [TestMethod]
+    [Fact]
     public void Pe2PeWithPdbWithv2() {
         ExtractResource("RoundtripTests.TestData.v2.mscorlib.dll", "mscorlib.dll");
         ExtractResource("RoundtripTests.TestData.v2.mscorlib.pdb", "mscorlib.pdb");
@@ -81,13 +79,13 @@ public class RoundTripTests {
         RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb");
     }
 
-    [TestMethod]
+    [Fact]
     public void Pe2PeNoPdbWithv4() {
         ExtractResource("RoundtripTests.TestData.v4.mscorlib.dll", "mscorlib.dll");
         RoundTripWithILMutator("mscorlib.dll", null);
     }
 
-    [TestMethod]
+    [Fact]
     public void Pe2PeWithPdbWithv4() {
 
         ExtractResource("RoundtripTests.TestData.v4.mscorlib.dll", "mscorlib.dll");
@@ -118,13 +116,13 @@ public class RoundTripTests {
             PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
         }
 
-        Assert.IsTrue(File.Exists(assembly.Location));
+        Assert.True(File.Exists(assembly.Location));
         PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
     }
 
     void VisitAndMutate(MetadataMutator mutator, ref IAssembly assembly) {
         assembly = mutator.Visit(mutator.GetMutableCopy(assembly));
-        Assert.IsNotNull(assembly);
+        Assert.NotNull(assembly);
     }
 
     static int StartAndWaitForResult(string fileName, string arguments, ref string stdOut, ref string stdErr) {
@@ -143,15 +141,14 @@ public class RoundTripTests {
     }
 
     IAssembly LoadAssembly(string assemblyName) {
-        Assert.IsTrue(File.Exists(assemblyName));
+        Assert.True(File.Exists(assemblyName));
 
         IModule module = host.LoadUnitFrom(assemblyName) as IModule;
-        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-            Assert.Fail("Failed to load the module...");
-        }
+        Assert.False(module == null || module == Dummy.Module || module == Dummy.Assembly,
+            "Failed to load the module...");
 
         IAssembly assembly = module as IAssembly;
-        Assert.IsNotNull(module);
+        Assert.NotNull(module);
 
         return assembly;
     }
@@ -189,8 +186,8 @@ public class RoundTripTests {
             Debug.WriteLine(s);
         }
 
-        Assert.AreEqual(0, results.Errors.Count);
-        Assert.IsTrue(File.Exists(assemblyName), string.Format("Failed to compile {0} from {1}", assemblyName, sourceFile));
+        Assert.Equal(0, results.Errors.Count);
+        Assert.True(File.Exists(assemblyName), string.Format("Failed to compile {0} from {1}", assemblyName, sourceFile));
     }
 
 } // class
@@ -229,29 +226,29 @@ internal class HostEnvironment : MetadataReaderHost {
     }
 }
 
-class MyTraceListener : TraceListener {
+//class MyTraceListener : TraceListener {
 
-    public override void Fail(string message, string detailMessage) {
-        Console.WriteLine("Fail:");
-        Console.WriteLine(message);
-        Console.WriteLine();
-        Console.WriteLine(detailMessage);
+//    public override void Fail(string message, string detailMessage) {
+//        Console.WriteLine("Fail:");
+//        Console.WriteLine(message);
+//        Console.WriteLine();
+//        Console.WriteLine(detailMessage);
 
-        Assert.Fail(message);
-    }
+//        Assert.Fail(message);
+//    }
 
-    public override void Fail(string message) {
-        Console.WriteLine("Fail:");
-        Console.WriteLine(message);
+//    public override void Fail(string message) {
+//        Console.WriteLine("Fail:");
+//        Console.WriteLine(message);
 
-        Assert.Fail(message);
-    }
+//        Assert.Fail(message);
+//    }
 
-    public override void Write(string message) {
-        Console.Write(message);
-    }
+//    public override void Write(string message) {
+//        Console.Write(message);
+//    }
 
-    public override void WriteLine(string message) {
-        Console.WriteLine(message);
-    }
-}
+//    public override void WriteLine(string message) {
+//        Console.WriteLine(message);
+//    }
+//}

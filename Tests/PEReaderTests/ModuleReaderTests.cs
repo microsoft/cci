@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.IO;
 
 #if !COMPACTFX
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 #endif
 
 namespace ModuleReaderTests {
@@ -337,9 +337,6 @@ namespace ModuleReaderTests {
     }
   }
 
-#if !COMPACTFX
-  [TestClass]
-#endif
   public class ModuleReaderTestClass {
     internal HostEnvironment HostEnv;
     internal INameTable NameTable;
@@ -354,12 +351,7 @@ namespace ModuleReaderTests {
     internal IAssembly ILAsmAssembly;
     internal IAssembly PhxArchMsil;
 
-#if !COMPACTFX
-    [TestInitialize()]
-    public void TestInitialize() {
-#else
     public ModuleReaderTestClass() {
-#endif
       this.HostEnv = new HostEnvironment();
       this.NameTable = this.HostEnv.NameTable;
       string location = Path.GetDirectoryName(typeof(Assem).Assembly.Location);
@@ -408,7 +400,7 @@ namespace ModuleReaderTests {
     }
 
 #if !COMPACTFX
-    [TestMethod]
+    [Fact]
 #endif
     public void MetadataReaderTests() {
       this.MRW_AssemblyTests();
