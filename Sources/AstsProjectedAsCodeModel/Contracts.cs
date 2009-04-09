@@ -226,7 +226,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     private IEnumerable<IExpression> GetWrites() {
-      foreach (Expression e in writes)
+      foreach (Expression e in this.writes)
         yield return e.ProjectAsIExpression();
     }
 
@@ -239,7 +239,22 @@ namespace Microsoft.Cci.Ast {
         else return this.GetWrites();
       }
     }
-    readonly IEnumerable<Expression> writes;
+    readonly IEnumerable<Expression>/*?*/ writes;
+
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get {
+        foreach (var inv in this.invariants)
+          foreach (var loc in inv.Locations) yield return loc;
+        if (this.writes != null) {
+          foreach (var write in this.writes)
+            foreach (var loc in write.Locations) yield return loc;
+        }
+      }
+    }
+
+    #endregion
   }
 
   /// <summary>
@@ -575,6 +590,30 @@ namespace Microsoft.Cci.Ast {
         write.SetContainingExpression(containingExpression);
     }
 
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get {
+        foreach (var a in this.allocates)
+          foreach (var loc in a.Locations) yield return loc;
+        foreach (var f in this.frees)
+          foreach (var loc in f.Locations) yield return loc;
+        foreach (var m in this.modifiedVariables)
+          foreach (var loc in m.Locations) yield return loc;
+        foreach (var p in this.postconditions)
+          foreach (var loc in p.Locations) yield return loc;
+        foreach (var p in this.preconditions)
+          foreach (var loc in p.Locations) yield return loc;
+        foreach (var r in this.reads)
+          foreach (var loc in r.Locations) yield return loc;
+        foreach (var t in this.thrownExceptions)
+          foreach (var loc in t.Locations) yield return loc;
+        foreach (var w in this.writes)
+          foreach (var loc in w.Locations) yield return loc;
+      }
+    }
+
+    #endregion
   }
 
   /// <summary>
@@ -1057,6 +1096,20 @@ namespace Microsoft.Cci.Ast {
         typeInvariant.SetContainingExpression(containingExpression);
     }
 
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get {
+        foreach (var f in this.contractFields)
+          foreach (var loc in f.Locations) yield return loc;
+        foreach (var m in this.contractMethods)
+          foreach (var loc in m.Locations) yield return loc;
+        foreach (var i in this.invariants)
+          foreach (var loc in i.Locations) yield return loc;
+      }
+    }
+
+    #endregion
   }
 
   /// <summary>

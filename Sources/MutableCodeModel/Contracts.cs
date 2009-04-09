@@ -150,10 +150,12 @@ namespace Microsoft.Cci.Contracts {
 
     public LoopContract() {
       this.invariants = new List<ILoopInvariant>();
+      this.locations = new List<ILocation>(1);
     }
 
     public LoopContract(ILoopContract loopContract) {
       this.invariants = new List<ILoopInvariant>(loopContract.Invariants);
+      this.locations = new List<ILocation>(loopContract.Locations);
       if (loopContract.Writes != null)
         this.writes = new List<IExpression>(loopContract.Writes);
     }
@@ -167,6 +169,15 @@ namespace Microsoft.Cci.Contracts {
     }
     List<ILoopInvariant> invariants;
 
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public List<ILocation> Locations {
+      get { return this.locations; }
+      set { this.locations = value; }
+    }
+    List<ILocation> locations;
 
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the loop.
@@ -188,9 +199,16 @@ namespace Microsoft.Cci.Contracts {
       get { return this.Writes == null ? null : this.Writes.AsReadOnly(); }
     }
 
-    public bool HasErrors()
-    {
+    public bool HasErrors() {
       return false;
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get { return this.Locations.AsReadOnly(); }
     }
 
     #endregion
@@ -232,14 +250,16 @@ namespace Microsoft.Cci.Contracts {
 
     #region ILoopInvariant Members
 
-
-    IEnumerable<ILocation> ILoopInvariant.Locations {
-      get { return this.Locations.AsReadOnly(); }
+    public bool HasErrors() {
+      return false;
     }
 
-    public bool HasErrors()
-    {
-      return false;
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get { return this.Locations.AsReadOnly(); }
     }
 
     #endregion
@@ -254,6 +274,7 @@ namespace Microsoft.Cci.Contracts {
     public MethodContract() {
       this.allocates = new List<IExpression>();
       this.frees = new List<IExpression>();
+      this.locations = new List<ILocation>(1);
       this.modifiedVariables = new List<IAddressableExpression>();
       this.mustInline = false;
       this.postconditions = new List<IPostcondition>();
@@ -266,6 +287,7 @@ namespace Microsoft.Cci.Contracts {
     public MethodContract(IMethodContract methodContract) {
       this.allocates = new List<IExpression>(methodContract.Allocates);
       this.frees = new List<IExpression>(methodContract.Frees);
+      this.locations = new List<ILocation>(methodContract.Locations);
       this.modifiedVariables = new List<IAddressableExpression>(methodContract.ModifiedVariables);
       this.mustInline = methodContract.MustInline;
       this.postconditions = new List<IPostcondition>(methodContract.Postconditions);
@@ -292,6 +314,15 @@ namespace Microsoft.Cci.Contracts {
       set { this.frees = value; }
     }
     List<IExpression> frees;
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public List<ILocation> Locations {
+      get { return this.locations; }
+      set { this.locations = value; }
+    }
+    List<ILocation> locations;
 
     /// <summary>
     /// A possibly empty list of addressable expressions (variables) that are modified by the called method.
@@ -358,8 +389,7 @@ namespace Microsoft.Cci.Contracts {
 
     #region IMethodContract Members
 
-    public bool HasErrors()
-    {
+    public bool HasErrors() {
       return false;
     }
 
@@ -393,6 +423,14 @@ namespace Microsoft.Cci.Contracts {
 
     IEnumerable<IExpression> IMethodContract.Writes {
       get { return this.Writes.AsReadOnly(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get { return this.Locations.AsReadOnly(); }
     }
 
     #endregion
@@ -461,10 +499,9 @@ namespace Microsoft.Cci.Contracts {
       return false;
     }
 
-    #region IPrecondition Members
+    #region IObjectWithLocations Members
 
-
-    IEnumerable<ILocation> IPrecondition.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.Locations.AsReadOnly(); }
     }
 
@@ -509,10 +546,9 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     public bool HasErrors() { return false; }
 
-    #region IPostcondition Members
+    #region IObjectWithLocations Members
 
-
-    IEnumerable<ILocation> IPostcondition.Locations {
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.Locations.AsReadOnly(); }
     }
 
@@ -572,12 +608,14 @@ namespace Microsoft.Cci.Contracts {
       this.contractFields = new List<IFieldDefinition>();
       this.contractMethods = new List<IMethodDefinition>();
       this.invariants = new List<ITypeInvariant>();
+      this.locations = new List<ILocation>(1);
     }
 
     public TypeContract(ITypeContract typeContract) {
       this.contractFields = new List<IFieldDefinition>(typeContract.ContractFields);
       this.contractMethods = new List<IMethodDefinition>(typeContract.ContractMethods);
       this.invariants = new List<ITypeInvariant>(typeContract.Invariants);
+      this.locations = new List<ILocation>(typeContract.Locations);
     }
 
     /// <summary>
@@ -608,10 +646,18 @@ namespace Microsoft.Cci.Contracts {
     }
     List<ITypeInvariant> invariants;
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public List<ILocation> Locations {
+      get { return this.locations; }
+      set { this.locations = value; }
+    }
+    List<ILocation> locations;
+
     #region ITypeContract Members
 
-    public bool HasErrors()
-    {
+    public bool HasErrors() {
       return false;
     }
 
@@ -625,6 +671,14 @@ namespace Microsoft.Cci.Contracts {
 
     IEnumerable<ITypeInvariant> ITypeContract.Invariants {
       get { return this.Invariants.AsReadOnly(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get { return this.Locations.AsReadOnly(); }
     }
 
     #endregion
@@ -688,12 +742,15 @@ namespace Microsoft.Cci.Contracts {
 
     #region ITypeInvariant Members
 
-    public bool HasErrors()
-    {
+    public bool HasErrors() {
       return false;
     }
 
-    IEnumerable<ILocation> ITypeInvariant.Locations {
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.Locations.AsReadOnly(); }
     }
 

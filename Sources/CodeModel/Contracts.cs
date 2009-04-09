@@ -130,7 +130,7 @@ namespace Microsoft.Cci.Contracts {
     public IMethodReference Assert {
       get {
         if (this.assertRef == null)
-          this.assertRef = new MethodReference(this.host, this.host.PlatformType.SystemDiagnosticsContractsContract, CallingConvention.Default, 
+          this.assertRef = new MethodReference(this.host, this.host.PlatformType.SystemDiagnosticsContractsContract, CallingConvention.Default,
             this.host.PlatformType.SystemVoid, this.host.NameTable.GetNameFor("Assert"), 0, this.host.PlatformType.SystemBoolean);
         return this.assertRef;
       }
@@ -304,7 +304,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A collection of collections of objects that describe a loop.
   /// </summary>
-  public interface ILoopContract : IErrorCheckable {
+  public interface ILoopContract : IErrorCheckable, IObjectWithLocations {
     /// <summary>
     /// A possibly empty list of loop invariants.
     /// </summary>
@@ -320,23 +320,18 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true at the start of every iteration of a loop.
   /// </summary>
-  public interface ILoopInvariant : IErrorCheckable {
+  public interface ILoopInvariant : IErrorCheckable, IObjectWithLocations {
     /// <summary>
     /// The condition that must be true at the start of every iteration of a loop.
     /// </summary>
     IExpression Condition { get; }
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get;}
   }
 
   /// <summary>
   /// A collection of collections of objects that augment the type signature of a method with additional information
   /// that describe the contract between calling method and called method.
   /// </summary>
-  public interface IMethodContract : IErrorCheckable {
+  public interface IMethodContract : IErrorCheckable, IObjectWithLocations {
 
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that are newly allocated by a call to the method.
@@ -382,12 +377,12 @@ namespace Microsoft.Cci.Contracts {
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
     IEnumerable<IExpression> Writes { get; }
- }
+  }
 
   /// <summary>
   /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
   /// </summary>
-  public interface IPrecondition : IErrorCheckable {
+  public interface IPrecondition : IErrorCheckable, IObjectWithLocations {
 
     /// <summary>
     /// The precondition is always checked at runtime, even in release builds.
@@ -408,26 +403,18 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     IExpression/*?*/ ExceptionToThrow { get; }
 
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get;}
   }
 
   /// <summary>
   /// A condition that must be true at the end of a method.
   /// </summary>
-  public interface IPostcondition : IErrorCheckable {
+  public interface IPostcondition : IErrorCheckable, IObjectWithLocations {
 
     /// <summary>
     /// The condition that must be true at the end of the method that is associated with this instance.
     /// </summary>
     IExpression Condition { get; }
 
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get;}
   }
 
   /// <summary>
@@ -450,7 +437,7 @@ namespace Microsoft.Cci.Contracts {
   /// A collection of collections of objects that augment the signature of a type with additional information
   /// that describe invariants, model variables and functions, as well as axioms.
   /// </summary>
-  public interface ITypeContract : IErrorCheckable {
+  public interface ITypeContract : IErrorCheckable, IObjectWithLocations {
 
     /// <summary>
     /// A possibly empty list of contract fields. Contract fields can only be used inside contracts and are not available at runtime.
@@ -472,7 +459,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true after an object has been constructed and that is by default a part of the precondition and postcondition of every public method of the associated type.
   /// </summary>
-  public interface ITypeInvariant : IErrorCheckable {
+  public interface ITypeInvariant : IErrorCheckable, IObjectWithLocations {
     /// <summary>
     /// The condition that must be true after an object of the type associated with this invariant has been constructed.
     /// </summary>
@@ -482,11 +469,6 @@ namespace Microsoft.Cci.Contracts {
     /// An axiom is a type invariant whose truth is assumed rather than derived. Commonly used to make statements about the meaning of contract methods.
     /// </summary>
     bool IsAxiom { get; }
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    IEnumerable<ILocation> Locations { get;}
 
     /// <summary>
     /// The name of the invariant. Used in error diagnostics. May be null.
