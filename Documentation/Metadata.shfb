@@ -1,0 +1,42 @@
+﻿<project schemaVersion="1.6.0.2">
+    <assemblies>
+        <assembly assemblyPath="..\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.dll" xmlCommentsPath="..\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.xml" commentsOnly="False" />
+    </assemblies>
+    <ProjectSummary />
+    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace</MissingTags>
+    <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
+    <HtmlHelp1xCompilerPath path="" />
+    <HtmlHelp2xCompilerPath path="" />
+    <OutputPath>..\..\..\Documentation\</OutputPath>
+    <SandcastlePath path="" />
+    <WorkingPath path="" />
+    <CleanIntermediates>True</CleanIntermediates>
+    <KeepLogFile>True</KeepLogFile>
+    <HelpFileFormat>HtmlHelp1x</HelpFileFormat>
+    <PurgeDuplicateTopics>True</PurgeDuplicateTopics>
+    <CppCommentsFixup>False</CppCommentsFixup>
+    <FrameworkVersion>2.0.50727</FrameworkVersion>
+    <BinaryTOC>True</BinaryTOC>
+    <IncludeFavorites>False</IncludeFavorites>
+    <Preliminary>False</Preliminary>
+    <RootNamespaceContainer>False</RootNamespaceContainer>
+    <RootNamespaceTitle />
+    <HelpTitle>A Sandcastle Documented Class Library</HelpTitle>
+    <HtmlHelpName>Documentation</HtmlHelpName>
+    <Language>en-US</Language>
+    <CopyrightHref />
+    <CopyrightText />
+    <FeedbackEMailAddress />
+    <HeaderText />
+    <FooterText />
+    <ProjectLinkType>Local</ProjectLinkType>
+    <SdkLinkType>Msdn</SdkLinkType>
+    <SdkLinkTarget>Blank</SdkLinkTarget>
+    <PresentationStyle>Prototype</PresentationStyle>
+    <NamingMethod>Guid</NamingMethod>
+    <SyntaxFilters>Standard</SyntaxFilters>
+    <ShowFeedbackControl>False</ShowFeedbackControl>
+    <ContentPlacement>AboveNamespaces</ContentPlacement>
+    <ContentSiteMap path="" />
+    <TopicFileTransform path="" />
+</project>
