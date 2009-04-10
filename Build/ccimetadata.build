@@ -11,6 +11,7 @@
 
     <BinDirectory>$(RootDirectory)\bin</BinDirectory>
     <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
+    <BinReleaseDirectory>$(BinDirectory)\release</BinReleaseDirectory>
   </PropertyGroup>
   
   <!-- target definitions  -->
@@ -18,37 +19,49 @@
     Name="ContinuousBuild" 
     DependsOnTargets="
       BuildDebug;
-      BuildBVT;
+      TestDebug;
       BuildRelease;
+      TestRelease;
       CreateCodePlexRelease;
       "          
           />
 
   <Target Name="BuildDebug">
     <MSBuild
-      Projects="$(MetadataSolution)"
+      Projects="$(MetadataSolution)" 
+      Targets="Clean;Build"
       Properties="
         Configuration=Debug
       " />      
   </Target>
 
-  <Target Name="BuildBVT">
-    <Exec
-      WorkingDirectory="$(BinDebugDirectory)"
-      Command="RoundtripTests.exe /xml RountripTests.results.xml" />
-    <Exec
-      WorkingDirectory="$(BinDebugDirectory)"
-      Command="ModuleReaderTests.exe /xml ModuleReaderTests.results.xml" />
-  </Target>
-
   <Target Name="BuildRelease">
     <MSBuild
       Projects="$(MetadataSolution)"
+      Targets="Clean;Build"
       Properties="
         Configuration=Release
       " />
   </Target>
 
+  <Target Name="TestDebug">
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.results.dbg.xml&quot;" />
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.results.dbg.xml&quot;" />
+  </Target>
+
+  <Target Name="TestRelease">
+    <Exec
+      WorkingDirectory="$(BinReleaseDirectory)"
+      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.results.ret.xml&quot;" />
+    <Exec
+      WorkingDirectory="$(BinReleaseDirectory)"
+      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.results.ret.xml&quot;" />
+  </Target>
+  
   <Target Name="CreateCodePlexRelease">
     
   </Target>
