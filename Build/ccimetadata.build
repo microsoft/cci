@@ -35,10 +35,10 @@
   <Target Name="BuildBVT">
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="RoundtripTests.exe" />
+      Command="RoundtripTests.exe /xml RountripTests.results.xml" />
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="PEReaderTests.exe" />
+      Command="ModuleReaderTests.exe /xml ModuleReaderTests.results.xml" />
   </Target>
 
   <Target Name="BuildRelease">
