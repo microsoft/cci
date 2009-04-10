@@ -71,7 +71,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.Assembly(this.ModuleReaderTest.TestAssembly);
       string result =
-@".assembly TestAssembly
+@".assembly MRW_TestAssembly
 {
   .custom instance void[mscorlib]System.Runtime.CompilerServices.CompilationRelaxationsAttribute::.ctor(int32)
   {
@@ -93,7 +93,6 @@ namespace ModuleReaderTests {
                 9D C2 EF 9C E3 02 30 D9 37 7A A6 3D D2 76 CD BF ) // ......0.7z.=.v..
   .hash algorithm 0x00008004
   .ver 0:0:0:0
-  .culture ""neutral""
   .flags 0x00000001
   .permissionset reqmin
   {
@@ -112,12 +111,12 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.Module(this.ModuleReaderTest.TestAssembly);
       string result =
-@".module TestAssembly {
+@".module MRW_TestAssembly {
   .flags ilonly dll
   .mdversion 2:0
-  .guid 7b14ccc1-a965-8843-eadd-d474352c8600
+  .guid c688ea21-04ad-49a7-931b-119f749453a6
   .runtime v2.0.50727
-  .assembly[TestAssembly]
+  .assembly[MRW_TestAssembly]
 }
 ";
       return result.Equals(stringPaper.Content);
@@ -162,55 +161,46 @@ namespace ModuleReaderTests {
 {
   .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern vjscor
 {
   .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern System
 {
   .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern System.Xml
 {
   .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern vjsvwaux
 {
   .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern vjslibcw
 {
   .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern System.Data
 {
   .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern System.Drawing
 {
   .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 .assembly extern System.Web
 {
   .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
   .ver 2:0:0:0
-  .culture ""neutral""
 }
 ";
       return result.Equals(stringPaper.Content);
@@ -396,7 +386,7 @@ namespace ModuleReaderTests {
 @".module vjslib {
   .flags ilonly bit32 dll
   .mdversion 2:0
-  .guid 38771d41-80d9-b14f-0937-5580583fea00
+  .guid 771d4164-d938-4f80-b109-375580583fea
   .runtime v2.0.50727
   .assembly[vjslib]
 }
@@ -411,7 +401,7 @@ namespace ModuleReaderTests {
       string result =
 @".class extern public Module1.Foo
 {
-  .file module1.netmodule
+  .file MRW_Module1.netmodule
 }
 .class extern nested public Nested
 {
@@ -419,7 +409,7 @@ namespace ModuleReaderTests {
 }
 .class extern public Module2.Bar
 {
-  .file module2.netmodule
+  .file MRW_Module2.netmodule
 }
 ";
       return result.Equals(stringPaper.Content);
@@ -508,15 +498,15 @@ namespace ModuleReaderTests {
   .type 00000010
   .language 0x00000409
   .codepage 0x000004E4
-  .data = (E4 03 34 00 00 00 56 00 53 00 5F 00 56 00 45 00   // ..4...V.S._.V.E.
+  .data = (EC 03 34 00 00 00 56 00 53 00 5F 00 56 00 45 00   // ..4...V.S._.V.E.
            52 00 53 00 49 00 4F 00 4E 00 5F 00 49 00 4E 00   // R.S.I.O.N._.I.N.
            46 00 4F 00 00 00 00 00 BD 04 EF FE 00 00 01 00   // F.O.............
-           00 00 02 00 38 01 27 C6 00 00 02 00 38 01 27 C6   // ....8.'.....8.'.
+           00 00 02 00 9A 05 27 C6 00 00 02 00 9A 05 27 C6   // ......'.......'.
            3F 00 00 00 00 00 00 00 04 00 00 00 02 00 00 00   // ?...............
-           00 00 00 00 00 00 00 00 00 00 00 00 44 03 00 00   // ............D...
+           00 00 00 00 00 00 00 00 00 00 00 00 4C 03 00 00   // ............L...
            01 00 53 00 74 00 72 00 69 00 6E 00 67 00 46 00   // ..S.t.r.i.n.g.F.
            69 00 6C 00 65 00 49 00 6E 00 66 00 6F 00 00 00   // i.l.e.I.n.f.o...
-           20 03 00 00 01 00 30 00 34 00 30 00 39 00 30 00   //  .....0.4.0.9.0.
+           28 03 00 00 01 00 30 00 34 00 30 00 39 00 30 00   // (.....0.4.0.9.0.
            34 00 42 00 30 00 00 00 4C 00 16 00 01 00 43 00   // 4.B.0...L.....C.
            6F 00 6D 00 70 00 61 00 6E 00 79 00 4E 00 61 00   // o.m.p.a.n.y.N.a.
            6D 00 65 00 00 00 00 00 4D 00 69 00 63 00 72 00   // m.e.....M.i.c.r.
@@ -530,47 +520,47 @@ namespace ModuleReaderTests {
            61 00 6E 00 67 00 75 00 61 00 67 00 65 00 20 00   // a.n.g.u.a.g.e. .
            52 00 75 00 6E 00 74 00 69 00 6D 00 65 00 20 00   // R.u.n.t.i.m.e. .
            43 00 6C 00 61 00 73 00 73 00 20 00 4C 00 69 00   // C.l.a.s.s. .L.i.
-           62 00 72 00 61 00 72 00 79 00 00 00 66 00 23 00   // b.r.a.r.y...f.#.
+           62 00 72 00 61 00 72 00 79 00 00 00 6A 00 25 00   // b.r.a.r.y...j.%.
            01 00 46 00 69 00 6C 00 65 00 56 00 65 00 72 00   // ..F.i.l.e.V.e.r.
            73 00 69 00 6F 00 6E 00 00 00 00 00 32 00 2E 00   // s.i.o.n.....2...
            30 00 2E 00 35 00 30 00 37 00 32 00 37 00 2E 00   // 0...5.0.7.2.7...
-           33 00 31 00 32 00 20 00 28 00 72 00 74 00 6D 00   // 3.1.2. .(.r.t.m.
-           4C 00 48 00 53 00 2E 00 30 00 35 00 30 00 37 00   // L.H.S...0.5.0.7.
-           32 00 37 00 2D 00 33 00 31 00 30 00 30 00 29 00   // 2.7.-.3.1.0.0.).
-           00 00 00 00 3A 00 0D 00 01 00 49 00 6E 00 74 00   // ....:.....I.n.t.
-           65 00 72 00 6E 00 61 00 6C 00 4E 00 61 00 6D 00   // e.r.n.a.l.N.a.m.
-           65 00 00 00 6D 00 73 00 63 00 6F 00 72 00 6C 00   // e...m.s.c.o.r.l.
-           69 00 62 00 2E 00 64 00 6C 00 6C 00 00 00 00 00   // i.b...d.l.l.....
-           82 00 2F 00 01 00 4C 00 65 00 67 00 61 00 6C 00   // ../...L.e.g.a.l.
-           43 00 6F 00 70 00 79 00 72 00 69 00 67 00 68 00   // C.o.p.y.r.i.g.h.
-           74 00 00 00 A9 00 20 00 4D 00 69 00 63 00 72 00   // t..... .M.i.c.r.
-           6F 00 73 00 6F 00 66 00 74 00 20 00 43 00 6F 00   // o.s.o.f.t. .C.o.
-           72 00 70 00 6F 00 72 00 61 00 74 00 69 00 6F 00   // r.p.o.r.a.t.i.o.
-           6E 00 2E 00 20 00 20 00 41 00 6C 00 6C 00 20 00   // n... . .A.l.l. .
-           72 00 69 00 67 00 68 00 74 00 73 00 20 00 72 00   // r.i.g.h.t.s. .r.
-           65 00 73 00 65 00 72 00 76 00 65 00 64 00 2E 00   // e.s.e.r.v.e.d...
-           00 00 00 00 42 00 0D 00 01 00 4F 00 72 00 69 00   // ....B.....O.r.i.
-           67 00 69 00 6E 00 61 00 6C 00 46 00 69 00 6C 00   // g.i.n.a.l.F.i.l.
-           65 00 6E 00 61 00 6D 00 65 00 00 00 6D 00 73 00   // e.n.a.m.e...m.s.
-           63 00 6F 00 72 00 6C 00 69 00 62 00 2E 00 64 00   // c.o.r.l.i.b...d.
-           6C 00 6C 00 00 00 00 00 54 00 1A 00 01 00 50 00   // l.l.....T.....P.
-           72 00 6F 00 64 00 75 00 63 00 74 00 4E 00 61 00   // r.o.d.u.c.t.N.a.
-           6D 00 65 00 00 00 00 00 4D 00 69 00 63 00 72 00   // m.e.....M.i.c.r.
-           6F 00 73 00 6F 00 66 00 74 00 AE 00 20 00 2E 00   // o.s.o.f.t... ...
-           4E 00 45 00 54 00 20 00 46 00 72 00 61 00 6D 00   // N.E.T. .F.r.a.m.
-           65 00 77 00 6F 00 72 00 6B 00 00 00 40 00 0E 00   // e.w.o.r.k...@...
+           31 00 34 00 33 00 34 00 20 00 28 00 52 00 45 00   // 1.4.3.4. .(.R.E.
+           44 00 42 00 49 00 54 00 53 00 2E 00 30 00 35 00   // D.B.I.T.S...0.5.
+           30 00 37 00 32 00 37 00 2D 00 31 00 34 00 30 00   // 0.7.2.7.-.1.4.0.
+           30 00 29 00 00 00 00 00 3A 00 0D 00 01 00 49 00   // 0.).....:.....I.
+           6E 00 74 00 65 00 72 00 6E 00 61 00 6C 00 4E 00   // n.t.e.r.n.a.l.N.
+           61 00 6D 00 65 00 00 00 6D 00 73 00 63 00 6F 00   // a.m.e...m.s.c.o.
+           72 00 6C 00 69 00 62 00 2E 00 64 00 6C 00 6C 00   // r.l.i.b...d.l.l.
+           00 00 00 00 82 00 2F 00 01 00 4C 00 65 00 67 00   // ....../...L.e.g.
+           61 00 6C 00 43 00 6F 00 70 00 79 00 72 00 69 00   // a.l.C.o.p.y.r.i.
+           67 00 68 00 74 00 00 00 A9 00 20 00 4D 00 69 00   // g.h.t..... .M.i.
+           63 00 72 00 6F 00 73 00 6F 00 66 00 74 00 20 00   // c.r.o.s.o.f.t. .
+           43 00 6F 00 72 00 70 00 6F 00 72 00 61 00 74 00   // C.o.r.p.o.r.a.t.
+           69 00 6F 00 6E 00 2E 00 20 00 20 00 41 00 6C 00   // i.o.n... . .A.l.
+           6C 00 20 00 72 00 69 00 67 00 68 00 74 00 73 00   // l. .r.i.g.h.t.s.
+           20 00 72 00 65 00 73 00 65 00 72 00 76 00 65 00   //  .r.e.s.e.r.v.e.
+           64 00 2E 00 00 00 00 00 42 00 0D 00 01 00 4F 00   // d.......B.....O.
+           72 00 69 00 67 00 69 00 6E 00 61 00 6C 00 46 00   // r.i.g.i.n.a.l.F.
+           69 00 6C 00 65 00 6E 00 61 00 6D 00 65 00 00 00   // i.l.e.n.a.m.e...
+           6D 00 73 00 63 00 6F 00 72 00 6C 00 69 00 62 00   // m.s.c.o.r.l.i.b.
+           2E 00 64 00 6C 00 6C 00 00 00 00 00 54 00 1A 00   // ..d.l.l.....T...
            01 00 50 00 72 00 6F 00 64 00 75 00 63 00 74 00   // ..P.r.o.d.u.c.t.
-           56 00 65 00 72 00 73 00 69 00 6F 00 6E 00 00 00   // V.e.r.s.i.o.n...
-           32 00 2E 00 30 00 2E 00 35 00 30 00 37 00 32 00   // 2...0...5.0.7.2.
-           37 00 2E 00 33 00 31 00 32 00 00 00 34 00 0E 00   // 7...3.1.2...4...
-           01 00 43 00 6F 00 6D 00 6D 00 65 00 6E 00 74 00   // ..C.o.m.m.e.n.t.
-           73 00 00 00 46 00 6C 00 61 00 76 00 6F 00 72 00   // s...F.l.a.v.o.r.
-           3D 00 52 00 65 00 74 00 61 00 69 00 6C 00 00 00   // =.R.e.t.a.i.l...
-           44 00 00 00 01 00 56 00 61 00 72 00 46 00 69 00   // D.....V.a.r.F.i.
-           6C 00 65 00 49 00 6E 00 66 00 6F 00 00 00 00 00   // l.e.I.n.f.o.....
-           24 00 04 00 00 00 54 00 72 00 61 00 6E 00 73 00   // $.....T.r.a.n.s.
-           6C 00 61 00 74 00 69 00 6F 00 6E 00 00 00 00 00   // l.a.t.i.o.n.....
-           09 04 B0 04 )
+           4E 00 61 00 6D 00 65 00 00 00 00 00 4D 00 69 00   // N.a.m.e.....M.i.
+           63 00 72 00 6F 00 73 00 6F 00 66 00 74 00 AE 00   // c.r.o.s.o.f.t...
+           20 00 2E 00 4E 00 45 00 54 00 20 00 46 00 72 00   //  ...N.E.T. .F.r.
+           61 00 6D 00 65 00 77 00 6F 00 72 00 6B 00 00 00   // a.m.e.w.o.r.k...
+           42 00 0F 00 01 00 50 00 72 00 6F 00 64 00 75 00   // B.....P.r.o.d.u.
+           63 00 74 00 56 00 65 00 72 00 73 00 69 00 6F 00   // c.t.V.e.r.s.i.o.
+           6E 00 00 00 32 00 2E 00 30 00 2E 00 35 00 30 00   // n...2...0...5.0.
+           37 00 32 00 37 00 2E 00 31 00 34 00 33 00 34 00   // 7.2.7...1.4.3.4.
+           00 00 00 00 34 00 0E 00 01 00 43 00 6F 00 6D 00   // ....4.....C.o.m.
+           6D 00 65 00 6E 00 74 00 73 00 00 00 46 00 6C 00   // m.e.n.t.s...F.l.
+           61 00 76 00 6F 00 72 00 3D 00 52 00 65 00 74 00   // a.v.o.r.=.R.e.t.
+           61 00 69 00 6C 00 00 00 44 00 00 00 01 00 56 00   // a.i.l...D.....V.
+           61 00 72 00 46 00 69 00 6C 00 65 00 49 00 6E 00   // a.r.F.i.l.e.I.n.
+           66 00 6F 00 00 00 00 00 24 00 04 00 00 00 54 00   // f.o.....$.....T.
+           72 00 61 00 6E 00 73 00 6C 00 61 00 74 00 69 00   // r.a.n.s.l.a.t.i.
+           6F 00 6E 00 00 00 00 00 09 04 B0 04 )             // o.n.........
 }
 ";
       return result.Equals(stringPaper.Content) || vistaResult.Equals(stringPaper.Content);

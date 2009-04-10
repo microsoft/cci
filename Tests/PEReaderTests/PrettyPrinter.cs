@@ -660,10 +660,10 @@ namespace ModuleReaderTests {
           this.ILDasmPaper.Keyword("void");
           return;
       }
-      INamespaceTypeDefinition namespaceType = typeDefinition as INamespaceTypeDefinition;
+      INamespaceTypeReference namespaceType = typeDefinition as INamespaceTypeReference;
       if (namespaceType != null) {
         bool wasRoot;
-        this.ModuleQualifiedUnitNamespace((IUnitNamespace)namespaceType.ContainingNamespace, out wasRoot);
+        this.ModuleQualifiedUnitNamespace(namespaceType.ContainingUnitNamespace, out wasRoot);
         if (!wasRoot) {
           this.ILDasmPaper.Symbol(".");
         }
@@ -674,9 +674,9 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Identifier(name);
         return;
       }
-      INestedTypeDefinition nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
+      INestedTypeReference nestedTypeDefinition = typeDefinition as INestedTypeReference;
       if (nestedTypeDefinition != null) {
-        this.TypeDefinitionAsReference(nestedTypeDefinition.ContainingTypeDefinition);
+        this.TypeDefinitionAsReference(nestedTypeDefinition.ContainingType);
         this.ILDasmPaper.Symbol("/");
         string name = nestedTypeDefinition.Name.Value;
         if (nestedTypeDefinition.GenericParameterCount != 0) {
@@ -774,15 +774,19 @@ namespace ModuleReaderTests {
       if (typeReference == null || typeReference == Dummy.TypeReference) {
         this.ILDasmPaper.Identifier("###DummyType###");
       }
-      this.TypeDefinitionAsReference(typeReference.ResolvedType);
+      var typeDef = typeReference.ResolvedType;
+      if (typeDef != Dummy.Type)
+        this.TypeDefinitionAsReference(typeDef);
+      else
+        this.TypeDefinitionAsReference(typeReference);
       IModifiedTypeReference/*?*/ modifiedReference = typeReference as IModifiedTypeReference;
       if (modifiedReference != null) {
         this.CustomModifiers(modifiedReference.CustomModifiers);
       }
     }
 
-    void ModuleAsReference(IModule module) {
-      IAssembly assembly = module as IAssembly;
+    void ModuleAsReference(IModuleReference module) {
+      IAssemblyReference assembly = module as IAssemblyReference;
       if (assembly != null) {
         this.ILDasmPaper.Symbol("[");
         this.ILDasmPaper.Identifier(assembly.Name.Value);
@@ -796,17 +800,17 @@ namespace ModuleReaderTests {
       return;
     }
 
-    void ModuleQualifiedUnitNamespace(IUnitNamespace unitNamespace, out bool wasRoot) {
-      INestedUnitNamespace nestedUnitNamespace = unitNamespace as INestedUnitNamespace;
+    void ModuleQualifiedUnitNamespace(IUnitNamespaceReference unitNamespace, out bool wasRoot) {
+      INestedUnitNamespaceReference nestedUnitNamespace = unitNamespace as INestedUnitNamespaceReference;
       if (nestedUnitNamespace != null) {
-        this.ModuleQualifiedUnitNamespace((IUnitNamespace)nestedUnitNamespace.ContainingNamespace, out wasRoot);
+        this.ModuleQualifiedUnitNamespace(nestedUnitNamespace.ContainingUnitNamespace, out wasRoot);
         if (!wasRoot) {
           this.ILDasmPaper.Symbol(".");
         }
         this.ILDasmPaper.Identifier(nestedUnitNamespace.Name.Value);
         wasRoot = false;
       } else {
-        IModule module = (IModule)unitNamespace.Unit;
+        IModuleReference module = (IModuleReference)unitNamespace.Unit;
         if (module.ContainingAssembly != null)
           module = module.ContainingAssembly;
         if (!module.Equals(this.CurrentModule))
@@ -1754,7 +1758,7 @@ namespace ModuleReaderTests {
       if (te != null) {
         this.ILDasmPaper.Keyword("typeof");
         this.ILDasmPaper.Symbol("(");
-        this.TypeDefinitionAsReference(te.TypeToGet.ResolvedType);
+        this.TypeDefinitionAsReference(te.TypeToGet);
         this.ILDasmPaper.Symbol(")");
         return;
       }
@@ -1782,6 +1786,11 @@ namespace ModuleReaderTests {
       this.ILDasmPaper.NewLine();
       this.ILDasmPaper.OpenBlock();
       foreach (IMetadataExpression argument in customAttribute.Arguments) {
+        this.ILDasmPaper.Directive(".argument");
+        this.Expression(argument);
+        this.ILDasmPaper.NewLine();
+      }
+      foreach (IMetadataExpression argument in customAttribute.NamedArguments) {
         this.ILDasmPaper.Directive(".argument");
         this.Expression(argument);
         this.ILDasmPaper.NewLine();

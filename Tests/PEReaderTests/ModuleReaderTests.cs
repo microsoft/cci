@@ -354,7 +354,7 @@ namespace ModuleReaderTests {
     public ModuleReaderTestClass() {
       this.HostEnv = new HostEnvironment();
       this.NameTable = this.HostEnv.NameTable;
-      string location = Path.GetDirectoryName(typeof(Assem).Assembly.Location);
+      string location = Directory.GetCurrentDirectory();
       string cppAssemblyPath = Path.Combine(location, "MRW_CppAssembly.dll");
       string ilAsmAssemblyPath = Path.Combine(location, "MRW_ILAsmAssembly.dll");
       string module1Path = Path.Combine(location, "MRW_Module1.netmodule");
@@ -381,27 +381,25 @@ namespace ModuleReaderTests {
 
     public void MRW_AssemblyTests() {
       AssemblyModuleTests amTests = new AssemblyModuleTests(this);
-      amTests.RunAssemblyTests();
+      Assert.True(amTests.RunAssemblyTests());
     }
 
     public void MRW_TypeTests() {
       TypeTests typeTests = new TypeTests(this);
-      typeTests.RunTypeTests();
+      Assert.True(typeTests.RunTypeTests());
     }
 
     public void MRW_TypeMemberTests() {
       TypeMemberTests typeMemberTests = new TypeMemberTests(this);
-      typeMemberTests.RunTypeMemberTests();
+      Assert.True(typeMemberTests.RunTypeMemberTests());
     }
 
     public void MRW_MethodBodyTests() {
       MethodBodyTests methodBodyTests = new MethodBodyTests(this);
-      methodBodyTests.RunMethodBodyTests();
+      Assert.True(methodBodyTests.RunMethodBodyTests());
     }
 
-#if !COMPACTFX
     [Fact]
-#endif
     public void MetadataReaderTests() {
       this.MRW_AssemblyTests();
       this.MRW_TypeTests();
@@ -409,11 +407,5 @@ namespace ModuleReaderTests {
       this.MRW_MethodBodyTests();
     }
 
-#if COMPACTFX
-    public static void Main() {
-      ModuleReaderTestClass rwTestClass = new ModuleReaderTestClass();
-      rwTestClass.MetadataReaderTests();
-    }
-#endif
   }
 }

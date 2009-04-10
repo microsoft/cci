@@ -233,7 +233,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.MscorlibAssembly);
       prettyPrinter.PropertyDefinition(property);
       string result =
-@".property public instance!0 Item(
+@".property public instance default!0 Item(
   int32
 )
 {
@@ -267,10 +267,10 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.EventDefinition(eventDef);
       string result =
-@".event public[Assembly]GenericDelegate`1<!0>GenericEvent
+@".event public[MRW_Assembly]GenericDelegate`1<!0>GenericEvent
 {
-  .addon instance void[Assembly]Generic1`1::add_GenericEvent([Assembly]GenericDelegate`1<!0>)
-  .removeon instance void[Assembly]Generic1`1::remove_GenericEvent([Assembly]GenericDelegate`1<!0>)
+  .addon instance void[MRW_Assembly]Generic1`1::add_GenericEvent([MRW_Assembly]GenericDelegate`1<!0>)
+  .removeon instance void[MRW_Assembly]Generic1`1::remove_GenericEvent([MRW_Assembly]GenericDelegate`1<!0>)
 }
 ";
       return result.Equals(stringPaper.Content);
@@ -336,7 +336,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.MethodDefinition(method);
       string result =
-@".method public hidebysig static pinvokeimpl(gdi32.dll as CreateFontIndirect autochar winapi)explicit default char CreateFontIndirect(
+@".method public hidebysig static pinvokeimpl(gdi32.dll as CreateFontIndirect autochar winapi)explicit default native int CreateFontIndirect(
   [in][vjslib]com.ms.win32.LOGFONT marshal(lpstruct) lplf
 )cil managed preservesig
 {
@@ -352,7 +352,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.MethodDefinition(method);
       string result =
-@".method public hidebysig static pinvokeimpl(gdi32.dll as CreateFontIndirectArray autochar winapi)explicit default char CreateFontIndirectArray(
+@".method public hidebysig static pinvokeimpl(gdi32.dll as CreateFontIndirectArray autochar winapi)explicit default native int CreateFontIndirectArray(
   [vjslib]com.ms.win32.LOGFONT[]marshal(lpstruct,0,0,1) lplf
 )cil managed preservesig
 {
@@ -387,7 +387,7 @@ namespace ModuleReaderTests {
   IL_0004:  ldnull
   IL_0005:  ldnull
   IL_0006:  ldnull
-  IL_0007:  call instance!!0[Assembly]Assem::GenMethod<[mscorlib]System.Object>(!!0,[mscorlib]System.Collections.Generic.List`1<!!0>,!!0[],!!0[,],!!0[,])
+  IL_0007:  call instance!!0[MRW_Assembly]Assem::GenMethod<[mscorlib]System.Object>(!!0,[mscorlib]System.Collections.Generic.List`1<!!0>,!!0[],!!0[,],!!0[,])
   IL_000c:  pop
   IL_000d:  ldarg.1
   IL_000e:  stloc.0
@@ -411,7 +411,7 @@ namespace ModuleReaderTests {
         return false;
       StringILDasmPaper stringPaper = new StringILDasmPaper(2);
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
-      prettyPrinter.MethodDefinition(gmi.ResolvedMethod);
+      prettyPrinter.MethodDefinition(gmi);
       string result =
 @".method public hidebysig instance explicit default[mscorlib]System.Object GenMethod<[mscorlib]System.Object>(
   [mscorlib]System.Object  t,
@@ -467,10 +467,10 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.PropertyDefinition(prop);
       string result =
-@".property public instance int32 propT()
+@".property public instance default int32 propT()
 {
-  .get instance int32[Assembly]Generic1`1<int32>::get_propT()
-  .set instance void[Assembly]Generic1`1<int32>::set_propT(int32)
+  .get instance int32[MRW_Assembly]Generic1`1<int32>::get_propT()
+  .set instance void[MRW_Assembly]Generic1`1<int32>::set_propT(int32)
 }
 ";
       return result.Equals(stringPaper.Content);
@@ -485,10 +485,10 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.EventDefinition(eventDef);
       string result =
-@".event public[Assembly]GenericDelegate`1<int32>GenericEvent
+@".event public[MRW_Assembly]GenericDelegate`1<int32>GenericEvent
 {
-  .addon instance void[Assembly]Generic1`1<int32>::add_GenericEvent([Assembly]GenericDelegate`1<int32>)
-  .removeon instance void[Assembly]Generic1`1<int32>::remove_GenericEvent([Assembly]GenericDelegate`1<int32>)
+  .addon instance void[MRW_Assembly]Generic1`1<int32>::add_GenericEvent([MRW_Assembly]GenericDelegate`1<int32>)
+  .removeon instance void[MRW_Assembly]Generic1`1<int32>::remove_GenericEvent([MRW_Assembly]GenericDelegate`1<int32>)
 }
 ";
       return result.Equals(stringPaper.Content);

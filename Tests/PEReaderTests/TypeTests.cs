@@ -183,13 +183,13 @@ namespace ModuleReaderTests {
   {
     .argument const(""Item"",System.String)
   }
-  .custom instance void System.Diagnostics.DebuggerDisplayAttribute::.ctor(System.String)
-  {
-    .argument const(""Count = {Count}"",System.String)
-  }
   .custom instance void System.Diagnostics.DebuggerTypeProxyAttribute::.ctor(System.Type)
   {
     .argument typeof(System.Collections.Generic.Mscorlib_CollectionDebugView`1)
+  }
+  .custom instance void System.Diagnostics.DebuggerDisplayAttribute::.ctor(System.String)
+  {
+    .argument const(""Count = {Count}"",System.String)
   }
   .class Enumerator
   .field _defaultCapacity : int32
@@ -466,7 +466,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.AssemblyAssembly);
       prettyPrinter.TypeDefinition(type);
       string result =
-@".class public auto ansi beforefieldinit Generic4`1<([mscorlib]System.ValueType) T>
+@".class public auto ansi beforefieldinit Generic4`1<valuetype .ctor([mscorlib]System.ValueType) T>
   extends [mscorlib]System.Object
 {
   .field field1 : !0
@@ -599,7 +599,7 @@ namespace ModuleReaderTests {
 {
   .class Nested
   .method .ctor : void()
-  .method Bar : [.module module1.netmodule]Module1.Foo()
+  .method Bar : [.module MRW_Module1.netmodule]Module1.Foo()
   .flags class reftype
   .pack 0
   .size 0
@@ -639,12 +639,12 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.TypeDefinition(type);
       string result =
-@".class public auto ansi beforefieldinit[Assembly]Module1.Foo
+@".class public auto ansi beforefieldinit[MRW_Assembly]Module1.Foo
   extends [mscorlib]System.Object
 {
   .class Nested
   .method .ctor : void()
-  .method Bar : [.module module1.netmodule]Module1.Foo()
+  .method Bar : [.module MRW_Module1.netmodule]Module1.Foo()
   .flags class reftype
   .pack 0
   .size 0
@@ -664,7 +664,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.TestAssembly);
       prettyPrinter.TypeDefinition(type);
       string result =
-@".class auto ansi nested public beforefieldinit[Assembly]Module1.Foo/Nested
+@".class auto ansi nested public beforefieldinit[MRW_Assembly]Module1.Foo/Nested
   extends [mscorlib]System.Object
 {
   .method .ctor : void()
@@ -741,8 +741,8 @@ namespace ModuleReaderTests {
     .argument .field Array : [mscorlib]System.Object[]=array([mscorlib]System.Object[]){const(null,[mscorlib]System.String), const(null,[mscorlib]System.String)}
     .argument .field IntArray : int32[]=array(int32[]){const(6,int32), const(6,int32), const(6,int32)}
   }
-  .field Foo : [.module module1.netmodule]Module1.Foo
-  .field FooNested : [.module module1.netmodule]Module1.Foo/Nested
+  .field Foo : [.module MRW_Module1.netmodule]Module1.Foo
+  .field FooNested : [.module MRW_Module1.netmodule]Module1.Foo/Nested
   .field IntList : [mscorlib]System.Collections.Generic.List`1<int32>
   .method .ctor : void()
   .flags class reftype
