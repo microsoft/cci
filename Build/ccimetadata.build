@@ -8,6 +8,9 @@
     
     <RootDirectory>..</RootDirectory>
     <MetadataSolution>$(RootDirectory)\Metadata.sln</MetadataSolution>
+
+    <BinDirectory>$(RootDirectory)\bin</BinDirectory>
+    <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
   </PropertyGroup>
   
   <!-- target definitions  -->
@@ -30,7 +33,12 @@
   </Target>
 
   <Target Name="BuildBVT">
-    
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="RoundtripTests.exe" />
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="PEReaderTests.exe" />
   </Target>
 
   <Target Name="BuildRelease">
