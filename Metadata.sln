@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.console", "Xunit\Main
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.gui", "Xunit\Main\xunit.gui\xunit.gui.csproj", "{380A0890-48E0-405A-9E3F-45A69EEE8E01}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.installer", "Xunit\Main\xunit.installer\xunit.installer.csproj", "{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -179,6 +181,14 @@ Global
 		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -191,5 +201,6 @@ Global
 		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 		{19C75545-5E0E-4E38-9995-511ED2DF6D30} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 		{380A0890-48E0-405A-9E3F-45A69EEE8E01} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
+		{4F16DF4B-8BBD-40E2-8AD4-82F58104A447} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 	EndGlobalSection
 EndGlobal
