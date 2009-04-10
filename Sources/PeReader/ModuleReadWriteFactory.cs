@@ -132,6 +132,10 @@ namespace Microsoft.Cci {
 
     internal Assembly/*?*/ CoreAssembly {
       get {
+        if (this.coreAssembly == null) 
+          this.coreAssembly = this.metadataReaderHost.FindAssembly(this.metadataReaderHost.CoreAssemblySymbolicIdentity) as Assembly;
+        if (this.coreAssembly == Dummy.Assembly)
+          return null;
         return this.coreAssembly;
       }
     }
