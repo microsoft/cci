@@ -1,0 +1,57 @@
+﻿<project schemaVersion="1.6.0.2">
+    <assemblies>
+        <assembly assemblyPath="..\Sources\AssertionAdder\bin\Debug\Microsoft.Cci.AssertionAdder.dll" xmlCommentsPath="..\Sources\AssertionAdder\bin\Debug\Microsoft.Cci.AssertionAdder.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\AstsProjectedAsCodeModel\bin\Debug\Microsoft.Cci.AstsProjectedAsCodeModel.dll" xmlCommentsPath="..\Sources\AstsProjectedAsCodeModel\bin\Debug\Microsoft.Cci.AstsProjectedAsCodeModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\CodeModel\bin\Debug\Microsoft.Cci.CodeModel.dll" xmlCommentsPath="..\Sources\CodeModel\bin\Debug\Microsoft.Cci.CodeModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\CodeModelNormalizer\bin\Debug\Microsoft.Cci.CodeModelNormalizer.dll" xmlCommentsPath="..\Sources\CodeModelNormalizer\bin\Debug\Microsoft.Cci.CodeModelNormalizer.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\CodeModelToIL\bin\Debug\Microsoft.Cci.CodeModelToIL.dll" xmlCommentsPath="..\Sources\CodeModelToIL\bin\Debug\Microsoft.Cci.CodeModelToIL.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\ILGenerator\bin\Debug\Microsoft.Cci.ILGenerator.dll" xmlCommentsPath="..\Metadata\Sources\ILGenerator\bin\Debug\Microsoft.Cci.ILGenerator.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\ILToCodeModel\bin\Debug\Microsoft.Cci.ILToCodeModel.dll" xmlCommentsPath="..\Sources\ILToCodeModel\bin\Debug\Microsoft.Cci.ILToCodeModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\MetadataHelper\bin\Debug\Microsoft.Cci.MetadataHelper.dll" xmlCommentsPath="..\Metadata\Sources\MetadataHelper\bin\Debug\Microsoft.Cci.MetadataHelper.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.dll" xmlCommentsPath="..\Metadata\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\MutableCodeModel\bin\Debug\Microsoft.Cci.MutableCodeModel.dll" xmlCommentsPath="..\Sources\MutableCodeModel\bin\Debug\Microsoft.Cci.MutableCodeModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\MutableMetadataModel\bin\Debug\Microsoft.Cci.MutableMetadataModel.dll" xmlCommentsPath="..\Metadata\Sources\MutableMetadataModel\bin\Debug\Microsoft.Cci.MutableMetadataModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\PdbReader\bin\Debug\Microsoft.Cci.PdbReader.dll" xmlCommentsPath="..\Metadata\Sources\PdbReader\bin\Debug\Microsoft.Cci.PdbReader.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\PdbWriter\bin\Debug\Microsoft.Cci.PdbWriter.dll" xmlCommentsPath="..\Metadata\Sources\PdbWriter\bin\Debug\Microsoft.Cci.PdbWriter.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\PeReader\bin\Debug\Microsoft.Cci.PeReader.dll" xmlCommentsPath="..\Metadata\Sources\PeReader\bin\Debug\Microsoft.Cci.PeReader.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.dll" xmlCommentsPath="..\Metadata\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Metadata\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.dll" xmlCommentsPath="..\Metadata\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.xml" commentsOnly="False" />
+    </assemblies>
+    <ProjectSummary />
+    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace</MissingTags>
+    <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
+    <HtmlHelp1xCompilerPath path="" />
+    <HtmlHelp2xCompilerPath path="" />
+    <OutputPath>.\</OutputPath>
+    <SandcastlePath path="" />
+    <WorkingPath path="" />
+    <CleanIntermediates>True</CleanIntermediates>
+    <KeepLogFile>True</KeepLogFile>
+    <HelpFileFormat>HtmlHelp1x</HelpFileFormat>
+    <PurgeDuplicateTopics>True</PurgeDuplicateTopics>
+    <CppCommentsFixup>False</CppCommentsFixup>
+    <FrameworkVersion>2.0.50727</FrameworkVersion>
+    <BinaryTOC>True</BinaryTOC>
+    <IncludeFavorites>False</IncludeFavorites>
+    <Preliminary>False</Preliminary>
+    <RootNamespaceContainer>False</RootNamespaceContainer>
+    <RootNamespaceTitle />
+    <HelpTitle>A Sandcastle Documented Class Library</HelpTitle>
+    <HtmlHelpName>CCI Metadata, Code and AST components API documentation</HtmlHelpName>
+    <Language>en-US</Language>
+    <CopyrightHref />
+    <CopyrightText />
+    <FeedbackEMailAddress />
+    <HeaderText />
+    <FooterText />
+    <ProjectLinkType>Local</ProjectLinkType>
+    <SdkLinkType>Msdn</SdkLinkType>
+    <SdkLinkTarget>Blank</SdkLinkTarget>
+    <PresentationStyle>Prototype</PresentationStyle>
+    <NamingMethod>Guid</NamingMethod>
+    <SyntaxFilters>Standard</SyntaxFilters>
+    <ShowFeedbackControl>False</ShowFeedbackControl>
+    <ContentPlacement>AboveNamespaces</ContentPlacement>
+    <ContentSiteMap path="" />
+    <TopicFileTransform path="" />
+</project>
