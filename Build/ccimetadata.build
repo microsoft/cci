@@ -23,7 +23,7 @@
     <!-- set by the ccnet server
     <CodePlexUser />
     <CodePlexPassword /> 
-    -->
+     -->
   </PropertyGroup>
 
   <!-- target definitions  -->
