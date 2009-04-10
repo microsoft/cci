@@ -3703,7 +3703,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override IModuleTypeReference/*?*/ SpecializeTypeInstance(
       IModuleGenericTypeInstance genericTypeInstance
     ) {
-      return this;
+      return genericTypeInstance.GetGenericTypeArgumentFromOrdinal(this.GenericParameterOrdinality);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
@@ -3789,7 +3789,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
       IModuleGenericMethodInstance genericMethodInstance
     ) {
-      return this;
+      return genericMethodInstance.GetGenericMethodArgumentFromOrdinal(this.Ordinal);
     }
 
     public override ModuleTypeKind ModuleTypeKind {
@@ -5148,7 +5148,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   //  A.B<int> aka A<int>.B or A.B<int> aka A<int>.B or A<int>.B<>
   internal abstract class SpecializedNestedPartialGenericInstanceReference : GenericTypeInstanceReference, IModuleSpecializedNestedTypeReference {
     internal readonly GenericTypeInstanceReference ParentGenericTypeReference;  //  A<int>
-    readonly IModuleNestedType unspecializedVersion; //A.B<T>
+    protected readonly IModuleNestedType unspecializedVersion; //A.B<T>
 
     internal SpecializedNestedPartialGenericInstanceReference(
       PEFileToObjectModel peFileToObjectModel,
@@ -5191,10 +5191,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         return this.ParentGenericTypeReference.GenericTypeArgumentCardinality;
       }
-    }
-
-    public override IModuleTypeReference/*?*/ GetGenericTypeArgumentFromOrdinal(ushort genericArgumentOrdinal) {
-      return this.ParentGenericTypeReference.GetGenericTypeArgumentFromOrdinal(genericArgumentOrdinal);
     }
 
     public override ushort ParentGenericTypeArgumentCardinality {
@@ -5314,11 +5310,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return 0; }
     }
 
+    public override IModuleTypeReference/*?*/ GetGenericTypeArgumentFromOrdinal(ushort genericArgumentOrdinal) {
+      return this.ParentGenericTypeReference.GetGenericTypeArgumentFromOrdinal(genericArgumentOrdinal);
+    }
+
   }
 
-  //  A.B<int> aka A<int>.B<>
+  //  A.B<int,T..> aka A<int>.B<T..>
   internal sealed class SpecializedNestedGenericTypeReference : SpecializedNestedPartialGenericInstanceReference {
-    readonly ushort genericParameterCount;  //  <>
+    readonly ushort genericParameterCount;  //  <T..>
     SpecializedNestedGenericType/*?*/ SpecializedNestedGenericType;
 
     internal SpecializedNestedGenericTypeReference(
@@ -5326,7 +5326,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       uint typeSpecToken,
       GenericTypeInstanceReference parentGenericTypeReference,  //  A<int>
       IModuleNestedType unspecializedVersion, //  B
-      ushort genericParameterCount   //  <>
+      ushort genericParameterCount   //  <T..>
     )
       : base(peFileToObjectModel, typeSpecToken, parentGenericTypeReference, unspecializedVersion) {
       this.genericParameterCount = genericParameterCount;
@@ -5356,6 +5356,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override ushort GenericParameterCount {
       get { return this.genericParameterCount; }
+    }
+
+    public override IModuleTypeReference/*?*/ GetGenericTypeArgumentFromOrdinal(ushort genericArgumentOrdinal) {
+      if (genericArgumentOrdinal < this.ParentGenericTypeArgumentCardinality)
+        return this.ParentGenericTypeReference.GetGenericTypeArgumentFromOrdinal(genericArgumentOrdinal);
+      else
+        return ((IModuleGenericType)this.unspecializedVersion).GetGenericTypeParameterFromOrdinal(genericArgumentOrdinal);
     }
   }
 
@@ -7173,12 +7180,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         startIndex += genParamCount;
         return this.GetNamespaceTypeGenericInstanceReference(0xFFFFFFFF, moduleNamespaceType, genericTypeArgs);
       }
-      //^ assert rawTemplateTypeReference is IModuleNestedType;
+      //^ assume rawTemplateTypeReference is IModuleNestedType; //if it is not a namespace type, it had better be a nested one.
       IModuleNestedType moduleNestedType = (IModuleNestedType)rawTemplateTypeReference;
-      //^ assert moduleNestedType.ParentTypeReference != null;  //  Because the type is IModuleNestedType....
+      //^ assume moduleNestedType.ParentTypeReference != null;  //  Because the type is IModuleNestedType....
       GenericTypeInstanceReference/*?*/ parentGenericTypeInstanceReference = this.GetGenericTypeInstanceReferenceInternal(moduleNestedType.ParentTypeReference, 
         cummulativeGenericTypeArgs, numberOfTypeArgsUsedByNestedTypes+moduleNestedType.GenericParameterCount, ref startIndex);
       if (parentGenericTypeInstanceReference == null) {
+        // parentGenericTypeInstanceReference is null if the module does not have direct reference to it.
+        // For example, if only the nested generic type is instantiated and referenced, the no reference will exist to an instantiation
+        // of the parent type.
         ushort genParamCount = moduleNestedType.GenericParameterCount;
         if (genParamCount == 0) {
           genParamCount = (ushort)(cummulativeGenericTypeArgs.Length-numberOfTypeArgsUsedByNestedTypes);
@@ -7193,7 +7203,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         ushort genParamCount = moduleNestedType.GenericParameterCount;
         if (genParamCount == 0) {
           if (startIndex < cummulativeGenericTypeArgs.Length-numberOfTypeArgsUsedByNestedTypes) {
-            //There are type arguments not used by the parent or by any nested types. These must belong to this type, even though there is not tick to help us out.
+            //There are type arguments not used by the parent or by any nested types. These must belong to this type, 
+            // even though there is no tick to help us out (which is the reason genParamCount is 0.
             genParamCount = (ushort)(cummulativeGenericTypeArgs.Length-numberOfTypeArgsUsedByNestedTypes-startIndex);
           }
         }
