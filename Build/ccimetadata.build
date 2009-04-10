@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
           DefaultTargets="ContinuousBuild">
+  <UsingTask 
+    TaskName="UploadFiles" 
+    AssemblyName="CodePlex.WebServices.Client" />
   <!-- constants -->
   <PropertyGroup>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
@@ -13,7 +16,16 @@
     <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
     <BinReleaseDirectory>$(BinDirectory)\release</BinReleaseDirectory>
   </PropertyGroup>
-  
+
+  <PropertyGroup>
+    <CodePlexProjectName>ccimetadata</CodePlexProjectName>
+    <CodePlexReleaseName>Latest Build</CodePlexReleaseName>
+    <!-- set by the ccnet server
+    <CodePlexUser />
+    <CodePlexPassword /> 
+    -->
+  </PropertyGroup>
+
   <!-- target definitions  -->
   <Target 
     Name="ContinuousBuild" 
@@ -22,9 +34,13 @@
       TestDebug;
       BuildRelease;
       TestRelease;
-      CreateCodePlexRelease;
-      "          
-          />
+      " />
+  <Target
+    Name="ContinuousCodePlexRelease"
+    DependsOnTargets="
+      CreateCodePlexRelease
+    "
+    />
 
   <Target Name="BuildDebug">
     <MSBuild
@@ -47,23 +63,36 @@
   <Target Name="TestDebug">
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.results.dbg.xml&quot;" />
+      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.dbg.results.xml&quot;" />
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.results.dbg.xml&quot;" />
+      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.dbg.results.xml&quot;" />
   </Target>
 
   <Target Name="TestRelease">
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.results.ret.xml&quot;" />
+      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.ret.results.xml&quot;" />
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.results.ret.xml&quot;" />
+      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.ret.results.xml&quot;" />
   </Target>
   
   <Target Name="CreateCodePlexRelease">
-    
+    <CreateItem
+      Include="$(BinReleaseDirectory)\Microsoft.Cci.*.dll" 
+      AdditionalMetadata="
+        FileType=RuntimeBinary;
+      ">
+      <Output TaskParameter="Include" ItemName="ReleaseFiles"/>
+    </CreateItem>
+    <UploadFiles
+      ProjectName="$(CodePlexProjectName)"
+      ReleaseName="$(CodePlexReleaseName)"
+      ReleaseFiles="@(ReleaseFiles)"
+      User="$(CodePlexUser)"
+      Password="$(CodePlexPassword)"
+	    />
   </Target>
 
 </Project>
