@@ -27,35 +27,35 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpSourceEmitter", "Test
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metadata", "Metadata", "{1B359551-AFB6-4EE2-A779-2F2071CCB451}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataModel", "metadata\Sources\MetadataModel\MetadataModel.csproj", "{33CAB640-0D03-43DF-81BD-22CDC6C0A597}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataModel", "Metadata\Sources\MetadataModel\MetadataModel.csproj", "{33CAB640-0D03-43DF-81BD-22CDC6C0A597}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataHelper", "metadata\Sources\MetadataHelper\MetadataHelper.csproj", "{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataHelper", "Metadata\Sources\MetadataHelper\MetadataHelper.csproj", "{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableMetadataModel", "metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj", "{319E151C-8F33-49E7-81C9-30F02F9BA90A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableMetadataModel", "Metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj", "{319E151C-8F33-49E7-81C9-30F02F9BA90A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeReader", "metadata\Sources\PeReader\PeReader.csproj", "{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeReader", "Metadata\Sources\PeReader\PeReader.csproj", "{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReader", "metadata\Sources\PdbReader\PdbReader.csproj", "{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReader", "Metadata\Sources\PdbReader\PdbReader.csproj", "{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbWriter", "metadata\Sources\PdbWriter\PdbWriter.csproj", "{6D83F687-ABB5-40B3-915E-CA53DA0EB7F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbWriter", "Metadata\Sources\PdbWriter\PdbWriter.csproj", "{6D83F687-ABB5-40B3-915E-CA53DA0EB7F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceModel", "metadata\Sources\SourceModel\SourceModel.csproj", "{4B0054FD-124A-4037-9965-BDB55E6BF389}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceModel", "Metadata\Sources\SourceModel\SourceModel.csproj", "{4B0054FD-124A-4037-9965-BDB55E6BF389}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeWriter", "metadata\Sources\PeWriter\PeWriter.csproj", "{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeWriter", "Metadata\Sources\PeWriter\PeWriter.csproj", "{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILGenerator", "metadata\Sources\ILGenerator\ILGenerator.csproj", "{08156C78-403A-4112-AD81-8646AC51CD2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILGenerator", "Metadata\Sources\ILGenerator\ILGenerator.csproj", "{08156C78-403A-4112-AD81-8646AC51CD2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableCodeModel", "Sources\MutableCodeModel\MutableCodeModel.csproj", "{319E150C-8F33-49E7-81CA-30F02F9BA90A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5795EBEE-7F94-4E25-B9C9-4E0238514B1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoundtripTests", "metadata\Tests\RoundtripTests\RoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D367F38D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoundtripTests", "Metadata\Tests\RoundtripTests\RoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D367F38D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToPe", "Samples\PeToPe\PeToPe.csproj", "{47D44A88-A9EE-46E9-8781-5B42A503A493}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelRoundtripTests", "Tests\CodeModelRoundtripTests\CodeModelRoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D377F38D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PEReaderTests", "metadata\Tests\PEReaderTests\PEReaderTests.csproj", "{A6BABD10-C384-4F9F-93D7-99B935A41719}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PEReaderTests", "Metadata\Tests\PEReaderTests\PEReaderTests.csproj", "{A6BABD10-C384-4F9F-93D7-99B935A41719}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2886EC15-51EC-4BE2-B65A-FE8A0875C9DC}"
 	ProjectSection(SolutionItems) = preProject
@@ -63,6 +63,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToPe", "Metadata\Samples\PeToPe\PeToPe.csproj", "{47D44A88-A9EE-46E9-8780-5B42A503A493}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.runner.utility", "Metadata\Xunit\Main\xunit.runner.utility\xunit.runner.utility.csproj", "{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.console", "Metadata\Xunit\Main\xunit.console\xunit.console.csproj", "{19C75545-5E0E-4E38-9995-511ED2DF6D30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit", "Metadata\Xunit\Main\xunit\xunit.csproj", "{09EF9917-4B00-4646-8C3F-96EFACC8BF51}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.gui", "Metadata\Xunit\Main\xunit.gui\xunit.gui.csproj", "{380A0890-48E0-405A-9E3F-45A69EEE8E01}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -275,6 +283,38 @@ Global
 		{47D44A88-A9EE-46E9-8780-5B42A503A493}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{47D44A88-A9EE-46E9-8780-5B42A503A493}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47D44A88-A9EE-46E9-8780-5B42A503A493}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -299,5 +339,9 @@ Global
 		{71B89CE8-CD33-4BC1-A411-4002D367F38D} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
 		{A6BABD10-C384-4F9F-93D7-99B935A41719} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
 		{47D44A88-A9EE-46E9-8780-5B42A503A493} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
+		{2CE5D729-2E2A-4D36-8161-0F215B1C46AF} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
+		{19C75545-5E0E-4E38-9995-511ED2DF6D30} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
+		{09EF9917-4B00-4646-8C3F-96EFACC8BF51} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
+		{380A0890-48E0-405A-9E3F-45A69EEE8E01} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
 	EndGlobalSection
 EndGlobal
