@@ -63,19 +63,19 @@
   <Target Name="TestDebug">
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.dbg.results.xml&quot;" />
+      Command="RoundtripTests.exe /xml ..\RountripTests.dbg.results.xml" />
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.dbg.results.xml&quot;" />
+      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.dbg.results.xml" />
   </Target>
 
   <Target Name="TestRelease">
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="RoundtripTests.exe /xml &quot;$(BinDirectory)\RountripTests.ret.results.xml&quot;" />
+      Command="RoundtripTests.exe /xml ..\RountripTests.ret.results.xml" />
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="ModuleReaderTests.exe /xml &quot;$(BinDirectory)\ModuleReaderTests.ret.results.xml&quot;" />
+      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.ret.results.xml" />
   </Target>
   
   <Target Name="CreateCodePlexRelease">
