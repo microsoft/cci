@@ -8,59 +8,53 @@ using Microsoft.Cci;
 using Microsoft.CSharp;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
-[TestClass]
 public class CodeModelRoundTripTests {
 
   PdbReader pdbReader;
   PdbWriter pdbWriter;
   HostEnvironment host;
 
-  [TestInitialize]
-  public void Initialize() {
-    Assert.IsTrue(File.Exists(PeVerify.PeVerifyPathv3), "Can't find PEVerify, please update the const.");
+  public CodeModelRoundTripTests() {
+    Assert.True(File.Exists(PeVerify.PeVerifyPathv3), "Can't find PEVerify, please update the const.");
 
     pdbReader = null;
     pdbWriter = null;
     host = new HostEnvironment();
-
-    Debug.Listeners.Clear();
-    Debug.Listeners.Add(new MyTraceListener());
   }
 
-  [TestMethod]
+  [Fact]
   public void Repro1WithCode() {
     ExtractAndCompile("Repro1.cs");
     RoundTripWithCodeMutator("Repro1.dll", "Repro1.pdb");
   }
 
-  [TestMethod]
+  [Fact]
   public void Repro2WithCode() {
     ExtractAndCompile("Repro2.cs");
     RoundTripWithCodeMutator("Repro2.dll", "Repro2.pdb");
   }
 
-  [TestMethod]
+  [Fact]
   public void Repro3WithCode() {
     ExtractAndCompile("Repro3.cs");
     RoundTripWithCodeMutator("Repro3.dll", "Repro3.pdb");
   }
 
-  [TestMethod]
+  [Fact]
   public void Repro5WithCode() {
     ExtractAndCompile("Repro5.cs");
     RoundTripWithCodeMutator("Repro5.dll", "Repro5.pdb");
   }
 
-  [TestMethod]
+  [Fact]
   public void Repro6WithCode() {
     ExtractAndCompile("Repro6.cs");
     RoundTripWithCodeMutator("Repro6.dll", "Repro6.pdb");
   }
 
-  [Ignore]
-  [TestMethod]
+  //[Fact]
   public void SystemCoreWithCode() {
     ExtractResource("CodeModelRoundtripTests.TestData.v4.System.Core.dll", "System.Core.dll");
     ExtractResource("CodeModelRoundtripTests.TestData.v4.System.Core.pdb", "System.Core.pdb");
@@ -116,7 +110,7 @@ public class CodeModelRoundTripTests {
       PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
     }
 
-    Assert.IsTrue(File.Exists(assembly.Location));
+    Assert.True(File.Exists(assembly.Location));
     PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
   }
 
@@ -127,7 +121,7 @@ public class CodeModelRoundTripTests {
       var normalizer = new CodeModelNormalizer(ccMutator);
       assembly = normalizer.Visit((Assembly)assembly);
     }
-    Assert.IsNotNull(assembly);
+    Assert.NotNull(assembly);
   }
 
   static int StartAndWaitForResult(string fileName, string arguments, ref string stdOut, ref string stdErr) {
@@ -146,15 +140,13 @@ public class CodeModelRoundTripTests {
   }
 
   IAssembly LoadAssembly(string assemblyName) {
-    Assert.IsTrue(File.Exists(assemblyName));
+    Assert.True(File.Exists(assemblyName));
 
     IModule module = host.LoadUnitFrom(assemblyName) as IModule;
-    if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-      Assert.Fail("Failed to load the module...");
-    }
+    Assert.False (module == null || module == Dummy.Module || module == Dummy.Assembly, "Failed to load the module...");
 
     IAssembly assembly = module as IAssembly;
-    Assert.IsNotNull(module);
+    Assert.NotNull(module);
 
     return assembly;
   }
@@ -192,8 +184,8 @@ public class CodeModelRoundTripTests {
       Debug.WriteLine(s);
     }
 
-    Assert.AreEqual(0, results.Errors.Count);
-    Assert.IsTrue(File.Exists(assemblyName), string.Format("Failed to compile {0} from {1}", assemblyName, sourceFile));
+    Assert.Equal(0, results.Errors.Count);
+    Assert.True(File.Exists(assemblyName), string.Format("Failed to compile {0} from {1}", assemblyName, sourceFile));
   }
 
 } // class
@@ -232,29 +224,3 @@ internal class HostEnvironment : MetadataReaderHost {
   }
 }
 
-class MyTraceListener : TraceListener {
-
-  public override void Fail(string message, string detailMessage) {
-    Console.WriteLine("Fail:");
-    Console.WriteLine(message);
-    Console.WriteLine();
-    Console.WriteLine(detailMessage);
-
-    Assert.Fail(message);
-  }
-
-  public override void Fail(string message) {
-    Console.WriteLine("Fail:");
-    Console.WriteLine(message);
-
-    Assert.Fail(message);
-  }
-
-  public override void Write(string message) {
-    Console.Write(message);
-  }
-
-  public override void WriteLine(string message) {
-    Console.WriteLine(message);
-  }
-}

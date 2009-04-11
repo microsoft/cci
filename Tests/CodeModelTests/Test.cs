@@ -1,24 +1,23 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Cci;
 using System.IO;
 using CSharpSourceEmitter;
 using SourceEmitter=PeToText.SourceEmitter;
 using Microsoft.Cci.Contracts;
+using Xunit;
 
 namespace CodeModelTests {
   /// <summary>
   /// Summary description for UnitTest1
   /// </summary>
-  [TestClass]
   public class Test {
 
-    [TestMethod]
+    [Fact]
     public void TestCodeModel() {
       HostEnvironment host = new HostEnvironment();
-      string dir = Path.GetDirectoryName(typeof(Test).Assembly.Location);
-      IAssembly/*?*/ assembly = host.LoadUnitFrom(Path.Combine(dir, "CodeModelTestInput.dll")) as IAssembly;
-      Assert.IsNotNull(assembly, "Failed to read in test executable as test data");
+      var location = typeof(CodeModelTestInput.Class1).Assembly.Location;
+      IAssembly/*?*/ assembly = host.LoadUnitFrom(location) as IAssembly;
+      Assert.True(assembly != null, "Failed to read in test executable as test data");
 
       PdbReader/*?*/ pdbReader = null;
       string pdbFile = Path.ChangeExtension(assembly.Location, "pdb");
@@ -36,7 +35,7 @@ namespace CodeModelTests {
       Stream resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt");
       StreamReader reader = new StreamReader(resource);
       string expected = reader.ReadToEnd();
-      Assert.IsTrue(sourceEmitterOutput.Data == expected);
+      Assert.True(sourceEmitterOutput.Data == expected);
     }
   }
 
