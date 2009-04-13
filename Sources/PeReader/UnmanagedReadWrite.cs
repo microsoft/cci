@@ -293,7 +293,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
       return result;
     }
 
-#if COMPACTFX
     private static string ScanUTF16WithSize(byte* bytePtr, int byteCount) {
       int charsToRead = byteCount / sizeof(Char);
       char* pc = (char*)bytePtr;
@@ -312,17 +311,12 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
       return new String(buffer, 0, charsToRead);
     }
-#endif
 
     internal string PeekUTF16WithSize(
       int offset,
       int byteCount
     ) {
-#if !COMPACTFX
-      return new string((sbyte*)this.CurrentPointer, (int)offset, byteCount, Encoding.Unicode);
-#else
       return MemoryReader.ScanUTF16WithSize(this.CurrentPointer + offset, byteCount);
-#endif
     }
 
     internal int PeekCompressedInt32(
@@ -816,15 +810,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal string ReadUTF16WithSize(
       int byteCount
     ) {
-#if !COMPACTFX
-      string retStr = new string((sbyte*)this.CurrentPointer, 0, byteCount, Encoding.Unicode);
-      this.CurrentPointer += byteCount;
-      return retStr;
-#else
       string retString = MemoryReader.ScanUTF16WithSize(this.CurrentPointer, byteCount);
       this.CurrentPointer += byteCount;
       return retString;
-#endif
     }
 
     /// <summary>
