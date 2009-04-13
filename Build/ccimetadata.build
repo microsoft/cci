@@ -27,6 +27,7 @@
   </PropertyGroup>
 
   <!-- target definitions  -->
+  <!-- quick build -->
   <Target 
     Name="ContinuousBuild" 
     DependsOnTargets="
@@ -35,9 +36,18 @@
       BuildRelease;
       TestRelease;
       " />
+  <!-- night long build -->
+  <Target
+    Name="NighltyBuild"
+    DependsOnTargets="
+      BuildRelease;
+      TestNightly;
+      " />
+  <!-- uploads new release -->  
   <Target
     Name="ContinuousCodePlexRelease"
     DependsOnTargets="
+      BuildRelease;
       CreateCodePlexRelease
     "
     />
@@ -77,8 +87,13 @@
       WorkingDirectory="$(BinReleaseDirectory)"
       Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.ret.results.xml" />
   </Target>
+
+  <Target Name="TestNightly">
+  </Target>
   
-  <Target Name="CreateCodePlexRelease">
+  <Target Name="CreateCodePlexRelease" Condition="False">
+    <Error Condition="$(CodePlexUser) == ''" Text="You must provide your codeplex user name (/p:CodePlexUser=John)" />
+    <Error Condition="$(CodePlexPassword) == ''" Text="You must provide your codeplex password (/p:CodePlexPassword=123456)" />
     <CreateItem
       Include="$(BinReleaseDirectory)\Microsoft.Cci.*.dll" 
       AdditionalMetadata="
@@ -86,14 +101,13 @@
       ">
       <Output TaskParameter="Include" ItemName="ReleaseFiles"/>
     </CreateItem>
-    <!--
     <UploadFiles
       ProjectName="$(CodePlexProjectName)"
       ReleaseName="$(CodePlexReleaseName)"
       ReleaseFiles="@(ReleaseFiles)"
       User="$(CodePlexUser)"
       Password="$(CodePlexPassword)"
-	    /> -->
+	    />
   </Target>
 
 </Project>
