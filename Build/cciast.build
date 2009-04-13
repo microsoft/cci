@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+          DefaultTargets="ContinuousBuild">
+  <UsingTask 
+    TaskName="UploadFiles" 
+    AssemblyName="CodePlex.WebServices.Client" />
+  <!-- constants -->
+  <PropertyGroup>
+    <BuildVersion>$(CCNetLabel)</BuildVersion>
+    <TraceFile>$(CCNetListenerFile)</TraceFile>
+    
+    <RootDirectory>..</RootDirectory>
+    <MetadataSolution>$(RootDirectory)\Ast.sln</MetadataSolution>
+
+    <BinDirectory>$(RootDirectory)\bin</BinDirectory>
+    <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
+    <BinReleaseDirectory>$(BinDirectory)\release</BinReleaseDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CodePlexProjectName>cciast</CodePlexProjectName>
+    <CodePlexReleaseName>Latest Build</CodePlexReleaseName>
+    <!-- set by the ccnet server
+    <CodePlexUser />
+    <CodePlexPassword /> 
+     -->
+  </PropertyGroup>
+
+  <!-- target definitions  -->
+  <!-- quick build -->
+  <Target 
+    Name="ContinuousBuild" 
+    DependsOnTargets="
+      BuildDebug;
+      TestDebug;
+      BuildRelease;
+      TestRelease;
+      " />
+  <!-- night long build -->
+  <Target
+    Name="NighltyBuild"
+    DependsOnTargets="
+      BuildRelease;
+      TestNightly;
+      " />
+  <!-- uploads new release -->  
+  <Target
+    Name="ContinuousCodePlexRelease"
+    DependsOnTargets="
+      BuildRelease;
+      CreateCodePlexRelease
+    "
+    />
+
+  <Target Name="BuildDebug">
+    <MSBuild
+      Projects="$(MetadataSolution)" 
+      Targets="Clean;Build"
+      Properties="
+        Configuration=Debug
+      " />      
+  </Target>
+
+  <Target Name="BuildRelease">
+    <MSBuild
+      Projects="$(MetadataSolution)"
+      Targets="Clean;Build"
+      Properties="
+        Configuration=Release
+      " />
+  </Target>
+
+  <Target Name="TestDebug">
+    <!--
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="RoundtripTests.exe /xml ..\RountripTests.dbg.results.xml" />
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.dbg.results.xml" />
+      -->
+  </Target>
+
+  <Target Name="TestRelease">
+    <!--
+    <Exec
+      WorkingDirectory="$(BinReleaseDirectory)"
+      Command="RoundtripTests.exe /xml ..\RountripTests.ret.results.xml" />
+    <Exec
+      WorkingDirectory="$(BinReleaseDirectory)"
+      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.ret.results.xml" />
+      -->
+  </Target>
+
+  <Target Name="TestNightly">
+  </Target>
+  
+  <Target Name="CreateCodePlexRelease" Condition="False">
+    <Error Condition="$(CodePlexUser) == ''" Text="You must provide your codeplex user name (/p:CodePlexUser=John)" />
+    <Error Condition="$(CodePlexPassword) == ''" Text="You must provide your codeplex password (/p:CodePlexPassword=123456)" />
+    <CreateItem
+      Include="$(BinReleaseDirectory)\Microsoft.Cci.*.dll" 
+      AdditionalMetadata="
+        FileType=RuntimeBinary;
+      ">
+      <Output TaskParameter="Include" ItemName="ReleaseFiles"/>
+    </CreateItem>
+    <UploadFiles
+      ProjectName="$(CodePlexProjectName)"
+      ReleaseName="$(CodePlexReleaseName)"
+      ReleaseFiles="@(ReleaseFiles)"
+      User="$(CodePlexUser)"
+      Password="$(CodePlexPassword)"
+	    />
+  </Target>
+
+</Project>
