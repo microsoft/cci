@@ -76,7 +76,7 @@
       Command="RoundtripTests.exe /xml ..\RountripTests.dbg.results.xml" />
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.dbg.results.xml" />
+      Command="PEReaderTests.exe /xml ..\PEReaderTests.dbg.results.xml" />
   </Target>
 
   <Target Name="TestRelease">
@@ -85,7 +85,7 @@
       Command="RoundtripTests.exe /xml ..\RountripTests.ret.results.xml" />
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.ret.results.xml" />
+      Command="PEReaderTests.exe /xml ..\PEReaderTests.ret.results.xml" />
   </Target>
 
   <Target Name="TestNightly">
