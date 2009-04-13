@@ -55,10 +55,10 @@ namespace ModuleReaderTests {
         Console.WriteLine("TestAssemblyExports - Failed");
         ret = false;
       }
-      if (!this.TestMscorlibWin32Resources()) {
-        Console.WriteLine("TestMscorlibWin32Resources - Failed");
-        ret = false;
-      }
+      //if (!this.TestMscorlibWin32Resources()) {
+      //  Console.WriteLine("TestMscorlibWin32Resources - Failed");
+      //  ret = false;
+      //}
       if (!this.TestMscorlibSecurityAttributes()) {
         Console.WriteLine("TestMscorlibSecurityAttributes - Failed");
         ret = false;
