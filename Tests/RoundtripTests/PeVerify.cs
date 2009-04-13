@@ -28,7 +28,33 @@ public class PeVerifyResult {
 public class PeVerify {
 
     const int PeVerifyExpectedExitCode = 0;
-    public const string PeVerifyPathv3 = @"C:\Program Files\Microsoft SDKs\Windows\v6.0A\bin\PEVerify.exe";
+    
+    static string _peVerify;
+    public static string PeVerifyPath
+    {
+        get
+        {
+            if (_peVerify == null)
+            {
+                var sdk = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles%\Microsoft SDKs\Windows"));
+                if (sdk.Exists)
+                    foreach(var sdkVersion in sdk.GetDirectories())
+                    {
+                        var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin"), "peverify.exe");
+                        if (File.Exists(peverify))
+                        {
+                            _peVerify = peverify;
+                            break;
+                        }
+                    }
+
+                if (_peVerify == null)                
+                    throw new FileNotFoundException(@"could not find peverify.exe under %programfiles%\Microsoft SDKs\Windows\...");
+            }
+
+            return _peVerify;
+        }
+    }
 
     public static PeVerifyResult VerifyAssembly(string assemblyName) {
 
@@ -36,7 +62,7 @@ public class PeVerify {
         result.AssemblyName = assemblyName;
 
         string stdOut, stdErr;
-        result.ExitCode = StartAndWaitForResult(PeVerifyPathv3, assemblyName + " /UNIQUE /IL /NOLOGO", out stdOut, out stdErr);
+        result.ExitCode = StartAndWaitForResult(PeVerifyPath, assemblyName + " /UNIQUE /IL /NOLOGO", out stdOut, out stdErr);
         ParseErrors(result, stdOut);
 
         return result;

@@ -16,8 +16,7 @@ public class RoundTripTests {
     HostEnvironment host;
 
     public RoundTripTests() {
-        Assert.True(File.Exists(PeVerify.PeVerifyPathv3), "Can't find PEVerify, please update the const.");
-
+        // we assume peverify.exe is in the path
         pdbReader = null;
         pdbWriter = null;
         host = new HostEnvironment();
