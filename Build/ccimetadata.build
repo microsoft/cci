@@ -86,13 +86,14 @@
       ">
       <Output TaskParameter="Include" ItemName="ReleaseFiles"/>
     </CreateItem>
+    <!--
     <UploadFiles
       ProjectName="$(CodePlexProjectName)"
       ReleaseName="$(CodePlexReleaseName)"
       ReleaseFiles="@(ReleaseFiles)"
       User="$(CodePlexUser)"
       Password="$(CodePlexPassword)"
-	    />
+	    /> -->
   </Target>
 
 </Project>
