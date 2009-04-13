@@ -31,6 +31,7 @@
   <Target 
     Name="ContinuousBuild" 
     DependsOnTargets="
+      Clean;
       BuildDebug;
       TestDebug;
       BuildRelease;
@@ -40,6 +41,7 @@
   <Target
     Name="NighltyBuild"
     DependsOnTargets="
+      Clean;
       BuildRelease;
       TestNightly;
       " />
@@ -47,11 +49,16 @@
   <Target
     Name="ContinuousCodePlexRelease"
     DependsOnTargets="
+      Clean;
       BuildRelease;
       CreateCodePlexRelease
     "
     />
 
+  <Target Name="Clean">
+    <RemoveDir Directories="$(BinDirectory)"  ContinueOnError="true" />
+  </Target>
+  
   <Target Name="BuildDebug">
     <MSBuild
       Projects="$(MetadataSolution)" 
