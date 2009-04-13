@@ -72,10 +72,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit", "Metadata\Xunit\Mai
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit.gui", "Metadata\Xunit\Main\xunit.gui\xunit.gui.csproj", "{380A0890-48E0-405A-9E3F-45A69EEE8E01}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{C89F78BA-178F-4747-B78A-EC7567619FA2}"
+	ProjectSection(SolutionItems) = preProject
+		Build\cciast.build = Build\cciast.build
+		Build\ccnet.config = Build\ccnet.config
+	EndProjectSection
+EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = Ast.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		NightlyDebug|Any CPU = NightlyDebug|Any CPU
