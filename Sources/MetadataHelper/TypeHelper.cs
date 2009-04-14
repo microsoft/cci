@@ -185,30 +185,6 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Implicit conversion is possible in the context of passing parameters from type on CLR operand stack to passed Type definition.
-    /// </summary>
-    /// <param name="typeReference"></param>
-    /// <param name="isReference"></param>
-    /// <param name="clrOpStack"></param>
-    /// <returns></returns>
-    public static bool ImplicitConversionPossible(ITypeReference typeReference, bool isReference, ClrOperandStackType clrOpStack) {
-      //TODO: preconditions that will make the assumptions weaker or unncessary
-      if (typeReference == Dummy.TypeReference)
-        return false;
-      PrimitiveTypeCode ptc = typeReference.TypeCode;
-      //if (isReference) {
-      //  ptc = PrimitiveTypeCode.Reference;
-      //} else if (typeReference.ResolvedType.IsEnum) {
-      //  ptc = typeReference.ResolvedType.UnderlyingType.ResolvedType.TypeCode;
-      //} else {
-      //  ptc = typeReference.ResolvedType.TypeCode;
-      //}
-      //^ assume 0 <= (int)ptc && ((int)ptc) < ClrHelper.ImplicitConversionPossibleArr.GetUpperBound(0);
-      //^ assume 0 <= (int)clrOpStack && ((int)clrOpStack) < ClrHelper.ImplicitConversionPossibleArr.GetUpperBound(1);
-      return ClrHelper.ImplicitConversionPossibleArr[(int)ptc, (int)clrOpStack];
-    }
-
-    /// <summary>
     /// Table representing the result of add operation with respect to ClrOperand stack.
     /// </summary>
     public static readonly ClrOperandStackType[,] AddResult = new ClrOperandStackType[,]{
@@ -413,12 +389,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Don't insert a space after the delimiter in a list. For example (one,two) rather than (one, two).
     /// </summary>
-    OmitWhitespaceAfterListDelimiter=OmitTypeArguments << 1,
+    OmitWhiteSpaceAfterListDelimiter=OmitTypeArguments << 1,
 
     /// <summary>
     /// Include the names of parameters in the signatures of methods and indexers.
     /// </summary>
-    ParameterName=OmitWhitespaceAfterListDelimiter << 1,
+    ParameterName=OmitWhiteSpaceAfterListDelimiter << 1,
 
     /// <summary>
     /// Include modifiers such as "ref" and "out" in the signatures of methods and indexers.
@@ -1750,7 +1726,7 @@ namespace Microsoft.Cci {
       sb.Append(this.GetTypeName(functionPointerType.Type, formattingOptions));
       bool first = true;
       sb.Append(" (");
-      string delim = ((formattingOptions & NameFormattingOptions.OmitWhitespaceAfterListDelimiter) == 0) ? ", " : ",";
+      string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
       foreach (IParameterTypeInformation par in functionPointerType.Parameters) {
         if (first) first = false; else sb.Append(delim);
         sb.Append(this.GetTypeName(par.Type, formattingOptions));
@@ -1777,7 +1753,7 @@ namespace Microsoft.Cci {
         StringBuilder sb = new StringBuilder(this.GetTypeName(genericType, formattingOptions&~NameFormattingOptions.TypeParameters));
         sb.Append("<");
         bool first = true;
-        string delim = ((formattingOptions & NameFormattingOptions.OmitWhitespaceAfterListDelimiter) == 0) ? ", " : ",";
+        string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
         foreach (ITypeReference argument in genericTypeInstance.GenericArguments) {
           if (first) first = false; else sb.Append(delim);
           sb.Append(this.GetTypeName(argument, formattingOptions));

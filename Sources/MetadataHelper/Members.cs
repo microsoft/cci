@@ -364,10 +364,6 @@ namespace Microsoft.Cci {
       get { return this.genericMethod.AcceptsExtraArguments; }
     }
 
-    public IMethodBody Body {
-      get { return Dummy.MethodBody; }
-    }
-
     public CallingConvention CallingConvention {
       get { return this.GenericMethod.CallingConvention; }
     }
@@ -390,10 +386,6 @@ namespace Microsoft.Cci {
     }
     readonly IMethodReference genericMethod;
     //^ invariant genericMethod.IsGeneric;
-
-    public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
-    }
 
     //^ [Pure]
     public ushort GenericParameterCount {

@@ -42,8 +42,8 @@ namespace Microsoft.Cci {
       }
     }
 
-    public void DefineLocalConstant(string name, object value, uint localVariablesSignatureToken) {
-      this.symWriter.DefineConstant2(name, value, localVariablesSignatureToken);
+    public void DefineLocalConstant(string name, object value, uint contantSignatureToken) {
+      this.symWriter.DefineConstant2(name, value, contantSignatureToken);
     }
 
     public void DefineLocalVariable(uint index, string name, bool isCompilerGenerated, uint localVariablesSignatureToken) {

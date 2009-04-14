@@ -40,7 +40,7 @@ namespace Microsoft.Cci {
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
       this.nameTable = nameTable;
-      this.internFactory = new InternFactory(this);
+      this.internFactory = new InternFactory();
       this.pointerSize = pointerSize;
     }
 
@@ -663,7 +663,6 @@ namespace Microsoft.Cci {
       }
     }
 
-    readonly IMetadataHost metadataHost;
     uint CurrentAssemblyInternValue;
     uint CurrentModuleInternValue;
     uint CurrentNamespaceInternValue;
@@ -698,11 +697,7 @@ namespace Microsoft.Cci {
     readonly DoubleHashtable ModifiedTypeHashtable;
     readonly Hashtable<MultiHashtable<SignatureStore>> MethodReferenceHashtable;
 
-    public InternFactory(
-      //^ [Delayed]
-      IMetadataHost metadataHost) 
-    {
-      this.metadataHost = metadataHost;
+    public InternFactory() {
       this.CurrentAssemblyInternValue = 0x00001000;
       this.CurrentModuleInternValue = 0x00000001;
       this.CurrentNamespaceInternValue = 0x00000001;

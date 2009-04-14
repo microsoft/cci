@@ -39,6 +39,8 @@
     <WarningsAsErrors>1591</WarningsAsErrors>
     <NoWarn>
     </NoWarn>
+    <CodeAnalysisRules>-Microsoft.Design#CA1062;-Microsoft.Design#CA1005;-Microsoft.Design#CA1011;-Microsoft.Design#CA1051;-Microsoft.Design#CA1002;-Microsoft.Design#CA1004;-Microsoft.Design#CA1033;-Microsoft.Design#CA1014;-Microsoft.Design#CA1060;-Microsoft.Design#CA1034;-Microsoft.Design#CA1024;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA2101;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1502;-Microsoft.Maintainability#CA1500;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1715;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1725;-Microsoft.Naming#CA1721;-Microsoft.Performance#CA1815;-Microsoft.Performance#CA1814;-Microsoft.Reliability#CA2001;-Microsoft.Reliability#CA2006;-Microsoft.Security#CA2105;-Microsoft.Security#CA2104;-Microsoft.Usage#CA1806;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2233</CodeAnalysisRules>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

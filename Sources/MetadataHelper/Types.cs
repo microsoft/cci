@@ -352,10 +352,6 @@ namespace Microsoft.Cci {
     }
     readonly ITypeReference genericType; //^ invariant genericType.ResolvedType.IsGeneric;
 
-    public IEnumerable<ITypeDefinitionMember> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
-    }
-
     protected override void InitializeIfNecessary() {
       if (this.initialized) return;
       lock (GlobalLock.LockingObject) {
@@ -518,10 +514,6 @@ namespace Microsoft.Cci {
       return new SpecializedNestedTypeDefinition(nestedTypeDef, this, internFactory);
     }
 
-    public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
-    }
-
     public uint SizeOf {
       get { return this.GenericType.ResolvedType.SizeOf; }
     }
@@ -617,13 +609,6 @@ namespace Microsoft.Cci {
       get { return Dummy.AliasForType; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
 
     ITypeDefinition ITypeReference.ResolvedType {
       get { return this; }
@@ -1692,14 +1677,6 @@ namespace Microsoft.Cci {
 
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
-    }
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
     }
 
     ITypeDefinition ITypeReference.ResolvedType {

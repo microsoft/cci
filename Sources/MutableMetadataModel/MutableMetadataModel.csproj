@@ -38,6 +38,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
+    <CodeAnalysisRules>-Microsoft.Design#CA1062;-Microsoft.Design#CA1051;-Microsoft.Design#CA1002;-Microsoft.Design#CA1004;-Microsoft.Design#CA1033;-Microsoft.Design#CA1014;-Microsoft.Design#CA1060;-Microsoft.Design#CA1024;-Microsoft.Maintainability#CA1506;-Microsoft.Maintainability#CA1500;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1708;-Microsoft.Naming#CA1715;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1711;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1725;-Microsoft.Naming#CA1719;-Microsoft.Performance#CA1805;-Microsoft.Performance#CA1814;-Microsoft.Security#CA2105;-Microsoft.Security#CA2104;-Microsoft.Usage#CA2227</CodeAnalysisRules>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

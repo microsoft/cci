@@ -1041,10 +1041,6 @@ namespace Microsoft.Cci {
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
-    }
-
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -1205,10 +1201,6 @@ namespace Microsoft.Cci {
   internal sealed class DummyMetadataExpression : IMetadataExpression {
 
     #region IMetadataExpression Members
-
-    public bool HasErrors() {
-      return true;
-    }
 
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
@@ -1635,14 +1627,6 @@ namespace Microsoft.Cci {
       get { return Dummy.AliasForType; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
-
     ITypeDefinition ITypeReference.ResolvedType {
       get { return this; }
     }
@@ -1906,14 +1890,6 @@ namespace Microsoft.Cci {
 
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
-    }
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
     }
 
     ITypeDefinition ITypeReference.ResolvedType {
@@ -2205,14 +2181,6 @@ namespace Microsoft.Cci {
 
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
-    }
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return true; }
     }
 
     ITypeDefinition ITypeReference.ResolvedType {
@@ -3014,10 +2982,6 @@ namespace Microsoft.Cci {
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
-    }
-
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -3279,14 +3243,6 @@ namespace Microsoft.Cci {
       get { return Dummy.AliasForType; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
-
     ITypeDefinition ITypeReference.ResolvedType {
       get { return this; }
     }
@@ -3358,19 +3314,11 @@ namespace Microsoft.Cci {
       get { return PrimitiveTypeCode.Invalid; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
     public uint InternedKey {
       get { return 0; }
     }
 
     public bool IsAlias {
-      get { return false; }
-    }
-
-    public bool IsModified {
       get { return false; }
     }
 
@@ -4183,14 +4131,6 @@ namespace Microsoft.Cci {
       get { return Dummy.AliasForType; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
-
     ITypeDefinition ITypeReference.ResolvedType {
       get { return this; }
     }
@@ -4843,14 +4783,6 @@ namespace Microsoft.Cci {
       get { return Dummy.AliasForType; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
-
     public ITypeDefinition ResolvedType {
       get { return this; }
     }
@@ -4881,19 +4813,11 @@ namespace Microsoft.Cci {
       get { return PrimitiveTypeCode.Invalid; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
     public uint InternedKey {
       get { return 0; }
     }
 
     public bool IsAlias {
-      get { return false; }
-    }
-
-    public bool IsModified {
       get { return false; }
     }
 
@@ -5473,11 +5397,11 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_VOID; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 
@@ -5784,14 +5708,6 @@ namespace Microsoft.Cci {
 
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
-    }
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
     }
 
     ITypeDefinition ITypeReference.ResolvedType {
@@ -6677,10 +6593,6 @@ namespace Microsoft.Cci {
     #region IFunctionPointerTypeReference Members
 
 
-    public IFunctionPointer ResolvedType {
-      get { return this; }
-    }
-
     #endregion
 
     #region ITypeReference Members
@@ -6691,14 +6603,6 @@ namespace Microsoft.Cci {
 
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
-    }
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
     }
 
     ITypeDefinition ITypeReference.ResolvedType {
@@ -7805,14 +7709,6 @@ namespace Microsoft.Cci {
 
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
-    }
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
     }
 
     public ITypeDefinition ResolvedType {

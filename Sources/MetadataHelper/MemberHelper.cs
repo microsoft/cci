@@ -30,7 +30,6 @@ namespace Microsoft.Cci {
       ushort bitFieldAlignment = 0;
       uint bitOffset = 0;
 
-      ushort alignment = containingTypeDefinition.Alignment;
       IEnumerable<ITypeDefinitionMember> members = containingTypeDefinition.Members;
       if (containingTypeDefinition.Layout == LayoutKind.Sequential) {
         List<IFieldDefinition> fields = new List<IFieldDefinition>(IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IFieldDefinition>(members));
@@ -98,7 +97,6 @@ namespace Microsoft.Cci {
       uint result = 0;
       ushort bitFieldAlignment = 0;
       uint bitOffset = 0;
-      ushort alignment = typeDefinition.Alignment;
       IEnumerable<ITypeDefinitionMember> members = typeDefinition.Members;
       if (typeDefinition.Layout == LayoutKind.Sequential) {
         List<IFieldDefinition> fields = new List<IFieldDefinition>(IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IFieldDefinition>(members));
@@ -660,7 +658,7 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.OmitTypeArguments) != 0) return;
       sb.Append("<");
       bool first = true;
-      string delim = ((formattingOptions & NameFormattingOptions.OmitWhitespaceAfterListDelimiter) == 0) ? ", " : ",";
+      string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
       foreach (ITypeReference argument in method.GenericArguments) {
         if (first) first = false; else sb.Append(delim);
         sb.Append(this.typeNameFormatter.GetTypeName(argument, formattingOptions));
@@ -675,7 +673,7 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.TypeParameters) == 0) return;
       sb.Append("<");
       bool first = true;
-      string delim = ((formattingOptions & NameFormattingOptions.OmitWhitespaceAfterListDelimiter) == 0) ? ", " : ",";
+      string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
       foreach (ITypeReference argument in method.ResolvedMethod.GenericParameters) {
         if (first) first = false; else sb.Append(delim);
         sb.Append(this.typeNameFormatter.GetTypeName(argument, formattingOptions));
@@ -690,7 +688,7 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.Signature) == 0) return;
       sb.Append('(');
       bool first = true;
-      string delim = ((formattingOptions & NameFormattingOptions.OmitWhitespaceAfterListDelimiter) == 0) ? ", " : ",";
+      string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
       foreach (IParameterTypeInformation par in parameters) {
         if (first) first = false; else sb.Append(delim);
         this.AppendParameter(par, formattingOptions, sb);

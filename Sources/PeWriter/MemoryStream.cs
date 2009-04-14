@@ -12,16 +12,12 @@ namespace Microsoft.Cci {
 
     internal MemoryStream() {
       this.Buffer = new byte[64];
-      this.Length = 0;
-      this.position = 0;
     }
 
     internal MemoryStream(uint initialSize) 
       //^ requires initialSize > 0;
     {
       this.Buffer = new byte[initialSize];
-      this.Length = 0;
-      this.position = 0;
     }
 
     internal byte[] Buffer;

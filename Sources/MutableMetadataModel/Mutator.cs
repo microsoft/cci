@@ -668,10 +668,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
         marshallingInformation.CustomMarshaller = this.Visit(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray && 
-      (marshallingInformation.SafeArrayElementSubType == VarEnum.VT_DISPATCH || 
-      marshallingInformation.SafeArrayElementSubType == VarEnum.VT_UNKNOWN || 
-      marshallingInformation.SafeArrayElementSubType == VarEnum.VT_RECORD))
-        marshallingInformation.SafeArrayElementUserDefinedSubType = this.Visit(marshallingInformation.SafeArrayElementUserDefinedSubType);
+      (marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_DISPATCH || 
+      marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_UNKNOWN || 
+      marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_RECORD))
+        marshallingInformation.SafeArrayElementUserDefinedSubtype = this.Visit(marshallingInformation.SafeArrayElementUserDefinedSubtype);
       this.path.Pop();
       return marshallingInformation;
     }
@@ -1266,8 +1266,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(moduleReference));
     }
 
-    public virtual INamespaceTypeDefinition Visit(INamespaceTypeDefinition typeDefinition) {
-      return this.Visit(this.GetMutableCopy(typeDefinition));
+    public virtual INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      return this.Visit(this.GetMutableCopy(namespaceTypeDefinition));
     }
 
     public virtual INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {

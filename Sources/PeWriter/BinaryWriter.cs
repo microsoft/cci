@@ -58,22 +58,22 @@ namespace Microsoft.Cci {
       this.BaseStream.Write(buffer, 0, (uint)buffer.Length);
     }
 
-    internal void WriteChar(char ch) {
-      MemoryStream m = this.BaseStream;
-      uint i = m.Position;
-      if (this.UTF8) {
-        if (ch < 0x80) {
-          m.Position = i+1;
-          m.Buffer[i] = (byte)ch;
-        } else
-          this.WriteChars(new char[] { ch });
-      } else {
-        m.Position = i+2;
-        byte[] buffer = m.Buffer;
-        buffer[i++] = (byte)ch;
-        buffer[i] = (byte)(ch >> 8);
-      }
-    }
+    //internal void WriteChar(char ch) {
+    //  MemoryStream m = this.BaseStream;
+    //  uint i = m.Position;
+    //  if (this.UTF8) {
+    //    if (ch < 0x80) {
+    //      m.Position = i+1;
+    //      m.Buffer[i] = (byte)ch;
+    //    } else
+    //      this.WriteChars(new char[] { ch });
+    //  } else {
+    //    m.Position = i+2;
+    //    byte[] buffer = m.Buffer;
+    //    buffer[i++] = (byte)ch;
+    //    buffer[i] = (byte)(ch >> 8);
+    //  }
+    //}
 
     internal void WriteChars(char[] chars) {
       if (chars == null) return;
@@ -233,7 +233,7 @@ namespace Microsoft.Cci {
       int n = str.Length;
       if (!emitNullTerminator) {
         if (this.UTF8)
-          this.WriteCompressedUInt(this.GetUTF8ByteCount(str));
+          this.WriteCompressedUInt(GetUTF8ByteCount(str));
         else
           this.WriteCompressedUInt((uint)n*2);
       }
@@ -330,7 +330,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    internal uint GetUTF8ByteCount(string str) {
+    internal static uint GetUTF8ByteCount(string str) {
       uint count = 0;
       for (int i = 0, n = str.Length; i < n; i++) {
         char ch = str[i];

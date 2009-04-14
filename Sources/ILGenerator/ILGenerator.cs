@@ -10,12 +10,11 @@ namespace Microsoft.Cci {
 
     List<ExceptionHandler> handlers = new List<ExceptionHandler>();
     ILocation location = Dummy.Location;
-    uint offset = 0;
+    uint offset;
     List<Operation> operations = new List<Operation>();
     List<ILGeneratorLocalScope> scopes = new List<ILGeneratorLocalScope>();
     Stack<ILGeneratorLocalScope> scopeStack = new Stack<ILGeneratorLocalScope>(); //TODO: write own stack so that dependecy on System.dll can go.
     Stack<TryBody> tryBodyStack = new Stack<TryBody>();
-    List<string> usedNamespaces = new List<string>();
 
     /// <summary>
     /// Adds the given local variable to the current lexical scope.
@@ -439,7 +438,7 @@ namespace Microsoft.Cci {
       this.location = location;
     }
 
-    private OperationCode LongVersionOf(OperationCode operationCode) {
+    private static OperationCode LongVersionOf(OperationCode operationCode) {
       switch (operationCode) {
         case OperationCode.Beq_S: return OperationCode.Beq;
         case OperationCode.Bge_S: return OperationCode.Bge;
@@ -459,7 +458,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    private OperationCode ShortVersionOf(OperationCode operationCode) {
+    private static OperationCode ShortVersionOf(OperationCode operationCode) {
       switch (operationCode) {
         case OperationCode.Beq: return OperationCode.Beq_S;
         case OperationCode.Bge: return OperationCode.Bge_S;
@@ -479,7 +478,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    private uint SizeOfOffset(OperationCode opcode) {
+    private static uint SizeOfOffset(OperationCode opcode) {
       switch (opcode) {
         case OperationCode.Beq_S:
         case OperationCode.Bge_S:

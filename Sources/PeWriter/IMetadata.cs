@@ -369,7 +369,7 @@ namespace Microsoft.Cci {
       for (int i = 0; i < pchTypeDef; i++) *(pTypeDef+i) = tName[i];
       *(pTypeDef+pchTypeDef) = (char)0;
       uint* pFlags = (uint*)pdwTypeDefFlags.ToPointer();
-      *(pFlags) = this.writer.GetTypeDefFlags(t.ResolvedType);
+      *(pFlags) = PeWriter.GetTypeDefFlags(t.ResolvedType);
       ITypeReference bc = null;
       foreach (ITypeReference baseClassRef in t.ResolvedType.BaseClasses) bc = baseClassRef;
       if (bc == null) return 0;

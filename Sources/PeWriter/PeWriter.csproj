@@ -36,6 +36,8 @@
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
     <DocumentationFile>bin\Debug\Microsoft.Cci.PeWriter.XML</DocumentationFile>
     <NoWarn>1591</NoWarn>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRules>-Microsoft.Design#CA1020;-Microsoft.Design#CA1051;-Microsoft.Design#CA1014;-Microsoft.Design#CA1024;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Maintainability#CA1502;-Microsoft.Maintainability#CA1505;-Microsoft.Maintainability#CA1500;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704</CodeAnalysisRules>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -55,6 +57,7 @@
       <Link>Build\version.cs</Link>
     </Compile>
     <Compile Include="BinaryWriter.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IMetadata.cs" />
     <Compile Include="MemoryStream.cs" />
     <Compile Include="PdbWriterInterface.cs" />

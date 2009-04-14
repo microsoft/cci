@@ -548,10 +548,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// The type to which the variant values of all elements of the safe array must belong. See also SafeArrayElementUserDefinedSubType.
+    /// The type to which the variant values of all elements of the safe array must belong. See also SafeArrayElementUserDefinedSubtype.
     /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
     /// </summary>
-    System.Runtime.InteropServices.VarEnum SafeArrayElementSubType { 
+    System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype { 
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray;
     }
@@ -561,12 +561,12 @@ namespace Microsoft.Cci {
     /// (The element type of a safe array is VARIANT. The tag fields will all be either VT_DISPATCH or VT_UNKNOWN or VT_RECORD.
     /// The "user defined sub type" specifies the type of value the ppdispVal/ppunkVal/pvRecord fields of the element values may point to.)
     /// </summary>
-    ITypeReference SafeArrayElementUserDefinedSubType {
+    ITypeReference SafeArrayElementUserDefinedSubtype {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray;
-      //^ requires this.SafeArrayElementSubType == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
-      //^          this.SafeArrayElementSubType == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
-      //^          this.SafeArrayElementSubType == System.Runtime.InteropServices.VarEnum.VT_RECORD;
+      //^ requires this.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
+      //^          this.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
+      //^          this.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_RECORD;
     }
 
   }

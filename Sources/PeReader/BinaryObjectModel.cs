@@ -4704,11 +4704,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return null; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_EMPTY; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 
@@ -4762,11 +4762,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return null; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_EMPTY; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 
@@ -4820,11 +4820,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return null; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_EMPTY; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 
@@ -4887,11 +4887,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.paramIndex < 0 ? (uint?)null : (uint)this.paramIndex; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_EMPTY; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 
@@ -4948,11 +4948,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return null; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return this.ArrayElementType; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return this.safeArrayElementUserDefinedSubType; }
     }
 
@@ -5006,11 +5006,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return null; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_EMPTY; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 
@@ -5067,11 +5067,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return 0; }
     }
 
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get { return System.Runtime.InteropServices.VarEnum.VT_EMPTY; }
     }
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
     }
 

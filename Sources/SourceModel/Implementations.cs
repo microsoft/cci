@@ -1327,7 +1327,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The number of characters in the buffer that came from the stream. Normally 8096, but will be fewer when the end of the stream has been reached.
     /// </summary>
-    private int charsInBuffer = 0;
+    private int charsInBuffer;
     //^ invariant 0 <= charsInBuffer;
     //^ invariant buffer != null ==> charsInBuffer < buffer.Length; 
 
@@ -1335,7 +1335,7 @@ namespace Microsoft.Cci {
     /// The number of characters that have already been read from the stream reader. 
     /// I.e. the index of the next character that will be returned by a call to this.streamReader.Peek().
     /// </summary>
-    private int streamReaderPosition = 0;
+    private int streamReaderPosition;
     //^ invariant 0 <= streamReaderPosition && charsInBuffer <= streamReaderPosition;
 
     /// <summary>
@@ -1582,6 +1582,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Dispose() {
       this.Dispose(true);
+      GC.SuppressFinalize(this);
     }
 
     /// <summary>

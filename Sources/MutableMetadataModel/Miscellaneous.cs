@@ -165,13 +165,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       else
         this.paramIndex = 0;
       if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray)
-        this.safeArrayElementSubType = marshallingInformation.SafeArrayElementSubType;
+        this.safeArrayElementSubType = marshallingInformation.SafeArrayElementSubtype;
       else
         this.safeArrayElementSubType = (VarEnum)0;
       if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray && 
-      (marshallingInformation.SafeArrayElementSubType == VarEnum.VT_DISPATCH || marshallingInformation.SafeArrayElementSubType == VarEnum.VT_UNKNOWN || 
-      marshallingInformation.SafeArrayElementSubType == VarEnum.VT_RECORD))
-        this.safeArrayElementUserDefinedSubType = marshallingInformation.SafeArrayElementUserDefinedSubType;
+      (marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_DISPATCH || marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_UNKNOWN || 
+      marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_RECORD))
+        this.safeArrayElementUserDefinedSubType = marshallingInformation.SafeArrayElementUserDefinedSubtype;
       else
         this.safeArrayElementUserDefinedSubType = Dummy.TypeReference;
       this.unmanagedType = marshallingInformation.UnmanagedType;
@@ -231,13 +231,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     uint? paramIndex;
 
-    public VarEnum SafeArrayElementSubType {
+    public VarEnum SafeArrayElementSubtype {
       get { return this.safeArrayElementSubType; }
       set { this.safeArrayElementSubType = value; }
     }
     VarEnum safeArrayElementSubType;
 
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return this.safeArrayElementUserDefinedSubType; }
       set { this.safeArrayElementUserDefinedSubType = value; }
     }

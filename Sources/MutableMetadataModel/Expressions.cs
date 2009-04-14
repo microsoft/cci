@@ -122,10 +122,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public abstract void Dispatch(IMetadataVisitor visitor);
 
-    public bool HasErrors() {
-      return false;
-    }
-
     public List<ILocation> Locations {
       get { return this.locations; }
       set { this.locations = value; }

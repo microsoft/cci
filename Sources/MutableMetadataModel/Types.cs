@@ -1705,14 +1705,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return Dummy.AliasForType; }
     }
 
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
-
     public INamedTypeDefinition ResolvedType {
       get { return this; }
     }

@@ -348,10 +348,10 @@ namespace Microsoft.Cci {
       if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler)
         this.Visit(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray && 
-      (marshallingInformation.SafeArrayElementSubType == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
-      marshallingInformation.SafeArrayElementSubType == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
-      marshallingInformation.SafeArrayElementSubType == System.Runtime.InteropServices.VarEnum.VT_RECORD))
-        this.Visit(marshallingInformation.SafeArrayElementUserDefinedSubType);
+      (marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
+      marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
+      marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_RECORD))
+        this.Visit(marshallingInformation.SafeArrayElementUserDefinedSubtype);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
     }
