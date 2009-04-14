@@ -295,11 +295,11 @@ namespace Microsoft.Cci.Ast {
     /// The zero based index of the parameter in the unmanaged method that contains the number of elements in the variable portion of unmanaged array.
     /// If the index is null, the variable portion is of size zero, or the caller conveys the size of the variable portion of the array to the unmanaged method in some other way.
     /// </param>
-    /// <param name="safeArrayElementSubType">
+    /// <param name="safeArrayElementSubtype">
     /// The type to which the variant values of all elements of the safe array must belong. See also SafeArrayElementUserDefinedSubType.
     /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
     /// </param>
-    /// <param name="safeArrayElementUserDefinedSubType">
+    /// <param name="safeArrayElementUserDefinedSubtype">
     /// A reference to the user defined type to which the variant values of all elements of the safe array must belong.
     /// (The element type of a safe array is VARIANT. The tag fields will all be either VT_DISPATCH or VT_UNKNOWN or VT_RECORD.
     /// The "user defined sub type" specifies the type of value the ppdispVal/ppunkVal/pvRecord fields of the element values may point to.)
@@ -313,7 +313,7 @@ namespace Microsoft.Cci.Ast {
     /// </param>
     public MarshallingInformation(System.Runtime.InteropServices.UnmanagedType unmanagedType, 
       System.Runtime.InteropServices.UnmanagedType elementType, uint elementSize, uint elementSizeMultiplier, uint iidParameterIndex, uint numberOfElements, uint? paramIndex,
-      System.Runtime.InteropServices.VarEnum safeArrayElementSubType, ITypeReference/*?*/ safeArrayElementUserDefinedSubType, 
+      System.Runtime.InteropServices.VarEnum safeArrayElementSubtype, ITypeReference/*?*/ safeArrayElementUserDefinedSubtype, 
       ITypeReference/*?*/ customMarshaller, string/*?*/ customMarshallerRuntimeArgument)
       //^ requires unmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler ==> 
       //^   customMarshaller != null && customMarshallerRuntimeArgument != null;
@@ -332,8 +332,8 @@ namespace Microsoft.Cci.Ast {
       this.iidParameterIndex = iidParameterIndex;
       this.numberOfElements = numberOfElements;
       this.paramIndex = paramIndex;
-      this.safeArrayElementSubType = safeArrayElementSubType;
-      this.safeArrayElementUserDefinedSubType = safeArrayElementUserDefinedSubType;
+      this.safeArrayElementSubtype = safeArrayElementSubtype;
+      this.safeArrayElementUserDefinedSubtype = safeArrayElementUserDefinedSubtype;
       this.unmanagedType = unmanagedType;
     }
 
@@ -413,23 +413,23 @@ namespace Microsoft.Cci.Ast {
     /// The type to which the variant values of all elements of the safe array must belong. See also SafeArrayElementUserDefinedSubType.
     /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
     /// </summary>
-    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubType {
-      get { return this.safeArrayElementSubType; }
+    public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
+      get { return this.safeArrayElementSubtype; }
     }
-    readonly System.Runtime.InteropServices.VarEnum safeArrayElementSubType;
+    readonly System.Runtime.InteropServices.VarEnum safeArrayElementSubtype;
 
     /// <summary>
     /// A reference to the user defined type to which the variant values of all elements of the safe array must belong.
     /// (The element type of a safe array is VARIANT. The tag fields will all be either VT_DISPATCH or VT_UNKNOWN or VT_RECORD.
     /// The "user defined sub type" specifies the type of value the ppdispVal/ppunkVal/pvRecord fields of the element values may point to.)
     /// </summary>
-    public ITypeReference SafeArrayElementUserDefinedSubType {
+    public ITypeReference SafeArrayElementUserDefinedSubtype {
       get {
-        //^ assume safeArrayElementUserDefinedSubType != null; //follows from the precondition
-        return this.safeArrayElementUserDefinedSubType;
+        //^ assume safeArrayElementUserDefinedSubtype != null; //follows from the precondition
+        return this.safeArrayElementUserDefinedSubtype;
       }
     }
-    readonly ITypeReference/*?*/ safeArrayElementUserDefinedSubType;
+    readonly ITypeReference/*?*/ safeArrayElementUserDefinedSubtype;
 
     /// <summary>
     /// A multiplier that must be applied to the value of the parameter specified by ParamIndex in order to work out the total size of the unmanaged array.

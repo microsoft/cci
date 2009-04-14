@@ -55,10 +55,10 @@ namespace Microsoft.Cci {
       this.type = Dummy.TypeReference;
     }
 
-    protected Expression(IExpression expression) {
-      this.locations = new List<ILocation>(expression.Locations);
-      this.type = expression.Type;
-    }
+    //protected Expression(IExpression expression) {
+    //  this.locations = new List<ILocation>(expression.Locations);
+    //  this.type = expression.Type;
+    //}
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -79,10 +79,10 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
-    }
+    //public List<ILocation> Locations {
+    //  get { return this.locations; }
+    //  set { this.locations = value; }
+    //}
     List<ILocation> locations;
 
     /// <summary>

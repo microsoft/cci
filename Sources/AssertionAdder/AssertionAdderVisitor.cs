@@ -353,27 +353,27 @@ namespace Microsoft.Cci  {
 
   }
 
-  internal sealed class LowerboundAssertionLocation : AssertionAdderSourceLocationWrapper {
+  //internal sealed class LowerboundAssertionLocation : AssertionAdderSourceLocationWrapper {
 
-    private LowerboundAssertionLocation(CompileTimeConstant lowerbound, IPrimarySourceLocation expressionLocation)
-      : base(expressionLocation) {
-      this.lowerbound = lowerbound;
-    }
+  //  private LowerboundAssertionLocation(CompileTimeConstant lowerbound, IPrimarySourceLocation expressionLocation)
+  //    : base(expressionLocation) {
+  //    this.lowerbound = lowerbound;
+  //  }
 
-    internal static LowerboundAssertionLocation For(CompileTimeConstant lowerbound, IEnumerable<ILocation> locations) {
-      IPrimarySourceLocation ploc = AssertAssumeAdderVisitor.GetPrimarySourceLocationFrom(locations);
-      return new LowerboundAssertionLocation(lowerbound, ploc);
-    }
+  //  internal static LowerboundAssertionLocation For(CompileTimeConstant lowerbound, IEnumerable<ILocation> locations) {
+  //    IPrimarySourceLocation ploc = AssertAssumeAdderVisitor.GetPrimarySourceLocationFrom(locations);
+  //    return new LowerboundAssertionLocation(lowerbound, ploc);
+  //  }
 
-    CompileTimeConstant lowerbound;
+  //  CompileTimeConstant lowerbound;
 
-    public override string Source {
-      get { 
-        object/*?*/ lb = this.lowerbound.Value;
-        return lb + " <= " + base.Source;
-      }
-    }
-  }
+  //  public override string Source {
+  //    get { 
+  //      object/*?*/ lb = this.lowerbound.Value;
+  //      return lb + " <= " + base.Source;
+  //    }
+  //  }
+  //}
 
   internal sealed class PointerIsValidationLocation : AssertionAdderSourceLocationWrapper {
     private PointerIsValidationLocation(CompileTimeConstant pointerSize, IPrimarySourceLocation expressionLocation)
@@ -396,26 +396,26 @@ namespace Microsoft.Cci  {
     }
   }
 
-  internal sealed class UpperboundAssertionLocation : AssertionAdderSourceLocationWrapper {
+  //internal sealed class UpperboundAssertionLocation : AssertionAdderSourceLocationWrapper {
 
-    private UpperboundAssertionLocation(CompileTimeConstant upperbound, IPrimarySourceLocation expressionLocation)
-      : base(expressionLocation) {
-      this.upperbound = upperbound;
-    }
+  //  private UpperboundAssertionLocation(CompileTimeConstant upperbound, IPrimarySourceLocation expressionLocation)
+  //    : base(expressionLocation) {
+  //    this.upperbound = upperbound;
+  //  }
 
-    internal static UpperboundAssertionLocation For(CompileTimeConstant upperbound, IEnumerable<ILocation> locations) {
-      IPrimarySourceLocation ploc = AssertAssumeAdderVisitor.GetPrimarySourceLocationFrom(locations);
-      return new UpperboundAssertionLocation(upperbound, ploc);
-    }
+  //  internal static UpperboundAssertionLocation For(CompileTimeConstant upperbound, IEnumerable<ILocation> locations) {
+  //    IPrimarySourceLocation ploc = AssertAssumeAdderVisitor.GetPrimarySourceLocationFrom(locations);
+  //    return new UpperboundAssertionLocation(upperbound, ploc);
+  //  }
 
-    CompileTimeConstant upperbound;
+  //  CompileTimeConstant upperbound;
 
-    public override string Source {
-      get {
-        object/*?*/ ub = this.upperbound.Value;
-        return ub + " >= " + base.Source;
-      }
-    }
-  }
+  //  public override string Source {
+  //    get {
+  //      object/*?*/ ub = this.upperbound.Value;
+  //      return ub + " >= " + base.Source;
+  //    }
+  //  }
+  //}
 
 }

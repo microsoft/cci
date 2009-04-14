@@ -380,11 +380,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void Visit(IConditional conditional) {
       base.Visit(conditional);
       Conditional cond = (Conditional)conditional;
-      cond.Condition = this.ConvertToBoolean(cond.Condition);
+      cond.Condition = ConvertToBoolean(cond.Condition);
       cond.Type = conditional.ResultIfTrue.Type;
     }
 
-    private IExpression ConvertToBoolean(IExpression expression) {
+    private static IExpression ConvertToBoolean(IExpression expression) {
       object/*?*/ val = null;
       IPlatformType platformType = expression.Type.PlatformType;
       ITypeReference type = platformType.SystemObject;

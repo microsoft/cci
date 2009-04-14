@@ -36,7 +36,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Performs some computation with the given anonymous delegate expression.
     /// </summary>
-    void Visit(IAnonymousDelegate anonymousMethod);
+    void Visit(IAnonymousDelegate anonymousDelegate);
     /// <summary>
     /// Performs some computation with the given array indexer expression.
     /// </summary>
@@ -1512,7 +1512,7 @@ namespace Microsoft.Cci {
     public virtual void Visit(IAddressOf addressOf) {
     }
 
-    public virtual void Visit(IAnonymousDelegate anonymousMethod) {
+    public virtual void Visit(IAnonymousDelegate anonymousDelegate) {
     }
 
     public virtual void Visit(IArrayIndexer arrayIndexer) {
@@ -1809,7 +1809,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Performs some computation with the given pre condition.
     /// </summary>
-    void Visit(IPrecondition preCondition);
+    void Visit(IPrecondition precondition);
 
     /// <summary>
     /// Performs some computation with the given thrown exception.
@@ -2006,15 +2006,15 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Traverses the given pre condition.
     /// </summary>
-    public virtual void Visit(IPrecondition preCondition)
+    public virtual void Visit(IPrecondition precondition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
-      this.path.Push(preCondition);
-      this.Visit(preCondition.Condition);
-      if (preCondition.ExceptionToThrow != null)
-        this.Visit(preCondition.ExceptionToThrow);
+      this.path.Push(precondition);
+      this.Visit(precondition.Condition);
+      if (precondition.ExceptionToThrow != null)
+        this.Visit(precondition.ExceptionToThrow);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -2115,15 +2115,15 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Traverses the given method definition.
     /// </summary>
-    public override void Visit(IMethodDefinition methodDefinition)
+    public override void Visit(IMethodDefinition method)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
-      base.Visit(methodDefinition);
+      base.Visit(method);
       if (this.contractProvider == null) return;
       //^ int oldCount = this.path.Count;
-      this.path.Push(methodDefinition);
-      IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
+      this.path.Push(method);
+      IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(method);
       if (methodContract != null)
         this.Visit(methodContract);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
@@ -2198,7 +2198,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Visits the given pre condition.
     /// </summary>
-    public virtual void Visit(IPrecondition preCondition)
+    public virtual void Visit(IPrecondition precondition)
     {
     }
 

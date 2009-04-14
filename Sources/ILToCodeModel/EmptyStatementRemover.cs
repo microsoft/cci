@@ -15,7 +15,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         FindPattern(bb.Statements);
       return;
     }
-    private void FindPattern(List<IStatement> statements) {
+    private static void FindPattern(List<IStatement> statements) {
       int n = statements.Count;
       for (int i = n - 1; 0 <= i; i--) {
         if (statements[i] is IEmptyStatement)

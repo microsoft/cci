@@ -29,12 +29,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private bool IsLoadLocalOp(OperationCode opCode) {
+    private static bool IsLoadLocalOp(OperationCode opCode) {
       return opCode == OperationCode.Ldloc || opCode == OperationCode.Ldloc_0 || opCode == OperationCode.Ldloc_1
         || opCode == OperationCode.Ldloc_2 || opCode == OperationCode.Ldloc_3 || opCode == OperationCode.Ldloc_S;
     }
 
-    private bool IsStoreLocalOp(OperationCode opCode) {
+    private static bool IsStoreLocalOp(OperationCode opCode) {
       return opCode == OperationCode.Stloc || opCode == OperationCode.Stloc_0 || opCode == OperationCode.Stloc_1
         || opCode == OperationCode.Stloc_2 || opCode == OperationCode.Stloc_3 || opCode == OperationCode.Stloc_S;
     }

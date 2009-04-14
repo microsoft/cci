@@ -17,7 +17,6 @@ namespace Microsoft.Cci {
       : base(contractProvider) {
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
-      this.maximumStackSizeNeeded = 0;
       this.minizeCodeSize = true;
     }
 
@@ -38,7 +37,7 @@ namespace Microsoft.Cci {
     protected ISourceLocationProvider/*?*/ sourceLocationProvider;
     List<ILocalDefinition> temporaries = new List<ILocalDefinition>();
 
-    private ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
+    private static ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
       ushort parameterIndex = parameterDefinition.Index;
       if ((parameterDefinition.ContainingSignature.CallingConvention & CallingConvention.HasThis) != 0)
         parameterIndex++;
@@ -60,7 +59,7 @@ namespace Microsoft.Cci {
       }
       IParameterDefinition/*?*/ parameter = container as IParameterDefinition;
       if (parameter != null) {
-        ushort parIndex = this.GetParameterIndex(parameter);
+        ushort parIndex = GetParameterIndex(parameter);
         if (parIndex <= byte.MaxValue) this.generator.Emit(OperationCode.Ldarga_S, parameter);
         else this.generator.Emit(OperationCode.Ldarga, parameter);
         return;
@@ -156,7 +155,7 @@ namespace Microsoft.Cci {
     }
 
     private void LoadParameter(IParameterDefinition parameter) {
-      ushort parIndex = this.GetParameterIndex(parameter);
+      ushort parIndex = GetParameterIndex(parameter);
       if (parIndex == 0) this.generator.Emit(OperationCode.Ldarg_0, parameter);
       else if (parIndex == 1) this.generator.Emit(OperationCode.Ldarg_1, parameter);
       else if (parIndex == 2) this.generator.Emit(OperationCode.Ldarg_2, parameter);
@@ -194,7 +193,7 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
-    public override void Visit(IAddressableExpression targetExpression) {
+    public override void Visit(IAddressableExpression addressableExpression) {
       Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
     }
 
@@ -329,7 +328,7 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Initobj, parameter.Type);
         } else {
           this.Visit(assignment.Source);
-          ushort parIndex = this.GetParameterIndex(parameter);
+          ushort parIndex = GetParameterIndex(parameter);
           if (parIndex <= byte.MaxValue) this.generator.Emit(OperationCode.Starg_S, parameter);
           else this.generator.Emit(OperationCode.Starg, parameter);
           this.StackSize--;
@@ -685,9 +684,9 @@ namespace Microsoft.Cci {
       ITypeReference targetType = conversion.Type;
       if (targetType.ResolvedType.IsEnum) targetType = targetType.ResolvedType.UnderlyingType;
       if (conversion.CheckNumericRange)
-        this.VisitCheckedConversion(conversion, sourceType, targetType);
+        this.VisitCheckedConversion(sourceType, targetType);
       else
-        this.VisitUncheckedConversion(conversion, sourceType, targetType);
+        this.VisitUncheckedConversion(sourceType, targetType);
     }
 
     public override void Visit(ICreateArray createArray) {
@@ -1089,9 +1088,9 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
-    public override void Visit(IPrecondition preCondition) {
+    public override void Visit(IPrecondition precondition) {
       if (this.contractProvider == null) return;
-      this.Visit(preCondition.Condition);
+      this.Visit(precondition.Condition);
       this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.Requires);
       this.StackSize--;
     }
@@ -1190,7 +1189,7 @@ namespace Microsoft.Cci {
     public override void Visit(ISwitchStatement switchStatement) {
       this.Visit(switchStatement.Expression);
       uint numberOfCases;
-      uint maxValue = this.GetMaxCaseExpressionValueAsUInt(switchStatement.Cases, out numberOfCases);
+      uint maxValue = GetMaxCaseExpressionValueAsUInt(switchStatement.Cases, out numberOfCases);
       if (numberOfCases == 0) { this.generator.Emit(OperationCode.Pop); return; }
       if (maxValue < uint.MaxValue && maxValue/2 < numberOfCases)
         this.GenerateSwitchInstruction(switchStatement.Cases, maxValue);
@@ -1237,7 +1236,7 @@ namespace Microsoft.Cci {
       this.currentBreakTarget = savedCurrentBreakTarget;
     }
 
-    private uint GetMaxCaseExpressionValueAsUInt(IEnumerable<ISwitchCase> switchCases, out uint numberOfCases) {
+    private static uint GetMaxCaseExpressionValueAsUInt(IEnumerable<ISwitchCase> switchCases, out uint numberOfCases) {
       numberOfCases = 0;
       uint result = 0;
       foreach (ISwitchCase switchCase in switchCases) {
@@ -1273,43 +1272,44 @@ namespace Microsoft.Cci {
       return result;
     }
 
-    private List<ISwitchCase> GetSortedListOfSwitchCases(IEnumerable<ISwitchCase> cases) {
-      List<ISwitchCase> caseList = new List<ISwitchCase>(cases);
-      caseList.Sort(
-        delegate(ISwitchCase x, ISwitchCase y) {
-          if (x == y) return 0;
-          if (x.IsDefault) return -1;
-          if (y.IsDefault) return 1;
-          if (x.Expression == CodeDummy.Constant) return -1;
-          if (y.Expression == CodeDummy.Constant) return 1;
-          object/*?*/ xvalue = x.Expression.Value;
-          object/*?*/ yvalue = y.Expression.Value;
-          switch (System.Convert.GetTypeCode(xvalue)) {
-            case TypeCode.Int32:
-              if (!(yvalue is int)) return 1;
-              return (int)xvalue - (int)yvalue;
-            case TypeCode.UInt32:
-              if (!(yvalue is uint)) return 1;
-              return (int)((uint)xvalue - (uint)yvalue);
-            case TypeCode.Int64:
-              if (!(yvalue is long)) return 1;
-              return (int)((long)xvalue - (long)yvalue);
-            case TypeCode.UInt64:
-              if (!(yvalue is ulong)) return 1;
-              return (int)((ulong)xvalue - (ulong)yvalue);
-            case TypeCode.String:
-              if (!(yvalue is string)) return 1;
-              return string.CompareOrdinal((string)xvalue, (string)yvalue);
-            default:
-              //^ assume false;
-              if (xvalue == null) return -1;
-              if (yvalue == null) return 1;
-              return xvalue.GetHashCode() - yvalue.GetHashCode();
-          }
-        }
-      );
-      return caseList;
-    }
+    //private static List<ISwitchCase> GetSortedListOfSwitchCases(IEnumerable<ISwitchCase> cases) {
+    //  List<ISwitchCase> caseList = new List<ISwitchCase>(cases);
+    //  caseList.Sort(
+    //    delegate(ISwitchCase x, ISwitchCase y) {
+    //      if (x == y) return 0;
+    //      if (x.IsDefault) return -1;
+    //      if (y.IsDefault) return 1;
+    //      if (x.Expression == CodeDummy.Constant) return -1;
+    //      if (y.Expression == CodeDummy.Constant) return 1;
+    //      object/*?*/ xvalue = x.Expression.Value;
+    //      object/*?*/ yvalue = y.Expression.Value;
+    //      switch (System.Convert.GetTypeCode(xvalue)) {
+    //        case TypeCode.Int32:
+    //          if (!(yvalue is int)) return 1;
+    //          return (int)xvalue - (int)yvalue;
+    //        case TypeCode.UInt32:
+    //          if (!(yvalue is uint)) return 1;
+    //          return (int)((uint)xvalue - (uint)yvalue);
+    //        case TypeCode.Int64:
+    //          if (!(yvalue is long)) return 1;
+    //          return (int)((long)xvalue - (long)yvalue);
+    //        case TypeCode.UInt64:
+    //          if (!(yvalue is ulong)) return 1;
+    //          return (int)((ulong)xvalue - (ulong)yvalue);
+    //        case TypeCode.String:
+    //          string ystr = yvalue as string;
+    //          if (ystr == null) return 1;
+    //          return string.CompareOrdinal(ystr, (string)yvalue);
+    //        default:
+    //          //^ assume false;
+    //          if (xvalue == null) return -1;
+    //          if (yvalue == null) return 1;
+    //          return xvalue.GetHashCode() - yvalue.GetHashCode();
+    //      }
+    //    }
+    //  );
+    //  return caseList;
+    //}
 
     public override void Visit(IThisReference thisReference) {
       this.generator.Emit(OperationCode.Ldarg_0);
@@ -1414,7 +1414,7 @@ namespace Microsoft.Cci {
       base.Visit(yieldReturnStatement);
     }
 
-    private void VisitCheckedConversion(IConversion conversion, ITypeReference sourceType, ITypeReference targetType) {
+    private void VisitCheckedConversion(ITypeReference sourceType, ITypeReference targetType) {
       switch (sourceType.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           switch (targetType.TypeCode) {
@@ -2217,7 +2217,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    private void VisitUncheckedConversion(IConversion conversion, ITypeReference sourceType, ITypeReference targetType) {
+    private void VisitUncheckedConversion(ITypeReference sourceType, ITypeReference targetType) {
       switch (sourceType.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           switch (targetType.TypeCode) {

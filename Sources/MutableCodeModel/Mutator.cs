@@ -1451,8 +1451,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       return newList;
     }
 
-    public virtual IPrecondition Visit(IPrecondition preCondition) {
-      Precondition mutablePrecondition = new Precondition(preCondition);
+    public virtual IPrecondition Visit(IPrecondition precondition) {
+      Precondition mutablePrecondition = new Precondition(precondition);
       mutablePrecondition.Condition = this.Visit(mutablePrecondition.Condition);
       if (mutablePrecondition.ExceptionToThrow != null)
         mutablePrecondition.ExceptionToThrow = this.Visit(mutablePrecondition.ExceptionToThrow);

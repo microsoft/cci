@@ -43,7 +43,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public bool HasBeenVerified {
       get { return this.hasBeenVerified; }
-      set { this.hasBeenVerified = true; }
+      set { this.hasBeenVerified = value; }
     }
     bool hasBeenVerified;
   }

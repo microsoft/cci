@@ -210,7 +210,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(PointerCall pointerCall) {
       pointerCall.Arguments = Visit(pointerCall.Arguments);
-      var savedPointerType = pointerCall.Pointer;
       pointerCall.Pointer = this.Visit(pointerCall.Pointer);
       pointerCall.Type = this.Visit(pointerCall.Type);
       return pointerCall;

@@ -28,7 +28,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       BasicBlock b = (BasicBlock)block;
       this.blockLocalVariables = b.LocalVariables;
       for (int i = 0; i < b.Statements.Count; i++) {
-        this.DeleteGotoNextStatement(b.Statements, i);
+        DeleteGotoNextStatement(b.Statements, i);
         this.ReplaceLocalArrayInitializerPattern(b.Statements, i);
         this.ReplaceShortCircuitPattern(b.Statements, i);
         this.ReplaceShortCircuitPattern2(b.Statements, i);
@@ -165,7 +165,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       statements.RemoveRange(i, count);
     }
 
-    private void DeleteGotoNextStatement(List<IStatement> statements, int i) {
+    private static void DeleteGotoNextStatement(List<IStatement> statements, int i) {
       if (i > statements.Count-2) return;
       GotoStatement/*?*/ gotoStatement = statements[i] as GotoStatement;
       if (gotoStatement == null) return;
@@ -210,7 +210,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (conditionalStatement.FalseBranch is EmptyStatement) {
         Conditional conditional = new Conditional();
         if (ExpressionHelper.IsIntegralZero(push2.ValueToPush)) {
-          conditional.Condition = this.InvertCondition(conditionalStatement.Condition);
+          conditional.Condition = InvertCondition(conditionalStatement.Condition);
           conditional.ResultIfTrue = push.ValueToPush;
           conditional.ResultIfFalse = push2.ValueToPush;
         } else {
@@ -254,7 +254,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!(conditionalStatement2.TrueBranch is EmptyStatement)) {
         if (!(conditionalStatement2.TrueBranch is GotoStatement)) return false;
         if (!(conditionalStatement2.FalseBranch is EmptyStatement)) return false;
-        conditionalStatement2.Condition = this.InvertCondition(conditionalStatement2.Condition);
+        conditionalStatement2.Condition = InvertCondition(conditionalStatement2.Condition);
         IStatement temp = conditionalStatement2.TrueBranch;
         conditionalStatement2.TrueBranch = conditionalStatement2.FalseBranch;
         conditionalStatement2.FalseBranch = temp;
@@ -318,15 +318,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       return false;
     }
 
-    private IExpression InvertCondition(IExpression expression) {
+    private static IExpression InvertCondition(IExpression expression) {
       IBinaryOperation/*?*/ binOp = expression as IBinaryOperation;
-      if (binOp != null) return this.InvertBinaryOperation(binOp);
+      if (binOp != null) return InvertBinaryOperation(binOp);
       LogicalNot logicalNot = new LogicalNot();
       logicalNot.Operand = expression;
       return logicalNot;
     }
 
-    private IExpression InvertBinaryOperation(IBinaryOperation binOp) {
+    private static IExpression InvertBinaryOperation(IBinaryOperation binOp) {
       BinaryOperation/*?*/ result = null;
       if (binOp is IEquality)
         result = new NotEquality();
@@ -407,15 +407,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (IExpression expr in createArray.Sizes) {
         IMetadataConstant mdc = expr as IMetadataConstant;
         if (mdc == null) return;
-        sizes.Add(this.ConvertToUlong(mdc));
+        sizes.Add(ConvertToUlong(mdc));
       }
-      this.AddArrayInitializers(createArray, initialValueField, sizes.ToArray());
+      AddArrayInitializers(createArray, initialValueField, sizes.ToArray());
       assignment.Source = createArray;
       statements[i] = expressionStatement;
       statements.RemoveRange(i+1, 2);
     }
 
-    private void AddArrayInitializers(CreateArray createArray, IFieldDefinition initialValueField, ulong[] sizes) {
+    private static void AddArrayInitializers(CreateArray createArray, IFieldDefinition initialValueField, ulong[] sizes) {
       ITypeReference elemType = createArray.ElementType;
       MemoryStream memoryStream = new MemoryStream(new List<byte>(initialValueField.FieldMapping.Data).ToArray());
       BinaryReader reader = new BinaryReader(memoryStream, Encoding.Unicode);
@@ -429,7 +429,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private ulong ConvertToUlong(IMetadataConstant c) {
+    private static ulong ConvertToUlong(IMetadataConstant c) {
       IConvertible/*?*/ ic = c.Value as IConvertible;
       if (ic == null) return 0; //TODO: error
       switch (ic.GetTypeCode()) {
@@ -447,7 +447,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return 0; //TODO: error
     }
 
-    private object ReadValue(PrimitiveTypeCode primitiveTypeCode, BinaryReader reader) {
+    private static object ReadValue(PrimitiveTypeCode primitiveTypeCode, BinaryReader reader) {
       switch (primitiveTypeCode) {
         case PrimitiveTypeCode.Boolean: return reader.ReadBoolean();
         case PrimitiveTypeCode.Char: return reader.ReadChar();

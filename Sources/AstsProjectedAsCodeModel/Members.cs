@@ -2740,7 +2740,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public IMarshallingInformation MarshallingInformation {
-      get { throw new Exception("The method or operation is not implemented."); }
+      get { return Dummy.MarshallingInformation; }
     }
 
     public ITypeReference ParamArrayElementType {

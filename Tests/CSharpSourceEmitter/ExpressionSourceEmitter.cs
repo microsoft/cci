@@ -182,7 +182,7 @@ namespace CSharpSourceEmitter {
     public override void Visit(IConditional conditional) {
       this.sourceEmitterOutput.Write("(");
       this.Visit(conditional.Condition);
-      if (ExpressionHelper.IsIntegralNonZero(conditional.ResultIfTrue)) {
+      if (ExpressionHelper.IsIntegralNonzero(conditional.ResultIfTrue)) {
         this.sourceEmitterOutput.Write(" || ");
         this.Visit(conditional.ResultIfFalse);
         this.sourceEmitterOutput.Write(")");

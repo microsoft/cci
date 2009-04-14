@@ -217,7 +217,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(LogicalNot logicalNot) {
       if (logicalNot.Type == Dummy.TypeReference)
-        return this.InvertCondition(this.Visit(logicalNot.Operand));
+        return InvertCondition(this.Visit(logicalNot.Operand));
       else if (logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Int32)
         return new Equality() { 
           LeftOperand = logicalNot.Operand, 
@@ -228,7 +228,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         return base.Visit(logicalNot);
     }
 
-    private IExpression InvertCondition(IExpression condition) {
+    private static IExpression InvertCondition(IExpression condition) {
       IEquality/*?*/ equality = condition as IEquality;
       if (equality != null) {
         if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {

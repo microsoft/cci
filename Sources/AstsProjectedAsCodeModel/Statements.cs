@@ -1671,7 +1671,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(IExpressionStatement) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      PostFixUnaryOperationAssignment/*?*/ postFix = this.Expression as PostFixUnaryOperationAssignment;
+      PostfixUnaryOperationAssignment/*?*/ postFix = this.Expression as PostfixUnaryOperationAssignment;
       if (postFix != null)
         postFix.VisitAsUnaryOperationAssignment(visitor);
       else

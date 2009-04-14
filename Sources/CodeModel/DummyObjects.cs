@@ -271,9 +271,6 @@ namespace Microsoft.Cci {
 
     #region IExpression Members
 
-    public void Dispatch(IMetadataVisitor visitor) {
-    }
-
     public bool HasErrors() {
       return true;
     }
@@ -421,10 +418,6 @@ namespace Microsoft.Cci {
 
     public IExpression ThisArgument {
       get { return CodeDummy.Expression; }
-    }
-
-    public ITypeReference/*?*/ ThisArgumentConstraint {
-      get { return Dummy.TypeReference; }
     }
 
     #endregion

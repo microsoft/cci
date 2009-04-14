@@ -37,7 +37,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             while (bbb != null) {
               if (bbb.ExceptionInformation != null) {
                 if (firstHandler == null) firstHandler = bbb;
-                this.DecompileHandler(bb, bbb, tryStatement);
+                DecompileHandler(bb, bbb, tryStatement);
                 break;
               }
               if (bbb.Statements.Count == 0) break;
@@ -50,7 +50,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         b.Statements.Insert(0, tryStatement);
       }
       for (int i = 0; i < b.Statements.Count; i++) {
-        if (this.DecompileIfThenElseStatement(b.Statements, i)) continue;
+        if (DecompileIfThenElseStatement(b.Statements, i)) continue;
         this.DecompileIfThenStatement(b.Statements, i);
         this.DecompileIfThenStatement2(b.Statements, i);
         this.DecompileSwitch(b.Statements, i);
@@ -72,7 +72,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private void DecompileHandler(BasicBlock containingBlock, BasicBlock handlerBlock, TryCatchFinallyStatement tryStatement) {
+    private static void DecompileHandler(BasicBlock containingBlock, BasicBlock handlerBlock, TryCatchFinallyStatement tryStatement) {
       if (handlerBlock.ExceptionInformation.HandlerKind == HandlerKind.Finally) {
         tryStatement.FinallyBody = handlerBlock;
       } else {
@@ -80,22 +80,22 @@ namespace Microsoft.Cci.ILToCodeModel {
         catchClause.Body = handlerBlock;
         catchClause.ExceptionType = handlerBlock.ExceptionInformation.ExceptionType;
         if (handlerBlock.ExceptionInformation.HandlerKind == HandlerKind.Catch) {
-          catchClause.ExceptionContainer = this.ExtractExceptionContainer(handlerBlock);
+          catchClause.ExceptionContainer = ExtractExceptionContainer(handlerBlock);
         }
         tryStatement.CatchClauses.Add(catchClause);
       }
       //Remove handler from statements in containing block 
-      containingBlock.Statements[containingBlock.Statements.Count-1] = this.GetBasicBlockStartingAt(handlerBlock, handlerBlock.ExceptionInformation.HandlerEndOffset);
-      this.RemoveEndFinally(handlerBlock);
+      containingBlock.Statements[containingBlock.Statements.Count-1] = GetBasicBlockStartingAt(handlerBlock, handlerBlock.ExceptionInformation.HandlerEndOffset);
+      RemoveEndFinally(handlerBlock);
     }
 
-    private void RemoveEndFinally(BasicBlock handlerBlock) {
+    private static void RemoveEndFinally(BasicBlock handlerBlock) {
       int i = handlerBlock.Statements.Count-1;
       if (i >= 0 && handlerBlock.Statements[i] is EndFinally)
         handlerBlock.Statements.RemoveAt(i);
     }
 
-    private ILocalDefinition ExtractExceptionContainer(BasicBlock bb) {
+    private static ILocalDefinition ExtractExceptionContainer(BasicBlock bb) {
       ILocalDefinition result = Dummy.LocalVariable;
       if (bb.Statements.Count < 1) return result;
       ExpressionStatement es = bb.Statements[0] as ExpressionStatement;
@@ -114,7 +114,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private BasicBlock GetBasicBlockStartingAt(BasicBlock bb, uint offset) {
+    private static BasicBlock GetBasicBlockStartingAt(BasicBlock bb, uint offset) {
       while (bb.StartOffset < offset && bb.Statements.Count > 0) {
         BasicBlock bbb = bb.Statements[bb.Statements.Count-1] as BasicBlock;
         if (bbb == null) break;
@@ -127,7 +127,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return bb;
     }
 
-    private bool DecompileIfThenElseStatement(List<IStatement> statements, int i) {
+    private static bool DecompileIfThenElseStatement(List<IStatement> statements, int i) {
       if (i >= statements.Count) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
       if (conditionalStatement == null) return false;
@@ -154,8 +154,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         k++;
       }
       if (blockAfterIf == null || k >= falseBlock.Statements.Count) return false;
-      BasicBlock ifBlock = this.ExtractAsBasicBlock(statements, i, j-1);
-      BasicBlock elseBlock = this.ExtractAsBasicBlock(falseBlock.Statements, 1, k);
+      BasicBlock ifBlock = ExtractAsBasicBlock(statements, i, j-1);
+      BasicBlock elseBlock = ExtractAsBasicBlock(falseBlock.Statements, 1, k);
       LogicalNot not = new LogicalNot();
       not.Operand = conditionalStatement.Condition;
       conditionalStatement.Condition = not;
@@ -226,11 +226,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         SwitchCase currentCase = new SwitchCase() { Expression = caseLabel };
         result.Cases.Add(currentCase);
         if (j < n-1 && currentCaseBody == switchInstruction.switchCases[j+1]) continue;
-        this.ExtractCaseBody(currentCaseBody, currentCase.Body);
+        ExtractCaseBody(currentCaseBody, currentCase.Body);
       }
     }
 
-    private void ExtractCaseBody(BasicBlock caseBody, List<IStatement> caseStatements) {
+    private static void ExtractCaseBody(BasicBlock caseBody, List<IStatement> caseStatements) {
       List<IStatement> body = caseBody.Statements;
       if (body.Count == 0) return;
       ILabeledStatement labeledStatement = body[0] as ILabeledStatement;
@@ -240,7 +240,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private BasicBlock ExtractAsBasicBlock(List<IStatement> statements, int i, int j) {
+    private static BasicBlock ExtractAsBasicBlock(List<IStatement> statements, int i, int j) {
       BasicBlock result = new BasicBlock(0);
       while (i < j) result.Statements.Add(statements[i++]);
       return result;

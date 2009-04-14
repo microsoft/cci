@@ -19,9 +19,7 @@ namespace Microsoft.Cci {
     /// Returns true if the constant is an integral value that falls in the range of the target type. 
     /// The target type does have to be an integral type. If it is not, this method always returns false.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
-    //^ [Pure]
-    public static bool IsIntegerInRangeOf(ICompileTimeConstant constExpression, ITypeDefinition targetType) {
+    public static bool IsIntegerInRangeOf(ICompileTimeConstant constExpression, ITypeReference targetType) {
       switch (targetType.TypeCode) {
         case PrimitiveTypeCode.UInt8: {
             IConvertible/*?*/ ic = constExpression.Value as IConvertible;
@@ -234,17 +232,17 @@ namespace Microsoft.Cci {
     /// that is not equal to 0.
     /// </summary>
     //^ [Pure]
-    public static bool IsIntegralNonZero(IExpression expression) {
+    public static bool IsIntegralNonzero(IExpression expression) {
       ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
       if (constExpression == null) return false;
-      return ExpressionHelper.IsIntegralNonZero(constExpression);
+      return ExpressionHelper.IsIntegralNonzero(constExpression);
     }
 
     /// <summary>
     /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong or ushort that is not equal to 0.
     /// </summary>
     //^ [Pure]
-    public static bool IsIntegralNonZero(ICompileTimeConstant constExpression) {
+    public static bool IsIntegralNonzero(ICompileTimeConstant constExpression) {
       IConvertible/*?*/ ic = constExpression.Value as IConvertible;
       if (ic == null) return false;
       switch (ic.GetTypeCode()) {

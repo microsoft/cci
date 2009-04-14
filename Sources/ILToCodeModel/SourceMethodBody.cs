@@ -23,7 +23,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     bool sawTailCall;
     bool sawVolatile;
     byte alignment;
-    bool contractsOnly = false;
+    bool contractsOnly;
 
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader) {
       this.ilMethodBody = ilMethodBody;
@@ -88,7 +88,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Dictionary<uint, BasicBlock> blockFor = new Dictionary<uint, BasicBlock>();
 
-    private int ConvertToInt(Expression expression) {
+    private static int ConvertToInt(Expression expression) {
       CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
       if (cc == null) return 0; //TODO: error
       IConvertible/*?*/ ic = cc.Value as IConvertible;
@@ -217,8 +217,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       return this.Transform(result);
     }
 
-    private int OffsetOfLastContractCallOrNegativeOne(IEnumerable<IOperation> operations) {
-      List<IOperation> instrs = new List<IOperation>(Operations);
+    private static int OffsetOfLastContractCallOrNegativeOne(IEnumerable<IOperation> operations) {
+      List<IOperation> instrs = new List<IOperation>(operations);
       for (int i = instrs.Count - 1; 0 <= i; i--) {
         IOperation op = instrs[i];
         if (op.OperationCode != OperationCode.Call) continue;
@@ -308,7 +308,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return new AddressOf() { Expression = addressableExpression };
     }
 
-    private Expression ParseAddressDereference(IOperation currentOperation) {
+    private Expression ParseAddressDereference() {
       AddressDereference result = new AddressDereference();
       result.Address = this.PopOperandStack();
       result.Alignment = this.alignment;
@@ -326,7 +326,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       result.Type = arrayType;
       if (currentOperation.OperationCode == OperationCode.Array_Create_WithLowerBound) {
         for (uint i = 0; i < arrayType.Rank; i++)
-          result.LowerBounds.Add(this.ConvertToInt(this.PopOperandStack()));
+          result.LowerBounds.Add(ConvertToInt(this.PopOperandStack()));
         result.LowerBounds.Reverse();
       }
       for (uint i = 0; i < arrayType.Rank; i++)
@@ -1089,7 +1089,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Ldind_U2:
         case OperationCode.Ldind_U4:
         case OperationCode.Ldobj:
-          expression = this.ParseAddressDereference(currentOperation);
+          expression = this.ParseAddressDereference();
           break;
 
         case OperationCode.Ldlen:
@@ -1097,7 +1097,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Ldtoken:
-          expression = this.ParseToken(currentOperation);
+          expression = ParseToken(currentOperation);
           break;
 
         case OperationCode.Localloc:
@@ -1154,7 +1154,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Sizeof:
-          expression = this.ParseSizeOf(currentOperation);
+          expression = ParseSizeOf(currentOperation);
           break;
 
         case OperationCode.Starg:
@@ -1226,7 +1226,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private Expression ParseSizeOf(IOperation currentOperation) {
+    private static Expression ParseSizeOf(IOperation currentOperation) {
       SizeOf result = new SizeOf();
       result.TypeToSize = (ITypeReference)currentOperation.Value;
       return result;
@@ -1253,7 +1253,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       uint[] branches = (uint[])operation.Value;
       foreach (uint targetAddress in branches) {
         BasicBlock bb = this.GetOrCreateBlock(targetAddress, true);
-        bb.StartsSwitchCase = true;
+        //bb.StartsSwitchCase = true;
         result.switchCases.Add(bb);
       }
       return result;
@@ -1265,7 +1265,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private Expression ParseToken(IOperation currentOperation) {
+    private static Expression ParseToken(IOperation currentOperation) {
       TokenOf result = new TokenOf();
       result.Definition = currentOperation.Value;
       return result;

@@ -155,37 +155,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return -1;
     }
-    private int IndexOfLastContractCall_old(List<IStatement> statements) {
-      // Can we always depend on the base ctor call being the first statement?
-      var i = this.extractingFromACtorInAClass ? 1 : 0;
-      // Zero or more local declarations, as long as they don't have initial values
-      // REVIEW: If the decompiler was better at finding the first use of a local, then there wouldn't be any of these here
-      while (i < statements.Count && IsLocalDeclarationWithoutInitializer(statements[i])) i++;
-      if (i == statements.Count) return -1;
-      // Zero or more legacy-requires
-      while (i < statements.Count && IsLegacyRequires(statements[i])) i++;
-      if (i == statements.Count) return -1;
-      // Either a call to EndContractBlock or one or more calls to Requires or Ensures
-      IExpressionStatement expressionStatement = statements[i] as IExpressionStatement;
-      if (expressionStatement == null) return -1;
-      IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
-      if (methodCall == null) return -1;
-      IMethodReference methodToCall = methodCall.MethodToCall;
-      if (!TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract)) return -1;
-      string mname = methodToCall.Name.Value;
-      if (mname == "EndContractBlock") return i;
-      if (!IsPreconditionOrPostcondition(expressionStatement)) return -1;
-      var indexOfLastContractCall = i;
-      i++;
-      while (i < statements.Count) {
-        if (!IsPreconditionOrPostcondition(statements[i] as IExpressionStatement)) return indexOfLastContractCall;
-        indexOfLastContractCall = i;
-        i++;
-      }
-      return indexOfLastContractCall;
-    }
 
-    private bool IsLocalDeclarationWithoutInitializer (IStatement statement) {
+    private static bool IsLocalDeclarationWithoutInitializer(IStatement statement) {
       ILocalDeclarationStatement localDeclarationStatement = statement as ILocalDeclarationStatement;
       if (localDeclarationStatement == null) return false;
       return localDeclarationStatement.InitialValue == null;
@@ -206,7 +177,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return mname == "Requires" || mname == "RequiresAlways" || mname == "Ensures";
     }
 
-    private bool IsLegacyRequires (IStatement statement) {
+    private static bool IsLegacyRequires(IStatement statement) {
       ConditionalStatement conditional = statement as ConditionalStatement;
       if (conditional == null) return false;
       EmptyStatement empty = conditional.FalseBranch as EmptyStatement;
@@ -251,7 +222,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return statements[i] is IReturnStatement && i == statements.Count - 1;
     }
 
-    private bool IsAssignmentToLocal(IStatement statement) {
+    private static bool IsAssignmentToLocal(IStatement statement) {
       IExpressionStatement exprStatement = statement as IExpressionStatement;
       if (exprStatement == null) return false;
       IAssignment assignment = exprStatement.Expression as IAssignment;
@@ -260,7 +231,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (targetExpression == null) return false;
       return targetExpression.Definition is ILocalDefinition && targetExpression.Instance == null;
     }
-    private bool IsDefinitionOfLocalWithInitializer(IStatement statement) {
+
+    private static bool IsDefinitionOfLocalWithInitializer(IStatement statement) {
       ILocalDeclarationStatement stmt = statement as ILocalDeclarationStatement;
       return stmt != null && stmt.InitialValue != null;
     }

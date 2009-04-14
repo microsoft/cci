@@ -10,7 +10,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal class DeclarationAdder : BaseCodeTraverser {
 
-    Stack<BasicBlock> scopeStack = new Stack<BasicBlock>();
+    //Stack<BasicBlock> scopeStack = new Stack<BasicBlock>();
 
     public override void Visit(IBlockStatement block) {
       BasicBlock basicBlock = (BasicBlock)block;

@@ -24,7 +24,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     internal uint StartOffset;
 
-    internal bool StartsSwitchCase;
+    //internal bool StartsSwitchCase;
 
   }
 

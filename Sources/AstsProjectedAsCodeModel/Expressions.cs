@@ -1683,7 +1683,9 @@ namespace Microsoft.Cci.Ast {
     }
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { throw new NotImplementedException(); }
+      get {
+        foreach (var par in this.Parameters) yield return par.ParameterDefinition;
+      }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
@@ -14605,7 +14607,7 @@ namespace Microsoft.Cci.Ast {
   /// An expression that subtracts one from the arithmetic value at the location denoted by the target expression, but results in the value at the location before the addition was performed.
   /// When overloaded, this expression corresponds to a call to op_Decrement.
   /// </summary>
-  public class PostfixDecrement : PostFixUnaryOperationAssignment {
+  public class PostfixDecrement : PostfixUnaryOperationAssignment {
 
     /// <summary>
     /// Allocates an expression that subtracts one from the arithmetic value at the location denoted by the target expression, but results in the value at the location before the addition was performed.
@@ -14668,7 +14670,7 @@ namespace Microsoft.Cci.Ast {
   /// An expression that adds one to the arithmetic value at the location denoted by the target expression, but results in the value at the location before the addition was performed.
   /// When overloaded, this expression corresponds to a call to op_Increment.
   /// </summary>
-  public class PostfixIncrement : PostFixUnaryOperationAssignment {
+  public class PostfixIncrement : PostfixUnaryOperationAssignment {
 
     /// <summary>
     /// Allocates an expression that adds one to the arithmetic value at the location denoted by the target expression, but results in the value at the location before the addition was performed.
@@ -14730,14 +14732,14 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An expression that performs an operation on the value at the location denoted by the target expression and results in the new value of the target.
   /// </summary>
-  public abstract class PostFixUnaryOperationAssignment : UnaryOperationAssignment {
+  public abstract class PostfixUnaryOperationAssignment : UnaryOperationAssignment {
 
     /// <summary>
     /// Initializes an operation performed on a single operand and that also assigns a new value to the memory location represented by the expression.
     /// </summary>
     /// <param name="target">The value on which the operation is performed.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated expression.</param>
-    protected PostFixUnaryOperationAssignment(TargetExpression target, ISourceLocation sourceLocation)
+    protected PostfixUnaryOperationAssignment(TargetExpression target, ISourceLocation sourceLocation)
       : base(target, sourceLocation) {
     }
 
@@ -14746,7 +14748,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="containingBlock">A new value for containing block. This replaces template.ContainingBlock in the resulting copy of template.</param>
     /// <param name="template">The template to copy.</param>
-    protected PostFixUnaryOperationAssignment(BlockStatement containingBlock, PostFixUnaryOperationAssignment template)
+    protected PostfixUnaryOperationAssignment(BlockStatement containingBlock, PostfixUnaryOperationAssignment template)
       : base(containingBlock, template)
       //^ requires template.ContainingBlock != containingBlock;
       //^ ensures this.containingBlock == containingBlock;
