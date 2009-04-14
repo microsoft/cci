@@ -195,9 +195,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two assembly references are to be considered equivalent.
     /// </summary>
-    /// <param name="assembly1"></param>
-    /// <param name="assembly2"></param>
-    /// <returns></returns>
     public static bool AssembliesAreEquivalent(IAssemblyReference/*?*/ assembly1, IAssemblyReference/*?*/ assembly2) {
       if (assembly1 == null || assembly2 == null)
         return false;
@@ -215,9 +212,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two module references are to be considered equivalent.
     /// </summary>
-    /// <param name="module1"></param>
-    /// <param name="module2"></param>
-    /// <returns></returns>
     public static bool ModulesAreEquivalent(IModuleReference/*?*/ module1, IModuleReference/*?*/ module2) {
       if (module1 == null || module2 == null)
         return false;
@@ -235,9 +229,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two unit references are to be considered equivalent.
     /// </summary>
-    /// <param name="unit1"></param>
-    /// <param name="unit2"></param>
-    /// <returns></returns>
     public static bool UnitsAreEquivalent(IUnitReference unit1, IUnitReference unit2) {
       if (unit1 == null || unit2 == null)
         return false;
@@ -253,9 +244,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two unit references are to be considered equivalent as containers.
     /// </summary>
-    /// <param name="unit1"></param>
-    /// <param name="unit2"></param>
-    /// <returns></returns>
     public static bool UnitsAreContainmentEquivalent(IUnitReference unit1, IUnitReference unit2) {
       if (unit1 == null || unit2 == null)
         return false;
@@ -273,9 +261,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two unit namespaces are to be considered equivalent as containers.
     /// </summary>
-    /// <param name="unitNamespace1"></param>
-    /// <param name="unitNamespace2"></param>
-    /// <returns></returns>
     public static bool UnitNamespacesAreEquivalent(IUnitNamespaceReference/*?*/ unitNamespace1, IUnitNamespaceReference/*?*/ unitNamespace2) {
       if (unitNamespace1 == null || unitNamespace2 == null)
         return false;
@@ -287,7 +272,7 @@ namespace Microsoft.Cci {
         return nstUnitNamespace1.Name.UniqueKey == nstUnitNamespace2.Name.UniqueKey
           && UnitHelper.UnitNamespacesAreEquivalent(nstUnitNamespace1.ContainingUnitNamespace, nstUnitNamespace2.ContainingUnitNamespace);
       }
-      if (nstUnitNamespace1 == null || nstUnitNamespace2 == null)
+      if (nstUnitNamespace1 != null || nstUnitNamespace2 != null)
         return false;
       return UnitHelper.UnitsAreContainmentEquivalent(unitNamespace1.Unit, unitNamespace2.Unit);
     }
@@ -369,7 +354,7 @@ namespace Microsoft.Cci {
   public abstract class AggregatedNamespace<ContainerType, ContainerMemberType> : AggregatedScope<INamespaceMember, ContainerType, ContainerMemberType>, INamespaceDefinition
     where ContainerType : class, IContainer<ContainerMemberType>
     where ContainerMemberType : class, IContainerMember<ContainerType> {
-    
+
     /// <summary>
     /// 
     /// </summary>
