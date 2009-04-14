@@ -359,7 +359,7 @@ namespace Microsoft.Cci.SmallBasic {
     /// <summary>
     /// Gets whether or not the given character is a whitespace character
     /// </summary>
-    bool IsWhiteSpace(char c) {
+    static bool IsWhiteSpace(char c) {
       switch (c) {
         case (char)0x09:
         case (char)0x0B:
@@ -378,66 +378,66 @@ namespace Microsoft.Cci.SmallBasic {
     /// <summary>
     /// Matches the given token text with a token from the enumerations
     /// </summary>
-    Token MatchToken(string tokenText) {
-      switch (tokenText.ToLowerInvariant()) {
-        case "and":
+    static Token MatchToken(string tokenText) {
+      switch (tokenText.ToUpperInvariant()) {
+        case "AND":
           return Token.And;
 
-        case "do":
+        case "DO":
           return Token.Do;
 
-        case "each":
+        case "EACH":
           return Token.Each;
 
-        case "else":
+        case "ELSE":
           return Token.Else;
 
-        case "endif":
+        case "ENDIF":
           return Token.EndIf;
 
-        case "false":
+        case "FALSE":
           return Token.False;
 
-        case "for":
+        case "FOR":
           return Token.For;
 
-        case "gosub":
+        case "GOSUB":
           return Token.Gosub;
 
-        case "goto":
+        case "GOTO":
           return Token.Goto;
 
-        case "if":
+        case "IF":
           return Token.If;
 
-        case "in":
+        case "IN":
           return Token.In;
 
-        case "loop":
+        case "LOOP":
           return Token.Loop;
 
-        case "next":
+        case "NEXT":
           return Token.Next;
 
-        case "not":
+        case "NOT":
           return Token.Not;
 
-        case "or":
+        case "OR":
           return Token.Or;
 
-        case "return":
+        case "RETURN":
           return Token.Return;
 
-        case "step":
+        case "STEP":
           return Token.Step;
 
-        case "to":
+        case "TO":
           return Token.To;
 
-        case "true":
+        case "TRUE":
           return Token.True;
 
-        case "while":
+        case "WHILE":
           return Token.While;
 
         default:
@@ -448,7 +448,7 @@ namespace Microsoft.Cci.SmallBasic {
     /// <summary>
     /// Given the token, returns the token type
     /// </summary>
-    TokenType GetTokenType(Token token) {
+    static TokenType GetTokenType(Token token) {
       switch (token) {
         case Token.Illegal:
           return TokenType.Illegal;

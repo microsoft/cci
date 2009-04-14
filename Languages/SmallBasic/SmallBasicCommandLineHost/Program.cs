@@ -11,7 +11,7 @@ using Microsoft.Cci.Ast;
 
 namespace Microsoft.Cci.SmallBasic {
 
-  public class SmallBasicCommandLineHost {
+  public static class SmallBasicCommandLineHost {
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
@@ -57,7 +57,7 @@ namespace Microsoft.Cci.SmallBasic {
       SmallBasicCommandLineHost.RunSuite(suiteName, File.OpenText(suiteName));
     }
 
-    public static void RunSuite(string suiteName, StreamReader instream) {
+    public static void RunSuite(string suiteName, TextReader instream) {
       System.Diagnostics.Debug.Listeners.Remove("Default");
       HostEnvironment hostEnvironment = new HostEnvironment();
       hostEnvironment.Errors += HandleErrors;
@@ -224,7 +224,7 @@ namespace Microsoft.Cci.SmallBasic {
       List<SmallBasicDocument> programSources = new List<SmallBasicDocument>(1);
       assem = new SmallBasicAssembly(name, "", hostEnvironment, options, assemblyReferences, moduleReferences, programSources);
       helper = new SmallBasicCompilationHelper(assem.Compilation);
-      programSources.Add(hostEnvironment.previousDocument = new SmallBasicDocument(helper, name, "", test));
+      programSources.Add(/*hostEnvironment.previousDocument = */new SmallBasicDocument(helper, name, "", test));
       var memStream = new MemoryStream();
       PeWriter.WritePeToStream(assem, hostEnvironment, memStream);
       var runtimeAssembly = System.Reflection.Assembly.Load(memStream.ToArray());
@@ -254,14 +254,14 @@ namespace Microsoft.Cci.SmallBasic {
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(loc, this)));
       loc = typeof(Microsoft.SmallBasic.Library.ConsoleTextColor).Assembly.Location;
       if (loc == null) loc = "";
-      System.Reflection.AssemblyName runtimeName = new System.Reflection.AssemblyName(typeof(Microsoft.SmallBasic.Library.ConsoleTextColor).Assembly.FullName);
-      this.smallBasicRuntimeAssemblyIdentity =
-        new AssemblyIdentity(this.NameTable.GetNameFor(runtimeName.Name), "", runtimeName.Version, runtimeName.GetPublicKeyToken(), loc);
+      //System.Reflection.AssemblyName runtimeName = new System.Reflection.AssemblyName(typeof(Microsoft.SmallBasic.Library.ConsoleTextColor).Assembly.FullName);
+      //this.smallBasicRuntimeAssemblyIdentity =
+      //  new AssemblyIdentity(this.NameTable.GetNameFor(runtimeName.Name), "", runtimeName.Version, runtimeName.GetPublicKeyToken(), loc);
       this.RegisterAsLatest(this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(loc, this)));
 
     }
 
-    internal SmallBasicDocument/*?*/ previousDocument;
+    //internal SmallBasicDocument/*?*/ previousDocument;
 
     AssemblyIdentity coreAssemblySymbolicIdentity;
 
@@ -269,10 +269,10 @@ namespace Microsoft.Cci.SmallBasic {
       return this.coreAssemblySymbolicIdentity;
     }
 
-    public AssemblyIdentity SmallBasicRuntimeAssemblyIdentity {
-      get { return this.smallBasicRuntimeAssemblyIdentity; }
-    }
-    readonly AssemblyIdentity smallBasicRuntimeAssemblyIdentity;
+    //public AssemblyIdentity SmallBasicRuntimeAssemblyIdentity {
+    //  get { return this.smallBasicRuntimeAssemblyIdentity; }
+    //}
+    //readonly AssemblyIdentity smallBasicRuntimeAssemblyIdentity;
 
     public override IUnit LoadUnitFrom(string location) {
       IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(location, this));

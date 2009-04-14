@@ -50,7 +50,7 @@ namespace Microsoft.Cci.SmallBasic {
         return this.compilation;
       }
     }
-    SmallBasicCompilation/*?*/ compilation = null;
+    SmallBasicCompilation/*?*/ compilation;
 
     readonly IEnumerable<CompilationPart>/*?*/ compilationParts;
 
@@ -158,7 +158,7 @@ namespace Microsoft.Cci.SmallBasic {
         return this.compilation;
       }
     }
-    SmallBasicCompilation/*?*/ compilation = null;
+    SmallBasicCompilation/*?*/ compilation;
 
     readonly IEnumerable<CompilationPart>/*?*/ compilationParts;
 

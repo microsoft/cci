@@ -772,10 +772,10 @@ namespace Microsoft.Cci.SmallBasic {
         }
       }
 
-      static TokenSet(){
+      //^ static TokenSet(){
         //^ int i = (int)Token.EndOfFile;
         //^ assert 0 <= i && i <= 255;
-      }
+      //^}
     }
 
 

@@ -33,6 +33,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1031;-Microsoft.Design#CA1014;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1502;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Security#CA2122;-Microsoft.Usage#CA1801</CodeAnalysisRules>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
