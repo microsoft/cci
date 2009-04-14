@@ -367,16 +367,30 @@ namespace ModuleReaderTests {
       DirectoryInfo dirInfo = new DirectoryInfo(Path.GetDirectoryName(typeof(object).Assembly.Location));
       string clrLocation = dirInfo.Parent.FullName + "\\" + "v2.0.50727\\";
 
+      Console.WriteLine("location: {0}", location);
       this.MscorlibAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(clrLocation + "mscorlib.dll");
       this.SystemAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(clrLocation + "System.dll");
+      LogAssemblyFile("vjslibPath", vjslibPath);
       this.VjslibAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(vjslibPath);
+      LogAssemblyFile("assemblyPath", assemblyPath);
       this.AssemblyAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(assemblyPath);
+      LogAssemblyFile("cppAssemblyPath", cppAssemblyPath);
       this.CppAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(cppAssemblyPath);
+      LogAssemblyFile("testAssemblyPath", testAssemblyPath);
       this.TestAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(testAssemblyPath);
+      LogAssemblyFile("module1Path", module1Path);
       this.Module1 = (IModule)this.HostEnv.LoadUnitFrom(module1Path);
+      LogAssemblyFile("module2Path", module2Path);
       this.Module2 = (IModule)this.HostEnv.LoadUnitFrom(module2Path);
+      LogAssemblyFile("ilAsmAssemblyPath", ilAsmAssemblyPath);
       this.ILAsmAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(ilAsmAssemblyPath);
+      LogAssemblyFile("phxArchMsilPath", phxArchMsilPath);
       this.PhxArchMsil = (IAssembly)this.HostEnv.LoadUnitFrom(phxArchMsilPath);
+    }
+
+    private static void LogAssemblyFile(string name, string path)
+    {
+        Console.WriteLine("{0}: {1} - {2}", name, path, File.Exists(path) ? "exists" : "not found!");
     }
 
     public void MRW_AssemblyTests() {
