@@ -35,18 +35,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Cci.MetadataHelper, Version=0.0.0.2, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Bin\Debug\Microsoft.Cci.MetadataHelper.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Cci.MetadataModel, Version=0.0.0.2, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Bin\Debug\Microsoft.Cci.MetadataModel.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Cci.PeReader, Version=0.0.0.2, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Bin\Debug\Microsoft.Cci.PeReader.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">
+      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
+      <Name>PeReader</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
