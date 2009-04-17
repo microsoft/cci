@@ -296,7 +296,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       //^ requires rowId <= this.NumberOfRows;
     {
       int rowOffset = (int)(rowId - 1) * this.RowSize;
-      uint methodListStart = this.TypeDefTableMemoryReader.PeekReference(rowOffset + this.MethodListOffset, this.IsFieldRefSizeSmall);
+      uint methodListStart = this.TypeDefTableMemoryReader.PeekReference(rowOffset + this.MethodListOffset, this.IsMethodRefSizeSmall);
       return methodListStart;
     }
     internal uint FindTypeContainingMethod(uint methodDefOrPtrRowId, int numberOfMethods) {
