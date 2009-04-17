@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -44,6 +44,7 @@
     <WarningLevel>4</WarningLevel>
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
     <NoWarn>649</NoWarn>
+    <DocumentationFile>bin\Release\Microsoft.Cci.PdbReader.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\common\include\version.cs">
