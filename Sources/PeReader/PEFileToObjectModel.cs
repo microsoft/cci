@@ -1817,7 +1817,8 @@ namespace Microsoft.Cci.MetadataReader {
     /// <returns></returns>
     internal TypeBase/*?*/ ResolveModuleTypeRefReference(
       TypeRefReference moduleTypeRefReference
-    ) {
+    )
+    {
       uint typeRefRowId = moduleTypeRefReference.TypeRefRowId;
       if (typeRefRowId == 0) {
         return null;
@@ -2149,7 +2150,8 @@ namespace Microsoft.Cci.MetadataReader {
       uint fieldStart = this.PEFileReader.GetFieldInformation(moduleType.TypeDefRowId, out fieldCount);
       uint fieldEnd = fieldStart + fieldCount;
       if (this.PEFileReader.UseFieldPtrTable) {
-        for (uint fieldIter = fieldStart; fieldIter < fieldEnd; ++fieldIter) {
+        uint numberOfFieldPtrRows = this.PEFileReader.FieldPtrTable.NumberOfRows;
+        for (uint fieldIter = fieldStart; fieldIter < fieldEnd && fieldIter <= numberOfFieldPtrRows; ++fieldIter) {
           uint fieldRowId = this.PEFileReader.FieldPtrTable.GetFieldFor(fieldIter);
           FieldDefinition moduleField = this.ModuleFieldArray[fieldRowId];
           if (moduleField == null) {
@@ -2158,7 +2160,8 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
       } else {
-        for (uint fieldIter = fieldStart; fieldIter < fieldEnd; ++fieldIter) {
+        uint numberOfFieldRows = this.PEFileReader.FieldTable.NumberOfRows;
+        for (uint fieldIter = fieldStart; fieldIter < fieldEnd && fieldIter <= numberOfFieldRows; ++fieldIter) {
           FieldDefinition moduleField = this.ModuleFieldArray[fieldIter];
           if (moduleField == null) {
             moduleField = this.CreateField(fieldIter, moduleType);
@@ -2174,12 +2177,14 @@ namespace Microsoft.Cci.MetadataReader {
       uint fieldStart = this.PEFileReader.GetFieldInformation(moduleType.TypeDefRowId, out fieldCount);
       uint fieldEnd = fieldStart + fieldCount;
       if (this.PEFileReader.UseFieldPtrTable) {
-        for (uint fieldIter = fieldStart; fieldIter < fieldEnd; ++fieldIter) {
+        uint numberOfFieldPtrRows = this.PEFileReader.FieldPtrTable.NumberOfRows;
+        for (uint fieldIter = fieldStart; fieldIter < fieldEnd && fieldIter <= numberOfFieldPtrRows; ++fieldIter) {
           uint fieldRowId = this.PEFileReader.FieldPtrTable.GetFieldFor(fieldIter);
           yield return this.ModuleFieldArray[fieldRowId];
         }
       } else {
-        for (uint fieldIter = fieldStart; fieldIter < fieldEnd; ++fieldIter) {
+        uint numberOfFieldRows = this.PEFileReader.FieldTable.NumberOfRows;
+        for (uint fieldIter = fieldStart; fieldIter < fieldEnd && fieldIter <= numberOfFieldRows; ++fieldIter) {
           yield return this.ModuleFieldArray[fieldIter];
         }
       }
@@ -2191,7 +2196,8 @@ namespace Microsoft.Cci.MetadataReader {
       uint methodStart = this.PEFileReader.GetMethodInformation(moduleType.TypeDefRowId, out methodCount);
       uint methodEnd = methodStart + methodCount;
       if (this.PEFileReader.UseMethodPtrTable) {
-        for (uint methodIter = methodStart; methodIter < methodEnd; ++methodIter) {
+        uint numberOfMethodPtrRows = this.PEFileReader.MethodPtrTable.NumberOfRows;
+        for (uint methodIter = methodStart; methodIter < methodEnd && methodIter <= numberOfMethodPtrRows; ++methodIter) {
           uint methodRowId = this.PEFileReader.MethodPtrTable.GetMethodFor(methodIter);
           MethodDefinition moduleMethod = this.ModuleMethodArray[methodRowId];
           if (moduleMethod == null) {
@@ -2200,7 +2206,8 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
       } else {
-        for (uint methodIter = methodStart; methodIter < methodEnd; ++methodIter) {
+        uint numberOfMethodRows = this.PEFileReader.MethodTable.NumberOfRows;
+        for (uint methodIter = methodStart; methodIter < methodEnd && methodIter <= numberOfMethodRows; ++methodIter) {
           MethodDefinition moduleMethod = this.ModuleMethodArray[methodIter];
           if (moduleMethod == null) {
             moduleMethod = this.CreateMethod(methodIter, moduleType);
@@ -2216,12 +2223,14 @@ namespace Microsoft.Cci.MetadataReader {
       uint methodStart = this.PEFileReader.GetMethodInformation(moduleType.TypeDefRowId, out methodCount);
       uint methodEnd = methodStart + methodCount;
       if (this.PEFileReader.UseMethodPtrTable) {
-        for (uint methodIter = methodStart; methodIter < methodEnd; ++methodIter) {
+        uint numberOfMethodPtrRows = this.PEFileReader.MethodPtrTable.NumberOfRows;
+        for (uint methodIter = methodStart; methodIter < methodEnd && methodIter <= numberOfMethodPtrRows; ++methodIter) {
           uint methodRowId = this.PEFileReader.MethodPtrTable.GetMethodFor(methodIter);
           yield return this.ModuleMethodArray[methodRowId];
         }
       } else {
-        for (uint methodIter = methodStart; methodIter < methodEnd; ++methodIter) {
+        uint numberOfMethodRows = this.PEFileReader.MethodTable.NumberOfRows;
+        for (uint methodIter = methodStart; methodIter < methodEnd && methodIter <= numberOfMethodRows; ++methodIter) {
           yield return this.ModuleMethodArray[methodIter];
         }
       }
@@ -2233,7 +2242,8 @@ namespace Microsoft.Cci.MetadataReader {
       uint eventStart = this.PEFileReader.GetEventInformation(moduleType.TypeDefRowId, out eventCount);
       uint eventEnd = eventStart + eventCount;
       if (this.PEFileReader.UseEventPtrTable) {
-        for (uint eventIter = eventStart; eventIter < eventEnd; ++eventIter) {
+        uint numberOfEventPtrRows = this.PEFileReader.EventPtrTable.NumberOfRows;
+        for (uint eventIter = eventStart; eventIter < eventEnd && eventIter <= numberOfEventPtrRows; ++eventIter) {
           uint eventRowId = this.PEFileReader.EventPtrTable.GetEventFor(eventIter);
           EventDefinition moduleEvent = this.ModuleEventArray[eventRowId];
           if (moduleEvent == null) {
@@ -2242,7 +2252,8 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
       } else {
-        for (uint eventIter = eventStart; eventIter < eventEnd; ++eventIter) {
+        uint numberOfEventRows = this.PEFileReader.EventTable.NumberOfRows;
+        for (uint eventIter = eventStart; eventIter < eventEnd && eventIter <= numberOfEventRows; ++eventIter) {
           EventDefinition moduleEvent = this.ModuleEventArray[eventIter];
           if (moduleEvent == null) {
             moduleEvent = this.CreateEvent(eventIter, moduleType);
@@ -2258,12 +2269,14 @@ namespace Microsoft.Cci.MetadataReader {
       uint eventStart = this.PEFileReader.GetEventInformation(moduleType.TypeDefRowId, out eventCount);
       uint eventEnd = eventStart + eventCount;
       if (this.PEFileReader.UseEventPtrTable) {
-        for (uint eventIter = eventStart; eventIter < eventEnd; ++eventIter) {
+        uint numberOfEventPtrRows = this.PEFileReader.EventPtrTable.NumberOfRows;
+        for (uint eventIter = eventStart; eventIter < eventEnd && eventIter <= numberOfEventPtrRows; ++eventIter) {
           uint eventRowId = this.PEFileReader.EventPtrTable.GetEventFor(eventIter);
           yield return this.ModuleEventArray[eventRowId];
         }
       } else {
-        for (uint eventIter = eventStart; eventIter < eventEnd; ++eventIter) {
+        uint numberOfEventRows = this.PEFileReader.EventTable.NumberOfRows;
+        for (uint eventIter = eventStart; eventIter < eventEnd && eventIter <= numberOfEventRows; ++eventIter) {
           yield return this.ModuleEventArray[eventIter];
         }
       }
@@ -2275,7 +2288,8 @@ namespace Microsoft.Cci.MetadataReader {
       uint propertyStart = this.PEFileReader.GetPropertyInformation(moduleType.TypeDefRowId, out propertyCount);
       uint propertyEnd = propertyStart + propertyCount;
       if (this.PEFileReader.UsePropertyPtrTable) {
-        for (uint propertyIter = propertyStart; propertyIter < propertyEnd; ++propertyIter) {
+        uint numberOfPropertyPtrRows = this.PEFileReader.PropertyPtrTable.NumberOfRows;
+        for (uint propertyIter = propertyStart; propertyIter < propertyEnd && propertyIter <= numberOfPropertyPtrRows; ++propertyIter) {
           uint propertyRowId = this.PEFileReader.PropertyPtrTable.GetPropertyFor(propertyIter);
           PropertyDefinition moduleProperty = this.ModulePropertyArray[propertyRowId];
           if (moduleProperty == null) {
@@ -2284,7 +2298,8 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
       } else {
-        for (uint propertyIter = propertyStart; propertyIter < propertyEnd; ++propertyIter) {
+        uint numberOfPropertyRows = this.PEFileReader.PropertyTable.NumberOfRows;
+        for (uint propertyIter = propertyStart; propertyIter < propertyEnd && propertyIter <= numberOfPropertyRows; ++propertyIter) {
           PropertyDefinition moduleProperty = this.ModulePropertyArray[propertyIter];
           if (moduleProperty == null) {
             moduleProperty = this.CreateProperty(propertyIter, moduleType);
@@ -2300,12 +2315,14 @@ namespace Microsoft.Cci.MetadataReader {
       uint propertyStart = this.PEFileReader.GetPropertyInformation(moduleType.TypeDefRowId, out propertyCount);
       uint propertyEnd = propertyStart + propertyCount;
       if (this.PEFileReader.UsePropertyPtrTable) {
-        for (uint propertyIter = propertyStart; propertyIter < propertyEnd; ++propertyIter) {
+        uint numberOfPropertyPtrRows = this.PEFileReader.PropertyPtrTable.NumberOfRows;
+        for (uint propertyIter = propertyStart; propertyIter < propertyEnd && propertyIter <= numberOfPropertyPtrRows; ++propertyIter) {
           uint propertyRowId = this.PEFileReader.PropertyPtrTable.GetPropertyFor(propertyIter);
           yield return this.ModulePropertyArray[propertyRowId];
         }
       } else {
-        for (uint propertyIter = propertyStart; propertyIter < propertyEnd; ++propertyIter) {
+        uint numberOfPropertyRows = this.PEFileReader.PropertyTable.NumberOfRows;
+        for (uint propertyIter = propertyStart; propertyIter < propertyEnd && propertyIter <= numberOfPropertyRows; ++propertyIter) {
           yield return this.ModulePropertyArray[propertyIter];
         }
       }
