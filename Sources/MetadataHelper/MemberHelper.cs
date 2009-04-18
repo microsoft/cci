@@ -161,6 +161,7 @@ namespace Microsoft.Cci {
       foreach (ITypeReference interfaceReference in implementingMethod.ContainingTypeDefinition.Interfaces) {
         foreach (ITypeDefinitionMember interfaceMember in interfaceReference.ResolvedType.GetMembersNamed(implementingMethod.Name, false)) {
           IMethodDefinition/*?*/ interfaceMethod = interfaceMember as IMethodDefinition;
+          if (interfaceMethod == null) continue;
           if (MemberHelper.SignaturesAreEqual(implementingMethod, interfaceMethod))
             yield return interfaceMethod;
         }
