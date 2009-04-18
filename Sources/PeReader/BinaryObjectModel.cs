@@ -17,23 +17,23 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   #region Base Objects for Object Model
 
   internal interface IModuleModuleReference : IModuleReference {
-    uint InternedModuleId { get;}
+    uint InternedModuleId { get; }
   }
 
   internal interface IModuleMemberReference : ITypeMemberReference {
-    IModuleTypeReference/*?*/ OwningTypeReference { get;}
+    IModuleTypeReference/*?*/ OwningTypeReference { get; }
   }
 
   internal interface IModuleFieldReference : IModuleMemberReference, IFieldReference {
-    IModuleTypeReference/*?*/ FieldType { get;}
+    IModuleTypeReference/*?*/ FieldType { get; }
   }
 
   internal interface IModuleMethodReference : IModuleMemberReference, IMethodReference {
-    EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers { get;}
-    IModuleTypeReference/*?*/ ReturnType { get;}
-    bool IsReturnByReference { get;}
-    EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos { get;}
-    EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos { get;}
+    EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers { get; }
+    IModuleTypeReference/*?*/ ReturnType { get; }
+    bool IsReturnByReference { get; }
+    EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos { get; }
+    EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos { get; }
   }
 
   /// <summary>
@@ -47,7 +47,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ) {
       this.PEFileToObjectModel = peFileToObjectModel;
     }
-    internal abstract uint TokenValue { get;}
+    internal abstract uint TokenValue { get; }
 
     public IPlatformType PlatformType {
       get { return this.PEFileToObjectModel.PlatformType; }
@@ -89,7 +89,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal abstract class MetadataDefinitionObject : MetadataObject, IDefinition {
     protected MetadataDefinitionObject(
       PEFileToObjectModel peFileToObjectModel
-    ) : base(peFileToObjectModel) {
+    )
+      : base(peFileToObjectModel) {
     }
   }
 
@@ -803,7 +804,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
             this.PEFileToObjectModel.Module, this.UnifiedAssemblyIdentity);
           this.internedId = (uint)this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(unifiedProbedAssemblyIdentity);
         }
-        return this.internedId; 
+        return this.internedId;
       }
     }
     private uint internedId;
@@ -1084,7 +1085,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal abstract class NamespaceReference : MetadataObject,IUnitNamespaceReference {
+  internal abstract class NamespaceReference : MetadataObject, IUnitNamespaceReference {
     internal readonly IName NamespaceName;
     internal readonly IName NamespaceFullName;
     internal readonly IModuleModuleReference ModuleReference;
@@ -1239,7 +1240,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public abstract TypeMemberVisibility Visibility { get;}
+    public abstract TypeMemberVisibility Visibility { get; }
 
     #endregion
 
@@ -1767,7 +1768,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.GetMethodBody(this); }
     }
 
-    public abstract IEnumerable<IGenericMethodParameter> GenericParameters { get;}
+    public abstract IEnumerable<IGenericMethodParameter> GenericParameters { get; }
 
     public abstract ushort GenericParameterCount { get; }
 
@@ -1797,14 +1798,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsExternal {
-      get { return this.IsPlatformInvoke || this.IsRuntimeInternal || this.IsRuntimeImplemented || this.Body == Dummy.MethodBody; }
+      get {
+        return this.IsPlatformInvoke || this.IsRuntimeInternal || this.IsRuntimeImplemented || 
+        this.PEFileToObjectModel.PEFileReader.GetMethodIL(this.MethodDefRowId) == null;
+      }
     }
 
     public bool IsForwardReference {
       get { return (this.MethodImplFlags & MethodImplFlags.ForwardRefInterop) == MethodImplFlags.ForwardRefInterop; }
     }
 
-    public abstract bool IsGeneric { get;}
+    public abstract bool IsGeneric { get; }
 
     public bool IsHiddenBySignature {
       get { return (this.MethodFlags & MethodFlags.HideBySignatureContract) == MethodFlags.HideBySignatureContract; }
@@ -1908,7 +1912,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           return this.PEFileToObjectModel.GetMethodParameterCount(this);
         }
-        return (ushort)this.moduleParameters.RawArray.Length; 
+        return (ushort)this.moduleParameters.RawArray.Length;
       }
     }
 
@@ -2188,7 +2192,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         uint genericRowIdEnd = this.GenericParamRowIdEnd;
         for (uint genericParamIter = this.GenericParamRowIdStart; genericParamIter < genericRowIdEnd; ++genericParamIter) {
           GenericMethodParameter/*?*/ mgmp = this.PEFileToObjectModel.GetGenericMethodParamAtRow(genericParamIter, this);
-          if (mgmp == null) 
+          if (mgmp == null)
             yield return Dummy.GenericMethodParameter;
           else
             yield return mgmp;
@@ -2391,7 +2395,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public IMethodReference Adder {
       get {
         if (this.AdderMethod == Dummy.Method) return Dummy.MethodReference;
-        return this.AdderMethod; 
+        return this.AdderMethod;
       }
     }
 
@@ -2410,7 +2414,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public IMethodReference Remover {
       get {
         if (this.RemoverMethod == Dummy.Method) return Dummy.MethodReference;
-        return this.RemoverMethod; 
+        return this.RemoverMethod;
       }
     }
 
@@ -2605,7 +2609,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnModuleCustomModifiers == null) {
           this.InitPropertySignature();
         }
-        return (this.PropertyFlags & PropertyFlags.ReturnValueIsByReference) != 0; 
+        return (this.PropertyFlags & PropertyFlags.ReturnValueIsByReference) != 0;
       }
     }
 
@@ -2657,7 +2661,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.OwningModuleGenericTypeInstance = owningModuleGenericTypeInstance;
     }
 
-    internal abstract TypeMember RawTemplateModuleTypeMember { get;}
+    internal abstract TypeMember RawTemplateModuleTypeMember { get; }
 
     //^ [Confined]
     public override string ToString() {
@@ -2885,7 +2889,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(owningModuleGenericTypeInstance) {
     }
 
-    internal abstract MethodDefinition RawTemplateModuleMethod { get;}
+    internal abstract MethodDefinition RawTemplateModuleMethod { get; }
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -2906,7 +2910,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return Dummy.MethodBody; }
     }
 
-    public abstract IEnumerable<IGenericMethodParameter> GenericParameters { get;}
+    public abstract IEnumerable<IGenericMethodParameter> GenericParameters { get; }
 
     public abstract ushort GenericParameterCount { get; }
 
@@ -2938,7 +2942,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.RawTemplateModuleMethod.IsForwardReference; }
     }
 
-    public abstract bool IsGeneric { get;}
+    public abstract bool IsGeneric { get; }
 
     public bool IsHiddenBySignature {
       get { return this.RawTemplateModuleMethod.IsHiddenBySignature; }
@@ -4445,7 +4449,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           return (ushort)this.PEFileToObjectModel.GetMethodRefGenericParameterCount(this);
         }
-        return this.genericParameterCount; 
+        return this.genericParameterCount;
       }
     }
 
@@ -4464,7 +4468,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
         }
-        return this.genericParameterCount > 0; 
+        return this.genericParameterCount > 0;
       }
     }
 
