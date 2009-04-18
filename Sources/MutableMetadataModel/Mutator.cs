@@ -17,7 +17,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     void Copy(ImmutableObject objectToCopy, IInternFactory internFactory);
   }
 
-  public class MetadataMutator  {
+  public class MetadataMutator {
 
     public MetadataMutator(IMetadataHost host) {
       this.host = host;
@@ -90,258 +90,713 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.Unit;
     }
 
-    public MutableObject GetMutableCopy<MutableObject, ImmutableObject>(ImmutableObject objectToCopy)
-      where MutableObject : class, ImmutableObject, ICopyFrom<ImmutableObject>, new() {
-      MutableObject/*?*/ result;
-      if (this.copyOnlyIfNotAlreadyMutable){
-        result = objectToCopy as MutableObject;
-        if (result != null) return result;
-      }
-      object/*?*/ cachedValue = null;
-      this.cache.TryGetValue(objectToCopy, out cachedValue);
-      result = cachedValue as MutableObject;
-      if (result != null) return result;
-      result = new MutableObject();
-      this.cache.Add(objectToCopy, result);
-      this.cache.Add(result, result);
-      result.Copy(objectToCopy, this.host.InternFactory);
-      return result;
-    }
-
-    public MutableObject GetMutableCopyOfReference<MutableObject, ImmutableObject>(ImmutableObject objectToCopy)
-      where MutableObject : class, ImmutableObject, ICopyFrom<ImmutableObject>, new() {
-      MutableObject/*?*/ result;
-      if (this.copyOnlyIfNotAlreadyMutable) {
-        result = objectToCopy as MutableObject;
-        if (result != null) return result;
-      }
-      object/*?*/ cachedValue = null;
-      this.referenceCache.TryGetValue(objectToCopy, out cachedValue);
-      result = cachedValue as MutableObject;
-      if (result != null) return result;
-      result = new MutableObject();
-      if (objectToCopy is ISpecializedMethodReference && !(result is ISpecializedMethodReference)) {
-      }
-      this.referenceCache.Add(objectToCopy, result);
-      this.referenceCache.Add(result, result);
-      result.Copy(objectToCopy, this.host.InternFactory);
-      return result;
-    }
-
     public virtual Assembly GetMutableCopy(IAssembly assembly) {
-      return this.GetMutableCopy<Assembly, IAssembly>(assembly);
+      Assembly/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = assembly as Assembly;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(assembly, out cachedValue);
+      result = cachedValue as Assembly;
+      if (result != null) return result;
+      result = new Assembly();
+      this.cache.Add(assembly, result);
+      this.cache.Add(result, result);
+      result.Copy(assembly, this.host.InternFactory);
+      return result;
     }
 
     public virtual AssemblyReference GetMutableCopy(IAssemblyReference assemblyReference) {
-      return this.GetMutableCopyOfReference<AssemblyReference, IAssemblyReference>(assemblyReference);
+      AssemblyReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = assemblyReference as AssemblyReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(assemblyReference, out cachedValue);
+      result = cachedValue as AssemblyReference;
+      if (result != null) return result;
+      result = new AssemblyReference();
+      this.referenceCache.Add(assemblyReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(assemblyReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual CustomAttribute GetMutableCopy(ICustomAttribute customAttribute) {
-      return this.GetMutableCopy<CustomAttribute, ICustomAttribute>(customAttribute);
+      CustomAttribute result = new CustomAttribute();
+      result.Copy(customAttribute, this.host.InternFactory);
+      return result;
     }
 
     public virtual CustomModifier GetMutableCopy(ICustomModifier customModifier) {
-      return this.GetMutableCopy<CustomModifier, ICustomModifier>(customModifier);
+      CustomModifier result = new CustomModifier();
+      result.Copy(customModifier, this.host.InternFactory);
+      return result;
     }
 
     public virtual EventDefinition GetMutableCopy(IEventDefinition eventDefinition) {
-      return this.GetMutableCopy<EventDefinition, IEventDefinition>(eventDefinition);
+      EventDefinition result = new EventDefinition();
+      result.Copy(eventDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual FieldDefinition GetMutableCopy(IFieldDefinition fieldDefinition) {
-      return this.GetMutableCopy<FieldDefinition, IFieldDefinition>(fieldDefinition);
+      FieldDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = fieldDefinition as FieldDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(fieldDefinition, out cachedValue);
+      result = cachedValue as FieldDefinition;
+      if (result != null) return result;
+      result = new FieldDefinition();
+      this.cache.Add(fieldDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(fieldDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual FieldReference GetMutableCopy(IFieldReference fieldReference) {
-      return this.GetMutableCopyOfReference<FieldReference, IFieldReference>(fieldReference);
+      FieldReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = fieldReference as FieldReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(fieldReference, out cachedValue);
+      result = cachedValue as FieldReference;
+      if (result != null) return result;
+      result = new FieldReference();
+      this.referenceCache.Add(fieldReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(fieldReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual FileReference GetMutableCopy(IFileReference fileReference) {
-      return this.GetMutableCopyOfReference<FileReference, IFileReference>(fileReference);
+      FileReference result = new FileReference();
+      result.Copy(fileReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual FunctionPointerTypeReference GetMutableCopy(IFunctionPointerTypeReference functionPointerTypeReference) {
-      return this.GetMutableCopyOfReference<FunctionPointerTypeReference, IFunctionPointerTypeReference>(functionPointerTypeReference);
+      FunctionPointerTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = functionPointerTypeReference as FunctionPointerTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(functionPointerTypeReference, out cachedValue);
+      result = cachedValue as FunctionPointerTypeReference;
+      if (result != null) return result;
+      result = new FunctionPointerTypeReference();
+      this.referenceCache.Add(functionPointerTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(functionPointerTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual GenericMethodInstanceReference GetMutableCopy(IGenericMethodInstanceReference genericMethodInstanceReference) {
-      return this.GetMutableCopyOfReference<GenericMethodInstanceReference, IGenericMethodInstanceReference>(genericMethodInstanceReference);
+      GenericMethodInstanceReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = genericMethodInstanceReference as GenericMethodInstanceReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(genericMethodInstanceReference, out cachedValue);
+      result = cachedValue as GenericMethodInstanceReference;
+      if (result != null) return result;
+      result = new GenericMethodInstanceReference();
+      this.referenceCache.Add(genericMethodInstanceReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(genericMethodInstanceReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual GenericMethodParameter GetMutableCopy(IGenericMethodParameter genericMethodParameter) {
-      return this.GetMutableCopy<GenericMethodParameter, IGenericMethodParameter>(genericMethodParameter);
+      GenericMethodParameter/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = genericMethodParameter as GenericMethodParameter;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(genericMethodParameter, out cachedValue);
+      result = cachedValue as GenericMethodParameter;
+      if (result != null) return result;
+      result = new GenericMethodParameter();
+      this.cache.Add(genericMethodParameter, result);
+      this.cache.Add(result, result);
+      result.Copy(genericMethodParameter, this.host.InternFactory);
+      return result;
     }
 
     public virtual GenericMethodParameterReference GetMutableCopy(IGenericMethodParameterReference genericMethodParameterReference) {
-      return this.GetMutableCopyOfReference<GenericMethodParameterReference, IGenericMethodParameterReference>(genericMethodParameterReference);
+      GenericMethodParameterReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = genericMethodParameterReference as GenericMethodParameterReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(genericMethodParameterReference, out cachedValue);
+      result = cachedValue as GenericMethodParameterReference;
+      if (result != null) return result;
+      result = new GenericMethodParameterReference();
+      this.referenceCache.Add(genericMethodParameterReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(genericMethodParameterReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual GenericTypeInstanceReference GetMutableCopy(IGenericTypeInstanceReference genericTypeInstanceReference) {
-      return this.GetMutableCopyOfReference<GenericTypeInstanceReference, IGenericTypeInstanceReference>(genericTypeInstanceReference);
+      GenericTypeInstanceReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = genericTypeInstanceReference as GenericTypeInstanceReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(genericTypeInstanceReference, out cachedValue);
+      result = cachedValue as GenericTypeInstanceReference;
+      if (result != null) return result;
+      result = new GenericTypeInstanceReference();
+      this.referenceCache.Add(genericTypeInstanceReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(genericTypeInstanceReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual GenericTypeParameter GetMutableCopy(IGenericTypeParameter genericTypeParameter) {
-      return this.GetMutableCopy<GenericTypeParameter, IGenericTypeParameter>(genericTypeParameter);
+      GenericTypeParameter/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = genericTypeParameter as GenericTypeParameter;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(genericTypeParameter, out cachedValue);
+      result = cachedValue as GenericTypeParameter;
+      if (result != null) return result;
+      result = new GenericTypeParameter();
+      this.cache.Add(genericTypeParameter, result);
+      this.cache.Add(result, result);
+      result.Copy(genericTypeParameter, this.host.InternFactory);
+      return result;
     }
 
     public virtual GenericTypeParameterReference GetMutableCopy(IGenericTypeParameterReference genericTypeParameterReference) {
-      return this.GetMutableCopyOfReference<GenericTypeParameterReference, IGenericTypeParameterReference>(genericTypeParameterReference);
+      GenericTypeParameterReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = genericTypeParameterReference as GenericTypeParameterReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(genericTypeParameterReference, out cachedValue);
+      result = cachedValue as GenericTypeParameterReference;
+      if (result != null) return result;
+      result = new GenericTypeParameterReference();
+      this.referenceCache.Add(genericTypeParameterReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(genericTypeParameterReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual GlobalFieldDefinition GetMutableCopy(IGlobalFieldDefinition globalFieldDefinition) {
-      return this.GetMutableCopy<GlobalFieldDefinition, IGlobalFieldDefinition>(globalFieldDefinition);
+      GlobalFieldDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = globalFieldDefinition as GlobalFieldDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(globalFieldDefinition, out cachedValue);
+      result = cachedValue as GlobalFieldDefinition;
+      if (result != null) return result;
+      result = new GlobalFieldDefinition();
+      this.cache.Add(globalFieldDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(globalFieldDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual GlobalMethodDefinition GetMutableCopy(IGlobalMethodDefinition globalMethodDefinition) {
-      return this.GetMutableCopy<GlobalMethodDefinition, IGlobalMethodDefinition>(globalMethodDefinition);
+      GlobalMethodDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = globalMethodDefinition as GlobalMethodDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(globalMethodDefinition, out cachedValue);
+      result = cachedValue as GlobalMethodDefinition;
+      if (result != null) return result;
+      result = new GlobalMethodDefinition();
+      this.cache.Add(globalMethodDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(globalMethodDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual LocalDefinition GetMutableCopy(ILocalDefinition localDefinition) {
-      return this.GetMutableCopy<LocalDefinition, ILocalDefinition>(localDefinition);
+      LocalDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = localDefinition as LocalDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(localDefinition, out cachedValue);
+      result = cachedValue as LocalDefinition;
+      if (result != null) return result;
+      result = new LocalDefinition();
+      this.cache.Add(localDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(localDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual MarshallingInformation GetMutableCopy(IMarshallingInformation marshallingInformation) {
-      return this.GetMutableCopy<MarshallingInformation, IMarshallingInformation>(marshallingInformation);
+      MarshallingInformation result = new MarshallingInformation();
+      result.Copy(marshallingInformation, this.host.InternFactory);
+      return result;
     }
 
     public virtual MetadataConstant GetMutableCopy(IMetadataConstant metadataConstant) {
-      return this.GetMutableCopy<MetadataConstant, IMetadataConstant>(metadataConstant);
+      MetadataConstant result = new MetadataConstant();
+      result.Copy(metadataConstant, this.host.InternFactory);
+      return result;
     }
 
     public virtual MetadataCreateArray GetMutableCopy(IMetadataCreateArray metadataCreateArray) {
-      return this.GetMutableCopy<MetadataCreateArray, IMetadataCreateArray>(metadataCreateArray);
+      MetadataCreateArray result = new MetadataCreateArray();
+      result.Copy(metadataCreateArray, this.host.InternFactory);
+      return result;
     }
 
     public virtual MetadataNamedArgument GetMutableCopy(IMetadataNamedArgument metadataNamedArgument) {
-      return this.GetMutableCopy<MetadataNamedArgument, IMetadataNamedArgument>(metadataNamedArgument);
+      MetadataNamedArgument result = new MetadataNamedArgument();
+      result.Copy(metadataNamedArgument, this.host.InternFactory);
+      return result;
     }
 
     public virtual MetadataTypeOf GetMutableCopy(IMetadataTypeOf metadataTypeOf) {
-      return this.GetMutableCopy<MetadataTypeOf, IMetadataTypeOf>(metadataTypeOf);
+      MetadataTypeOf result = new MetadataTypeOf();
+      result.Copy(metadataTypeOf, this.host.InternFactory);
+      return result;
     }
 
     public virtual MethodDefinition GetMutableCopy(IMethodDefinition methodDefinition) {
-      return this.GetMutableCopy<MethodDefinition, IMethodDefinition>(methodDefinition);
+      MethodDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = methodDefinition as MethodDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(methodDefinition, out cachedValue);
+      result = cachedValue as MethodDefinition;
+      if (result != null) return result;
+      result = new MethodDefinition();
+      this.cache.Add(methodDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(methodDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual MethodBody GetMutableCopy(IMethodBody methodBody) {
-      return this.GetMutableCopy<MethodBody, IMethodBody>(methodBody);
+      MethodBody result = new MethodBody();
+      result.Copy(methodBody, this.host.InternFactory);
+      return result;
     }
 
     public virtual MethodImplementation GetMutableCopy(IMethodImplementation methodImplementation) {
-      return this.GetMutableCopy<MethodImplementation, IMethodImplementation>(methodImplementation);
+      MethodImplementation result = new MethodImplementation();
+      result.Copy(methodImplementation, this.host.InternFactory);
+      return result;
     }
 
     public virtual MethodReference GetMutableCopy(IMethodReference methodReference) {
-      return this.GetMutableCopyOfReference<MethodReference, IMethodReference>(methodReference);
+      MethodReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = methodReference as MethodReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(methodReference, out cachedValue);
+      result = cachedValue as MethodReference;
+      if (result != null) return result;
+      result = new MethodReference();
+      this.referenceCache.Add(methodReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(methodReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual ModifiedTypeReference GetMutableCopy(IModifiedTypeReference modifiedTypeReference) {
-      return this.GetMutableCopyOfReference<ModifiedTypeReference, IModifiedTypeReference>(modifiedTypeReference);
+      ModifiedTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = modifiedTypeReference as ModifiedTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(modifiedTypeReference, out cachedValue);
+      result = cachedValue as ModifiedTypeReference;
+      if (result != null) return result;
+      result = new ModifiedTypeReference();
+      this.referenceCache.Add(modifiedTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(modifiedTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual Module GetMutableCopy(IModule module) {
-      return this.GetMutableCopy<Module, IModule>(module);
+      Module/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = module as Module;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(module, out cachedValue);
+      result = cachedValue as Module;
+      if (result != null) return result;
+      result = new Module();
+      this.cache.Add(module, result);
+      this.cache.Add(result, result);
+      result.Copy(module, this.host.InternFactory);
+      return result;
     }
 
     public virtual ModuleReference GetMutableCopy(IModuleReference moduleReference) {
-      return this.GetMutableCopyOfReference<ModuleReference, IModuleReference>(moduleReference);
+      ModuleReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = moduleReference as ModuleReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(moduleReference, out cachedValue);
+      result = cachedValue as ModuleReference;
+      if (result != null) return result;
+      result = new ModuleReference();
+      this.referenceCache.Add(moduleReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(moduleReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual NamespaceAliasForType GetMutableCopy(INamespaceAliasForType namespaceAliasForType) {
-      return this.GetMutableCopy<NamespaceAliasForType, INamespaceAliasForType>(namespaceAliasForType);
+      NamespaceAliasForType result = new NamespaceAliasForType();
+      result.Copy(namespaceAliasForType, this.host.InternFactory);
+      return result;
     }
 
     public virtual NamespaceTypeDefinition GetMutableCopy(INamespaceTypeDefinition namespaceTypeDefinition) {
-      return this.GetMutableCopy<NamespaceTypeDefinition, INamespaceTypeDefinition>(namespaceTypeDefinition);
+      NamespaceTypeDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = namespaceTypeDefinition as NamespaceTypeDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(namespaceTypeDefinition, out cachedValue);
+      result = cachedValue as NamespaceTypeDefinition;
+      if (result != null) return result;
+      result = new NamespaceTypeDefinition();
+      this.cache.Add(namespaceTypeDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(namespaceTypeDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual NamespaceTypeReference GetMutableCopy(INamespaceTypeReference namespaceTypeReference) {
-      return this.GetMutableCopyOfReference<NamespaceTypeReference, INamespaceTypeReference>(namespaceTypeReference);
+      NamespaceTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = namespaceTypeReference as NamespaceTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(namespaceTypeReference, out cachedValue);
+      result = cachedValue as NamespaceTypeReference;
+      if (result != null) return result;
+      result = new NamespaceTypeReference();
+      this.referenceCache.Add(namespaceTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(namespaceTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual NestedAliasForType GetMutableCopy(INestedAliasForType nestedAliasForType) {
-      return this.GetMutableCopy<NestedAliasForType, INestedAliasForType>(nestedAliasForType);
+      NestedAliasForType result = new NestedAliasForType();
+      result.Copy(nestedAliasForType, this.host.InternFactory);
+      return result;
     }
 
     public virtual NestedTypeDefinition GetMutableCopy(INestedTypeDefinition nestedTypeDefinition) {
-      return this.GetMutableCopy<NestedTypeDefinition, INestedTypeDefinition>(nestedTypeDefinition);
+      NestedTypeDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = nestedTypeDefinition as NestedTypeDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(nestedTypeDefinition, out cachedValue);
+      result = cachedValue as NestedTypeDefinition;
+      if (result != null) return result;
+      result = new NestedTypeDefinition();
+      this.cache.Add(nestedTypeDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(nestedTypeDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual NestedTypeReference GetMutableCopy(INestedTypeReference nestedTypeReference) {
-      return this.GetMutableCopyOfReference<NestedTypeReference, INestedTypeReference>(nestedTypeReference);
+      NestedTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = nestedTypeReference as NestedTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(nestedTypeReference, out cachedValue);
+      result = cachedValue as NestedTypeReference;
+      if (result != null) return result;
+      result = new NestedTypeReference();
+      this.referenceCache.Add(nestedTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(nestedTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual NestedUnitNamespace GetMutableCopy(INestedUnitNamespace nestedUnitNamespace) {
-      return this.GetMutableCopy<NestedUnitNamespace, INestedUnitNamespace>(nestedUnitNamespace);
+      NestedUnitNamespace/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = nestedUnitNamespace as NestedUnitNamespace;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(nestedUnitNamespace, out cachedValue);
+      result = cachedValue as NestedUnitNamespace;
+      if (result != null) return result;
+      result = new NestedUnitNamespace();
+      this.cache.Add(nestedUnitNamespace, result);
+      this.cache.Add(result, result);
+      result.Copy(nestedUnitNamespace, this.host.InternFactory);
+      return result;
     }
 
     public virtual NestedUnitNamespaceReference GetMutableCopy(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
-      return this.GetMutableCopyOfReference<NestedUnitNamespaceReference, INestedUnitNamespaceReference>(nestedUnitNamespaceReference);
+      NestedUnitNamespaceReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = nestedUnitNamespaceReference as NestedUnitNamespaceReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(nestedUnitNamespaceReference, out cachedValue);
+      result = cachedValue as NestedUnitNamespaceReference;
+      if (result != null) return result;
+      result = new NestedUnitNamespaceReference();
+      this.referenceCache.Add(nestedUnitNamespaceReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(nestedUnitNamespaceReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual Operation GetMutableCopy(IOperation operation) {
-      return this.GetMutableCopy<Operation, IOperation>(operation);
+      var result = new Operation();
+      result.Copy(operation, this.host.InternFactory);
+      return result;
     }
 
     public virtual OperationExceptionInformation GetMutableCopy(IOperationExceptionInformation operationExceptionInformation) {
-      return this.GetMutableCopy<OperationExceptionInformation, IOperationExceptionInformation>(operationExceptionInformation);
+      var result = new OperationExceptionInformation();
+      result.Copy(operationExceptionInformation, this.host.InternFactory);
+      return result;
     }
 
     public virtual ParameterDefinition GetMutableCopy(IParameterDefinition parameterDefinition) {
-      return this.GetMutableCopy<ParameterDefinition, IParameterDefinition>(parameterDefinition);
+      ParameterDefinition/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = parameterDefinition as ParameterDefinition;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(parameterDefinition, out cachedValue);
+      result = cachedValue as ParameterDefinition;
+      if (result != null) return result;
+      result = new ParameterDefinition();
+      this.cache.Add(parameterDefinition, result);
+      this.cache.Add(result, result);
+      result.Copy(parameterDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual ParameterTypeInformation GetMutableCopy(IParameterTypeInformation parameterTypeInformation) {
-      return this.GetMutableCopyOfReference<ParameterTypeInformation, IParameterTypeInformation>(parameterTypeInformation);
+      var result = new ParameterTypeInformation();
+      result.Copy(parameterTypeInformation, this.host.InternFactory);
+      return result;
     }
 
     public virtual PlatformInvokeInformation GetMutableCopy(IPlatformInvokeInformation platformInvokeInformation) {
-      return this.GetMutableCopy<PlatformInvokeInformation, IPlatformInvokeInformation>(platformInvokeInformation);
+      var result = new PlatformInvokeInformation();
+      result.Copy(platformInvokeInformation, this.host.InternFactory);
+      return result;
     }
 
     public virtual PointerTypeReference GetMutableCopy(IPointerTypeReference pointerTypeReference) {
-      return this.GetMutableCopyOfReference<PointerTypeReference, IPointerTypeReference>(pointerTypeReference);
+      PointerTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = pointerTypeReference as PointerTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(pointerTypeReference, out cachedValue);
+      result = cachedValue as PointerTypeReference;
+      if (result != null) return result;
+      result = new PointerTypeReference();
+      this.referenceCache.Add(pointerTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(pointerTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual PropertyDefinition GetMutableCopy(IPropertyDefinition propertyDefinition) {
-      return this.GetMutableCopy<PropertyDefinition, IPropertyDefinition>(propertyDefinition);
+      var result = new PropertyDefinition();
+      result.Copy(propertyDefinition, this.host.InternFactory);
+      return result;
     }
 
     public virtual ResourceReference GetMutableCopy(IResourceReference resourceReference) {
-      return this.GetMutableCopy<ResourceReference, IResourceReference>(resourceReference);
+      ResourceReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = resourceReference as ResourceReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(resourceReference, out cachedValue);
+      result = cachedValue as ResourceReference;
+      if (result != null) return result;
+      result = new ResourceReference();
+      this.referenceCache.Add(resourceReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(resourceReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual RootUnitNamespace GetMutableCopy(IRootUnitNamespace rootUnitNamespace) {
-      return this.GetMutableCopy<RootUnitNamespace, IRootUnitNamespace>(rootUnitNamespace);
+      RootUnitNamespace/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = rootUnitNamespace as RootUnitNamespace;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(rootUnitNamespace, out cachedValue);
+      result = cachedValue as RootUnitNamespace;
+      if (result != null) return result;
+      result = new RootUnitNamespace();
+      this.cache.Add(rootUnitNamespace, result);
+      this.cache.Add(result, result);
+      result.Copy(rootUnitNamespace, this.host.InternFactory);
+      return result;
     }
 
     public virtual RootUnitNamespaceReference GetMutableCopy(IRootUnitNamespaceReference rootUnitNamespaceReference) {
-      return this.GetMutableCopyOfReference<RootUnitNamespaceReference, IRootUnitNamespaceReference>(rootUnitNamespaceReference);
+      RootUnitNamespaceReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = rootUnitNamespaceReference as RootUnitNamespaceReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(rootUnitNamespaceReference, out cachedValue);
+      result = cachedValue as RootUnitNamespaceReference;
+      if (result != null) return result;
+      result = new RootUnitNamespaceReference();
+      this.referenceCache.Add(rootUnitNamespaceReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(rootUnitNamespaceReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual SecurityAttribute GetMutableCopy(ISecurityAttribute securityAttribute) {
-      return this.GetMutableCopy<SecurityAttribute, ISecurityAttribute>(securityAttribute);
+      var result = new SecurityAttribute();
+      result.Copy(securityAttribute, this.host.InternFactory);
+      return result;
     }
 
     public virtual SpecializedFieldReference GetMutableCopy(ISpecializedFieldReference specializedFieldReference) {
-      return this.GetMutableCopyOfReference<SpecializedFieldReference, ISpecializedFieldReference>(specializedFieldReference);
+      SpecializedFieldReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = specializedFieldReference as SpecializedFieldReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(specializedFieldReference, out cachedValue);
+      result = cachedValue as SpecializedFieldReference;
+      if (result != null) return result;
+      result = new SpecializedFieldReference();
+      this.referenceCache.Add(specializedFieldReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(specializedFieldReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual SpecializedMethodReference GetMutableCopy(ISpecializedMethodReference specializedMethodReference) {
-      return this.GetMutableCopyOfReference<SpecializedMethodReference, ISpecializedMethodReference>(specializedMethodReference);
+      SpecializedMethodReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = specializedMethodReference as SpecializedMethodReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(specializedMethodReference, out cachedValue);
+      result = cachedValue as SpecializedMethodReference;
+      if (result != null) return result;
+      result = new SpecializedMethodReference();
+      this.referenceCache.Add(specializedMethodReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(specializedMethodReference, this.host.InternFactory);
+      return result;
     }
 
-    public virtual SpecializedNestedTypeReference GetMutableCopy (ISpecializedNestedTypeReference specializedNestedTypeReference) {
-      return this.GetMutableCopyOfReference<SpecializedNestedTypeReference, ISpecializedNestedTypeReference>(specializedNestedTypeReference);
+    public virtual SpecializedNestedTypeReference GetMutableCopy(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      SpecializedNestedTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = specializedNestedTypeReference as SpecializedNestedTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(specializedNestedTypeReference, out cachedValue);
+      result = cachedValue as SpecializedNestedTypeReference;
+      if (result != null) return result;
+      result = new SpecializedNestedTypeReference();
+      this.referenceCache.Add(specializedNestedTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(specializedNestedTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual MatrixTypeReference GetMutableMatrixCopy(IArrayTypeReference matrixTypeReference) {
-      return this.GetMutableCopyOfReference<MatrixTypeReference, IArrayTypeReference>(matrixTypeReference);
+      MatrixTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = matrixTypeReference as MatrixTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(matrixTypeReference, out cachedValue);
+      result = cachedValue as MatrixTypeReference;
+      if (result != null) return result;
+      result = new MatrixTypeReference();
+      this.referenceCache.Add(matrixTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(matrixTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual VectorTypeReference GetMutableVectorCopy(IArrayTypeReference vectorTypeReference) {
-      return this.GetMutableCopyOfReference<VectorTypeReference, IArrayTypeReference>(vectorTypeReference);
+      VectorTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = vectorTypeReference as VectorTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(vectorTypeReference, out cachedValue);
+      result = cachedValue as VectorTypeReference;
+      if (result != null) return result;
+      result = new VectorTypeReference();
+      this.referenceCache.Add(vectorTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(vectorTypeReference, this.host.InternFactory);
+      return result;
     }
 
     public virtual IMethodReference GetTypeSpecificMutableCopy(IMethodReference methodReference) {
@@ -410,7 +865,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         object/*?*/ mutatedResolvedAssembly = null;
         if (this.cache.TryGetValue(assemblyReference.ResolvedAssembly, out mutatedResolvedAssembly))
           assemblyReference.ResolvedAssembly = (IAssembly)mutatedResolvedAssembly;
-      }      
+      }
       return assemblyReference;
     }
 
@@ -449,7 +904,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<IEventDefinition> Visit(List<IEventDefinition> eventDefinitions) {
       if (this.stopTraversal) return eventDefinitions;
       for (int i = 0, n = eventDefinitions.Count; i < n; i++)
-        eventDefinitions[i] = this.Visit(this.GetMutableCopy(eventDefinitions[i]));
+        eventDefinitions[i] = this.Visit(eventDefinitions[i]);
       return eventDefinitions;
     }
 
@@ -474,7 +929,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<IFieldDefinition> Visit(List<IFieldDefinition> fieldDefinitions) {
       if (this.stopTraversal) return fieldDefinitions;
       for (int i = 0, n = fieldDefinitions.Count; i < n; i++)
-        fieldDefinitions[i] = this.Visit(this.GetMutableCopy(fieldDefinitions[i]));
+        fieldDefinitions[i] = this.Visit(fieldDefinitions[i]);
       return fieldDefinitions;
     }
 
@@ -649,7 +1104,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return locations;
     }
 
-    public virtual ILocation Visit(ILocation location){
+    public virtual ILocation Visit(ILocation location) {
       return location;
     }
 
@@ -1009,7 +1464,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<IModuleReference> Visit(List<IModuleReference> moduleReferences) {
       if (this.stopTraversal) return moduleReferences;
       for (int i = 0, n = moduleReferences.Count; i < n; i++)
-        moduleReferences[i] = this.Visit(this.GetMutableCopy(moduleReferences[i]));
+        moduleReferences[i] = this.Visit(moduleReferences[i]);
       return moduleReferences;
     }
 
@@ -1083,7 +1538,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<INestedTypeDefinition> Visit(List<INestedTypeDefinition> nestedTypeDefinitions) {
       if (this.stopTraversal) return nestedTypeDefinitions;
       for (int i = 0, n = nestedTypeDefinitions.Count; i < n; i++)
-        nestedTypeDefinitions[i] = this.Visit(this.GetMutableCopy(nestedTypeDefinitions[i]));
+        nestedTypeDefinitions[i] = this.Visit(nestedTypeDefinitions[i]);
       return nestedTypeDefinitions;
     }
 
@@ -1247,7 +1702,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Pointer types are not nominal types, so always visit the reference, even if
     /// it is a definition.
     /// </summary>
-    public virtual IPointerTypeReference Visit (IPointerTypeReference pointerTypeReference) {
+    public virtual IPointerTypeReference Visit(IPointerTypeReference pointerTypeReference) {
       return this.Visit(this.GetMutableCopy(pointerTypeReference));
     }
 
@@ -1403,7 +1858,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<IPropertyDefinition> Visit(List<IPropertyDefinition> propertyDefinitions) {
       if (this.stopTraversal) return propertyDefinitions;
       for (int i = 0, n = propertyDefinitions.Count; i < n; i++)
-        propertyDefinitions[i] = this.Visit(this.GetMutableCopy(propertyDefinitions[i]));
+        propertyDefinitions[i] = this.Visit(propertyDefinitions[i]);
       return propertyDefinitions;
     }
 
