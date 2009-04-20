@@ -69,9 +69,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IModuleTypeReference/*?*/ SpecializeMethodInstance(
       IModuleGenericMethodInstance genericMethodInstance
     );
-    IModuleTypeDefAndRef/*?*/ ResolvedModuleType { get;}
-    ModuleTypeKind ModuleTypeKind { get;}
-    ModuleSignatureTypeCode SignatureTypeCode { get;}
+    IModuleTypeDefAndRef/*?*/ ResolvedModuleType { get; }
+    ModuleTypeKind ModuleTypeKind { get; }
+    ModuleSignatureTypeCode SignatureTypeCode { get; }
   }
 
   internal interface IModuleSpecializedNestedTypeReference : ISpecializedNestedTypeReference {
@@ -97,11 +97,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   /// and parent type reference in case of nested type.
   /// </summary>
   internal interface IModuleNominalType : IModuleTypeReference {
-    IModuleModuleReference ModuleReference { get;}
-    IModuleNominalType/*?*/ ParentTypeReference { get;}
-    IName/*?*/ NamespaceFullName { get;}
-    IName MangledTypeName { get;}
-    IModuleTypeReference/*?*/ EnumUnderlyingType { get;}
+    IModuleModuleReference ModuleReference { get; }
+    IModuleNominalType/*?*/ ParentTypeReference { get; }
+    IName/*?*/ NamespaceFullName { get; }
+    IName MangledTypeName { get; }
+    IModuleTypeReference/*?*/ EnumUnderlyingType { get; }
   }
 
   internal interface IModuleNamespaceType : INamespaceTypeReference, IModuleNominalType {
@@ -132,7 +132,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal interface IModuleGenericTypeInstance : IModuleTypeReference {
     IModuleTypeReference ModuleGenericTypeReference { get; }
-    PEFileToObjectModel PEFileToObjectModel { get;}
+    PEFileToObjectModel PEFileToObjectModel { get; }
     ushort GenericTypeArgumentCardinality { get; }
     ushort ParentGenericTypeArgumentCardinality { get; }
     IModuleTypeReference/*?*/ GetGenericTypeArgumentFromOrdinal(
@@ -141,8 +141,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal interface IModuleGenericMethodInstance : IGenericMethodInstanceReference {
-    PEFileToObjectModel PEFileToObjectModel { get;}
-    IModuleMethodReference RawGenericTemplate { get;}
+    PEFileToObjectModel PEFileToObjectModel { get; }
+    IModuleMethodReference RawGenericTemplate { get; }
     ushort GenericMethodArgumentCardinality { get; }
     IModuleTypeReference/*?*/ GetGenericMethodArgumentFromOrdinal(
       ushort genericArgumentOrdinal
@@ -164,7 +164,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal interface IModuleGenericTypeParameter : IGenericTypeParameter, IModuleGenericParameter {
-    IModuleTypeReference OwningGenericType { get;}
+    IModuleTypeReference OwningGenericType { get; }
   }
 
   internal interface IModuleGenericTypeParameterReference : IGenericTypeParameterReference, IModuleGenericParameterReference {
@@ -172,7 +172,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal interface IModuleGenericMethodParameter : IGenericMethodParameter, IModuleGenericParameter {
-    IModuleMethodReference OwningGenericMethod { get;}
+    IModuleMethodReference OwningGenericMethod { get; }
   }
 
   internal interface IModuleGenericMethodParameterReference : IGenericMethodParameterReference, IModuleGenericParameterReference {
@@ -256,7 +256,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsValueType {
-      get { 
+      get {
         switch (this.signatureTypeCode) {
           case ModuleSignatureTypeCode.NotModulePrimitive:
           case ModuleSignatureTypeCode.Object:
@@ -591,8 +591,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal sealed class RootNamespaceTypeNameNamespaceReference : NamespaceTypeNameNamespaceReference, IRootUnitNamespaceReference {
 
-    internal RootNamespaceTypeNameNamespaceReference(NamespaceTypeNameTypeReference namespaceTypeNameTypeReference) 
-      : base (namespaceTypeNameTypeReference) {
+    internal RootNamespaceTypeNameNamespaceReference(NamespaceTypeNameTypeReference namespaceTypeNameTypeReference)
+      : base(namespaceTypeNameTypeReference) {
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -699,13 +699,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #endregion
   }
-  
+
   internal sealed class NamespaceTypeNameTypeReference : TypeNameTypeReference, IModuleNamespaceType {
 
     internal readonly NamespaceTypeName NamespaceTypeName;
 
-    internal NamespaceTypeNameTypeReference(IModuleModuleReference module, NamespaceTypeName namespaceTypeName, PEFileToObjectModel peFileToObjectModel) 
-      :base (module, peFileToObjectModel) {
+    internal NamespaceTypeNameTypeReference(IModuleModuleReference module, NamespaceTypeName namespaceTypeName, PEFileToObjectModel peFileToObjectModel)
+      : base(module, peFileToObjectModel) {
       this.NamespaceTypeName = namespaceTypeName;
     }
 
@@ -739,7 +739,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.NamespaceTypeName.NamespaceName == null)
           return new RootNamespaceTypeNameNamespaceReference(this);
         else
-          return new NestedNamespaceTypeNameNamespaceReference(this.NamespaceTypeName.NamespaceName, this); 
+          return new NestedNamespaceTypeNameNamespaceReference(this.NamespaceTypeName.NamespaceName, this);
       }
     }
 
@@ -776,7 +776,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.NamespaceTypeName.NamespaceName == null)
           return this.PEFileToObjectModel.NameTable.EmptyName;
         else
-          return this.NamespaceTypeName.NamespaceName.FullyQualifiedName; 
+          return this.NamespaceTypeName.NamespaceName.FullyQualifiedName;
       }
     }
 
@@ -811,8 +811,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     internal readonly NestedTypeName NestedTypeName;
 
-    internal NestedTypeNameTypeReference(IModuleModuleReference module, NestedTypeName nestedTypeName, PEFileToObjectModel peFileToObjectModel) 
-      :base (module, peFileToObjectModel) {
+    internal NestedTypeNameTypeReference(IModuleModuleReference module, NestedTypeName nestedTypeName, PEFileToObjectModel peFileToObjectModel)
+      : base(module, peFileToObjectModel) {
       this.NestedTypeName = nestedTypeName;
     }
 
@@ -992,11 +992,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.moduleReference; }
     }
 
-    public abstract IModuleNominalType/*?*/ ParentTypeReference { get;}
+    public abstract IModuleNominalType/*?*/ ParentTypeReference { get; }
 
-    public abstract IName/*?*/ NamespaceFullName { get;}
+    public abstract IName/*?*/ NamespaceFullName { get; }
 
-    public abstract IName MangledTypeName { get;}
+    public abstract IName MangledTypeName { get; }
 
     public IModuleTypeReference/*?*/ EnumUnderlyingType {
       get {
@@ -1263,7 +1263,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         case ModuleSignatureTypeCode.Object:
         case ModuleSignatureTypeCode.String: break;
         default: this.isValueType = true; break;
-      }      
+      }
     }
 
     public override ModuleSignatureTypeCode SignatureTypeCode {
@@ -1490,7 +1490,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (moduleTypeRef != null)
           return moduleTypeRef.SignatureTypeCode;
         else
-          return ModuleSignatureTypeCode.NotModulePrimitive; 
+          return ModuleSignatureTypeCode.NotModulePrimitive;
       }
     }
 
@@ -1522,7 +1522,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         IModuleTypeReference/*?*/ underlyingModuleTypeReference = this.UnderlyingModuleTypeReference;
         if (underlyingModuleTypeReference == null) return false;
-        return underlyingModuleTypeReference.IsValueType; 
+        return underlyingModuleTypeReference.IsValueType;
       }
     }
 
@@ -1540,7 +1540,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         IModuleTypeReference/*?*/ underlyingModuleTypeReference = this.UnderlyingModuleTypeReference;
         if (underlyingModuleTypeReference == null) return PrimitiveTypeCode.NotPrimitive;
-        return underlyingModuleTypeReference.TypeCode; 
+        return underlyingModuleTypeReference.TypeCode;
       }
     }
 
@@ -1733,7 +1733,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return ModuleTypeKind.Nominal; }
     }
 
-    public abstract ModuleSignatureTypeCode SignatureTypeCode { get;}
+    public abstract ModuleSignatureTypeCode SignatureTypeCode { get; }
 
     #endregion
 
@@ -1766,7 +1766,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public abstract IEnumerable<IGenericTypeParameter> GenericParameters { get;}
+    public abstract IEnumerable<IGenericTypeParameter> GenericParameters { get; }
 
     public abstract ushort GenericParameterCount { get; }
 
@@ -1805,7 +1805,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public abstract bool IsGeneric { get;}
+    public abstract bool IsGeneric { get; }
 
     public bool IsInterface {
       get { return (this.TypeDefFlags & TypeDefFlags.InterfaceSemantics) == TypeDefFlags.InterfaceSemantics; }
@@ -1851,14 +1851,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public ITypeReference UnderlyingType {
-      get { 
+      get {
         ITypeReference/*?*/ result = this.EnumUnderlyingType;
         if (result == null) return Dummy.TypeReference;
         return result;
       }
     }
 
-    public abstract PrimitiveTypeCode TypeCode { get;}
+    public abstract PrimitiveTypeCode TypeCode { get; }
 
     public LayoutKind Layout {
       get {
@@ -1933,9 +1933,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.Module; }
     }
 
-    public abstract IModuleNominalType/*?*/ ParentTypeReference { get;}
+    public abstract IModuleNominalType/*?*/ ParentTypeReference { get; }
 
-    public abstract IName/*?*/ NamespaceFullName { get;}
+    public abstract IName/*?*/ NamespaceFullName { get; }
 
     public virtual IName MangledTypeName {
       get {
@@ -1943,7 +1943,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public abstract IModuleTypeReference/*?*/ EnumUnderlyingType { get;}
+    public abstract IModuleTypeReference/*?*/ EnumUnderlyingType { get; }
 
     #endregion
 
@@ -2964,7 +2964,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return null; }
     }
 
-    public abstract ModuleTypeKind ModuleTypeKind { get;}
+    public abstract ModuleTypeKind ModuleTypeKind { get; }
 
     public ModuleSignatureTypeCode SignatureTypeCode {
       get { return ModuleSignatureTypeCode.NotModulePrimitive; }
@@ -3023,7 +3023,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
       INestedTypeReference/*?*/ nestedType = moduleTypeReference as INestedTypeReference;
       IModuleGenericTypeInstance/*?*/ genericTypeInstance = moduleTypeReference as IModuleGenericTypeInstance;
-      while (nestedType != null) { 
+      while (nestedType != null) {
         //See if parameter belongs to parent
         IModuleGenericTypeInstance/*?*/ containingGenericTypeInstance = nestedType.ContainingType as IModuleGenericTypeInstance;
         if (containingGenericTypeInstance == null) {
@@ -3109,7 +3109,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
               this.name = par.Name;
               break;
             }
-          }            
+          }
         }
         return this.name;
       }
@@ -3242,7 +3242,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IGenericMethodParameter IGenericMethodParameterReference.ResolvedType {
-      get { 
+      get {
         IMethodDefinition definingMethod = this.DefiningMethod;
         if (definingMethod.IsGeneric) {
           ushort index = 0;
@@ -3294,7 +3294,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this; }
     }
 
-    public abstract ModuleTypeKind ModuleTypeKind { get;}
+    public abstract ModuleTypeKind ModuleTypeKind { get; }
 
     public ModuleSignatureTypeCode SignatureTypeCode {
       get { return ModuleSignatureTypeCode.NotModulePrimitive; }
@@ -3703,7 +3703,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override IModuleTypeReference/*?*/ SpecializeTypeInstance(
       IModuleGenericTypeInstance genericTypeInstance
     ) {
-      return genericTypeInstance.GetGenericTypeArgumentFromOrdinal(this.GenericParameterOrdinality);
+      if (this.DefiningType.InternedKey == genericTypeInstance.ModuleGenericTypeReference.InternedKey)
+        return genericTypeInstance.GetGenericTypeArgumentFromOrdinal(this.GenericParameterOrdinality);
+      var partialInstance = genericTypeInstance as SpecializedNestedTypePartialGenericInstance;
+      if (partialInstance != null) return this.SpecializeTypeInstance(partialInstance.OwningGenericTypeInstance);
+      var genPartialInstance = genericTypeInstance as NestedTypeGenericInstanceWithOwnerGenericInstance;
+      if (genPartialInstance != null) return this.SpecializeTypeInstance(genPartialInstance.GenericType.OwningGenericTypeInstance);
+      return this;
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
@@ -3789,7 +3795,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
       IModuleGenericMethodInstance genericMethodInstance
     ) {
-      return genericMethodInstance.GetGenericMethodArgumentFromOrdinal(this.Ordinal);
+      if (this.OwningGenericMethod.InternedKey == genericMethodInstance.GenericMethod.InternedKey)
+        return genericMethodInstance.GetGenericMethodArgumentFromOrdinal(this.Ordinal);
+      return this;
     }
 
     public override ModuleTypeKind ModuleTypeKind {
@@ -4303,7 +4311,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this; }
     }
 
-    public abstract ModuleTypeKind ModuleTypeKind { get;}
+    public abstract ModuleTypeKind ModuleTypeKind { get; }
 
     public ModuleSignatureTypeCode SignatureTypeCode {
       get { return ModuleSignatureTypeCode.NotModulePrimitive; }
@@ -5040,14 +5048,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override ushort ParentGenericTypeArgumentCardinality {
-      get { 
-        return this.GenericTypeReference.GenericTypeArgumentCardinality; 
+      get {
+        return this.GenericTypeReference.GenericTypeArgumentCardinality;
       }
     }
 
     public override IModuleTypeReference ModuleGenericTypeReference {
-      get { 
-        return this.GenericTypeReference.UnspecializedModuleType; 
+      get {
+        return this.GenericTypeReference.UnspecializedModuleType;
       }
     }
 
@@ -5376,7 +5384,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel) {
     }
 
-    internal abstract TypeBase RawTemplateModuleType { get;}
+    internal abstract TypeBase RawTemplateModuleType { get; }
 
     internal abstract GenericTypeInstanceReference ModuleGenericTypeInstanceReference {
       get;
@@ -5495,7 +5503,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
     }
 
-    public abstract IEnumerable<IGenericTypeParameter> GenericParameters { get;}
+    public abstract IEnumerable<IGenericTypeParameter> GenericParameters { get; }
 
     public abstract ushort GenericParameterCount { get; }
 
@@ -5539,7 +5547,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.RawTemplateModuleType.IsEnum; }
     }
 
-    public abstract bool IsGeneric { get;}
+    public abstract bool IsGeneric { get; }
 
     public bool IsInterface {
       get { return this.RawTemplateModuleType.IsInterface; }
@@ -5756,7 +5764,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   //  A.B<int, float> aka A<int>.B<float>
   internal sealed class NestedTypeGenericInstanceWithOwnerGenericInstance : GenericTypeInstance, IGenericTypeInstance {
     readonly NestedTypeGenericInstanceWithOwnerGenericInstanceReference NestedTypeGenericInstanceWithOwnerGenericInstanceReference;
-    readonly SpecializedNestedGenericType GenericType;
+    readonly internal SpecializedNestedGenericType GenericType;
 
     internal NestedTypeGenericInstanceWithOwnerGenericInstance(
       PEFileToObjectModel peFileToObjectModel,
@@ -5964,8 +5972,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.RawNestedGenericTypeTemplate.MangleName; }
     }
 
-    INamedTypeDefinition INamedTypeReference.ResolvedType { 
-      get { return this; } 
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { return this; }
     }
 
     #endregion
@@ -6361,7 +6369,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     //^ [Pure]
     public abstract bool IsMarshalledExplicitly { get; }
 
-    public bool IsModified { get { return this.ModuleCustomModifiers.RawArray.Length > 0;} }
+    public bool IsModified { get { return this.ModuleCustomModifiers.RawArray.Length > 0; } }
 
     public abstract bool IsOptional { get; }
 
@@ -6369,7 +6377,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public abstract bool IsParameterArray { get; }
 
-    public abstract IMarshallingInformation MarshallingInformation { get;}
+    public abstract IMarshallingInformation MarshallingInformation { get; }
 
     public abstract ITypeReference ParamArrayElementType { get; }
 
@@ -6434,7 +6442,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       ISignature containingSignatureDefinition,
       bool isByReference
     )
-      : base (peFileToObjectModel) {
+      : base(peFileToObjectModel) {
       this.ParameterIndex = (ushort)parameterIndex;
       this.ModuleCustomModifiers = moduleCustomModifiers;
       this.TypeReference = typeReference;
@@ -6847,7 +6855,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public ITypeReference Type {
       get {
         if (this.TypeReference == null) return Dummy.TypeReference;
-        return this.TypeReference; 
+        return this.TypeReference;
       }
     }
 
@@ -7170,7 +7178,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       IModuleNamespaceType/*?*/ moduleNamespaceType = rawTemplateTypeReference as IModuleNamespaceType;
       if (moduleNamespaceType != null) {
         ushort genParamCount = moduleNamespaceType.GenericParameterCount;
-        if (genParamCount == 0){
+        if (genParamCount == 0) {
           genParamCount = (ushort)(cummulativeGenericTypeArgs.Length-numberOfTypeArgsUsedByNestedTypes);
           if (genParamCount == 0) {
             return null;
@@ -7183,7 +7191,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       //^ assume rawTemplateTypeReference is IModuleNestedType; //if it is not a namespace type, it had better be a nested one.
       IModuleNestedType moduleNestedType = (IModuleNestedType)rawTemplateTypeReference;
       //^ assume moduleNestedType.ParentTypeReference != null;  //  Because the type is IModuleNestedType....
-      GenericTypeInstanceReference/*?*/ parentGenericTypeInstanceReference = this.GetGenericTypeInstanceReferenceInternal(moduleNestedType.ParentTypeReference, 
+      GenericTypeInstanceReference/*?*/ parentGenericTypeInstanceReference = this.GetGenericTypeInstanceReferenceInternal(moduleNestedType.ParentTypeReference,
         cummulativeGenericTypeArgs, numberOfTypeArgsUsedByNestedTypes+moduleNestedType.GenericParameterCount, ref startIndex);
       if (parentGenericTypeInstanceReference == null) {
         // parentGenericTypeInstanceReference is null if the module does not have direct reference to it.
@@ -7452,7 +7460,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     };
 
     /// <summary>
-    /// Least upper bound of the Type member visibilty considered as the following lattice:
+    /// Least upper bound of the Type member visibility considered as the following lattice:
     ///          Public
     ///      FamilyOrAssembly
     ///    Family        Assembly
