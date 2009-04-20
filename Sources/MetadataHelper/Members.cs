@@ -525,7 +525,7 @@ namespace Microsoft.Cci {
         foreach (IGenericMethodParameter genericParameter in definingMethodDef.GenericParameters) {
           if (i++ == this.index) return genericParameter;
         }
-        return Dummy.GenericMethodParameter; 
+        return Dummy.GenericMethodParameter;
       }
     }
 
@@ -604,8 +604,8 @@ namespace Microsoft.Cci {
 
   public class SpecializedEventDefinition : SpecializedTypeDefinitionMember<IEventDefinition>, ISpecializedEventDefinition {
 
-    public SpecializedEventDefinition(IEventDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) 
-      : base(unspecializedVersion, containingGenericTypeInstance){
+    public SpecializedEventDefinition(IEventDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingGenericTypeInstance) {
     }
 
     public IEnumerable<IMethodReference> Accessors {
@@ -676,8 +676,8 @@ namespace Microsoft.Cci {
 
   public class SpecializedFieldDefinition : SpecializedTypeDefinitionMember<IFieldDefinition>, ISpecializedFieldDefinition, ISpecializedFieldReference {
 
-    public SpecializedFieldDefinition(IFieldDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) 
-      : base(unspecializedVersion, containingGenericTypeInstance){
+    public SpecializedFieldDefinition(IFieldDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingGenericTypeInstance) {
     }
 
     /// <summary>
@@ -701,7 +701,7 @@ namespace Microsoft.Cci {
             }
           }
         }
-        return this.type; 
+        return this.type;
       }
     }
     ITypeReference/*?*/ type;
@@ -719,7 +719,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsMapped {
-      get { 
+      get {
         bool result = this.UnspecializedVersion.IsMapped;
         //^ assume this.IsStatic == this.UnspecializedVersion.IsStatic; //it is the post condition of this.IsStatic;
         return result;
@@ -739,7 +739,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsRuntimeSpecial {
-      get { 
+      get {
         bool result = this.UnspecializedVersion.IsRuntimeSpecial;
         //^ assume this.IsSpecialName == this.UnspecializedVersion.IsSpecialName; //it is the post condition of this.IsSpecialName;
         return result;
@@ -749,16 +749,16 @@ namespace Microsoft.Cci {
     public bool IsSpecialName {
       get
         //^ ensures result == this.UnspecializedVersion.IsSpecialName;
-      { 
-        return this.UnspecializedVersion.IsSpecialName; 
+      {
+        return this.UnspecializedVersion.IsSpecialName;
       }
     }
 
     public bool IsStatic {
-      get 
+      get
         //^ ensures result == this.UnspecializedVersion.IsStatic;
-      { 
-        return this.UnspecializedVersion.IsStatic; 
+      {
+        return this.UnspecializedVersion.IsStatic;
       }
     }
 
@@ -768,7 +768,7 @@ namespace Microsoft.Cci {
       {
         //^ assume this.UnspecializedVersion.ContainingTypeDefinition == this.ContainingGenericTypeInstance.GenericType.ResolvedType;
         //^ assume this.ContainingTypeDefinition.Layout == this.UnspecializedVersion.ContainingTypeDefinition.Layout;
-        return this.UnspecializedVersion.Offset; 
+        return this.UnspecializedVersion.Offset;
       }
     }
 
@@ -872,8 +872,8 @@ namespace Microsoft.Cci {
 
   public class SpecializedMethodDefinition : SpecializedTypeDefinitionMember<IMethodDefinition>, ISpecializedMethodDefinition, ISpecializedMethodReference {
 
-    public SpecializedMethodDefinition(IMethodDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) 
-      : base(unspecializedVersion, containingGenericTypeInstance){
+    public SpecializedMethodDefinition(IMethodDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingGenericTypeInstance) {
     }
 
     public IMethodBody Body {
@@ -927,7 +927,7 @@ namespace Microsoft.Cci {
     }
 
     public override string ToString() {
-      return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters);    
+      return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters);
     }
 
     public ITypeReference Type {
@@ -1036,8 +1036,8 @@ namespace Microsoft.Cci {
     }
 
     public bool IsVirtual {
-      get { 
-        bool result = this.UnspecializedVersion.IsVirtual; 
+      get {
+        bool result = this.UnspecializedVersion.IsVirtual;
         //^ assume result ==> !this.IsStatic;
         return result;
       }
@@ -1143,8 +1143,8 @@ namespace Microsoft.Cci {
     public ISignature ContainingSignature {
       get
         //^ ensures result is IGenericMethodInstance || result is SpecializedMethodDefinition || result is SpecializedPropertyDefinition;
-      { 
-        return this.containingSignature; 
+      {
+        return this.containingSignature;
       }
     }
     readonly ISignature containingSignature;
@@ -1243,8 +1243,8 @@ namespace Microsoft.Cci {
     public bool IsParameterArray {
       get
         //^ ensures result == this.unspecializedParameter.IsParameterArray;
-      { 
-        return this.unspecializedParameter.IsParameterArray; 
+      {
+        return this.unspecializedParameter.IsParameterArray;
       }
     }
 
@@ -1286,23 +1286,20 @@ namespace Microsoft.Cci {
 
   }
 
-  public class SpecializedParameterTypeInformation : IParameterTypeInformation {
+  internal class SpecializedParameterTypeInformation : IParameterTypeInformation {
 
-    protected internal SpecializedParameterTypeInformation(IParameterTypeInformation unspecializedParameter, IGenericMethodInstanceReference containingSignature, IInternFactory internFactory) {
+    internal SpecializedParameterTypeInformation(IParameterTypeInformation unspecializedParameter, IGenericMethodInstanceReference containingSignature, IInternFactory internFactory) {
       this.unspecializedParameter = unspecializedParameter;
       this.containingSignature = containingSignature;
       this.internFactory = internFactory;
     }
 
     public ISignature ContainingSignature {
-      get
-        //^ ensures result is IGenericMethodInstance || result is SpecializedMethodDefinition || result is SpecializedPropertyDefinition;
-      {
+      get {
         return this.containingSignature;
       }
     }
-    readonly ISignature containingSignature;
-    //^ invariant containingSignature is IGenericMethodInstance || containingSignature is SpecializedMethodDefinition || containingSignature is SpecializedPropertyDefinition;
+    readonly IGenericMethodInstanceReference containingSignature;
 
     private IParameterTypeInformation unspecializedParameter;
 
@@ -1310,14 +1307,8 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
-    //^ [Confined]
     private ITypeReference SpecializeIfConstructed(ITypeReference unspecializedType) {
-      IGenericMethodInstance/*?*/ genericMethodInstance = this.ContainingSignature as IGenericMethodInstance;
-      if (genericMethodInstance != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, genericMethodInstance, this.InternFactory);
-      SpecializedMethodDefinition/*?*/ specializedMethodDefinition = this.ContainingSignature as SpecializedMethodDefinition;
-      if (specializedMethodDefinition != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedMethodDefinition.ContainingGenericTypeInstance, this.InternFactory);
-      SpecializedPropertyDefinition specializedPropertyDefinition = (SpecializedPropertyDefinition)this.ContainingSignature;
-      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedPropertyDefinition.ContainingGenericTypeInstance, this.InternFactory);
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, this.containingSignature, this.InternFactory);
     }
 
     public ITypeReference Type {
@@ -1357,8 +1348,8 @@ namespace Microsoft.Cci {
 
   public class SpecializedPropertyDefinition : SpecializedTypeDefinitionMember<IPropertyDefinition>, ISpecializedPropertyDefinition {
 
-    public SpecializedPropertyDefinition(IPropertyDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) 
-      : base(unspecializedVersion, containingGenericTypeInstance){
+    public SpecializedPropertyDefinition(IPropertyDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingGenericTypeInstance) {
     }
 
     public IEnumerable<IMethodReference> Accessors {
@@ -1510,7 +1501,7 @@ namespace Microsoft.Cci {
       get {
         ITypeDefinitionMember unspecializedVersion = this.UnspecializedVersion;
         //^ assume unspecializedVersion != null; //The type system guarantees this
-        return TypeHelper.VisibilityIntersection(unspecializedVersion.Visibility, 
+        return TypeHelper.VisibilityIntersection(unspecializedVersion.Visibility,
           TypeHelper.TypeVisibilityAsTypeMemberVisibility(this.ContainingGenericTypeInstance));
       }
     }
@@ -1525,8 +1516,8 @@ namespace Microsoft.Cci {
     public ITypeDefinition ContainingTypeDefinition {
       get
         //^ ensures result == this.ContainingGenericTypeInstance;
-      { 
-        return this.ContainingGenericTypeInstance; 
+      {
+        return this.ContainingGenericTypeInstance;
       }
     }
 
