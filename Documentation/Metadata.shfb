@@ -1,13 +1,21 @@
 ﻿<project schemaVersion="1.6.0.2">
     <assemblies>
+        <assembly assemblyPath="..\Sources\ILGenerator\bin\Debug\Microsoft.Cci.ILGenerator.dll" xmlCommentsPath="..\Sources\ILGenerator\bin\Debug\Microsoft.Cci.ILGenerator.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\MetadataHelper\bin\Debug\Microsoft.Cci.MetadataHelper.dll" xmlCommentsPath="..\Sources\MetadataHelper\bin\Debug\Microsoft.Cci.MetadataHelper.xml" commentsOnly="False" />
         <assembly assemblyPath="..\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.dll" xmlCommentsPath="..\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\MutableMetadataModel\bin\Debug\Microsoft.Cci.MutableMetadataModel.dll" xmlCommentsPath="..\Sources\MutableMetadataModel\bin\Debug\Microsoft.Cci.MutableMetadataModel.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\PdbReader\bin\Debug\Microsoft.Cci.PdbReader.dll" xmlCommentsPath="..\Sources\PdbReader\bin\Debug\Microsoft.Cci.PdbReader.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\PdbWriter\bin\Debug\Microsoft.Cci.PdbWriter.dll" xmlCommentsPath="..\Sources\PdbWriter\bin\Debug\Microsoft.Cci.PdbWriter.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\PeReader\bin\Debug\Microsoft.Cci.PeReader.dll" xmlCommentsPath="..\Sources\PeReader\bin\Debug\Microsoft.Cci.PeReader.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.dll" xmlCommentsPath="..\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.xml" commentsOnly="False" />
+        <assembly assemblyPath="..\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.dll" xmlCommentsPath="..\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.xml" commentsOnly="False" />
     </assemblies>
     <ProjectSummary />
     <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace</MissingTags>
     <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
     <HtmlHelp1xCompilerPath path="" />
     <HtmlHelp2xCompilerPath path="" />
-    <OutputPath>..\..\..\Documentation\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <SandcastlePath path="" />
     <WorkingPath path="" />
     <CleanIntermediates>True</CleanIntermediates>
@@ -22,7 +30,7 @@
     <RootNamespaceContainer>False</RootNamespaceContainer>
     <RootNamespaceTitle />
     <HelpTitle>A Sandcastle Documented Class Library</HelpTitle>
-    <HtmlHelpName>Documentation</HtmlHelpName>
+    <HtmlHelpName>CCI Metadata components API documentation</HtmlHelpName>
     <Language>en-US</Language>
     <CopyrightHref />
     <CopyrightText />
