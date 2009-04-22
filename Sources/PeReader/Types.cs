@@ -3707,8 +3707,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return genericTypeInstance.GetGenericTypeArgumentFromOrdinal(this.GenericParameterOrdinality);
       var partialInstance = genericTypeInstance as SpecializedNestedTypePartialGenericInstance;
       if (partialInstance != null) return this.SpecializeTypeInstance(partialInstance.OwningGenericTypeInstance);
+      var partialInstanceRef =  genericTypeInstance as SpecializedNestedPartialGenericInstanceReference;
+      if (partialInstanceRef != null) return this.SpecializeTypeInstance(partialInstanceRef.ParentGenericTypeReference);
       var genPartialInstance = genericTypeInstance as NestedTypeGenericInstanceWithOwnerGenericInstance;
       if (genPartialInstance != null) return this.SpecializeTypeInstance(genPartialInstance.GenericType.OwningGenericTypeInstance);
+      var genPartialInstanceRef = genericTypeInstance as NestedTypeGenericInstanceWithOwnerGenericInstanceReference;
+      if (genPartialInstanceRef != null) return this.SpecializeTypeInstance(genPartialInstanceRef.GenericTypeReference.ParentGenericTypeReference);
       return this;
     }
 
