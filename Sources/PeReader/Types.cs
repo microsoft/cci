@@ -413,7 +413,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       IModuleTypeReference/*?*/ underlyingModuleTypeReference = this.UnderlyingModuleTypeReference.SpecializeTypeInstance(genericTypeInstance);
       if (underlyingModuleTypeReference == null) return null;
       if (this.UnderlyingModuleTypeReference != underlyingModuleTypeReference) {
-        return this.PEFileToObjectModel.typeCache.GetModifiedTypeReference(underlyingModuleTypeReference, this.ModuleCustomModifiers);
+        return new ModifiedTypeReference(this.PEFileToObjectModel, underlyingModuleTypeReference, this.ModuleCustomModifiers);
       }
       return this;
     }
@@ -422,7 +422,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       IModuleTypeReference/*?*/ underlyingModuleTypeReference = this.UnderlyingModuleTypeReference.SpecializeMethodInstance(genericMethodInstance);
       if (underlyingModuleTypeReference == null) return null;
       if (this.UnderlyingModuleTypeReference != underlyingModuleTypeReference) {
-        return genericMethodInstance.PEFileToObjectModel.typeCache.GetModifiedTypeReference(underlyingModuleTypeReference, this.ModuleCustomModifiers);
+        return new ModifiedTypeReference(this.PEFileToObjectModel, underlyingModuleTypeReference, this.ModuleCustomModifiers);
       }
       return this;
     }
@@ -3843,7 +3843,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class PointerType : SimpleStructuralType, IPointerType {
+  internal sealed class PointerType : SimpleStructuralType, IPointerType { //TODO: make this a reference, not a def
     internal readonly IModuleTypeReference/*?*/ TargetType;
 
     internal PointerType(
@@ -3873,7 +3873,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (instantiatedTargetType == this.TargetType)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetPointerType(0xFFFFFFFF, instantiatedTargetType);
+      return new PointerType(this.PEFileToObjectModel, 0xFFFFFFFF, instantiatedTargetType);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
@@ -3886,7 +3886,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (instantiatedTargetType == this.TargetType)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetPointerType(0xFFFFFFFF, instantiatedTargetType);
+      return new PointerType(this.PEFileToObjectModel, 0xFFFFFFFF, instantiatedTargetType);
     }
 
     public override ModuleTypeKind ModuleTypeKind {
@@ -3906,7 +3906,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class ManagedPointerType : SimpleStructuralType, IManagedPointerType {
+  internal sealed class ManagedPointerType : SimpleStructuralType, IManagedPointerType { //TODO: make this a reference, not a def
     internal readonly IModuleTypeReference TargetType;
 
     internal ManagedPointerType(
@@ -3967,7 +3967,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class VectorType : SimpleStructuralType, IArrayType {
+  internal sealed class VectorType : SimpleStructuralType, IArrayType { //TODO: make this a reference, not a def
     internal readonly IModuleTypeReference/*?*/ ElementType;
 
     internal VectorType(
@@ -4020,7 +4020,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (instantiatedElementType == this.ElementType)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetVectorType(0xFFFFFFFF, instantiatedElementType);
+      return new VectorType(this.PEFileToObjectModel, 0xFFFFFFFF, instantiatedElementType);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
@@ -4033,7 +4033,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (instantiatedElementType == this.ElementType)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetVectorType(0xFFFFFFFF, instantiatedElementType);
+      return new VectorType(this.PEFileToObjectModel, 0xFFFFFFFF, instantiatedElementType);
     }
 
     public override ModuleTypeKind ModuleTypeKind {
@@ -4071,7 +4071,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class MatrixType : SimpleStructuralType, IArrayType {
+  internal sealed class MatrixType : SimpleStructuralType, IArrayType { //TODO: make this a reference, not a def
     internal readonly IModuleTypeReference/*?*/ ElementType;
     internal readonly uint Rank;
     internal readonly EnumerableArrayWrapper<ulong> Sizes;
@@ -4116,7 +4116,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (instantiatedElementType == this.ElementType)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetMatrixType(0xFFFFFFFF, instantiatedElementType, (int)this.Rank, this.Sizes.RawArray, this.LowerBounds.RawArray);
+      return new MatrixType(this.PEFileToObjectModel, 0xFFFFFFFF, instantiatedElementType, (int)this.Rank, this.Sizes, this.LowerBounds);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(
@@ -4129,7 +4129,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (instantiatedElementType == this.ElementType)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetMatrixType(0xFFFFFFFF, instantiatedElementType, (int)this.Rank, this.Sizes.RawArray, this.LowerBounds.RawArray);
+      return new MatrixType(this.PEFileToObjectModel, 0xFFFFFFFF, instantiatedElementType, (int)this.Rank, this.Sizes, this.LowerBounds);
     }
 
     public override ModuleTypeKind ModuleTypeKind {
@@ -4173,7 +4173,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class FunctionPointerType : SimpleStructuralType, IFunctionPointer, IModuleTypeDefAndRef {
+  internal sealed class FunctionPointerType : SimpleStructuralType, IFunctionPointer, IModuleTypeDefAndRef { //TODO: make this a reference, not a def
     internal readonly CallingConvention CallingConvention;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
     internal readonly bool IsReturnByReference;
@@ -4936,14 +4936,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> newTypeArgs = TypeCache.SpecializeTypeInstance(this.TypeArguments, genericTypeInstance);
       if (newTypeArgs == this.TypeArguments)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetNamespaceTypeGenericInstanceReference(0xFFFFFFFF, this.GenericNamespaceType, newTypeArgs);
+      return new NamespaceTypeGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, this.GenericNamespaceType, newTypeArgs);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(IModuleGenericMethodInstance genericMethodInstance) {
       EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> newTypeArgs = TypeCache.SpecializeMethodInstance(this.TypeArguments, genericMethodInstance);
       if (newTypeArgs == this.TypeArguments)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetNamespaceTypeGenericInstanceReference(0xFFFFFFFF, this.GenericNamespaceType, newTypeArgs);
+      return new NamespaceTypeGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, this.GenericNamespaceType, newTypeArgs);
     }
 
     public override ushort GenericTypeArgumentCardinality {
@@ -5022,7 +5022,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> newTypeArgs = TypeCache.SpecializeTypeInstance(this.TypeArguments, genericTypeInstance);
       if (newTypeArgs == this.TypeArguments && this.GenericTypeReference == specializedNestedGenericTypeReference)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetNestedTypeGenericInstanceWithOwnerGenericInstanceReference(0xFFFFFFFF, specializedNestedGenericTypeReference, newTypeArgs);
+      return new NestedTypeGenericInstanceWithOwnerGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, specializedNestedGenericTypeReference, newTypeArgs);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(IModuleGenericMethodInstance genericMethodInstance) {
@@ -5032,7 +5032,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> newTypeArgs = TypeCache.SpecializeMethodInstance(this.TypeArguments, genericMethodInstance);
       if (newTypeArgs == this.TypeArguments && this.GenericTypeReference == specializedNestedGenericTypeReference)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetNestedTypeGenericInstanceWithOwnerGenericInstanceReference(0xFFFFFFFF, specializedNestedGenericTypeReference, newTypeArgs);
+      return new NestedTypeGenericInstanceWithOwnerGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, specializedNestedGenericTypeReference, newTypeArgs);
     }
 
     public override ushort GenericTypeArgumentCardinality {
@@ -5114,14 +5114,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> newTypeArgs = TypeCache.SpecializeTypeInstance(this.TypeArguments, genericTypeInstance);
       if (newTypeArgs == this.TypeArguments)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetNestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(0xFFFFFFFF, this.GenericTypeReference, newTypeArgs);
+      return new NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, this.GenericTypeReference, newTypeArgs);
     }
 
     public override IModuleTypeReference/*?*/ SpecializeMethodInstance(IModuleGenericMethodInstance genericMethodInstance) {
       EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> newTypeArgs = TypeCache.SpecializeMethodInstance(this.TypeArguments, genericMethodInstance);
       if (newTypeArgs == this.TypeArguments)
         return this;
-      return this.PEFileToObjectModel.typeCache.GetNestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(0xFFFFFFFF, this.GenericTypeReference, newTypeArgs);
+      return new NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, this.GenericTypeReference, newTypeArgs);
     }
 
     public override ushort GenericTypeArgumentCardinality {
@@ -6928,218 +6928,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       ushort genericParameterCount,
       ModuleSignatureTypeCode signatureTypeCode
     ) {
-      //  No need to look in cache or cache or anything becuase this is called by the constructor.
+      //  No need to look in cache or cache or anything because this is called by the constructor.
       return new CoreTypeReference(this.PEFileToObjectModel, coreAssemblyReference, namespaceReference, typeName, genericParameterCount, signatureTypeCode);
-    }
-    internal ManagedPointerType GetManagedPointerType(
-      uint typeSpecToken,
-      IModuleTypeReference targetType
-    ) {
-      uint internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetManagedPointerTypeReferenceInternedKey(targetType);
-      ManagedPointerType/*?*/ managedPointerType = this.ModuleTypeHashTable.Find(internedKey) as ManagedPointerType;
-      if (managedPointerType == null) {
-        lock (GlobalLock.LockingObject) {
-          managedPointerType = this.ModuleTypeHashTable.Find(internedKey) as ManagedPointerType;
-          if (managedPointerType == null) {
-            managedPointerType = new ManagedPointerType(this.PEFileToObjectModel, typeSpecToken, targetType);
-            this.ModuleTypeHashTable.Add(internedKey, managedPointerType);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && managedPointerType.TokenValue == 0xFFFFFFFF) {
-        managedPointerType.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return managedPointerType;
-    }
-    internal PointerType GetPointerType(
-      uint typeSpecToken,
-      IModuleTypeReference targetType
-    ) {
-      uint internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetPointerTypeReferenceInternedKey(targetType);
-      PointerType/*?*/ pointerType = this.ModuleTypeHashTable.Find(internedKey) as PointerType;
-      if (pointerType == null) {
-        lock (GlobalLock.LockingObject) {
-          pointerType = this.ModuleTypeHashTable.Find(internedKey) as PointerType;
-          if (pointerType == null) {
-            pointerType = new PointerType(this.PEFileToObjectModel, typeSpecToken, targetType);
-            this.ModuleTypeHashTable.Add(internedKey, pointerType);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && pointerType.TokenValue == 0xFFFFFFFF) {
-        pointerType.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return pointerType;
-    }
-    internal VectorType GetVectorType(
-      uint typeSpecToken,
-      IModuleTypeReference elementType
-    ) {
-      uint internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetVectorTypeReferenceInternedKey(elementType);
-      VectorType/*?*/ vectorType = this.ModuleTypeHashTable.Find(internedKey) as VectorType;
-      if (vectorType == null) {
-        lock (GlobalLock.LockingObject) {
-          vectorType = this.ModuleTypeHashTable.Find(internedKey) as VectorType;
-          if (vectorType == null) {
-            vectorType = new VectorType(this.PEFileToObjectModel, typeSpecToken, elementType);
-            this.ModuleTypeHashTable.Add(internedKey, vectorType);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && vectorType.TokenValue == 0xFFFFFFFF) {
-        vectorType.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return vectorType;
-    }
-    internal MatrixType GetMatrixType(
-      uint typeSpecToken,
-      IModuleTypeReference elementType,
-      int rank,
-      ulong[] sizes,
-      int[] lowerBounds
-    ) {
-      uint internedKey =
-        this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetMatrixTypeReferenceInternedKey(
-          elementType,
-          rank,
-          sizes,
-          lowerBounds
-        );
-      MatrixType/*?*/ matrixType = this.ModuleTypeHashTable.Find(internedKey) as MatrixType;
-      if (matrixType == null) {
-        lock (GlobalLock.LockingObject) {
-          matrixType = this.ModuleTypeHashTable.Find(internedKey) as MatrixType;
-          if (matrixType == null) {
-            matrixType = new MatrixType(this.PEFileToObjectModel, typeSpecToken, elementType, rank, new EnumerableArrayWrapper<ulong>(sizes), new EnumerableArrayWrapper<int>(lowerBounds));
-            this.ModuleTypeHashTable.Add(internedKey, matrixType);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && matrixType.TokenValue == 0xFFFFFFFF) {
-        matrixType.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return matrixType;
-    }
-    internal FunctionPointerType GetFunctionPointerType(
-      uint typeSpecToken,
-      CallingConvention callingConvention,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> returnCustomModifiers,
-      bool isReturnByReference,
-      IModuleTypeReference returnType,
-      EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> moduleParameters,
-      EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> moduleVarargsParameters
-    ) {
-      uint internedKey =
-        this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFunctionPointerTypeReferenceInternedKey(
-          callingConvention,
-          moduleParameters,
-          moduleVarargsParameters,
-          returnCustomModifiers,
-          isReturnByReference,
-          returnType
-        );
-      FunctionPointerType/*?*/ functionPointerType = this.ModuleTypeHashTable.Find(internedKey) as FunctionPointerType;
-      if (functionPointerType == null) {
-        lock (GlobalLock.LockingObject) {
-          functionPointerType = this.ModuleTypeHashTable.Find(internedKey) as FunctionPointerType;
-          if (functionPointerType == null) {
-            functionPointerType =
-              new FunctionPointerType(
-                this.PEFileToObjectModel,
-                typeSpecToken,
-                callingConvention,
-                returnCustomModifiers,
-                isReturnByReference,
-                returnType,
-                moduleParameters,
-                moduleVarargsParameters
-              );
-            this.ModuleTypeHashTable.Add(internedKey, functionPointerType);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && functionPointerType.TokenValue == 0xFFFFFFFF) {
-        functionPointerType.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return functionPointerType;
-    }
-    internal NamespaceTypeGenericInstanceReference GetNamespaceTypeGenericInstanceReference(
-      uint typeSpecToken,
-      IModuleNamespaceType moduleNamespaceType,
-      EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> genericTypeArgs
-    ) {
-      //Debug.Assert(moduleNamespaceType.GenericParameterCount == genericTypeArgs.RawArray.Length);
-      uint internedKey =
-        this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetGenericTypeInstanceReferenceInternedKey(
-          moduleNamespaceType,
-          genericTypeArgs
-        );
-      NamespaceTypeGenericInstanceReference/*?*/ namespaceTypeGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as NamespaceTypeGenericInstanceReference;
-      if (namespaceTypeGenericInstanceReference == null) {
-        lock (GlobalLock.LockingObject) {
-          namespaceTypeGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as NamespaceTypeGenericInstanceReference;
-          if (namespaceTypeGenericInstanceReference == null) {
-            namespaceTypeGenericInstanceReference = new NamespaceTypeGenericInstanceReference(this.PEFileToObjectModel, typeSpecToken, moduleNamespaceType, genericTypeArgs);
-            this.ModuleTypeHashTable.Add(internedKey, namespaceTypeGenericInstanceReference);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && namespaceTypeGenericInstanceReference.TokenValue == 0xFFFFFFFF) {
-        namespaceTypeGenericInstanceReference.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return namespaceTypeGenericInstanceReference;
-    }
-    internal NestedTypeGenericInstanceWithOwnerGenericInstanceReference GetNestedTypeGenericInstanceWithOwnerGenericInstanceReference(
-      uint typeSpecToken,
-      SpecializedNestedGenericTypeReference specializedNestedGenericTypeReference,
-      EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> genericTypeArgs
-    ) {
-      //Debug.Assert(specializedNestedGenericTypeReference.GenericParameterCount == genericTypeArgs.RawArray.Length);
-      uint internedKey =
-        this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetGenericTypeInstanceReferenceInternedKey(
-          specializedNestedGenericTypeReference,
-          genericTypeArgs
-        );
-      NestedTypeGenericInstanceWithOwnerGenericInstanceReference/*?*/ nestedTypeGenericInstanceWithOwnerGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as NestedTypeGenericInstanceWithOwnerGenericInstanceReference;
-      if (nestedTypeGenericInstanceWithOwnerGenericInstanceReference == null) {
-        lock (GlobalLock.LockingObject) {
-          nestedTypeGenericInstanceWithOwnerGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as NestedTypeGenericInstanceWithOwnerGenericInstanceReference;
-          if (nestedTypeGenericInstanceWithOwnerGenericInstanceReference == null) {
-            nestedTypeGenericInstanceWithOwnerGenericInstanceReference = new NestedTypeGenericInstanceWithOwnerGenericInstanceReference(this.PEFileToObjectModel, typeSpecToken, specializedNestedGenericTypeReference, genericTypeArgs);
-            this.ModuleTypeHashTable.Add(internedKey, nestedTypeGenericInstanceWithOwnerGenericInstanceReference);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && nestedTypeGenericInstanceWithOwnerGenericInstanceReference.TokenValue == 0xFFFFFFFF) {
-        nestedTypeGenericInstanceWithOwnerGenericInstanceReference.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return nestedTypeGenericInstanceWithOwnerGenericInstanceReference;
-    }
-    internal NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference GetNestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(
-      uint typeSpecToken,
-      IModuleNestedType moduleNestedType,
-      EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> genericTypeArgs
-    ) {
-      //Debug.Assert(moduleNestedType.GenericParameterCount == genericTypeArgs.RawArray.Length);
-      uint internedKey =
-        this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetGenericTypeInstanceReferenceInternedKey(
-          moduleNestedType,
-          genericTypeArgs
-        );
-      NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference/*?*/ nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference;
-      if (nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference == null) {
-        lock (GlobalLock.LockingObject) {
-          nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference;
-          if (nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference == null) {
-            nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference = new NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(this.PEFileToObjectModel, typeSpecToken, moduleNestedType, genericTypeArgs);
-            this.ModuleTypeHashTable.Add(internedKey, nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference);
-          }
-        }
-      }
-      if (typeSpecToken != 0xFFFFFFFF && nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference.TokenValue == 0xFFFFFFFF) {
-        nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return nestedTypeGenericInstanceWithOwnerNonGenericInstanceReference;
     }
     internal SpecializedNestedPartialGenericInstanceReference GetSpecializedNestedPartialGenericInstanceReference(
       uint typeSpecToken,
@@ -7147,30 +6937,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       IModuleNestedType unspecializedVersion,
       ushort genericParameterCount
     ) {
-      uint internedKey =
-        this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetNestedTypeReferenceInternedKey(
-          parentGenericTypeInstanceReference,
-          unspecializedVersion.Name,
-          genericParameterCount
-        );
-      SpecializedNestedPartialGenericInstanceReference/*?*/ specializedNestedPartialGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as SpecializedNestedPartialGenericInstanceReference;
-      if (specializedNestedPartialGenericInstanceReference == null) {
-        lock (GlobalLock.LockingObject) {
-          specializedNestedPartialGenericInstanceReference = this.ModuleTypeHashTable.Find(internedKey) as SpecializedNestedPartialGenericInstanceReference;
-          if (specializedNestedPartialGenericInstanceReference == null) {
-            if (genericParameterCount == 0) {
-              specializedNestedPartialGenericInstanceReference = new SpecializedNestedNonGenericTypeReference(this.PEFileToObjectModel, typeSpecToken, parentGenericTypeInstanceReference, unspecializedVersion);
-            } else {
-              specializedNestedPartialGenericInstanceReference = new SpecializedNestedGenericTypeReference(this.PEFileToObjectModel, typeSpecToken, parentGenericTypeInstanceReference, unspecializedVersion, genericParameterCount);
-            }
-            this.ModuleTypeHashTable.Add(internedKey, specializedNestedPartialGenericInstanceReference);
-          }
-        }
+      if (genericParameterCount == 0) {
+        return new SpecializedNestedNonGenericTypeReference(this.PEFileToObjectModel, typeSpecToken, parentGenericTypeInstanceReference, unspecializedVersion);
+      } else {
+        return new SpecializedNestedGenericTypeReference(this.PEFileToObjectModel, typeSpecToken, parentGenericTypeInstanceReference, unspecializedVersion, genericParameterCount);
       }
-      if (typeSpecToken != 0xFFFFFFFF && specializedNestedPartialGenericInstanceReference.TokenValue == 0xFFFFFFFF) {
-        specializedNestedPartialGenericInstanceReference.UpdateTypeSpecToken(typeSpecToken);
-      }
-      return specializedNestedPartialGenericInstanceReference;
     }
     GenericTypeInstanceReference/*?*/ GetGenericTypeInstanceReferenceInternal(
       IModuleNominalType rawTemplateTypeReference,
@@ -7190,7 +6961,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         }
         EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> genericTypeArgs = new EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference>(TypeCache.GetSubArray(cummulativeGenericTypeArgs, startIndex, genParamCount), Dummy.TypeReference);
         startIndex += genParamCount;
-        return this.GetNamespaceTypeGenericInstanceReference(0xFFFFFFFF, moduleNamespaceType, genericTypeArgs);
+        return new NamespaceTypeGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, moduleNamespaceType, genericTypeArgs);
       }
       //^ assume rawTemplateTypeReference is IModuleNestedType; //if it is not a namespace type, it had better be a nested one.
       IModuleNestedType moduleNestedType = (IModuleNestedType)rawTemplateTypeReference;
@@ -7210,7 +6981,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         }
         EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference> genericTypeArgs = new EnumerableArrayWrapper<IModuleTypeReference/*?*/, ITypeReference>(TypeCache.GetSubArray(cummulativeGenericTypeArgs, startIndex, genParamCount), Dummy.TypeReference);
         startIndex += genParamCount;
-        return this.GetNestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(0xFFFFFFFF, moduleNestedType, genericTypeArgs);
+        return new NestedTypeGenericInstanceWithOwnerNonGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, moduleNestedType, genericTypeArgs);
       } else {
         ushort genParamCount = moduleNestedType.GenericParameterCount;
         if (genParamCount == 0) {
@@ -7227,7 +6998,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           startIndex += genParamCount;
           SpecializedNestedGenericTypeReference/*?*/ specializedNestedGenericTypeReference = this.GetSpecializedNestedPartialGenericInstanceReference(0xFFFFFFFF, parentGenericTypeInstanceReference, moduleNestedType, genParamCount) as SpecializedNestedGenericTypeReference;
           //^ assert specializedNestedGenericTypeReference != null;  //  Since genParamCount > 0
-          return this.GetNestedTypeGenericInstanceWithOwnerGenericInstanceReference(0xFFFFFFFF, specializedNestedGenericTypeReference, genericTypeArgs);
+          return new NestedTypeGenericInstanceWithOwnerGenericInstanceReference(this.PEFileToObjectModel, 0xFFFFFFFF, specializedNestedGenericTypeReference, genericTypeArgs);
         }
       }
     }
@@ -7255,28 +7026,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         genericTypeInstanceReference.UpdateTypeSpecToken(typeSpecToken);
       }
       return genericTypeInstanceReference;
-    }
-    internal ModifiedTypeReference GetModifiedTypeReference(
-      IModuleTypeReference moduleType,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers
-    ) {
-      uint internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetModifiedTypeReferenceInternedKey(moduleType, moduleCustomModifiers);
-      ModifiedTypeReference/*?*/ modifiedTypeReference = this.ModuleTypeHashTable.Find(internedKey) as ModifiedTypeReference;
-      if (modifiedTypeReference == null) {
-        lock (GlobalLock.LockingObject) {
-          modifiedTypeReference = this.ModuleTypeHashTable.Find(internedKey) as ModifiedTypeReference;
-          if (modifiedTypeReference == null) {
-            modifiedTypeReference =
-              new ModifiedTypeReference(
-                this.PEFileToObjectModel,
-                moduleType,
-                moduleCustomModifiers
-              );
-            this.ModuleTypeHashTable.Add(internedKey, modifiedTypeReference);
-          }
-        }
-      }
-      return modifiedTypeReference;
     }
     internal static EnumerableArrayWrapper<IModuleParameter, IParameterDefinition> SpecializeInstantiatedParameters(
       ISignature owningSignature,

@@ -17,7 +17,7 @@ using Microsoft.Cci.MetadataReader.ObjectModelImplementation;
 namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal abstract class ExpressionBase : IMetadataExpression {
-    internal abstract IModuleTypeReference/*?*/ ModuleTypeReference { get;}
+    internal abstract IModuleTypeReference/*?*/ ModuleTypeReference { get; }
 
     #region IExpression Members
 
@@ -147,9 +147,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region ITypeOf Members
 
     public ITypeReference TypeToGet {
-      get { 
+      get {
         if (this.TypeExpression == null) return Dummy.TypeReference;
-        return this.TypeExpression; 
+        return this.TypeExpression;
       }
     }
 
@@ -439,8 +439,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal abstract TypeBase/*?*/ ResolveNominalTypeName(
       PEFileToObjectModel peFileToObjectModel
     );
-        
-    internal abstract IName UnmanagledTypeName { get;}
+
+    internal abstract IName UnmanagledTypeName { get; }
   }
 
   internal sealed class NamespaceTypeName : NominalTypeName {
@@ -772,7 +772,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       char c,
       bool assemblyName
     ) {
-      if (c == '[' || c == ']' || c == '*' || c == '+' || c == ',' || c == '&' || c == ' ' || char.IsWhiteSpace(c)){
+      if (c == '[' || c == ']' || c == '*' || c == '+' || c == ',' || c == '&' || c == ' ' || char.IsWhiteSpace(c)) {
         return true;
       }
       if (assemblyName) {
@@ -1259,7 +1259,7 @@ namespace Microsoft.Cci.MetadataReader {
             IModuleTypeReference/*?*/ elementType = this.GetFieldOrPropType();
             if (elementType == null)
               return null;
-            return this.PEFileToObjectModel.typeCache.GetVectorType(0xFFFFFFFF, elementType);
+            return new VectorType(this.PEFileToObjectModel, 0xFFFFFFFF, elementType);
           }
         case SerializationType.Type:
           return this.PEFileToObjectModel.SystemType;
@@ -1470,7 +1470,7 @@ namespace Microsoft.Cci.MetadataReader {
         }
       }
       if (ctorReference == Dummy.MethodReference) {
-        ctorReference = new MethodReference(this.PEFileToObjectModel.ModuleReader.metadataReaderHost, moduleTypeReference, 
+        ctorReference = new MethodReference(this.PEFileToObjectModel.ModuleReader.metadataReaderHost, moduleTypeReference,
           CallingConvention.Default, this.PEFileToObjectModel.PlatformType.SystemVoid,
           this.PEFileToObjectModel.NameTable.Ctor, 0, this.PEFileToObjectModel.PlatformType.SystemSecurityPermissionsSecurityAction);
       }

@@ -158,7 +158,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     public IEnumerable<ILocation> Locations {
       get {
         MethodBodyLocation mbLoc = new MethodBodyLocation(new MethodBodyDocument(this.MethodBody.MethodDefinition), this.Index);
-        return IteratorHelper.GetSingletonEnumerable<ILocation>(mbLoc); 
+        return IteratorHelper.GetSingletonEnumerable<ILocation>(mbLoc);
       }
     }
 
@@ -176,7 +176,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       get {
         if (this.name == null)
           this.name = this.MethodBody.MethodDefinition.PEFileToObjectModel.NameTable.GetNameFor("local_" + this.Index);
-        return this.name; 
+        return this.name;
       }
     }
     IName/*?*/ name;
@@ -456,21 +456,18 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       //  TODO: Check if this is really field signature there.
       StandAloneMethodSignatureConverter standAloneSigConv = new StandAloneMethodSignatureConverter(this.PEFileToObjectModel, this.MethodDefinition, memoryReader);
       if (standAloneSigConv.ReturnTypeReference == null)
-          return null;
-      FunctionPointerType fpt =
-        this.PEFileToObjectModel.typeCache.GetFunctionPointerType(
+        return null;
+      return
+        new FunctionPointerType(
+          this.PEFileToObjectModel,
           0xFFFFFFFF,
           (CallingConvention)standAloneSigConv.FirstByte,
-          standAloneSigConv.ReturnCustomModifiers,
-          standAloneSigConv.IsReturnByReference,
-          standAloneSigConv.ReturnTypeReference,
-          standAloneSigConv.RequiredParameters,
-          standAloneSigConv.VarArgParameters
+            standAloneSigConv.ReturnCustomModifiers,
+            standAloneSigConv.IsReturnByReference,
+            standAloneSigConv.ReturnTypeReference,
+            standAloneSigConv.RequiredParameters,
+            standAloneSigConv.VarArgParameters
         );
-      if (fpt != null)
-        return fpt;
-      //  Error...
-      return null;
     }
 
     IParameterDefinition/*?*/ GetParameter(uint rawParamNum) {
@@ -795,7 +792,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               ITypeReference elementType = this.GetType(memReader.ReadUInt32());
               IModuleTypeReference/*?*/ moduleTypeReference = elementType as IModuleTypeReference;
               if (moduleTypeReference != null)
-                value = this.PEFileToObjectModel.typeCache.GetVectorType(0xFFFFFFFF, moduleTypeReference);
+                value = new VectorType(this.PEFileToObjectModel, 0xFFFFFFFF, moduleTypeReference);
               else
                 value = Dummy.ArrayType;
             }
@@ -899,7 +896,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           case OperationCode.Ldarg:
           case OperationCode.Ldarga:
           case OperationCode.Starg:
-              value = this.GetParameter(memReader.ReadUInt16());
+            value = this.GetParameter(memReader.ReadUInt16());
             break;
           case OperationCode.Ldloc:
           case OperationCode.Ldloca:
@@ -907,7 +904,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             value = this.GetLocal(memReader.ReadUInt16());
             break;
           case OperationCode.Localloc:
-            value = this.PEFileToObjectModel.typeCache.GetPointerType(0xFFFFFFFF, this.PEFileToObjectModel.SystemVoid);
+            value = new PointerType(this.PEFileToObjectModel, 0xFFFFFFFF, this.PEFileToObjectModel.SystemVoid);
             break;
           case OperationCode.Endfilter:
             break;
