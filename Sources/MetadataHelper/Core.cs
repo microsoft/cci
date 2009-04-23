@@ -435,8 +435,7 @@ namespace Microsoft.Cci {
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
     protected MetadataReaderHost()
-      : this(new NameTable(), 0)
-    {
+      : this(new NameTable(), 0) {
     }
 
     /// <summary>
@@ -448,8 +447,7 @@ namespace Microsoft.Cci {
     /// environment to co-exist while agreeing on how to map strings to IName instances.
     /// </param>
     protected MetadataReaderHost(INameTable nameTable)
-      : this(nameTable, 0)
-    {
+      : this(nameTable, 0) {
     }
 
     /// <summary>
@@ -674,6 +672,7 @@ namespace Microsoft.Cci {
     uint CurrentParameterTypeListInternValue;
     uint CurrentSignatureInternValue;
     uint CurrentMethodReferenceInternValue;
+    IMethodReference CurrentMethodReference; //The method reference currently being interned
     readonly MultiHashtable<AssemblyStore> AssemblyHashtable;
     readonly MultiHashtable<ModuleStore> ModuleHashtable;
     readonly DoubleHashtable NestedNamespaceHashtable;
@@ -686,8 +685,7 @@ namespace Microsoft.Cci {
     readonly DoubleHashtable TypeListHashtable;
     readonly DoubleHashtable GenericInstanceHashtable;
     readonly DoubleHashtable GenericTypeParameterHashtable;
-    readonly DoubleHashtable GenericMethodTypeParameterHashTable1;
-    readonly DoubleHashtable GenericMethodTypeParameterHashTable2;
+    readonly DoubleHashtable GenericMethodTypeParameterHashTable;
     readonly DoubleHashtable CustomModifierHashTable;
     readonly DoubleHashtable CustomModifierListHashTable;
     readonly MultiHashtable<ParameterTypeStore> ParameterTypeHashtable;
@@ -699,9 +697,10 @@ namespace Microsoft.Cci {
 
     public InternFactory() {
       this.CurrentAssemblyInternValue = 0x00001000;
+      this.CurrentMethodReference = Dummy.MethodReference;
       this.CurrentModuleInternValue = 0x00000001;
       this.CurrentNamespaceInternValue = 0x00000001;
-      this.CurrentTypeInternValue = 0x00000001;
+      this.CurrentTypeInternValue = 0x00000100;
       this.CurrentTypeListInternValue = 0x00000001;
       this.CurrentCustomModifierInternValue = 0x00000001;
       this.CurrentCustomModifierListInternValue = 0x00000001;
@@ -720,8 +719,7 @@ namespace Microsoft.Cci {
       this.TypeListHashtable = new DoubleHashtable();
       this.GenericInstanceHashtable = new DoubleHashtable();
       this.GenericTypeParameterHashtable = new DoubleHashtable();
-      this.GenericMethodTypeParameterHashTable1 = new DoubleHashtable();
-      this.GenericMethodTypeParameterHashTable2 = new DoubleHashtable();
+      this.GenericMethodTypeParameterHashTable = new DoubleHashtable();
       this.CustomModifierHashTable = new DoubleHashtable();
       this.CustomModifierListHashTable = new DoubleHashtable();
       this.ParameterTypeHashtable = new MultiHashtable<ParameterTypeStore>();
@@ -954,21 +952,30 @@ namespace Microsoft.Cci {
       return typeReference;
     }
 
+    /// <summary>
+    /// Returns the interned key for the generic method parameter constructed with the given index
+    /// </summary>
+    /// <param name="definingMethodReference">A reference to the method defining the referenced generic parameter.</param>
+    /// <param name="index">The index of the referenced generic parameter. This is an index rather than a name because metadata in CLR
+    /// PE files contain only the index, not the name.</param>
     uint GetGenericMethodParameterReferenceInternId(
       IMethodReference definingMethodReference,
-      int index
+      uint index
     ) {
-      uint definingTypeReferenceInternId = this.GetTypeReferenceInternId(definingMethodReference.ContainingType);
-      uint methodGroupId = this.GenericMethodTypeParameterHashTable1.Find(definingTypeReferenceInternId, (uint)definingMethodReference.Name.UniqueKey);
-      if (methodGroupId == 0) {
-        methodGroupId = this.CurrentMethodReferenceInternValue++;
-        this.GenericMethodTypeParameterHashTable1.Add(definingTypeReferenceInternId, (uint)definingMethodReference.Name.UniqueKey, methodGroupId);
+      if (this.CurrentMethodReference != Dummy.MethodReference) {
+        //this happens when the defining method reference contains a type in its signature which either is, or contains,
+        //a reference to this generic method type parameter. In that case we break the cycle by just using the index of 
+        //the generic parameter. Only method references that refer to their own type parameters will ever
+        //get this version of the interned id.
+        return index+1;
       }
-      uint hash = (uint)(definingMethodReference.ParameterCount << 16) | (uint)(definingMethodReference.GenericParameterCount << 8) | (uint)index;
-      uint value = this.GenericMethodTypeParameterHashTable2.Find(methodGroupId, hash);
+      this.CurrentMethodReference = definingMethodReference; //short circuit recursive calls back to this method
+      uint definingMethodReferenceInternId = this.GetMethodReferenceInternedId(definingMethodReference);
+      this.CurrentMethodReference = Dummy.MethodReference;
+      uint value = this.GenericMethodTypeParameterHashTable.Find(definingMethodReferenceInternId, index);
       if (value == 0) {
         value = this.CurrentTypeInternValue++;
-        this.GenericMethodTypeParameterHashTable2.Add(methodGroupId, hash, value);
+        this.GenericMethodTypeParameterHashTable.Add(definingMethodReferenceInternId, index, value);
       }
       return value;
     }
@@ -1060,7 +1067,7 @@ namespace Microsoft.Cci {
         }
       }
       SignatureStore signatureStore1 = new SignatureStore(methodReference.CallingConvention, requiredParameterTypesInternedId,
-        0, methodReference.ReturnValueIsByRef, returnValueCustomModifiersInternedId, returnTypeReferenceInternedId, 
+        0, methodReference.ReturnValueIsByRef, returnValueCustomModifiersInternedId, returnTypeReferenceInternedId,
         this.CurrentMethodReferenceInternValue++);
       methods.Add((uint)methodReference.Name.UniqueKey, signatureStore1);
       return signatureStore1.InternedId;
@@ -1171,7 +1178,7 @@ namespace Microsoft.Cci {
       }
       IGenericMethodParameterReference/*?*/ genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
       if (genericMethodParameterReference != null) {
-        return this.GetGenericMethodParameterReferenceInternId(genericMethodParameterReference.DefiningMethod, (int)genericMethodParameterReference.Index);
+        return this.GetGenericMethodParameterReferenceInternId(genericMethodParameterReference.DefiningMethod, genericMethodParameterReference.Index);
       }
       IFunctionPointerTypeReference/*?*/ functionPointerTypeReference = typeReference as IFunctionPointerTypeReference;
       if (functionPointerTypeReference != null) {
@@ -1314,7 +1321,7 @@ namespace Microsoft.Cci {
 
     uint IInternFactory.GetGenericMethodParameterReferenceInternedKey(IMethodReference methodReference, int index) {
       lock (GlobalLock.LockingObject) {
-        return this.GetGenericMethodParameterReferenceInternId(methodReference, index);
+        return this.GetGenericMethodParameterReferenceInternId(methodReference, (uint)index);
       }
     }
 
