@@ -283,6 +283,11 @@ namespace Microsoft.Cci.Ast {
     ObjectRequired,
 
     /// <summary>
+    /// Reference to out parameter '{0}' not allowed in this context.
+    /// </summary>
+    OutParameterReferenceNotAllowedHere,
+
+    /// <summary>
     /// The * or -&gt; operator must be applied to a pointer.
     /// </summary>
     PointerExpected,

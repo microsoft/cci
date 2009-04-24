@@ -69,8 +69,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the precondition for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors()
-    {
+    public bool HasErrors() {
       if (this.hasErrors == null)
         this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
       return this.hasErrors.Value;
@@ -85,22 +84,20 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class Invariant : SourceItem, IErrorCheckable {
 
-    protected Invariant(Expression condition, ISourceLocation sourceLocation) : base(sourceLocation)
-    {
+    protected Invariant(Expression condition, ISourceLocation sourceLocation)
+      : base(sourceLocation) {
       this.condition = condition;
     }
 
     protected Invariant(BlockStatement containingBlock, Invariant template)
-      :base(template.SourceLocation)
-    {
+      : base(template.SourceLocation) {
       this.condition = template.condition.MakeCopyFor(containingBlock);
     }
 
     /// <summary>
     /// The condition that must be maintained.
     /// </summary>
-    public Expression Condition
-    {
+    public Expression Condition {
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -108,10 +105,8 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// IsTrue(this.Condition)
     /// </summary>
-    public Expression ConvertedCondition
-    {
-      get
-      {
+    public Expression ConvertedCondition {
+      get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
         return this.convertedCondition;
@@ -123,8 +118,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the condition.
     /// </summary>
-    public virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    public virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = this.Condition.HasErrors();
       if (this.Condition.ContainingBlock.Helper.ImplicitConversionInAssignmentContext(this.Condition, this.Condition.PlatformType.SystemBoolean.ResolvedType) is DummyExpression) {
         this.Condition.ContainingBlock.Helper.ReportFailedImplicitConversion(this.Condition, this.Condition.PlatformType.SystemBoolean.ResolvedType);
@@ -137,8 +131,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the precondition for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors()
-    {
+    public bool HasErrors() {
       if (this.hasErrors == null)
         this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
       return this.hasErrors.Value;
@@ -184,8 +177,7 @@ namespace Microsoft.Cci.Ast {
     }
     readonly IEnumerable<LoopInvariant> invariants;
 
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (LoopInvariant invariant in this.Invariants)
         result |= invariant.HasErrors();
@@ -266,9 +258,8 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="condition">The condition that must be true at the start of every iteration of a loop.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
-    public LoopInvariant(Expression condition, ISourceLocation sourceLocation) 
-      : base(condition, sourceLocation)
-    {
+    public LoopInvariant(Expression condition, ISourceLocation sourceLocation)
+      : base(condition, sourceLocation) {
     }
 
     /// <summary>
@@ -414,15 +405,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public IEnumerable<IExpression> Allocates {
       get {
-        foreach (Expression expr in this.allocates) 
+        foreach (Expression expr in this.allocates)
           yield return expr.ProjectAsIExpression();
       }
     }
     readonly IEnumerable<Expression> allocates;
 
-    public ISignatureDeclaration/*?*/ ContainingSignatureDeclaration
-    {
-      get { 
+    public ISignatureDeclaration/*?*/ ContainingSignatureDeclaration {
+      get {
         return this.containingBlock != null ? this.containingBlock.ContainingSignatureDeclaration : null;
       }
     }
@@ -444,7 +434,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public IEnumerable<IExpression> Frees {
       get {
-        foreach (Expression expr in this.frees) 
+        foreach (Expression expr in this.frees)
           yield return expr.ProjectAsIExpression();
       }
     }
@@ -496,7 +486,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public IEnumerable<IExpression> Reads {
       get {
-        foreach (Expression expr in this.reads) 
+        foreach (Expression expr in this.reads)
           yield return expr.ProjectAsIExpression();
       }
     }
@@ -509,7 +499,7 @@ namespace Microsoft.Cci.Ast {
       get {
         foreach (ThrownException thrownException in this.thrownExceptions)
           yield return thrownException;
-      } 
+      }
     }
     readonly IEnumerable<ThrownException> thrownExceptions;
 
@@ -518,27 +508,25 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public IEnumerable<IExpression> Writes {
       get {
-        foreach (Expression expr in this.writes) 
+        foreach (Expression expr in this.writes)
           yield return expr.ProjectAsIExpression();
       }
     }
     readonly IEnumerable<Expression> writes;
 
-
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (Precondition preCond in this.Preconditions)
-        result |= preCond.HasErrors();
+        result |= preCond.HasErrors() || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(preCond.Condition, this.containingBlock.CompilationPart.Helper);
       foreach (Postcondition postCond in this.Postconditions)
         result |= postCond.HasErrors();
       foreach (Expression read in this.reads) {
-        result |= read.HasErrors();
+        result |= read.HasErrors() || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(read, this.containingBlock.CompilationPart.Helper);
         if (read.ProjectAsIExpression() is ICompileTimeConstant)
           this.containingBlock.CompilationPart.Helper.ReportError(new AstErrorMessage(read, Error.ConstInReadsOrWritesClause, read.SourceLocation.Source));
       }
       foreach (Expression write in this.writes) {
-        result |= write.HasErrors();
+        result |= write.HasErrors() || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(write, this.containingBlock.CompilationPart.Helper);
         if (write.ProjectAsIExpression() is ICompileTimeConstant)
           this.containingBlock.CompilationPart.Helper.ReportError(new AstErrorMessage(write, Error.ConstInReadsOrWritesClause, write.SourceLocation.Source));
       }
@@ -614,55 +602,70 @@ namespace Microsoft.Cci.Ast {
     }
 
     #endregion
+
+    private class ErrorForOutParameterReporter : BaseCodeTraverser {
+      private bool OutParameterFound = false;
+      private readonly LanguageSpecificCompilationHelper helper;
+      private readonly ISourceItem defaultSourceItemForErrorReporting;
+
+      private ErrorForOutParameterReporter(LanguageSpecificCompilationHelper helper, ISourceItem defaultSourceItemForErrorReporting) {
+        this.helper = helper;
+        this.defaultSourceItemForErrorReporting = defaultSourceItemForErrorReporting;
+      }
+
+      public override void Visit(IBoundExpression boundExpression) {
+        IParameterDefinition par = boundExpression.Definition as IParameterDefinition;
+        if (par != null && par.IsOut) {
+          ISourceItem sourceItem = boundExpression as ISourceItem;
+          if (sourceItem == null) sourceItem = this.defaultSourceItemForErrorReporting;
+          this.helper.ReportError(new AstErrorMessage(sourceItem, Error.OutParameterReferenceNotAllowedHere, par.Name.Value));
+          OutParameterFound = true;
+        }
+        base.Visit(boundExpression);
+      }
+
+      internal static bool CheckAndReturnTrueIfFound(Expression expression, LanguageSpecificCompilationHelper helper) {
+        ErrorForOutParameterReporter er = new ErrorForOutParameterReporter(helper, expression);
+        expression.Dispatch(er);
+        return er.OutParameterFound;
+      }
+    }
   }
 
   /// <summary>
-  /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
+  /// A condition that must be true at the start or end of a method
   /// </summary>
-  public class Precondition : SourceItem, IPrecondition {
+  public abstract class MethodContractItem : SourceItem, IErrorCheckable {
 
     /// <summary>
-    /// Allocates a condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
+    /// Allocates a condition that must be true at the start or end of a method
     /// </summary>
-    /// <param name="condition">The condition that must be true at the start of the method that is associated with this Precondition instance.</param>
-    /// <param name="exceptionToThrow">An exeption that will be thrown if Condition is not true at the start of the method that is associated with this Precondition instance.
-    /// May be null. If null, the runtime behavior of the associated method is undefined when Condition is not true.</param>
+    /// <param name="condition">The condition that must be true at the start or end of the method that is associated with this MethodContractItem instance.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
-    public Precondition(Expression condition, Expression/*?*/ exceptionToThrow, ISourceLocation sourceLocation) 
-      : base(sourceLocation)
-    {
+    protected MethodContractItem(Expression condition, ISourceLocation sourceLocation)
+      : base(sourceLocation) {
       this.condition = condition;
-      this.exceptionToThrow = exceptionToThrow;
     }
 
     /// <summary>
     /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
     /// </summary>
-    /// <param name="containingBlock">The containing block of the copied precondition. This should be different from the containing block of the template precondition.</param>
+    /// <param name="containingBlock">The containing block of the copied condition. This should be different from the containing block of the template precondition.</param>
     /// <param name="template">The statement to copy.</param>
-    private Precondition(BlockStatement containingBlock, Precondition template)
+    protected MethodContractItem(BlockStatement containingBlock, MethodContractItem template)
       : base(template.SourceLocation) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
-      if (template.ExceptionToThrow != null)
-        this.exceptionToThrow = template.ExceptionToThrow.MakeCopyFor(containingBlock);
     }
 
-    /// <summary>
-    /// The precondition is always checked at runtime, even in release builds.
-    /// </summary>
-    public virtual bool AlwaysCheckedAtRuntime {
-      get { return false; }
-    }
-    
     /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
-    private bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ConvertedCondition.HasErrors() || this.ConvertedCondition.HasSideEffect(true) || this.ExceptionToThrow != null && this.ExceptionToThrow.HasErrors();
+    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return this.ConvertedCondition.HasErrors() || this.ConvertedCondition.HasSideEffect(true);
     }
 
     /// <summary>
-    /// The condition that must be true at the start of the method that is associated with this Precondition instance.
+    /// The condition that must be true at the start or end of the method that is associated with this MethodContractItem instance.
     /// </summary>
     public Expression Condition {
       get { return this.condition; }
@@ -670,7 +673,7 @@ namespace Microsoft.Cci.Ast {
     readonly Expression condition;
 
     /// <summary>
-    /// The condition that must be true at the start of the method that is associated with this Precondition instance.
+    /// The condition that must be true at the start or end of the method that is associated with this MethodContractItem instance.
     /// </summary>
     public Expression ConvertedCondition {
       get {
@@ -681,6 +684,71 @@ namespace Microsoft.Cci.Ast {
     }
     //^ [Once]
     Expression/*?*/ convertedCondition;
+
+    /// <summary>
+    /// Checks the condition for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors() {
+      if (this.hasErrors == null)
+        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      return this.hasErrors.Value;
+    }
+    bool? hasErrors;
+
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    public virtual void SetContainingExpression(Expression containingExpression) {
+      this.Condition.SetContainingExpression(containingExpression);
+    }
+  }
+
+
+  /// <summary>
+  /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
+  /// </summary>
+  public class Precondition : MethodContractItem, IPrecondition {
+
+    /// <summary>
+    /// Allocates a condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
+    /// </summary>
+    /// <param name="condition">The condition that must be true at the start of the method that is associated with this Precondition instance.</param>
+    /// <param name="exceptionToThrow">An exeption that will be thrown if Condition is not true at the start of the method that is associated with this Precondition instance.
+    /// May be null. If null, the runtime behavior of the associated method is undefined when Condition is not true.</param>
+    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
+    public Precondition(Expression condition, Expression/*?*/ exceptionToThrow, ISourceLocation sourceLocation)
+      : base(condition, sourceLocation) {
+      this.exceptionToThrow = exceptionToThrow;
+    }
+
+    /// <summary>
+    /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
+    /// </summary>
+    /// <param name="containingBlock">The containing block of the copied precondition. This should be different from the containing block of the template precondition.</param>
+    /// <param name="template">The statement to copy.</param>
+    private Precondition(BlockStatement containingBlock, Precondition template)
+      : base(containingBlock, template) {
+      if (template.ExceptionToThrow != null)
+        this.exceptionToThrow = template.ExceptionToThrow.MakeCopyFor(containingBlock);
+    }
+
+    /// <summary>
+    /// The precondition is always checked at runtime, even in release builds.
+    /// </summary>
+    public virtual bool AlwaysCheckedAtRuntime {
+      get { return false; }
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      result |= this.ExceptionToThrow != null && this.ExceptionToThrow.HasErrors();
+      return result;
+    }
 
     /// <summary>
     /// Calls visitor.Visit(IPrecondition).
@@ -706,16 +774,6 @@ namespace Microsoft.Cci.Ast {
     readonly Expression/*?*/ exceptionToThrow;
 
     /// <summary>
-    /// Checks the precondition for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound(); 
-      return this.hasErrors.Value;
-    }  
-    bool? hasErrors;
-
-    /// <summary>
     /// Makes a copy of this precondition, changing the containing block to the given block.
     /// </summary>
     public Precondition MakeCopyFor(BlockStatement containingBlock)
@@ -730,8 +788,8 @@ namespace Microsoft.Cci.Ast {
     /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
     /// care not to call any other methods or property/event accessors on the object until after this method has been called.
     /// </summary>
-    public void SetContainingExpression(Expression containingExpression) {
-      this.Condition.SetContainingExpression(containingExpression);
+    public override void SetContainingExpression(Expression containingExpression) {
+      base.SetContainingExpression(containingExpression);
       if (this.ExceptionToThrow != null)
         this.ExceptionToThrow.SetContainingExpression(containingExpression);
     }
@@ -756,7 +814,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A condition that must be true at the end of a method.
   /// </summary>
-  public sealed class Postcondition : SourceItem, IPostcondition {
+  public sealed class Postcondition : MethodContractItem, IPostcondition {
 
     /// <summary>
     /// Allocates a condition that must be true at the end of a method.
@@ -764,9 +822,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="condition">The condition that must be true at the end of the method that is associated with this Postcondition instance.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
     public Postcondition(Expression condition, ISourceLocation sourceLocation)
-      : base(sourceLocation) 
-    {
-      this.condition = condition;
+      : base(condition, sourceLocation) {
     }
 
     /// <summary>
@@ -775,37 +831,8 @@ namespace Microsoft.Cci.Ast {
     /// <param name="containingBlock">The containing block of the copied postcondition. This should be different from the containing block of the template postcondition.</param>
     /// <param name="template">The statement to copy.</param>
     private Postcondition(BlockStatement containingBlock, Postcondition template)
-      : base(template.SourceLocation) {
-      this.condition = template.Condition.MakeCopyFor(containingBlock);
+      : base(containingBlock, template) {
     }
-
-    /// <summary>
-    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
-    /// </summary>
-    private bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ConvertedCondition.HasErrors() || this.ConvertedCondition.HasSideEffect(true);
-    }
-
-    /// <summary>
-    /// The condition that must be true at the end of the method that is associated with this Postcondition instance.
-    /// </summary>
-    public Expression Condition {
-      get { return this.condition; }
-    }
-    readonly Expression condition;
-
-    /// <summary>
-    /// The condition that must be true at the start of the method that is associated with this Precondition instance.
-    /// </summary>
-    public Expression ConvertedCondition {
-      get {
-        if (this.convertedCondition == null) 
-          this.convertedCondition = new IsTrue(this.Condition);
-        return this.convertedCondition;
-      }
-    }
-    //^ [Once]
-    Expression/*?*/ convertedCondition;
 
     /// <summary>
     /// Calls visitor.Visit(IPostcondition).
@@ -822,16 +849,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Checks the postcondition for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
-    }
-    bool? hasErrors;
-
-    /// <summary>
     /// Makes a copy of this post condition, changing the containing block to the given block.
     /// </summary>
     public Postcondition MakeCopyFor(BlockStatement containingBlock)
@@ -839,15 +856,6 @@ namespace Microsoft.Cci.Ast {
     {
       if (this.Condition.ContainingBlock == containingBlock) return this;
       return new Postcondition(containingBlock, this);
-    }
-
-    /// <summary>
-    /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
-    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
-    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
-    /// </summary>
-    public void SetContainingExpression(Expression containingExpression) {
-      this.Condition.SetContainingExpression(containingExpression);
     }
 
     #region IPostcondition Members
@@ -1037,14 +1045,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public IEnumerable<IMethodDefinition> ContractMethods {
       get {
-        foreach (MethodDeclaration methDecl in this.contractMethods) 
+        foreach (MethodDeclaration methDecl in this.contractMethods)
           yield return methDecl.MethodDefinition;
       }
     }
     readonly IEnumerable<MethodDeclaration> contractMethods;
 
-    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound()
-    {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (TypeInvariant invariant in this.invariants)
         result |= invariant.HasErrors();
@@ -1124,9 +1131,8 @@ namespace Microsoft.Cci.Ast {
     /// <param name="condition">The condition that must be true at the start of the method that is associated with this Precondition instance.</param>
     /// <param name="isAxiom">An axiom is a type invariant whose truth is assumed rather than derived. Commonly used to make statements about the meaning of contract methods.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
-    public TypeInvariant(NameDeclaration/*?*/ name, Expression condition, bool isAxiom, ISourceLocation sourceLocation) 
-      : base(condition, sourceLocation)
-    {
+    public TypeInvariant(NameDeclaration/*?*/ name, Expression condition, bool isAxiom, ISourceLocation sourceLocation)
+      : base(condition, sourceLocation) {
       this.name = name;
       this.isAxiom = isAxiom;
     }
@@ -1161,7 +1167,7 @@ namespace Microsoft.Cci.Ast {
     /// An axiom is a type invariant whose truth is assumed rather than derived. Commonly used to make statements about the meaning of contract methods.
     /// </summary>
     public bool IsAxiom {
-      get { return this.isAxiom; } 
+      get { return this.isAxiom; }
     }
     readonly bool isAxiom;
 

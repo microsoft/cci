@@ -229,7 +229,7 @@
     <value>'{0}' probably does not express what you intended; use two conjoined conditions to express an interval or parenthesize the {1} comparison.</value>
   </data>
   <data name="SizeOfUnknown" xml:space="preserve">
-    <value>The size of '{0}' is unknown in the current context; note that the use of sizeof may be due to SAL __in ,__inout, or __out annotations.</value>
+    <value>The size of '{0}' is unknown in the current context.</value>
   </data>
   <data name="CannotCallNonMethod" xml:space="preserve">
     <value>'{0}' is not a method and cannot be called.</value>
@@ -266,5 +266,8 @@
   </data>
   <data name="CannotInferTypeOfConditionalDueToAmbiguity" xml:space="preserve">
     <value>Type of conditional expression cannot be determined because there are implicit conversions between '{0}' and '{1}'; try adding an explicit cast to one of the arguments.</value>
+  </data>
+  <data name="OutParameterReferenceNotAllowedHere" xml:space="preserve">
+    <value>Reference to out parameter '{0}' not allowed in this context.</value>
   </data>
 </root>
