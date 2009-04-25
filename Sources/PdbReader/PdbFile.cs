@@ -127,7 +127,6 @@ namespace Microsoft.Cci.Pdb {
     }
 
     private static PdbFunction match = new PdbFunction();
-    private static IntHashTable checks = new IntHashTable();
 
     private static PdbFunction FindFunction(PdbFunction[] funcs, ushort sec, uint off) {
       match.segment = sec;
@@ -145,7 +144,7 @@ namespace Microsoft.Cci.Pdb {
                                  BitAccess bits,
                                  uint limit) {
       Array.Sort(funcs, PdbFunction.byAddress);
-      checks.Clear();
+      IntHashTable checks = new IntHashTable();
 
       // Read the files first
       int begin = bits.Position;
