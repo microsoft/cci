@@ -298,9 +298,9 @@ namespace Microsoft.Cci {
       if (this.documentCache.TryGetValue(pdbSourceFile, out result)) return result;
       IName name = this.host.NameTable.GetNameFor(Path.GetFileName(pdbSourceFile.name));
       if (File.Exists(pdbSourceFile.name)) {
-        result = new PdbSourceDocument(name, pdbSourceFile.name, new StreamReader(pdbSourceFile.name));
+        result = new PdbSourceDocument(name, pdbSourceFile, new StreamReader(pdbSourceFile.name));
       } else
-        result = new PdbSourceDocument(name, pdbSourceFile.name, "");
+        result = new PdbSourceDocument(name, pdbSourceFile);
       this.documentCache.Add(pdbSourceFile, result);
       return result;
     }
@@ -359,7 +359,7 @@ namespace Microsoft.Cci {
     }
 
     public IPrimarySourceDocument PrimarySourceDocument {
-      get { return new PdbSourceDocument(Dummy.Name, string.Empty, string.Empty); }
+      get { return SourceDummy.PrimarySourceDocument; }
     }
 
     public int StartColumn {
@@ -427,11 +427,11 @@ namespace Microsoft.Cci {
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
     /// <param name="location">The location where the document was found or where it will be stored.</param>
     /// <param name="streamReader">A StreamReader instance whose BaseStream produces the contents of the document.</param>
-    internal PdbSourceDocument(IName name, string location, StreamReader streamReader) 
-      : base(name, location, streamReader)
+    internal PdbSourceDocument(IName name, PdbSource pdbSourceFile, StreamReader streamReader) 
+      : base(name, pdbSourceFile.name, streamReader)
     {
       this.name = name;
-      this.location = location;
+      this.pdbSourceFile = pdbSourceFile;
     }
 
     /// <summary>
@@ -440,42 +440,42 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
     /// <param name="location">The location where the document was found or where it will be stored.</param>
-    /// <param name="text">The source text of the document.</param>
-    internal PdbSourceDocument(IName name, string location, string text)
-      : base(name, location, text) {
+    internal PdbSourceDocument(IName name, PdbSource pdbSourceFile)
+      : base(name, pdbSourceFile.name, "") {
+      this.name = name;
+      this.pdbSourceFile = pdbSourceFile;
     }
 
     IName name;
-    string location;
-
+    PdbSource pdbSourceFile;
 
     public override string SourceLanguage {
       get {
-        if (this.DocumentType == SymLanguageType.Basic) return "Basic";
-        if (this.DocumentType == SymLanguageType.C) return "C";
-        if (this.DocumentType == SymLanguageType.Cobol) return "Cobol";
-        if (this.DocumentType == SymLanguageType.CPlusPlus) return "C++";
-        if (this.DocumentType == SymLanguageType.CSharp) return "C#";
-        if (this.DocumentType == SymLanguageType.ILAssembly) return "ILAssembly";
-        if (this.DocumentType == SymLanguageType.Java) return "Java";
-        if (this.DocumentType == SymLanguageType.JScript) return "JScript";
-        if (this.DocumentType == SymLanguageType.MCPlusPlus) return "MC++";
-        if (this.DocumentType == SymLanguageType.Pascal) return "Pascal";
-        if (this.DocumentType == SymLanguageType.SMC) return "SMC";
+        if (this.Language == SymLanguageType.Basic) return "Basic";
+        if (this.Language == SymLanguageType.C) return "C";
+        if (this.Language == SymLanguageType.Cobol) return "Cobol";
+        if (this.Language == SymLanguageType.CPlusPlus) return "C++";
+        if (this.Language == SymLanguageType.CSharp) return "C#";
+        if (this.Language == SymLanguageType.ILAssembly) return "ILAssembly";
+        if (this.Language == SymLanguageType.Java) return "Java";
+        if (this.Language == SymLanguageType.JScript) return "JScript";
+        if (this.Language == SymLanguageType.MCPlusPlus) return "MC++";
+        if (this.Language == SymLanguageType.Pascal) return "Pascal";
+        if (this.Language == SymLanguageType.SMC) return "SMC";
         return ""; //TODO: search registry based on file extension
       }
     }
 
     public override Guid DocumentType {
-      get { return SymDocumentType.Text; }
+      get { return this.pdbSourceFile.doctype; }
     }
 
-    public override Guid Language { //TODO: get from PDB
-      get { return SymLanguageType.CSharp; }
+    public override Guid Language {
+      get { return this.pdbSourceFile.language; }
     }
 
     public override Guid LanguageVendor {
-      get { return SymLanguageVendor.Microsoft; }
+      get { return this.pdbSourceFile.vendor; }
     }
 
   }
