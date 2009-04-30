@@ -174,8 +174,8 @@ namespace Microsoft.Cci.Pdb {
               string name = (string)names[(int)chk.name];
               int guidStream;
               Guid doctypeGuid = SymDocumentType.Text;
-              Guid languageGuid = SymLanguageType.CSharp;
-              Guid vendorGuid = SymLanguageVendor.Microsoft;
+              Guid languageGuid = Guid.Empty;
+              Guid vendorGuid = Guid.Empty;
               if (nameIndex.TryGetValue("/src/files/"+name, out guidStream)) {
                 var guidBits = new BitAccess(0x100);
                 dir.streams[guidStream].Read(reader, guidBits);
