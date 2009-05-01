@@ -20,10 +20,25 @@
   <PropertyGroup>
     <CodePlexProjectName>ccimetadata</CodePlexProjectName>
     <CodePlexReleaseName>Latest Build</CodePlexReleaseName>
-    <!-- set by the ccnet server
-    <CodePlexUser />
-    <CodePlexPassword /> 
-     -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
+    <VersionSource>
+      // ==++==
+      //
+      //   Copyright (c) Microsoft Corporation.  All rights reserved.
+      //
+      // ==--==
+      // Warning: Automatically generated file. DO NOT EDIT
+      // Generated at $(CCNetBuildDate)
+
+      using System.Reflection;
+      [assembly: AssemblyVersion("$(BuildVersion)")]
+      [assembly: AssemblyFileVersion("$(BuildVersion)")]
+      [assembly: AssemblyCompany("Microsoft Corporation")]
+      [assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+    </VersionSource>
   </PropertyGroup>
 
   <!-- target definitions  -->
@@ -32,6 +47,7 @@
     Name="ContinuousBuild" 
     DependsOnTargets="
       Clean;
+      CreateVersion;
       BuildDebug;
       TestDebug;
       BuildRelease;
@@ -42,6 +58,7 @@
     Name="NighltyBuild"
     DependsOnTargets="
       Clean;
+      CreateVersion;
       BuildRelease;
       TestNightly;
       " />
@@ -50,13 +67,19 @@
     Name="ContinuousCodePlexRelease"
     DependsOnTargets="
       Clean;
-      BuildRelease;
-      CreateCodePlexRelease
+      CreateVersion;
+      BuildRelease
     "
     />
 
   <Target Name="Clean">
     <RemoveDir Directories="$(BinDirectory)"  ContinueOnError="true" />
+  </Target>
+
+  <Target Name="CreateVersion">
+    <Message Text="Writing version file" />
+    <Delete Files="$(VersionFile)" />
+    <WriteLinesToFile File="$(VersionFile)" Lines="$(VersionSource)" />    
   </Target>
   
   <Target Name="BuildDebug">
@@ -98,23 +121,4 @@
   <Target Name="TestNightly">
   </Target>
   
-  <Target Name="CreateCodePlexRelease" Condition="False">
-    <Error Condition="$(CodePlexUser) == ''" Text="You must provide your codeplex user name (/p:CodePlexUser=John)" />
-    <Error Condition="$(CodePlexPassword) == ''" Text="You must provide your codeplex password (/p:CodePlexPassword=123456)" />
-    <CreateItem
-      Include="$(BinReleaseDirectory)\Microsoft.Cci.*.dll" 
-      AdditionalMetadata="
-        FileType=RuntimeBinary;
-      ">
-      <Output TaskParameter="Include" ItemName="ReleaseFiles"/>
-    </CreateItem>
-    <UploadFiles
-      ProjectName="$(CodePlexProjectName)"
-      ReleaseName="$(CodePlexReleaseName)"
-      ReleaseFiles="@(ReleaseFiles)"
-      User="$(CodePlexUser)"
-      Password="$(CodePlexPassword)"
-	    />
-  </Target>
-
 </Project>
