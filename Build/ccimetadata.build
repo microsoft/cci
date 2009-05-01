@@ -2,8 +2,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
           DefaultTargets="ContinuousBuild">
   <UsingTask 
-    TaskName="UploadFiles" 
-    AssemblyName="CodePlex.WebServices.Client" />
+    TaskName="Microsoft.Cci.MsBuild.WriteFile" 
+    AssemblyName="Microsoft.Cci.MsBuild" />
   <!-- constants -->
   <PropertyGroup>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
@@ -24,6 +24,8 @@
 
   <PropertyGroup>
     <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
+  </PropertyGroup>
+  <ItemGroup>
     <VersionSource>
 <![CDATA[// ==++==
 //
@@ -40,7 +42,7 @@ using System.Reflection;
 [assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
 ]]>
     </VersionSource>
-  </PropertyGroup>
+  </ItemGroup>
 
   <!-- target definitions  -->
   <!-- quick build -->
@@ -79,8 +81,7 @@ using System.Reflection;
 
   <Target Name="CreateVersion">
     <Message Text="Writing version file $(VersionFile) with $(VersionSource)" />
-    <Delete Files="$(VersionFile)" />
-    <WriteLinesToFile File="$(VersionFile)" Lines="$(VersionSource)" />    
+    <WriteFile File="$(VersionFile)" Content="$(VersionSource)" />    
   </Target>
   
   <Target Name="BuildDebug">
