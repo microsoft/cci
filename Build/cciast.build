@@ -4,6 +4,10 @@
   <UsingTask 
     TaskName="UploadFiles" 
     AssemblyName="CodePlex.WebServices.Client" />
+  <UsingTask
+    TaskName="Microsoft.Cci.MsBuild.WriteFile"
+    AssemblyFile="..\Metadata\Build\Microsoft.Cci.MsBuild.dll" />
+
   <!-- constants -->
   <PropertyGroup>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
@@ -26,11 +30,34 @@
      -->
   </PropertyGroup>
 
+  <PropertyGroup>
+    <MetadataVersionFile>$(RootDirectory)\Metadata\Sources\common\include\version.cs</MetadataVersionFile>
+    <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
+    <VersionSource>
+      <![CDATA[// ==++==
+//
+//   Copyright (c) Microsoft Corporation.  All rights reserved.
+//
+// ==--==
+// Warning: Automatically generated file. DO NOT EDIT
+// Generated at $(CCNetBuildDate)
+
+using System.Reflection;
+[assembly: AssemblyVersion("$(BuildVersion)")]
+[assembly: AssemblyFileVersion("$(BuildVersion)")]
+[assembly: AssemblyCompany("Microsoft Corporation")]
+[assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+]]>
+    </VersionSource>
+  </PropertyGroup>
+
+
   <!-- target definitions  -->
   <!-- quick build -->
   <Target 
     Name="ContinuousBuild" 
     DependsOnTargets="
+      CreateVersion;
       BuildDebug;
       TestDebug;
       BuildRelease;
@@ -40,6 +67,7 @@
   <Target
     Name="NighltyBuild"
     DependsOnTargets="
+      CreateVersion;
       BuildRelease;
       TestNightly;
       " />
@@ -47,10 +75,17 @@
   <Target
     Name="ContinuousCodePlexRelease"
     DependsOnTargets="
+      CreateVersion;
       BuildRelease;
       CreateCodePlexRelease
     "
     />
+
+  <Target Name="CreateVersion">
+    <Message Text="Writing version file $(VersionFile) and $(MetadataVersionFile)" />
+    <WriteFile File="$(MetadataVersionFile)" Content="$(VersionSource)" />
+    <WriteFile File="$(VersionFile)" Content="$(VersionSource)" />
+  </Target>
 
   <Target Name="BuildDebug">
     <MSBuild
