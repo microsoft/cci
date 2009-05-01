@@ -3,7 +3,7 @@
           DefaultTargets="ContinuousBuild">
   <UsingTask 
     TaskName="Microsoft.Cci.MsBuild.WriteFile" 
-    AssemblyName="Microsoft.Cci.MsBuild" />
+    AssemblyFile="Microsoft.Cci.MsBuild.dll" />
   <!-- constants -->
   <PropertyGroup>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
