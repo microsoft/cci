@@ -25,19 +25,20 @@
   <PropertyGroup>
     <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
     <VersionSource>
-      // ==++==
-      //
-      //   Copyright (c) Microsoft Corporation.  All rights reserved.
-      //
-      // ==--==
-      // Warning: Automatically generated file. DO NOT EDIT
-      // Generated at $(CCNetBuildDate)
+<![CDATA[// ==++==
+//
+//   Copyright (c) Microsoft Corporation.  All rights reserved.
+//
+// ==--==
+// Warning: Automatically generated file. DO NOT EDIT
+// Generated at $(CCNetBuildDate)
 
-      using System.Reflection;
-      [assembly: AssemblyVersion("$(BuildVersion)")]
-      [assembly: AssemblyFileVersion("$(BuildVersion)")]
-      [assembly: AssemblyCompany("Microsoft Corporation")]
-      [assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+using System.Reflection;
+[assembly: AssemblyVersion("$(BuildVersion)")]
+[assembly: AssemblyFileVersion("$(BuildVersion)")]
+[assembly: AssemblyCompany("Microsoft Corporation")]
+[assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+]]>
     </VersionSource>
   </PropertyGroup>
 
@@ -77,7 +78,7 @@
   </Target>
 
   <Target Name="CreateVersion">
-    <Message Text="Writing version file" />
+    <Message Text="Writing version file $(VersionFile) with $(VersionSource)" />
     <Delete Files="$(VersionFile)" />
     <WriteLinesToFile File="$(VersionFile)" Lines="$(VersionSource)" />    
   </Target>
