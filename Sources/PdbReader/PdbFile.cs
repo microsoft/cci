@@ -182,7 +182,7 @@ namespace Microsoft.Cci.Pdb {
                 LoadGuidStream(guidBits, out doctypeGuid, out languageGuid, out vendorGuid);
               }
 
-              PdbSource src = new PdbSource((uint)ni, name, doctypeGuid, languageGuid, vendorGuid);
+              PdbSource src = new PdbSource(/*(uint)ni,*/ name, doctypeGuid, languageGuid, vendorGuid);
               checks.Add(ni, src);
               bits.Position += chk.len;
               bits.Align(4);
@@ -257,7 +257,7 @@ namespace Microsoft.Cci.Pdb {
 
                   uint lineBegin = line.flags & (uint)CV_Line_Flags.linenumStart;
                   uint delta = (line.flags & (uint)CV_Line_Flags.deltaLineEnd) >> 24;
-                  bool statement = ((line.flags & (uint)CV_Line_Flags.fStatement) == 0);
+                  //bool statement = ((line.flags & (uint)CV_Line_Flags.fStatement) == 0);
                   if ((sec.flags & 1) != 0) {
                     bits.Position = pcol + 4 * i;
                     bits.ReadUInt16(out column.offColumnStart);
@@ -297,7 +297,7 @@ namespace Microsoft.Cci.Pdb {
 
       bits.Position = 4;
       // Console.WriteLine("{0}:", info.moduleName);
-      funcs = PdbFunction.LoadManagedFunctions(info.moduleName,
+      funcs = PdbFunction.LoadManagedFunctions(/*info.moduleName,*/
                                                bits, (uint)info.cbSyms,
                                                readStrings);
       if (funcs != null) {

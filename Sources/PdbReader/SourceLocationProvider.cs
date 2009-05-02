@@ -146,12 +146,12 @@ namespace Microsoft.Cci {
 
     private PdbFunction/*?*/ GetPdbFunctionFor(IMethodBody methodBody) {
       PdbFunction result = null;
-      uint methodToken = this.GetTokenFor(methodBody);
+      uint methodToken = GetTokenFor(methodBody);
       this.pdbFunctionMap.TryGetValue(methodToken, out result);
       return result;
     }
 
-    private uint GetTokenFor(IMethodBody methodBody) {
+    private static uint GetTokenFor(IMethodBody methodBody) {
       foreach (ILocation location in methodBody.MethodDefinition.Locations) {
         MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
         if (mbLocation != null) return mbLocation.Document.MethodToken;
@@ -219,13 +219,13 @@ namespace Microsoft.Cci {
       if (pdbFunction != null && pdbFunction.usingCounts != null) {
         if (pdbFunction.namespaceScopes != null) return pdbFunction.namespaceScopes;
         foreach (PdbScope pdbScope in pdbFunction.scopes) {
-          return pdbFunction.namespaceScopes = this.GetNamespaceScopes(methodBody, pdbFunction.usingCounts, pdbScope).AsReadOnly();
+          return pdbFunction.namespaceScopes = this.GetNamespaceScopes(pdbFunction.usingCounts, pdbScope).AsReadOnly();
         }
       }
       return IteratorHelper.GetEmptyEnumerable<INamespaceScope>();
     }
 
-    private List<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody, ushort[] usingCounts, PdbScope pdbScope) {
+    private List<INamespaceScope> GetNamespaceScopes(ushort[] usingCounts, PdbScope pdbScope) {
       int usedNamespaceCount = 0;
       int numScopes = usingCounts.Length;
       List<INamespaceScope> result = new List<INamespaceScope>(numScopes);
@@ -241,30 +241,18 @@ namespace Microsoft.Cci {
     }
 
     private IUsedNamespace GetUsedNamespace(string namespaceName) {
-      if (namespaceName.StartsWith("A")) {
+      if (namespaceName.Length > 0 && namespaceName[0] == 'A') {
         string[] parts = namespaceName.Split(' ');
         if (parts.Length == 2) {
           IName alias = this.host.NameTable.GetNameFor(parts[0].Substring(1));
           IName nsName = this.host.NameTable.GetNameFor(parts[1].Substring(1));
           return new UsedNamespace(alias, nsName);
         }
-      } else if (namespaceName.StartsWith("U")) {
+      } else if (namespaceName.Length > 0 && namespaceName[0] == 'U') {
         IName nsName = this.host.NameTable.GetNameFor(namespaceName.Substring(1));
         return new UsedNamespace(this.host.NameTable.EmptyName, nsName);
       }
       return new UsedNamespace(this.host.NameTable.EmptyName, this.host.NameTable.GetNameFor(namespaceName));
-    }
-
-    private PdbScope/*?*/ GetScopeFor(PdbScope[] pdbScopes, uint index) {
-      PdbScope/*?*/ result = null;
-      foreach (PdbScope scope in pdbScopes) {
-        foreach (PdbSlot slot in scope.slots) {
-          if (slot.slot == index) return scope;
-        }
-        result = this.GetScopeFor(scope.scopes, index);
-        if (result != null) return result;
-      }
-      return result;
     }
 
     /// <summary>
@@ -425,12 +413,11 @@ namespace Microsoft.Cci {
     /// such as C#, to produce an object model.
     /// </summary>
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
-    /// <param name="location">The location where the document was found or where it will be stored.</param>
+    /// <param name="pdbSourceFile">Information about the document, such as its location.</param>
     /// <param name="streamReader">A StreamReader instance whose BaseStream produces the contents of the document.</param>
     internal PdbSourceDocument(IName name, PdbSource pdbSourceFile, StreamReader streamReader) 
       : base(name, pdbSourceFile.name, streamReader)
     {
-      this.name = name;
       this.pdbSourceFile = pdbSourceFile;
     }
 
@@ -439,14 +426,12 @@ namespace Microsoft.Cci {
     /// such as C#, to produce an object model.
     /// </summary>
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
-    /// <param name="location">The location where the document was found or where it will be stored.</param>
+    /// <param name="pdbSourceFile">Information about the document, such as its location.</param>
     internal PdbSourceDocument(IName name, PdbSource pdbSourceFile)
       : base(name, pdbSourceFile.name, "") {
-      this.name = name;
       this.pdbSourceFile = pdbSourceFile;
     }
 
-    IName name;
     PdbSource pdbSourceFile;
 
     public override string SourceLanguage {
@@ -713,10 +698,6 @@ namespace Microsoft.Cci {
 
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
-    }
-
-    public bool HasErrors() {
-      return false;
     }
 
     public IEnumerable<ILocation> Locations {

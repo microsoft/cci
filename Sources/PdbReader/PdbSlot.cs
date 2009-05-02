@@ -10,8 +10,8 @@ namespace Microsoft.Cci.Pdb {
     internal uint slot;
     internal string name;
     internal ushort flags;
-    internal uint segment;
-    internal uint address;
+    //internal uint segment;
+    //internal uint address;
 
     internal PdbSlot(BitAccess bits, out uint typind) {
       AttrSlotSym slot;
@@ -26,8 +26,8 @@ namespace Microsoft.Cci.Pdb {
       this.slot = slot.index;
       this.name = slot.name;
       this.flags = slot.flags;
-      this.segment = slot.segCod;
-      this.address = slot.offCod;
+      //this.segment = slot.segCod;
+      //this.address = slot.offCod;
 
       typind = slot.typind;
     }

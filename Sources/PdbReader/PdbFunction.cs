@@ -12,17 +12,17 @@ namespace Microsoft.Cci.Pdb {
     static internal readonly Guid msilMetaData = new Guid(0xc6ea3fc9, 0x59b3, 0x49d6, 0xbc, 0x25,
                                                         0x09, 0x02, 0xbb, 0xab, 0xb4, 0x60);
     static internal readonly IComparer byAddress = new PdbFunctionsByAddress();
-    static internal readonly IComparer byToken = new PdbFunctionsByToken();
+    //static internal readonly IComparer byToken = new PdbFunctionsByToken();
 
     internal uint token;
     internal uint slotToken;
-    internal string name;
-    internal string module;
-    internal ushort flags;
+    //internal string name;
+    //internal string module;
+    //internal ushort flags;
 
     internal uint segment;
     internal uint address;
-    internal uint length;
+    //internal uint length;
 
     //internal byte[] metadata;
     internal PdbScope[] scopes;
@@ -41,10 +41,10 @@ namespace Microsoft.Cci.Pdb {
     }
 
 
-    internal static PdbFunction[] LoadManagedFunctions(string module,
+    internal static PdbFunction[] LoadManagedFunctions(/*string module,*/
                                                        BitAccess bits, uint limit,
                                                        bool readStrings) {
-      string mod = StripNamespace(module);
+      //string mod = StripNamespace(module);
       int begin = bits.Position;
       int count = 0;
 
@@ -101,7 +101,7 @@ namespace Microsoft.Cci.Pdb {
           case SYM.S_GMANPROC:
           case SYM.S_LMANPROC:
             ManProcSym proc;
-            int offset = bits.Position;
+            //int offset = bits.Position;
 
             bits.ReadUInt32(out proc.parent);
             bits.ReadUInt32(out proc.end);
@@ -122,7 +122,7 @@ namespace Microsoft.Cci.Pdb {
             //Console.WriteLine("token={0:X8} [{1}::{2}]", proc.token, module, proc.name);
 
             bits.Position = stop;
-            funcs[func++] = new PdbFunction(module, proc, bits);
+            funcs[func++] = new PdbFunction(/*module,*/ proc, bits);
             break;
 
           default: {
@@ -190,15 +190,14 @@ namespace Microsoft.Cci.Pdb {
     internal PdbFunction() {
     }
 
-    internal PdbFunction(string module, ManProcSym proc, BitAccess bits) {
+    internal PdbFunction(/*string module, */ManProcSym proc, BitAccess bits) {
       this.token = proc.token;
-      this.module = module;
-      this.name = proc.name;
-      this.flags = proc.flags;
+      //this.module = module;
+      //this.name = proc.name;
+      //this.flags = proc.flags;
       this.segment = proc.seg;
       this.address = proc.off;
-      this.length = proc.len;
-      this.slotToken = 0;
+      //this.length = proc.len;
 
       if (proc.seg != 1) {
         throw new PdbDebugException("Segment is {0}, not 1.", proc.seg);
@@ -320,8 +319,8 @@ namespace Microsoft.Cci.Pdb {
       bits.ReadUInt32(out numberOfBytesInItem);
       switch (kind) {
         case 0: this.ReadUsingInfo(bits); break;
-        case 1: this.ReadForwardInfo(bits); break;
-        case 2: this.ReadForwardedToModuleInfo(bits); break;
+        case 1: break; // this.ReadForwardInfo(bits); break;
+        case 2: break; // this.ReadForwardedToModuleInfo(bits); break;
         case 3: this.ReadIteratorLocals(bits); break;
         case 4: this.ReadForwardIterator(bits); break;
         default: throw new PdbDebugException("Unknown custom metadata item kind: {0}", kind);
@@ -346,11 +345,11 @@ namespace Microsoft.Cci.Pdb {
       }
     }
 
-    private void ReadForwardedToModuleInfo(BitAccess bits) {
-    }
+    //private void ReadForwardedToModuleInfo(BitAccess bits) {
+    //}
 
-    private void ReadForwardInfo(BitAccess bits) {
-    }
+    //private void ReadForwardInfo(BitAccess bits) {
+    //}
 
     private void ReadUsingInfo(BitAccess bits) {
       ushort numberOfNamespaces;
@@ -380,20 +379,20 @@ namespace Microsoft.Cci.Pdb {
       }
     }
 
-    internal class PdbFunctionsByToken : IComparer {
-      public int Compare(Object x, Object y) {
-        PdbFunction fx = (PdbFunction)x;
-        PdbFunction fy = (PdbFunction)y;
+    //internal class PdbFunctionsByToken : IComparer {
+    //  public int Compare(Object x, Object y) {
+    //    PdbFunction fx = (PdbFunction)x;
+    //    PdbFunction fy = (PdbFunction)y;
 
-        if (fx.token < fy.token) {
-          return -1;
-        } else if (fx.token > fy.token) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }
+    //    if (fx.token < fy.token) {
+    //      return -1;
+    //    } else if (fx.token > fy.token) {
+    //      return 1;
+    //    } else {
+    //      return 0;
+    //    }
+    //  }
 
-    }
+    //}
   }
 }

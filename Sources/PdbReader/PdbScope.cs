@@ -12,12 +12,12 @@ namespace Microsoft.Cci.Pdb {
     internal PdbScope[] scopes;
     internal string[] usedNamespaces;
 
-    internal uint segment;
+    //internal uint segment;
     internal uint address;
     internal uint length;
 
     internal PdbScope(BlockSym32 block, BitAccess bits, out uint typind) {
-      this.segment = block.seg;
+      //this.segment = block.seg;
       this.address = block.off;
       this.length = block.len;
       typind = 0;

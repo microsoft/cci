@@ -12,7 +12,6 @@ namespace Microsoft.Cci.Pdb {
 
     internal BitAccess(int capacity) {
       this.buffer = new byte[capacity];
-      this.offset = 0;
     }
 
     internal byte[] Buffer {
@@ -32,9 +31,9 @@ namespace Microsoft.Cci.Pdb {
     }
     private int offset;
 
-    internal void WriteBuffer(Stream stream, int count) {
-      stream.Write(buffer, 0, count);
-    }
+    //internal void WriteBuffer(Stream stream, int count) {
+    //  stream.Write(buffer, 0, count);
+    //}
 
     internal void MinCapacity(int capacity) {
       if (buffer.Length < capacity) {
@@ -49,25 +48,25 @@ namespace Microsoft.Cci.Pdb {
       }
     }
 
-    internal void WriteInt32(int value) {
-      buffer[offset + 0] = (byte)value;
-      buffer[offset + 1] = (byte)(value >> 8);
-      buffer[offset + 2] = (byte)(value >> 16);
-      buffer[offset + 3] = (byte)(value >> 24);
-      offset += 4;
-    }
+    //internal void WriteInt32(int value) {
+    //  buffer[offset + 0] = (byte)value;
+    //  buffer[offset + 1] = (byte)(value >> 8);
+    //  buffer[offset + 2] = (byte)(value >> 16);
+    //  buffer[offset + 3] = (byte)(value >> 24);
+    //  offset += 4;
+    //}
 
-    internal void WriteInt32(int[] values) {
-      for (int i = 0; i < values.Length; i++) {
-        WriteInt32(values[i]);
-      }
-    }
+    //internal void WriteInt32(int[] values) {
+    //  for (int i = 0; i < values.Length; i++) {
+    //    WriteInt32(values[i]);
+    //  }
+    //}
 
-    internal void WriteBytes(byte[] bytes) {
-      for (int i = 0; i < bytes.Length; i++) {
-        buffer[offset++] = bytes[i];
-      }
-    }
+    //internal void WriteBytes(byte[] bytes) {
+    //  for (int i = 0; i < bytes.Length; i++) {
+    //    buffer[offset++] = bytes[i];
+    //  }
+    //}
 
     internal void ReadInt16(out short value) {
       value = (short)((buffer[offset + 0] & 0xFF) |

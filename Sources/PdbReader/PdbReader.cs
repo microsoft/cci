@@ -25,9 +25,9 @@ namespace Microsoft.Cci.Pdb {
       return (size + pageSize - 1) / (pageSize);
     }
 
-    internal int PageSize {
-      get { return pageSize; }
-    }
+    //internal int PageSize {
+    //  get { return pageSize; }
+    //}
 
     internal readonly int pageSize;
     internal readonly Stream reader;
