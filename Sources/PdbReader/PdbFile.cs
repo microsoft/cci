@@ -72,7 +72,7 @@ namespace Microsoft.Cci.Pdb {
           bits.ReadCString(out name);
           bits.Position = saved;
 
-          result.Add(name, ni);
+          result.Add(name.ToUpperInvariant(), ni);
           j++;
         }
       }
@@ -176,7 +176,7 @@ namespace Microsoft.Cci.Pdb {
               Guid doctypeGuid = SymDocumentType.Text;
               Guid languageGuid = Guid.Empty;
               Guid vendorGuid = Guid.Empty;
-              if (nameIndex.TryGetValue("/src/files/"+name, out guidStream)) {
+              if (nameIndex.TryGetValue("/SRC/FILES/"+name.ToUpperInvariant(), out guidStream)) {
                 var guidBits = new BitAccess(0x100);
                 dir.streams[guidStream].Read(reader, guidBits);
                 LoadGuidStream(guidBits, out doctypeGuid, out languageGuid, out vendorGuid);
@@ -379,7 +379,7 @@ namespace Microsoft.Cci.Pdb {
       dir.streams[1].Read(reader, bits);
       Dictionary<string, int> nameIndex = LoadNameIndex(bits);
       int nameStream;
-      if (!nameIndex.TryGetValue("/names", out nameStream)) {
+      if (!nameIndex.TryGetValue("/NAMES", out nameStream)) {
         throw new PdbException("No `name' stream");
       }
 
