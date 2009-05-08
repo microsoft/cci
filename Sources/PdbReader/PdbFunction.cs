@@ -31,7 +31,7 @@ namespace Microsoft.Cci.Pdb {
     internal IEnumerable<INamespaceScope>/*?*/ namespaceScopes;
     internal string/*?*/ iteratorClass;
     internal List<ILocalScope>/*?*/ iteratorScopes;
-    
+
     private static string StripNamespace(string module) {
       int li = module.LastIndexOf('.');
       if (li > 0) {
@@ -206,10 +206,10 @@ namespace Microsoft.Cci.Pdb {
         throw new PdbDebugException("Warning parent={0}, next={1}",
                                     proc.parent, proc.next);
       }
-      if (proc.dbgStart != 0 || proc.dbgEnd != 0) {
-        throw new PdbDebugException("Warning DBG start={0}, end={1}",
-                                    proc.dbgStart, proc.dbgEnd);
-      }
+      //if (proc.dbgStart != 0 || proc.dbgEnd != 0) {
+      //  throw new PdbDebugException("Warning DBG start={0}, end={1}",
+      //                              proc.dbgStart, proc.dbgEnd);
+      //}
 
       int constantCount;
       int scopeCount;
