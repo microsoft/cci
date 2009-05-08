@@ -10,7 +10,22 @@
         <assembly assemblyPath="..\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.dll" xmlCommentsPath="..\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.xml" commentsOnly="False" />
         <assembly assemblyPath="..\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.dll" xmlCommentsPath="..\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.xml" commentsOnly="False" />
     </assemblies>
-    <ProjectSummary />
+    <namespaceSummaries>
+        <namespaceSummaryItem name="" isDocumented="False" />
+        <namespaceSummaryItem name="Microsoft.Cci" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.MetadataReader" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.MetadataReader.MethodBody" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.MetadataReader.ObjectModelImplementation" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.MetadataReader.PEFile" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.MetadataReader.PEFileFlags" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.MutableCodeModel" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.Pdb" isDocumented="True" />
+        <namespaceSummaryItem name="Microsoft.Cci.UtilityDataStructures" isDocumented="True" />
+    </namespaceSummaries>
+    <ProjectSummary>The Microsoft Research Common Compiler Infrastructure (CCI) is a set of components (libraries) that provide some of the functionality that compilers and related programming tools tend to have in common.
+
+The metadata components provide functionality for reading, writing and manipulating Microsoft Common Language Runtime (CLR) assemblies and debug files. The functionality provided by these components subsumes the functionality provided by System.Reflection and System.Reflection.Emit.
+</ProjectSummary>
     <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace</MissingTags>
     <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
     <HtmlHelp1xCompilerPath path="" />
@@ -29,7 +44,7 @@
     <Preliminary>False</Preliminary>
     <RootNamespaceContainer>False</RootNamespaceContainer>
     <RootNamespaceTitle />
-    <HelpTitle>A Sandcastle Documented Class Library</HelpTitle>
+    <HelpTitle>CCI Metadata components</HelpTitle>
     <HtmlHelpName>CCI Metadata components API documentation</HtmlHelpName>
     <Language>en-US</Language>
     <CopyrightHref />
