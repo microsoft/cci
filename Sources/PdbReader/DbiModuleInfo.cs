@@ -9,7 +9,7 @@ namespace Microsoft.Cci.Pdb {
   internal class DbiModuleInfo {
     internal DbiModuleInfo(BitAccess bits, bool readStrings) {
       bits.ReadInt32(out opened);
-      //section = new DbiSecCon(bits);
+      new DbiSecCon(bits);
       bits.ReadUInt16(out flags);
       bits.ReadInt16(out stream);
       bits.ReadInt32(out cbSyms);
