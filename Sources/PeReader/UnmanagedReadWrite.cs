@@ -397,24 +397,24 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
       return result;
 #elif BIGENDIAN
-      byte headerByte = this.PeekByte(offset);
+      byte headerByte = this.PeekByte((int)offset);
       uint result;
       if ((headerByte & 0x80) == 0x00) {
         result = headerByte;
         numberOfBytesRead = 1;
       } else if ((headerByte & 0x40) == 0x00) {
-        result = (headerByte & 0x3f) | (this.PeekByte(offset + 1) << 8);
+        result = (uint)(headerByte & 0x3f) | (uint)(this.PeekByte((int)offset + 1) << 8);
         numberOfBytesRead = 2;
       } else if (headerByte == 0xFF) {
         result = 0xFF;
         numberOfBytesRead = 1;
       } else {
-        int offsetIter = offset + 1;
-        result = (headerByte & 0x3f) | (this.PeekByte(offsetIter) << 8);
+        int offsetIter = (int)offset + 1;
+        result = (uint)(headerByte & 0x3f) | (uint)(this.PeekByte(offsetIter) << 8);
         offsetIter++;
-        result |= (this.PeekByte(offsetIter) << 16);
+        result |= (uint)(this.PeekByte(offsetIter) << 16);
         offsetIter++;
-        result |= this.PeekByte(offsetIter) << 24;
+        result |= (uint)this.PeekByte(offsetIter) << 24;
         numberOfBytesRead = 4;
       }
       return result;

@@ -7240,10 +7240,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       if (index == -1 || index == mangledTypeName.Length - 1)
         return;
       typeName = mangledTypeName.Substring(0, index);
+#if COMPACTFX
       try {
-        genericParamCount = ushort.Parse(mangledTypeName.Substring(index + 1, mangledTypeName.Length - index - 1), System.Globalization.CultureInfo.InvariantCulture);
+          genericParamCount = ushort.Parse(mangledTypeName.Substring(index + 1, mangledTypeName.Length - index - 1), System.Globalization.NumberStyles.Integer,
+              System.Globalization.CultureInfo.InvariantCulture);
       } catch {
       }
+#else
+      ushort.TryParse(mangledTypeName.Substring(index + 1, mangledTypeName.Length - index - 1), System.Globalization.NumberStyles.Integer,
+          System.Globalization.CultureInfo.InvariantCulture, out genericParamCount);
+#endif
     }
   }
 }

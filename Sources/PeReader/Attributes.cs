@@ -444,7 +444,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class NamespaceTypeName : NominalTypeName {
-    readonly uint genericParameterCount;
+    readonly ushort genericParameterCount;
     internal readonly NamespaceName/*?*/ NamespaceName;
     internal readonly IName Name;
     internal readonly IName unmanagledTypeName;
@@ -457,13 +457,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.NamespaceName = namespaceName;
       this.Name = name;
       this.unmanagledTypeName = name;
-      string nameStr = name.Value;
-      int indx = nameStr.IndexOf('`');
-      if (indx != -1) {
-        uint.TryParse(nameStr.Substring(indx+1), out this.genericParameterCount);
-        nameStr = nameStr.Substring(0, indx);
-        unmanagledTypeName = nameTable.GetNameFor(nameStr);
-      }
+      string nameStr = null;
+      TypeCache.SplitMangledTypeName(name.Value, out nameStr, out this.genericParameterCount);
+      this.unmanagledTypeName = nameTable.GetNameFor(nameStr);
     }
 
     internal override uint GenericParameterCount {
@@ -505,7 +501,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class NestedTypeName : NominalTypeName {
-    readonly uint genericParameterCount;
+    readonly ushort genericParameterCount;
     internal readonly NominalTypeName ContainingTypeName;
     internal readonly IName Name;
     internal readonly IName unmanagledTypeName;
@@ -518,13 +514,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.ContainingTypeName = containingTypeName;
       this.Name = name;
       this.unmanagledTypeName = name;
-      string nameStr = name.Value;
-      int indx = nameStr.IndexOf('`');
-      if (indx != -1) {
-        uint.TryParse(nameStr.Substring(indx+1), out this.genericParameterCount);
-        nameStr = nameStr.Substring(0, indx);
-        unmanagledTypeName = nameTable.GetNameFor(nameStr);
-      }
+      string nameStr = null;
+      TypeCache.SplitMangledTypeName(name.Value, out nameStr, out this.genericParameterCount);
+      this.unmanagledTypeName = nameTable.GetNameFor(nameStr);
     }
 
     internal override uint GenericParameterCount {

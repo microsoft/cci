@@ -61,7 +61,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       int numberOfBytes = this.MemoryReader.PeekCompressedInt32((int)offset, out bytesRead);
       if (index >= numberOfBytes)
         return 0;
-      return this.MemoryReader.PeekByte((int)offset + bytesRead + (int)index);
+      return this.MemoryReader.PeekByte((int)offset + bytesRead + index);
     }
     internal MemoryBlock GetMemoryBlockAt(uint offset)
         //^ requires offset >= 0 && offset < this.MemoryReader.Length;

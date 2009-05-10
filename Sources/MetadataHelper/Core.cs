@@ -111,9 +111,9 @@ namespace Microsoft.Cci {
         }
         if (result != null) return result;
       }
-      string/*?*/ loc = typeof(object).Assembly.Location;
+      var coreAssemblyName = typeof(object).Assembly.GetName();
+      string/*?*/ loc = coreAssemblyName.CodeBase;
       if (loc == null) loc = "";
-      System.Reflection.AssemblyName coreAssemblyName = new System.Reflection.AssemblyName(typeof(object).Assembly.FullName);
       return new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), loc);
     }
 
