@@ -925,7 +925,7 @@ namespace Microsoft.Cci {
     /// Returns a C#-like string that corresponds to the given namespace definition and that conforms to the specified formatting options.
     /// </summary>
     //^ [Pure]
-    public static string GetNamespaceName(INamespaceDefinition namespaceDefinition, NameFormattingOptions formattingOptions) {
+    public static string GetNamespaceName(IUnitSetNamespace namespaceDefinition, NameFormattingOptions formattingOptions) {
       return (new TypeNameFormatter()).GetNamespaceName(namespaceDefinition, formattingOptions);
     }
 
@@ -1587,31 +1587,18 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a C#-like string that corresponds to the given namespace definition and that conforms to the specified formatting options.
+    /// Returns a C#-like string that corresponds to the given unit set namespace definition and that conforms to the specified formatting options.
     /// </summary>
     //^ [Pure]
-    public virtual string GetNamespaceName(INamespaceDefinition namespaceDefinition, NameFormattingOptions formattingOptions) {
-      INestedUnitNamespace/*?*/ nestedUnitNamespace = namespaceDefinition as INestedUnitNamespace;
-      if (nestedUnitNamespace != null && nestedUnitNamespace.ContainingNamespace != null) {
-        if (nestedUnitNamespace.ContainingNamespace.Name.Value.Length == 0 || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
-          return nestedUnitNamespace.Name.Value;
-        else
-          return this.GetNamespaceName(nestedUnitNamespace.ContainingNamespace, formattingOptions) + "." + nestedUnitNamespace.Name.Value;
-      }
-      IUnitNamespace/*?*/ unitNamespace = namespaceDefinition as IUnitNamespace;
-      if (unitNamespace != null)
-        return unitNamespace.Name.Value;
+    public virtual string GetNamespaceName(IUnitSetNamespace namespaceDefinition, NameFormattingOptions formattingOptions) {
       INestedUnitSetNamespace/*?*/ nestedUnitSetNamespace = namespaceDefinition as INestedUnitSetNamespace;
       if (nestedUnitSetNamespace != null) {
         if (nestedUnitSetNamespace.ContainingNamespace.Name.Value.Length == 0 || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
           return nestedUnitSetNamespace.Name.Value;
         else
-          return this.GetNamespaceName(nestedUnitSetNamespace.ContainingNamespace, formattingOptions) + "." + nestedUnitSetNamespace.Name.Value;
+          return this.GetNamespaceName(nestedUnitSetNamespace.ContainingUnitSetNamespace, formattingOptions) + "." + nestedUnitSetNamespace.Name.Value;
       }
-      IUnitSetNamespace/*?*/ unitSetNamespace = namespaceDefinition as IUnitSetNamespace;
-      if (unitSetNamespace != null)
-        return unitSetNamespace.Name.Value;
-      return namespaceDefinition.ToString();
+      return namespaceDefinition.Name.Value;
     }
 
     /// <summary>

@@ -2421,7 +2421,7 @@ namespace Microsoft.Cci {
         r.Flags = GetTypeDefFlags(typeDef);
         string name = GetMangledName(typeDef);
         r.Name = this.GetStringIndex(name);
-        r.Namespace = nsType == null ? StringIdx.Empty : this.GetStringIndex(TypeHelper.GetNamespaceName(nsType.ContainingNamespace, NameFormattingOptions.None));
+        r.Namespace = nsType == null ? StringIdx.Empty : this.GetStringIndex(TypeHelper.GetNamespaceName(nsType.ContainingUnitNamespace, NameFormattingOptions.None));
         r.Extends = 0;
         foreach (ITypeReference baseType in typeDef.BaseClasses) {
           r.Extends = this.GetTypeDefOrRefCodedIndex(baseType);

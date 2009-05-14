@@ -316,6 +316,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+
+    public override string ToString() {
+      return TypeHelper.GetNamespaceName(this, NameFormattingOptions.SmartNamespaceName);
+    }
+
   }
 
   public abstract class UnitNamespaceReference : IUnitNamespaceReference, ICopyFrom<IUnitNamespaceReference> {
