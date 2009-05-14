@@ -31,10 +31,12 @@ namespace ModuleReaderTests {
         Console.WriteLine("TestMsCorlibModuleReferences - Failed");
         ret = false;
       }
+#if VJSLIB
       if (!this.TestVjslibAssemblyReferences()) {
         Console.WriteLine("TestVjslibAssemblyReferences - Failed");
         ret = false;
       }
+#endif
       if (!this.TestSystemFileSystemWatcherResource()) {
         Console.WriteLine("TestSystemFileSystemWatcherResource - Failed");
         ret = false;
@@ -47,10 +49,12 @@ namespace ModuleReaderTests {
         Console.WriteLine("TestMscorlibFileReferences - Failed");
         ret = false;
       }
+#if VJSLIB
       if (!this.TestVjslibModule()) {
         Console.WriteLine("TestVjslibModule - Failed");
         ret = false;
       }
+#endif
       if (!this.TestAssemblyExports()) {
         Console.WriteLine("TestAssemblyExports - Failed");
         ret = false;
@@ -152,6 +156,7 @@ namespace ModuleReaderTests {
       return result.Equals(stringPaper.Content) || resultVista.Equals(stringPaper.Content);
     }
 
+#if VJSLIB
     public bool TestVjslibAssemblyReferences() {
       StringILDasmPaper stringPaper = new StringILDasmPaper(2);
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.VjslibAssembly);
@@ -205,7 +210,7 @@ namespace ModuleReaderTests {
 ";
       return result.Equals(stringPaper.Content);
     }
-
+#endif
     public bool TestSystemFileSystemWatcherResource() {
       StringILDasmPaper stringPaper = new StringILDasmPaper(2);
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.SystemAssembly);
@@ -378,6 +383,7 @@ namespace ModuleReaderTests {
       return result.Equals(stringPaper.Content) || vistaResult.Equals(stringPaper.Content);
     }
 
+#if VJSLIB
     bool TestVjslibModule() {
       StringILDasmPaper stringPaper = new StringILDasmPaper(2);
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.AssemblyAssembly);
@@ -393,6 +399,7 @@ namespace ModuleReaderTests {
 ";
       return result.Equals(stringPaper.Content);
     }
+#endif
 
     bool TestAssemblyExports() {
       StringILDasmPaper stringPaper = new StringILDasmPaper(2);
