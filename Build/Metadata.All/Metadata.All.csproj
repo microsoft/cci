@@ -104,9 +104,33 @@
     <Compile Include="Empty.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="arch-msil, Version=0.63.61101.0, Culture=neutral, PublicKeyToken=3330ea3d34fd0fe8, processorArchitecture=IA64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tests\PEReaderTests\TestModules\arch-msil.dll</HintPath>
+    </Reference>
+    <Reference Include="MRW_Assembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tests\PEReaderTests\TestModules\MRW_Assembly.dll</HintPath>
+    </Reference>
+    <Reference Include="MRW_CppAssembly, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tests\PEReaderTests\TestModules\MRW_CppAssembly.dll</HintPath>
+    </Reference>
+    <Reference Include="MRW_ILAsmAssembly, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tests\PEReaderTests\TestModules\MRW_ILAsmAssembly.dll</HintPath>
+    </Reference>
+    <Reference Include="MRW_TestAssembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tests\PEReaderTests\TestModules\MRW_TestAssembly.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="vjslib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tests\PEReaderTests\TestModules\vjslib.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
