@@ -342,9 +342,7 @@ namespace ModuleReaderTests {
     internal INameTable NameTable;
     internal IAssembly MscorlibAssembly;
     internal IAssembly SystemAssembly;
-#if VJSLIB
     internal IAssembly VjslibAssembly;
-#endif
     internal IAssembly AssemblyAssembly;
     internal IAssembly CppAssembly;
     internal IAssembly TestAssembly;
@@ -364,19 +362,15 @@ namespace ModuleReaderTests {
       string phxArchMsilPath = Path.Combine(location, "arch-msil.dll");
       string testAssemblyPath = Path.Combine(location, "MRW_TestAssembly.dll");
       string assemblyPath = Path.Combine(location, "MRW_Assembly.dll");
-#if VJSLIB
       string vjslibPath = Path.Combine(location, "vjslib.dll");
-#endif
       DirectoryInfo dirInfo = new DirectoryInfo(Path.GetDirectoryName(typeof(object).Assembly.Location));
       string clrLocation = dirInfo.Parent.FullName + "\\" + "v2.0.50727\\";
 
       Console.WriteLine("location: {0}", location);
       this.MscorlibAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(clrLocation + "mscorlib.dll");
       this.SystemAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(clrLocation + "System.dll");
-#if VJSLIB
       LogAssemblyFile("vjslibPath", vjslibPath);
       this.VjslibAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(vjslibPath);
-#endif
       LogAssemblyFile("assemblyPath", assemblyPath);
       this.AssemblyAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(assemblyPath);
       LogAssemblyFile("cppAssemblyPath", cppAssemblyPath);
