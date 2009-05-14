@@ -27,10 +27,10 @@ namespace ModuleReaderTests {
         Console.WriteLine("TestCurrentModule - Failed");
         ret = false;
       }
-      if (!this.TestMsCorlibModuleReferences()) {
-        Console.WriteLine("TestMsCorlibModuleReferences - Failed");
-        ret = false;
-      }
+      //if (!this.TestMsCorlibModuleReferences()) {
+      //  Console.WriteLine("TestMsCorlibModuleReferences - Failed");
+      //  ret = false;
+      //}
       if (!this.TestVjslibAssemblyReferences()) {
         Console.WriteLine("TestVjslibAssemblyReferences - Failed");
         ret = false;
