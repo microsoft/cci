@@ -20,18 +20,35 @@
     <BinDirectory>$(RootDirectory)\bin</BinDirectory>
     <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
     <BinReleaseDirectory>$(BinDirectory)\release</BinReleaseDirectory>
-
-    <BinCodePlexDirectory>$(BinDirectory)\CodePlex</BinCodePlexDirectory>
-    <ZipBinaries>$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion).zip</ZipBinaries>
-    <ZipSymbols>$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion)-symbols.zip</ZipSymbols>
   </PropertyGroup>
 
   <PropertyGroup>
     <CodeplexProjectName>ccimetadata</CodeplexProjectName>
     <CodeplexReleaseName>Latest Build</CodeplexReleaseName>
-    <!-- <CodePlexUser/>
-    <codePlexPassword/> -->
+    <!-- 
+      <CodeplexUser/>
+      <CodeplexPassword/> 
+      <CleanRootDirectory />
+      -->
   </PropertyGroup>
+
+  <PropertyGroup>
+    <BinCodePlexDirectory>$(BinDirectory)\CodePlex</BinCodePlexDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <ZipBinaries Include="$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion).zip">
+      <Name>Binaries and Xml documentation files</Name>
+      <FileType>RuntimeBinary</FileType>
+    </ZipBinaries>
+    <ZipSymbols Include="$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion)-symbols.zip">
+      <Name>Symbols</Name>
+      <FileType>RuntimeBinary</FileType>
+    </ZipSymbols>
+    <ZipSources  Include="$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion)-sources.zip">
+      <Name>Source code drop</Name>
+      <FileType>SourceCode</FileType>
+    </ZipSources>
+  </ItemGroup>
 
   <PropertyGroup>
     <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
@@ -148,27 +165,23 @@ using System.Reflection;
     <CreateItem Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb">
       <Output TaskParameter="Include" ItemName="Symbols"/>
     </CreateItem>
-    <CreateItem
-      Include="$(RootDirectory)\***"
-      Exclude="
-        **\bin\**;
-        **\obj\**;
-        ">
-      <Output TaskParameter="Include" ItemName="Sources"/>
-    </CreateItem>
+    <Exec Command="svn update &quot;$(CleanRootDirectory)&quot;" />
 
     <MakeDir Directories="$(BinCodePlexDirectory)" />
-    <Zip Files="@(Assemblies)" OutputFile="$(ZipBinaries)" />
-    <Zip Files="@(Symbols)" OutputFile="$(ZipSymbols)" />
+    <Zip Files="@(Assemblies)" OutputFile="@(ZipBinaries)" />
+    <Zip Files="@(Symbols)" OutputFile="@(ZipSymbols)" />
+    <Zip Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
 
-<!--    <UploadFiles
+    <UploadFiles
       ProjectName="$(CodeplexProjectName)"
       ReleaseName="$(CodeplexReleaseName)"
       ReleaseFiles="
-        $(ZipBinaries)
-        $(ZipSymbols)"
-      User="$(CodeplexUser)"
-      Password="$(CodeplexPassword)" /> -->
+        @(ZipBinaries);
+        @(ZipSymbols);
+        @(ZipSources)  
+      "
+      Username="$(CodeplexUser)"
+      Password="$(CodeplexPassword)" />
   </Target>
 
   <Target Name="TestNightly">

@@ -14,8 +14,9 @@ namespace Microsoft.Cci.MsBuild
     public sealed class Zip
         : Task
     {
-        [Required]
         public ITaskItem[] Files { get; set; }
+
+        public ITaskItem[] Directories { get; set; }
 
         [Required]
         public ITaskItem OutputFile { get; set; }
@@ -25,11 +26,24 @@ namespace Microsoft.Cci.MsBuild
             using (var zip = new ZipFile())
             {
                 this.Log.LogMessage("creating zip file");
-                foreach (var file in this.Files)
-                {
-                    this.Log.LogMessage("adding {0}", file);
-                    zip.AddFile(file.ItemSpec, ".");
-                }
+
+                if (this.Files != null)
+                    foreach (var file in this.Files)
+                    {
+                        this.Log.LogMessage("adding {0}", file);
+                        zip.AddFile(file.ItemSpec, ".");
+                    }
+                if (this.Directories != null)
+                    foreach (var directory in this.Directories)
+                    {
+                        if (!Directory.Exists(directory.ItemSpec))
+                        {
+                            this.Log.LogError("directory {0} does not exist", directory);
+                            return false;
+                        }
+                        this.Log.LogMessage("adding directory {0}", directory);
+                        zip.AddDirectory(directory.ItemSpec, ".");
+                    }
 
                 this.Log.LogMessage("saving zip to {0}", this.OutputFile.ItemSpec);
                 zip.Save(this.OutputFile.ItemSpec);

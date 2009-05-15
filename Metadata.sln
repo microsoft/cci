@@ -33,6 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{0FC2FA29
 	ProjectSection(SolutionItems) = preProject
 		Build\ccimetadata.build = Build\ccimetadata.build
 		Build\ccnet.config = Build\ccnet.config
+		Build\createrelease.cmd = Build\createrelease.cmd
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xunit", "Xunit\Main\xunit\xunit.csproj", "{09EF9917-4B00-4646-8C3F-96EFACC8BF51}"
