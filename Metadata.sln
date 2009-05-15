@@ -47,7 +47,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindGeneric", "Samples\Find
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindThrowPlatformType", "Samples\FindThrowPlatformType\FindThrowPlatformType.csproj", "{271E4173-B938-430F-988E-910EBF22B7B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cci.MsBuild", "build\Cci.MsBuild\Cci.MsBuild.csproj", "{3063ACB6-B548-457C-983C-8BA3560E1409}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cci.MsBuild", "Build\Cci.MsBuild\Cci.MsBuild.csproj", "{3063ACB6-B548-457C-983C-8BA3560E1409}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metadata.All", "Build\Metadata.All\Metadata.All.csproj", "{97EE0D3C-C2F1-4756-A373-66683EC13B58}"
 EndProject

@@ -4,6 +4,11 @@
   <UsingTask 
     TaskName="Microsoft.Cci.MsBuild.WriteFile" 
     AssemblyFile="Microsoft.Cci.MsBuild.dll" />
+  <UsingTask
+    TaskName="Microsoft.Cci.MsBuild.Zip"
+    AssemblyFile="Microsoft.Cci.MsBuild.dll" />
+
+  <UsingTask TaskName="UploadFiles" AssemblyFile="CodePlex.WebServices.Client.dll" />
   <!-- constants -->
   <PropertyGroup>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
@@ -15,11 +20,17 @@
     <BinDirectory>$(RootDirectory)\bin</BinDirectory>
     <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
     <BinReleaseDirectory>$(BinDirectory)\release</BinReleaseDirectory>
+
+    <BinCodePlexDirectory>$(BinDirectory)\CodePlex</BinCodePlexDirectory>
+    <ZipBinaries>$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion).zip</ZipBinaries>
+    <ZipSymbols>$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion)-symbols.zip</ZipSymbols>
   </PropertyGroup>
 
   <PropertyGroup>
-    <CodePlexProjectName>ccimetadata</CodePlexProjectName>
-    <CodePlexReleaseName>Latest Build</CodePlexReleaseName>
+    <CodeplexProjectName>ccimetadata</CodeplexProjectName>
+    <CodeplexReleaseName>Latest Build</CodeplexReleaseName>
+    <!-- <CodePlexUser/>
+    <codePlexPassword/> -->
   </PropertyGroup>
 
   <PropertyGroup>
@@ -65,11 +76,13 @@ using System.Reflection;
       " />
   <!-- uploads new release -->  
   <Target
-    Name="ContinuousCodePlexRelease"
+    Name="CreateCodePlexRelease"
     DependsOnTargets="
       Clean;
       CreateVersion;
-      BuildRelease
+      BuildRelease;
+      BuildDocumentation;
+      UploadRelease
     "
     />
 
@@ -100,6 +113,10 @@ using System.Reflection;
       " />
   </Target>
 
+  <Target Name="BuildDocumentation">
+    
+  </Target>
+
   <Target Name="TestDebug">
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
@@ -116,6 +133,42 @@ using System.Reflection;
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
       Command="PEReaderTests.exe /xml ..\PEReaderTests.ret.results.xml" />
+  </Target>
+
+  <Target Name="UploadRelease">
+    <Error Condition="$(CodeplexUser) == ''" Text="CodeplexUser property is not set" />
+    <Error Condition="$(CodeplexPassword) == ''" Text="CodeplexPassword property is not set" />
+
+    <CreateItem Include="
+      $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
+      $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
+      ">
+      <Output TaskParameter="Include" ItemName="Assemblies"/>
+    </CreateItem>
+    <CreateItem Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb">
+      <Output TaskParameter="Include" ItemName="Symbols"/>
+    </CreateItem>
+    <CreateItem
+      Include="$(RootDirectory)\***"
+      Exclude="
+        **\bin\**;
+        **\obj\**;
+        ">
+      <Output TaskParameter="Include" ItemName="Sources"/>
+    </CreateItem>
+
+    <MakeDir Directories="$(BinCodePlexDirectory)" />
+    <Zip Files="@(Assemblies)" OutputFile="$(ZipBinaries)" />
+    <Zip Files="@(Symbols)" OutputFile="$(ZipSymbols)" />
+
+<!--    <UploadFiles
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(CodeplexReleaseName)"
+      ReleaseFiles="
+        $(ZipBinaries)
+        $(ZipSymbols)"
+      User="$(CodeplexUser)"
+      Password="$(CodeplexPassword)" /> -->
   </Target>
 
   <Target Name="TestNightly">
