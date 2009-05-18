@@ -461,8 +461,9 @@ namespace Microsoft.Cci {
   /// Represents a location in IL operation stream.
   /// </summary>
   public interface IILLocation : ILocation {
+
     /// <summary>
-    /// Method definition of the IL.
+    /// The method whose body contains this IL operation whose location this is.
     /// </summary>
     IMethodDefinition MethodDefinition { get; }
 

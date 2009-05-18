@@ -978,7 +978,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// The local variables of the method.
     /// </summary>
-    /// <value></value>
     public List<ILocalDefinition> LocalVariables {
       get { return this.localVariables; }
       set { this.localVariables = value; }
@@ -986,9 +985,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<ILocalDefinition> localVariables;
 
     /// <summary>
-    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// The maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
-    /// <value></value>
     public ushort MaxStack {
       get { return this.maxStack; }
       set { this.maxStack = value; }
@@ -996,10 +994,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     ushort maxStack;
 
     /// <summary>
-    /// Definition of method whose body this is.
-    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// The definition of the method whose body this is.
+    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
-    /// <value></value>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
       set { this.methodDefinition = value; }
@@ -1009,7 +1006,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A list CLR IL operations that implement this method body.
     /// </summary>
-    /// <value></value>
     public List<IOperation> Operations {
       get { return this.operations; }
       set { this.operations = value; }
@@ -1019,7 +1015,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A list exception data within the method body IL.
     /// </summary>
-    /// <value></value>
     public List<IOperationExceptionInformation> OperationExceptionInformation {
       get { return this.operationExceptionInformation; }
       set { this.operationExceptionInformation = value; }
@@ -1032,7 +1027,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// In case of instructions to AST decompilation this should ideally be list of all types
     /// which are local to method.
     /// </summary>
-    /// <value></value>
     public List<ITypeDefinition> PrivateHelperTypes {
       get { return this.privateHelperTypes; }
       set { this.privateHelperTypes = value; }

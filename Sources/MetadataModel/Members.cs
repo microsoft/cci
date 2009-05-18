@@ -344,7 +344,7 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// A metadata (IL) level represetation The body of a method or of a property/event accessor.
+  /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
   /// </summary>
   public interface IMethodBody {
 
@@ -385,8 +385,8 @@ namespace Microsoft.Cci {
     IEnumerable<ILocalDefinition> LocalVariables { get; }
 
     /// <summary>
-    /// Definition of method whose body this is.
-    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// The definition of the method whose body this is.
+    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
     IMethodDefinition MethodDefinition {
       get;
@@ -401,7 +401,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// The maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
     ushort MaxStack { get; }
 

@@ -1077,8 +1077,9 @@ namespace Microsoft.Cci.MetadataReader {
     readonly MethodBodyDocument document;
 
     /// <summary>
-    /// Method definition of the IL.
+    /// The method whose body contains this IL operation whose location this is.
     /// </summary>
+    /// <value></value>
     public IMethodDefinition MethodDefinition {
       get { return this.document.method; }
     }

@@ -6,15 +6,31 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Generates Microsoft intermediate language (MSIL) instructions.
   /// </summary>
+  /// <remarks>
+  /// A typical use of the ILGenerator class is to produce the values of the properties of an IMethodBody object.
+  /// This could be a SourceMethodBody from the mutable Code Model or an instance of ILGeneratorMethodBody (or perhaps a derived class).
+  /// In the former case, the ILGenerator is a part of the private state of an instance of CodeModelToILConverter (or a derived class) that
+  /// is usually part of a code model mutator. In the latter case, the ILGenerator may have been used to generate a method body for which no
+  /// Code Model has been built.
+  /// </remarks>
   public sealed class ILGenerator {
 
     List<ExceptionHandler> handlers = new List<ExceptionHandler>();
+    IMetadataHost host;
     ILocation location = Dummy.Location;
     uint offset;
     List<Operation> operations = new List<Operation>();
-    List<ILGeneratorLocalScope> scopes = new List<ILGeneratorLocalScope>();
-    Stack<ILGeneratorLocalScope> scopeStack = new Stack<ILGeneratorLocalScope>(); //TODO: write own stack so that dependecy on System.dll can go.
+    List<ILGeneratorScope> scopes = new List<ILGeneratorScope>();
+    Stack<ILGeneratorScope> scopeStack = new Stack<ILGeneratorScope>(); //TODO: write own stack so that dependecy on System.dll can go.
     Stack<TryBody> tryBodyStack = new Stack<TryBody>();
+
+    /// <summary>
+    /// Allocates an object that helps with the generation of Microsoft intermediate language (MSIL) instructions corresponding to a method body.
+    /// </summary>
+    /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
+    public ILGenerator(IMetadataHost host) {
+      this.host = host;
+    }
 
     /// <summary>
     /// Adds the given local variable to the current lexical scope.
@@ -166,7 +182,7 @@ namespace Microsoft.Cci {
     /// Begins a lexical scope.
     /// </summary>
     public void BeginScope() {
-      ILGeneratorLocalScope scope = new ILGeneratorLocalScope(this.offset);
+      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable);
       this.scopeStack.Push(scope);
       this.scopes.Add(scope);
     }
@@ -513,11 +529,10 @@ namespace Microsoft.Cci {
       this.scopeStack.Peek().usedNamespaces.Add(namespaceToUse);      
     }
 
-
     /// <summary>
     /// Returns a sequence of all of the block scopes that have been defined for this method body. Includes nested block scopes.
     /// </summary>
-    public IEnumerable<ILGeneratorLocalScope> GetLocalScopes() {
+    public IEnumerable<ILGeneratorScope> GetLocalScopes() {
       return this.scopes.AsReadOnly();
     }
 
@@ -635,10 +650,11 @@ namespace Microsoft.Cci {
   /// An object that keeps track of a set of local definitions (variables) and used (imported) namespaces that appear in the
   /// source code corresponding to the IL operations from Offset to Offset+Length.
   /// </summary>
-  public class ILGeneratorLocalScope : ILocalScope {
+  public class ILGeneratorScope : ILocalScope, INamespaceScope {
 
-    internal ILGeneratorLocalScope(uint offset) {
+    internal ILGeneratorScope(uint offset, INameTable nameTable) {
       this.offset = offset;
+      this.nameTable = nameTable;
     }
 
     internal void CloseScope(uint offset) {
@@ -663,6 +679,8 @@ namespace Microsoft.Cci {
     }
     internal readonly List<ILocalDefinition> locals = new List<ILocalDefinition>();
 
+    readonly INameTable nameTable;
+
     /// <summary>
     /// The offset of the first operation in the scope.
     /// </summary>
@@ -681,6 +699,15 @@ namespace Microsoft.Cci {
     }
     internal readonly List<string> usedNamespaces = new List<string>(0);
 
+    /// <summary>
+    /// Zero or more used namespaces. These correspond to using clauses in C#.
+    /// </summary>
+    public IEnumerable<IUsedNamespace> UsedNamespaces {
+      get {
+        foreach (var usedNamespaceName in this.usedNamespaces)
+          yield return new UsedNamespace(this.nameTable.GetNameFor(usedNamespaceName));
+      }
+    }
   }
 
   internal class Operation : IOperation {
@@ -723,6 +750,38 @@ namespace Microsoft.Cci {
       }
     }
     internal object/*?*/ value;
+
+  }
+
+  /// <summary>
+  ///  A namespace that is used (imported) inside a namespace scope.
+  /// </summary>
+  internal class UsedNamespace : IUsedNamespace {
+
+    /// <summary>
+    /// Allocates a namespace that is used (imported) inside a namespace scope.
+    /// </summary>
+    /// <param name="namespaceName">The name of a namepace that has been aliased.  For example the "y.z" of "using x = y.z;" or "using y.z" in C#.</param>
+    internal UsedNamespace(IName namespaceName) {
+      this.namespaceName = namespaceName;
+    }
+
+    /// <summary>
+    /// An alias for a namespace. For example the "x" of "using x = y.z;" in C#. Empty if no alias is present.
+    /// </summary>
+    /// <value></value>
+    public IName Alias {
+      get { return Dummy.Name; }
+    }
+
+    /// <summary>
+    /// The name of a namepace that has been aliased.  For example the "y.z" of "using x = y.z;" or "using y.z" in C#.
+    /// </summary>
+    /// <value></value>
+    public IName NamespaceName {
+      get { return this.namespaceName; }
+    }
+    readonly IName namespaceName;
 
   }
 
