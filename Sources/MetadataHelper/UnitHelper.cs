@@ -156,7 +156,7 @@ namespace Microsoft.Cci {
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
-      if (dotPos < 0) return null;
+      if (dotPos < 0) dotPos = len;
       IName tName = nameTable.GetNameFor(typeName.Substring(offset, dotPos-offset));
       foreach (var member in namespaceDefinition.GetMembersNamed(tName, false)) {
         var namespaceType = member as INamespaceTypeDefinition;
@@ -171,8 +171,8 @@ namespace Microsoft.Cci {
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
-      if (dotPos < 0) return null;
-      IName tName = nameTable.GetNameFor(typeName.Substring(offset, dotPos < 0 ? len-offset : dotPos-offset));
+      if (dotPos < 0) dotPos = len;
+      IName tName = nameTable.GetNameFor(typeName.Substring(offset, dotPos-offset));
       foreach (var member in typeDefinition.GetMembersNamed(tName, false)) {
         var nestedType = member as INestedTypeDefinition;
         if (nestedType == null) continue;
