@@ -722,16 +722,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodBody">The method body.</param>
     /// <returns></returns>
-    public override MethodBody Visit(MethodBody methodBody) {
-      methodBody.MethodDefinition = this.GetCurrentMethod();
-      return methodBody;
-    }
-
-    /// <summary>
-    /// Visits the specified method body.
-    /// </summary>
-    /// <param name="methodBody">The method body.</param>
-    /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null && this.ilToSourceProvider != null)
