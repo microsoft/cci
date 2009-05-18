@@ -11,24 +11,47 @@ using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci.Ast {
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class GlobalDeclarationContainerClass : NamespaceClassDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="compilationHost"></param>
     public GlobalDeclarationContainerClass(IMetadataHost compilationHost)
       : this(compilationHost, new List<ITypeDeclarationMember>()) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="compilationHost"></param>
+    /// <param name="globalMembers"></param>
     private GlobalDeclarationContainerClass(IMetadataHost compilationHost, List<ITypeDeclarationMember> globalMembers)
       : base(null, Flags.None, new NameDeclaration(compilationHost.NameTable.GetNameFor("__Globals__"), SourceDummy.SourceLocation),
       new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), globalMembers, SourceDummy.SourceLocation) {
       this.globalMembers = globalMembers;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected GlobalDeclarationContainerClass(NamespaceDeclaration containingNamespaceDeclaration, GlobalDeclarationContainerClass template)
       : this(containingNamespaceDeclaration, template, template.globalMembers)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected GlobalDeclarationContainerClass(NamespaceDeclaration containingNamespaceDeclaration, GlobalDeclarationContainerClass template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -37,6 +60,10 @@ namespace Microsoft.Cci.Ast {
     }
 
 
+    /// <summary>
+    /// Creates a new type definition to correspond to this type declaration.
+    /// </summary>
+    /// <returns></returns>
     protected internal override NamespaceTypeDefinition CreateType() {
       NamespaceTypeDefinition result = this.Compilation.GlobalsClass;
       result.AddTypeDeclaration(this);
@@ -46,6 +73,9 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// A list of type declaration members that correspond to global variables and functions.
+    /// </summary>
     public IEnumerable<ITypeDeclarationMember> GlobalMembers {
       get
         //^ ensures result is List<ITypeDeclarationMember>; //The return type is different so that a downcast is required before the members can be modified.
@@ -56,6 +86,9 @@ namespace Microsoft.Cci.Ast {
     }
     List<ITypeDeclarationMember> globalMembers;
 
+    /// <summary>
+    /// A scope containing global variables and functions.
+    /// </summary>
     public IScope<ITypeDeclarationMember> GlobalScope {
       get {
         if (this.globalScope == null)
@@ -67,6 +100,11 @@ namespace Microsoft.Cci.Ast {
     IScope<ITypeDeclarationMember>/*?*/ globalScope;
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
+    /// <returns></returns>
     public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)      
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -76,7 +114,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members.
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
       return new GlobalDeclarationContainerClass(this.ContainingNamespaceDeclaration, this, members);
@@ -84,12 +128,22 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   internal class GlobalDeclarationScope : Scope<ITypeDeclarationMember> {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="members"></param>
     internal GlobalDeclarationScope(IEnumerable<ITypeDeclarationMember> members) {
       this.members = members;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected override void InitializeIfNecessary() {
       if (this.initialized) return;
       lock (GlobalLock.LockingObject) {
@@ -101,6 +155,10 @@ namespace Microsoft.Cci.Ast {
     }
     bool initialized;
 
+    /// <summary>
+    /// The collection of member instances that are members of this scope.
+    /// </summary>
+    /// <value></value>
     public override IEnumerable<ITypeDeclarationMember> Members {
       get { return this.Members; }
     }
@@ -112,6 +170,18 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class GenericParameterDeclaration : SourceItem, IDeclaration, INamedEntity, IParameterListEntry {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="name"></param>
+    /// <param name="index"></param>
+    /// <param name="constraints"></param>
+    /// <param name="variance"></param>
+    /// <param name="mustBeReferenceType"></param>
+    /// <param name="mustBeValueType"></param>
+    /// <param name="mustHaveDefaultConstructor"></param>
+    /// <param name="sourceLocation"></param>
     protected GenericParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, ushort index, List<TypeExpression> constraints, 
       TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor, ISourceLocation sourceLocation)
       : base(sourceLocation) 
@@ -143,12 +213,22 @@ namespace Microsoft.Cci.Ast {
         this.sourceAttributes = new List<SourceCustomAttribute>(template.sourceAttributes);
     }
 
+    /// <summary>
+    /// Custom attributes that are to be persisted in the metadata.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get {
         return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); //TODO: extract attributes from SourceAttributes.
       }
     }
 
+    /// <summary>
+    /// Add a constraint to this generic parameter declaration. This is done after construction of this declaration because
+    /// it may contain a reference to this declaration. It should not be called after the second phase of construction has
+    /// been completed.
+    /// </summary>
+    /// <param name="constraint">A type expression that resolves to a type that constrains this parameter.</param>
     protected void AddConstraint(TypeExpression constraint) {
       this.constraints.Add(constraint);
     }
@@ -164,24 +244,41 @@ namespace Microsoft.Cci.Ast {
     }
     readonly List<TypeExpression> constraints;
 
+    /// <summary>
+    /// The compilation that contains this statement.
+    /// </summary>
     public Compilation Compilation {
       get { return this.ContainingBlock.Compilation;  }
     }
 
+    /// <summary>
+    /// The compilation part that this declaration forms a part of.
+    /// </summary>
+    /// <value></value>
     public CompilationPart CompilationPart {
       get { return this.ContainingBlock.CompilationPart; }
     }
 
+    /// <summary>
+    /// The block that contains this declaration.
+    /// </summary>
     public BlockStatement ContainingBlock {
       get { 
         //^ assume this.containingBlock != null;
         return this.containingBlock; 
       }
     }
+    /// <summary>
+    /// The block that contains this declaration.
+    /// </summary>
     protected BlockStatement/*?*/ containingBlock;
 
     private int flags;
 
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
     public ushort Index {
       get { return this.index; }
     }
@@ -230,6 +327,10 @@ namespace Microsoft.Cci.Ast {
       protected set { if (value) this.flags |= 0x10000000; else this.flags &= ~0x10000000; }
     }
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public NameDeclaration Name {
       get { return this.name; }
     }
@@ -247,6 +348,10 @@ namespace Microsoft.Cci.Ast {
         foreach (SourceCustomAttribute attribute in this.sourceAttributes) attribute.SetContainingExpression(containingExpression);
     }
 
+    /// <summary>
+    /// Custom attributes that are explicitly specified in source. Some of these may not end up in persisted metadata.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
       get {
         List<SourceCustomAttribute> sourceAttributes;
@@ -285,6 +390,18 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class GenericTypeParameterDeclaration : GenericParameterDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="name"></param>
+    /// <param name="index"></param>
+    /// <param name="constraints"></param>
+    /// <param name="variance"></param>
+    /// <param name="mustBeReferenceType"></param>
+    /// <param name="mustBeValueType"></param>
+    /// <param name="mustHaveDefaultConstructor"></param>
+    /// <param name="sourceLocation"></param>
     public GenericTypeParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, 
       ushort index, List<TypeExpression> constraints, TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor, ISourceLocation sourceLocation)
       : base(sourceAttributes, name, index, constraints, variance, mustBeReferenceType, mustBeValueType, mustHaveDefaultConstructor, sourceLocation)
@@ -292,6 +409,11 @@ namespace Microsoft.Cci.Ast {
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaringType"></param>
+    /// <param name="template"></param>
     protected GenericTypeParameterDeclaration(TypeDeclaration declaringType, GenericTypeParameterDeclaration template)
       : base(declaringType.OuterDummyBlock, template) {
       this.declaringType = declaringType;
@@ -336,6 +458,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaringType"></param>
     public virtual void SetDeclaringType(TypeDeclaration declaringType) 
       //^ requires this.declaringType == null;
     {
@@ -351,18 +477,39 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NamespaceClassDeclaration : NamespaceTypeDeclaration, IClassDeclaration, INamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NamespaceClassDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceClassDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceClassDeclaration template)
       : base(containingNamespaceDeclaration, template)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NamespaceClassDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceClassDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -377,13 +524,24 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members.
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
       return new NamespaceClassDeclaration(this.ContainingNamespaceDeclaration, this, members);
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
+    /// <returns></returns>
     public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -399,6 +557,15 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NamespaceDelegateDeclaration : NamespaceTypeDeclaration, IDelegateDeclaration, INamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="signature"></param>
+    /// <param name="sourceLocation"></param>
     public NamespaceDelegateDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, 
       Flags flags, NameDeclaration name, List<GenericTypeParameterDeclaration> genericParameters, SignatureDeclaration signature, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, new List<TypeExpression>(0), new List<ITypeDeclarationMember>(0), sourceLocation)
@@ -406,6 +573,11 @@ namespace Microsoft.Cci.Ast {
       this.signature = signature;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceDelegateDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceDelegateDeclaration template)
       : base(containingNamespaceDeclaration, template)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -414,11 +586,21 @@ namespace Microsoft.Cci.Ast {
       //^ assume this.containingNamespaceDeclaration == containingNamespaceDeclaration;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NamespaceDelegateDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceDelegateDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members) {
       this.signature = template.signature.MakeShallowCopyFor(containingNamespaceDeclaration.DummyBlock);
     }
 
+    /// <summary>
+    /// Creates a new type definition to correspond to this type declaration.
+    /// </summary>
+    /// <returns></returns>
     protected internal override NamespaceTypeDefinition CreateType() {
       return base.CreateType();
       //TODO: create a derived type specific to delegates
@@ -432,13 +614,24 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members.
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
       return new NamespaceDelegateDeclaration(this.ContainingNamespaceDeclaration, this, members);
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
+    /// <returns></returns>
     public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -457,6 +650,10 @@ namespace Microsoft.Cci.Ast {
       this.Signature.SetContainingBlock(this.DummyBlock);
     }
 
+    /// <summary>
+    /// The signature of the Invoke method.
+    /// </summary>
+    /// <value></value>
     public SignatureDeclaration Signature {
       get {
         return this.signature;
@@ -481,6 +678,15 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NamespaceEnumDeclaration : NamespaceTypeDeclaration, IEnumDeclaration, INamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="underlyingType"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NamespaceEnumDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
        TypeExpression/*?*/ underlyingType, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), members, sourceLocation)
@@ -488,12 +694,23 @@ namespace Microsoft.Cci.Ast {
       this.underlyingType = underlyingType;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceEnumDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceEnumDeclaration template)
       : base(containingNamespaceDeclaration, template) {
       if (template.underlyingType != null)
         this.underlyingType = (TypeExpression)template.underlyingType.MakeCopyFor(containingNamespaceDeclaration.DummyBlock);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NamespaceEnumDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceEnumDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members) {
       if (template.underlyingType != null)
@@ -508,13 +725,24 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members.
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
       return new NamespaceEnumDeclaration(this.ContainingNamespaceDeclaration, this, members);
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
+    /// <returns></returns>
     public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -523,6 +751,13 @@ namespace Microsoft.Cci.Ast {
       return new NamespaceEnumDeclaration(targetNamespaceDeclaration, this);
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a namespace type before constructing the namespace.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="recurse"></param>
     public override void SetContainingNamespaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, bool recurse) {
       TypeExpression/*?*/ thisType = this.UnderlyingType;
       if (thisType == null) thisType = TypeExpression.For(containingNamespaceDeclaration.Helper.PlatformType.SystemInt32.ResolvedType);
@@ -536,6 +771,10 @@ namespace Microsoft.Cci.Ast {
         this.UnderlyingType.SetContainingExpression(new DummyExpression(this.DummyBlock, SourceDummy.SourceLocation));
     }
 
+    /// <summary>
+    /// The primitive integral type that will be used to represent the values of enumeration. May be null.
+    /// </summary>
+    /// <value></value>
     public TypeExpression/*?*/ UnderlyingType {
       get {
         return this.underlyingType;
@@ -560,16 +799,37 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NamespaceInterfaceDeclaration : NamespaceTypeDeclaration, IInterfaceDeclaration, INamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NamespaceInterfaceDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceInterfaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceInterfaceDeclaration template)
       : base(containingNamespaceDeclaration, template) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NamespaceInterfaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceInterfaceDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members) {
     }
@@ -582,13 +842,24 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members.
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
       return new NamespaceInterfaceDeclaration(this.ContainingNamespaceDeclaration, this, members);
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
+    /// <returns></returns>
     public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -604,16 +875,37 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NamespaceStructDeclaration : NamespaceTypeDeclaration, IStructDeclaration, INamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NamespaceStructDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, genericParameters, baseTypes, members, sourceLocation) 
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceStructDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceStructDeclaration template)
       : base(containingNamespaceDeclaration, template) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NamespaceStructDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceStructDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members) {
     }
@@ -626,7 +918,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members.
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
       return new NamespaceStructDeclaration(this.ContainingNamespaceDeclaration, this, members);
@@ -642,6 +940,11 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
+    /// <returns></returns>
     public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -660,12 +963,27 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class NamespaceTypeDeclaration : TypeDeclaration, INamespaceDeclarationMember, IAggregatableNamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     protected NamespaceTypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceTypeDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceTypeDeclaration template)
       : base(containingNamespaceDeclaration.DummyBlock, template)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -673,6 +991,12 @@ namespace Microsoft.Cci.Ast {
       this.containingNamespaceDeclaration = containingNamespaceDeclaration;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NamespaceTypeDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceTypeDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration.DummyBlock, template, members)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -691,8 +1015,16 @@ namespace Microsoft.Cci.Ast {
         return this.containingNamespaceDeclaration;
       }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     protected NamespaceDeclaration/*?*/ containingNamespaceDeclaration;
 
+    /// <summary>
+    /// A block that is the containing block for any expressions contained inside the type declaration
+    /// but not inside of a method.
+    /// </summary>
+    /// <value></value>
     public override BlockStatement DummyBlock {
       get {
         if (this.dummyBlock == null) {
@@ -722,6 +1054,9 @@ namespace Microsoft.Cci.Ast {
       return this.CreateType();
     }
 
+    /// <summary>
+    /// Creates a new type definition to correspond to this type declaration.
+    /// </summary>
     protected internal virtual NamespaceTypeDefinition CreateType() {
       NamespaceTypeDefinition result = new NamespaceTypeDefinition(this.ContainingNamespaceDeclaration.UnitNamespace, this.Name, this.Compilation.HostEnvironment.InternFactory);
       this.namespaceTypeDefinition = result;
@@ -741,9 +1076,18 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    protected abstract NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit);
+    /// <summary>
+    /// Returns a shallow copy of this namespace type with the given list of members replacing the template members. 
+    /// The containing namespace declaration should be set by means of a later call to SetContainingNamespaceDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    protected abstract NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members);
     //^ ensures result.GetType() == this.GetType();
 
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
     public abstract INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration);
     //^ ensures result.GetType() == this.GetType();
     //^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -760,6 +1104,12 @@ namespace Microsoft.Cci.Ast {
     }
     NamespaceTypeDefinition/*?*/ namespaceTypeDefinition;
 
+    /// <summary>
+    /// A block that serves as the container for expressions that are not contained inside this type declaration, but that are part of the
+    /// signature of this type declaration (for example a base class reference). The block scope includes the type parameters of this type
+    /// declaration.
+    /// </summary>
+    /// <value></value>
     public override BlockStatement OuterDummyBlock {
       get {
         BlockStatement/*?*/ outerDummyBlock = this.outerDummyBlock;
@@ -787,15 +1137,26 @@ namespace Microsoft.Cci.Ast {
       this.SetCompilationPart(containingNamespaceDeclaration.CompilationPart, recurse);
     }
 
+    /// <summary>
+    /// The symbol table type definition that corresponds to this type declaration. If this type declaration is a partial type, the symbol table type
+    /// will be an aggregate of multiple type declarations.
+    /// </summary>
+    /// <value></value>
     public override TypeDefinition TypeDefinition {
       get { return this.NamespaceTypeDefinition; }
     }
 
+    /// <summary>
+    /// Returns a shallow copy of this type declaration that has the specified list of members as the value of its Members property.
+    /// </summary>
+    /// <param name="members">The members of the new type declaration.</param>
+    /// <param name="edit">The edit that resulted in this update.</param>
+    /// <returns></returns>
     public override TypeDeclaration UpdateMembers(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
       //^^ requires edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDcoument);
       //^^ ensures result.GetType() == this.GetType();
     {
-      NamespaceTypeDeclaration result = this.MakeShallowCopy(members, edit);
+      NamespaceTypeDeclaration result = this.MakeShallowCopy(members);
       ISourceDocument afterEdit = edit.SourceDocumentAfterEdit;
       ISourceLocation locationBeforeEdit = this.SourceLocation;
       //^ assume afterEdit.IsUpdatedVersionOf(locationBeforeEdit.SourceDocument);
@@ -853,22 +1214,46 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NestedClassDeclaration : NestedTypeDeclaration, IClassDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NestedClassDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
     {
     }
 
-    // Create a nested class declaration from a non nested one
+    /// <summary>
+    /// Create a nested class declaration from a non nested one 
+    /// </summary>
+    /// <param name="sourceClassDeclaration"></param>
     public NestedClassDeclaration(NamespaceClassDeclaration sourceClassDeclaration)
       : base(sourceClassDeclaration)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedClassDeclaration(TypeDeclaration containingTypeDeclaration, NestedClassDeclaration template)
       : base(containingTypeDeclaration, template) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NestedClassDeclaration(TypeDeclaration containingTypeDeclaration, NestedClassDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingTypeDeclaration, template, members) {
     }
@@ -881,6 +1266,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type with the given list of members replacing the template members.
+    /// The containing type declaration should be set by means of a later call to SetContainingTypeDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
     protected override NestedTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
@@ -888,6 +1279,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type declaration with the given type declaration as the containing
+    /// type declaration of the copy.
+    /// </summary>
+    /// <param name="targetTypeDeclaration">The type declaration that will contain the result.</param>
+    /// <returns></returns>
     public override ITypeDeclarationMember MakeShallowCopyFor(TypeDeclaration targetTypeDeclaration) {
       if (targetTypeDeclaration == this.ContainingTypeDeclaration) return this;
       return new NestedClassDeclaration(targetTypeDeclaration, this);
@@ -900,6 +1297,15 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NestedDelegateDeclaration : NestedTypeDeclaration, IDelegateDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="signature"></param>
+    /// <param name="sourceLocation"></param>
     public NestedDelegateDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration> genericParameters, SignatureDeclaration signature, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, 
@@ -908,6 +1314,11 @@ namespace Microsoft.Cci.Ast {
       this.signature = signature;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedDelegateDeclaration(TypeDeclaration containingTypeDeclaration, NestedDelegateDeclaration template)
       : base(containingTypeDeclaration, template) {
       this.signature = template.signature; //TODO: copy the signature
@@ -921,6 +1332,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type with the given list of members replacing the template members.
+    /// The containing type declaration should be set by means of a later call to SetContainingTypeDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
     protected override NestedTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
@@ -928,16 +1345,33 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type declaration with the given type declaration as the containing
+    /// type declaration of the copy.
+    /// </summary>
+    /// <param name="targetTypeDeclaration">The type declaration that will contain the result.</param>
+    /// <returns></returns>
     public override ITypeDeclarationMember MakeShallowCopyFor(TypeDeclaration targetTypeDeclaration) {
       if (targetTypeDeclaration == this.ContainingTypeDeclaration) return this;
       return new NestedDelegateDeclaration(targetTypeDeclaration, this);
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a type member before constructing the containing type declaration.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingTypeDeclaration">The type declaration that contains this nested type declaration.</param>
+    /// <param name="recurse">True if the construction of the children of this node need to be completed as well.</param>
     public override void SetContainingTypeDeclaration(TypeDeclaration containingTypeDeclaration, bool recurse) {
       base.SetContainingTypeDeclaration(containingTypeDeclaration, recurse);
       this.Signature.SetContainingBlock(this.DummyBlock);
     }
 
+    /// <summary>
+    /// The signature of the Invoke method.
+    /// </summary>
+    /// <value></value>
     public SignatureDeclaration Signature {
       get {
         return this.signature;
@@ -962,6 +1396,15 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NestedEnumDeclaration : NestedTypeDeclaration, IEnumDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="underlyingType"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NestedEnumDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       TypeExpression/*?*/ underlyingType, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), members, sourceLocation)
@@ -969,12 +1412,23 @@ namespace Microsoft.Cci.Ast {
       this.underlyingType = underlyingType;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedEnumDeclaration(TypeDeclaration containingTypeDeclaration, NestedEnumDeclaration template)
       : base(containingTypeDeclaration, template) {
       if (template.UnderlyingType != null)
         this.underlyingType = (TypeExpression)template.UnderlyingType.MakeCopyFor(containingTypeDeclaration.OuterDummyBlock);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NestedEnumDeclaration(TypeDeclaration containingTypeDeclaration, NestedEnumDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingTypeDeclaration, template, members) {
       if (template.UnderlyingType != null)
@@ -989,6 +1443,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type with the given list of members replacing the template members.
+    /// The containing type declaration should be set by means of a later call to SetContainingTypeDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
     protected override NestedTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
@@ -996,11 +1456,22 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type declaration with the given type declaration as the containing
+    /// type declaration of the copy.
+    /// </summary>
+    /// <param name="targetTypeDeclaration">The type declaration that will contain the result.</param>
+    /// <returns></returns>
     public override ITypeDeclarationMember MakeShallowCopyFor(TypeDeclaration targetTypeDeclaration) {
       if (targetTypeDeclaration == this.ContainingTypeDeclaration) return this;
       return new NestedEnumDeclaration(targetTypeDeclaration, this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="compilationPart"></param>
+    /// <param name="recurse"></param>
     public override void SetCompilationPart(CompilationPart compilationPart, bool recurse) {
       TypeExpression/*?*/ thisType = this.UnderlyingType;
       if (thisType == null) thisType = TypeExpression.For(compilationPart.Helper.PlatformType.SystemInt32.ResolvedType);
@@ -1017,6 +1488,10 @@ namespace Microsoft.Cci.Ast {
         this.underlyingType.SetContainingExpression(containingExpression);
     }
 
+    /// <summary>
+    /// The primitive integral type that will be used to represent the values of enumeration. May be null.
+    /// </summary>
+    /// <value></value>
     public TypeExpression/*?*/ UnderlyingType {
       get {
         return this.underlyingType;
@@ -1040,16 +1515,37 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NestedInterfaceDeclaration : NestedTypeDeclaration, IInterfaceDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NestedInterfaceDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) 
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedInterfaceDeclaration(TypeDeclaration containingTypeDeclaration, NestedInterfaceDeclaration template)
       : base(containingTypeDeclaration, template) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NestedInterfaceDeclaration(TypeDeclaration containingTypeDeclaration, NestedInterfaceDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingTypeDeclaration, template, members) {
     }
@@ -1062,6 +1558,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type with the given list of members replacing the template members.
+    /// The containing type declaration should be set by means of a later call to SetContainingTypeDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
     protected override NestedTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
@@ -1069,6 +1571,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type declaration with the given type declaration as the containing
+    /// type declaration of the copy.
+    /// </summary>
+    /// <param name="targetTypeDeclaration">The type declaration that will contain the result.</param>
+    /// <returns></returns>
     public override ITypeDeclarationMember MakeShallowCopyFor(TypeDeclaration targetTypeDeclaration) {
       if (targetTypeDeclaration == this.ContainingTypeDeclaration) return this;
       return new NestedInterfaceDeclaration(targetTypeDeclaration, this);
@@ -1081,18 +1589,39 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NestedStructDeclaration : NestedTypeDeclaration, IStructDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     public NestedStructDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, genericParameters, baseTypes, members, sourceLocation)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedStructDeclaration(TypeDeclaration containingTypeDeclaration, NestedStructDeclaration template)
       : base(containingTypeDeclaration, template)
       // ^ ensures this.ContainingTypeDeclaration == containingTypeDeclaration; //Spec# problem with delayed receiver
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NestedStructDeclaration(TypeDeclaration containingTypeDeclaration, NestedStructDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingTypeDeclaration, template, members)
       // ^ ensures this.ContainingTypeDeclaration == containingTypeDeclaration; //Spec# problem with delayed receiver
@@ -1116,6 +1645,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type with the given list of members replacing the template members.
+    /// The containing type declaration should be set by means of a later call to SetContainingTypeDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
+    /// <returns></returns>
     protected override NestedTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members)
       //^^ ensures result.GetType() == this.GetType();
     {
@@ -1123,6 +1658,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this nested type declaration with the given type declaration as the containing
+    /// type declaration of the copy.
+    /// </summary>
+    /// <param name="targetTypeDeclaration">The type declaration that will contain the result.</param>
+    /// <returns></returns>
     public override ITypeDeclarationMember MakeShallowCopyFor(TypeDeclaration targetTypeDeclaration) {
       if (targetTypeDeclaration == this.ContainingTypeDeclaration) return this;
       return new NestedStructDeclaration(targetTypeDeclaration, this);
@@ -1137,17 +1678,36 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class NestedTypeDeclaration : TypeDeclaration, ITypeDeclarationMember, IAggregatableTypeDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     protected NestedTypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) 
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceTypeDeclaration"></param>
     protected NestedTypeDeclaration(NamespaceTypeDeclaration sourceTypeDeclaration)
         : base(sourceTypeDeclaration.CompilationPart, sourceTypeDeclaration)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedTypeDeclaration(TypeDeclaration containingTypeDeclaration, NestedTypeDeclaration template)
       : base(containingTypeDeclaration.DummyBlock, template)
       // ^ ensures this.ContainingTypeDeclaration == containingTypeDeclaration; //Spec# problem with delayed receiver
@@ -1155,6 +1715,12 @@ namespace Microsoft.Cci.Ast {
       this.containingTypeDeclaration = containingTypeDeclaration;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected NestedTypeDeclaration(TypeDeclaration containingTypeDeclaration, NestedTypeDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingTypeDeclaration.DummyBlock, template, members)
       // ^ ensures this.ContainingTypeDeclaration == containingTypeDeclaration; //Spec# problem with delayed receiver
@@ -1162,6 +1728,10 @@ namespace Microsoft.Cci.Ast {
       this.containingTypeDeclaration = containingTypeDeclaration;
     }
 
+    /// <summary>
+    /// The type declaration that contains this member.
+    /// </summary>
+    /// <value></value>
     public TypeDeclaration ContainingTypeDeclaration {
       get {
         //^ assume this.containingTypeDeclaration != null;
@@ -1171,6 +1741,11 @@ namespace Microsoft.Cci.Ast {
     //^ [SpecPublic]
     TypeDeclaration/*?*/ containingTypeDeclaration;
 
+    /// <summary>
+    /// A block that is the containing block for any expressions contained inside the type declaration
+    /// but not inside of a method.
+    /// </summary>
+    /// <value></value>
     public override BlockStatement DummyBlock {
       get {
         if (this.dummyBlock == null) {
@@ -1202,6 +1777,10 @@ namespace Microsoft.Cci.Ast {
       return this.CreateNestedType();
     }
 
+    /// <summary>
+    /// Creates a type definition to correspond to this type declaration.
+    /// </summary>
+    /// <returns></returns>
     protected internal virtual NestedTypeDefinition CreateNestedType() {
       NestedTypeDefinition result = new NestedTypeDefinition(this.ContainingTypeDeclaration.TypeDefinition, this.Name, this.Compilation.HostEnvironment.InternFactory);
       this.nestedTypeDefinition = result;
@@ -1212,15 +1791,30 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// Indicates that this member is intended to hide the name of an inherited member.
+    /// </summary>
+    /// <value></value>
     public virtual bool IsNew {
       get {
         return (this.flags & Flags.New) != 0;
       }
     }
 
+    /// <summary>
+    /// Returns a shallow copy of this nested type with the given list of members replacing the template members. 
+    /// The containing type declaration should be set by means of a later call to SetContainingTypeDeclaration.
+    /// </summary>
+    /// <param name="members">The member list of the new type declaration.</param>
     protected abstract NestedTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members);
     //^ ensures result.GetType() == this.GetType();
 
+    /// <summary>
+    /// Returns a shallow copy of this nested type declaration with the given type declaration as the containing
+    /// type declaration of the copy.
+    /// </summary>
+    /// <param name="targetTypeDeclaration">The type declaration that will contain the result.</param>
+    /// <returns></returns>
     public abstract ITypeDeclarationMember MakeShallowCopyFor(TypeDeclaration targetTypeDeclaration);
     //^ ensures result.GetType() == this.GetType();
     //^ ensures result.ContainingTypeDeclaration == targetTypeDeclaration;
@@ -1241,6 +1835,12 @@ namespace Microsoft.Cci.Ast {
     }
     NestedTypeDefinition/*?*/ nestedTypeDefinition;
 
+    /// <summary>
+    /// A block that serves as the container for expressions that are not contained inside this type declaration, but that are part of the
+    /// signature of this type declaration (for example a base class reference). The block scope includes the type parameters of this type
+    /// declaration.
+    /// </summary>
+    /// <value></value>
     public override BlockStatement OuterDummyBlock {
       get {
         if (this.outerDummyBlock == null) {
@@ -1256,16 +1856,34 @@ namespace Microsoft.Cci.Ast {
     }
     BlockStatement/*?*/ outerDummyBlock;
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a type member before constructing the containing type declaration.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingTypeDeclaration">The type declaration that contains this nested type declaration.</param>
+    /// <param name="recurse">True if the construction of the children of this node need to be completed as well.</param>
     public virtual void SetContainingTypeDeclaration(TypeDeclaration containingTypeDeclaration, bool recurse) {
       this.containingTypeDeclaration = containingTypeDeclaration;
       this.OuterDummyBlock.SetContainers(containingTypeDeclaration.DummyBlock, this);
       this.SetCompilationPart(containingTypeDeclaration.CompilationPart, recurse);
     }
 
+    /// <summary>
+    /// The symbol table type definition that corresponds to this type declaration. If this type declaration is a partial type, the symbol table type
+    /// will be an aggregate of multiple type declarations.
+    /// </summary>
+    /// <value></value>
     public override TypeDefinition TypeDefinition {
       get { return this.NestedTypeDefinition; }
     }
 
+    /// <summary>
+    /// Returns a shallow copy of this type declaration that has the specified list of members as the value of its Members property.
+    /// </summary>
+    /// <param name="members">The members of the new type declaration.</param>
+    /// <param name="edit">The edit that resulted in this update.</param>
+    /// <returns></returns>
     public override TypeDeclaration UpdateMembers(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit)
       //^^ requires edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDcoument);
       //^^ ensures result.GetType() == this.GetType();
@@ -1286,6 +1904,10 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
+    /// </summary>
+    /// <value></value>
     public TypeMemberVisibility Visibility {
       get {
         return ((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask;
@@ -1339,20 +1961,57 @@ namespace Microsoft.Cci.Ast {
   /// Corresponds to a source language type declaration, such as a C# partial class. One of more of these make up a type definition. 
   /// </summary>
   public abstract class TypeDeclaration : SourceItem, IContainer<IAggregatableTypeDeclarationMember>, IContainer<ITypeDeclarationMember>, IDeclaration, INamedEntity {
+    /// <summary>
+    /// 
+    /// </summary>
     [Flags]
     public enum Flags {
+      /// <summary>
+      /// 
+      /// </summary>
       None     = 0x00000000,
 
+      /// <summary>
+      /// 
+      /// </summary>
       Abstract = 0x40000000,
+      /// <summary>
+      /// 
+      /// </summary>
       New =      0x20000000,
+      /// <summary>
+      /// 
+      /// </summary>
       Partial =  0x10000000,
+      /// <summary>
+      /// 
+      /// </summary>
       Sealed =   0x08000000,
+      /// <summary>
+      /// 
+      /// </summary>
       Static =   0x04000000,
+      /// <summary>
+      /// 
+      /// </summary>
       Unsafe =   0x02000000,
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected readonly Flags flags;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="baseTypes"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceLocation"></param>
     protected TypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceLocation) {
@@ -1364,6 +2023,11 @@ namespace Microsoft.Cci.Ast {
       this.typeDeclarationMembers = members;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="compilationPart"></param>
+    /// <param name="template"></param>
     protected TypeDeclaration(CompilationPart compilationPart, TypeDeclaration template)
       : base(template.SourceLocation) {
       this.sourceAttributes = new List<SourceCustomAttribute>(template.SourceAttributes);
@@ -1384,6 +2048,12 @@ namespace Microsoft.Cci.Ast {
       : this(containingBlock, template, new List<ITypeDeclarationMember>(template.typeDeclarationMembers)) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingBlock"></param>
+    /// <param name="template"></param>
+    /// <param name="members"></param>
     protected TypeDeclaration(BlockStatement containingBlock, TypeDeclaration template, List<ITypeDeclarationMember> members)
       : base(template.SourceLocation) {
       this.sourceAttributes = new List<SourceCustomAttribute>(template.SourceAttributes);
@@ -1406,6 +2076,10 @@ namespace Microsoft.Cci.Ast {
       return 0;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="typeDeclarationMember"></param>
     public void AddHelperMember(ITypeDeclarationMember typeDeclarationMember) {
       lock (this) {
         if (this.helperMembers == null)
@@ -1414,10 +2088,17 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The byte alignment that values of the given type ought to have. Must be a power of 2. If zero, the alignment is decided at runtime.
+    /// </summary>
     public virtual ushort Alignment {
       get { return 0; } //TODO: provide a default implementation that extracts this from a custom attribute
     }
 
+    /// <summary>
+    /// Custom attributes that are to be persisted in the metadata.
+    /// </summary>
+    /// <value></value>
     public virtual IEnumerable<ICustomAttribute> Attributes {
       get {
         foreach (SourceCustomAttribute attribute in this.SourceAttributes) {
@@ -1450,10 +2131,16 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     internal Dictionary<int, object/*?*/> caseSensitiveCache = new Dictionary<int, object/*?*/>();
 
+    /// <summary>
+    /// The compilation to which this type declaration belongs.
+    /// </summary>
     public Compilation Compilation {
       get { return this.CompilationPart.Compilation; }
     }
 
+    /// <summary>
+    /// The compilation part to which this type declaration belongs.
+    /// </summary>
     public CompilationPart CompilationPart {
       get { 
         //^ assume this.compilationPart != null;
@@ -1463,6 +2150,10 @@ namespace Microsoft.Cci.Ast {
     //^ [SpecPublic]
     CompilationPart/*?*/ compilationPart;
 
+    /// <summary>
+    /// A block that is the containing block for any expressions contained inside the type declaration
+    /// but not inside of a method.
+    /// </summary>
     public abstract BlockStatement DummyBlock { get; }
 
     /// <summary>
@@ -1481,6 +2172,9 @@ namespace Microsoft.Cci.Ast {
     }
     readonly List<GenericTypeParameterDeclaration>/*?*/ genericParameters;
 
+    /// <summary>
+    /// The number of generic parameters. Zero if the type is not generic.
+    /// </summary>
     public virtual ushort GenericParameterCount {
       get {
         return (ushort)(this.genericParameters == null ? 0 : this.genericParameters.Count);
@@ -1529,6 +2223,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// A static class can not have instance members. A static class is sealed.
+    /// </summary>
     public virtual bool IsStatic {
       get {
         return (this.flags & Flags.Static) != 0;
@@ -1563,6 +2260,11 @@ namespace Microsoft.Cci.Ast {
     }
     readonly NameDeclaration name;
 
+    /// <summary>
+    /// A block that serves as the container for expressions that are not contained inside this type declaration, but that are part of the
+    /// signature of this type declaration (for example a base class reference). The block scope includes the type parameters of this type
+    /// declaration.
+    /// </summary>
     public abstract BlockStatement OuterDummyBlock { get; }
 
     /// <summary>
@@ -1591,6 +2293,11 @@ namespace Microsoft.Cci.Ast {
       get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); } //TODO: extract these from the source attributes
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="compilationPart"></param>
+    /// <param name="recurse"></param>
     public virtual void SetCompilationPart(CompilationPart compilationPart, bool recurse) {
       this.compilationPart = compilationPart;
       if (!recurse) return;
@@ -1606,6 +2313,10 @@ namespace Microsoft.Cci.Ast {
       if (typeContract != null) typeContract.SetContainingType(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="member"></param>
     public virtual void SetMemberContainingTypeDeclaration(ITypeDeclarationMember member) {
       TypeDeclarationMember/*?*/ tmem = member as TypeDeclarationMember;
       if (tmem != null) {
@@ -1629,6 +2340,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Custom attributes that are explicitly specified in source. Some of these may not end up in persisted metadata.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
       get {
         List<SourceCustomAttribute> sourceAttributes;
@@ -1643,6 +2358,10 @@ namespace Microsoft.Cci.Ast {
     readonly List<SourceCustomAttribute>/*?*/ sourceAttributes;
 
     //^ [Confined]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return this.Helper.GetTypeName(this.TypeDefinition);
     }
@@ -1658,6 +2377,11 @@ namespace Microsoft.Cci.Ast {
     }
     readonly List<ITypeDeclarationMember> typeDeclarationMembers;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="uniqueKey"></param>
+    /// <returns></returns>
     public IEnumerable<ITypeDeclarationMember> GetTypeDeclarationMembersNamed(int uniqueKey) {
       this.InitializeIfNecessary();
       List<ITypeDeclarationMember> members;
@@ -1697,6 +2421,11 @@ namespace Microsoft.Cci.Ast {
       get;
     }
 
+    /// <summary>
+    /// Returns a shallow copy of this type declaration that has the specified list of members as the value of its Members property.
+    /// </summary>
+    /// <param name="members">The members of the new type declaration.</param>
+    /// <param name="edit">The edit that resulted in this update.</param>
     public abstract TypeDeclaration UpdateMembers(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit);
     //^ requires edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDocument);
     //^ ensures result.GetType() == this.GetType();

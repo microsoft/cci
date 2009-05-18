@@ -148,11 +148,18 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class LoopContract : ILoopContract {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public LoopContract() {
       this.invariants = new List<ILoopInvariant>();
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="loopContract"></param>
     public LoopContract(ILoopContract loopContract) {
       this.invariants = new List<ILoopInvariant>(loopContract.Invariants);
       this.locations = new List<ILocation>(loopContract.Locations);
@@ -199,6 +206,10 @@ namespace Microsoft.Cci.Contracts {
       get { return this.Writes == null ? null : this.Writes.AsReadOnly(); }
     }
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -219,11 +230,18 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class LoopInvariant : ILoopInvariant {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public LoopInvariant() {
       this.condition = CodeDummy.Expression;
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="loopInvariant"></param>
     public LoopInvariant(ILoopInvariant loopInvariant) {
       this.condition = loopInvariant.Condition;
       this.locations = new List<ILocation>(loopInvariant.Locations);
@@ -250,6 +268,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region ILoopInvariant Members
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -271,6 +293,9 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class MethodContract : IMethodContract {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MethodContract() {
       this.allocates = new List<IExpression>();
       this.frees = new List<IExpression>();
@@ -284,6 +309,10 @@ namespace Microsoft.Cci.Contracts {
       this.writes = new List<IExpression>();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodContract"></param>
     public MethodContract(IMethodContract methodContract) {
       this.allocates = new List<IExpression>(methodContract.Allocates);
       this.frees = new List<IExpression>(methodContract.Frees);
@@ -389,6 +418,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region IMethodContract Members
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -441,6 +474,9 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class Precondition : IPrecondition {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Precondition() {
       this.alwaysCheckedAtRuntime = false;
       this.condition = CodeDummy.Expression;
@@ -448,6 +484,10 @@ namespace Microsoft.Cci.Contracts {
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="precondition"></param>
     public Precondition(IPrecondition precondition) {
       this.alwaysCheckedAtRuntime = precondition.AlwaysCheckedAtRuntime;
       this.condition = precondition.Condition;
@@ -513,11 +553,18 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class PostCondition : IPostcondition {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public PostCondition() {
       this.condition = CodeDummy.Expression;
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="postcondition"></param>
     public PostCondition(IPostcondition postcondition) {
       this.condition = postcondition.Condition;
       this.locations = new List<ILocation>(postcondition.Locations);
@@ -560,11 +607,18 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class ThrownException : IThrownException {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ThrownException() {
       this.exceptionType = Dummy.TypeReference;
       this.postconditions = new List<IPostcondition>();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="thrownException"></param>
     public ThrownException(IThrownException thrownException) {
       this.exceptionType = thrownException.ExceptionType;
       this.postconditions = new List<IPostcondition>(thrownException.Postconditions);
@@ -604,6 +658,9 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class TypeContract : ITypeContract {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public TypeContract() {
       this.contractFields = new List<IFieldDefinition>();
       this.contractMethods = new List<IMethodDefinition>();
@@ -611,6 +668,10 @@ namespace Microsoft.Cci.Contracts {
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="typeContract"></param>
     public TypeContract(ITypeContract typeContract) {
       this.contractFields = new List<IFieldDefinition>(typeContract.ContractFields);
       this.contractMethods = new List<IMethodDefinition>(typeContract.ContractMethods);
@@ -657,6 +718,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region ITypeContract Members
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -689,6 +754,9 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class TypeInvariant : ITypeInvariant {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public TypeInvariant() {
       this.condition = CodeDummy.Expression;
       this.isAxiom = false;
@@ -696,6 +764,10 @@ namespace Microsoft.Cci.Contracts {
       this.name = null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="typeInvariant"></param>
     public TypeInvariant(ITypeInvariant typeInvariant) {
       this.condition = typeInvariant.Condition;
       this.isAxiom = typeInvariant.IsAxiom;
@@ -742,6 +814,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region ITypeInvariant Members
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }

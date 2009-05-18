@@ -75,6 +75,10 @@ namespace Microsoft.Cci {
       return false;
     }
 
+    /// <summary>
+    /// True if the expression has no observable side effects.
+    /// </summary>
+    /// <value></value>
     public bool IsPure {
       get { return false; }
     }
@@ -110,6 +114,15 @@ namespace Microsoft.Cci {
       this.host = host;
     }
 
+    /// <summary>
+    /// Traverses the given block of statements in the context of the given method to produce a list of
+    /// IL operations, exception information blocks (the locations of handlers, filters and finallies) and any private helper
+    /// types (for example closure classes) that represent the semantics of the given block of statements.
+    /// The results of the traversal can be retrieved via the GetOperations, GetOperationExceptionInformation
+    /// and GetPrivateHelperTypes methods.
+    /// </summary>
+    /// <param name="method">A method that provides the context for a block of statments that are to be converted to IL.</param>
+    /// <param name="body">A block of statements that are to be converted to IL.</param>
     public override void ConvertToIL(IMethodDefinition method, IBlockStatement body) {
       MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.host, null, ProvideSourceToILConverter,
         this.sourceLocationProvider, (ContractProvider)this.contractProvider);
@@ -118,6 +131,11 @@ namespace Microsoft.Cci {
       base.Visit(normalizedBody);
     }
 
+    /// <summary>
+    /// Returns zero or more types that are used to keep track of information needed to implement
+    /// the statements that have been converted to IL by this converter. For example, any closure classes
+    /// needed to compile anonymous delegate expressions (lambdas) will be returned by this method.
+    /// </summary>
     public override IEnumerable<ITypeDefinition> GetPrivateHelperTypes() {
       return this.privateHelperTypes;
     }

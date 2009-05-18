@@ -10,14 +10,35 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci  {
+  /// <summary>
+  /// A visitor that traverses a code model and generates explicit assert and assume statements based on implicit checks and assumptions
+  /// that are present in the object model. For example, any array index expression implicitly asserts that the array index is within bounds.
+  /// The purpose of this visitor is to produce an object model that can be checked by a static checker, without requiring the static checker to
+  /// have special cases for all of the implicit assertions and assumes in the code.
+  /// </summary>
+  /// <remarks>This class is basically obsolete. It should be replaced by a mutator. It is also mostly incomplete.</remarks>
   public class AssertAssumeAdderVisitor : BaseCodeTraverser {
 
+    /// <summary>
+    /// Allocates a visitor that traverses a code model and generates explicit assert and assume statements based on implicit checks and assumptions
+    /// that are present in the object model. For example, any array index expression implicitly asserts that the array index is within bounds.
+    /// The purpose of this visitor is to produce an object model that can be checked by a static checker, without requiring the static checker to
+    /// have special cases for all of the implicit assertions and assumes in the code.
+    /// </summary>
+    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
+    /// <param name="insertAssumeFalseAtLine"></param>
     public AssertAssumeAdderVisitor(INameTable nameTable, uint? insertAssumeFalseAtLine)
       : base() {
       this.nameTable = nameTable;
       this.insertAssumeFalseAtLine = insertAssumeFalseAtLine;
     }
 
+    /// <summary>
+    /// A map from statements to collections of statements that should precede them. The preceding statements will be assert/assume statements
+    /// that make explicit the checks that are implicit in the statement they precede.
+    /// </summary>
     public IDictionary<IStatement, ICollection<IStatement>> AddedStmts {
       get { return this.addedStmts; }
     }
@@ -75,6 +96,10 @@ namespace Microsoft.Cci  {
     }
     IMethodDefinition/*?*/ pointerValidator;
 
+    /// <summary>
+    /// Visits the specified assembly.
+    /// </summary>
+    /// <param name="assembly">The assembly.</param>
     public override void Visit(IAssembly assembly) {
       List<IUnit> units = new List<IUnit>();
       foreach (IUnitReference uref in assembly.UnitReferences) units.Add(uref.ResolvedUnit);
@@ -170,6 +195,10 @@ namespace Microsoft.Cci  {
     //  this.AddAssertion(ge);
     //}
 
+    /// <summary>
+    /// Visits the specified method.
+    /// </summary>
+    /// <param name="method">The method.</param>
     public override void Visit(IMethodDefinition method) {
       //TODO: if the method is the main method of the assembly, then add assumptions that the global variables have been initialized and not yet modified.
       base.Visit(method);
@@ -177,6 +206,10 @@ namespace Microsoft.Cci  {
         this.Visit(method.Body);
     }
 
+    /// <summary>
+    /// Visits the specified module.
+    /// </summary>
+    /// <param name="module">The module.</param>
     public override void Visit(IModule module) {
       List<IUnit> units = new List<IUnit>();
       foreach (IUnitReference uref in module.UnitReferences) units.Add(uref.ResolvedUnit);
@@ -185,11 +218,19 @@ namespace Microsoft.Cci  {
       base.Visit(module);
     }
 
+    /// <summary>
+    /// Visits the specified pointer call.
+    /// </summary>
+    /// <param name="pointerCall">The pointer call.</param>
     public override void Visit(IPointerCall pointerCall) {
       base.Visit(pointerCall);
       this.AddAssertion(this.GetPointerValidationCall(pointerCall.Pointer));
     }
 
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
     public override void Visit(IStatement statement) {
       IStatement oldCurrentStatement = this.currentStatement;
       this.currentStatement = statement;
@@ -209,8 +250,11 @@ namespace Microsoft.Cci  {
       }
     }
 
-    public override void Visit(IBlockStatement block)
-    {
+    /// <summary>
+    /// Visits the specified block.
+    /// </summary>
+    /// <param name="block">The block.</param>
+    public override void Visit(IBlockStatement block) {
       if (this.insertAssumeFalseAtLine != null) {
         uint startLine;
         uint endLine;
@@ -234,6 +278,10 @@ namespace Microsoft.Cci  {
       base.Visit(block);
     }
 
+    /// <summary>
+    /// Visits the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit.</param>
     public override void Visit(IUnit unit) {
       List<IUnit> units = new List<IUnit>();
       foreach (IUnitReference uref in unit.UnitReferences) units.Add(uref.ResolvedUnit);

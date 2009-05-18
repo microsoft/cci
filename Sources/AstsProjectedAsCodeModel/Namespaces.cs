@@ -9,8 +9,17 @@ using System.Collections.Generic;
 
 namespace Microsoft.Cci.Ast {
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class NestedUnitNamespace : UnitNamespace, INestedUnitNamespace {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingUnitNamespace"></param>
+    /// <param name="name"></param>
+    /// <param name="unit"></param>
     public NestedUnitNamespace(IUnitNamespace containingUnitNamespace, IName name, IUnit unit)
       : base(name, unit)
       //^ requires containingUnitNamespace is RootUnitNamespace || containingUnitNamespace is NestedUnitNamespace;
@@ -18,6 +27,10 @@ namespace Microsoft.Cci.Ast {
       this.containingUnitNamespace = containingUnitNamespace;
     }
 
+    /// <summary>
+    /// The unit namespace that contains this member.
+    /// </summary>
+    /// <value></value>
     public IUnitNamespace ContainingUnitNamespace {
       get
         //^ ensures result is RootUnitNamespace || result is NestedUnitNamespace;
@@ -35,6 +48,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       if (this.ContainingUnitNamespace is IRootUnitNamespace) return this.Name.Value;
       return this.ContainingUnitNamespace.ToString() + "." + this.Name.Value;
@@ -50,6 +67,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IScopeMember<IScope<INamespaceMember>> Members
 
+    /// <summary>
+    /// The scope instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public IScope<INamespaceMember> ContainingScope {
       get { return this.ContainingUnitNamespace; }
     }
@@ -58,6 +79,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IContainerMember<INamespace> Members
 
+    /// <summary>
+    /// The container instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public INamespaceDefinition Container {
       get { return this.ContainingUnitNamespace; }
     }
@@ -78,6 +103,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.ContainingUnitNamespace; }
     }
 
+    /// <summary>
+    /// The namespace definition being referred to.
+    /// </summary>
+    /// <value></value>
     public INestedUnitNamespace ResolvedNestedUnitNamespace {
       get { return this; }
     }
@@ -85,13 +114,25 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public abstract class UnitNamespace : AggregatedNamespace<NamespaceDeclaration, IAggregatableNamespaceDeclarationMember>, IUnitNamespace {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="unit"></param>
     protected UnitNamespace(IName name, IUnit unit)
       : base(name) {
       this.unit = unit;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     protected internal void AddNamespaceDeclaration(NamespaceDeclaration declaration) {
       this.namespaceDeclarations.Add(declaration);
       this.AddContainer(declaration);
@@ -109,6 +150,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IEnumerable<NamespaceDeclaration> NamespaceDeclarations {
       get {
         return this.namespaceDeclarations.AsReadOnly();
@@ -138,12 +182,22 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Finds or creates an aggregated member instance corresponding to the given member. Usually this should result in the given member being added to the declarations
+    /// collection of the aggregated member.
+    /// </summary>
+    /// <param name="member">The member to aggregate.</param>
+    /// <returns></returns>
     protected override INamespaceMember GetAggregatedMember(IAggregatableNamespaceDeclarationMember member) {
       return member.AggregatedMember;
     }
 
     #region IUnitNamespace Members
 
+    /// <summary>
+    /// The IUnit instance associated with this namespace.
+    /// </summary>
+    /// <value></value>
     public IUnit Unit {
       get { return this.unit; }
     }
@@ -153,6 +207,9 @@ namespace Microsoft.Cci.Ast {
 
     #region INamespace Members
 
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed override INamespaceRootOwner RootOwner {
       get { return this.unit; }
     }
@@ -161,6 +218,9 @@ namespace Microsoft.Cci.Ast {
 
     #region IDefinition Members
 
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed override IEnumerable<ILocation> Locations {
       get {
         foreach (NamespaceDeclaration declaration in this.namespaceDeclarations)
@@ -176,6 +236,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.unit; }
     }
 
+    /// <summary>
+    /// The namespace definition being referred to.
+    /// </summary>
+    /// <value></value>
     public IUnitNamespace ResolvedUnitNamespace {
       get { return this; }
     }
@@ -183,20 +247,40 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class RootUnitNamespace : UnitNamespace, IRootUnitNamespace {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="unit"></param>
     public RootUnitNamespace(IName name, IUnit unit)
       : base(name, unit) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="container"></param>
     protected override void AddContainer(NamespaceDeclaration container) {
       base.AddContainer(container);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return "global::";
     }

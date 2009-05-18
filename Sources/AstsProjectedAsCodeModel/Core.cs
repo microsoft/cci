@@ -133,6 +133,9 @@ namespace Microsoft.Cci.Ast {
       return new UnitSet(units);
     }
 
+    /// <summary>
+    /// The class that contains any global variables and funcions.
+    /// </summary>
     public GlobalsClass GlobalsClass {
       get {
         if (this.globalsClass == null)
@@ -151,6 +154,9 @@ namespace Microsoft.Cci.Ast {
     }
     readonly ISourceEditHost hostEnvironment;
 
+    /// <summary>
+    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops. 
+    /// </summary>
     public SourceContractProvider ContractProvider {
       get {
         if (this.contractProvider == null) {
@@ -165,6 +171,9 @@ namespace Microsoft.Cci.Ast {
     //^ [Once]
     SourceContractProvider/*?*/ contractProvider;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ModuleClass ModuleClass {
       get {
         if (this.moduleClass == null)
@@ -246,6 +255,9 @@ namespace Microsoft.Cci.Ast {
     }
     readonly Unit result;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ISourceLocationProvider SourceLocationProvider {
       get {
         if (this.sourceLocationProvider == null)
@@ -401,6 +413,9 @@ namespace Microsoft.Cci.Ast {
         return this.rootNamespace;
       }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     protected RootNamespaceDeclaration/*?*/ rootNamespace;
 
     /// <summary>
@@ -508,6 +523,14 @@ namespace Microsoft.Cci.Ast {
       if (edit == null || oldMember == null) return; //Dummy use of edit until TODO is done.
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="oldMember"></param>
+    /// <param name="newMember"></param>
+    /// <param name="edit"></param>
+    /// <param name="recurse"></param>
+    /// <returns></returns>
     public virtual RootNamespaceDeclaration GetUpdatedRootNamespace(INamespaceDeclarationMember oldMember, INamespaceDeclarationMember newMember,
       ISourceDocumentEdit edit, bool recurse)
       //^ requires newMember is NamespaceDeclarationMember || newMember is NamespaceTypeDeclaration || newMember is NestedNamespaceDeclaration;
@@ -550,6 +573,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="newMember"></param>
+    /// <param name="result"></param>
+    /// <param name="recurse"></param>
     public virtual void SetContainingNamespace(INamespaceDeclarationMember newMember, NamespaceDeclaration result, bool recurse)
       //^ requires newMember is NamespaceDeclarationMember || newMember is NamespaceTypeDeclaration || newMember is NestedNamespaceDeclaration;
     {
@@ -567,6 +596,14 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="edit"></param>
+    /// <param name="updatedParts"></param>
+    /// <param name="editEventArgs"></param>
+    /// <param name="symbolTableEditEventArgs"></param>
+    /// <returns></returns>
     public virtual RootNamespaceDeclaration GetUpdatedRootNamespace(AstSourceDocumentEdit edit, IList<CompilationPart> updatedParts, out EditEventArgs editEventArgs, out EditEventArgs/*?*/ symbolTableEditEventArgs)
       //^ requires this.SourceLocation.SourceDocument == edit.SourceLocationBeforeEdit.SourceDocument;
       //^ requires this.SourceLocation.Contains(edit.SourceLocationBeforeEdit);
@@ -585,6 +622,15 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="oldMember"></param>
+    /// <param name="edit"></param>
+    /// <param name="updatedParts"></param>
+    /// <param name="editEventArgs"></param>
+    /// <param name="symbolTableEditEventArgs"></param>
+    /// <returns></returns>
     public virtual RootNamespaceDeclaration GetUpdatedRootNamespace(ITypeDeclarationMember oldMember,
       AstSourceDocumentEdit edit, IList<CompilationPart> updatedParts, out EditEventArgs editEventArgs, out EditEventArgs/*?*/ symbolTableEditEventArgs)
       //^ requires this.SourceLocation.SourceDocument == edit.SourceLocationBeforeEdit.SourceDocument;
@@ -638,6 +684,14 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="oldMember"></param>
+    /// <param name="newMember"></param>
+    /// <param name="edit"></param>
+    /// <param name="recurse"></param>
+    /// <returns></returns>
     public virtual RootNamespaceDeclaration GetUpdatedRootNamespace(ITypeDeclarationMember oldMember, ITypeDeclarationMember newMember,
       ISourceDocumentEdit edit, bool recurse)
       //^ requires newMember is TypeDeclarationMember || newMember is NestedTypeDeclaration;
@@ -675,6 +729,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="newMember"></param>
+    /// <param name="newNsType"></param>
+    /// <param name="recurse"></param>
     public virtual void SetContainingTypeDeclaration(ITypeDeclarationMember newMember, TypeDeclaration newNsType, bool recurse)
       //^ requires newMember is TypeDeclarationMember || newMember is NestedTypeDeclaration;
     {
@@ -687,6 +747,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocationBeforeEdit"></param>
+    /// <param name="edit"></param>
+    /// <returns></returns>
     public virtual INamespaceDeclarationMember/*?*/ ParseAsNamespaceDeclarationMember(ISourceLocation sourceLocationBeforeEdit, ISourceDocumentEdit edit)
       // ^ requires this.SourceLocation.SourceDocument == sourceLocationBeforeEdit.SourceDocument;
       // ^ requires this.SourceLocation.SourceDocument == edit.SourceLocationBeforeEdit.SourceDocument;
@@ -698,6 +764,10 @@ namespace Microsoft.Cci.Ast {
       throw new NotSupportedException();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public virtual RootNamespaceDeclaration ParseAsRootNamespace()
       //^ ensures result.CompilationPart.GetType() == this.GetType();
       //^ ensures result.CompilationPart.SourceLocation.SourceDocument == this.SourceLocation.SourceDocument;
@@ -706,6 +776,13 @@ namespace Microsoft.Cci.Ast {
       throw new NotSupportedException();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocationBeforeEdit"></param>
+    /// <param name="edit"></param>
+    /// <param name="typeName"></param>
+    /// <returns></returns>
     public virtual ITypeDeclarationMember/*?*/ ParseAsTypeDeclarationMember(ISourceLocation sourceLocationBeforeEdit, ISourceDocumentEdit edit, IName typeName)
       // ^ requires this.SourceLocation.SourceDocument == sourceLocationBeforeEdit.SourceDocument;
       // ^ requires this.SourceLocation.SourceDocument == edit.SourceLocationBeforeEdit.SourceDocument;
@@ -1047,6 +1124,12 @@ namespace Microsoft.Cci.Ast {
       return new Conversion(expression, targetType, expression.SourceLocation);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="anonMethod"></param>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
     protected virtual Expression ConversionFromAnonymousMethodToDelegate(AnonymousMethod anonMethod, ITypeDefinition targetType)
       //^ requires targetType.IsDelegate;
     {
@@ -1082,6 +1165,12 @@ namespace Microsoft.Cci.Ast {
       return new CreateDelegateInstance(instance, targetType, matchingMethod, expression.SourceLocation);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <param name="functionPointer"></param>
+    /// <returns></returns>
     protected virtual Expression ConversionFromMethodGroupToFunctionPointer(Expression expression, IFunctionPointerTypeReference functionPointer) { //TODO: pass in the source context of the conversion
       AddressOf/*?*/ addressOfExpression = expression as AddressOf;
       if (addressOfExpression != null) {
@@ -1445,6 +1534,12 @@ namespace Microsoft.Cci.Ast {
     DoubleHashtable<object> typeConversionCache = new DoubleHashtable<object>();
 
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
     public virtual bool CachedImplicitConversionExists(Expression expression, ITypeDefinition targetType) {
       bool result;
       var pair = new Pair(expression, targetType.InternedKey);
@@ -2707,6 +2802,9 @@ namespace Microsoft.Cci.Ast {
         this.ReportError(new AstErrorMessage(expression, Error.NoImplicitConvCast, sourceTypeName, targetTypeName));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected virtual bool ReportAreYouMissingACast
     {
       get { return true; }
@@ -3154,6 +3252,9 @@ namespace Microsoft.Cci.Ast {
         return this.sourceLocation;
       }
     }
+    /// <summary>
+    /// The location in the source document that has been parsed to construct this item.
+    /// </summary>
     protected ISourceLocation sourceLocation;
 
   }
@@ -7198,12 +7299,22 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class StatementFinder : MemberFinder {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="locationToContain"></param>
     public StatementFinder(ISourceLocation locationToContain)
       : base(locationToContain) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Statement/*?*/ MostNestedStatement {
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
@@ -7215,6 +7326,10 @@ namespace Microsoft.Cci.Ast {
     Statement/*?*/ mostNestedStatement;
     // ^ invariant mostNestedStatement == null || mostNestedStatement.SourceLocation.Contains(this.LocationToContain);
 
+    /// <summary>
+    /// Performs some computation with the given method declaration.
+    /// </summary>
+    /// <param name="methodDeclaration"></param>
     public override void Visit(MethodDeclaration methodDeclaration)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -7228,6 +7343,10 @@ namespace Microsoft.Cci.Ast {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given statement.
+    /// </summary>
+    /// <param name="statement"></param>
     public override void VisitStatement(Statement statement) {
       if (statement.SourceLocation.Contains(this.LocationToContain)) {
         this.mostNestedStatement = statement;
@@ -7237,8 +7356,15 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class StatementScope : Scope<LocalDeclaration> { //TODO: use non caching scope
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="statement"></param>
     public StatementScope(Statement statement) {
       this.statement = statement;
     }
@@ -7247,6 +7373,12 @@ namespace Microsoft.Cci.Ast {
     Dictionary<int, LabeledStatement>/*?*/ statementForLabel;
     Dictionary<int, LabeledStatement>/*?*/ statementForLabelIgnoringCase;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="label"></param>
+    /// <param name="ignoreCase"></param>
+    /// <returns></returns>
     public LabeledStatement/*?*/ GetStatementLabeled(IName label, bool ignoreCase) {
       LabeledStatement/*?*/ result = null;
       this.InitializeIfNecessary();
@@ -7260,6 +7392,9 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// Provides a derived class with an opportunity to lazily initialize the scope's data structures via calls to AddMemberToCache.
+    /// </summary>
     protected override void InitializeIfNecessary() {
       if (this.isInitialized) return;
       lock (GlobalLock.LockingObject) {

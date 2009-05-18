@@ -96,6 +96,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected int flags;
 
+    /// <summary>
+    /// Returns the string used to identify the operator in error messages
+    /// </summary>
+    /// <value></value>
     protected override string OperationSymbolForErrorMessage {
       get { return "+"; }
     }
@@ -276,6 +280,10 @@ namespace Microsoft.Cci.Ast {
         get { return this.addition.Type; }
       }
 
+      /// <summary>
+      /// True if the expression has no observable side effects.
+      /// </summary>
+      /// <value></value>
       public bool IsPure {
         get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
@@ -480,6 +488,10 @@ namespace Microsoft.Cci.Ast {
       return this;
     }
 
+    /// <summary>
+    /// Resolves this instance.
+    /// </summary>
+    /// <returns></returns>
     public override object Resolve() {
       object/*?*/ definition = base.Resolve();
       if (definition is IEventDefinition || definition is IPropertyDefinition)
@@ -513,6 +525,9 @@ namespace Microsoft.Cci.Ast {
       return new AddressableExpression(containingBlock, this);
     }
 
+    /// <summary>
+    /// Reports the error.
+    /// </summary>
     protected override void ReportError() {
       this.Helper.ReportError(new AstErrorMessage(this, Error.LValueRequired, "&"));
     }
@@ -591,6 +606,12 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="simpleName"></param>
+    /// <param name="mayAppendSuffix"></param>
+    /// <returns></returns>
     protected virtual ITypeDefinition ResolveSimpleName(SimpleName simpleName, bool mayAppendSuffix) {
       object/*?*/ definition = simpleName.ResolveAsNamespaceOrType();
       ITypeDefinition/*?*/ result = definition as ITypeDefinition;
@@ -610,6 +631,12 @@ namespace Microsoft.Cci.Ast {
       return Dummy.Type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="qualifier"></param>
+    /// <param name="simpleName"></param>
+    /// <returns></returns>
     protected virtual ITypeDefinition ResolveQualifiedName(object/*?*/ qualifier, SimpleName simpleName) {
       INamespaceDefinition/*?*/ nspace = qualifier as INamespaceDefinition;
       if (nspace != null) return ResolveQualifiedName(nspace, simpleName);
@@ -625,6 +652,12 @@ namespace Microsoft.Cci.Ast {
       return Dummy.Type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="qualifyingType"></param>
+    /// <param name="simpleName"></param>
+    /// <returns></returns>
     protected virtual ITypeDefinition ResolveQualifiedName(ITypeDefinition qualifyingType, SimpleName simpleName) {
       foreach (ITypeDefinitionMember member in qualifyingType.GetMembersNamed(simpleName.Name, simpleName.IgnoreCase)) {
         ITypeDefinition/*?*/ type = member as ITypeDefinition;
@@ -640,6 +673,12 @@ namespace Microsoft.Cci.Ast {
       return Dummy.Type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nspace"></param>
+    /// <param name="simpleName"></param>
+    /// <returns></returns>
     protected virtual ITypeDefinition ResolveQualifiedName(INamespaceDefinition nspace, SimpleName simpleName) {
       foreach (INamespaceMember member in nspace.GetMembersNamed(simpleName.Name, simpleName.IgnoreCase)) {
         ITypeDefinition/*?*/ type = member as ITypeDefinition;
@@ -736,6 +775,10 @@ namespace Microsoft.Cci.Ast {
       return this;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override object Resolve() {
       object/*?*/ definition = base.Resolve();
       if (definition is IThisReference || definition is IMethodDefinition || definition is IEventDefinition)
@@ -966,6 +1009,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected virtual void ReportError() {
       this.Helper.ReportError(new AstErrorMessage(this, Error.AssignmentLeftHandValueExpected));
     }
@@ -1013,6 +1059,11 @@ namespace Microsoft.Cci.Ast {
       return this.Expression.HasSideEffect(reportError);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="expr"></param>
+    /// <returns></returns>
     protected virtual AddressableExpression CreateAddressableExpr(Expression expr) {
       return new AddressableExpression(expr);
     }
@@ -1057,6 +1108,10 @@ namespace Microsoft.Cci.Ast {
     }
     Expression/*?*/ instance;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public virtual object/*?*/ Resolve()
       //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IEventDefinition || 
       //^   result is IFieldDefinition || result is IArrayIndexer || result is IAddressDereference || result is IMethodDefinition || 
@@ -1572,8 +1627,16 @@ namespace Microsoft.Cci.Ast {
     }
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class AnonymousDelegate : Expression, IAnonymousDelegate, ISignatureDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="anonymousMethod"></param>
+    /// <param name="delegateType"></param>
     public AnonymousDelegate(AnonymousMethod anonymousMethod, ITypeDefinition delegateType)
       : base(anonymousMethod.SourceLocation)
       //^ requires targetType.IsDelegate;
@@ -1586,6 +1649,10 @@ namespace Microsoft.Cci.Ast {
 
     private readonly AnonymousMethod anonymousMethod;
 
+    /// <summary>
+    /// A block of statements providing the implementation of the anonymous method that is called by the delegate that is the result of this expression.
+    /// </summary>
+    /// <value></value>
     public IBlockStatement Body {
       get {
         return this.body = (BlockStatement)this.body.MakeCopyFor(this.DummyBlock);
@@ -1593,6 +1660,10 @@ namespace Microsoft.Cci.Ast {
     }
     BlockStatement body;
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = this.Body.HasErrors();
       foreach (ParameterDeclaration parDecl in this.Parameters)
@@ -1603,6 +1674,10 @@ namespace Microsoft.Cci.Ast {
     private readonly ITypeDefinition delegateType;
     //^ invariant delegateType.IsDelegate;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1620,10 +1695,20 @@ namespace Microsoft.Cci.Ast {
     }
     BlockStatement/*?*/ dummyBlock;
 
+    /// <summary>
+    /// Checks if the expression has a side effect and reports an error unless told otherwise.
+    /// </summary>
+    /// <param name="reportError">If true, report an error if the expression has a side effect.</param>
+    /// <returns></returns>
     public override bool HasSideEffect(bool reportError) {
       return false;
     }
 
+    /// <summary>
+    /// Makes a copy of this expression, changing the ContainingBlock to the given block.
+    /// </summary>
+    /// <param name="containingBlock"></param>
+    /// <returns></returns>
     public override Expression MakeCopyFor(BlockStatement containingBlock) {
       //^ assume false;
       return this;
@@ -1640,14 +1725,29 @@ namespace Microsoft.Cci.Ast {
     }
     readonly List<ParameterDeclaration> parameters;
 
+    /// <summary>
+    /// Returns an object that implements IExpression and that represents this expression after language specific rules have been
+    /// applied to it in order to determine its semantics. The resulting expression is a standard representation of the semantics
+    /// of this expression, suitable for use by language agnostic clients and complete enough for translation of the expression
+    /// into IL.
+    /// </summary>
+    /// <returns></returns>
     protected override IExpression ProjectAsNonConstantIExpression() {
       return this;
     }
 
+    /// <summary>
+    /// The return type of the delegate.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ReturnType {
       get { return this.ContainingBlock.Helper.GetInvokeMethod(this.delegateType).Type; }
     }
 
+    /// <summary>
+    /// The type of value that the expression will evaluate to, as determined at compile time.
+    /// </summary>
+    /// <value></value>
     public override ITypeDefinition Type {
       get { return this.delegateType; }
     }
@@ -1871,6 +1971,10 @@ namespace Microsoft.Cci.Ast {
 
     #region ISignature Members
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return CallingConvention.HasThis; }
     }
@@ -1882,14 +1986,26 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return false; }
     }
@@ -2654,6 +2770,9 @@ namespace Microsoft.Cci.Ast {
       this.rightOperand = template.RightOperand.MakeCopyFor(containingBlock);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Expression ConvertedLeftOperand {
       get {
         MethodCall/*?*/ overloadedCall = this.OverloadMethodCall;
@@ -2666,6 +2785,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Expression ConvertedRightOperand {
       get {
         MethodCall/*?*/ overloadedCall = this.OverloadMethodCall;
@@ -3599,10 +3721,19 @@ namespace Microsoft.Cci.Ast {
       return new BlockExpression(containingBlock, this);
     }
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.Expression.HasErrors();
     }
 
+    /// <summary>
+    /// Checks if the expression has a side effect and reports an error unless told otherwise.
+    /// </summary>
+    /// <param name="reportError">If true, report an error if the expression has a side effect.</param>
+    /// <returns></returns>
     public override bool HasSideEffect(bool reportError) {
       return this.Expression.HasSideEffect(reportError);
     }
@@ -4588,6 +4719,10 @@ namespace Microsoft.Cci.Ast {
         return this.resolvedMethod;
       }
     }
+    /// <summary>
+    /// The constructor, indexer or method that is being called. Visible to derived types in order to allow 
+    /// initialization during construction.
+    /// </summary>
     protected IMethodDefinition/*?*/ resolvedMethod;
 
     /// <summary>
@@ -4698,6 +4833,11 @@ namespace Microsoft.Cci.Ast {
       return this.ValueToConvert.HasErrors();
     }
 
+    /// <summary>
+    /// Returns true if no information is lost if the integer value of this expression is converted to the target integer type.
+    /// </summary>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
     public override bool IntegerConversionIsLossless(ITypeDefinition targetType) {
       return base.IntegerConversionIsLossless(targetType);
     }
@@ -4936,6 +5076,10 @@ namespace Microsoft.Cci.Ast {
       return this.RightOperand.Type;
     }
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.LeftOperand.HasErrors() || this.RightOperand.HasErrors();
     }
@@ -5764,6 +5908,10 @@ namespace Microsoft.Cci.Ast {
       return this.PlatformType.SystemBoolean.ResolvedType;
     }
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool leftOpIsComparison = this.LeftOperand is Comparison;
       bool rightOpIsComparison = this.RightOperand is Comparison;
@@ -5904,6 +6052,11 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Returns true if no information is lost if the integer value of this expression is converted to the target integer type.
+    /// </summary>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
     public override bool IntegerConversionIsLossless(ITypeDefinition targetType) {
       if (!TypeHelper.IsPrimitiveInteger(this.ResultIfTrue.Type) || !TypeHelper.IsPrimitiveInteger(this.ResultIfFalse.Type)) return false;
       return this.ResultIfTrue.IntegerConversionIsLossless(targetType) && this.ResultIfFalse.IntegerConversionIsLossless(targetType);
@@ -6173,6 +6326,9 @@ namespace Microsoft.Cci.Ast {
       get { return this.objectType.ResolvedType; }
     }
 
+    /// <summary>
+    /// Called when the arguments are good and no type inferences have failed. This means that the callee could not be found. Complain.
+    /// </summary>
     protected override void ComplainAboutCallee() {
       // TODO: complain
     }
@@ -7274,6 +7430,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingExpression"></param>
     public override void SetContainingExpression(Expression containingExpression) {
       base.SetContainingExpression(containingExpression);
       if (containingExpression.ContainingBlock.UseCheckedArithmetic)
@@ -7283,6 +7445,10 @@ namespace Microsoft.Cci.Ast {
       //Note that checked/unchecked expressions intercept this call and provide a dummy block that has the flag set appropriately.
     }
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return base.CheckForErrorsAndReturnTrueIfAnyAreFound();
     }
@@ -8180,6 +8346,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class Exponentiation : BinaryOperation {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="leftOperand"></param>
+    /// <param name="rightOperand"></param>
+    /// <param name="sourceLocation"></param>
     public Exponentiation(Expression leftOperand, Expression rightOperand, ISourceLocation sourceLocation)
       : base(leftOperand, rightOperand, sourceLocation) {
     }
@@ -8446,6 +8618,9 @@ namespace Microsoft.Cci.Ast {
         this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
       return this.hasErrors.Value;
     }
+    /// <summary>
+    /// Non null and true if this expression has errors. Visible to derived classes so that it can be set during construction.
+    /// </summary>
     protected bool? hasErrors;
 
     /// <summary>
@@ -8456,6 +8631,10 @@ namespace Microsoft.Cci.Ast {
       return false;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether this instance is pure.
+    /// </summary>
+    /// <value><c>true</c> if this instance is pure; otherwise, <c>false</c>.</value>
     public bool IsPure {
       get { return !this.HasSideEffect(false); }
     }
@@ -9347,6 +9526,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ImplicitQualifier : Expression {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public ImplicitQualifier(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -9535,6 +9718,13 @@ namespace Microsoft.Cci.Ast {
       this.indexedObject = template.indexedObject.MakeCopyFor(containingBlock);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="indexedObject"></param>
+    /// <param name="indices"></param>
+    /// <param name="sourceLocation"></param>
+    /// <returns></returns>
     protected virtual Indexer CreateNewIndexerForFactoring(Expression indexedObject, IEnumerable<Expression> indices, ISourceLocation sourceLocation) {
       return new Indexer(indexedObject, indices, sourceLocation);
     }
@@ -9742,6 +9932,9 @@ namespace Microsoft.Cci.Ast {
       this.indexedObject.SetContainingExpression(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected override void ComplainAboutCallee() {
       // TODO: complain
     }
@@ -9874,6 +10067,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class IntegerDivision : BinaryOperation {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="leftOperand"></param>
+    /// <param name="rightOperand"></param>
+    /// <param name="sourceLocation"></param>
     public IntegerDivision(Expression leftOperand, Expression rightOperand, ISourceLocation sourceLocation)
       : base(leftOperand, rightOperand, sourceLocation) {
     }
@@ -10134,6 +10333,13 @@ namespace Microsoft.Cci.Ast {
       return new IsTrue(containingBlock, this);
     }
 
+    /// <summary>
+    /// Returns an object that implements IExpression and that represents this expression after language specific rules have been
+    /// applied to it in order to determine its semantics. The resulting expression is a standard representation of the semantics
+    /// of this expression, suitable for use by language agnostic clients and complete enough for translation of the expression
+    /// into IL.
+    /// </summary>
+    /// <returns></returns>
     protected override IExpression ProjectAsNonConstantIExpression() {
       if (!this.HasErrors()) {
         MethodCall/*?*/ overloadedMethodCall = this.OverloadMethodCall;
@@ -10830,6 +11036,13 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class LiftedConversion : Conversion {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="valueToConvert"></param>
+    /// <param name="userDefinedUnliftedConversion"></param>
+    /// <param name="resultType"></param>
+    /// <param name="sourceLocation"></param>
     public LiftedConversion(Expression valueToConvert, IMethodDefinition/*?*/ userDefinedUnliftedConversion, ITypeDefinition resultType, ISourceLocation sourceLocation)
       : base(valueToConvert, resultType, sourceLocation) {
       this.userDefinedUnliftedConversion = userDefinedUnliftedConversion;
@@ -10874,6 +11087,13 @@ namespace Microsoft.Cci.Ast {
       return new LiftedConversion(containingBlock, this);
     }
 
+    /// <summary>
+    /// Returns an object that implements IExpression and that represents this expression after language specific rules have been
+    /// applied to it in order to determine its semantics. The resulting expression is a standard representation of the semantics
+    /// of this expression, suitable for use by language agnostic clients and complete enough for translation of the expression
+    /// into IL.
+    /// </summary>
+    /// <returns></returns>
     protected override IExpression ProjectAsNonConstantIExpression() {
       if (this.cachedProjection != null) return this.cachedProjection;
       NameDeclaration tempName = new NameDeclaration(Dummy.Name, SourceDummy.SourceLocation);
@@ -11521,6 +11741,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ManagedPointerTypeExpression : TypeExpression {
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManagedPointerTypeExpression"/> class.
+    /// </summary>
+    /// <param name="targetType">Type of the target.</param>
+    /// <param name="sourceLocation">The source location.</param>
     public ManagedPointerTypeExpression(TypeExpression targetType, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.targetType = targetType;
@@ -11546,6 +11771,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Gets the type of the target.
+    /// </summary>
+    /// <value>The type of the target.</value>
     public TypeExpression TargetType {
       get { return this.targetType; }
     }
@@ -12156,6 +12385,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class MethodGroup : Expression {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="selector"></param>
+    /// <param name="sourceLocation"></param>
     public MethodGroup(Expression selector, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.selector = selector;
@@ -12682,6 +12916,9 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// An empty collection of NamedArguments.
+    /// </summary>
     new public static IEnumerable<NamedArgument> EmptyCollection {
       get { return NamedArgument.emptyCollection; }
     }
@@ -13307,6 +13544,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Gets the type of the element.
+    /// </summary>
+    /// <value>The type of the element.</value>
     public TypeExpression ElementType {
       get { return this.elementType; }
     }
@@ -13937,6 +14178,10 @@ namespace Microsoft.Cci.Ast {
       this.Expression.SetContainingExpression(containingExpression);
     }
 
+    /// <summary>
+    /// The type of value that the expression will evaluate to, as determined at compile time.
+    /// </summary>
+    /// <value></value>
     public override ITypeDefinition Type {
       [DebuggerNonUserCode]
       get { return this.Expression.Type; }
@@ -14138,6 +14383,11 @@ namespace Microsoft.Cci.Ast {
       get { return this.ParenthesizedExpression.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
+    /// <summary>
+    /// Returns true if no information is lost if the integer value of this expression is converted to the target integer type.
+    /// </summary>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
     public override bool IntegerConversionIsLossless(ITypeDefinition targetType) {
       return this.ParenthesizedExpression.IntegerConversionIsLossless(targetType);
     }
@@ -14222,8 +14472,17 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class PointerQualifiedName : QualifiedName {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="qualifier"></param>
+    /// <param name="simpleName"></param>
+    /// <param name="sourceLocation"></param>
     public PointerQualifiedName(Expression qualifier, SimpleName simpleName, ISourceLocation sourceLocation)
       : base(qualifier, simpleName, sourceLocation) {
     }
@@ -14263,6 +14522,10 @@ namespace Microsoft.Cci.Ast {
         return base.CheckForErrorsAndReturnTrueIfAnyAreFound();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     protected virtual string RhsToStringForError() {
       return "->" + this.SimpleName.Name.Value;
     }
@@ -14316,6 +14579,10 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [Confined]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return this.Qualifier.ToString() + "->" + this.SimpleName.ToString();
     }
@@ -14440,6 +14707,10 @@ namespace Microsoft.Cci.Ast {
       this.elementType = (TypeExpression)template.elementType.MakeCopyFor(containingBlock);
     }
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.elementType.HasErrors() || this.elementType == Dummy.Type;
     }
@@ -14799,6 +15070,10 @@ namespace Microsoft.Cci.Ast {
     }
     IExpression/*?*/ cachedProjection;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public virtual void VisitAsUnaryOperationAssignment(ICodeVisitor visitor) {
       MethodCall/*?*/ overloadedMethodCall = this.OverloadMethodCall;
       Expression expression = this.Target.Expression;
@@ -15160,12 +15435,21 @@ namespace Microsoft.Cci.Ast {
 
     readonly Expression regionExpr;
 
+    /// <summary>
+    /// The type of value that the expression will evaluate to, as determined at compile time.
+    /// </summary>
+    /// <value></value>
     public override ITypeDefinition Type {
       [DebuggerNonUserCode]
       get { return this.PlatformType.SystemVoidPtr.ResolvedType; }
     }
 
-    private MethodCall cachedCondition;
+    /// <summary>
+    /// An expression that is evaluated for every tuple of values that may be bound to the variables defined by this.BoundVariables.
+    /// If the expression evaluates to true for every such tuple, the result of the Forall expression is true.
+    /// Typically, the expression contains references to the variables defined in this.BoundVariables.
+    /// </summary>
+    /// <value></value>
     public override Expression Condition {
       get {
         if (cachedCondition != null) return cachedCondition;
@@ -15176,6 +15460,7 @@ namespace Microsoft.Cci.Ast {
         return cachedCondition;
       }
     }
+    MethodCall/*?*/ cachedCondition;
   }
 
 
@@ -15284,6 +15569,9 @@ namespace Microsoft.Cci.Ast {
       return Dummy.Type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public virtual Expression/*?*/ Instance {
       get {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
@@ -15402,6 +15690,11 @@ namespace Microsoft.Cci.Ast {
       return null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="resolvedQualifier"></param>
+    /// <returns></returns>
     public ITypeDefinition/*?*/ ResolveAsType(object/*?*/ resolvedQualifier) {
       ITypeDefinition/*?*/ qualifyingType = null;
       ITypeGroup/*?*/ qualifyingTypeGroup = resolvedQualifier as ITypeGroup;
@@ -15523,6 +15816,10 @@ namespace Microsoft.Cci.Ast {
     readonly SimpleName simpleName;
 
     //^ [Confined]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return this.Qualifier.ToString() + "." + this.SimpleName.ToString();
     }
@@ -15630,6 +15927,10 @@ namespace Microsoft.Cci.Ast {
     }
     Expression/*?*/ convertedCondition;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="template"></param>
     protected void CopyTriggersFromTemplate(Quantifier template) {
       IEnumerable<IEnumerable<Expression>>/*?*/ triggers = template.Compilation.ContractProvider.GetTriggersFor(template);
       if (triggers != null) {
@@ -16607,6 +16908,9 @@ namespace Microsoft.Cci.Ast {
       return Dummy.Type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected virtual void ReportNoContainingSignatureError() {
       this.Helper.ReportError(new AstErrorMessage(this, Error.NameNotInContext, "result"));
     }
@@ -17284,6 +17588,11 @@ namespace Microsoft.Cci.Ast {
       return this.ResolveUsing(this.PlatformType.SystemObject.ResolvedType, restrictToNamespacesAndTypes);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nd"></param>
+    /// <returns></returns>
     protected bool NamespaceDeclIsBusy(NamespaceDeclaration nd) {
       return nd.BusyResolvingAnAliasOrImport;
     }
@@ -17649,6 +17958,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class StringConcatenation : BinaryOperation {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="leftOperand"></param>
+    /// <param name="rightOperand"></param>
+    /// <param name="sourceLocation"></param>
     public StringConcatenation(Expression leftOperand, Expression rightOperand, ISourceLocation sourceLocation)
       : base(leftOperand, rightOperand, sourceLocation) {
     }
@@ -17930,6 +18245,10 @@ namespace Microsoft.Cci.Ast {
         get { return this.subtraction.Type; }
       }
 
+      /// <summary>
+      /// True if the expression has no observable side effects.
+      /// </summary>
+      /// <value></value>
       public bool IsPure {
         get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
@@ -18485,6 +18804,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Returns the user defined or standard operator method that matches this operation.
+    /// </summary>
+    /// <returns></returns>
     protected override MethodCall/*?*/ OverloadCall() {
       MethodCall/*?*/ overloadedMethodCall = base.OverloadCall();
       if (overloadedMethodCall != null) {
@@ -18619,6 +18942,9 @@ namespace Microsoft.Cci.Ast {
       this.operand = template.operand.MakeCopyFor(containingBlock);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Expression ConvertedOperand {
       get {
         MethodCall/*?*/ overloadedCall = this.OverloadCall();
@@ -18639,6 +18965,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.Operand.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.Operand.HasErrors() || this.Type == Dummy.Type;
     }
@@ -19220,6 +19550,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class UnsignedRightShift : BinaryOperation {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="leftOperand"></param>
+    /// <param name="rightOperand"></param>
+    /// <param name="sourceLocation"></param>
     public UnsignedRightShift(Expression leftOperand, Expression rightOperand, ISourceLocation sourceLocation)
       : base(leftOperand, rightOperand, sourceLocation) {
     }
@@ -19296,6 +19632,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class UnsignedRightShiftAssignment : BinaryOperationAssignment {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="leftOperand"></param>
+    /// <param name="rightOperand"></param>
+    /// <param name="sourceLocation"></param>
     public UnsignedRightShiftAssignment(TargetExpression leftOperand, Expression rightOperand, ISourceLocation sourceLocation)
       : base(leftOperand, rightOperand, sourceLocation) {
     }
@@ -19345,30 +19687,62 @@ namespace Microsoft.Cci.Ast {
   }
 
 
+  /// <summary>
+  /// 
+  /// </summary>
   internal sealed class VectorLength : Expression, IVectorLength {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="vector"></param>
+    /// <param name="sourceLocation"></param>
     internal VectorLength(Expression vector, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.vector = vector;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Makes a copy of this expression, changing the ContainingBlock to the given block.
+    /// </summary>
+    /// <param name="containingBlock"></param>
+    /// <returns></returns>
     public override Expression MakeCopyFor(BlockStatement containingBlock) {
       Debug.Assert(false);
       return this;
     }
 
+    /// <summary>
+    /// Returns an object that implements IExpression and that represents this expression after language specific rules have been
+    /// applied to it in order to determine its semantics. The resulting expression is a standard representation of the semantics
+    /// of this expression, suitable for use by language agnostic clients and complete enough for translation of the expression
+    /// into IL.
+    /// </summary>
+    /// <returns></returns>
     protected override IExpression ProjectAsNonConstantIExpression() {
       return this;
     }
 
+    /// <summary>
+    /// The type of value that the expression will evaluate to, as determined at compile time.
+    /// </summary>
+    /// <value></value>
     public override ITypeDefinition Type {
       get { return this.Vector.Type.PlatformType.SystemIntPtr.ResolvedType; }
     }
 
+    /// <summary>
+    /// An expression that results in a value of a vector (zero-based one-dimensional array) type.
+    /// </summary>
+    /// <value></value>
     public Expression Vector {
       get { return this.vector; }
     }
@@ -19392,8 +19766,17 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public static class NamespaceHelper {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nameTable"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
     public static Expression CreateInSystemDiagnosticsContractsCodeContractExpr(INameTable nameTable, string name) {
       SimpleName System = new SimpleName(nameTable.GetNameFor("System"), SourceDummy.SourceLocation, false);
       SimpleName Diagnostics = new SimpleName(nameTable.GetNameFor("Diagnostics"), SourceDummy.SourceLocation, false);
@@ -19406,6 +19789,9 @@ namespace Microsoft.Cci.Ast {
       return new QualifiedName(SystemDiagnosticsContractsCodeContract, sName, SourceDummy.SourceLocation);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public static string SystemDiagnosticsContractsCodeContractString {
       get { return "System.Diagnostics.Contracts.CodeContract"; }
     }

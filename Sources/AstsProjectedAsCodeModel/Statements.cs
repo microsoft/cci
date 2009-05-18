@@ -14,11 +14,21 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public sealed class AssertStatement : Statement, IAssertStatement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="sourceLocation"></param>
     public AssertStatement(Expression condition, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.condition = condition;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingBlock"></param>
+    /// <param name="template"></param>
     public AssertStatement(BlockStatement containingBlock, AssertStatement template)
       : base(containingBlock, template) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
@@ -111,11 +121,21 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public sealed class AssumeStatement : Statement, IAssumeStatement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="sourceLocation"></param>
     public AssumeStatement(Expression condition, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.condition = condition;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingBlock"></param>
+    /// <param name="template"></param>
     public AssumeStatement(BlockStatement containingBlock, AssumeStatement template)
       : base(containingBlock, template) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
@@ -199,6 +219,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class AttachEventHandlerStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="event"></param>
+    /// <param name="handler"></param>
+    /// <param name="sourceLocation"></param>
     public AttachEventHandlerStatement(Expression @event, Expression handler, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.@event = @event;
@@ -642,6 +668,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public bool IsEmpty {
       get { return this.statements.Count == 0; }
     }
@@ -924,6 +953,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ClearLastErrorStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public ClearLastErrorStatement(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -1169,6 +1202,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class DisableOnErrorHandler : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public DisableOnErrorHandler(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -1503,6 +1540,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class EndStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public EndStatement(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -1536,6 +1577,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class EraseStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targets"></param>
+    /// <param name="sourceLocation"></param>
     public EraseStatement(IEnumerable<AddressableExpression> targets, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.targets = targets;
@@ -1579,6 +1625,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ErrorStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="errorNumber"></param>
+    /// <param name="sourceLocation"></param>
     public ErrorStatement(Expression errorNumber, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.errorNumber = errorNumber;
@@ -2151,6 +2202,15 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ForRangeStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="variableTypeExpression"></param>
+    /// <param name="variableName"></param>
+    /// <param name="range"></param>
+    /// <param name="step"></param>
+    /// <param name="body"></param>
+    /// <param name="sourceLocation"></param>
     public ForRangeStatement(TypeExpression/*?*/ variableTypeExpression, SimpleName variableName, Range range, Expression/*?*/ step, Statement body, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.variableTypeExpression = variableTypeExpression;
@@ -2275,11 +2335,17 @@ namespace Microsoft.Cci.Ast {
     }
     readonly SimpleName variableName;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public TypeExpression/*?*/ VariableTypeExpression {
       get { return this.variableTypeExpression; }
     }
     readonly TypeExpression/*?*/ variableTypeExpression;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ITypeDefinition VariableType {
       get {
         if (this.VariableTypeExpression != null)
@@ -3065,6 +3131,9 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected int flags;
 
     /// <summary>
@@ -3136,6 +3205,10 @@ namespace Microsoft.Cci.Ast {
       get { return (this.flags & 2) != 0; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     protected virtual LocalDefinition CreateLocalDefinition() {
       return new LocalDefinition(this);
     }
@@ -3219,6 +3292,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IScopeMember<IScope<ILocalDeclaration>> Members
 
+    /// <summary>
+    /// The scope instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public IScope<LocalDeclaration> ContainingScope {
       [DebuggerNonUserCode]
       get { return this.ContainingLocalDeclarationsStatement.ContainingBlock.Scope; }
@@ -3642,6 +3719,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class OnErrorGotoStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="goto"></param>
+    /// <param name="sourceLocation"></param>
     public OnErrorGotoStatement(GotoStatement @goto, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.@goto = @goto;
@@ -3684,6 +3766,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class OnErrorResumeNextStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public OnErrorResumeNextStatement(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -3717,6 +3803,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class RaiseEventStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="eventToRaise"></param>
+    /// <param name="arguments"></param>
+    /// <param name="sourceLocation"></param>
     public RaiseEventStatement(SimpleName eventToRaise, IEnumerable<Expression> arguments, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.eventToRaise = eventToRaise;
@@ -3778,6 +3870,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class RedimensionClause : SourceItem {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="value"></param>
+    /// <param name="sourceLocation"></param>
     public RedimensionClause(AddressableExpression target, CreateArray value, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.target = target;
@@ -3822,6 +3920,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class RedimensionStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="preserveExistingElementValues"></param>
+    /// <param name="arrays"></param>
+    /// <param name="sourceLocation"></param>
     public RedimensionStatement(bool preserveExistingElementValues, IEnumerable<RedimensionClause> arrays, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.preserveExistingElementValues = preserveExistingElementValues;
@@ -3873,6 +3977,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class RemoveEventHandlerStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="event"></param>
+    /// <param name="handler"></param>
+    /// <param name="sourceLocation"></param>
     public RemoveEventHandlerStatement(Expression @event, Expression handler, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.@event = @event;
@@ -4063,6 +4173,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ResumeLabeledStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetLabel"></param>
+    /// <param name="sourceLocation"></param>
     public ResumeLabeledStatement(SimpleName targetLabel, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.targetLabel = targetLabel;
@@ -4106,6 +4221,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ResumeNextStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public ResumeNextStatement(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -4140,6 +4259,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class ResumeStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public ResumeStatement(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -4264,6 +4387,9 @@ namespace Microsoft.Cci.Ast {
       return false;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Expression/*?*/ ConvertedExpression {
       get {
         if (this.expression == null) return null;
@@ -4467,6 +4593,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class StopStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     public StopStatement(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
@@ -4559,6 +4689,9 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Expression/*?*/ ConvertedExpression {
       get {
         if (this.expression == null) return null;
@@ -4730,6 +4863,9 @@ namespace Microsoft.Cci.Ast {
       this.cases = new List<SwitchCase>(template.Cases);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BlockStatement Block {
       get {
         if (this.block == null) {
@@ -5076,6 +5212,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class UntilDoStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="body"></param>
+    /// <param name="sourceLocation"></param>
     public UntilDoStatement(Expression condition, Statement body, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.body = body;
@@ -5280,6 +5422,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class WithStatement : Statement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="implicitQualifier"></param>
+    /// <param name="body"></param>
+    /// <param name="sourceLocation"></param>
     public WithStatement(Expression implicitQualifier, Statement body, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.body = body;
@@ -5389,6 +5537,11 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class YieldReturnStatement : Statement, IYieldReturnStatement {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <param name="sourceLocation"></param>
     public YieldReturnStatement(Expression expression, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.expression = expression;

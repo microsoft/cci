@@ -11,8 +11,21 @@ using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci {
 
+  /// <summary>
+  /// An object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private
+  /// helper types.
+  /// </summary>
   public class CodeModelToILConverter : BaseCodeAndContractTraverser, ISourceToILConverter {
 
+    /// <summary>
+    /// Initializes an object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private 
+    /// helper types.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider)
       : base(contractProvider) {
       this.host = host;
@@ -27,6 +40,10 @@ namespace Microsoft.Cci {
     bool minizeCodeSize;
     ILGeneratorLabel endOfMethod = new ILGeneratorLabel();
     ILGenerator generator = new ILGenerator();
+    /// <summary>
+    /// An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.
+    /// </summary>
     protected IMetadataHost host;
     Dictionary<int, ILGeneratorLabel> labelFor = new Dictionary<int, ILGeneratorLabel>();
     bool lastStatementWasUnconditionalTransfer;
@@ -34,6 +51,9 @@ namespace Microsoft.Cci {
     IMethodDefinition method = Dummy.Method;
     Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor = new Dictionary<object, ITryCatchFinallyStatement>();
     ILocalDefinition/*?*/ returnLocal;
+    /// <summary>
+    /// An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.
+    /// </summary>
     protected ISourceLocationProvider/*?*/ sourceLocationProvider;
     List<ILocalDefinition> temporaries = new List<ILocalDefinition>();
 
@@ -165,6 +185,9 @@ namespace Microsoft.Cci {
       this.StackSize++;
     }
 
+    /// <summary>
+    /// The maximum number of stack slots that will be needed by an interpreter of the IL produced by this converter.
+    /// </summary>
     public ushort MaximumStackSizeNeeded {
       get { return this.maximumStackSizeNeeded; }
     }
@@ -179,6 +202,10 @@ namespace Microsoft.Cci {
     }
     ushort _stackSize;
 
+    /// <summary>
+    /// Visits the specified addition.
+    /// </summary>
+    /// <param name="addition">The addition.</param>
     public override void Visit(IAddition addition) {
       this.Visit(addition.LeftOperand);
       this.Visit(addition.RightOperand);
@@ -193,10 +220,18 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression">The addressable expression.</param>
     public override void Visit(IAddressableExpression addressableExpression) {
       Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
     }
 
+    /// <summary>
+    /// Visits the specified address dereference.
+    /// </summary>
+    /// <param name="addressDereference">The address dereference.</param>
     public override void Visit(IAddressDereference addressDereference) {
       this.Visit(addressDereference.Address);
       if (addressDereference.IsUnaligned)
@@ -230,6 +265,10 @@ namespace Microsoft.Cci {
       this.generator.Emit(opcode);
     }
 
+    /// <summary>
+    /// Visits the specified address of.
+    /// </summary>
+    /// <param name="addressOf">The address of.</param>
     public override void Visit(IAddressOf addressOf) {
       object/*?*/ container = addressOf.Expression.Definition;
       IExpression/*?*/ instance = addressOf.Expression.Instance;
@@ -237,14 +276,26 @@ namespace Microsoft.Cci {
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified alias for type.
+    /// </summary>
+    /// <param name="aliasForType">Type of the alias for.</param>
     public override void Visit(IAliasForType aliasForType) {
       Debug.Assert(false);
     }
 
+    /// <summary>
+    /// Visits the specified anonymous delegate.
+    /// </summary>
+    /// <param name="anonymousDelegate">The anonymous delegate.</param>
     public override void Visit(IAnonymousDelegate anonymousDelegate) {
       Debug.Assert(false);
     }
 
+    /// <summary>
+    /// Visits the specified array indexer.
+    /// </summary>
+    /// <param name="arrayIndexer">The array indexer.</param>
     public override void Visit(IArrayIndexer arrayIndexer) {
       this.Visit(arrayIndexer.IndexedObject);
       this.Visit(arrayIndexer.Indices);
@@ -284,18 +335,34 @@ namespace Microsoft.Cci {
       this.generator.Emit(opcode);
     }
 
+    /// <summary>
+    /// Visits the specified array type reference.
+    /// </summary>
+    /// <param name="arrayTypeReference">The array type reference.</param>
     public override void Visit(IArrayTypeReference arrayTypeReference) {
       Debug.Assert(false);
     }
 
+    /// <summary>
+    /// Visits the specified assembly.
+    /// </summary>
+    /// <param name="assembly">The assembly.</param>
     public override void Visit(IAssembly assembly) {
       base.Visit(assembly);
     }
 
+    /// <summary>
+    /// Visits the specified assembly reference.
+    /// </summary>
+    /// <param name="assemblyReference">The assembly reference.</param>
     public override void Visit(IAssemblyReference assemblyReference) {
       base.Visit(assemblyReference);
     }
 
+    /// <summary>
+    /// Visits the specified assert statement.
+    /// </summary>
+    /// <param name="assertStatement">The assert statement.</param>
     public override void Visit(IAssertStatement assertStatement) {
       if (this.contractProvider == null) return;
       this.Visit(assertStatement.Condition);
@@ -303,10 +370,19 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified assignment.
+    /// </summary>
+    /// <param name="assignment">The assignment.</param>
     public override void Visit(IAssignment assignment) {
       this.VisitAssignment(assignment, false);
     }
 
+    /// <summary>
+    /// Visits the assignment.
+    /// </summary>
+    /// <param name="assignment">The assignment.</param>
+    /// <param name="treatAsStatement">if set to <c>true</c> [treat as statement].</param>
     public virtual void VisitAssignment(IAssignment assignment, bool treatAsStatement) {
       object/*?*/ container = assignment.Target.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
@@ -525,6 +601,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified assume statement.
+    /// </summary>
+    /// <param name="assumeStatement">The assume statement.</param>
     public override void Visit(IAssumeStatement assumeStatement) {
       if (this.contractProvider == null) return;
       this.Visit(assumeStatement.Condition);
@@ -532,11 +612,19 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified base class reference.
+    /// </summary>
+    /// <param name="baseClassReference">The base class reference.</param>
     public override void Visit(IBaseClassReference baseClassReference) {
       this.generator.Emit(OperationCode.Ldarg_0);
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified bitwise and.
+    /// </summary>
+    /// <param name="bitwiseAnd">The bitwise and.</param>
     public override void Visit(IBitwiseAnd bitwiseAnd) {
       this.Visit(bitwiseAnd.LeftOperand);
       this.Visit(bitwiseAnd.RightOperand);
@@ -544,6 +632,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified bitwise or.
+    /// </summary>
+    /// <param name="bitwiseOr">The bitwise or.</param>
     public override void Visit(IBitwiseOr bitwiseOr) {
       this.Visit(bitwiseOr.LeftOperand);
       this.Visit(bitwiseOr.RightOperand);
@@ -551,17 +643,29 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified block expression.
+    /// </summary>
+    /// <param name="blockExpression">The block expression.</param>
     public override void Visit(IBlockExpression blockExpression) {
       this.Visit(blockExpression.BlockStatement);
       this.Visit(blockExpression.Expression);
     }
 
+    /// <summary>
+    /// Visits the specified block.
+    /// </summary>
+    /// <param name="block">The block.</param>
     public override void Visit(IBlockStatement block) {
       this.generator.BeginScope();
       this.Visit(block.Statements);
       this.generator.EndScope();
     }
 
+    /// <summary>
+    /// Performs some computation with the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
     public override void Visit(IBoundExpression boundExpression) {
       object/*?*/ container = boundExpression.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
@@ -582,6 +686,10 @@ namespace Microsoft.Cci {
       Debug.Assert(false);
     }
 
+    /// <summary>
+    /// Visits the specified break statement.
+    /// </summary>
+    /// <param name="breakStatement">The break statement.</param>
     public override void Visit(IBreakStatement breakStatement) {
       if (this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
         this.generator.Emit(OperationCode.Leave, this.currentBreakTarget);
@@ -590,11 +698,19 @@ namespace Microsoft.Cci {
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
+    /// <summary>
+    /// Visits the specified cast if possible.
+    /// </summary>
+    /// <param name="castIfPossible">The cast if possible.</param>
     public override void Visit(ICastIfPossible castIfPossible) {
       this.Visit(castIfPossible.ValueToCast);
       this.generator.Emit(OperationCode.Isinst, castIfPossible.TargetType);
     }
 
+    /// <summary>
+    /// Visits the specified catch clause.
+    /// </summary>
+    /// <param name="catchClause">The catch clause.</param>
     public override void Visit(ICatchClause catchClause) {
       this.lastStatementWasUnconditionalTransfer = false;
       if (catchClause.FilterCondition != null) {
@@ -611,6 +727,10 @@ namespace Microsoft.Cci {
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
     }
 
+    /// <summary>
+    /// Visits the specified check if instance.
+    /// </summary>
+    /// <param name="checkIfInstance">The check if instance.</param>
     public override void Visit(ICheckIfInstance checkIfInstance) {
       ILGeneratorLabel falseCase = new ILGeneratorLabel();
       ILGeneratorLabel endif = new ILGeneratorLabel();
@@ -624,10 +744,18 @@ namespace Microsoft.Cci {
       this.generator.MarkLabel(endif);
     }
 
+    /// <summary>
+    /// Visits the specified constant.
+    /// </summary>
+    /// <param name="constant">The constant.</param>
     public override void Visit(ICompileTimeConstant constant) {
       this.EmitConstant(constant.Value as IConvertible);
     }
 
+    /// <summary>
+    /// Visits the specified conditional.
+    /// </summary>
+    /// <param name="conditional">The conditional.</param>
     public override void Visit(IConditional conditional) {
       ILGeneratorLabel falseCase = new ILGeneratorLabel();
       ILGeneratorLabel endif = new ILGeneratorLabel();
@@ -640,6 +768,10 @@ namespace Microsoft.Cci {
       this.generator.MarkLabel(endif);
     }
 
+    /// <summary>
+    /// Visits the specified conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement">The conditional statement.</param>
     public override void Visit(IConditionalStatement conditionalStatement) {
       ILGeneratorLabel/*?*/ endif = null;
       if (conditionalStatement.TrueBranch is IBreakStatement && !this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
@@ -668,6 +800,10 @@ namespace Microsoft.Cci {
       return this.currentTryCatch != tryCatchContainingTarget;
     }
 
+    /// <summary>
+    /// Visits the specified continue statement.
+    /// </summary>
+    /// <param name="continueStatement">The continue statement.</param>
     public override void Visit(IContinueStatement continueStatement) {
       if (this.LabelIsOutsideCurrentExceptionBlock(this.currentContinueTarget))
         this.generator.Emit(OperationCode.Leave, this.currentContinueTarget);
@@ -676,6 +812,10 @@ namespace Microsoft.Cci {
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
+    /// <summary>
+    /// Visits the specified conversion.
+    /// </summary>
+    /// <param name="conversion">The conversion.</param>
     public override void Visit(IConversion conversion) {
       this.Visit(conversion.ValueToConvert);
       //TODO: change IConversion to make it illegal to convert to or from enum types.
@@ -689,6 +829,10 @@ namespace Microsoft.Cci {
         this.VisitUncheckedConversion(sourceType, targetType);
     }
 
+    /// <summary>
+    /// Visits the specified create array.
+    /// </summary>
+    /// <param name="createArray">The create array.</param>
     public override void Visit(ICreateArray createArray) {
       foreach (IExpression size in createArray.Sizes) {
         this.Visit(size);
@@ -731,6 +875,10 @@ namespace Microsoft.Cci {
       //TODO: initialization of non vectors and initialization from compile time constant
     }
 
+    /// <summary>
+    /// Visits the specified create delegate instance.
+    /// </summary>
+    /// <param name="createDelegateInstance">The create delegate instance.</param>
     public override void Visit(ICreateDelegateInstance createDelegateInstance) {
       IPlatformType platformType = createDelegateInstance.Type.PlatformType;
       MethodReference constructor = new MethodReference(this.host, createDelegateInstance.Type, CallingConvention.Default|CallingConvention.HasThis,
@@ -754,6 +902,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified create object instance.
+    /// </summary>
+    /// <param name="createObjectInstance">The create object instance.</param>
     public override void Visit(ICreateObjectInstance createObjectInstance) {
       this.Visit(createObjectInstance.Arguments);
       this.generator.Emit(OperationCode.Newobj, createObjectInstance.MethodToCall);
@@ -761,14 +913,26 @@ namespace Microsoft.Cci {
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified custom attribute.
+    /// </summary>
+    /// <param name="customAttribute">The custom attribute.</param>
     public override void Visit(ICustomAttribute customAttribute) {
       base.Visit(customAttribute);
     }
 
+    /// <summary>
+    /// Visits the specified custom modifier.
+    /// </summary>
+    /// <param name="customModifier">The custom modifier.</param>
     public override void Visit(ICustomModifier customModifier) {
       base.Visit(customModifier);
     }
 
+    /// <summary>
+    /// Visits the specified default value.
+    /// </summary>
+    /// <param name="defaultValue">The default value.</param>
     public override void Visit(IDefaultValue defaultValue) {
       ILocalDefinition temp = new TemporaryVariable(defaultValue.Type);
       this.generator.AddLocalToCurrentScope(temp);
@@ -778,10 +942,18 @@ namespace Microsoft.Cci {
       this.LoadLocal(temp);
     }
 
+    /// <summary>
+    /// Visits the specified debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement">The debugger break statement.</param>
     public override void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
       this.generator.Emit(OperationCode.Break);
     }
 
+    /// <summary>
+    /// Visits the specified division.
+    /// </summary>
+    /// <param name="division">The division.</param>
     public override void Visit(IDivision division) {
       this.Visit(division.LeftOperand);
       this.Visit(division.RightOperand);
@@ -792,6 +964,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement">The do until statement.</param>
     public override void Visit(IDoUntilStatement doUntilStatement) {
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
@@ -811,11 +987,19 @@ namespace Microsoft.Cci {
       this.currentContinueTarget = savedCurrentContinueTarget;
     }
 
+    /// <summary>
+    /// Visits the specified empty statement.
+    /// </summary>
+    /// <param name="emptyStatement">The empty statement.</param>
     public override void Visit(IEmptyStatement emptyStatement) {
       if (!this.minizeCodeSize)
         this.generator.Emit(OperationCode.Nop);
     }
 
+    /// <summary>
+    /// Visits the specified equality.
+    /// </summary>
+    /// <param name="equality">The equality.</param>
     public override void Visit(IEquality equality) {
       this.Visit(equality.LeftOperand);
       this.Visit(equality.RightOperand);
@@ -823,6 +1007,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified exclusive or.
+    /// </summary>
+    /// <param name="exclusiveOr">The exclusive or.</param>
     public override void Visit(IExclusiveOr exclusiveOr) {
       this.Visit(exclusiveOr.LeftOperand);
       this.Visit(exclusiveOr.RightOperand);
@@ -830,6 +1018,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified expression statement.
+    /// </summary>
+    /// <param name="expressionStatement">The expression statement.</param>
     public override void Visit(IExpressionStatement expressionStatement) {
       IAssignment/*?*/ assigment = expressionStatement.Expression as IAssignment;
       if (assigment != null) {
@@ -843,12 +1035,20 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified for each statement.
+    /// </summary>
+    /// <param name="forEachStatement">For each statement.</param>
     public override void Visit(IForEachStatement forEachStatement) {
       //TODO: special case for arrays
       //TODO: special case for enumerator that is sealed and does not implement IDisposable
       base.Visit(forEachStatement);
     }
 
+    /// <summary>
+    /// Visits the specified for statement.
+    /// </summary>
+    /// <param name="forStatement">For statement.</param>
     public override void Visit(IForStatement forStatement) {
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
@@ -876,16 +1076,28 @@ namespace Microsoft.Cci {
       this.currentContinueTarget = savedCurrentContinueTarget;
     }
 
+    /// <summary>
+    /// Visits the specified get type of typed reference.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference">The get type of typed reference.</param>
     public override void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
       this.Visit(getTypeOfTypedReference.TypedReference);
       this.generator.Emit(OperationCode.Refanytype);
     }
 
+    /// <summary>
+    /// Visits the specified get value of typed reference.
+    /// </summary>
+    /// <param name="getValueOfTypedReference">The get value of typed reference.</param>
     public override void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
       this.Visit(getValueOfTypedReference.TypedReference);
       this.generator.Emit(OperationCode.Refanyval, getValueOfTypedReference.TargetType);
     }
 
+    /// <summary>
+    /// Visits the specified goto statement.
+    /// </summary>
+    /// <param name="gotoStatement">The goto statement.</param>
     public override void Visit(IGotoStatement gotoStatement) {
       ILGeneratorLabel targetLabel;
       if (!this.labelFor.TryGetValue(gotoStatement.TargetStatement.Label.UniqueKey, out targetLabel)) {
@@ -899,10 +1111,18 @@ namespace Microsoft.Cci {
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
+    /// <summary>
+    /// Visits the specified goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement">The goto switch case statement.</param>
     public override void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
       base.Visit(gotoSwitchCaseStatement);
     }
 
+    /// <summary>
+    /// Visits the specified greater than.
+    /// </summary>
+    /// <param name="greaterThan">The greater than.</param>
     public override void Visit(IGreaterThan greaterThan) {
       this.Visit(greaterThan.LeftOperand);
       this.Visit(greaterThan.RightOperand);
@@ -913,6 +1133,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified greater than or equal.
+    /// </summary>
+    /// <param name="greaterThanOrEqual">The greater than or equal.</param>
     public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
       this.Visit(greaterThanOrEqual.LeftOperand);
       this.Visit(greaterThanOrEqual.RightOperand);
@@ -925,6 +1149,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement">The labeled statement.</param>
     public override void Visit(ILabeledStatement labeledStatement) {
       ILGeneratorLabel targetLabel;
       if (!this.labelFor.TryGetValue(labeledStatement.Label.UniqueKey, out targetLabel)) {
@@ -935,6 +1163,10 @@ namespace Microsoft.Cci {
       this.Visit(labeledStatement.Statement);
     }
 
+    /// <summary>
+    /// Visits the specified left shift.
+    /// </summary>
+    /// <param name="leftShift">The left shift.</param>
     public override void Visit(ILeftShift leftShift) {
       this.Visit(leftShift.LeftOperand);
       this.Visit(leftShift.RightOperand);
@@ -942,6 +1174,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified less than.
+    /// </summary>
+    /// <param name="lessThan">The less than.</param>
     public override void Visit(ILessThan lessThan) {
       this.Visit(lessThan.LeftOperand);
       this.Visit(lessThan.RightOperand);
@@ -952,6 +1188,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified less than or equal.
+    /// </summary>
+    /// <param name="lessThanOrEqual">The less than or equal.</param>
     public override void Visit(ILessThanOrEqual lessThanOrEqual) {
       this.Visit(lessThanOrEqual.LeftOperand);
       this.Visit(lessThanOrEqual.RightOperand);
@@ -964,6 +1204,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
       if (localDeclarationStatement.InitialValue != null) {
         this.Visit(localDeclarationStatement.InitialValue);
@@ -971,10 +1215,18 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified lock statement.
+    /// </summary>
+    /// <param name="lockStatement">The lock statement.</param>
     public override void Visit(ILockStatement lockStatement) {
       base.Visit(lockStatement);
     }
 
+    /// <summary>
+    /// Visits the specified logical not.
+    /// </summary>
+    /// <param name="logicalNot">The logical not.</param>
     public override void Visit(ILogicalNot logicalNot) {
       if (TypeHelper.IsPrimitiveInteger(logicalNot.Operand.Type)) {
         this.Visit(logicalNot.Operand);
@@ -988,11 +1240,19 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified make typed reference.
+    /// </summary>
+    /// <param name="makeTypedReference">The make typed reference.</param>
     public override void Visit(IMakeTypedReference makeTypedReference) {
       this.LoadAddressOf(makeTypedReference.Operand, null);
       this.generator.Emit(OperationCode.Mkrefany, makeTypedReference.Operand.Type);
     }
 
+    /// <summary>
+    /// Visits the specified method call.
+    /// </summary>
+    /// <param name="methodCall">The method call.</param>
     public override void Visit(IMethodCall methodCall) {
       if (methodCall.MethodToCall == Dummy.MethodReference) return;
       if (this.contractProvider != null && methodCall.MethodToCall.InternedKey == this.contractProvider.ContractMethods.StartContract.InternedKey) {
@@ -1017,12 +1277,20 @@ namespace Microsoft.Cci {
         this.StackSize++;
     }
 
+    /// <summary>
+    /// Traverses the given method contract.
+    /// </summary>
+    /// <param name="methodContract"></param>
     public override void Visit(IMethodContract methodContract) {
       this.Visit(methodContract.Postconditions);
       this.Visit(methodContract.Preconditions);
       this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.EndContract);
     }
 
+    /// <summary>
+    /// Visits the specified modulus.
+    /// </summary>
+    /// <param name="modulus">The modulus.</param>
     public override void Visit(IModulus modulus) {
       this.Visit(modulus.LeftOperand);
       this.Visit(modulus.RightOperand);
@@ -1033,6 +1301,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified multiplication.
+    /// </summary>
+    /// <param name="multiplication">The multiplication.</param>
     public override void Visit(IMultiplication multiplication) {
       this.Visit(multiplication.LeftOperand);
       this.Visit(multiplication.RightOperand);
@@ -1047,6 +1319,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified not equality.
+    /// </summary>
+    /// <param name="notEquality">The not equality.</param>
     public override void Visit(INotEquality notEquality) {
       this.Visit(notEquality.LeftOperand);
       this.Visit(notEquality.RightOperand);
@@ -1055,6 +1331,10 @@ namespace Microsoft.Cci {
       this.generator.Emit(OperationCode.Ceq);
     }
 
+    /// <summary>
+    /// Visits the specified old value.
+    /// </summary>
+    /// <param name="oldValue">The old value.</param>
     public override void Visit(IOldValue oldValue) {
       if (this.contractProvider == null) return;
       this.Visit(oldValue.Expression);
@@ -1063,15 +1343,27 @@ namespace Microsoft.Cci {
       this.generator.Emit(OperationCode.Call, oldInst);
     }
 
+    /// <summary>
+    /// Visits the specified ones complement.
+    /// </summary>
+    /// <param name="onesComplement">The ones complement.</param>
     public override void Visit(IOnesComplement onesComplement) {
       this.Visit(onesComplement.Operand);
       this.generator.Emit(OperationCode.Not);
     }
 
+    /// <summary>
+    /// Visits the specified out argument.
+    /// </summary>
+    /// <param name="outArgument">The out argument.</param>
     public override void Visit(IOutArgument outArgument) {
       this.LoadAddressOf(outArgument.Expression, null);
     }
 
+    /// <summary>
+    /// Visits the specified pointer call.
+    /// </summary>
+    /// <param name="pointerCall">The pointer call.</param>
     public override void Visit(IPointerCall pointerCall) {
       this.Visit(pointerCall.Arguments);
       this.Visit(pointerCall.Pointer);
@@ -1081,6 +1373,10 @@ namespace Microsoft.Cci {
         this.StackSize--;
     }
 
+    /// <summary>
+    /// Traverses the given postCondition.
+    /// </summary>
+    /// <param name="postCondition"></param>
     public override void Visit(IPostcondition postCondition) {
       if (this.contractProvider == null) return;
       this.Visit(postCondition.Condition);
@@ -1088,6 +1384,10 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Traverses the given pre condition.
+    /// </summary>
+    /// <param name="precondition"></param>
     public override void Visit(IPrecondition precondition) {
       if (this.contractProvider == null) return;
       this.Visit(precondition.Condition);
@@ -1095,18 +1395,34 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified ref argument.
+    /// </summary>
+    /// <param name="refArgument">The ref argument.</param>
     public override void Visit(IRefArgument refArgument) {
       this.LoadAddressOf(refArgument.Expression, null);
     }
 
+    /// <summary>
+    /// Visits the specified resource use statement.
+    /// </summary>
+    /// <param name="resourceUseStatement">The resource use statement.</param>
     public override void Visit(IResourceUseStatement resourceUseStatement) {
       base.Visit(resourceUseStatement);
     }
 
+    /// <summary>
+    /// Visits the specified rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement">The rethrow statement.</param>
     public override void Visit(IRethrowStatement rethrowStatement) {
       this.generator.Emit(OperationCode.Rethrow);
     }
 
+    /// <summary>
+    /// Visits the specified return statement.
+    /// </summary>
+    /// <param name="returnStatement">The return statement.</param>
     public override void Visit(IReturnStatement returnStatement) {
       if (returnStatement.Expression != null) {
         this.Visit(returnStatement.Expression);
@@ -1124,6 +1440,10 @@ namespace Microsoft.Cci {
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
+    /// <summary>
+    /// Performs some computation with the given return value expression.
+    /// </summary>
+    /// <param name="returnValue"></param>
     public override void Visit(IReturnValue returnValue) {
       if (this.contractProvider == null) return;
       IEnumerable<ITypeReference> genArgs = IteratorHelper.GetSingletonEnumerable<ITypeReference>(returnValue.Type);
@@ -1132,6 +1452,10 @@ namespace Microsoft.Cci {
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified right shift.
+    /// </summary>
+    /// <param name="rightShift">The right shift.</param>
     public override void Visit(IRightShift rightShift) {
       this.Visit(rightShift.LeftOperand);
       this.Visit(rightShift.RightOperand);
@@ -1142,25 +1466,45 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression">The runtime argument handle expression.</param>
     public override void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
       this.generator.Emit(OperationCode.Arglist);
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified size of.
+    /// </summary>
+    /// <param name="sizeOf">The size of.</param>
     public override void Visit(ISizeOf sizeOf) {
       this.generator.Emit(OperationCode.Sizeof, sizeOf.TypeToSize);
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
     public override void Visit(ISourceMethodBody methodBody) {
       base.Visit(methodBody);
     }
 
+    /// <summary>
+    /// Visits the specified stack array create.
+    /// </summary>
+    /// <param name="stackArrayCreate">The stack array create.</param>
     public override void Visit(IStackArrayCreate stackArrayCreate) {
       this.Visit(stackArrayCreate.Size);
       this.generator.Emit(OperationCode.Localloc);
     }
 
+    /// <summary>
+    /// Traverses the given statement.
+    /// </summary>
+    /// <param name="statement"></param>
     public override void Visit(IStatement statement) {
       this.lastStatementWasUnconditionalTransfer = false;
       if (!(statement is IBlockStatement))
@@ -1168,6 +1512,10 @@ namespace Microsoft.Cci {
       base.Visit(statement);
     }
 
+    /// <summary>
+    /// Visits the specified subtraction.
+    /// </summary>
+    /// <param name="subtraction">The subtraction.</param>
     public override void Visit(ISubtraction subtraction) {
       this.Visit(subtraction.LeftOperand);
       this.Visit(subtraction.RightOperand);
@@ -1182,10 +1530,18 @@ namespace Microsoft.Cci {
       this.StackSize--;
     }
 
+    /// <summary>
+    /// Visits the specified switch case.
+    /// </summary>
+    /// <param name="switchCase">The switch case.</param>
     public override void Visit(ISwitchCase switchCase) {
       this.Visit(switchCase.Body);
     }
 
+    /// <summary>
+    /// Visits the specified switch statement.
+    /// </summary>
+    /// <param name="switchStatement">The switch statement.</param>
     public override void Visit(ISwitchStatement switchStatement) {
       this.Visit(switchStatement.Expression);
       uint numberOfCases;
@@ -1311,11 +1667,19 @@ namespace Microsoft.Cci {
     //  return caseList;
     //}
 
+    /// <summary>
+    /// Visits the specified this reference.
+    /// </summary>
+    /// <param name="thisReference">The this reference.</param>
     public override void Visit(IThisReference thisReference) {
       this.generator.Emit(OperationCode.Ldarg_0);
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified throw statement.
+    /// </summary>
+    /// <param name="throwStatement">The throw statement.</param>
     public override void Visit(IThrowStatement throwStatement) {
       this.Visit(throwStatement.Exception);
       this.generator.Emit(OperationCode.Throw);
@@ -1323,6 +1687,10 @@ namespace Microsoft.Cci {
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
+    /// <summary>
+    /// Visits the specified try catch filter finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement">The try catch filter finally statement.</param>
     public override void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
       ITryCatchFinallyStatement/*?*/ savedCurrentTryCatch = this.currentTryCatch;
       this.currentTryCatch = tryCatchFilterFinallyStatement;
@@ -1344,6 +1712,10 @@ namespace Microsoft.Cci {
       this.currentTryCatch = savedCurrentTryCatch;
     }
 
+    /// <summary>
+    /// Visits the specified token of.
+    /// </summary>
+    /// <param name="tokenOf">The token of.</param>
     public override void Visit(ITokenOf tokenOf) {
       IFieldReference/*?*/ fieldReference = tokenOf.Definition as IFieldReference;
       if (fieldReference != null)
@@ -1358,12 +1730,20 @@ namespace Microsoft.Cci {
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified type of.
+    /// </summary>
+    /// <param name="typeOf">The type of.</param>
     public override void Visit(ITypeOf typeOf) {
       this.generator.Emit(OperationCode.Ldtoken, typeOf.TypeToGet);
       //TODO: call helper method. Get it from the host.
       this.StackSize++;
     }
 
+    /// <summary>
+    /// Visits the specified unary negation.
+    /// </summary>
+    /// <param name="unaryNegation">The unary negation.</param>
     public override void Visit(IUnaryNegation unaryNegation) {
       if (unaryNegation.CheckOverflow && TypeHelper.IsSignedPrimitiveInteger(unaryNegation.Type)) {
         this.generator.Emit(OperationCode.Ldc_I4_0);
@@ -1375,15 +1755,27 @@ namespace Microsoft.Cci {
       this.generator.Emit(OperationCode.Neg);
     }
 
+    /// <summary>
+    /// Visits the specified unary plus.
+    /// </summary>
+    /// <param name="unaryPlus">The unary plus.</param>
     public override void Visit(IUnaryPlus unaryPlus) {
       this.Visit(unaryPlus.Operand);
     }
 
+    /// <summary>
+    /// Visits the specified vector length.
+    /// </summary>
+    /// <param name="vectorLength">Length of the vector.</param>
     public override void Visit(IVectorLength vectorLength) {
       this.Visit(vectorLength.Vector);
       this.generator.Emit(OperationCode.Ldlen);
     }
 
+    /// <summary>
+    /// Visits the specified while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement">The while do statement.</param>
     public override void Visit(IWhileDoStatement whileDoStatement) {
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
@@ -1406,10 +1798,18 @@ namespace Microsoft.Cci {
       this.currentContinueTarget = savedCurrentContinueTarget;
     }
 
+    /// <summary>
+    /// Visits the specified yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement">The yield break statement.</param>
     public override void Visit(IYieldBreakStatement yieldBreakStatement) {
       base.Visit(yieldBreakStatement);
     }
 
+    /// <summary>
+    /// Visits the specified yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement">The yield return statement.</param>
     public override void Visit(IYieldReturnStatement yieldReturnStatement) {
       base.Visit(yieldReturnStatement);
     }
@@ -3283,22 +3683,47 @@ namespace Microsoft.Cci {
       return localIndex;
     }
 
+    /// <summary>
+    /// Returns all of the local variables (including compiler generated temporary variables) that are local to the block
+    /// of statements translated by this converter.
+    /// </summary>
     public IEnumerable<ILocalDefinition> GetLocalVariables() {
       return this.temporaries.AsReadOnly();
     }
 
+    /// <summary>
+    /// Returns the IL operations that correspond to the statements that have been converted to IL by this converter.
+    /// </summary>
     public IEnumerable<IOperation> GetOperations() {
       return this.generator.GetOperations();
     }
 
+    /// <summary>
+    /// Returns zero or more exception exception information blocks (information about handlers, filters and finally blocks)
+    /// that correspond to try-catch-finally constructs that appear in the statements that have been converted to IL by this converter.
+    /// </summary>
     public IEnumerable<IOperationExceptionInformation> GetOperationExceptionInformation() {
       return this.generator.GetOperationExceptionInformation();
     }
 
+    /// <summary>
+    /// Returns zero or more types that are used to keep track of information needed to implement
+    /// the statements that have been converted to IL by this converter. For example, any closure classes
+    /// needed to compile anonymous delegate expressions (lambdas) will be returned by this method.
+    /// </summary>
     public virtual IEnumerable<ITypeDefinition> GetPrivateHelperTypes() {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
     }
 
+    /// <summary>
+    /// Traverses the given block of statements in the context of the given method to produce a list of
+    /// IL operations, exception information blocks (the locations of handlers, filters and finallies) and any private helper
+    /// types (for example closure classes) that represent the semantics of the given block of statements.
+    /// The results of the traversal can be retrieved via the GetOperations, GetOperationExceptionInformation
+    /// and GetPrivateHelperTypes methods.
+    /// </summary>
+    /// <param name="method">A method that provides the context for a block of statments that are to be converted to IL.</param>
+    /// <param name="body">A block of statements that are to be converted to IL.</param>
     public virtual void ConvertToIL(IMethodDefinition method, IBlockStatement body) {
       this.method = method;
       ITypeReference returnType = method.Type;

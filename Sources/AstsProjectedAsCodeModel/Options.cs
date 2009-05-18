@@ -12,18 +12,50 @@ using System.Text;
 
 namespace Microsoft.Cci.Ast {
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class FrameworkOptions {
+    /// <summary>
+    /// 
+    /// </summary>
     public bool CheckedArithmetic;
+    /// <summary>
+    /// 
+    /// </summary>
     public int? CodePage = null;
+    /// <summary>
+    /// 
+    /// </summary>
     public bool DisplayCommandLineHelp;
+    /// <summary>
+    /// 
+    /// </summary>
     public bool DisplayVersion;
+    /// <summary>
+    /// 
+    /// </summary>
     public List<string> FileNames = new List<string>();
+    /// <summary>
+    /// 
+    /// </summary>
     public string/*?*/ OutputFileName;
+    /// <summary>
+    /// 
+    /// </summary>
     public List<string> ReferencedAssemblies = new List<string>();
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <typeparam name="Options"></typeparam>
   public abstract class OptionParser<Options> where Options : FrameworkOptions, new() {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="hostEnvironment"></param>
     protected OptionParser(MetadataHostEnvironment hostEnvironment) {
       this.hostEnvironment = hostEnvironment;
       Options options = new Options();
@@ -31,10 +63,24 @@ namespace Microsoft.Cci.Ast {
       this.options = options;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected Dictionary<string, bool>/*?*/ alreadySeenResponseFiles;
+    /// <summary>
+    /// 
+    /// </summary>
     protected MetadataHostEnvironment hostEnvironment;
+    /// <summary>
+    /// 
+    /// </summary>
     protected Options/*!*/ options;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <param name="oneOrMoreSourceFilesExpected"></param>
     protected void ParseCommandLineArguments(IEnumerable<string> arguments, bool oneOrMoreSourceFilesExpected) {
       bool gaveFileNotFoundError = false;
       foreach (string arg in arguments) {
@@ -73,14 +119,33 @@ namespace Microsoft.Cci.Ast {
         this.ReportError(Error.NoSourceFiles);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="pattern"></param>
+    /// <param name="extension"></param>
+    /// <returns></returns>
     protected virtual bool DirectoryIsOk(string path, string pattern, string extension) {
       return false;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <returns></returns>
     protected abstract bool ParseCompilerOption(string arg);
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected static char[] spaceNewLineTabQuote = { ' ', (char)0x0A, (char)0x0D, '\t', '"' };
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arg"></param>
     protected void ParseOptionBatch(string arg) {
       if (arg.Length < 2) {
         this.ReportError(Error.InvalidCompilerOption, arg);
@@ -145,6 +210,13 @@ namespace Microsoft.Cci.Ast {
       this.ReportError(Error.BatchFileNotRead, arg.Substring(1), this.LocalizedNoSuchFile(arg.Substring(1)));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <param name="name"></param>
+    /// <param name="shortName"></param>
+    /// <returns></returns>
     protected bool ParseName(string arg, string name, string shortName) {
       arg = arg.ToLower();
       int n = arg.Length;
@@ -163,6 +235,13 @@ namespace Microsoft.Cci.Ast {
       return false;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <param name="name"></param>
+    /// <param name="shortName"></param>
+    /// <returns></returns>
     protected bool? ParseNamedBoolean(string arg, string name, string shortName) {
       arg = arg.ToLower();
       int n = arg.Length;
@@ -183,6 +262,13 @@ namespace Microsoft.Cci.Ast {
       return null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <param name="name"></param>
+    /// <param name="shortName"></param>
+    /// <returns></returns>
     protected string/*?*/ ParseNamedArgument(string arg, string name, string shortName) {
       string arg1 = arg.ToLower();
       int n = arg.Length;
@@ -200,6 +286,13 @@ namespace Microsoft.Cci.Ast {
       return arg.Substring(j+1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <param name="name"></param>
+    /// <param name="shortName"></param>
+    /// <returns></returns>
     protected List<string>/*?*/ ParseNamedArgumentList(string arg, string name, string shortName) {
       string/*?*/ argList = this.ParseNamedArgument(arg, name, shortName);
       if (argList == null || argList.Length == 0) return null;
@@ -218,6 +311,12 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="argList"></param>
+    /// <param name="startIndex"></param>
+    /// <returns></returns>
     protected int GetArgumentSeparatorIndex(string argList, int startIndex) {
       int commaIndex = argList.IndexOf(",", startIndex);
       int semicolonIndex = argList.IndexOf(";", startIndex);
@@ -227,6 +326,11 @@ namespace Microsoft.Cci.Ast {
       return semicolonIndex;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
     protected string ReadSourceText(string fileName) {
       try {
         using (FileStream inputStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
@@ -275,11 +379,21 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="error"></param>
+    /// <param name="messageArguments"></param>
     protected void ReportError(Error error, params string[] messageArguments) {
       DummyExpression dummyExpression = new DummyExpression(SourceDummy.SourceLocation);
       this.hostEnvironment.ReportError(new AstErrorMessage(dummyExpression, error, messageArguments));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
     protected string LocalizedNoSuchFile(string fileName) {
       DummyExpression dummyExpression = new DummyExpression(SourceDummy.SourceLocation);
       return new AstErrorMessage(dummyExpression, Error.NoSuchFile, fileName).Message;

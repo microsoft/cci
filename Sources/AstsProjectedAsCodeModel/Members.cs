@@ -321,6 +321,11 @@ namespace Microsoft.Cci.Ast {
   /// These methods exist only to allow the use of overload resolution as an aid to determining how operands should be converted.
   /// </summary>
   public class BuiltinMethods {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="compilation"></param>
     public BuiltinMethods(Compilation compilation) {
       this.nameTable = compilation.NameTable;
       this.platformType = compilation.PlatformType;
@@ -1093,11 +1098,19 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class EventDefinition : TypeDefinitionMember, IEventDefinition {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     public EventDefinition(EventDeclaration declaration)
       : base() {
       this.declaration = declaration;
     }
 
+    /// <summary>
+    /// A list of methods that are associated with the event.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<MethodDefinition> Accessors {
       get {
         foreach (MethodDeclaration accessor in this.declaration.Accessors)
@@ -1105,6 +1118,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public override ITypeDeclarationMember Declaration {
       get { return this.declaration; }
     }
@@ -1117,6 +1133,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// The method used to add a handler to the event.
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition Adder {
       get {
         MethodDeclaration/*?*/ adder = this.declaration.Adder;
@@ -1125,6 +1145,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The method used to call the event handlers when the event occurs. May be null.
+    /// </summary>
+    /// <value></value>
     public MethodDefinition/*?*/ Caller {
       get {
         MethodDeclaration/*?*/ callerDeclaration = this.declaration.Caller;
@@ -1133,6 +1157,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IEnumerable<EventDeclaration> EventDeclarations {
       get { return IteratorHelper.GetSingletonEnumerable<EventDeclaration>(this.declaration); }
     }
@@ -1144,10 +1171,18 @@ namespace Microsoft.Cci.Ast {
       get { return this.declaration.IsRuntimeSpecial; }
     }
 
+    /// <summary>
+    /// This event is special in some way, as specified by the name.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return this.declaration.IsSpecialName; }
     }
 
+    /// <summary>
+    /// The method used to add a handler to the event.
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition Remover {
       get {
         MethodDeclaration/*?*/ remover = this.declaration.Remover;
@@ -1187,12 +1222,23 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class FieldDefinition : TypeDefinitionMember, IFieldDefinition {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     protected internal FieldDefinition(FieldDeclaration declaration) {
       this.fieldDeclaration = declaration;
     }
 
+    /// <summary>
+    /// The number of bits that form part of the value of the field.
+    /// </summary>
+    /// <value></value>
     public uint BitLength {
       get { return this.FieldDeclaration.BitLength; }
     }
@@ -1207,6 +1253,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The declaration that corresponds to this definition.
+    /// </summary>
+    /// <value></value>
     public override ITypeDeclarationMember Declaration {
       get { return this.FieldDeclaration; }
     }
@@ -1218,11 +1268,17 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public FieldDeclaration FieldDeclaration {
       get { return this.fieldDeclaration; }
     }
     readonly FieldDeclaration fieldDeclaration;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IEnumerable<FieldDeclaration> FieldDeclarations {
       get { return IteratorHelper.GetSingletonEnumerable<FieldDeclaration>(this.FieldDeclaration); }
     }
@@ -1234,6 +1290,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.FieldDeclaration.IsBitField; }
     }
 
+    /// <summary>
+    /// This field is a compile-time constant. The field has no runtime location and cannot be directly addressed from IL.
+    /// </summary>
+    /// <value></value>
     public bool IsCompileTimeConstant {
       get
         //^ ensures result == this.FieldDeclaration.IsCompileTimeConstant;
@@ -1242,6 +1302,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// This field is mapped to an explicitly initialized (static) memory location.
+    /// </summary>
+    /// <value></value>
     public bool IsMapped {
       get {
         bool result = this.FieldDeclaration.IsMapped;
@@ -1250,6 +1314,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// This field has associated field marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool IsMarshalledExplicitly {
       get
         //^ ensures result == this.FieldDeclaration.IsMarshalledExplicitly;
@@ -1258,22 +1326,42 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The field does not have to be serialized when its containing instance is serialized.
+    /// </summary>
+    /// <value></value>
     public bool IsNotSerialized {
       get { return this.FieldDeclaration.IsNotSerialized; }
     }
 
+    /// <summary>
+    /// This field can only be read. Initialization takes place in a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsReadOnly {
       get { return this.FieldDeclaration.IsReadOnly; }
     }
 
+    /// <summary>
+    /// True if the field gets special treatment from the runtime.
+    /// </summary>
+    /// <value></value>
     public virtual bool IsRuntimeSpecial {
       get { return this.FieldDeclaration.IsRuntimeSpecial; }
     }
 
+    /// <summary>
+    /// This field is special in some way, as specified by the name.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return this.FieldDeclaration.IsSpecialName; }
     }
 
+    /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get
         //^ ensures result == this.FieldDeclaration.IsStatic;
@@ -1282,14 +1370,26 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Offset of the field.
+    /// </summary>
+    /// <value></value>
     public uint Offset {
       get { return this.FieldDeclaration.Offset; }  //  TODO: Implement this...
     }
 
+    /// <summary>
+    /// The position of the field starting from 0 within the class.
+    /// </summary>
+    /// <value></value>
     public int SequenceNumber {
       get { return -1; }  //  TODO: Implement this...
     }
 
+    /// <summary>
+    /// Specifies how this field is marshalled when it is accessed from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation MarshallingInformation {
       get
         //^^ requires this.IsMarshalledExplicitly;
@@ -1299,6 +1399,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The type of value that is stored in this field.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get {
         if (this.type == null) {
@@ -1343,6 +1447,10 @@ namespace Microsoft.Cci.Ast {
     #region IFieldReference Members
 
 
+    /// <summary>
+    /// The Field being referred to.
+    /// </summary>
+    /// <value></value>
     public IFieldDefinition ResolvedField {
       get { return this; }
     }
@@ -1474,12 +1582,22 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class FunctionPointerMethod : IMethodDefinition {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="functionPointer"></param>
     public FunctionPointerMethod(IFunctionPointerTypeReference functionPointer) {
       this.functionPointer = functionPointer;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IFunctionPointerTypeReference FunctionPointer {
       get { return this.functionPointer; }
     }
@@ -1487,10 +1605,18 @@ namespace Microsoft.Cci.Ast {
 
     #region IMethodDefinition Members
 
+    /// <summary>
+    /// True if the call sites that references the method with this object supply extra arguments.
+    /// </summary>
+    /// <value></value>
     public bool AcceptsExtraArguments {
       get { return (this.functionPointer.CallingConvention & CallingConvention.ExtraArguments) != 0; }
     }
 
+    /// <summary>
+    /// A container for a list of IL instructions providing the implementation (if any) of this method.
+    /// </summary>
+    /// <value></value>
     public virtual IMethodBody Body {
       get {
         //^ assume false;
@@ -1498,42 +1624,82 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.functionPointer.CallingConvention; }
     }
 
+    /// <summary>
+    /// If the method is generic then this list contains the type parameters.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IGenericMethodParameter> GenericParameters {
       get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
     }
 
+    /// <summary>
+    /// True if this method has a non empty collection of SecurityAttributes or the System.Security.SuppressUnmanagedCodeSecurityAttribute.
+    /// </summary>
+    /// <value></value>
     public bool HasDeclarativeSecurity {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if this an instance method that explicitly declares the type and name of its first parameter (the instance).
+    /// </summary>
+    /// <value></value>
     public bool HasExplicitThisParameter {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method does not provide an implementation.
+    /// </summary>
+    /// <value></value>
     public bool IsAbstract {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method can only be overridden when it is also accessible.
+    /// </summary>
+    /// <value></value>
     public bool IsAccessCheckedOnOverride {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method is implemented in the CLI Common Intermediate Language.
+    /// </summary>
+    /// <value></value>
     public bool IsCil {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method has an external implementation (i.e. not supplied by this definition).
+    /// </summary>
+    /// <value></value>
     public bool IsExternal {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method implementation is defined by another method definition (to be supplied at a later time).
+    /// </summary>
+    /// <value></value>
     public bool IsForwardReference {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method has generic parameters;
+    /// </summary>
+    /// <value></value>
     public bool IsGeneric {
       get
         //^ ensures result == false;
@@ -1542,66 +1708,132 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// True if this method is hidden if a derived type declares a method with the same name and signature.
+    /// If false, any method with the same name hides this method. This flag is ignored by the runtime and is only used by compilers.
+    /// </summary>
+    /// <value></value>
     public bool IsHiddenBySignature {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method is implemented in native (platform-specific) code.
+    /// </summary>
+    /// <value></value>
     public bool IsNativeCode {
       get { return false; }
     }
 
+    /// <summary>
+    /// The method always gets a new slot in the virtual method table.
+    /// This means the method will hide (not override) a base type method with the same name and signature.
+    /// </summary>
+    /// <value></value>
     public bool IsNewSlot {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the the runtime is not allowed to inline this method.
+    /// </summary>
+    /// <value></value>
     public bool IsNeverInlined {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the runtime is not allowed to optimize this method.
+    /// </summary>
+    /// <value></value>
     public bool IsNeverOptimized {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method is implemented via the invocation of an underlying platform method.
+    /// </summary>
+    /// <value></value>
     public bool IsPlatformInvoke {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the implementation of this method is supplied by the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeImplemented {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method is an internal part of the runtime and must be called in a special way.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeInternal {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method gets special treatment from the runtime. For example, it might be a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method may not be overridden.
+    /// </summary>
+    /// <value></value>
     public bool IsSealed {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method is special in some way for tools. For example, it might be a property getter or setter.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if only one thread at a time may execute this method.
+    /// </summary>
+    /// <value></value>
     public bool IsSynchronized {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method may be overridden (or if it is an override).
+    /// </summary>
+    /// <value></value>
     public bool IsVirtual {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the implementation of this method is not managed by the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsUnmanaged {
       get { return false; }
     }
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IParameterDefinition> Parameters {
       [DebuggerNonUserCode]
       get {
@@ -1614,63 +1846,124 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The number of required parameters of the method.
+    /// </summary>
+    /// <value></value>
     public ushort ParameterCount {
       get { return (ushort)IteratorHelper.EnumerableCount(this.FunctionPointer.Parameters); }
     }
 
+    /// <summary>
+    /// True if the method signature must not be mangled during the interoperation with COM code.
+    /// </summary>
+    /// <value></value>
     public bool PreserveSignature {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method calls another method containing security code. If this flag is set, the method
+    /// should have System.Security.DynamicSecurityMethodAttribute present in its list of custom attributes.
+    /// </summary>
+    /// <value></value>
     public bool RequiresSecurityObject {
       get { return false; }
     }
 
+    /// <summary>
+    /// Custom attributes associated with the method's return value.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return false; }
     }
 
+    /// <summary>
+    /// The return value has associated marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsMarshalledExplicitly {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return false; }
     }
 
+    /// <summary>
+    /// Specifies how the return value is marshalled when the method is called from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation ReturnValueMarshallingInformation {
       get { return Dummy.MarshallingInformation; }
     }
 
+    /// <summary>
+    /// Declarative security actions for this method.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
       get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
     }
 
     //^ [Confined]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return this.functionPointer.ToString();
     }
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.functionPointer.Type; }
     }
 
+    /// <summary>
+    /// True if the method is a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsConstructor {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the method is a static constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsStaticConstructor {
       get { return false; }
     }
 
+    /// <summary>
+    /// Detailed information about the PInvoke stub. Identifies which method to call, which module has the method and the calling convention among other things.
+    /// </summary>
+    /// <value></value>
     public IPlatformInvokeInformation PlatformInvokeData {
       get { return Dummy.PlatformInvokeInformation; }
     }
@@ -1679,15 +1972,27 @@ namespace Microsoft.Cci.Ast {
 
     #region ITypeDefinitionMember Members
 
+    /// <summary>
+    /// The type definition that contains this member.
+    /// </summary>
+    /// <value></value>
     public virtual ITypeDefinition ContainingTypeDefinition {
       get { return Dummy.Type; }
     }
 
     //^ [Pure]
+    /// <summary>
+    /// The number of generic parameters of the method. Zero if the referenced method is not generic.
+    /// </summary>
+    /// <value></value>
     public ushort GenericParameterCount {
       get { return 0; }
     }
 
+    /// <summary>
+    /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
+    /// </summary>
+    /// <value></value>
     public TypeMemberVisibility Visibility {
       get { return TypeMemberVisibility.Other; }
     }
@@ -1696,6 +2001,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IContainerMember<ITypeDefinition> Members
 
+    /// <summary>
+    /// The container instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinition Container {
       get { return Dummy.Type; }
     }
@@ -1704,6 +2013,10 @@ namespace Microsoft.Cci.Ast {
 
     #region INamedEntity Members
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return Dummy.Name; }
     }
@@ -1712,10 +2025,18 @@ namespace Microsoft.Cci.Ast {
 
     #region IDefinition Members
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -1724,6 +2045,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IDoubleDispatcher Members
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
@@ -1731,6 +2056,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IScopeMember<IScope<ITypeDefinitionMember>> Members
 
+    /// <summary>
+    /// The scope instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public IScope<ITypeDefinitionMember> ContainingScope {
       get { return Dummy.Type; }
     }
@@ -1739,6 +2068,10 @@ namespace Microsoft.Cci.Ast {
 
     #region ISignature Members
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
       get { return this.functionPointer.Parameters; }
     }
@@ -1747,14 +2080,27 @@ namespace Microsoft.Cci.Ast {
 
     #region IMethodReference Members
 
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that uniquely identifies
+    /// this.ResolvedMethod.
+    /// </summary>
+    /// <value></value>
     uint IMethodReference.InternedKey {
       get { return 0; }
     }
 
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition ResolvedMethod {
       get { return this; }
     }
 
+    /// <summary>
+    /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
       get { return this.functionPointer.ExtraArgumentTypes; }
     }
@@ -1763,10 +2109,18 @@ namespace Microsoft.Cci.Ast {
 
     #region ITypeMemberReference Members
 
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ContainingType {
       get { return Dummy.TypeReference; }
     }
 
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this; }
     }
@@ -1774,9 +2128,17 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class GenericMethodParameter : GenericParameter, IGenericMethodParameter {
 
     //^ [NotDelayed]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="definingMethod"></param>
+    /// <param name="declaration"></param>
     public GenericMethodParameter(MethodDefinition definingMethod, GenericMethodParameterDeclaration declaration)
       : base(declaration.Name, declaration.Index, declaration.Variance, declaration.MustBeReferenceType, declaration.MustBeValueType, declaration.MustHaveDefaultConstructor, declaration.Compilation.HostEnvironment.InternFactory)
       //^ requires definingMethod.IsGeneric;
@@ -1786,6 +2148,10 @@ namespace Microsoft.Cci.Ast {
       //^ base;
     }
 
+    /// <summary>
+    /// The generic method that defines this type parameter.
+    /// </summary>
+    /// <value></value>
     public MethodDefinition DefiningMethod {
       get 
         //^ ensures result.IsGeneric;
@@ -1803,16 +2169,28 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Returns the list of generic parameter declarations that collectively define this generic parameter definition.
+    /// </summary>
+    /// <returns></returns>
     protected override IEnumerable<GenericParameterDeclaration> GetDeclarations() {
       foreach (GenericMethodParameterDeclaration parameterDeclaration in this.ParameterDeclarations)
         yield return parameterDeclaration;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IEnumerable<GenericMethodParameterDeclaration> ParameterDeclarations {
       get { return IteratorHelper.GetSingletonEnumerable<GenericMethodParameterDeclaration>(this.declaration); }
     }
     readonly GenericMethodParameterDeclaration declaration;
 
+    /// <summary>
+    /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
+    /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
+    /// </summary>
+    /// <value></value>
     public override IPlatformType PlatformType {
       get { return this.DefiningMethod.ContainingTypeDefinition.PlatformType; }
     }
@@ -1832,6 +2210,10 @@ namespace Microsoft.Cci.Ast {
     #region IReference Members
 
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.declaration.SourceLocation); }
     }
@@ -1951,6 +2333,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.GlobalFieldDeclaration.FieldMapping; }
     }
 
+    /// <summary>
+    /// Gets the global field declaration.
+    /// </summary>
+    /// <returns></returns>
     protected virtual GlobalFieldDeclaration GetGlobalFieldDeclaration()
       //^ requires this.globalFieldDeclaration == null;
     {
@@ -1969,6 +2355,10 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// Gets the global field declarations.
+    /// </summary>
+    /// <value>The global field declarations.</value>
     public IEnumerable<GlobalFieldDeclaration> GlobalFieldDeclarations {
       get {
         if (this.globalFieldDeclarations != null) return this.globalFieldDeclarations.AsReadOnly();
@@ -1979,6 +2369,10 @@ namespace Microsoft.Cci.Ast {
     List<GlobalFieldDeclaration>/*?*/ globalFieldDeclarations;
     //^ invariant globalFieldDeclaration == null <==> globalFieldDeclarations != null && globalFieldDeclarations.Count > 1;
 
+    /// <summary>
+    /// The field is aligned on a bit boundary and uses only the BitLength number of least significant bits of the representation of a Type value.
+    /// </summary>
+    /// <value></value>
     public bool IsBitField {
       get { return this.GlobalFieldDeclaration.IsBitField; }
     }
@@ -2210,8 +2604,17 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class MethodBody : ISourceMethodBody {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <param name="block"></param>
+    /// <param name="localsAreZeroed"></param>
     public MethodBody(IMethodDefinition methodDefinition, BlockStatement/*?*/ block, bool localsAreZeroed)
       //^ requires block == null <==> methodDefinition.IsAbstract;
     {
@@ -2220,6 +2623,11 @@ namespace Microsoft.Cci.Ast {
       this.methodDefinition = methodDefinition;
     }
 
+    /// <summary>
+    /// The collection of statements making up the body.
+    /// This is produced by either language parser or through decompilation of the Instructions.
+    /// </summary>
+    /// <value></value>
     public BlockStatement Block {
       get {
         //^ assume this.block != null; //implied by the precondition
@@ -2228,10 +2636,18 @@ namespace Microsoft.Cci.Ast {
     }
     BlockStatement/*?*/ block;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public virtual void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public virtual void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2271,11 +2687,19 @@ namespace Microsoft.Cci.Ast {
 
     bool ilWasGenerated;
 
+    /// <summary>
+    /// True if the locals are initialized by zeroeing the stack upon method entry.
+    /// </summary>
+    /// <value></value>
     public bool LocalsAreZeroed {
       get { return this.localsAreZeroed; }
     }
     bool localsAreZeroed;
 
+    /// <summary>
+    /// The local variables of the method.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocalDefinition> LocalVariables {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2285,10 +2709,19 @@ namespace Microsoft.Cci.Ast {
     IEnumerable<ILocalDefinition>/*?*/ localVariables;
 
     // Do we want shallow copy of method body or do we want to reparse it?
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetCompilation"></param>
+    /// <returns></returns>
     public virtual MethodBody MakeShallowCopyFor(Compilation targetCompilation) {
       return this; //TODO: implement this
     }
 
+    /// <summary>
+    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// </summary>
+    /// <value></value>
     public ushort MaxStack {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2297,11 +2730,20 @@ namespace Microsoft.Cci.Ast {
     }
     ushort maxStack;
 
+    /// <summary>
+    /// Definition of method whose body this is.
+    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
     }
     readonly IMethodDefinition methodDefinition;
 
+    /// <summary>
+    /// A list CLR IL operations that implement this method body.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IOperation> Operations {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2310,6 +2752,10 @@ namespace Microsoft.Cci.Ast {
     }
     IEnumerable<IOperation>/*?*/ operations;
 
+    /// <summary>
+    /// A list exception data within the method body IL.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2318,6 +2764,13 @@ namespace Microsoft.Cci.Ast {
     }
     IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
 
+    /// <summary>
+    /// Any types that are implicitly defined in order to implement the body semantics.
+    /// In case of AST to instructions conversion this lists the types produced.
+    /// In case of instructions to AST decompilation this should ideally be list of all types
+    /// which are local to method.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2335,16 +2788,31 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class MethodDefinition : TypeDefinitionMember, IMethodDefinition {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     public MethodDefinition(MethodDeclaration declaration) {
       this.declaration = declaration;
     }
 
+    /// <summary>
+    /// True if the call sites that references the method with this object supply extra arguments.
+    /// </summary>
+    /// <value></value>
     public bool AcceptsExtraArguments {
       get { return this.declaration.AcceptsExtraArguments; }
     }
 
+    /// <summary>
+    /// A container for a list of IL instructions providing the implementation (if any) of this method.
+    /// </summary>
+    /// <value></value>
     public MethodBody Body {
       get
         //^ requires !this.IsAbstract && !this.IsExternal;
@@ -2357,10 +2825,18 @@ namespace Microsoft.Cci.Ast {
     MethodBody/*?*/ body;
 
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.declaration.CallingConvention; }
     }
 
+    /// <summary>
+    /// The declaration that corresponds to this definition.
+    /// </summary>
+    /// <value></value>
     public override ITypeDeclarationMember Declaration {
       get { return this.declaration; }
     }
@@ -2374,11 +2850,18 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// An empty collection of method definitions.
+    /// </summary>
     public static IEnumerable<IMethodDefinition> EmptyCollection {
       get { return MethodDefinition.emptyCollection; }
     }
     static readonly IEnumerable<IMethodDefinition> emptyCollection = new List<IMethodDefinition>(0).AsReadOnly();
 
+    /// <summary>
+    /// If the method is generic then this list contains the type parameters.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<GenericMethodParameter> GenericParameters {
       get {
         foreach (GenericMethodParameterDeclaration parameterDeclaration in this.declaration.GenericParameters)
@@ -2386,6 +2869,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The number of generic parameters of the method. Zero if the referenced method is not generic.
+    /// </summary>
+    /// <value></value>
     public ushort GenericParameterCount
       //^^ ensures result >= 0;
       //^^ ensures !this.IsGeneric ==> result == 0;
@@ -2398,6 +2885,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// True if this method has a non empty collection of SecurityAttributes or the System.Security.SuppressUnmanagedCodeSecurityAttribute.
+    /// </summary>
+    /// <value></value>
     public bool HasDeclarativeSecurity {
       get { return this.declaration.HasDeclarativeSecurity; }
     }
@@ -2419,6 +2910,11 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that uniquely identifies
+    /// this.ResolvedMethod.
+    /// </summary>
+    /// <value></value>
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
@@ -2429,6 +2925,10 @@ namespace Microsoft.Cci.Ast {
     }
     uint internedKey;
 
+    /// <summary>
+    /// True if the method does not provide an implementation.
+    /// </summary>
+    /// <value></value>
     public bool IsAbstract {
       get { return this.declaration.IsAbstract; }
     }
@@ -2440,18 +2940,34 @@ namespace Microsoft.Cci.Ast {
       get { return this.declaration.IsAccessCheckedOnOverride; }
     }
 
+    /// <summary>
+    /// True if the method is implemented in the CLI Common Intermediate Language.
+    /// </summary>
+    /// <value></value>
     public bool IsCil {
       get { return this.declaration.IsCil; }
     }
 
+    /// <summary>
+    /// True if the method has an external implementation (i.e. not supplied by this definition).
+    /// </summary>
+    /// <value></value>
     public bool IsExternal {
       get { return this.declaration.IsExternal; }
     }
 
+    /// <summary>
+    /// True if the method implementation is defined by another method definition (to be supplied at a later time).
+    /// </summary>
+    /// <value></value>
     public bool IsForwardReference {
       get { return this.declaration.IsForwardReference; }
     }
 
+    /// <summary>
+    /// True if the method has generic parameters;
+    /// </summary>
+    /// <value></value>
     public bool IsGeneric {
       get 
         //^ ensures result == this.declaration.IsGeneric;
@@ -2460,58 +2976,116 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// True if this method is hidden if a derived type declares a method with the same name and signature.
+    /// If false, any method with the same name hides this method. This flag is ignored by the runtime and is only used by compilers.
+    /// </summary>
+    /// <value></value>
     public bool IsHiddenBySignature {
       get { return this.declaration.IsHiddenBySignature; }
     }
 
+    /// <summary>
+    /// True if the method is implemented in native (platform-specific) code.
+    /// </summary>
+    /// <value></value>
     public bool IsNativeCode {
       get { return this.declaration.IsNativeCode; }
     }
 
+    /// <summary>
+    /// The method always gets a new slot in the virtual method table.
+    /// This means the method will hide (not override) a base type method with the same name and signature.
+    /// </summary>
+    /// <value></value>
     public bool IsNewSlot {
       get { return this.declaration.IsVirtual && !this.declaration.IsOverride; }
     }
 
+    /// <summary>
+    /// True if the the runtime is not allowed to inline this method.
+    /// </summary>
+    /// <value></value>
     public bool IsNeverInlined {
       get { return this.declaration.IsNeverInlined; }
     }
 
+    /// <summary>
+    /// True if the runtime is not allowed to optimize this method.
+    /// </summary>
+    /// <value></value>
     public bool IsNeverOptimized {
       get { return this.declaration.IsNeverOptimized; }
     }
 
+    /// <summary>
+    /// True if the method is implemented via the invocation of an underlying platform method.
+    /// </summary>
+    /// <value></value>
     public bool IsPlatformInvoke {
       get { return this.declaration.IsPlatformInvoke; }
     }
 
+    /// <summary>
+    /// True if the implementation of this method is supplied by the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeImplemented {
       get { return this.declaration.IsRuntimeImplemented; }
     }
 
+    /// <summary>
+    /// True if the method is an internal part of the runtime and must be called in a special way.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeInternal {
       get { return this.declaration.IsRuntimeInternal; }
     }
 
+    /// <summary>
+    /// True if the method gets special treatment from the runtime. For example, it might be a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return this.declaration.IsRuntimeSpecial; }
     }
 
+    /// <summary>
+    /// True if the method may not be overridden.
+    /// </summary>
+    /// <value></value>
     public bool IsSealed {
       get { return this.declaration.IsSealed; }
     }
 
+    /// <summary>
+    /// True if the method is special in some way for tools. For example, it might be a property getter or setter.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return this.declaration.IsSpecialName; }
     }
 
+    /// <summary>
+    /// True if the method does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get { return this.declaration.IsStatic; }
     }
 
+    /// <summary>
+    /// True if only one thread at a time may execute this method.
+    /// </summary>
+    /// <value></value>
     public bool IsSynchronized {
       get { return this.declaration.IsSynchronized; }
     }
 
+    /// <summary>
+    /// True if the method may be overridden (or if it is an override).
+    /// </summary>
+    /// <value></value>
     public bool IsVirtual {
       get { 
         bool result = this.declaration.IsVirtual || this.declaration.IsOverride || this.declaration.IsAbstract; 
@@ -2520,46 +3094,91 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// True if the implementation of this method is not managed by the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsUnmanaged {
       get { return this.declaration.IsUnmanaged; }
     }
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public override IName Name {
       get { return this.declaration.QualifiedName; }
     }
 
+    /// <summary>
+    /// True if the method signature must not be mangled during the interoperation with COM code.
+    /// </summary>
+    /// <value></value>
     public bool PreserveSignature {
       get { return this.declaration.PreserveSignature; }
     }
 
+    /// <summary>
+    /// True if the method calls another method containing security code. If this flag is set, the method
+    /// should have System.Security.DynamicSecurityMethodAttribute present in its list of custom attributes.
+    /// </summary>
+    /// <value></value>
     public bool RequiresSecurityObject {
       get { return this.declaration.RequiresSecurityObject; }
     }
 
+    /// <summary>
+    /// Custom attributes associated with the method's return value.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
       get { return this.declaration.ReturnValueAttributes; }
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.declaration.ReturnValueIsByRef; }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.declaration.ReturnValueIsModified; }
     }
 
+    /// <summary>
+    /// The return value has associated marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsMarshalledExplicitly {
       get { return this.declaration.ReturnValueIsMarshalledExplicitly; }
     }
 
+    /// <summary>
+    /// Specifies how the return value is marshalled when the method is called from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation ReturnValueMarshallingInformation {
       get { return this.declaration.ReturnValueMarshallingInformation; }
     }
 
+    /// <summary>
+    /// Declarative security actions for this method.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
       get { return this.declaration.SecurityAttributes; }
     }
@@ -2574,6 +3193,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The number of required parameters of the method.
+    /// </summary>
+    /// <value></value>
     public ushort ParameterCount {
       get {
         if (this.declaration.parameters == null) return 0;
@@ -2581,28 +3204,51 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.declaration.Type.ResolvedType; }
     }
 
+    /// <summary>
+    /// True if the method is a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsConstructor {
       get { return this.Name.Value.Equals(".ctor"); } //  TODO: Implement this properly
     }
 
+    /// <summary>
+    /// True if the method is a static constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsStaticConstructor {
       get { return this.Name.Value.Equals(".cctor"); }  //  TODO: Implement this properly
     }
 
+    /// <summary>
+    /// Detailed information about the PInvoke stub. Identifies which method to call, which module has the method and the calling convention among other things.
+    /// </summary>
+    /// <value></value>
     public IPlatformInvokeInformation PlatformInvokeData {
       get { return this.declaration.PlatformInvokeData; }
     }
 
     //^ [Confined]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this, 
         NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IName UnqualifiedName {
       get { return this.declaration.Name; }
     }
@@ -2649,10 +3295,18 @@ namespace Microsoft.Cci.Ast {
 
     #region IMethodReference Members
 
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition ResolvedMethod {
       get { return this; }
     }
 
+    /// <summary>
+    /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
       get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
     }
@@ -2661,22 +3315,41 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class ParameterDefinition : IParameterDefinition {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     protected internal ParameterDefinition(ParameterDeclaration declaration) {
       this.declaration = declaration;
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get { return this.declaration.Attributes; }
     }
 
+    /// <summary>
+    /// The method or property that defines this parameter.
+    /// </summary>
+    /// <value></value>
     public ISignature ContainingSignature {
       get { 
         return this.declaration.ContainingSignature.SignatureDefinition; 
       }
     }
 
+    /// <summary>
+    /// The list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<CustomModifier> CustomModifiers {
       get { return this.declaration.CustomModifiers; }
     }
@@ -2684,6 +3357,10 @@ namespace Microsoft.Cci.Ast {
     //^ [SpecPublic]
     private ParameterDeclaration declaration;
 
+    /// <summary>
+    /// A compile time constant value that should be supplied as the corresponding argument value by callers that do not explicitly specify an argument value for this parameter.
+    /// </summary>
+    /// <value></value>
     public CompileTimeConstant DefaultValue {
       get 
         //^^ requires this.HasDefaultValue;
@@ -2695,10 +3372,18 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public virtual void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// True if the parameter has a default value that should be supplied as the argument value by a caller for which the argument value has not been explicitly specified.
+    /// </summary>
+    /// <value></value>
     public bool HasDefaultValue {
       get
         //^ ensures result == this.declaration.HasDefaultValue;
@@ -2707,42 +3392,82 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
     public ushort Index {
       get { return this.declaration.Index; }
     }
 
+    /// <summary>
+    /// True if the parameter is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool IsByReference {
       get { return this.declaration.IsOut || this.declaration.IsRef; }
     }
 
+    /// <summary>
+    /// True if the argument value must be included in the marshalled arguments passed to a remote callee.
+    /// </summary>
+    /// <value></value>
     public bool IsIn {
       get { return this.declaration.IsIn; }
     }
 
+    /// <summary>
+    /// This parameter has associated marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool IsMarshalledExplicitly {
       get { return this.declaration.IsMarshalledExplicitly; }
     }
 
+    /// <summary>
+    /// This parameter has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool IsModified {
       get { return this.declaration.IsModified; }
     }
 
+    /// <summary>
+    /// True if the argument value must be included in the marshalled arguments passed to a remote callee only if it is different from the default value (if there is one).
+    /// </summary>
+    /// <value></value>
     public bool IsOptional {
       get { return this.declaration.IsOptional; }
     }
 
+    /// <summary>
+    /// True if the final value assigned to the parameter will be marshalled with the return values passed back from a remote callee.
+    /// </summary>
+    /// <value></value>
     public bool IsOut {
       get { return this.declaration.IsOut; }
     }
 
+    /// <summary>
+    /// True if the parameter has the ParamArrayAttribute custom attribute.
+    /// </summary>
+    /// <value></value>
     public bool IsParameterArray {
       get { return this.declaration.IsParameterArray; }
     }
 
+    /// <summary>
+    /// Specifies how this parameter is marshalled when it is accessed from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation MarshallingInformation {
       get { return Dummy.MarshallingInformation; }
     }
 
+    /// <summary>
+    /// The element type of the parameter array.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ParamArrayElementType {
       get
         //^^ requires this.IsParameterArray;
@@ -2751,14 +3476,26 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Gets the parameter declarations.
+    /// </summary>
+    /// <value>The parameter declarations.</value>
     public IEnumerable<ParameterDeclaration> ParameterDeclarations {
       get { return IteratorHelper.GetSingletonEnumerable<ParameterDeclaration>(this.declaration); }
     }
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.declaration.Name; }
     }
 
+    /// <summary>
+    /// The type of argument value that corresponds to this parameter.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.declaration.Type.ResolvedType; }
     }
@@ -2779,6 +3516,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IReference Members
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get {
         foreach (ParameterDeclaration parameterDeclaration in this.ParameterDeclarations)
@@ -2798,8 +3539,15 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class PropertyDefinition : TypeDefinitionMember, IPropertyDefinition {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     public PropertyDefinition(PropertyDeclaration declaration) {
       this.declaration = declaration;
     }
@@ -2814,11 +3562,19 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The declaration that corresponds to this definition.
+    /// </summary>
+    /// <value></value>
     public override ITypeDeclarationMember Declaration {
       get { return this.declaration; }
     }
     readonly PropertyDeclaration declaration;
 
+    /// <summary>
+    /// A compile time constant value that provides the default value for the property. (Who uses this and why?)
+    /// </summary>
+    /// <value></value>
     public CompileTimeConstant DefaultValue {
       get
         //^^ requires this.HasDefaultValue;
@@ -2837,6 +3593,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// The method used to get the value of this property. May be absent (null).
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition/*?*/ Getter {
       get {
         MethodDeclaration/*?*/ getter = this.declaration.Getter;
@@ -2845,6 +3605,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// True if this property has a compile time constant associated with that serves as a default value for the property. (Who uses this and why?)
+    /// </summary>
+    /// <value></value>
     public bool HasDefaultValue {
       get { return this.declaration.HasDefaultValue; }
     }
@@ -2863,6 +3627,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.declaration.IsSpecialName; }
     }
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ParameterDefinition> Parameters {
       get {
         foreach (ParameterDeclaration parameter in this.declaration.Parameters)
@@ -2870,30 +3638,58 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Gets the property declarations.
+    /// </summary>
+    /// <value>The property declarations.</value>
     public IEnumerable<PropertyDeclaration> PropertyDeclarations {
       get { return IteratorHelper.GetSingletonEnumerable<PropertyDeclaration>(this.declaration); }
     }
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public override IName Name {
       get { return this.declaration.QualifiedName; }
     }
 
+    /// <summary>
+    /// Custom attributes associated with the property's return value.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
       get { return this.declaration.ReturnValueAttributes; }
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.declaration.ReturnValueIsByRef; }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.declaration.ReturnValueIsModified; }
     }
 
+    /// <summary>
+    /// The method used to set the value of this property. May be absent (null).
+    /// </summary>
+    /// <value></value>
     public IMethodReference/*?*/ Setter {
       get {
         MethodDeclaration/*?*/ setter = this.declaration.Setter;
@@ -2922,6 +3718,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.declaration.Type.ResolvedType; }
     }
@@ -2932,6 +3732,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return CallingConvention.Default; }
     }
@@ -2957,14 +3761,25 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class SignatureDefinition : ISignature {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaration"></param>
     public SignatureDefinition(SignatureDeclaration declaration) {
       this.declaration = declaration;
     }
 
     readonly SignatureDeclaration declaration;
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ParameterDefinition> Parameters {
       get {
         foreach (ParameterDeclaration parameterDeclaration in this.declaration.Parameters)
@@ -2972,32 +3787,60 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Gets the return value attributes.
+    /// </summary>
+    /// <value>The return value attributes.</value>
     public IEnumerable<CustomAttribute> ReturnValueAttributes {
       get { return this.declaration.ReturnValueAttributes; }
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<CustomModifier> ReturnValueCustomModifiers {
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.declaration.ReturnValueIsByRef; }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.declaration.ReturnValueIsModified; }
     }
 
+    /// <summary>
+    /// Gets the signature declarations.
+    /// </summary>
+    /// <value>The signature declarations.</value>
     public IEnumerable<SignatureDeclaration> SignatureDeclarations {
       get {
         return IteratorHelper.GetSingletonEnumerable<SignatureDeclaration>(this.declaration);
       }
     }
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.declaration.Type.ResolvedType; }
     }
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return CallingConvention.Default; }
     }
@@ -3019,15 +3862,27 @@ namespace Microsoft.Cci.Ast {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <typeparam name="MemberType"></typeparam>
   public abstract class SpecializedTypeDefinitionMember<MemberType> : ITypeDefinitionMember
     where MemberType : ITypeDefinitionMember  //  This constraint should also require the MemberType to be unspecialized.
   {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="unspecializedVersion"></param>
+    /// <param name="containingGenericTypeInstance"></param>
     protected SpecializedTypeDefinitionMember(MemberType/*!*/ unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) {
       this.unspecializedVersion = unspecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public GenericTypeInstance ContainingGenericTypeInstance {
       get { return this.containingGenericTypeInstance; }
     }
@@ -3040,6 +3895,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
 
+    /// <summary>
+    /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
+    /// </summary>
+    /// <value></value>
     public TypeMemberVisibility Visibility {
       get {
         ITypeDefinitionMember unspecializedVersion = this.UnspecializedVersion;
@@ -3049,6 +3908,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MemberType/*!*/ UnspecializedVersion {
       get { return this.unspecializedVersion; }
     }
@@ -3056,6 +3918,10 @@ namespace Microsoft.Cci.Ast {
 
     #region ITypeDefinitionMember Members
 
+    /// <summary>
+    /// The type definition that contains this member.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
       get
         //^ ensures result == this.ContainingGenericTypeInstance;
@@ -3068,10 +3934,18 @@ namespace Microsoft.Cci.Ast {
 
     #region ITypeMemberReference Members
 
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ContainingType {
       get { return this.ContainingTypeDefinition; }
     }
 
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this; }
     }
@@ -3080,6 +3954,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IContainerMember<ITypeDefinition> Members
 
+    /// <summary>
+    /// The container instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinition Container {
       get { return this.ContainingTypeDefinition; }
     }
@@ -3088,6 +3966,10 @@ namespace Microsoft.Cci.Ast {
 
     #region INamedEntity Members
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.UnspecializedVersion.Name; }
     }
@@ -3096,10 +3978,18 @@ namespace Microsoft.Cci.Ast {
 
     #region IDefinition Members
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get { return this.UnspecializedVersion.Attributes; }
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get { return this.UnspecializedVersion.Locations; }
     }
@@ -3108,6 +3998,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IScopeMember<IScope<ITypeDefinitionMember>> Members
 
+    /// <summary>
+    /// The scope instance with a Members collection that includes this instance.
+    /// </summary>
+    /// <value></value>
     public IScope<ITypeDefinitionMember> ContainingScope {
       get { return this.ContainingTypeDefinition; }
     }
@@ -3116,16 +4010,30 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public abstract class TypeDefinitionMember : ITypeDefinitionMember {
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get { return this.Declaration.Attributes; }
     }
 
+    /// <summary>
+    /// The type definition that contains this member.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
       get { return this.Declaration.ContainingTypeDeclaration.TypeDefinition; }
     }
 
+    /// <summary>
+    /// The declaration that corresponds to this definition.
+    /// </summary>
     public abstract ITypeDeclarationMember Declaration { get; }
 
     /// <summary>
@@ -3135,10 +4043,18 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public virtual IName Name {
       get { return this.Declaration.Name; }
     }
 
+    /// <summary>
+    /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
+    /// </summary>
+    /// <value></value>
     public TypeMemberVisibility Visibility {
       get { 
         TypeMemberVisibility result = this.Declaration.Visibility;
@@ -3159,10 +4075,18 @@ namespace Microsoft.Cci.Ast {
 
     #region ITypeMemberReference Members
 
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ContainingType {
       get { return this.ContainingTypeDefinition; }
     }
 
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this; }
     }
@@ -3177,6 +4101,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.Declaration.SourceLocation); }
     }

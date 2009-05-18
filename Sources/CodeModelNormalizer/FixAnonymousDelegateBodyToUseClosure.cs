@@ -9,12 +9,32 @@ using System.Diagnostics;
 
 namespace Microsoft.Cci {
 
+  /// <summary>
+  /// A mutator that visits an anonymous delegate body and produces a copy that has been changed to
+  /// reference captured locals and parameters via fields on a closure class.
+  /// </summary>
   internal class FixAnonymousDelegateBodyToUseClosure : CodeMutator {
 
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
     TypeDefinition closure;
     List<IFieldDefinition> outerClosures;
 
+    /// <summary>
+    /// Allocates a mutator that visits an anonymous delegate body and produces a copy that has been changed to
+    /// reference captured locals and parameters via fields on a closure class.
+    /// </summary>
+    /// <param name="fieldForCapturedLocalOrParameter">A map from captured locals and parameters to the closure class fields that hold their state for the method
+    /// corresponding to the anonymous delegate.</param>
+    /// <param name="cache">A cache for any duplicates created by this mutator. The cache is used both to save space and to detect when the traversal of a cycle should stop.</param>
+    /// <param name="closure">The definition of the class that contains the fields that hold the values of captured locals and parameters.</param>
+    /// <param name="outerClosures">A potentially empty list of closures that for any anonymous delegates that enclose the anonymous delegate that will be
+    /// traversed by this mutator.</param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
+    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
+    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     internal FixAnonymousDelegateBodyToUseClosure(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<object, object> cache,
       TypeDefinition closure, List<IFieldDefinition> outerClosures, 
       IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)

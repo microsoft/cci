@@ -273,16 +273,43 @@ namespace Microsoft.Cci.Ast {
       this.type = type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     [Flags]
     public new enum Flags { //Must remain same as PropertyDeclaration.Flags and be a prefix of MethodDeclaration.Flags
+      /// <summary>
+      /// 
+      /// </summary>
       New=int.MinValue,
+      /// <summary>
+      /// 
+      /// </summary>
       Unsafe=(New>>1)&int.MaxValue,
 
+      /// <summary>
+      /// 
+      /// </summary>
       Abstract=Unsafe>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       External=Abstract>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Override=External>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Sealed=Override>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Static=Sealed>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Virtual=Static>>1
     }
 
@@ -658,17 +685,47 @@ namespace Microsoft.Cci.Ast {
       this.flags |= (int)flags;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     [Flags]
     public new enum Flags {
+      /// <summary>
+      /// 
+      /// </summary>
       New=int.MinValue,
+      /// <summary>
+      /// 
+      /// </summary>
       Unsafe=(New>>1)&int.MaxValue,
 
+      /// <summary>
+      /// 
+      /// </summary>
       AutomaticEventHookup=Unsafe>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Constant=AutomaticEventHookup>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       ReadOnly=Constant>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       RuntimeSpecial=ReadOnly>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       SpecialName=RuntimeSpecial>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Static=SpecialName>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Volatile=Static>>1
     }
 
@@ -838,6 +895,9 @@ namespace Microsoft.Cci.Ast {
     public virtual Expression/*?*/ Initializer {
       get { return this.initializer; }
     }
+    /// <summary>
+    /// An expression that evaluates to the initial value of this field. May be null.
+    /// </summary>
     protected Expression/*?*/ initializer;
 
     /// <summary>
@@ -1006,6 +1066,18 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class GenericMethodParameterDeclaration : GenericParameterDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="name"></param>
+    /// <param name="index"></param>
+    /// <param name="constraints"></param>
+    /// <param name="variance"></param>
+    /// <param name="mustBeReferenceType"></param>
+    /// <param name="mustBeValueType"></param>
+    /// <param name="mustHaveDefaultConstructor"></param>
+    /// <param name="sourceLocation"></param>
     public GenericMethodParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name,
       ushort index, List<TypeExpression> constraints, TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor, ISourceLocation sourceLocation)
       : base(sourceAttributes, name, index, constraints, variance, mustBeReferenceType, mustBeValueType, mustHaveDefaultConstructor, sourceLocation)
@@ -1013,6 +1085,11 @@ namespace Microsoft.Cci.Ast {
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="declaringMethod"></param>
+    /// <param name="template"></param>
     protected GenericMethodParameterDeclaration(MethodDeclaration declaringMethod, GenericMethodParameterDeclaration template)
       : base(declaringMethod.DummyBlock, template)
       //^ requires declaringMethod.IsGeneric;
@@ -1058,6 +1135,12 @@ namespace Microsoft.Cci.Ast {
     //^ [Once]
     GenericMethodParameter/*?*/ genericMethodParameterDefinition;
 
+    /// <summary>
+    /// Makes a shallow copy of this generic parameter that can be added to the generic parameter list of the given method declaration.
+    /// The shallow copy may share child objects with this instance, but should never expose such child objects except through
+    /// wrappers (or shallow copies made on demand). If this instance is already a parameter of the given method declaration it
+    /// returns itself.
+    /// </summary>
     public virtual GenericMethodParameterDeclaration MakeShallowCopyFor(MethodDeclaration declaringMethod) 
       //^ requires declaringMethod.IsGeneric;
     {
@@ -1065,6 +1148,12 @@ namespace Microsoft.Cci.Ast {
       return new GenericMethodParameterDeclaration(declaringMethod, this);
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a generic method parameter before constructing the declaring method declaration.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="declaringMethod"></param>
     public virtual void SetDeclaringMethod(MethodDeclaration declaringMethod) 
       //^ requires declaringMethod.IsGeneric;
       //^ modifies this.*;
@@ -1211,6 +1300,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IAggregatableNamespaceDeclarationMember Members
 
+    /// <summary>
+    /// The single definition that is associated with this declaration and possibly other declarations too.
+    /// </summary>
+    /// <value></value>
     public INamespaceMember AggregatedMember {
       get { return this.GlobalFieldDefinition; }
     }
@@ -1233,6 +1326,18 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class GlobalMethodDeclaration : MethodDeclaration, INamespaceDeclarationMember, IAggregatableNamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="visibility"></param>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="parameters"></param>
+    /// <param name="body"></param>
+    /// <param name="sourceLocation"></param>
     public GlobalMethodDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags,
       TypeMemberVisibility visibility, TypeExpression type, NameDeclaration name, List<GenericMethodParameterDeclaration>/*?*/ genericParameters, List<ParameterDeclaration>/*?*/ parameters, BlockStatement/*?*/ body, ISourceLocation sourceLocation)
       : base(sourceAttributes, flags|Flags.Static, visibility, type, null,
@@ -1371,6 +1476,20 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class MethodDeclaration : TypeDeclarationMember, ISignatureDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="visibility"></param>
+    /// <param name="type"></param>
+    /// <param name="implementedInterfaces"></param>
+    /// <param name="name"></param>
+    /// <param name="genericParameters"></param>
+    /// <param name="parameters"></param>
+    /// <param name="handledEvents"></param>
+    /// <param name="body"></param>
+    /// <param name="sourceLocation"></param>
     public MethodDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
       Flags flags, TypeMemberVisibility visibility, TypeExpression type, List<TypeExpression>/*?*/ implementedInterfaces, NameDeclaration name,
       List<GenericMethodParameterDeclaration>/*?*/ genericParameters, List<ParameterDeclaration>/*?*/ parameters, List<QualifiedName>/*?*/ handledEvents,
@@ -1386,23 +1505,62 @@ namespace Microsoft.Cci.Ast {
       this.implementedInterfaces = implementedInterfaces;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     [Flags]
     public new enum Flags {
+      /// <summary>
+      /// 
+      /// </summary>
       New=int.MinValue,
+      /// <summary>
+      /// 
+      /// </summary>
       Unsafe=(New>>1)&int.MaxValue,
 
+      /// <summary>
+      /// 
+      /// </summary>
       Abstract=Unsafe>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       External=Abstract>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Override=External>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Sealed=Override>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Static=Sealed>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Virtual=Static>>1,
 
       //Up to here is must remain the same as EventDeclaration.Flags and PropertyDeclaration.Flags
 
+      /// <summary>
+      /// 
+      /// </summary>
       AcceptsExtraArguments=Virtual>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       ExtensionMethod=AcceptsExtraArguments>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       SpecialName=ExtensionMethod>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Synchronized=SpecialName>>1,
     }
 
@@ -1425,6 +1583,11 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [NotDelayed]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected MethodDeclaration(TypeDeclaration containingTypeDeclaration, MethodDeclaration template)
       : base(containingTypeDeclaration, template)
       //^ ensures this.containingTypeDeclaration == containingTypeDeclaration;
@@ -1519,6 +1682,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// A block statement that serves as the declaring block of any expressions that form part of the the method declaration
+    /// but that do not appear inside a method body.
+    /// </summary>
     public BlockStatement DummyBlock {
       get {
         if (this.dummyBlock == null) {
@@ -1555,6 +1722,9 @@ namespace Microsoft.Cci.Ast {
     List<GenericMethodParameterDeclaration>/*?*/ genericParameters;
     //^ invariant genericParameters == null || this.IsGeneric;
 
+    /// <summary>
+    /// The number of generic parameters. Zero if the method is not generic.
+    /// </summary>
     public ushort GenericParameterCount
       //^^ ensures !this.IsGeneric ==> result == 0;
       //^^ ensures this.IsGeneric ==> result > 0;
@@ -1879,6 +2049,9 @@ namespace Microsoft.Cci.Ast {
     }
     internal readonly List<ParameterDeclaration>/*?*/ parameters;
 
+    /// <summary>
+    /// Detailed information about the PInvoke stub. Identifies which method to call, which module has the method and the calling convention among other things.
+    /// </summary>
     public IPlatformInvokeInformation PlatformInvokeData {
       get 
         //^ requires this.IsPlatformInvoke;
@@ -1914,6 +2087,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The name of this method, qualified with the name of an interface, if this method is the private implementation
+    /// of an interface method.
+    /// </summary>
     internal protected virtual IName QualifiedName {
       get {
         if (this.qualifiedName == null){
@@ -1925,6 +2102,9 @@ namespace Microsoft.Cci.Ast {
         return this.qualifiedName;
       }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     protected IName/*?*/ qualifiedName;
 
     /// <summary>
@@ -1966,10 +2146,16 @@ namespace Microsoft.Cci.Ast {
       get { return false; } //TODO: compute this
     }
 
+    /// <summary>
+    /// The return value has associated marshalling information.
+    /// </summary>
     public bool ReturnValueIsMarshalledExplicitly {
       get { return false; } //TODO: compute this
     }
 
+    /// <summary>
+    /// Specifies how the return value is marshalled when the method is called from unmanaged code.
+    /// </summary>
     public IMarshallingInformation ReturnValueMarshallingInformation {
       get { return Dummy.MarshallingInformation; } //TODO: compute this
     }
@@ -2026,7 +2212,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// An expression that denotes the return type of the method or type of the property.
+    /// An expression that denotes the return type of the method.
     /// </summary>
     public TypeExpression Type {
       get { return this.type; }
@@ -2035,8 +2221,24 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class ParameterDeclaration : SourceItem, IDeclaration, INamedEntity, IParameterListEntry {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    /// <param name="defaultValue"></param>
+    /// <param name="index"></param>
+    /// <param name="isOptional"></param>
+    /// <param name="isOut"></param>
+    /// <param name="isParameterArray"></param>
+    /// <param name="isRef"></param>
+    /// <param name="sourceLocation"></param>
     public ParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
       TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index, bool isOptional, bool isOut, bool isParameterArray, bool isRef, ISourceLocation sourceLocation)
       : base(sourceLocation) 
@@ -2056,6 +2258,12 @@ namespace Microsoft.Cci.Ast {
       this.flags = flags;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingSignature"></param>
+    /// <param name="containingBlock"></param>
+    /// <param name="template"></param>
     protected ParameterDeclaration(ISignatureDeclaration containingSignature, BlockStatement containingBlock, ParameterDeclaration template)
       : base(template.SourceLocation) {
       this.containingSignature = containingSignature;
@@ -2068,6 +2276,10 @@ namespace Microsoft.Cci.Ast {
       this.flags = template.flags;
     }
 
+    /// <summary>
+    /// Custom attributes that are to be persisted in the metadata.
+    /// </summary>
+    /// <value></value>
     public virtual IEnumerable<ICustomAttribute> Attributes {
       get {
         foreach (var sourceAttribute in this.SourceAttributes)
@@ -2076,14 +2288,23 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The compilation that contains this parameter declaration.
+    /// </summary>
     public Compilation Compilation {
       get { return this.Type.ContainingBlock.Compilation; }
     }
 
+    /// <summary>
+    /// The compilation part that contains this parameter declaration.
+    /// </summary>
     public CompilationPart CompilationPart {
       get { return this.Type.ContainingBlock.CompilationPart; }
     }
 
+    /// <summary>
+    /// The method or property that declares this parameter.
+    /// </summary>
     public ISignatureDeclaration ContainingSignature {
       get { 
         //^ assume this.containingSignature != null; 
@@ -2093,10 +2314,17 @@ namespace Microsoft.Cci.Ast {
     //^ [SpecPublic]
     ISignatureDeclaration/*?*/ containingSignature;
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected internal virtual IEnumerable<CustomModifier> CustomModifiers {
       get { return IteratorHelper.GetEmptyEnumerable<CustomModifier>(); }
     }
 
+    /// <summary>
+    /// A value that should be supplied as the corresponding argument value by callers that do not explicitly specify an argument value for this parameter.
+    /// This expression is only correct if it evaluates to a compile time constant.
+    /// </summary>
     public Expression DefaultValue {
       get
         //^^ requires this.HasDefaultValue;
@@ -2120,6 +2348,9 @@ namespace Microsoft.Cci.Ast {
     //^ [SpecPublic]
     private readonly int flags;
 
+    /// <summary>
+    /// True if the parameter has a default value that should be supplied as the argument value by a caller for which the argument value has not been explicitly specified.
+    /// </summary>
     public bool HasDefaultValue {
       get 
         //^ ensures this.DefaultValue is ICompileTimeConstant;
@@ -2129,33 +2360,56 @@ namespace Microsoft.Cci.Ast {
       //TODO: evaluate the expression and return false if the result is not a compile time constant
     }
 
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
     public ushort Index {
       get { return this.index; }
     }
     readonly ushort index;
 
+    /// <summary>
+    /// True if the argument value must be included in the marshalled arguments passed to a remote callee.
+    /// </summary>
     public bool IsIn {
       get { return (this.flags & 1) != 0; }
       //TODO: compute this from the custom attributes
     }
 
+    /// <summary>
+    /// This parameter has associated marshalling information.
+    /// </summary>
     public bool IsMarshalledExplicitly {
       get { return (this.flags & 4) != 0; }
       //TODO: compute this from the custom attributes
     }
 
+    /// <summary>
+    /// The parameter has custom modifiers.
+    /// </summary>
     internal protected virtual bool IsModified {
       get { return false; } //TODO: compute this. For example volatile fields have modifiers.
     }
 
+    /// <summary>
+    /// True if the argument value must be included in the marshalled arguments passed to a remote callee only if it is different from the default value (if there is one).
+    /// </summary>
     public bool IsOptional {
       get { return (this.flags & 16) != 0; }
     }
 
+    /// <summary>
+    /// True if the parameter is passed by reference and is always assigned to by the declaring method before it is referenced.
+    /// Corresponds to the out modifier in C#.
+    /// </summary>
     public bool IsOut {
       get { return (this.flags & 32) != 0; }
     }
 
+    /// <summary>
+    /// True if the parameter has the ParamArrayAttribute custom attribute.
+    /// </summary>
     public bool IsParameterArray {
       get
         //^ ensures result == ((this.flags & 64) != 0);
@@ -2164,11 +2418,20 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// True if the parameter is passed by reference. Corresponds to the ref modifier in C#.
+    /// </summary>
     public bool IsRef {
       get { return (this.flags & 128) != 0; }
     }
 
     // ^ [MustOverride]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingSignature"></param>
+    /// <param name="containingBlock"></param>
+    /// <returns></returns>
     public virtual ParameterDeclaration MakeShallowCopyFor(ISignatureDeclaration containingSignature, BlockStatement containingBlock) 
       //^ ensures result.GetType() == this.GetType();
     {
@@ -2176,11 +2439,18 @@ namespace Microsoft.Cci.Ast {
       return new ParameterDeclaration(containingSignature, containingBlock, this);
     }
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public NameDeclaration Name {
       get { return this.name; }
     }
     readonly NameDeclaration name;
 
+    /// <summary>
+    /// The element type of the parameter array.
+    /// </summary>
     public ITypeDefinition ParamArrayElementType {
       get
         //^^ requires this.IsParameterArray;
@@ -2191,10 +2461,17 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     protected virtual ParameterDefinition CreateParameterDefinition() {
       return new ParameterDefinition(this);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ParameterDefinition ParameterDefinition {
       get {
         if (this.parameterDefinition == null) {
@@ -2208,6 +2485,10 @@ namespace Microsoft.Cci.Ast {
     }
     ParameterDefinition/*?*/ parameterDefinition;
 
+    /// <summary>
+    /// Custom attributes that are explicitly specified in source. Some of these may not end up in persisted metadata.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
       get {
         List<SourceCustomAttribute> sourceAttributes;
@@ -2236,6 +2517,9 @@ namespace Microsoft.Cci.Ast {
       if (this.defaultValue != null) this.defaultValue.SetContainingExpression(containingExpression);
     }
 
+    /// <summary>
+    /// The type of argument value that corresponds to this parameter.
+    /// </summary>
     public TypeExpression Type {
       get { return this.type; }
     }
@@ -2258,6 +2542,23 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class PropertyDeclaration : TypeDeclarationMember, ISignatureDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="flags"></param>
+    /// <param name="visibility"></param>
+    /// <param name="type"></param>
+    /// <param name="implementedInterfaces"></param>
+    /// <param name="name"></param>
+    /// <param name="parameters"></param>
+    /// <param name="getterAttributes"></param>
+    /// <param name="getterBody"></param>
+    /// <param name="getterVisibility"></param>
+    /// <param name="setterAttributes"></param>
+    /// <param name="setterBody"></param>
+    /// <param name="setterVisibility"></param>
+    /// <param name="sourceLocation"></param>
     public PropertyDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
       Flags flags, TypeMemberVisibility visibility, TypeExpression type, List<TypeExpression>/*?*/ implementedInterfaces, NameDeclaration name, List<ParameterDeclaration>/*?*/ parameters,
       List<SourceCustomAttribute>/*?*/ getterAttributes, BlockStatement/*?*/ getterBody, TypeMemberVisibility getterVisibility,
@@ -2274,20 +2575,52 @@ namespace Microsoft.Cci.Ast {
       this.type = type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     [Flags]
     public new enum Flags { //Must remain same as EventDeclaration.Flags and be a prefix of MethodDeclaration.Flags
+      /// <summary>
+      /// 
+      /// </summary>
       New=int.MinValue,
+      /// <summary>
+      /// 
+      /// </summary>
       Unsafe=(New>>1)&int.MaxValue,
 
+      /// <summary>
+      /// 
+      /// </summary>
       Abstract=Unsafe>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       External=Abstract>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Override=External>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Sealed=Override>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Static=Sealed>>1,
+      /// <summary>
+      /// 
+      /// </summary>
       Virtual=Static>>1
 
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingTypeDeclaration"></param>
+    /// <param name="template"></param>
     protected PropertyDeclaration(TypeDeclaration containingTypeDeclaration, PropertyDeclaration template)
       : base(containingTypeDeclaration, template)
       //^ ensures this.containingTypeDeclaration == containingTypeDeclaration;
@@ -2311,6 +2644,9 @@ namespace Microsoft.Cci.Ast {
       //^ assume this.setter == null;
     }
 
+    /// <summary>
+    /// A compile time constant value that provides the default value for the property. (Who uses this and why?)
+    /// </summary>
     public Expression DefaultValue {
       get {
         //^ assume false; //this.HasDefaultValue must return false unless this routine is overridden.
@@ -2327,6 +2663,9 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// The method used to get the value of this property. May be absent (null).
+    /// </summary>
     public MethodDeclaration/*?*/ Getter {
       get {
         BlockStatement/*?*/ getterBody = this.GetterBody;
@@ -2383,6 +2722,9 @@ namespace Microsoft.Cci.Ast {
       get { return (TypeMemberVisibility)(this.flags >> 4) & TypeMemberVisibility.Mask; }
     }
 
+    /// <summary>
+    /// True if this property has a compile time constant associated with it that serves as a default value for the property. (Who uses this and why?)
+    /// </summary>
     public virtual bool HasDefaultValue {
       get { return false; }
     }
@@ -2484,6 +2826,10 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ParameterDeclaration> Parameters {
       get {
         List<ParameterDeclaration> parameters;
@@ -2513,6 +2859,10 @@ namespace Microsoft.Cci.Ast {
     }
     PropertyDefinition/*?*/ propertyDefinition;
 
+    /// <summary>
+    /// The name of this property, qualified with the name of an interface, if this property is the private implementation
+    /// of an interface property.
+    /// </summary>
     internal protected virtual IName QualifiedName {
       get {
         if (this.qualifiedName == null) {
@@ -2524,24 +2874,44 @@ namespace Microsoft.Cci.Ast {
         return this.qualifiedName;
       }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     protected IName/*?*/ qualifiedName;
 
+    /// <summary>
+    /// Custom attributes associated with the property's return value.
+    /// </summary>
     public virtual IEnumerable<ICustomAttribute> ReturnValueAttributes {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); } //TODO: implement this
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
     public virtual IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
+    /// <summary>
+    /// True if the getter return value is passed by reference (using a managed pointer).
+    /// </summary>
     public virtual bool ReturnValueIsByRef {
       get { return false; }
     }
 
+    /// <summary>
+    /// True if the getter return value has one or more custom modifiers associated with it.
+    /// </summary>
     public virtual bool ReturnValueIsModified {
       get { return false; }
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a type member before constructing the containing type declaration.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
     public override void SetContainingTypeDeclaration(TypeDeclaration containingTypeDeclaration, bool recurse) {
       base.SetContainingTypeDeclaration(containingTypeDeclaration, recurse);
       //^ assert this.ContainingTypeDeclaration == containingTypeDeclaration;
@@ -2564,6 +2934,9 @@ namespace Microsoft.Cci.Ast {
       //^ assume this.ContainingTypeDeclaration == containingTypeDeclaration;
     }
 
+    /// <summary>
+    /// The method used to set the value of this property. May be absent (null).
+    /// </summary>
     public MethodDeclaration/*?*/ Setter {
       get {
         BlockStatement/*?*/ setterBody = this.SetterBody;
@@ -2628,10 +3001,16 @@ namespace Microsoft.Cci.Ast {
       get { return (TypeMemberVisibility)(this.flags >> 8) & TypeMemberVisibility.Mask; }
     }
 
+    /// <summary>
+    /// The symbol table object that represents the metadata for this property.
+    /// </summary>
     public ISignature SignatureDefinition {
       get { return this.PropertyDefinition; }
     }
 
+    /// <summary>
+    /// An expression that denotes the type of the property.
+    /// </summary>
     public TypeExpression Type {
       get { return this.type; }
     }
@@ -2646,26 +3025,50 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   internal unsafe sealed class StaticDataSectionBlock : ISectionBlock {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="offset"></param>
+    /// <param name="data"></param>
     internal StaticDataSectionBlock(uint offset, byte[] data) {
       this.offset = offset;
       this.data = data;
     }
 
+    /// <summary>
+    /// Section where the block resides.
+    /// </summary>
+    /// <value></value>
     public PESectionKind PESectionKind {
       get { return PESectionKind.StaticData; }
     }
 
+    /// <summary>
+    /// Offset into section where the block resides.
+    /// </summary>
+    /// <value></value>
     public uint Offset {
       get { return this.offset; }
     }
     readonly uint offset;
 
+    /// <summary>
+    /// Size of the block.
+    /// </summary>
+    /// <value></value>
     public uint Size {
       get { return (uint)this.data.Length; }
     }
 
+    /// <summary>
+    /// Byte information stored in the block.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<byte> Data {
       get { return this.data; }
     }
@@ -2673,8 +3076,17 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class SignatureDeclaration : SourceItem, ISignatureDeclaration {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="parameters"></param>
+    /// <param name="sourceLocation"></param>
     public SignatureDeclaration(TypeExpression type, List<ParameterDeclaration> parameters, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.type = type;
@@ -2699,32 +3111,55 @@ namespace Microsoft.Cci.Ast {
     public override void Dispatch(SourceVisitor visitor) {
     }
 
+    /// <summary>
+    /// Makes a shallow copy of this signature.
+    /// </summary>
     public SignatureDeclaration MakeShallowCopyFor(BlockStatement containingBlock) {
       if (this.type.ContainingBlock == containingBlock) return this;
       return new SignatureDeclaration(containingBlock, this);
     }
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ParameterDeclaration> Parameters {
       get { return this.parameters.AsReadOnly(); }
     }
     readonly List<ParameterDeclaration> parameters;
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected internal virtual IEnumerable<CustomAttribute> ReturnValueAttributes {
       get { return IteratorHelper.GetEmptyEnumerable<CustomAttribute>(); } //TODO: compute this
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected internal virtual IEnumerable<CustomModifier> ReturnValueCustomModifiers {
       get { return IteratorHelper.GetEmptyEnumerable<CustomModifier>(); } //TODO: compute this
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected internal virtual bool ReturnValueIsByRef {
       get { return false; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected internal virtual bool ReturnValueIsModified {
       get { return false; } //TODO: compute this
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingBlock"></param>
     public virtual void SetContainingBlock(BlockStatement containingBlock) {
       DummyExpression containingExpression = new DummyExpression(containingBlock, SourceDummy.SourceLocation);
       this.Type.SetContainingExpression(containingExpression);
@@ -2732,6 +3167,9 @@ namespace Microsoft.Cci.Ast {
         parameter.SetContainingSignatureAndExpression(this, containingExpression);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public SignatureDefinition SignatureDefinition {
       get {
         if (this.signatureDefinition == null) {
@@ -2745,6 +3183,9 @@ namespace Microsoft.Cci.Ast {
     }
     SignatureDefinition/*?*/ signatureDefinition;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public TypeExpression Type {
       get { return this.type; }
     }
@@ -2802,9 +3243,18 @@ namespace Microsoft.Cci.Ast {
       this.flags = ((int)visibility)|(int)flags;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     [Flags]
     protected enum Flags {
+      /// <summary>
+      /// 
+      /// </summary>
       New=int.MinValue,
+      /// <summary>
+      /// 
+      /// </summary>
       Unsafe=(New>>1)&int.MaxValue,
     }
 
@@ -2874,8 +3324,14 @@ namespace Microsoft.Cci.Ast {
       }
     }
     //^ [SpecPublic]
+    /// <summary>
+    /// The type declaration that contains this member.
+    /// </summary>
     protected TypeDeclaration/*?*/ containingTypeDeclaration;
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected int flags;
 
     /// <summary>

@@ -8,8 +8,15 @@ using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
+  /// <summary>
+  /// A block of statements that can only be reached by branching to the first statement in the block.
+  /// </summary>
   public sealed class BasicBlock : BlockStatement {
 
+    /// <summary>
+    /// Allocates a block of statements that can only be reached by branching to the first statement in the block.
+    /// </summary>
+    /// <param name="startOffset">The IL offset of the first statement in the block.</param>
     public BasicBlock(uint startOffset) {
       this.StartOffset = startOffset;
     }

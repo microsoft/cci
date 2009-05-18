@@ -11,21 +11,52 @@ using Microsoft.Cci.Contracts;
 namespace Microsoft.Cci {
 
   /// <summary>
-  /// This visitor takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
+  /// This visitor takes a code model and rewrites it so that high level constructs such as anonymous delegates and yield statements
   /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
   /// </summary>
   public class CodeModelNormalizer : CodeAndContractMutator {
 
+    /// <summary>
+    /// Initializes a visitor that takes a code model and rewrites it so that high level constructs such as anonymous delegates and yield statements
+    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel. This constructor is used when
+    /// the code model was obtained by reading in a compiled unit of metadata via something like the PE reader. 
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
+    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
+    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     public CodeModelNormalizer(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
 
+    /// <summary>
+    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
+    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
+    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
+    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, copyOnlyIfNotAlreadyMutable, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
 
+    /// <summary>
+    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
+    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
+    /// </summary>
+    /// <param name="mutator"></param>
     public CodeModelNormalizer(CodeAndContractMutator mutator) 
       : base(mutator) {
     }
@@ -40,6 +71,12 @@ namespace Microsoft.Cci {
     Dictionary<IMethodDefinition, bool> isAlreadyNormalized = new Dictionary<IMethodDefinition, bool>();
 
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="body"></param>
+    /// <returns></returns>
     public ISourceMethodBody GetNormalizedSourceMethodBodyFor(IMethodDefinition method, IBlockStatement body) {
       this.closureLocals = new List<ILocalDefinition>();
       this.currentClosureClass = new NestedTypeDefinition();
@@ -311,6 +348,10 @@ namespace Microsoft.Cci {
       return new PreNormalizedCodeModelToILConverter(host, sourceLocationProvider, contractProvider);
     }
 
+    /// <summary>
+    /// Visits the specified anonymous delegate.
+    /// </summary>
+    /// <param name="anonymousDelegate">The anonymous delegate.</param>
     public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
       var method = new MethodDefinition();
       this.currentClosureClass.Methods.Add(method);
@@ -344,6 +385,10 @@ namespace Microsoft.Cci {
       return createDelegateInstance;
     }
 
+    /// <summary>
+    /// Visits the specified addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression">The addressable expression.</param>
     public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(addressableExpression.Definition, out boundField)) {
@@ -380,10 +425,18 @@ namespace Microsoft.Cci {
       return blockStatement;
     }
 
+    /// <summary>
+    /// Visits the specified block statement.
+    /// </summary>
+    /// <param name="blockStatement">The block statement.</param>
     public override IBlockStatement Visit(BlockStatement blockStatement) {
       return this.Visit(blockStatement, null, null);
     }
 
+    /// <summary>
+    /// Visits the specified bound expression.
+    /// </summary>
+    /// <param name="boundExpression">The bound expression.</param>
     public override IExpression Visit(BoundExpression boundExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
@@ -400,12 +453,20 @@ namespace Microsoft.Cci {
       return base.Visit(boundExpression);
     }
 
+    /// <summary>
+    /// Visits the specified global method definition.
+    /// </summary>
+    /// <param name="globalMethodDefinition">The global method definition.</param>
     public override IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
       var result = base.Visit(globalMethodDefinition);
       this.isAlreadyNormalized.Add(globalMethodDefinition, true);
       return result;
     }
 
+    /// <summary>
+    /// Visits the specified local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
       localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(localDeclarationStatement.LocalVariable));
       if (localDeclarationStatement.InitialValue != null) {
@@ -426,6 +487,10 @@ namespace Microsoft.Cci {
       return localDeclarationStatement;
     }
 
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
     public override IMethodBody Visit(IMethodBody methodBody) {
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null)
@@ -433,6 +498,11 @@ namespace Microsoft.Cci {
       return base.Visit(methodBody);
     }
 
+    /// <summary>
+    /// Visits the specified method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
     public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
       if (this.isAlreadyNormalized.ContainsKey(methodDefinition)) {
         object result = methodDefinition;
@@ -442,6 +512,10 @@ namespace Microsoft.Cci {
       return base.Visit(methodDefinition);
     }
 
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
     public override IMethodContract Visit(IMethodContract methodContract) {
       object/*?*/ result = null;
       if (this.cache.TryGetValue(methodContract, out result)) return (IMethodContract)result;
@@ -450,6 +524,10 @@ namespace Microsoft.Cci {
       return (IMethodContract)result;
     }
 
+    /// <summary>
+    /// Visits the specified method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
     public override MethodDefinition Visit(MethodDefinition methodDefinition) {
       if (this.stopTraversal) return methodDefinition;
       if (methodDefinition == Dummy.Method) return methodDefinition;
@@ -481,6 +559,10 @@ namespace Microsoft.Cci {
       return methodDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified target expression.
+    /// </summary>
+    /// <param name="targetExpression">The target expression.</param>
     public override ITargetExpression Visit(TargetExpression targetExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(targetExpression.Definition, out boundField)) {
@@ -492,6 +574,10 @@ namespace Microsoft.Cci {
       return base.Visit(targetExpression);
     }
 
+    /// <summary>
+    /// Visits the specified method definitions.
+    /// </summary>
+    /// <param name="methodDefinitions">The method definitions.</param>
     public override List<IMethodDefinition> Visit(List<IMethodDefinition> methodDefinitions) {
       int n = methodDefinitions.Count;
       List<IMethodDefinition> result = new List<IMethodDefinition>(n);
@@ -506,6 +592,10 @@ namespace Microsoft.Cci {
       return result;
     }
 
+    /// <summary>
+    /// Visits the specified nested type definitions.
+    /// </summary>
+    /// <param name="nestedTypeDefinitions">The nested type definitions.</param>
     public override List<INestedTypeDefinition> Visit(List<INestedTypeDefinition> nestedTypeDefinitions) {
       int n = nestedTypeDefinitions.Count;
       List<INestedTypeDefinition> result = new List<INestedTypeDefinition>(n);
@@ -522,22 +612,59 @@ namespace Microsoft.Cci {
 
   }
 
+  /// <summary>
+  /// This visitor takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
+  /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
+  /// </summary>
   public class MethodBodyNormalizer : CodeModelNormalizer {
 
+    /// <summary>
+    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
+    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
+    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
+    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     public MethodBodyNormalizer(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
 
+    /// <summary>
+    /// Visits the specified field reference.
+    /// </summary>
+    /// <param name="fieldReference">The field reference.</param>
     public override IFieldReference Visit(IFieldReference fieldReference) {
+      //Just return the reference as is. The base visitor will make a copy of the reference, which
+      //is inappropriate here because only the body of a method is being mutated (and hence all
+      //fields definitions will remain unchanged).
       return fieldReference;
     }
 
+    /// <summary>
+    /// Visits the specified method reference.
+    /// </summary>
+    /// <param name="methodReference">The method reference.</param>
     public override IMethodReference Visit(IMethodReference methodReference) {
+      //Just return the reference as is. The base visitor will make a copy of the reference, which
+      //is inappropriate here because only the body of a method is being mutated (and hence all
+      //method definitions will remain unchanged).
       return methodReference;
     }
 
+    /// <summary>
+    /// Visits the specified type reference.
+    /// </summary>
+    /// <param name="typeReference">The type reference.</param>
     public override ITypeReference Visit(ITypeReference typeReference) {
+      //Just return the reference as is. The base visitor will make a copy of the reference, which
+      //is inappropriate here because only the body of a method is being mutated (and hence all
+      //type definitions will remain unchanged).
       return typeReference;
     }
 

@@ -15,11 +15,22 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class AliasDeclaration : NamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="referencedNamespaceOrType"></param>
+    /// <param name="sourceLocation"></param>
     public AliasDeclaration(NameDeclaration name, Expression referencedNamespaceOrType, ISourceLocation sourceLocation)
       : base(name, sourceLocation) {
       this.referencedNamespaceOrType = referencedNamespaceOrType;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected AliasDeclaration(NamespaceDeclaration containingNamespaceDeclaration, AliasDeclaration template)
       : base(containingNamespaceDeclaration, template)
       //^ ensures containingNamespaceDeclaration == this.containingNamespaceDeclaration;
@@ -35,6 +46,11 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this namespace declarations member with the given namespace declaration as the containing namespace of the copy.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The namespace declaration that is to be the containing namespace of the copy.</param>
+    /// <returns></returns>
     public override NamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration) {
       if (targetNamespaceDeclaration == this.ContainingNamespaceDeclaration) return this;
       return new AliasDeclaration(targetNamespaceDeclaration, this);
@@ -120,6 +136,13 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a namespace member before constructing the namespace.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration">The containing namespace declaration.</param>
+    /// <param name="recurse">True if the method should be called recursively on members of nested namespace declarations.</param>
     public override void SetContainingNamespaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, bool recurse) {
       base.SetContainingNamespaceDeclaration(containingNamespaceDeclaration, recurse);
       if (!recurse) return;
@@ -129,7 +152,13 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public interface IAggregatableNamespaceDeclarationMember : INamespaceDeclarationMember, IContainerMember<NamespaceDeclaration> {
+    /// <summary>
+    /// 
+    /// </summary>
     INamespaceMember AggregatedMember { get; }
   }
 
@@ -138,10 +167,18 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class NamespaceDeclaration : SourceItem, IContainer<IAggregatableNamespaceDeclarationMember> {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocation"></param>
     protected NamespaceDeclaration(ISourceLocation sourceLocation)
       : base(sourceLocation) {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="template"></param>
     protected NamespaceDeclaration(NamespaceDeclaration template)
       : base(template.SourceLocation) 
     {
@@ -202,6 +239,9 @@ namespace Microsoft.Cci.Ast {
       return aliasList.AsReadOnly();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
       get {
         return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
@@ -223,6 +263,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// The compilation part that contains this namespace declaration.
+    /// </summary>
     public abstract CompilationPart CompilationPart { get; }
 
     /// <summary>
@@ -232,6 +275,10 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// A block statement that serves as the declaring block of any expressions that form part of the the namespace declaration
+    /// but that do not appear inside a method body.
+    /// </summary>
     public abstract BlockStatement DummyBlock { get; }
 
     /// <summary>
@@ -261,6 +308,13 @@ namespace Microsoft.Cci.Ast {
       return null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodName"></param>
+    /// <param name="ignoreCase"></param>
+    /// <param name="namespaceDeclaration"></param>
+    /// <returns></returns>
     public static object/*?*/ GetMethodExtensionGroup(IName methodName, bool ignoreCase, NamespaceDeclaration namespaceDeclaration) {
       object/*?*/ result = null;
       NamespaceDeclaration/*?*/ nsDecl = namespaceDeclaration as NamespaceDeclaration;
@@ -370,6 +424,10 @@ namespace Microsoft.Cci.Ast {
       return members.AsReadOnly();
     }
 
+    /// <summary>
+    /// Completes the two part construction of the namespace declaration by setting the containing nodes
+    /// of all of the nodes contained directly or indirectly inside this namespace declaration.
+    /// </summary>
     protected virtual void SetContainingNodes()
       //^ requires this.members != null;
     {
@@ -413,6 +471,9 @@ namespace Microsoft.Cci.Ast {
     }
     NamespaceScope/*?*/ scope;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
       get {
         if (this.cachedSourceAttributes == null)
@@ -420,8 +481,14 @@ namespace Microsoft.Cci.Ast {
         return this.cachedSourceAttributes;
       }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     protected IEnumerable<SourceCustomAttribute>/*?*/ cachedSourceAttributes;
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected List<SourceCustomAttribute>/*?*/ sourceAttributes;
 
     private IEnumerable<SourceCustomAttribute> ComputeCachedSourceAttributes() {
@@ -466,6 +533,9 @@ namespace Microsoft.Cci.Ast {
       return unitSetAliasList.AsReadOnly();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public abstract IUnitSetNamespace UnitSetNamespace { get; }
 
     /// <summary>
@@ -498,13 +568,26 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public abstract class NamespaceDeclarationMember : SourceItem, INamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="sourceLocation"></param>
     protected NamespaceDeclarationMember(NameDeclaration name, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.name = name;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceDeclarationMember(NamespaceDeclaration containingNamespaceDeclaration, NamespaceDeclarationMember template)
       : base(template.SourceLocation)
       //^ ensures containingNamespaceDeclaration == this.containingNamespaceDeclaration;
@@ -517,6 +600,10 @@ namespace Microsoft.Cci.Ast {
       this.containingNamespaceDeclaration = containingNamespaceDeclaration;
     }
 
+    /// <summary>
+    /// The namespace declaration in which this nested namespace declaration is nested.
+    /// </summary>
+    /// <value></value>
     public NamespaceDeclaration ContainingNamespaceDeclaration {
       get
         //^ ensures result == this.containingNamespaceDeclaration;
@@ -525,12 +612,24 @@ namespace Microsoft.Cci.Ast {
         return this.containingNamespaceDeclaration;
       }
     }
+    /// <summary>
+    /// The namespace declaration in which this nested namespace declaration is nested.
+    /// </summary>
     protected NamespaceDeclaration/*?*/ containingNamespaceDeclaration;
 
+    /// <summary>
+    /// Returns a shallow copy of this namespace declarations member with the given namespace declaration as the containing namespace of the copy.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The namespace declaration that is to be the containing namespace of the copy.</param>
     public abstract NamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration);
     //^ ensures result.GetType() == this.GetType();
     //^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
 
+    /// <summary>
+    /// The name of the member. For example the alias of an alias declaration, the name of nested namespace and so on.
+    /// Can be the empty name, for example if the construct is a namespace import.
+    /// </summary>
+    /// <value></value>
     public virtual NameDeclaration Name {
       get {
         return this.name;
@@ -543,6 +642,8 @@ namespace Microsoft.Cci.Ast {
     /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
     /// care not to call any other methods or property/event accessors on the object until after this method has been called.
     /// </summary>
+    /// <param name="containingNamespaceDeclaration">The containing namespace declaration.</param>
+    /// <param name="recurse">True if the method should be called recursively on members of nested namespace declarations.</param>
     public virtual void SetContainingNamespaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, bool recurse) {
       this.containingNamespaceDeclaration = containingNamespaceDeclaration;
     }
@@ -604,11 +705,22 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NamespaceImportDeclaration : NamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="importedNamespace"></param>
+    /// <param name="sourceLocation"></param>
     public NamespaceImportDeclaration(NameDeclaration name, NamespaceReferenceExpression importedNamespace, ISourceLocation sourceLocation)
       : base(name, sourceLocation) {
       this.importedNamespace = importedNamespace;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NamespaceImportDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceImportDeclaration template)
       : base(containingNamespaceDeclaration, template)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -617,6 +729,13 @@ namespace Microsoft.Cci.Ast {
       //^ assume this.containingNamespaceDeclaration == containingNamespaceDeclaration;
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a namespace member before constructing the namespace.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="recurse"></param>
     public override void SetContainingNamespaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, bool recurse) {
       base.SetContainingNamespaceDeclaration(containingNamespaceDeclaration, recurse);
       if (!recurse) return;
@@ -642,6 +761,11 @@ namespace Microsoft.Cci.Ast {
     readonly NamespaceReferenceExpression importedNamespace;
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this namespace declarations member with the given namespace declaration as the containing namespace of the copy.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The namespace declaration that is to be the containing namespace of the copy.</param>
+    /// <returns></returns>
     public override NamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration) {
       if (targetNamespaceDeclaration == this.ContainingNamespaceDeclaration) return this;
       return new NamespaceImportDeclaration(targetNamespaceDeclaration, this);
@@ -763,6 +887,13 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NestedNamespaceDeclaration : NamespaceDeclaration, IAggregatableNamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="members"></param>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="sourceLocation"></param>
     public NestedNamespaceDeclaration(NameDeclaration name, List<INamespaceDeclarationMember> members, List<SourceCustomAttribute>/*?*/ sourceAttributes, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.members = members;
@@ -770,6 +901,11 @@ namespace Microsoft.Cci.Ast {
       this.sourceAttributes = sourceAttributes;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected NestedNamespaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NestedNamespaceDeclaration template)
       : base(template)
       //^ ensures this.containingNamespaceDeclaration == containingNamespaceDeclaration;
@@ -778,6 +914,9 @@ namespace Microsoft.Cci.Ast {
       this.containingNamespaceDeclaration = containingNamespaceDeclaration;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public NamespaceDeclaration ContainingNamespaceDeclaration {
       get
         //^ ensures result == this.containingNamespaceDeclaration;
@@ -786,16 +925,30 @@ namespace Microsoft.Cci.Ast {
         return this.containingNamespaceDeclaration;
       }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     protected NamespaceDeclaration/*?*/ containingNamespaceDeclaration;
 
+    /// <summary>
+    /// Gets the compilation part.
+    /// </summary>
+    /// <value>The compilation part.</value>
     public override CompilationPart CompilationPart {
       get { return this.ContainingNamespaceDeclaration.CompilationPart; }
     }
 
+    /// <summary>
+    /// Creates the nested namespace.
+    /// </summary>
+    /// <returns></returns>
     protected virtual NestedUnitNamespace CreateNestedNamespace() {
       return new NestedUnitNamespace(this.ContainingNamespaceDeclaration.UnitNamespace, this.Name, this.Compilation.Result);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public override BlockStatement DummyBlock {
       get {
         if (this.dummyBlock == null) {
@@ -841,6 +994,10 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// Returns a shallow copy of this instance with the given namespace as the new containing namespace.
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
     public virtual NestedNamespaceDeclaration MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^ ensures result.GetType() == this.GetType();
       //^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
@@ -849,6 +1006,11 @@ namespace Microsoft.Cci.Ast {
       return new NestedNamespaceDeclaration(targetNamespaceDeclaration, this);
     }
 
+    /// <summary>
+    /// The name of the member. For example the alias of an alias declaration, the name of nested namespace and so on.
+    /// Can be the empty name, for example if the construct is a namespace import.
+    /// </summary>
+    /// <value></value>
     public NameDeclaration Name {
       get {
         return this.name;
@@ -881,6 +1043,10 @@ namespace Microsoft.Cci.Ast {
       this.SetContainingNodes();
     }
 
+    /// <summary>
+    /// The corresponding symbol table object. Effectively a namespace that unifies all of the namespace declarations with the same name for a particular unit.
+    /// </summary>
+    /// <value></value>
     public override IUnitNamespace UnitNamespace {
       get {
         return this.NestedUnitNamespace;
@@ -920,6 +1086,9 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public override IUnitSetNamespace UnitSetNamespace {
       get {
         if (this.unitSetNamespace == null) {
@@ -1002,6 +1171,14 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class OptionDeclaration : NamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="dummyName"></param>
+    /// <param name="compareStringsAsBinary"></param>
+    /// <param name="explicit"></param>
+    /// <param name="strict"></param>
+    /// <param name="sourceLocation"></param>
     public OptionDeclaration(NameDeclaration dummyName, bool compareStringsAsBinary, bool @explicit, bool strict, ISourceLocation sourceLocation)
       : base(dummyName, sourceLocation) {
       uint flags = 0;
@@ -1011,6 +1188,11 @@ namespace Microsoft.Cci.Ast {
       this.flags = flags;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected OptionDeclaration(NamespaceDeclaration containingNamespaceDeclaration, OptionDeclaration template)
       : base(containingNamespaceDeclaration, template)
       //^ ensures containingNamespaceDeclaration == this.containingNamespaceDeclaration;
@@ -1046,11 +1228,23 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration"></param>
+    /// <returns></returns>
     public override NamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration) {
       if (this.ContainingNamespaceDeclaration == targetNamespaceDeclaration) return this;
       return new OptionDeclaration(targetNamespaceDeclaration, this);
     }
 
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct a namespace member before constructing the namespace.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="recurse"></param>
     public override void SetContainingNamespaceDeclaration(NamespaceDeclaration containingNamespaceDeclaration, bool recurse) {
       base.SetContainingNamespaceDeclaration(containingNamespaceDeclaration, recurse);
       if (!recurse) return;
@@ -1110,6 +1304,9 @@ namespace Microsoft.Cci.Ast {
       this.compilationPart = compilationPart;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public bool CompareStringsAsBinary {
       get { return (this.flags & 1) != 0; }
     }
@@ -1123,6 +1320,9 @@ namespace Microsoft.Cci.Ast {
         return this.compilationPart;
       }
     }
+    /// <summary>
+    /// The compilation part for which this is the root namespace declaration.
+    /// </summary>
     protected CompilationPart/*?*/ compilationPart;
 
     /// <summary>
@@ -1254,11 +1454,21 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class UnitSetAliasDeclaration : NamespaceDeclarationMember {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="sourceLocation"></param>
     public UnitSetAliasDeclaration(NameDeclaration name, ISourceLocation sourceLocation)
       : base(name, sourceLocation)
     {
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingNamespaceDeclaration"></param>
+    /// <param name="template"></param>
     protected UnitSetAliasDeclaration(NamespaceDeclaration containingNamespaceDeclaration, UnitSetAliasDeclaration template)
       : base(containingNamespaceDeclaration, template)
       //^ ensures containingNamespaceDeclaration == this.containingNamespaceDeclaration;
@@ -1276,6 +1486,11 @@ namespace Microsoft.Cci.Ast {
     }
 
     //^ [MustOverride]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetNamespaceDeclaration"></param>
+    /// <returns></returns>
     public override NamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration) {
       if (targetNamespaceDeclaration == this.ContainingNamespaceDeclaration) return this;
       return new UnitSetAliasDeclaration(targetNamespaceDeclaration, this);

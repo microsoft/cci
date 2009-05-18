@@ -10,6 +10,9 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
+  /// <summary>
+  /// A metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
+  /// </summary>
   public sealed class SourceMethodBody : ISourceMethodBody {
 
     internal readonly ContractProvider/*?*/ contractProvider;
@@ -25,6 +28,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     byte alignment;
     bool contractsOnly;
 
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
+    /// </summary>
+    /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
@@ -36,11 +49,27 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.localVariables = new List<ILocalDefinition>(ilMethodBody.LocalVariables);
     }
 
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
+    /// </summary>
+    /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
+    /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
+    /// embedded in the given method body.</param>
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly) 
       : this(ilMethodBody, host, contractProvider, pdbReader) { 
       this.contractsOnly = contractsOnly; 
     }
 
+    /// <summary>
+    /// The collection of statements making up the body.
+    /// This is produced by either language parser or through decompilation of the Instructions.
+    /// </summary>
     public IBlockStatement Block {
       get {
         if (this.block == null)
@@ -52,34 +81,64 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     #region IMethodBody Members
 
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
+    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// A list exception data within the method body IL.
+    /// </summary>
     public System.Collections.Generic.IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
       get { return this.ilMethodBody.OperationExceptionInformation; }
     }
 
+    /// <summary>
+    /// True if the locals are initialized by zeroeing the stack upon method entry.
+    /// </summary>
     public bool LocalsAreZeroed {
       get { return this.ilMethodBody.LocalsAreZeroed; }
     }
 
+    /// <summary>
+    /// The local variables of the method.
+    /// </summary>
     public IEnumerable<ILocalDefinition> LocalVariables {
       get { return this.localVariables.AsReadOnly(); }
     }
 
+    /// <summary>
+    /// Definition of method whose body this is.
+    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// </summary>
     public IMethodDefinition MethodDefinition {
       get { return this.ilMethodBody.MethodDefinition; }
     }
 
+    /// <summary>
+    /// A list CLR IL operations that implement this method body.
+    /// </summary>
     public IEnumerable<IOperation> Operations {
       get { return this.ilMethodBody.Operations; }
     }
 
+    /// <summary>
+    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// </summary>
     public ushort MaxStack {
       get { return this.ilMethodBody.MaxStack; }
     }
 
+    /// <summary>
+    /// Any types that are implicitly defined in order to implement the body semantics.
+    /// In case of AST to instructions conversion this lists the types produced.
+    /// In case of instructions to AST decompilation this should ideally be list of all types
+    /// which are local to method.
+    /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get { return this.ilMethodBody.PrivateHelperTypes; }
     }

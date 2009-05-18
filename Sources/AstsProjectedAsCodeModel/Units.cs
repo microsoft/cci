@@ -845,6 +845,10 @@ namespace Microsoft.Cci.Ast {
 
     #region IUnitReference Members
 
+    /// <summary>
+    /// The referenced unit, or Dummy.Unit if the reference cannot be resolved.
+    /// </summary>
+    /// <value></value>
     public IUnit ResolvedUnit {
       get { return this; }
     }
@@ -861,10 +865,18 @@ namespace Microsoft.Cci.Ast {
 
     #region IReference Members
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get {
         foreach (CompilationPart compilationPart in this.Compilation.Parts)

@@ -467,7 +467,7 @@ namespace Microsoft.Cci {
     ITypeReference Type { get; }
 
     /// <summary>
-    /// if <c>true</c>, then the expression is side
+    /// True if the expression has no observable side effects.
     /// </summary>
     bool IsPure { get; }
   }

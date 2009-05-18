@@ -126,6 +126,10 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class Documentation {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="elements"></param>
     public Documentation(IEnumerable<DocumentationElement> elements) {
       this.elements = elements;
     }
@@ -164,6 +168,12 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class DocumentationAttribute : SourceItem {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="value"></param>
+    /// <param name="sourceLocation"></param>
     public DocumentationAttribute(IName name, string value, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.name = name;
@@ -193,6 +203,13 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class DocumentationElement : SourceItem {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="attributes"></param>
+    /// <param name="children"></param>
+    /// <param name="sourceLocation"></param>
     public DocumentationElement(IName name, IEnumerable<DocumentationAttribute> attributes, IEnumerable<DocumentationElement> children, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.attributes = attributes;
@@ -200,6 +217,11 @@ namespace Microsoft.Cci.Ast {
       this.name = name;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="sourceLocation"></param>
     public DocumentationElement(string text, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.name = Dummy.Name;
@@ -446,20 +468,37 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public class NameDeclaration : IName, ISourceItem {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="sourceLocation"></param>
     public NameDeclaration(IName name, ISourceLocation sourceLocation) {
       this.sourceLocation = sourceLocation;
       this.name = name;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetCompilation"></param>
+    /// <param name="template"></param>
     protected NameDeclaration(Compilation targetCompilation, NameDeclaration template) {
       this.sourceLocation = template.SourceLocation;
       this.name = targetCompilation.NameTable.GetNameFor(template.Value);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public virtual void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// The name being declared.
+    /// </summary>
     public IName Name {
       get { return this.name; }
     }
@@ -472,24 +511,46 @@ namespace Microsoft.Cci.Ast {
       return new NameDeclaration(targetCompilation, this);
     }
 
+    /// <summary>
+    /// The location in the source document that has been parsed to construct this item.
+    /// </summary>
+    /// <value></value>
     public ISourceLocation SourceLocation {
       get { return this.sourceLocation; }
     }
     readonly ISourceLocation sourceLocation;
 
     //^ [Confined]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
       return "NameDeclaration{Name="+this.name.Value+"}";
     }
 
+    /// <summary>
+    /// An integer that is unique within the pool from which the name instance has been allocated. Useful as a hashtable key.
+    /// </summary>
+    /// <value></value>
     public int UniqueKey {
       get { return this.name.UniqueKey; }
     }
 
+    /// <summary>
+    /// An integer that is unique within the pool from which the name instance has been allocated. Useful as a hashtable key.
+    /// All name instances in the pool that have the same string value when ignoring the case of the characters in the string
+    /// will have the same key value.
+    /// </summary>
+    /// <value></value>
     public int UniqueKeyIgnoringCase {
       get { return this.name.UniqueKeyIgnoringCase; }
     }
 
+    /// <summary>
+    /// The string value corresponding to this name.
+    /// </summary>
+    /// <value></value>
     public string Value {
       get { return this.name.Value; }
     }
@@ -675,6 +736,9 @@ namespace Microsoft.Cci.Ast {
     }
     readonly List<Expression> arguments;
 
+    /// <summary>
+    /// A reference to the constructor of the custom attribute.
+    /// </summary>
     public IMethodReference Constructor {
       get {
         if (this.constructor == null)
@@ -708,6 +772,10 @@ namespace Microsoft.Cci.Ast {
         return this.containingBlock; 
       }
     }
+    /// <summary>
+    /// The (dummy) block used to provide a scope chain for the type expression and the argument expressions.
+    /// Writeable by derived classes to allow for delayed initialization.
+    /// </summary>
     protected BlockStatement/*?*/ containingBlock;
 
     /// <summary>

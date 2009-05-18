@@ -359,17 +359,23 @@ namespace Microsoft.Cci {
     void Visit(IYieldReturnStatement yieldReturnStatement);
   }
 
-#pragma warning disable 1591
   /// <summary>
   /// A visitor base class that traverses the code model in depth first, left to right order.
   /// </summary>
   public class BaseCodeTraverser : BaseMetadataTraverser, ICodeVisitor {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BaseCodeTraverser() {
     }
 
     #region ICodeVisitor Members
 
+    /// <summary>
+    /// Performs some computation with the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
     public virtual void Visit(IAddition addition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -382,6 +388,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
     public virtual void Visit(IAddressableExpression addressableExpression)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -400,6 +410,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
     public virtual void Visit(IAddressDereference addressDereference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -411,6 +425,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
     public virtual void Visit(IAddressOf addressOf)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -422,6 +440,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
     public virtual void Visit(IAnonymousDelegate anonymousDelegate)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -434,6 +456,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
     public virtual void Visit(IAssertStatement assertStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -445,6 +471,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified assignments.
+    /// </summary>
+    /// <param name="assignments">The assignments.</param>
     public virtual void Visit(IEnumerable<IAssignment> assignments)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -457,6 +487,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
     public virtual void Visit(IAssignment assignment)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -469,6 +503,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
     public virtual void Visit(IAssumeStatement assumeStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -480,11 +518,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given base class reference expression.
+    /// </summary>
+    /// <param name="baseClassReference"></param>
     public virtual void Visit(IBaseClassReference baseClassReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given bitwise and expression.
+    /// </summary>
+    /// <param name="bitwiseAnd"></param>
     public virtual void Visit(IBitwiseAnd bitwiseAnd)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -497,6 +543,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given bitwise or expression.
+    /// </summary>
+    /// <param name="bitwiseOr"></param>
     public virtual void Visit(IBitwiseOr bitwiseOr)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -509,6 +559,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
     public virtual void Visit(IBlockExpression blockExpression)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -521,6 +575,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given statement block.
+    /// </summary>
+    /// <param name="block"></param>
     public virtual void Visit(IBlockStatement block)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -532,6 +590,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the cast-if-possible expression.
+    /// </summary>
+    /// <param name="castIfPossible"></param>
     public virtual void Visit(ICastIfPossible castIfPossible)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -544,6 +606,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified catch clauses.
+    /// </summary>
+    /// <param name="catchClauses">The catch clauses.</param>
     public virtual void Visit(IEnumerable<ICatchClause> catchClauses)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -556,6 +622,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given catch clause.
+    /// </summary>
+    /// <param name="catchClause"></param>
     public virtual void Visit(ICatchClause catchClause)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -569,6 +639,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given check-if-instance expression.
+    /// </summary>
+    /// <param name="checkIfInstance"></param>
     public virtual void Visit(ICheckIfInstance checkIfInstance)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -581,11 +655,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given compile time constant.
+    /// </summary>
+    /// <param name="constant"></param>
     public virtual void Visit(ICompileTimeConstant constant)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given conversion expression.
+    /// </summary>
+    /// <param name="conversion"></param>
     public virtual void Visit(IConversion conversion)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -597,6 +679,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given conditional expression.
+    /// </summary>
+    /// <param name="conditional"></param>
     public virtual void Visit(IConditional conditional)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -610,6 +696,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement"></param>
     public virtual void Visit(IConditionalStatement conditionalStatement)
       //^ ensures this.path.Count == old(this.path.Count);
    {
@@ -623,6 +713,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given continue statement.
+    /// </summary>
+    /// <param name="continueStatement"></param>
     public virtual void Visit(IContinueStatement continueStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -633,6 +727,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
     public virtual void Visit(ICreateArray createArray)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -645,6 +743,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given constructor call expression.
+    /// </summary>
+    /// <param name="createObjectInstance"></param>
     public virtual void Visit(ICreateObjectInstance createObjectInstance)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -656,6 +758,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the anonymous object creation expression.
+    /// </summary>
+    /// <param name="createDelegateInstance"></param>
     public virtual void Visit(ICreateDelegateInstance createDelegateInstance)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -668,6 +774,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
     public virtual void Visit(IArrayIndexer arrayIndexer)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -683,6 +793,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Performs some computation with the given bound expression.
     /// </summary>
+    /// <param name="boundExpression"></param>
     public virtual void Visit(IBoundExpression boundExpression) {
       if (this.stopTraversal) return;
       this.path.Push(boundExpression);
@@ -691,6 +802,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given custom attribute.
+    /// </summary>
+    /// <param name="customAttribute"></param>
     public override void Visit(ICustomAttribute customAttribute)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -702,6 +817,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given defalut value expression.
+    /// </summary>
+    /// <param name="defaultValue"></param>
     public virtual void Visit(IDefaultValue defaultValue)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -713,6 +832,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement"></param>
     public virtual void Visit(IDebuggerBreakStatement debuggerBreakStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -723,6 +846,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given division expression.
+    /// </summary>
+    /// <param name="division"></param>
     public virtual void Visit(IDivision division)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -735,6 +862,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement"></param>
     public virtual void Visit(IDoUntilStatement doUntilStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -747,6 +878,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given empty statement.
+    /// </summary>
+    /// <param name="emptyStatement"></param>
     public virtual void Visit(IEmptyStatement emptyStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -757,6 +892,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given equality expression.
+    /// </summary>
+    /// <param name="equality"></param>
     public virtual void Visit(IEquality equality)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -769,6 +908,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given exclusive or expression.
+    /// </summary>
+    /// <param name="exclusiveOr"></param>
     public virtual void Visit(IExclusiveOr exclusiveOr)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -781,6 +924,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified expressions.
+    /// </summary>
+    /// <param name="expressions">The expressions.</param>
     public virtual void Visit(IEnumerable<IExpression> expressions)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -793,11 +940,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given expression.
+    /// </summary>
+    /// <param name="expression"></param>
     public virtual void Visit(IExpression expression) {
       if (this.stopTraversal) return;
       expression.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given expression statement.
+    /// </summary>
+    /// <param name="expressionStatement"></param>
     public virtual void Visit(IExpressionStatement expressionStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -809,6 +964,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given field definition.
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
     public override void Visit(IFieldDefinition fieldDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -822,6 +981,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given foreach statement.
+    /// </summary>
+    /// <param name="forEachStatement"></param>
     public virtual void Visit(IForEachStatement forEachStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -834,6 +997,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given for statement.
+    /// </summary>
+    /// <param name="forStatement"></param>
     public virtual void Visit(IForStatement forStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -848,6 +1015,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given get type of typed reference expression.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference"></param>
     public virtual void Visit(IGetTypeOfTypedReference getTypeOfTypedReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -859,6 +1030,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given get value of typed reference expression.
+    /// </summary>
+    /// <param name="getValueOfTypedReference"></param>
     public virtual void Visit(IGetValueOfTypedReference getValueOfTypedReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -871,6 +1046,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given goto statement.
+    /// </summary>
+    /// <param name="gotoStatement"></param>
     public virtual void Visit(IGotoStatement gotoStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -881,11 +1060,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement"></param>
     public virtual void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given greater-than expression.
+    /// </summary>
+    /// <param name="greaterThan"></param>
     public virtual void Visit(IGreaterThan greaterThan)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -898,6 +1085,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given greater-than-or-equal expression.
+    /// </summary>
+    /// <param name="greaterThanOrEqual"></param>
     public virtual void Visit(IGreaterThanOrEqual greaterThanOrEqual)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -910,6 +1101,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement"></param>
     public virtual void Visit(ILabeledStatement labeledStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -921,6 +1116,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given left shift expression.
+    /// </summary>
+    /// <param name="leftShift"></param>
     public virtual void Visit(ILeftShift leftShift)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -933,6 +1132,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given less-than expression.
+    /// </summary>
+    /// <param name="lessThan"></param>
     public virtual void Visit(ILessThan lessThan)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -945,6 +1148,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given less-than-or-equal expression.
+    /// </summary>
+    /// <param name="lessThanOrEqual"></param>
     public virtual void Visit(ILessThanOrEqual lessThanOrEqual)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -957,6 +1164,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement"></param>
     public virtual void Visit(ILocalDeclarationStatement localDeclarationStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -969,6 +1180,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given lock statement.
+    /// </summary>
+    /// <param name="lockStatement"></param>
     public virtual void Visit(ILockStatement lockStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -981,6 +1196,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given logical not expression.
+    /// </summary>
+    /// <param name="logicalNot"></param>
     public virtual void Visit(ILogicalNot logicalNot)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -992,6 +1211,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given break statement.
+    /// </summary>
+    /// <param name="breakStatement"></param>
     public virtual void Visit(IBreakStatement breakStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1002,6 +1225,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given make typed reference expression.
+    /// </summary>
+    /// <param name="makeTypedReference"></param>
     public virtual void Visit(IMakeTypedReference makeTypedReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1013,6 +1240,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
     public virtual void Visit(ISourceMethodBody methodBody)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1025,6 +1256,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given method body.
+    /// </summary>
+    /// <param name="methodBody"></param>
     public override void Visit(IMethodBody methodBody)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1040,6 +1275,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
     public virtual void Visit(IMethodCall methodCall)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1053,6 +1292,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given modulus expression.
+    /// </summary>
+    /// <param name="modulus"></param>
     public virtual void Visit(IModulus modulus)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1065,6 +1308,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given multiplication expression.
+    /// </summary>
+    /// <param name="multiplication"></param>
     public virtual void Visit(IMultiplication multiplication)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1077,6 +1324,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified named arguments.
+    /// </summary>
+    /// <param name="namedArguments">The named arguments.</param>
     public virtual void Visit(IEnumerable<INamedArgument> namedArguments)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1089,6 +1340,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
     public virtual void Visit(INamedArgument namedArgument)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1100,6 +1355,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given not equality expression.
+    /// </summary>
+    /// <param name="notEquality"></param>
     public virtual void Visit(INotEquality notEquality)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1112,6 +1371,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given old value expression.
+    /// </summary>
+    /// <param name="oldValue"></param>
     public virtual void Visit(IOldValue oldValue)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1123,6 +1386,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given one's complement expression.
+    /// </summary>
+    /// <param name="onesComplement"></param>
     public virtual void Visit(IOnesComplement onesComplement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1134,6 +1401,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given out argument expression.
+    /// </summary>
+    /// <param name="outArgument"></param>
     public virtual void Visit(IOutArgument outArgument)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1145,6 +1416,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given parameter definition.
+    /// </summary>
+    /// <param name="parameterDefinition"></param>
     public override void Visit(IParameterDefinition parameterDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1158,6 +1433,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given pointer call.
+    /// </summary>
+    /// <param name="pointerCall"></param>
     public virtual void Visit(IPointerCall pointerCall)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1170,6 +1449,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given property definition.
+    /// </summary>
+    /// <param name="propertyDefinition"></param>
     public override void Visit(IPropertyDefinition propertyDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1184,6 +1467,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given ref argument expression.
+    /// </summary>
+    /// <param name="refArgument"></param>
     public virtual void Visit(IRefArgument refArgument)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1195,6 +1482,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given resource usage statement.
+    /// </summary>
+    /// <param name="resourceUseStatement"></param>
     public virtual void Visit(IResourceUseStatement resourceUseStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1207,6 +1498,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement"></param>
     public virtual void Visit(IRethrowStatement rethrowStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1217,6 +1512,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the return statement.
+    /// </summary>
+    /// <param name="returnStatement"></param>
     public virtual void Visit(IReturnStatement returnStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1237,6 +1536,10 @@ namespace Microsoft.Cci {
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given right shift expression.
+    /// </summary>
+    /// <param name="rightShift"></param>
     public virtual void Visit(IRightShift rightShift)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1249,6 +1552,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given stack array create expression.
+    /// </summary>
+    /// <param name="stackArrayCreate"></param>
     public virtual void Visit(IStackArrayCreate stackArrayCreate)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1261,11 +1568,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression"></param>
     public virtual void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given sizeof() expression.
+    /// </summary>
+    /// <param name="sizeOf"></param>
     public virtual void Visit(ISizeOf sizeOf)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1277,6 +1592,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified statements.
+    /// </summary>
+    /// <param name="statements">The statements.</param>
     public virtual void Visit(IEnumerable<IStatement> statements)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1289,11 +1608,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
     public virtual void Visit(IStatement statement) {
       if (this.stopTraversal) return;
       statement.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given subtraction expression.
+    /// </summary>
+    /// <param name="subtraction"></param>
     public virtual void Visit(ISubtraction subtraction)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1306,6 +1633,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified switch cases.
+    /// </summary>
+    /// <param name="switchCases">The switch cases.</param>
     public virtual void Visit(IEnumerable<ISwitchCase> switchCases)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1318,6 +1649,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given switch case.
+    /// </summary>
+    /// <param name="switchCase"></param>
     public virtual void Visit(ISwitchCase switchCase)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1331,6 +1666,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given switch statement.
+    /// </summary>
+    /// <param name="switchStatement"></param>
     public virtual void Visit(ISwitchStatement switchStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1343,6 +1682,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
     public virtual void Visit(ITargetExpression targetExpression)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1364,11 +1707,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
     public virtual void Visit(IThisReference thisReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the throw statement.
+    /// </summary>
+    /// <param name="throwStatement"></param>
     public virtual void Visit(IThrowStatement throwStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1381,6 +1732,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the try-catch-filter-finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement"></param>
     public virtual void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1395,6 +1750,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given tokenof() expression.
+    /// </summary>
+    /// <param name="tokenOf"></param>
     public virtual void Visit(ITokenOf tokenOf)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1415,6 +1774,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given typeof() expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
     public virtual void Visit(ITypeOf typeOf)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1426,6 +1789,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given unary negation expression.
+    /// </summary>
+    /// <param name="unaryNegation"></param>
     public virtual void Visit(IUnaryNegation unaryNegation)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1437,6 +1804,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given unary plus expression.
+    /// </summary>
+    /// <param name="unaryPlus"></param>
     public virtual void Visit(IUnaryPlus unaryPlus)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1448,6 +1819,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given vector length expression.
+    /// </summary>
+    /// <param name="vectorLength"></param>
     public virtual void Visit(IVectorLength vectorLength)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1459,6 +1834,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement"></param>
     public virtual void Visit(IWhileDoStatement whileDoStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1471,11 +1850,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
     public virtual void Visit(IYieldBreakStatement yieldBreakStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement"></param>
     public virtual void Visit(IYieldReturnStatement yieldReturnStatement)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1495,288 +1882,654 @@ namespace Microsoft.Cci {
   /// </summary>
   public class BaseCodeVisitor : BaseMetadataVisitor, ICodeVisitor {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BaseCodeVisitor() {
     }
 
     #region IMetadataVisitor Members
 
+    /// <summary>
+    /// Performs some computation with the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
     public virtual void Visit(IAddition addition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
     public virtual void Visit(IAddressableExpression addressableExpression) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
     public virtual void Visit(IAddressDereference addressDereference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
     public virtual void Visit(IAddressOf addressOf) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
     public virtual void Visit(IAnonymousDelegate anonymousDelegate) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
     public virtual void Visit(IArrayIndexer arrayIndexer) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
     public virtual void Visit(IAssertStatement assertStatement) {
     }
 
+    /// <summary>
+    /// Visits the specified assignments.
+    /// </summary>
+    /// <param name="assignments">The assignments.</param>
     public virtual void Visit(IEnumerable<IAssignment> assignments) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
     public virtual void Visit(IAssignment assignment) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
     public virtual void Visit(IAssumeStatement assumeStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given base class reference expression.
+    /// </summary>
+    /// <param name="baseClassReference"></param>
     public virtual void Visit(IBaseClassReference baseClassReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given bitwise and expression.
+    /// </summary>
+    /// <param name="bitwiseAnd"></param>
     public virtual void Visit(IBitwiseAnd bitwiseAnd) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given bitwise or expression.
+    /// </summary>
+    /// <param name="bitwiseOr"></param>
     public virtual void Visit(IBitwiseOr bitwiseOr) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
     public virtual void Visit(IBlockExpression blockExpression) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given statement block.
+    /// </summary>
+    /// <param name="block"></param>
     public virtual void Visit(IBlockStatement block) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given break statement.
+    /// </summary>
+    /// <param name="breakStatement"></param>
     public virtual void Visit(IBreakStatement breakStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the cast-if-possible expression.
+    /// </summary>
+    /// <param name="castIfPossible"></param>
     public virtual void Visit(ICastIfPossible castIfPossible) {
     }
 
+    /// <summary>
+    /// Visits the specified catch clauses.
+    /// </summary>
+    /// <param name="catchClauses">The catch clauses.</param>
     public virtual void Visit(IEnumerable<ICatchClause> catchClauses) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given catch clause.
+    /// </summary>
+    /// <param name="catchClause"></param>
     public virtual void Visit(ICatchClause catchClause) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given check-if-instance expression.
+    /// </summary>
+    /// <param name="checkIfInstance"></param>
     public virtual void Visit(ICheckIfInstance checkIfInstance) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given compile time constant.
+    /// </summary>
+    /// <param name="constant"></param>
     public virtual void Visit(ICompileTimeConstant constant) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given conversion expression.
+    /// </summary>
+    /// <param name="conversion"></param>
     public virtual void Visit(IConversion conversion) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given conditional expression.
+    /// </summary>
+    /// <param name="conditional"></param>
     public virtual void Visit(IConditional conditional) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement"></param>
     public virtual void Visit(IConditionalStatement conditionalStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given continue statement.
+    /// </summary>
+    /// <param name="continueStatement"></param>
     public virtual void Visit(IContinueStatement continueStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
     public virtual void Visit(ICreateArray createArray) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given constructor call expression.
+    /// </summary>
+    /// <param name="createObjectInstance"></param>
     public virtual void Visit(ICreateObjectInstance createObjectInstance) {
     }
 
+    /// <summary>
+    /// Performs some computation with the anonymous object creation expression.
+    /// </summary>
+    /// <param name="createDelegateInstance"></param>
     public virtual void Visit(ICreateDelegateInstance createDelegateInstance) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given defalut value expression.
+    /// </summary>
+    /// <param name="defaultValue"></param>
     public virtual void Visit(IDefaultValue defaultValue) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given division expression.
+    /// </summary>
+    /// <param name="division"></param>
     public virtual void Visit(IDivision division) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement"></param>
     public virtual void Visit(IDoUntilStatement doUntilStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given empty statement.
+    /// </summary>
+    /// <param name="emptyStatement"></param>
     public virtual void Visit(IEmptyStatement emptyStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given equality expression.
+    /// </summary>
+    /// <param name="equality"></param>
     public virtual void Visit(IEquality equality) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given exclusive or expression.
+    /// </summary>
+    /// <param name="exclusiveOr"></param>
     public virtual void Visit(IExclusiveOr exclusiveOr) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
     public virtual void Visit(IBoundExpression boundExpression) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement"></param>
     public virtual void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given expression.
+    /// </summary>
+    /// <param name="expression"></param>
     public virtual void Visit(IExpression expression) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given expression statement.
+    /// </summary>
+    /// <param name="expressionStatement"></param>
     public virtual void Visit(IExpressionStatement expressionStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given foreach statement.
+    /// </summary>
+    /// <param name="forEachStatement"></param>
     public virtual void Visit(IForEachStatement forEachStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given for statement.
+    /// </summary>
+    /// <param name="forStatement"></param>
     public virtual void Visit(IForStatement forStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given get type of typed reference expression.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference"></param>
     public virtual void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given get value of typed reference expression.
+    /// </summary>
+    /// <param name="getValueOfTypedReference"></param>
     public virtual void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given goto statement.
+    /// </summary>
+    /// <param name="gotoStatement"></param>
     public virtual void Visit(IGotoStatement gotoStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement"></param>
     public virtual void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given greater-than expression.
+    /// </summary>
+    /// <param name="greaterThan"></param>
     public virtual void Visit(IGreaterThan greaterThan) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given greater-than-or-equal expression.
+    /// </summary>
+    /// <param name="greaterThanOrEqual"></param>
     public virtual void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement"></param>
     public virtual void Visit(ILabeledStatement labeledStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given left shift expression.
+    /// </summary>
+    /// <param name="leftShift"></param>
     public virtual void Visit(ILeftShift leftShift) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given less-than expression.
+    /// </summary>
+    /// <param name="lessThan"></param>
     public virtual void Visit(ILessThan lessThan) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given less-than-or-equal expression.
+    /// </summary>
+    /// <param name="lessThanOrEqual"></param>
     public virtual void Visit(ILessThanOrEqual lessThanOrEqual) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement"></param>
     public virtual void Visit(ILocalDeclarationStatement localDeclarationStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given lock statement.
+    /// </summary>
+    /// <param name="lockStatement"></param>
     public virtual void Visit(ILockStatement lockStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given logical not expression.
+    /// </summary>
+    /// <param name="logicalNot"></param>
     public virtual void Visit(ILogicalNot logicalNot) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given make typed reference expression.
+    /// </summary>
+    /// <param name="makeTypedReference"></param>
     public virtual void Visit(IMakeTypedReference makeTypedReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
     public virtual void Visit(IMethodCall methodCall) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given modulus expression.
+    /// </summary>
+    /// <param name="modulus"></param>
     public virtual void Visit(IModulus modulus) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given multiplication expression.
+    /// </summary>
+    /// <param name="multiplication"></param>
     public virtual void Visit(IMultiplication multiplication) {
     }
 
+    /// <summary>
+    /// Visits the specified named arguments.
+    /// </summary>
+    /// <param name="namedArguments">The named arguments.</param>
     public virtual void Visit(IEnumerable<INamedArgument> namedArguments) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
     public virtual void Visit(INamedArgument namedArgument) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given not equality expression.
+    /// </summary>
+    /// <param name="notEquality"></param>
     public virtual void Visit(INotEquality notEquality) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given old value expression.
+    /// </summary>
+    /// <param name="oldValue"></param>
     public virtual void Visit(IOldValue oldValue) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given one's complement expression.
+    /// </summary>
+    /// <param name="onesComplement"></param>
     public virtual void Visit(IOnesComplement onesComplement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given out argument expression.
+    /// </summary>
+    /// <param name="outArgument"></param>
     public virtual void Visit(IOutArgument outArgument) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given pointer call.
+    /// </summary>
+    /// <param name="pointerCall"></param>
     public virtual void Visit(IPointerCall pointerCall) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given ref argument expression.
+    /// </summary>
+    /// <param name="refArgument"></param>
     public virtual void Visit(IRefArgument refArgument) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given resource usage statement.
+    /// </summary>
+    /// <param name="resourceUseStatement"></param>
     public virtual void Visit(IResourceUseStatement resourceUseStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement"></param>
     public virtual void Visit(IRethrowStatement rethrowStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the return statement.
+    /// </summary>
+    /// <param name="returnStatement"></param>
     public virtual void Visit(IReturnStatement returnStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given return value expression.
+    /// </summary>
+    /// <param name="returnValue"></param>
     public virtual void Visit(IReturnValue returnValue) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given right shift expression.
+    /// </summary>
+    /// <param name="rightShift"></param>
     public virtual void Visit(IRightShift rightShift) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given stack array create expression.
+    /// </summary>
+    /// <param name="stackArrayCreate"></param>
     public virtual void Visit(IStackArrayCreate stackArrayCreate) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression"></param>
     public virtual void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given sizeof() expression.
+    /// </summary>
+    /// <param name="sizeOf"></param>
     public virtual void Visit(ISizeOf sizeOf) {
     }
 
+    /// <summary>
+    /// Visits the specified statements.
+    /// </summary>
+    /// <param name="statements">The statements.</param>
     public virtual void Visit(IEnumerable<IStatement> statements) {
     }
 
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
     public virtual void Visit(IStatement statement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given subtraction expression.
+    /// </summary>
+    /// <param name="subtraction"></param>
     public virtual void Visit(ISubtraction subtraction) {
     }
 
+    /// <summary>
+    /// Visits the specified switch cases.
+    /// </summary>
+    /// <param name="switchCases">The switch cases.</param>
     public virtual void Visit(IEnumerable<ISwitchCase> switchCases) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given switch case.
+    /// </summary>
+    /// <param name="switchCase"></param>
     public virtual void Visit(ISwitchCase switchCase) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given switch statement.
+    /// </summary>
+    /// <param name="switchStatement"></param>
     public virtual void Visit(ISwitchStatement switchStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
     public virtual void Visit(ITargetExpression targetExpression) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
     public virtual void Visit(IThisReference thisReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the throw statement.
+    /// </summary>
+    /// <param name="throwStatement"></param>
     public virtual void Visit(IThrowStatement throwStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the try-catch-filter-finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement"></param>
     public virtual void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given tokenof() expression.
+    /// </summary>
+    /// <param name="tokenOf"></param>
     public virtual void Visit(ITokenOf tokenOf) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given typeof() expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
     public virtual void Visit(ITypeOf typeOf) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given unary negation expression.
+    /// </summary>
+    /// <param name="unaryNegation"></param>
     public virtual void Visit(IUnaryNegation unaryNegation) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given unary plus expression.
+    /// </summary>
+    /// <param name="unaryPlus"></param>
     public virtual void Visit(IUnaryPlus unaryPlus) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given vector length expression.
+    /// </summary>
+    /// <param name="vectorLength"></param>
     public virtual void Visit(IVectorLength vectorLength) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement"></param>
     public virtual void Visit(IWhileDoStatement whileDoStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
     public virtual void Visit(IYieldBreakStatement yieldBreakStatement) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement"></param>
     public virtual void Visit(IYieldReturnStatement yieldReturnStatement) {
     }
 
     #endregion
   }
 
-#pragma warning restore 1591
 }
 
 namespace Microsoft.Cci.Contracts {

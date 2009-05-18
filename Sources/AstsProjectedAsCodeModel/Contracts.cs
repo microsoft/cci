@@ -76,6 +76,9 @@ namespace Microsoft.Cci.Ast {
     }
     bool? hasErrors;
 
+    /// <summary>
+    /// Checks for errors and return true if any are found.
+    /// </summary>
     protected abstract bool CheckForErrorsAndReturnTrueIfAnyAreFound();
   }
 
@@ -84,11 +87,21 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class Invariant : SourceItem, IErrorCheckable {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="sourceLocation"></param>
     protected Invariant(Expression condition, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.condition = condition;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="containingBlock"></param>
+    /// <param name="template"></param>
     protected Invariant(BlockStatement containingBlock, Invariant template)
       : base(template.SourceLocation) {
       this.condition = template.condition.MakeCopyFor(containingBlock);
@@ -177,6 +190,10 @@ namespace Microsoft.Cci.Ast {
     }
     readonly IEnumerable<LoopInvariant> invariants;
 
+    /// <summary>
+    /// Checks for errors and return true if any are found.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (LoopInvariant invariant in this.Invariants)
@@ -411,6 +428,9 @@ namespace Microsoft.Cci.Ast {
     }
     readonly IEnumerable<Expression> allocates;
 
+    /// <summary>
+    /// The signature declaration (such as a lambda, method, property or anonymous method) that defines this contract.
+    /// </summary>
     public ISignatureDeclaration/*?*/ ContainingSignatureDeclaration {
       get {
         return this.containingBlock != null ? this.containingBlock.ContainingSignatureDeclaration : null;
@@ -514,6 +534,10 @@ namespace Microsoft.Cci.Ast {
     }
     readonly IEnumerable<Expression> writes;
 
+    /// <summary>
+    /// Checks for errors and return true if any are found.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (Precondition preCond in this.Preconditions)
@@ -1051,6 +1075,10 @@ namespace Microsoft.Cci.Ast {
     }
     readonly IEnumerable<MethodDeclaration> contractMethods;
 
+    /// <summary>
+    /// Checks for errors and return true if any are found.
+    /// </summary>
+    /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (TypeInvariant invariant in this.invariants)
