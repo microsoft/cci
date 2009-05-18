@@ -18,7 +18,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   public sealed class SourceMethodBody : ISourceMethodBody {
 
     /// <summary>
-    /// 
+    /// Allocates an object that provides a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
     /// </summary>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
@@ -126,9 +126,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ILocalDefinition>/*?*/ localVariables;
 
     /// <summary>
-    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// The maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
-    /// <value></value>
     public ushort MaxStack {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -138,10 +137,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     ushort maxStack;
 
     /// <summary>
-    /// Definition of method whose body this is.
-    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// The definition of the method whose body this is.
+    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
-    /// <value></value>
+    /// <remarks>The setter should only be called once, to complete the two phase initialization of this object.</remarks>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
       set { this.methodDefinition = value; }
@@ -151,7 +150,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A list CLR IL operations that implement this method body.
     /// </summary>
-    /// <value></value>
     public IEnumerable<IOperation> Operations {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();

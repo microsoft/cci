@@ -2690,7 +2690,6 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.
     /// </summary>
-    /// <value></value>
     public bool LocalsAreZeroed {
       get { return this.localsAreZeroed; }
     }
@@ -2719,9 +2718,8 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// The maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
-    /// <value></value>
     public ushort MaxStack {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2731,10 +2729,9 @@ namespace Microsoft.Cci.Ast {
     ushort maxStack;
 
     /// <summary>
-    /// Definition of method whose body this is.
-    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// The definition of the method whose body this is.
+    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
-    /// <value></value>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
     }
@@ -2743,7 +2740,6 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A list CLR IL operations that implement this method body.
     /// </summary>
-    /// <value></value>
     public IEnumerable<IOperation> Operations {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2755,7 +2751,6 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A list exception data within the method body IL.
     /// </summary>
-    /// <value></value>
     public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
@@ -2770,7 +2765,6 @@ namespace Microsoft.Cci.Ast {
     /// In case of instructions to AST decompilation this should ideally be list of all types
     /// which are local to method.
     /// </summary>
-    /// <value></value>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();

@@ -28,6 +28,7 @@ namespace Microsoft.Cci {
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider)
       : base(contractProvider) {
+      this.generator = new ILGenerator(host);
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
       this.minizeCodeSize = true;
@@ -39,7 +40,7 @@ namespace Microsoft.Cci {
     ITryCatchFinallyStatement/*?*/ currentTryCatch;
     bool minizeCodeSize;
     ILGeneratorLabel endOfMethod = new ILGeneratorLabel();
-    ILGenerator generator = new ILGenerator();
+    ILGenerator generator;
     /// <summary>
     /// An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.

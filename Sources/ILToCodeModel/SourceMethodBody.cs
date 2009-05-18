@@ -112,8 +112,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Definition of method whose body this is.
-    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// The definition of the method whose body this is.
+    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
     public IMethodDefinition MethodDefinition {
       get { return this.ilMethodBody.MethodDefinition; }
@@ -127,7 +127,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// The maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
     public ushort MaxStack {
       get { return this.ilMethodBody.MaxStack; }
