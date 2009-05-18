@@ -117,7 +117,7 @@ namespace Microsoft.Cci {
     ISignature ContainingSignature { get; }
 
     /// <summary>
-    /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
+    /// The list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     IEnumerable<ICustomModifier> CustomModifiers {
       get;
@@ -1107,7 +1107,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive: CLR type (such as System.Int32) and
+    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive" CLR type (such as System.Int32) and
     /// the type code identifies which of the primitive types it corresponds to.
     /// </summary>
     PrimitiveTypeCode TypeCode { get; }

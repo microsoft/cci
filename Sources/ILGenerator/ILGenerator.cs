@@ -602,8 +602,14 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  /// <summary>
+  /// An object that is used to mark a location in an IL stream and that is used to indicate where branches go to.
+  /// </summary>
   public sealed class ILGeneratorLabel {
 
+    /// <summary>
+    /// Initializes an object that is used to mark a location in an IL stream and that is used to indicate where branches go to.
+    /// </summary>
     public ILGeneratorLabel() {
     }
 
@@ -625,6 +631,10 @@ namespace Microsoft.Cci {
     internal bool labelsReturnInstruction;
   }
 
+  /// <summary>
+  /// An object that keeps track of a set of local definitions (variables) and used (imported) namespaces that appear in the
+  /// source code corresponding to the IL operations from Offset to Offset+Length.
+  /// </summary>
   public class ILGeneratorLocalScope : ILocalScope {
 
     internal ILGeneratorLocalScope(uint offset) {
@@ -635,21 +645,37 @@ namespace Microsoft.Cci {
       this.length = this.offset - offset;
     }
 
+    /// <summary>
+    /// The length of the scope. Offset+Length equals the offset of the first operation outside the scope, or equals the method body length.
+    /// </summary>
+    /// <value></value>
     public uint Length {
       get { return this.length; }
     }
     uint length;
 
+    /// <summary>
+    /// The local definitions (variables) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
+    /// point that falls inside this scope.)
+    /// </summary>
     public IEnumerable<ILocalDefinition> Locals {
       get { return this.locals.AsReadOnly(); }
     }
     internal readonly List<ILocalDefinition> locals = new List<ILocalDefinition>();
 
+    /// <summary>
+    /// The offset of the first operation in the scope.
+    /// </summary>
     public uint Offset {
       get { return this.offset; }
     }
     readonly uint offset;
 
+    /// <summary>
+    /// The namespaces that are used (imported) into this scope. (A debugger can use this when evaluating expressions in a program
+    /// point that falls inside this scope.)
+    /// </summary>
+    /// <value>The used namespace names.</value>
     public IEnumerable<string> UsedNamespaceNames {
       get { return this.usedNamespaces.AsReadOnly(); }
     }

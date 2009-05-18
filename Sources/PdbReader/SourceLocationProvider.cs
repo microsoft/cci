@@ -15,8 +15,7 @@ using System.Diagnostics.SymbolStore;
 namespace Microsoft.Cci {
 
   /// <summary>
-  /// An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
-  /// For example, a PDB reader that maps offsets in an IL stream to source locations.
+  /// An object that maps offsets in an IL stream to source locations.
   /// </summary>
   public sealed class PdbReader : ISourceLocationProvider, ILocalScopeProvider {
 
@@ -24,8 +23,7 @@ namespace Microsoft.Cci {
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
 
     /// <summary>
-    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
-    /// For example, a PDB reader that maps offsets in an IL stream to source locations.
+    /// Allocates an object that maps offsets in an IL stream to source locations.
     /// </summary>
     public PdbReader(Stream pdbStream, IMetadataHost host) {
       this.host = host;

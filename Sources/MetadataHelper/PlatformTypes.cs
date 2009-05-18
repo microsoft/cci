@@ -259,7 +259,7 @@ namespace Microsoft.Cci {
     //^ ensures (this is ITypeDefinition) ==> result == this;
 
     /// <summary>
-    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive: CLR type (such as System.Int32) and
+    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive" CLR type (such as System.Int32) and
     /// the type code identifies which of the primitive types it corresponds to.
     /// </summary>
     public virtual PrimitiveTypeCode TypeCode {
@@ -468,7 +468,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive: CLR type (such as System.Int32) and
+    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive" CLR type (such as System.Int32) and
     /// the type code identifies which of the primitive types it corresponds to.
     /// </summary>
     public override PrimitiveTypeCode TypeCode {

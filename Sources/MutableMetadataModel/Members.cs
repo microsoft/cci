@@ -11,8 +11,14 @@ using System.Text;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class EventDefinition : TypeDefinitionMember, IEventDefinition, ICopyFrom<IEventDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public EventDefinition() {
       this.accessors = new List<IMethodReference>();
       this.adder = Dummy.MethodReference;
@@ -21,6 +27,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="eventDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IEventDefinition eventDefinition, IInternFactory internFactory) {
       ((ICopyFrom<ITypeDefinitionMember>)this).Copy(eventDefinition, internFactory);
       this.accessors = new List<IMethodReference>(eventDefinition.Accessors);
@@ -32,28 +43,48 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = eventDefinition.Type;
     }
 
+    /// <summary>
+    /// A list of methods that are associated with the event.
+    /// </summary>
+    /// <value></value>
     public List<IMethodReference> Accessors {
       get { return this.accessors; }
       set { this.accessors = value; }
     }
     List<IMethodReference> accessors;
 
+    /// <summary>
+    /// The method used to add a handler to the event.
+    /// </summary>
+    /// <value></value>
     public IMethodReference Adder {
       get { return this.adder; }
       set { this.adder = value; }
     }
     IMethodReference adder;
 
+    /// <summary>
+    /// The method used to call the event handlers when the event occurs. May be null.
+    /// </summary>
+    /// <value></value>
     public IMethodReference/*?*/ Caller {
       get { return this.caller; }
       set { this.caller = value; }
     }
     IMethodReference/*?*/ caller;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// True if the event gets special treatment from the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return (this.flags & 0x40000000) != 0; }
       set {
@@ -64,6 +95,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// This event is special in some way, as specified by the name.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return (this.flags & 0x20000000) != 0; }
       set {
@@ -74,12 +109,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// The method used to add a handler to the event.
+    /// </summary>
+    /// <value></value>
     public IMethodReference Remover {
       get { return this.remover; }
       set { this.remover = value; }
     }
     IMethodReference remover;
 
+    /// <summary>
+    /// The (delegate) type of the handlers that will handle the event.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -95,8 +138,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class FieldDefinition : TypeDefinitionMember, IFieldDefinition, ICopyFrom<IFieldDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public FieldDefinition() {
       this.compileTimeValue = Dummy.Constant;
       this.fieldMapping = Dummy.SectionBlock;
@@ -107,6 +156,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IFieldDefinition fieldDefinition, IInternFactory internFactory) {
       ((ICopyFrom<ITypeDefinitionMember>)this).Copy(fieldDefinition, internFactory);
       if (fieldDefinition.IsBitField)
@@ -146,22 +200,39 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.IsStatic = fieldDefinition.IsStatic;
     }
 
+    /// <summary>
+    /// The number of bits that form part of the value of the field.
+    /// </summary>
+    /// <value></value>
     public uint BitLength {
       get { return (uint)this.bitLength; }
       set { this.bitLength = (int)value; }
     }
     int bitLength;
 
+    /// <summary>
+    /// The compile time value of the field. This value should be used directly in IL, rather than a reference to the field.
+    /// If the field does not have a valid compile time value, Dummy.Constant is returned.
+    /// </summary>
+    /// <value></value>
     public IMetadataConstant CompileTimeValue {
       get { return this.compileTimeValue; }
       set { this.compileTimeValue = value; }
     }
     IMetadataConstant compileTimeValue;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Information of the location where this field is mapped to
+    /// </summary>
+    /// <value></value>
     public ISectionBlock FieldMapping {
       get { return this.fieldMapping; }
       set
@@ -179,18 +250,34 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.bitLength >= 0; }
     }
 
+    /// <summary>
+    /// This field is a compile-time constant. The field has no runtime location and cannot be directly addressed from IL.
+    /// </summary>
+    /// <value></value>
     public bool IsCompileTimeConstant {
       get { return this.compileTimeValue != Dummy.Constant; }
     }
 
+    /// <summary>
+    /// This field is mapped to an explicitly initialized (static) memory location.
+    /// </summary>
+    /// <value></value>
     public bool IsMapped {
       get { return this.fieldMapping != Dummy.SectionBlock; }
     }
 
+    /// <summary>
+    /// This field has associated field marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool IsMarshalledExplicitly {
       get { return this.marshallingInformation != Dummy.MarshallingInformation; }
     }
 
+    /// <summary>
+    /// The field does not have to be serialized when its containing instance is serialized.
+    /// </summary>
+    /// <value></value>
     public bool IsNotSerialized {
       get { return (this.flags & 0x40000000) != 0; }
       set {
@@ -201,6 +288,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// This field can only be read. Initialization takes place in a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsReadOnly {
       get { return (this.flags & 0x20000000) != 0; }
       set {
@@ -211,6 +302,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the field gets special treatment from the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return (this.flags & 0x10000000) != 0; }
       set
@@ -223,6 +318,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// This field is special in some way, as specified by the name.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return (this.flags & 0x08000000) != 0; }
       set {
@@ -233,6 +332,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get { return (this.flags & 0x04000000) != 0; }
       set {
@@ -243,24 +346,40 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Specifies how this field is marshalled when it is accessed from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation MarshallingInformation {
       get { return this.marshallingInformation; }
       set { this.marshallingInformation = value; }
     }
     IMarshallingInformation marshallingInformation;
 
+    /// <summary>
+    /// Offset of the field.
+    /// </summary>
+    /// <value></value>
     public uint Offset {
       get { return this.offset; }
       set { this.offset = value; }
     }
     uint offset;
 
+    /// <summary>
+    /// The position of the field starting from 0 within the class.
+    /// </summary>
+    /// <value></value>
     public int SequenceNumber {
       get { return this.sequenceNumber; }
       set { this.sequenceNumber = value; }
     }
     int sequenceNumber;
 
+    /// <summary>
+    /// The type of value that is stored in this field.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -269,6 +388,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IFieldReference Members
 
+    /// <summary>
+    /// The Field being referred to.
+    /// </summary>
+    /// <value></value>
     public IFieldDefinition ResolvedField {
       get { return this; }
     }
@@ -284,8 +407,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class FieldReference : IFieldReference, ICopyFrom<IFieldReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public FieldReference() {
       this.attributes = new List<ICustomAttribute>();
       this.containingType = Dummy.TypeReference;
@@ -294,6 +423,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fieldReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IFieldReference fieldReference, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(fieldReference.Attributes);
       this.containingType = fieldReference.ContainingType;
@@ -302,46 +436,84 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = fieldReference.Type;
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ContainingType {
       get { return this.containingType; }
       set { this.containingType = value; }
     }
     ITypeReference containingType;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
     List<ILocation> locations;
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
     IName name;
 
+    /// <summary>
+    /// The Field being referred to.
+    /// </summary>
+    /// <value></value>
     public IFieldDefinition ResolvedField {
       get { return TypeHelper.GetField(this.ContainingType.ResolvedType, this); }
     }
 
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this.ResolvedField; }
     }
 
+    /// <summary>
+    /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+    /// </returns>
     public override string ToString() {
       return MemberHelper.GetMemberSignature(this, NameFormattingOptions.None);
     }
 
+    /// <summary>
+    /// The type of value that is stored in this field.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -362,23 +534,42 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class GlobalFieldDefinition : FieldDefinition, IGlobalFieldDefinition, ICopyFrom<IGlobalFieldDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public GlobalFieldDefinition() {
       this.containingNamespace = Dummy.RootUnitNamespace;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="globalFieldDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IGlobalFieldDefinition globalFieldDefinition, IInternFactory internFactory) {
       ((ICopyFrom<IFieldDefinition>)this).Copy(globalFieldDefinition, internFactory);
       this.containingNamespace = globalFieldDefinition.ContainingNamespace;
     }
 
+    /// <summary>
+    /// The namespace that contains this member.
+    /// </summary>
+    /// <value></value>
     public INamespaceDefinition ContainingNamespace {
       get { return this.containingNamespace; }
       set { this.containingNamespace = value; }
     }
     INamespaceDefinition containingNamespace;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -400,23 +591,42 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class GlobalMethodDefinition : MethodDefinition, IGlobalMethodDefinition, ICopyFrom<IGlobalMethodDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public GlobalMethodDefinition() {
       this.containingNamespace = Dummy.RootUnitNamespace;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="globalMethodDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IGlobalMethodDefinition globalMethodDefinition, IInternFactory internFactory) {
       ((ICopyFrom<IMethodDefinition>)this).Copy(globalMethodDefinition, internFactory);
       this.containingNamespace = globalMethodDefinition.ContainingNamespace;
     }
 
+    /// <summary>
+    /// The namespace that contains this member.
+    /// </summary>
+    /// <value></value>
     public INamespaceDefinition ContainingNamespace {
       get { return this.containingNamespace; }
       set { this.containingNamespace = value; }
     }
     INamespaceDefinition containingNamespace;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -438,31 +648,54 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class GenericMethodInstanceReference : MethodReference, IGenericMethodInstanceReference, ICopyFrom<IGenericMethodInstanceReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public GenericMethodInstanceReference() {
       this.genericArguments = new List<ITypeReference>();
       this.genericMethod = Dummy.MethodReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericMethodInstanceReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IGenericMethodInstanceReference genericMethodInstanceReference, IInternFactory internFactory) {
       ((ICopyFrom<IMethodReference>)this).Copy(genericMethodInstanceReference, internFactory);
       this.genericArguments = new List<ITypeReference>(genericMethodInstanceReference.GenericArguments);
       this.genericMethod = genericMethodInstanceReference.GenericMethod;
     }
 
+    /// <summary>
+    /// The type arguments that were used to instantiate this.GenericMethod in order to create this method.
+    /// </summary>
+    /// <value></value>
     public List<ITypeReference> GenericArguments {
       get { return this.genericArguments; }
       set { this.genericArguments = value; }
     }
     List<ITypeReference> genericArguments;
 
+    /// <summary>
+    /// Returns the generic method of which this method is an instance.
+    /// </summary>
+    /// <value></value>
     public IMethodReference GenericMethod {
       get { return this.genericMethod; }
       set { this.genericMethod = value; }
     }
     IMethodReference genericMethod;
 
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    /// <value></value>
     public override IMethodDefinition ResolvedMethod {
       get { return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, this.GenericArguments.AsReadOnly(), this.InternFactory); }
     }
@@ -477,8 +710,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class GenericMethodParameter : GenericParameter, IGenericMethodParameter, ICopyFrom<IGenericMethodParameter> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     //^ [NotDelayed]
     public GenericMethodParameter() {
       this.definingMethod = Dummy.Method;
@@ -486,11 +725,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       //^ assume this.definingMethod.IsGeneric; //TODO: define a dummy generic method
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericMehodParameter"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IGenericMethodParameter genericMehodParameter, IInternFactory internFactory) {
       ((ICopyFrom<IGenericParameter>)this).Copy(genericMehodParameter, internFactory);
       this.definingMethod = genericMehodParameter.DefiningMethod;
     }
 
+    /// <summary>
+    /// The generic method that defines this type parameter.
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition DefiningMethod {
       get {
         return this.definingMethod;
@@ -504,6 +752,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMethodDefinition definingMethod;
     //^ invariant definingMethod.IsGeneric;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -522,8 +774,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class LocalDefinition : ILocalDefinition, ICopyFrom<ILocalDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public LocalDefinition() {
       this.compileTimeValue = Dummy.Constant;
       this.customModifiers = new List<ICustomModifier>();
@@ -535,6 +793,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="localVariableDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ILocalDefinition localVariableDefinition, IInternFactory internFactory) {
       if (localVariableDefinition.IsConstant)
         this.compileTimeValue = localVariableDefinition.CompileTimeValue;
@@ -552,52 +815,88 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = localVariableDefinition.Type;
     }
 
+    /// <summary>
+    /// The compile time value of the definition, if it is a local constant.
+    /// </summary>
+    /// <value></value>
     public IMetadataConstant CompileTimeValue {
       get { return this.compileTimeValue; }
       set { this.compileTimeValue = value; }
     }
     IMetadataConstant compileTimeValue;
 
+    /// <summary>
+    /// Custom modifiers associated with local variable definition.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> CustomModifiers {
       get { return this.customModifiers; }
       set { this.customModifiers = value; }
     }
     List<ICustomModifier> customModifiers;
 
+    /// <summary>
+    /// True if this local definition is readonly and initialized with a compile time constant value.
+    /// </summary>
+    /// <value></value>
     public bool IsConstant {
       get { return this.compileTimeValue != Dummy.Constant; }
     }
 
+    /// <summary>
+    /// The local variable has custom modifiers.
+    /// </summary>
+    /// <value></value>
     public bool IsModified {
       get { return this.isModified; }
       set { this.isModified = value; }
     }
     bool isModified;
 
+    /// <summary>
+    /// True if the value referenced by the local must not be moved by the actions of the garbage collector.
+    /// </summary>
+    /// <value></value>
     public bool IsPinned {
       get { return this.isPinned; }
       set { this.isPinned = value; }
     }
     bool isPinned;
 
+    /// <summary>
+    /// True if the local contains a managed pointer (for example a reference to a local variable or a reference to a field of an object).
+    /// </summary>
+    /// <value></value>
     public bool IsReference {
       get { return this.isReference; }
       set { this.isReference = value; }
     }
     bool isReference;
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
     IName name;
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
     List<ILocation> locations;
 
+    /// <summary>
+    /// The type of the local.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -617,8 +916,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class MethodBody : IMethodBody, ICopyFrom<IMethodBody> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MethodBody() {
       this.localsAreZeroed = true;
       this.localVariables = new List<ILocalDefinition>();
@@ -629,6 +934,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.privateHelperTypes = new List<ITypeDefinition>(0);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodBody"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IMethodBody methodBody, IInternFactory internFactory) {
       this.localsAreZeroed = methodBody.LocalsAreZeroed;
       this.localVariables = new List<ILocalDefinition>(methodBody.LocalVariables);
@@ -647,46 +957,82 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.privateHelperTypes = new List<ITypeDefinition>(0);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// True if the locals are initialized by zeroeing the stack upon method entry.
+    /// </summary>
+    /// <value></value>
     public bool LocalsAreZeroed {
       get { return this.localsAreZeroed; }
       set { this.localsAreZeroed = value; }
     }
     bool localsAreZeroed;
 
+    /// <summary>
+    /// The local variables of the method.
+    /// </summary>
+    /// <value></value>
     public List<ILocalDefinition> LocalVariables {
       get { return this.localVariables; }
       set { this.localVariables = value; }
     }
     List<ILocalDefinition> localVariables;
 
+    /// <summary>
+    /// Maximum number of elements on the evaluation stack during the execution of the method.
+    /// </summary>
+    /// <value></value>
     public ushort MaxStack {
       get { return this.maxStack; }
       set { this.maxStack = value; }
     }
     ushort maxStack;
 
+    /// <summary>
+    /// Definition of method whose body this is.
+    /// If this is body for Event/Property this will hold the corresponding adder/remover/setter or getter
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
       set { this.methodDefinition = value; }
     }
     IMethodDefinition methodDefinition;
 
+    /// <summary>
+    /// A list CLR IL operations that implement this method body.
+    /// </summary>
+    /// <value></value>
     public List<IOperation> Operations {
       get { return this.operations; }
       set { this.operations = value; }
     }
     List<IOperation> operations;
 
+    /// <summary>
+    /// A list exception data within the method body IL.
+    /// </summary>
+    /// <value></value>
     public List<IOperationExceptionInformation> OperationExceptionInformation {
       get { return this.operationExceptionInformation; }
       set { this.operationExceptionInformation = value; }
     }
     List<IOperationExceptionInformation> operationExceptionInformation;
 
+    /// <summary>
+    /// Any types that are implicitly defined in order to implement the body semantics.
+    /// In case of AST to instructions conversion this lists the types produced.
+    /// In case of instructions to AST decompilation this should ideally be list of all types
+    /// which are local to method.
+    /// </summary>
+    /// <value></value>
     public List<ITypeDefinition> PrivateHelperTypes {
       get { return this.privateHelperTypes; }
       set { this.privateHelperTypes = value; }
@@ -715,8 +1061,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class MethodDefinition : TypeDefinitionMember, IMethodDefinition, ICopyFrom<IMethodDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MethodDefinition() {
       this.body = Dummy.MethodBody;
       this.callingConvention = CallingConvention.Default;
@@ -731,6 +1083,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IMethodDefinition methodDefinition, IInternFactory internFactory) {
       ((ICopyFrom<ITypeDefinitionMember>)this).Copy(methodDefinition, internFactory);
       if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal)
@@ -792,6 +1149,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.ReturnValueIsMarshalledExplicitly = methodDefinition.ReturnValueIsMarshalledExplicitly;
     }
 
+    /// <summary>
+    /// True if the call sites that references the method with this object supply extra arguments.
+    /// </summary>
+    /// <value></value>
     public bool AcceptsExtraArguments {
       get { return (this.flags & 0x40000000) != 0; }
       set {
@@ -802,22 +1163,38 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// A container for a list of IL instructions providing the implementation (if any) of this method.
+    /// </summary>
+    /// <value></value>
     public IMethodBody Body {
       get { return this.body; }
       set { this.body = value; }
     }
     IMethodBody body;
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.callingConvention; }
       set { this.callingConvention = value; }
     }
     CallingConvention callingConvention;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// If the method is generic then this list contains the type parameters.
+    /// </summary>
+    /// <value></value>
     public List<IGenericMethodParameter> GenericParameters {
       get { return this.genericParameters; }
       set { this.genericParameters = value; }
@@ -825,10 +1202,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<IGenericMethodParameter> genericParameters;
 
     //^ [Pure]
+    /// <summary>
+    /// The number of generic parameters of the method. Zero if the referenced method is not generic.
+    /// </summary>
+    /// <value></value>
     public ushort GenericParameterCount {
       get { return (ushort)this.genericParameters.Count; }
     }
 
+    /// <summary>
+    /// True if this method has a non empty collection of SecurityAttributes or the System.Security.SuppressUnmanagedCodeSecurityAttribute.
+    /// </summary>
+    /// <value></value>
     public bool HasDeclarativeSecurity {
       get { return (this.flags & 0x20000000) != 0; }
       set {
@@ -839,6 +1224,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if this an instance method that explicitly declares the type and name of its first parameter (the instance).
+    /// </summary>
+    /// <value></value>
     public bool HasExplicitThisParameter {
       get { return (this.flags & 0x10000000) != 0; }
       set {
@@ -849,16 +1238,30 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
       set { this.internFactory = value; }
     }
     IInternFactory internFactory;
 
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that uniquely identifies
+    /// this.ResolvedMethod.
+    /// </summary>
+    /// <value></value>
     public uint InternedKey {
       get { return this.internFactory.GetMethodInternedKey(this); }
     }
 
+    /// <summary>
+    /// True if the method does not provide an implementation.
+    /// </summary>
+    /// <value></value>
     public bool IsAbstract {
       get { return (this.flags & 0x08000000) != 0; }
       set {
@@ -869,6 +1272,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method can only be overridden when it is also accessible.
+    /// </summary>
+    /// <value></value>
     public bool IsAccessCheckedOnOverride {
       get { return (this.flags & 0x04000000) != 0; }
       set {
@@ -879,6 +1286,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is implemented in the CLI Common Intermediate Language.
+    /// </summary>
+    /// <value></value>
     public bool IsCil {
       get { return (this.flags & 0x02000000) != 0; }
       set {
@@ -889,10 +1300,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsConstructor {
       get { return this.IsSpecialName && this.Name.Value.Equals(".ctor"); }
     }
 
+    /// <summary>
+    /// True if the method has an external implementation (i.e. not supplied by this definition).
+    /// </summary>
+    /// <value></value>
     public bool IsExternal {
       get { return (this.flags & 0x00800000) != 0; }
       set {
@@ -903,6 +1322,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method implementation is defined by another method definition (to be supplied at a later time).
+    /// </summary>
+    /// <value></value>
     public bool IsForwardReference {
       get { return (this.flags & 0x00400000) != 0; }
       set {
@@ -913,10 +1336,19 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method has generic parameters;
+    /// </summary>
+    /// <value></value>
     public bool IsGeneric {
       get { return this.genericParameters.Count > 0; }
     }
 
+    /// <summary>
+    /// True if this method is hidden if a derived type declares a method with the same name and signature.
+    /// If false, any method with the same name hides this method. This flag is ignored by the runtime and is only used by compilers.
+    /// </summary>
+    /// <value></value>
     public bool IsHiddenBySignature {
       get { return (this.flags & 0x00200000) != 0; }
       set {
@@ -927,6 +1359,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is implemented in native (platform-specific) code.
+    /// </summary>
+    /// <value></value>
     public bool IsNativeCode {
       get { return (this.flags & 0x00100000) != 0; }
       set {
@@ -937,6 +1373,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// The method always gets a new slot in the virtual method table.
+    /// This means the method will hide (not override) a base type method with the same name and signature.
+    /// </summary>
+    /// <value></value>
     public bool IsNewSlot {
       get { return (this.flags & 0x00080000) != 0; }
       set {
@@ -947,6 +1388,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the the runtime is not allowed to inline this method.
+    /// </summary>
+    /// <value></value>
     public bool IsNeverInlined {
       get { return (this.flags & 0x00040000) != 0; }
       set {
@@ -957,6 +1402,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the runtime is not allowed to optimize this method.
+    /// </summary>
+    /// <value></value>
     public bool IsNeverOptimized {
       get { return (this.flags & 0x00020000) != 0; }
       set {
@@ -967,6 +1416,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is implemented via the invocation of an underlying platform method.
+    /// </summary>
+    /// <value></value>
     public bool IsPlatformInvoke {
       get { return (this.flags & 0x00010000) != 0; }
       set {
@@ -977,6 +1430,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the implementation of this method is supplied by the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeImplemented {
       get { return (this.flags & 0x00008000) != 0; }
       set {
@@ -987,6 +1444,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is an internal part of the runtime and must be called in a special way.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeInternal {
       get { return (this.flags & 0x00004000) != 0; }
       set {
@@ -997,6 +1458,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method gets special treatment from the runtime. For example, it might be a constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return (this.flags & 0x00002000) != 0; }
       set {
@@ -1007,6 +1472,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method may not be overridden.
+    /// </summary>
+    /// <value></value>
     public bool IsSealed {
       get { return (this.flags & 0x00001000) != 0; }
       set {
@@ -1017,6 +1486,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is special in some way for tools. For example, it might be a property getter or setter.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return (this.flags & 0x00000800) != 0; }
       set {
@@ -1027,6 +1500,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get { return (this.flags & 0x00000400) != 0; }
       set {
@@ -1037,10 +1514,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method is a static constructor.
+    /// </summary>
+    /// <value></value>
     public bool IsStaticConstructor {
       get { return this.IsSpecialName && this.Name.Value.Equals(".cctor"); }
     }
 
+    /// <summary>
+    /// True if only one thread at a time may execute this method.
+    /// </summary>
+    /// <value></value>
     public bool IsSynchronized {
       get { return (this.flags & 0x00000200) != 0; }
       set {
@@ -1051,6 +1536,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the implementation of this method is not managed by the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsUnmanaged {
       get { return (this.flags & 0x00000100) != 0; }
       set {
@@ -1061,6 +1550,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method may be overridden (or if it is an override).
+    /// </summary>
+    /// <value></value>
     public bool IsVirtual {
       get {
         //^ assume !this.IsStatic;
@@ -1076,22 +1569,38 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public List<IParameterDefinition> Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
     List<IParameterDefinition> parameters;
 
+    /// <summary>
+    /// The number of required parameters of the method.
+    /// </summary>
+    /// <value></value>
     public ushort ParameterCount {
       get { return (ushort)this.parameters.Count; }
     }
 
+    /// <summary>
+    /// Detailed information about the PInvoke stub. Identifies which method to call, which module has the method and the calling convention among other things.
+    /// </summary>
+    /// <value></value>
     public IPlatformInvokeInformation PlatformInvokeData {
       get { return this.platformInvokeData; }
       set { this.platformInvokeData = value; }
     }
     IPlatformInvokeInformation platformInvokeData;
 
+    /// <summary>
+    /// True if the method signature must not be mangled during the interoperation with COM code.
+    /// </summary>
+    /// <value></value>
     public bool PreserveSignature {
       get { return (this.flags & 0x00000040) != 0; }
       set {
@@ -1102,6 +1611,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the method calls another method containing security code. If this flag is set, the method
+    /// should have System.Security.DynamicSecurityMethodAttribute present in its list of custom attributes.
+    /// </summary>
+    /// <value></value>
     public bool RequiresSecurityObject {
       get { return (this.flags & 0x00000020) != 0; }
       set {
@@ -1112,18 +1626,30 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Custom attributes associated with the method's return value.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> ReturnValueAttributes {
       get { return this.returnValueAttributes; }
       set { this.returnValueAttributes = value; }
     }
     List<ICustomAttribute> returnValueAttributes;
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set { this.returnValueCustomModifiers = value; }
     }
     List<ICustomModifier> returnValueCustomModifiers;
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return (this.flags & 0x00000010) != 0; }
       set {
@@ -1134,6 +1660,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// The return value has associated marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsMarshalledExplicitly {
       get { return (this.flags & int.MinValue) != 0; }
       set {
@@ -1144,22 +1674,38 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.returnValueCustomModifiers.Count > 0; }
     }
 
+    /// <summary>
+    /// Specifies how the return value is marshalled when the method is called from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation ReturnValueMarshallingInformation {
       get { return this.returnValueMarshallingInformation; }
       set { this.returnValueMarshallingInformation = value; }
     }
     IMarshallingInformation returnValueMarshallingInformation;
 
+    /// <summary>
+    /// Declarative security actions for this method.
+    /// </summary>
+    /// <value></value>
     public List<ISecurityAttribute> SecurityAttributes {
       get { return this.securityAttributes; }
       set { this.securityAttributes = value; }
     }
     List<ISecurityAttribute> securityAttributes;
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -1204,10 +1750,18 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IMethodReference Members
 
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    /// <value></value>
     public IMethodDefinition ResolvedMethod {
       get { return this; }
     }
 
+    /// <summary>
+    /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
       get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
     }
@@ -1216,8 +1770,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class MethodReference : IMethodReference, ICopyFrom<IMethodReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MethodReference() {
       this.attributes = new List<ICustomAttribute>();
       this.callingConvention = (CallingConvention)0;
@@ -1235,6 +1795,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IMethodReference methodReference, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(methodReference.Attributes);
       this.callingConvention = methodReference.CallingConvention;
@@ -1255,113 +1820,203 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = methodReference.Type;
     }
 
+    /// <summary>
+    /// True if the call sites that references the method with this object supply extra arguments.
+    /// </summary>
+    /// <value></value>
     public bool AcceptsExtraArguments {
       get { return (this.callingConvention & (CallingConvention)0x7) == CallingConvention.ExtraArguments; }
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.callingConvention; }
       set { this.callingConvention = value; }
     }
     CallingConvention callingConvention;
 
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ContainingType {
       get { return this.containingType; }
       set { this.containingType = value; }
     }
     ITypeReference containingType;
 
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
+    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// </summary>
+    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
+    /// </summary>
+    /// <value></value>
     public List<IParameterTypeInformation> ExtraParameters {
       get { return this.extraParameters; }
       set { this.extraParameters = value; }
     }
     List<IParameterTypeInformation> extraParameters;
 
+    /// <summary>
+    /// The number of generic parameters of the method. Zero if the referenced method is not generic.
+    /// </summary>
+    /// <value></value>
     public ushort GenericParameterCount {
       get { return this.genericParameterCount; }
       set { this.genericParameterCount = value; }
     }
     ushort genericParameterCount;
 
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
       set { this.internFactory = value; }
     }
     IInternFactory internFactory;
 
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that uniquely identifies
+    /// this.ResolvedMethod.
+    /// </summary>
+    /// <value></value>
     public uint InternedKey {
       get { return this.internFactory.GetMethodInternedKey(this); }
     }
 
+    /// <summary>
+    /// True if the method has generic parameters;
+    /// </summary>
+    /// <value></value>
     public bool IsGeneric {
       get { return this.isGeneric; }
       set { this.isGeneric = value; }
     }
     bool isGeneric;
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
     List<ILocation> locations;
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
     IName name;
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public List<IParameterTypeInformation> Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
     List<IParameterTypeInformation> parameters;
 
+    /// <summary>
+    /// The number of required parameters of the method.
+    /// </summary>
+    /// <value></value>
     public ushort ParameterCount {
       get { return (ushort)this.Parameters.Count; }
     }
 
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    /// <value></value>
     public virtual IMethodDefinition ResolvedMethod {
       get { return TypeHelper.GetMethod(this.ContainingType.ResolvedType, this); }
     }
 
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this.ResolvedMethod; }
     }
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set { this.returnValueCustomModifiers = value; }
     }
     List<ICustomModifier> returnValueCustomModifiers;
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.returnValueIsByRef; }
       set { this.returnValueIsByRef = value; }
     }
     bool returnValueIsByRef;
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.returnValueIsModified; }
       set { this.returnValueIsModified = value; }
     }
     bool returnValueIsModified;
 
+    /// <summary>
+    /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+    /// </returns>
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this,
         NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName);
     }
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -1404,8 +2059,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class ParameterDefinition : IParameterDefinition, ICopyFrom<IParameterDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ParameterDefinition() {
       this.attributes = new List<ICustomAttribute>();
       this.containingSignature = Dummy.Method;
@@ -1419,6 +2080,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="parameterDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IParameterDefinition parameterDefinition, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(parameterDefinition.Attributes);
       this.containingSignature = parameterDefinition.ContainingSignature;
@@ -1448,46 +2114,78 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.IsOut = parameterDefinition.IsOut;
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
+    /// <summary>
+    /// The method or property that defines this parameter.
+    /// </summary>
+    /// <value></value>
     public ISignature ContainingSignature {
       get { return this.containingSignature; }
       set { this.containingSignature = value; }
     }
     ISignature containingSignature;
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> CustomModifiers {
       get { return this.customModifiers; }
       set { this.customModifiers = value; }
     }
     List<ICustomModifier> customModifiers;
 
+    /// <summary>
+    /// A compile time constant value that should be supplied as the corresponding argument value by callers that do not explicitly specify an argument value for this parameter.
+    /// </summary>
+    /// <value></value>
     public IMetadataConstant DefaultValue {
       get { return this.defaultValue; }
       set { this.defaultValue = value; }
     }
     IMetadataConstant defaultValue;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
     private int flags;
 
+    /// <summary>
+    /// True if the parameter has a default value that should be supplied as the argument value by a caller for which the argument value has not been explicitly specified.
+    /// </summary>
+    /// <value></value>
     public bool HasDefaultValue {
       get { return this.defaultValue != Dummy.Constant; }
     }
 
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
     public ushort Index {
       get { return this.index; }
       set { this.index = value; }
     }
     ushort index;
 
+    /// <summary>
+    /// True if the parameter is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool IsByReference {
       get { return (this.flags & 0x40000000) != 0; }
       set {
@@ -1498,6 +2196,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the argument value must be included in the marshalled arguments passed to a remote callee.
+    /// </summary>
+    /// <value></value>
     public bool IsIn {
       get { return (this.flags & 0x20000000) != 0; }
       set {
@@ -1508,14 +2210,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// This parameter has associated marshalling information.
+    /// </summary>
+    /// <value></value>
     public bool IsMarshalledExplicitly {
       get { return this.marshallingInformation != Dummy.MarshallingInformation; }
     }
 
+    /// <summary>
+    /// This parameter has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool IsModified {
       get { return this.customModifiers.Count > 0; }
     }
 
+    /// <summary>
+    /// True if the argument value must be included in the marshalled arguments passed to a remote callee only if it is different from the default value (if there is one).
+    /// </summary>
+    /// <value></value>
     public bool IsOptional {
       get { return (this.flags & 0x10000000) != 0; }
       set {
@@ -1526,6 +2240,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the final value assigned to the parameter will be marshalled with the return values passed back from a remote callee.
+    /// </summary>
+    /// <value></value>
     public bool IsOut {
       get { return (this.flags & 0x08000000) != 0; }
       set {
@@ -1536,33 +2254,57 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the parameter has the ParamArrayAttribute custom attribute.
+    /// </summary>
+    /// <value></value>
     public bool IsParameterArray {
       get { return this.paramArrayElementType != Dummy.Type; }
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
     List<ILocation> locations;
 
+    /// <summary>
+    /// Specifies how this parameter is marshalled when it is accessed from unmanaged code.
+    /// </summary>
+    /// <value></value>
     public IMarshallingInformation MarshallingInformation {
       get { return this.marshallingInformation; }
       set { this.marshallingInformation = value; }
     }
     IMarshallingInformation marshallingInformation;
 
+    /// <summary>
+    /// The element type of the parameter array.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ParamArrayElementType {
       get { return this.paramArrayElementType; }
     }
     ITypeReference paramArrayElementType;
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
     IName name;
 
+    /// <summary>
+    /// The type of argument value that corresponds to this parameter.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -1598,8 +2340,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class ParameterTypeInformation : IParameterTypeInformation, ICopyFrom<IParameterTypeInformation> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ParameterTypeInformation() {
       this.containingSignature = Dummy.Method;
       this.customModifiers = new List<ICustomModifier>();
@@ -1608,6 +2356,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="parameterTypeInformation"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IParameterTypeInformation parameterTypeInformation, IInternFactory internFactory) {
       this.containingSignature = parameterTypeInformation.ContainingSignature;
       if (parameterTypeInformation.IsModified)
@@ -1619,34 +2372,58 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = parameterTypeInformation.Type;
     }
 
+    /// <summary>
+    /// The method or property that defines this parameter.
+    /// </summary>
+    /// <value></value>
     public ISignature ContainingSignature {
       get { return this.containingSignature; }
       set { this.containingSignature = value; }
     }
     ISignature containingSignature;
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> CustomModifiers {
       get { return this.customModifiers; }
       set { this.customModifiers = value; }
     }
     List<ICustomModifier> customModifiers;
 
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
     public ushort Index {
       get { return this.index; }
       set { this.index = value; }
     }
     ushort index;
 
+    /// <summary>
+    /// True if the parameter is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool IsByReference {
       get { return this.isByReference; }
       set { this.isByReference = value; }
     }
     bool isByReference;
 
+    /// <summary>
+    /// This parameter has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool IsModified {
       get { return this.customModifiers.Count > 0; }
     }
 
+    /// <summary>
+    /// The type of argument value that corresponds to this parameter.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -1662,8 +2439,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class PropertyDefinition : TypeDefinitionMember, IPropertyDefinition, ICopyFrom<IPropertyDefinition> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public PropertyDefinition() {
       this.accessors = new List<IMethodReference>();
       this.callingConvention = CallingConvention.Default;
@@ -1676,6 +2459,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="propertyDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IPropertyDefinition propertyDefinition, IInternFactory internFactory) {
       ((ICopyFrom<ITypeDefinitionMember>)this).Copy(propertyDefinition, internFactory);
       this.accessors = new List<IMethodReference>(propertyDefinition.Accessors);
@@ -1699,38 +2487,66 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.ReturnValueIsByRef = propertyDefinition.ReturnValueIsByRef;
     }
 
+    /// <summary>
+    /// A list of methods that are associated with the property.
+    /// </summary>
+    /// <value></value>
     public List<IMethodReference> Accessors {
       get { return this.accessors; }
       set { this.accessors = value; }
     }
     List<IMethodReference> accessors;
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.callingConvention; }
       set { this.callingConvention = value; }
     }
     CallingConvention callingConvention;
 
+    /// <summary>
+    /// A compile time constant value that provides the default value for the property. (Who uses this and why?)
+    /// </summary>
+    /// <value></value>
     public IMetadataConstant DefaultValue {
       get { return this.defaultValue; }
       set { this.defaultValue = value; }
     }
     IMetadataConstant defaultValue;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// The method used to get the value of this property. May be absent (null).
+    /// </summary>
+    /// <value></value>
     public IMethodReference/*?*/ Getter {
       get { return this.getter; }
       set { this.getter = value; }
     }
     IMethodReference/*?*/ getter;
 
+    /// <summary>
+    /// True if this property has a compile time constant associated with that serves as a default value for the property. (Who uses this and why?)
+    /// </summary>
+    /// <value></value>
     public bool HasDefaultValue {
       get { return this.defaultValue != Dummy.Constant; }
     }
 
+    /// <summary>
+    /// True if this property gets special treatment from the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return (this.flags & 0x40000000) != 0; }
       set {
@@ -1741,6 +2557,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if this property is special in some way, as specified by the name.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return (this.flags & 0x20000000) != 0; }
       set {
@@ -1751,24 +2571,40 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public List<IParameterDefinition> Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
     List<IParameterDefinition> parameters;
 
+    /// <summary>
+    /// Custom attributes associated with the property's return value.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> ReturnValueAttributes {
       get { return this.returnValueAttributes; }
       set { this.returnValueAttributes = value; }
     }
     List<ICustomAttribute> returnValueAttributes;
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set { this.returnValueCustomModifiers = value; }
     }
     List<ICustomModifier> returnValueCustomModifiers;
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return (this.flags & 0x10000000) != 0; }
       set {
@@ -1779,16 +2615,28 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.returnValueCustomModifiers.Count > 0; }
     }
 
+    /// <summary>
+    /// The method used to set the value of this property. May be absent (null).
+    /// </summary>
+    /// <value></value>
     public IMethodReference/*?*/ Setter {
       get { return this.setter; }
       set { this.setter = value; }
     }
     IMethodReference/*?*/ setter;
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -1832,8 +2680,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class SignatureDefinition : ISignature, ICopyFrom<ISignature> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public SignatureDefinition() {
       this.callingConvention = CallingConvention.Default;
       this.parameters = new List<IParameterTypeInformation>();
@@ -1842,6 +2696,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = Dummy.TypeReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="signatureDefinition"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ISignature signatureDefinition, IInternFactory internFactory) {
       this.callingConvention = signatureDefinition.CallingConvention;
       this.parameters = new List<IParameterTypeInformation>(signatureDefinition.Parameters);
@@ -1853,34 +2712,58 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.type = signatureDefinition.Type;
     }
 
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.callingConvention; }
       set { this.callingConvention = value; }
     }
     CallingConvention callingConvention;
 
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    /// <value></value>
     public List<IParameterTypeInformation> Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
     List<IParameterTypeInformation> parameters;
 
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    /// <value></value>
     public List<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set { this.returnValueCustomModifiers = value; }
     }
     List<ICustomModifier> returnValueCustomModifiers;
 
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.returnValueIsByRef; }
       set { this.returnValueIsByRef = value; }
     }
     bool returnValueIsByRef;
 
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.returnValueCustomModifiers.Count > 0; }
     }
 
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
       set { this.type = value; }
@@ -1901,17 +2784,35 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class SpecializedFieldReference : FieldReference, ISpecializedFieldReference, ICopyFrom<ISpecializedFieldReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public SpecializedFieldReference() {
       this.unspecializedVersion = Dummy.FieldReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedFieldReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ISpecializedFieldReference specializedFieldReference, IInternFactory internFactory) {
       ((ICopyFrom<IFieldReference>)this).Copy(specializedFieldReference, internFactory);
       this.unspecializedVersion = specializedFieldReference.UnspecializedVersion;
     }
 
+    /// <summary>
+    /// A reference to the field definition that has been specialized to obtain the field definition referred to by this field reference.
+    /// When the containing type of the referenced specialized field definition is itself a specialized nested type of a generic type instance,
+    /// then the unspecialized field reference refers to the corresponding field definition from the unspecialized containing type definition.
+    /// (I.e. the unspecialized field reference always refers to a field definition that is not obtained via specialization.)
+    /// </summary>
+    /// <value></value>
     public IFieldReference UnspecializedVersion {
       get { return this.unspecializedVersion; }
       set { this.unspecializedVersion = value; }
@@ -1919,17 +2820,35 @@ namespace Microsoft.Cci.MutableCodeModel {
     IFieldReference unspecializedVersion;
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class SpecializedMethodReference : MethodReference, ISpecializedMethodReference, ICopyFrom<ISpecializedMethodReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public SpecializedMethodReference() {
       this.unspecializedVersion = Dummy.MethodReference;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedMethodReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
       ((ICopyFrom<IMethodReference>)this).Copy(specializedMethodReference, internFactory);
       this.unspecializedVersion = specializedMethodReference.UnspecializedVersion;
     }
 
+    /// <summary>
+    /// A reference to the method definition that has been specialized to obtain the method definition referred to by this method reference.
+    /// When the containing type of the referenced specialized method definition is itself a specialized nested type of a generic type instance,
+    /// then the unspecialized method reference refers to the corresponding method definition from the unspecialized containing type definition.
+    /// (I.e. the unspecialized method reference always refers to a method definition that is not obtained via specialization.)
+    /// </summary>
+    /// <value></value>
     public IMethodReference UnspecializedVersion {
       get { return this.unspecializedVersion; }
       set { this.unspecializedVersion = value; }
@@ -1938,8 +2857,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public abstract class TypeDefinitionMember : ITypeDefinitionMember, ICopyFrom<ITypeDefinitionMember> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     internal TypeDefinitionMember() {
       this.attributes = new List<ICustomAttribute>();
       this.containingType = Dummy.TypeReference;
@@ -1948,6 +2873,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.flags = 0;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="typeDefinitionMember"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ITypeDefinitionMember typeDefinitionMember, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(typeDefinitionMember.Attributes);
       this.containingType = typeDefinitionMember.ContainingType;
@@ -1956,12 +2886,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.flags = (int)typeDefinitionMember.Visibility;
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ContainingType {
       get { return this.containingType; }
       set { this.containingType = value; }
@@ -1977,23 +2915,41 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     internal int flags;
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
     List<ILocation> locations;
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
     IName name;
 
+    /// <summary>
+    /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+    /// </returns>
     public override string ToString() {
       return MemberHelper.GetMemberSignature(this,
         NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName|NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
     }
 
+    /// <summary>
+    /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
+    /// </summary>
+    /// <value></value>
     public TypeMemberVisibility Visibility {
       get { return (TypeMemberVisibility)this.flags & TypeMemberVisibility.Mask; }
       set {
@@ -2004,10 +2960,18 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region ITypeMemberReference Members
 
+    /// <summary>
+    /// The type definition that contains this member.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
       get { return this.ContainingType.ResolvedType; }
     }
 
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this; }
     }

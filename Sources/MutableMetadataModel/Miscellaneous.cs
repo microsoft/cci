@@ -12,42 +12,73 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class CustomAttribute : ICustomAttribute, ICopyFrom<ICustomAttribute> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public CustomAttribute() {
       this.arguments = new List<IMetadataExpression>();
       this.constructor = Dummy.MethodReference;
       this.namedArguments = new List<IMetadataNamedArgument>();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="customAttribute"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ICustomAttribute customAttribute, IInternFactory internFactory) {
       this.arguments = new List<IMetadataExpression>(customAttribute.Arguments);
       this.constructor = customAttribute.Constructor;
       this.namedArguments = new List<IMetadataNamedArgument>(customAttribute.NamedArguments);
     }
 
+    /// <summary>
+    /// Zero or more positional arguments for the attribute constructor.
+    /// </summary>
+    /// <value></value>
     public List<IMetadataExpression> Arguments {
       get { return this.arguments; }
       set { this.arguments = value; }
     }
     List<IMetadataExpression> arguments;
 
+    /// <summary>
+    /// A reference to the constructor that will be used to instantiate this custom attribute during execution (if the attribute is inspected via Reflection).
+    /// </summary>
+    /// <value></value>
     public IMethodReference Constructor {
       get { return this.constructor; }
       set { this.constructor = value; }
     }
     IMethodReference constructor;
 
+    /// <summary>
+    /// Zero or more named arguments that specify values for fields and properties of the attribute.
+    /// </summary>
+    /// <value></value>
     public List<IMetadataNamedArgument> NamedArguments {
       get { return this.namedArguments; }
       set { this.namedArguments = value; }
     }
     List<IMetadataNamedArgument> namedArguments;
 
+    /// <summary>
+    /// The number of named arguments.
+    /// </summary>
+    /// <value></value>
     public ushort NumberOfNamedArguments {
       get { return (ushort)this.namedArguments.Count; }
     }
 
+    /// <summary>
+    /// The type of the attribute. For example System.AttributeUsageAttribute.
+    /// </summary>
+    /// <value></value>
     public ITypeReference Type {
       get { return this.Constructor.ContainingType; }
     }
@@ -65,8 +96,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class FileReference : IFileReference, ICopyFrom<IFileReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public FileReference() {
       this.containingAssembly = Dummy.Assembly;
       this.fileName = Dummy.Name;
@@ -74,6 +111,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.hasMetadata = false;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fileReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IFileReference fileReference, IInternFactory internFactory) {
       this.containingAssembly = fileReference.ContainingAssembly;
       this.fileName = fileReference.FileName;
@@ -81,24 +123,40 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.hasMetadata = fileReference.HasMetadata;
     }
 
+    /// <summary>
+    /// The assembly that references this file.
+    /// </summary>
+    /// <value></value>
     public IAssembly ContainingAssembly {
       get { return this.containingAssembly; }
       set { this.containingAssembly = value; }
     }
     IAssembly containingAssembly;
 
+    /// <summary>
+    /// Name of the file.
+    /// </summary>
+    /// <value></value>
     public IName FileName {
       get { return this.fileName; }
       set { this.fileName = value; }
     }
     IName fileName;
 
+    /// <summary>
+    /// A hash of the file contents.
+    /// </summary>
+    /// <value></value>
     public List<byte> HashValue {
       get { return this.hashValue; }
       set { this.hashValue = value; }
     }
     List<byte> hashValue;
 
+    /// <summary>
+    /// True if the file has metadata.
+    /// </summary>
+    /// <value></value>
     public bool HasMetadata {
       get { return this.hasMetadata; }
       set { this.hasMetadata = value; }
@@ -114,8 +172,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class MarshallingInformation : IMarshallingInformation, ICopyFrom<IMarshallingInformation> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MarshallingInformation() {
       this.customMarshaller = Dummy.TypeReference;
       this.customMarshallerRuntimeArgument = "";
@@ -130,6 +194,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.unmanagedType = (UnmanagedType)0;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="marshallingInformation"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IMarshallingInformation marshallingInformation, IInternFactory internFactory) {
       if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
         this.customMarshaller = marshallingInformation.CustomMarshaller;
@@ -177,66 +246,115 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.unmanagedType = marshallingInformation.UnmanagedType;
     }
 
+    /// <summary>
+    /// A reference to the type implementing the custom marshaller.
+    /// </summary>
+    /// <value></value>
     public ITypeReference CustomMarshaller {
       get { return this.customMarshaller; }
       set { this.customMarshaller = value; }
     }
     ITypeReference customMarshaller;
 
+    /// <summary>
+    /// An argument string (cookie) passed to the custom marshaller at run time.
+    /// </summary>
+    /// <value></value>
     public string CustomMarshallerRuntimeArgument {
       get { return this.customMarshallerRuntimeArgument; }
       set { this.customMarshallerRuntimeArgument = value; }
     }
     string customMarshallerRuntimeArgument;
 
+    /// <summary>
+    /// The size of an element of the fixed sized umanaged array.
+    /// </summary>
+    /// <value></value>
     public uint ElementSize {
       get { return this.elementSize; }
       set { this.elementSize = value; }
     }
     uint elementSize;
 
+    /// <summary>
+    /// A multiplier that must be applied to the value of the parameter specified by ParamIndex in order to work out the total size of the unmanaged array.
+    /// </summary>
+    /// <value></value>
     public uint ElementSizeMultiplier {
       get { return this.elementSizeMultiplier; }
       set { this.elementSizeMultiplier = value; }
     }
     uint elementSizeMultiplier;
 
+    /// <summary>
+    /// The unmanged element type of the unmanaged array.
+    /// </summary>
+    /// <value></value>
     public UnmanagedType ElementType {
       get { return this.elementType; }
       set { this.elementType = value; }
     }
     UnmanagedType elementType;
 
+    /// <summary>
+    /// Specifies the index of the parameter that contains the value of the Inteface Identifier (IID) of the marshalled object.
+    /// </summary>
+    /// <value></value>
     public uint IidParameterIndex {
       get { return this.iidParameterIndex; }
       set { this.iidParameterIndex = value; }
     }
     uint iidParameterIndex;
 
+    /// <summary>
+    /// The unmanaged type to which the managed type will be marshalled. This can be be UnmanagedType.CustomMarshaler, in which case the unmanaged type
+    /// is decided at runtime.
+    /// </summary>
+    /// <value></value>
     public UnmanagedType UnmanagedType {
       get { return this.unmanagedType; }
       set { this.unmanagedType = value; }
     }
     UnmanagedType unmanagedType;
 
+    /// <summary>
+    /// The number of elements in the fixed size portion of the unmanaged array.
+    /// </summary>
+    /// <value></value>
     public uint NumberOfElements {
       get { return this.numberOfElements; }
       set { this.numberOfElements = value; }
     }
     uint numberOfElements;
 
+    /// <summary>
+    /// The zero based index of the parameter in the unmanaged method that contains the number of elements in the variable portion of unmanaged array.
+    /// If the index is null, the variable portion is of size zero, or the caller conveys the size of the variable portion of the array to the unmanaged method in some other way.
+    /// </summary>
+    /// <value></value>
     public uint? ParamIndex {
       get { return this.paramIndex; }
       set { this.paramIndex = value; }
     }
     uint? paramIndex;
 
+    /// <summary>
+    /// The type to which the variant values of all elements of the safe array must belong. See also SafeArrayElementUserDefinedSubtype.
+    /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
+    /// </summary>
+    /// <value></value>
     public VarEnum SafeArrayElementSubtype {
       get { return this.safeArrayElementSubType; }
       set { this.safeArrayElementSubType = value; }
     }
     VarEnum safeArrayElementSubType;
 
+    /// <summary>
+    /// A reference to the user defined type to which the variant values of all elements of the safe array must belong.
+    /// (The element type of a safe array is VARIANT. The tag fields will all be either VT_DISPATCH or VT_UNKNOWN or VT_RECORD.
+    /// The "user defined sub type" specifies the type of value the ppdispVal/ppunkVal/pvRecord fields of the element values may point to.)
+    /// </summary>
+    /// <value></value>
     public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return this.safeArrayElementUserDefinedSubType; }
       set { this.safeArrayElementUserDefinedSubType = value; }
@@ -245,8 +363,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class Operation : IOperation, ICopyFrom<IOperation> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Operation() {
       this.location = Dummy.Location;
       this.offset = 0;
@@ -254,6 +378,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.value = null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="operation"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IOperation operation, IInternFactory internFactory) {
       this.location = operation.Location;
       this.offset = operation.Offset;
@@ -261,24 +390,40 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.value = operation.Value;
     }
 
+    /// <summary>
+    /// The location that corresponds to this instruction.
+    /// </summary>
+    /// <value></value>
     public ILocation Location {
       get { return this.location; }
       set { this.location = value; }
     }
     ILocation location;
 
+    /// <summary>
+    /// The offset from the start of the operation stream of a method
+    /// </summary>
+    /// <value></value>
     public uint Offset {
       get { return this.offset; }
       set { this.offset = value; }
     }
     uint offset;
 
+    /// <summary>
+    /// The actual value of the operation code
+    /// </summary>
+    /// <value></value>
     public OperationCode OperationCode {
       get { return this.operationCode; }
       set { this.operationCode = value; }
     }
     OperationCode operationCode;
 
+    /// <summary>
+    /// Immediate data such as a string, the address of a branch target, or a metadata reference, such as a Field
+    /// </summary>
+    /// <value></value>
     public object Value {
       get { return this.value; }
       set { this.value = value; }
@@ -287,8 +432,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class OperationExceptionInformation : IOperationExceptionInformation, ICopyFrom<IOperationExceptionInformation> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public OperationExceptionInformation() {
       this.exceptionType = Dummy.TypeReference;
       this.filterDecisionStartOffset = 0;
@@ -299,6 +450,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.tryStartOffset = 0;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="operationExceptionInformation"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IOperationExceptionInformation operationExceptionInformation, IInternFactory internFactory) {
       this.exceptionType = operationExceptionInformation.ExceptionType;
       this.filterDecisionStartOffset = operationExceptionInformation.FilterDecisionStartOffset;
@@ -309,42 +465,71 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.tryStartOffset = operationExceptionInformation.TryStartOffset;
     }
 
+    /// <summary>
+    /// If HandlerKind == HandlerKind.Catch, this is the type of expection to catch. If HandlerKind == HandlerKind.Filter, this is System.Object.
+    /// Otherwise this is a Dummy.TypeReference.
+    /// </summary>
+    /// <value></value>
     public ITypeReference ExceptionType {
       get { return this.exceptionType; }
       set { this.exceptionType = value; }
     }
     ITypeReference exceptionType;
 
+    /// <summary>
+    /// Label instruction corresponding to the start of filter decision block
+    /// </summary>
+    /// <value></value>
     public uint FilterDecisionStartOffset {
       get { return this.filterDecisionStartOffset; }
       set { this.filterDecisionStartOffset = value; }
     }
     uint filterDecisionStartOffset;
 
+    /// <summary>
+    /// Label instruction corresponding to the end of handler block
+    /// </summary>
+    /// <value></value>
     public uint HandlerEndOffset {
       get { return this.handlerEndOffset; }
       set { this.handlerEndOffset = value; }
     }
     uint handlerEndOffset;
 
+    /// <summary>
+    /// Handler kind for this SEH info
+    /// </summary>
+    /// <value></value>
     public HandlerKind HandlerKind {
       get { return this.handlerKind; }
       set { this.handlerKind = value; }
     }
     HandlerKind handlerKind;
 
+    /// <summary>
+    /// Label instruction corresponding to the start of handler block
+    /// </summary>
+    /// <value></value>
     public uint HandlerStartOffset {
       get { return this.handlerStartOffset; }
       set { this.handlerStartOffset = value; }
     }
     uint handlerStartOffset;
 
+    /// <summary>
+    /// Label instruction corresponding to the end of try block
+    /// </summary>
+    /// <value></value>
     public uint TryEndOffset {
       get { return this.tryEndOffset; }
       set { this.tryEndOffset = value; }
     }
     uint tryEndOffset;
 
+    /// <summary>
+    /// Label instruction corresponding to the start of try block
+    /// </summary>
+    /// <value></value>
     public uint TryStartOffset {
       get { return this.tryStartOffset; }
       set { this.tryStartOffset = value; }
@@ -353,8 +538,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class PlatformInvokeInformation : IPlatformInvokeInformation, ICopyFrom<IPlatformInvokeInformation> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public PlatformInvokeInformation() {
       this.importModule = Dummy.ModuleReference;
       this.importName = Dummy.Name;
@@ -366,6 +557,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.throwExceptionForUnmappableChar = null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="platformInvokeInformation"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IPlatformInvokeInformation platformInvokeInformation, IInternFactory internFactory) {
       this.importModule = platformInvokeInformation.ImportModule;
       this.importName = platformInvokeInformation.ImportName;
@@ -377,48 +573,80 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.throwExceptionForUnmappableChar = platformInvokeInformation.ThrowExceptionForUnmappableChar;
     }
 
+    /// <summary>
+    /// Module providing the method/field.
+    /// </summary>
+    /// <value></value>
     public IModuleReference ImportModule {
       get { return this.importModule; }
       set { this.importModule = value; }
     }
     IModuleReference importModule;
 
+    /// <summary>
+    /// Name of the method/field providing the implementation.
+    /// </summary>
+    /// <value></value>
     public IName ImportName {
       get { return this.importName; }
       set { this.importName = value; }
     }
     IName importName;
 
+    /// <summary>
+    /// If the PInvoke should use the name specified as is.
+    /// </summary>
+    /// <value></value>
     public bool NoMangle {
       get { return this.noMangle; }
       set { this.noMangle = value; }
     }
     bool noMangle;
 
+    /// <summary>
+    /// The calling convention of the PInvoke call.
+    /// </summary>
+    /// <value></value>
     public PInvokeCallingConvention PInvokeCallingConvention {
       get { return this.pinvokeCallingConvention; }
       set { this.pinvokeCallingConvention = value; }
     }
     PInvokeCallingConvention pinvokeCallingConvention;
 
+    /// <summary>
+    /// Marshalling of the Strings for this method.
+    /// </summary>
+    /// <value></value>
     public StringFormatKind StringFormat {
       get { return this.stringFormat; }
       set { this.stringFormat = value; }
     }
     StringFormatKind stringFormat;
 
+    /// <summary>
+    /// If the target function supports getting last error.
+    /// </summary>
+    /// <value></value>
     public bool SupportsLastError {
       get { return this.supportsLastError; }
       set { this.supportsLastError = value; }
     }
     bool supportsLastError;
 
+    /// <summary>
+    /// Enables or disables best-fit mapping behavior when converting Unicode characters to ANSI characters.
+    /// </summary>
+    /// <value></value>
     public bool? UseBestFit {
       get { return this.useBestFit; }
       set { this.useBestFit = value; }
     }
     bool? useBestFit;
 
+    /// <summary>
+    /// Enables or disables the throwing of an exception on an unmappable Unicode character that is converted to an ANSI "?" character.
+    /// </summary>
+    /// <value></value>
     public bool? ThrowExceptionForUnmappableChar {
       get { return this.throwExceptionForUnmappableChar; }
       set { this.throwExceptionForUnmappableChar = value; }
@@ -427,8 +655,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class Resource : IResource, ICopyFrom<IResource> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Resource() {
       this.attributes = new List<ICustomAttribute>();
       this.data = new List<byte>();
@@ -439,6 +673,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.name = Dummy.Name;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="resource"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IResource resource, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(resource.Attributes);
       this.data = new List<byte>(resource.Data);
@@ -452,42 +691,70 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.name = resource.Name;
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this resource.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
+    /// <summary>
+    /// The resource data.
+    /// </summary>
+    /// <value></value>
     public List<byte> Data {
       get { return this.data; }
       set { this.data = value; }
     }
     List<byte> data;
 
+    /// <summary>
+    /// A symbolic reference to the IAssembly that defines the resource.
+    /// </summary>
+    /// <value></value>
     public IAssemblyReference DefiningAssembly {
       get { return this.definingAssembly; }
       set { this.definingAssembly = value; }
     }
     IAssemblyReference definingAssembly;
 
+    /// <summary>
+    /// The external file that contains the resource.
+    /// </summary>
+    /// <value></value>
     public IFileReference ExternalFile {
       get { return this.externalFile; }
       set { this.externalFile = value; }
     }
     IFileReference externalFile;
 
+    /// <summary>
+    /// The resource is in external file
+    /// </summary>
+    /// <value></value>
     public bool IsInExternalFile {
       get { return this.isInExternalFile; }
       set { this.isInExternalFile = value; }
     }
     bool isInExternalFile;
 
+    /// <summary>
+    /// Specifies whether other code from other assemblies may access this resource.
+    /// </summary>
+    /// <value></value>
     public bool IsPublic {
       get { return this.isPublic; }
       set { this.isPublic = value; }
     }
     bool isPublic;
 
+    /// <summary>
+    /// The name of the resource.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
@@ -515,8 +782,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class ResourceReference : IResourceReference, ICopyFrom<IResourceReference> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ResourceReference() {
       this.attributes = new List<ICustomAttribute>();
       this.definingAssembly = Dummy.Assembly;
@@ -525,6 +798,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.resource = Dummy.Resource;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="resourceReference"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IResourceReference resourceReference, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(resourceReference.Attributes);
       this.definingAssembly = resourceReference.DefiningAssembly;
@@ -533,30 +811,50 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.resource = resourceReference.Resource;
     }
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this resource.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
+    /// <summary>
+    /// A symbolic reference to the IAssembly that defines the resource.
+    /// </summary>
+    /// <value></value>
     public IAssemblyReference DefiningAssembly {
       get { return this.definingAssembly; }
       set { this.definingAssembly = value; }
     }
     IAssemblyReference definingAssembly;
 
+    /// <summary>
+    /// Specifies whether other code from other assemblies may access this resource.
+    /// </summary>
+    /// <value></value>
     public bool IsPublic {
       get { return this.isPublic; }
       set { this.isPublic = value; }
     }
     bool isPublic;
 
+    /// <summary>
+    /// The name of the resource.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
     IName name;
 
+    /// <summary>
+    /// The referenced resource.
+    /// </summary>
+    /// <value></value>
     public IResource Resource {
       get { return this.resource; }
       set { this.resource = value; }
@@ -572,24 +870,44 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class SecurityAttribute : ISecurityAttribute, ICopyFrom<ISecurityAttribute> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public SecurityAttribute() {
       this.action = (SecurityAction)0;
       this.attributes = new List<ICustomAttribute>();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="securityAttribute"></param>
+    /// <param name="internFactory"></param>
     public void Copy(ISecurityAttribute securityAttribute, IInternFactory internFactory) {
       this.action = securityAttribute.Action;
       this.attributes = new List<ICustomAttribute>(securityAttribute.Attributes);
     }
 
+    /// <summary>
+    /// Specifies the security action that can be performed using declarative security. For example the action could be Deny.
+    /// </summary>
+    /// <value></value>
     public SecurityAction Action {
       get { return this.action; }
       set { this.action = value; }
     }
     SecurityAction action;
 
+    /// <summary>
+    /// Custom attributes that collectively define the permission set to which the action is applied. Each attribute represents a serialized permission
+    /// or permission set. The union of the sets, together with the individual permissions, define the set to which the action applies.
+    /// </summary>
+    /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
@@ -606,8 +924,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class Win32Resource : IWin32Resource, ICopyFrom<IWin32Resource> {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public Win32Resource() {
       this.codePage = 0;
       this.data = new List<byte>();
@@ -618,6 +942,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.typeName = "";
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="win32Resource"></param>
+    /// <param name="internFactory"></param>
     public void Copy(IWin32Resource win32Resource, IInternFactory internFactory) {
       this.codePage = win32Resource.CodePage;
       this.data = new List<byte>(win32Resource.Data);
@@ -628,42 +957,70 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.typeName = win32Resource.TypeName;
     }
 
+    /// <summary>
+    /// The code page for which this resource is appropriate.
+    /// </summary>
+    /// <value></value>
     public uint CodePage {
       get { return this.codePage; }
       set { this.codePage = value; }
     }
     uint codePage;
 
+    /// <summary>
+    /// The data of the resource.
+    /// </summary>
+    /// <value></value>
     public List<byte> Data {
       get { return this.data; }
       set { this.data = value; }
     }
     List<byte> data;
 
+    /// <summary>
+    /// An integer tag that identifies this resource. If the value is less than 0, this.Name should be used instead.
+    /// </summary>
+    /// <value></value>
     public int Id {
       get { return this.id; }
       set { this.id = value; }
     }
     int id;
 
+    /// <summary>
+    /// The language for which this resource is appropriate.
+    /// </summary>
+    /// <value></value>
     public uint LanguageId {
       get { return this.languageId; }
       set { this.languageId = value; }
     }
     uint languageId;
 
+    /// <summary>
+    /// The name of the resource. Only valid if this.Id &lt; 0.
+    /// </summary>
+    /// <value></value>
     public string Name {
       get { return this.name; }
       set { this.name = value; }
     }
     string name;
 
+    /// <summary>
+    /// An integer tag that identifies what type of resource this is. If the value is less than 0, this.TypeName should be used instead.
+    /// </summary>
+    /// <value></value>
     public int TypeId {
       get { return this.typeId; }
       set { this.typeId = value; }
     }
     int typeId;
 
+    /// <summary>
+    /// A string that identifies what type of resource this is. Only valid if this.TypeId &lt; 0.
+    /// </summary>
+    /// <value></value>
     public string TypeName {
       get { return this.typeName; }
       set { this.typeName = value; }

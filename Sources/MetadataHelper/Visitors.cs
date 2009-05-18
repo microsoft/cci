@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using Microsoft.Cci;
 
 //^ using Microsoft.Contracts;
-#pragma warning disable 1591
-
 namespace Microsoft.Cci {
 
   /// <summary>
@@ -17,16 +15,29 @@ namespace Microsoft.Cci {
   /// </summary>
   public class BaseMetadataTraverser : IMetadataVisitor {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BaseMetadataTraverser() {
     }
 
     //^ [SpecPublic]
+    /// <summary>
+    /// 
+    /// </summary>
     protected System.Collections.Stack path = new System.Collections.Stack();
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected bool stopTraversal;
 
     #region IMetadataVisitor Members
 
+    /// <summary>
+    /// Visits the specified aliases for types.
+    /// </summary>
+    /// <param name="aliasesForTypes">The aliases for types.</param>
     public virtual void Visit(IEnumerable<IAliasForType> aliasesForTypes)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -39,6 +50,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified alias for type.
+    /// </summary>
+    /// <param name="aliasForType">Type of the alias for.</param>
     public virtual void Visit(IAliasForType aliasForType)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -52,6 +67,10 @@ namespace Microsoft.Cci {
       aliasForType.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given array type reference.
+    /// </summary>
+    /// <param name="arrayTypeReference"></param>
     public virtual void Visit(IArrayTypeReference arrayTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -63,6 +82,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given assembly.
+    /// </summary>
+    /// <param name="assembly"></param>
     public virtual void Visit(IAssembly assembly)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -76,6 +99,10 @@ namespace Microsoft.Cci {
       this.Visit(assembly.SecurityAttributes);
     }
 
+    /// <summary>
+    /// Visits the specified assembly references.
+    /// </summary>
+    /// <param name="assemblyReferences">The assembly references.</param>
     public virtual void Visit(IEnumerable<IAssemblyReference> assemblyReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -88,11 +115,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given assembly reference.
+    /// </summary>
+    /// <param name="assemblyReference"></param>
     public virtual void Visit(IAssemblyReference assemblyReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified custom attributes.
+    /// </summary>
+    /// <param name="customAttributes">The custom attributes.</param>
     public virtual void Visit(IEnumerable<ICustomAttribute> customAttributes)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -105,6 +140,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given custom attribute.
+    /// </summary>
+    /// <param name="customAttribute"></param>
     public virtual void Visit(ICustomAttribute customAttribute)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -118,6 +157,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified custom modifiers.
+    /// </summary>
+    /// <param name="customModifiers">The custom modifiers.</param>
     public virtual void Visit(IEnumerable<ICustomModifier> customModifiers)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -130,6 +173,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given custom modifier.
+    /// </summary>
+    /// <param name="customModifier"></param>
     public virtual void Visit(ICustomModifier customModifier)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -141,6 +188,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified events.
+    /// </summary>
+    /// <param name="events">The events.</param>
     public virtual void Visit(IEnumerable<IEventDefinition> events)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -153,6 +204,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given event definition.
+    /// </summary>
+    /// <param name="eventDefinition"></param>
     public virtual void Visit(IEventDefinition eventDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -165,6 +220,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified fields.
+    /// </summary>
+    /// <param name="fields">The fields.</param>
     public virtual void Visit(IEnumerable<IFieldDefinition> fields)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -177,6 +236,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given field definition.
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
     public virtual void Visit(IFieldDefinition fieldDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -192,12 +255,20 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given field reference.
+    /// </summary>
+    /// <param name="fieldReference"></param>
     public virtual void Visit(IFieldReference fieldReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       this.Visit((ITypeMemberReference)fieldReference);
     }
 
+    /// <summary>
+    /// Visits the specified file references.
+    /// </summary>
+    /// <param name="fileReferences">The file references.</param>
     public virtual void Visit(IEnumerable<IFileReference> fileReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -210,11 +281,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given file reference.
+    /// </summary>
+    /// <param name="fileReference"></param>
     public virtual void Visit(IFileReference fileReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given function pointer type reference.
+    /// </summary>
+    /// <param name="functionPointerTypeReference"></param>
     public virtual void Visit(IFunctionPointerTypeReference functionPointerTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -230,11 +309,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic method instance reference.
+    /// </summary>
+    /// <param name="genericMethodInstanceReference"></param>
     public virtual void Visit(IGenericMethodInstanceReference genericMethodInstanceReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified generic parameters.
+    /// </summary>
+    /// <param name="genericParameters">The generic parameters.</param>
     public virtual void Visit(IEnumerable<IGenericMethodParameter> genericParameters)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -247,16 +334,28 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic method parameter.
+    /// </summary>
+    /// <param name="genericMethodParameter"></param>
     public virtual void Visit(IGenericMethodParameter genericMethodParameter)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic method parameter reference.
+    /// </summary>
+    /// <param name="genericMethodParameterReference"></param>
     public virtual void Visit(IGenericMethodParameterReference genericMethodParameterReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified generic parameter.
+    /// </summary>
+    /// <param name="genericParameter">The generic parameter.</param>
     public virtual void Visit(IGenericParameter genericParameter) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -268,6 +367,10 @@ namespace Microsoft.Cci {
       genericParameter.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic type instance reference.
+    /// </summary>
+    /// <param name="genericTypeInstanceReference"></param>
     public virtual void Visit(IGenericTypeInstanceReference genericTypeInstanceReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -280,6 +383,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified generic parameters.
+    /// </summary>
+    /// <param name="genericParameters">The generic parameters.</param>
     public virtual void Visit(IEnumerable<IGenericTypeParameter> genericParameters)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -292,28 +399,48 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic parameter.
+    /// </summary>
+    /// <param name="genericTypeParameter"></param>
     public virtual void Visit(IGenericTypeParameter genericTypeParameter)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic type parameter reference.
+    /// </summary>
+    /// <param name="genericTypeParameterReference"></param>
     public virtual void Visit(IGenericTypeParameterReference genericTypeParameterReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given global field definition.
+    /// </summary>
+    /// <param name="globalFieldDefinition"></param>
     public virtual void Visit(IGlobalFieldDefinition globalFieldDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       this.Visit((IFieldDefinition)globalFieldDefinition);
     }
 
+    /// <summary>
+    /// Performs some computation with the given global method definition.
+    /// </summary>
+    /// <param name="globalMethodDefinition"></param>
     public virtual void Visit(IGlobalMethodDefinition globalMethodDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       this.Visit((IMethodDefinition)globalMethodDefinition);
     }
 
+    /// <summary>
+    /// Visits the specified local definitions.
+    /// </summary>
+    /// <param name="localDefinitions">The local definitions.</param>
     public virtual void Visit(IEnumerable<ILocalDefinition> localDefinitions) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -324,6 +451,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The local definition.</param>
     public virtual void Visit(ILocalDefinition localDefinition) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -334,11 +465,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given managed pointer type reference.
+    /// </summary>
+    /// <param name="managedPointerTypeReference"></param>
     public virtual void Visit(IManagedPointerTypeReference managedPointerTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given marshalling information.
+    /// </summary>
+    /// <param name="marshallingInformation"></param>
     public virtual void Visit(IMarshallingInformation marshallingInformation)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -356,11 +495,19 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata constant.
+    /// </summary>
+    /// <param name="constant"></param>
     public virtual void Visit(IMetadataConstant constant)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
     public virtual void Visit(IMetadataCreateArray createArray)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -373,6 +520,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified expressions.
+    /// </summary>
+    /// <param name="expressions">The expressions.</param>
     public virtual void Visit(IEnumerable<IMetadataExpression> expressions)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -385,6 +536,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata expression.
+    /// </summary>
+    /// <param name="expression"></param>
     public virtual void Visit(IMetadataExpression expression) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -395,6 +550,10 @@ namespace Microsoft.Cci {
       expression.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified named arguments.
+    /// </summary>
+    /// <param name="namedArguments">The named arguments.</param>
     public virtual void Visit(IEnumerable<IMetadataNamedArgument> namedArguments)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -407,6 +566,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
     public virtual void Visit(IMetadataNamedArgument namedArgument)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -418,6 +581,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata typeof expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
     public virtual void Visit(IMetadataTypeOf typeOf)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -429,6 +596,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given method body.
+    /// </summary>
+    /// <param name="methodBody"></param>
     public virtual void Visit(IMethodBody methodBody)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -442,6 +613,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified methods.
+    /// </summary>
+    /// <param name="methods">The methods.</param>
     public virtual void Visit(IEnumerable<IMethodDefinition> methods)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -454,6 +629,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given method definition.
+    /// </summary>
+    /// <param name="method"></param>
     public virtual void Visit(IMethodDefinition method)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -474,6 +653,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified method implementations.
+    /// </summary>
+    /// <param name="methodImplementations">The method implementations.</param>
     public virtual void Visit(IEnumerable<IMethodImplementation> methodImplementations)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -486,6 +669,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given method implementation.
+    /// </summary>
+    /// <param name="methodImplementation"></param>
     public virtual void Visit(IMethodImplementation methodImplementation)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -498,6 +685,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified method references.
+    /// </summary>
+    /// <param name="methodReferences">The method references.</param>
     public virtual void Visit(IEnumerable<IMethodReference> methodReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -510,6 +701,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given method reference.
+    /// </summary>
+    /// <param name="methodReference"></param>
     public virtual void Visit(IMethodReference methodReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -520,6 +715,10 @@ namespace Microsoft.Cci {
         this.Visit((ITypeMemberReference)methodReference);
     }
 
+    /// <summary>
+    /// Performs some computation with the given modified type reference.
+    /// </summary>
+    /// <param name="modifiedTypeReference"></param>
     public virtual void Visit(IModifiedTypeReference modifiedTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -532,6 +731,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given module.
+    /// </summary>
+    /// <param name="module"></param>
     public virtual void Visit(IModule module)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -545,6 +748,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified modules.
+    /// </summary>
+    /// <param name="modules">The modules.</param>
     public virtual void Visit(IEnumerable<IModule> modules)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -557,6 +764,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified module references.
+    /// </summary>
+    /// <param name="moduleReferences">The module references.</param>
     public virtual void Visit(IEnumerable<IModuleReference> moduleReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -569,11 +780,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given module reference.
+    /// </summary>
+    /// <param name="moduleReference"></param>
     public virtual void Visit(IModuleReference moduleReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified types.
+    /// </summary>
+    /// <param name="types">The types.</param>
     public virtual void Visit(IEnumerable<INamedTypeDefinition> types)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -586,6 +805,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified namespace members.
+    /// </summary>
+    /// <param name="namespaceMembers">The namespace members.</param>
     public virtual void Visit(IEnumerable<INamespaceMember> namespaceMembers)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -598,9 +821,17 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given alias for a namespace type definition.
+    /// </summary>
+    /// <param name="namespaceAliasForType"></param>
     public virtual void Visit(INamespaceAliasForType namespaceAliasForType) {
     }
 
+    /// <summary>
+    /// Visits the specified namespace member.
+    /// </summary>
+    /// <param name="namespaceMember">The namespace member.</param>
     public virtual void Visit(INamespaceMember namespaceMember) {
       if (this.stopTraversal) return;
       INamespaceDefinition/*?*/ nestedNamespace = namespaceMember as INamespaceDefinition;
@@ -627,24 +858,44 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Performs some computation with the given namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition"></param>
     public virtual void Visit(INamespaceTypeDefinition namespaceTypeDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given namespace type reference.
+    /// </summary>
+    /// <param name="namespaceTypeReference"></param>
     public virtual void Visit(INamespaceTypeReference namespaceTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given alias to a nested type definition.
+    /// </summary>
+    /// <param name="nestedAliasForType"></param>
     public virtual void Visit(INestedAliasForType nestedAliasForType) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested unit namespace reference.
+    /// </summary>
+    /// <param name="nestedUnitNamespaceReference"></param>
     public virtual void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified nested types.
+    /// </summary>
+    /// <param name="nestedTypes">The nested types.</param>
     public virtual void Visit(IEnumerable<INestedTypeDefinition> nestedTypes)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -657,11 +908,19 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition"></param>
     public virtual void Visit(INestedTypeDefinition nestedTypeDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested type reference.
+    /// </summary>
+    /// <param name="nestedTypeReference"></param>
     public virtual void Visit(INestedTypeReference nestedTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -673,16 +932,28 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested unit namespace.
+    /// </summary>
+    /// <param name="nestedUnitNamespace"></param>
     public virtual void Visit(INestedUnitNamespace nestedUnitNamespace)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested unit set namespace.
+    /// </summary>
+    /// <param name="nestedUnitSetNamespace"></param>
     public virtual void Visit(INestedUnitSetNamespace nestedUnitSetNamespace)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified operations.
+    /// </summary>
+    /// <param name="operations">The operations.</param>
     public virtual void Visit(IEnumerable<IOperation> operations) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -693,6 +964,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified operation.
+    /// </summary>
+    /// <param name="operation">The operation.</param>
     public virtual void Visit(IOperation operation) {
       ITypeReference/*?*/ typeReference = operation.Value as ITypeReference;
       if (typeReference != null) {
@@ -713,6 +988,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified operation exception informations.
+    /// </summary>
+    /// <param name="operationExceptionInformations">The operation exception informations.</param>
     public virtual void Visit(IEnumerable<IOperationExceptionInformation> operationExceptionInformations) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -723,6 +1002,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified operation exception information.
+    /// </summary>
+    /// <param name="operationExceptionInformation">The operation exception information.</param>
     public virtual void Visit(IOperationExceptionInformation operationExceptionInformation) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -732,6 +1015,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified parameters.
+    /// </summary>
+    /// <param name="parameters">The parameters.</param>
     public virtual void Visit(IEnumerable<IParameterDefinition> parameters)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -744,6 +1031,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given parameter definition.
+    /// </summary>
+    /// <param name="parameterDefinition"></param>
     public virtual void Visit(IParameterDefinition parameterDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -762,6 +1053,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified parameter type informations.
+    /// </summary>
+    /// <param name="parameterTypeInformations">The parameter type informations.</param>
     public virtual void Visit(IEnumerable<IParameterTypeInformation> parameterTypeInformations)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -774,6 +1069,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given parameter type information.
+    /// </summary>
+    /// <param name="parameterTypeInformation"></param>
     public virtual void Visit(IParameterTypeInformation parameterTypeInformation)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -787,6 +1086,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified platform invoke information.
+    /// </summary>
+    /// <param name="platformInvokeInformation">The platform invoke information.</param>
     public virtual void Visit(IPlatformInvokeInformation platformInvokeInformation)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -798,6 +1101,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Performs some computation with the given pointer type reference.
+    /// </summary>
+    /// <param name="pointerTypeReference"></param>
     public virtual void Visit(IPointerTypeReference pointerTypeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -809,6 +1116,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified properties.
+    /// </summary>
+    /// <param name="properties">The properties.</param>
     public virtual void Visit(IEnumerable<IPropertyDefinition> properties)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -821,6 +1132,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given property definition.
+    /// </summary>
+    /// <param name="propertyDefinition"></param>
     public virtual void Visit(IPropertyDefinition propertyDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -833,6 +1148,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified resource references.
+    /// </summary>
+    /// <param name="resourceReferences">The resource references.</param>
     public virtual void Visit(IEnumerable<IResourceReference> resourceReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -845,21 +1164,37 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Performs some computation with the given reference to a manifest resource.
+    /// </summary>
+    /// <param name="resourceReference"></param>
     public virtual void Visit(IResourceReference resourceReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given root unit namespace.
+    /// </summary>
+    /// <param name="rootUnitNamespace"></param>
     public virtual void Visit(IRootUnitNamespace rootUnitNamespace)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given root unit set namespace.
+    /// </summary>
+    /// <param name="rootUnitSetNamespace"></param>
     public virtual void Visit(IRootUnitSetNamespace rootUnitSetNamespace)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Performs some computation with the given security attribute.
+    /// </summary>
+    /// <param name="securityAttribute"></param>
     public virtual void Visit(ISecurityAttribute securityAttribute)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -871,6 +1206,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified security attributes.
+    /// </summary>
+    /// <param name="securityAttributes">The security attributes.</param>
     public virtual void Visit(IEnumerable<ISecurityAttribute> securityAttributes)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -883,6 +1222,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified type members.
+    /// </summary>
+    /// <param name="typeMembers">The type members.</param>
     public virtual void Visit(IEnumerable<ITypeDefinitionMember> typeMembers)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -895,6 +1238,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified types.
+    /// </summary>
+    /// <param name="types">The types.</param>
     public virtual void Visit(IEnumerable<ITypeDefinition> types)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -907,6 +1254,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified type definition.
+    /// </summary>
+    /// <param name="typeDefinition">The type definition.</param>
     public virtual void Visit(ITypeDefinition typeDefinition) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -925,6 +1276,10 @@ namespace Microsoft.Cci {
       typeDefinition.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified type member.
+    /// </summary>
+    /// <param name="typeMember">The type member.</param>
     public virtual void Visit(ITypeDefinitionMember typeMember) {
       if (this.stopTraversal) return;
       ITypeDefinition/*?*/ nestedType = typeMember as ITypeDefinition;
@@ -940,6 +1295,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified type member reference.
+    /// </summary>
+    /// <param name="typeMemberReference">The type member reference.</param>
     public virtual void Visit(ITypeMemberReference typeMemberReference) {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -949,6 +1308,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified type references.
+    /// </summary>
+    /// <param name="typeReferences">The type references.</param>
     public virtual void Visit(IEnumerable<ITypeReference> typeReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -961,6 +1324,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified type reference.
+    /// </summary>
+    /// <param name="typeReference">The type reference.</param>
     public virtual void Visit(ITypeReference typeReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1022,6 +1389,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit.</param>
     public virtual void Visit(IUnit unit)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1035,6 +1406,10 @@ namespace Microsoft.Cci {
       unit.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified unit references.
+    /// </summary>
+    /// <param name="unitReferences">The unit references.</param>
     public virtual void Visit(IEnumerable<IUnitReference> unitReferences)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1047,6 +1422,10 @@ namespace Microsoft.Cci {
       //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
     }
 
+    /// <summary>
+    /// Visits the specified unit reference.
+    /// </summary>
+    /// <param name="unitReference">The unit reference.</param>
     public virtual void Visit(IUnitReference unitReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1073,6 +1452,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Visits the specified namespace definition.
+    /// </summary>
+    /// <param name="namespaceDefinition">The namespace definition.</param>
     public virtual void Visit(INamespaceDefinition namespaceDefinition)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1085,17 +1468,29 @@ namespace Microsoft.Cci {
       namespaceDefinition.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given root unit namespace reference.
+    /// </summary>
+    /// <param name="rootUnitNamespaceReference"></param>
     public virtual void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the specified unit namespace reference.
+    /// </summary>
+    /// <param name="unitNamespaceReference">The unit namespace reference.</param>
     public virtual void Visit(IUnitNamespaceReference unitNamespaceReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       unitNamespaceReference.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given unit set.
+    /// </summary>
+    /// <param name="unitSet"></param>
     public virtual void Visit(IUnitSet unitSet)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1107,6 +1502,10 @@ namespace Microsoft.Cci {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the specified unit set namespace.
+    /// </summary>
+    /// <param name="unitSetNamespace">The unit set namespace.</param>
     public virtual void Visit(IUnitSetNamespace unitSetNamespace)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1119,11 +1518,19 @@ namespace Microsoft.Cci {
       unitSetNamespace.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given Win32 resource.
+    /// </summary>
+    /// <param name="win32Resource"></param>
     public virtual void Visit(IWin32Resource win32Resource)
       //^ ensures this.path.Count == old(this.path.Count);
     {
     }
 
+    /// <summary>
+    /// Visits the method return attributes.
+    /// </summary>
+    /// <param name="customAttributes">The custom attributes.</param>
     public virtual void VisitMethodReturnAttributes(IEnumerable<ICustomAttribute> customAttributes)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -1144,207 +1551,453 @@ namespace Microsoft.Cci {
   /// </summary>
   public class BaseMetadataVisitor : IMetadataVisitor {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public BaseMetadataVisitor() {
     }
 
     #region IMetadataVisitor Members
 
+    /// <summary>
+    /// Visits the specified alias for type.
+    /// </summary>
+    /// <param name="aliasForType">Type of the alias for.</param>
     public virtual void Visit(IAliasForType aliasForType) {
       aliasForType.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given array type reference.
+    /// </summary>
+    /// <param name="arrayTypeReference"></param>
     public virtual void Visit(IArrayTypeReference arrayTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given assembly.
+    /// </summary>
+    /// <param name="assembly"></param>
     public virtual void Visit(IAssembly assembly) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given assembly reference.
+    /// </summary>
+    /// <param name="assemblyReference"></param>
     public virtual void Visit(IAssemblyReference assemblyReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given custom attribute.
+    /// </summary>
+    /// <param name="customAttribute"></param>
     public virtual void Visit(ICustomAttribute customAttribute) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given custom modifier.
+    /// </summary>
+    /// <param name="customModifier"></param>
     public virtual void Visit(ICustomModifier customModifier) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given event definition.
+    /// </summary>
+    /// <param name="eventDefinition"></param>
     public virtual void Visit(IEventDefinition eventDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given field definition.
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
     public virtual void Visit(IFieldDefinition fieldDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given field reference.
+    /// </summary>
+    /// <param name="fieldReference"></param>
     public virtual void Visit(IFieldReference fieldReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given file reference.
+    /// </summary>
+    /// <param name="fileReference"></param>
     public virtual void Visit(IFileReference fileReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given function pointer type reference.
+    /// </summary>
+    /// <param name="functionPointerTypeReference"></param>
     public virtual void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic method instance reference.
+    /// </summary>
+    /// <param name="genericMethodInstanceReference"></param>
     public virtual void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic method parameter.
+    /// </summary>
+    /// <param name="genericMethodParameter"></param>
     public virtual void Visit(IGenericMethodParameter genericMethodParameter) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic method parameter reference.
+    /// </summary>
+    /// <param name="genericMethodParameterReference"></param>
     public virtual void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic type instance reference.
+    /// </summary>
+    /// <param name="genericTypeInstanceReference"></param>
     public virtual void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic parameter.
+    /// </summary>
+    /// <param name="genericTypeParameter"></param>
     public virtual void Visit(IGenericTypeParameter genericTypeParameter) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given generic type parameter reference.
+    /// </summary>
+    /// <param name="genericTypeParameterReference"></param>
     public virtual void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given global field definition.
+    /// </summary>
+    /// <param name="globalFieldDefinition"></param>
     public virtual void Visit(IGlobalFieldDefinition globalFieldDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given global method definition.
+    /// </summary>
+    /// <param name="globalMethodDefinition"></param>
     public virtual void Visit(IGlobalMethodDefinition globalMethodDefinition) {
     }
-    
+
+    /// <summary>
+    /// Performs some computation with the given managed pointer type reference.
+    /// </summary>
+    /// <param name="managedPointerTypeReference"></param>
     public virtual void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given marshalling information.
+    /// </summary>
+    /// <param name="marshallingInformation"></param>
     public virtual void Visit(IMarshallingInformation marshallingInformation) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata constant.
+    /// </summary>
+    /// <param name="constant"></param>
     public virtual void Visit(IMetadataConstant constant) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
     public virtual void Visit(IMetadataCreateArray createArray) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata expression.
+    /// </summary>
+    /// <param name="expression"></param>
     public virtual void Visit(IMetadataExpression expression) {
       expression.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
     public virtual void Visit(IMetadataNamedArgument namedArgument) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given metadata typeof expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
     public virtual void Visit(IMetadataTypeOf typeOf) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given method body.
+    /// </summary>
+    /// <param name="methodBody"></param>
     public virtual void Visit(IMethodBody methodBody) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given method definition.
+    /// </summary>
+    /// <param name="method"></param>
     public virtual void Visit(IMethodDefinition method) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given method implementation.
+    /// </summary>
+    /// <param name="methodImplementation"></param>
     public virtual void Visit(IMethodImplementation methodImplementation) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given method reference.
+    /// </summary>
+    /// <param name="methodReference"></param>
     public virtual void Visit(IMethodReference methodReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given modified type reference.
+    /// </summary>
+    /// <param name="modifiedTypeReference"></param>
     public virtual void Visit(IModifiedTypeReference modifiedTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given module.
+    /// </summary>
+    /// <param name="module"></param>
     public virtual void Visit(IModule module) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given module reference.
+    /// </summary>
+    /// <param name="moduleReference"></param>
     public virtual void Visit(IModuleReference moduleReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given alias for a namespace type definition.
+    /// </summary>
+    /// <param name="namespaceAliasForType"></param>
     public virtual void Visit(INamespaceAliasForType namespaceAliasForType) {
     }
 
+    /// <summary>
+    /// Visits the specified namespace definition.
+    /// </summary>
+    /// <param name="namespaceDefinition">The namespace definition.</param>
     public virtual void Visit(INamespaceDefinition namespaceDefinition) {
       namespaceDefinition.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified namespace member.
+    /// </summary>
+    /// <param name="namespaceMember">The namespace member.</param>
     public virtual void Visit(INamespaceMember namespaceMember) {
       namespaceMember.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition"></param>
     public virtual void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given namespace type reference.
+    /// </summary>
+    /// <param name="namespaceTypeReference"></param>
     public virtual void Visit(INamespaceTypeReference namespaceTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given alias to a nested type definition.
+    /// </summary>
+    /// <param name="nestedAliasForType"></param>
     public virtual void Visit(INestedAliasForType nestedAliasForType) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition"></param>
     public virtual void Visit(INestedTypeDefinition nestedTypeDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested type reference.
+    /// </summary>
+    /// <param name="nestedTypeReference"></param>
     public virtual void Visit(INestedTypeReference nestedTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested unit namespace.
+    /// </summary>
+    /// <param name="nestedUnitNamespace"></param>
     public virtual void Visit(INestedUnitNamespace nestedUnitNamespace) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested unit namespace reference.
+    /// </summary>
+    /// <param name="nestedUnitNamespaceReference"></param>
     public virtual void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given nested unit set namespace.
+    /// </summary>
+    /// <param name="nestedUnitSetNamespace"></param>
     public virtual void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given parameter definition.
+    /// </summary>
+    /// <param name="parameterDefinition"></param>
     public virtual void Visit(IParameterDefinition parameterDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given property definition.
+    /// </summary>
+    /// <param name="propertyDefinition"></param>
     public virtual void Visit(IPropertyDefinition propertyDefinition) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given parameter type information.
+    /// </summary>
+    /// <param name="parameterTypeInformation"></param>
     public virtual void Visit(IParameterTypeInformation parameterTypeInformation){
     }
 
+    /// <summary>
+    /// Performs some computation with the given pointer type reference.
+    /// </summary>
+    /// <param name="pointerTypeReference"></param>
     public virtual void Visit(IPointerTypeReference pointerTypeReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given reference to a manifest resource.
+    /// </summary>
+    /// <param name="resourceReference"></param>
     public virtual void Visit(IResourceReference resourceReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given root unit namespace.
+    /// </summary>
+    /// <param name="rootUnitNamespace"></param>
     public virtual void Visit(IRootUnitNamespace rootUnitNamespace) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given root unit namespace reference.
+    /// </summary>
+    /// <param name="rootUnitNamespaceReference"></param>
     public virtual void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given root unit set namespace.
+    /// </summary>
+    /// <param name="rootUnitSetNamespace"></param>
     public virtual void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
     }
 
+    /// <summary>
+    /// Performs some computation with the given security attribute.
+    /// </summary>
+    /// <param name="securityAttribute"></param>
     public virtual void Visit(ISecurityAttribute securityAttribute) {
     }
 
+    /// <summary>
+    /// Visits the specified type member.
+    /// </summary>
+    /// <param name="typeMember">The type member.</param>
     public virtual void Visit(ITypeDefinitionMember typeMember) {
       typeMember.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified type reference.
+    /// </summary>
+    /// <param name="typeReference">The type reference.</param>
     public virtual void Visit(ITypeReference typeReference) {
       typeReference.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit.</param>
     public virtual void Visit(IUnit unit) {
       unit.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified unit reference.
+    /// </summary>
+    /// <param name="unitReference">The unit reference.</param>
     public virtual void Visit(IUnitReference unitReference) {
       unitReference.Dispatch(this);
     }
 
+    /// <summary>
+    /// Visits the specified unit namespace reference.
+    /// </summary>
+    /// <param name="unitNamespaceReference">The unit namespace reference.</param>
     public virtual void Visit(IUnitNamespaceReference unitNamespaceReference) {
       unitNamespaceReference.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given unit set.
+    /// </summary>
+    /// <param name="unitSet"></param>
     public virtual void Visit(IUnitSet unitSet) {
     }
 
+    /// <summary>
+    /// Visits the specified unit set namespace.
+    /// </summary>
+    /// <param name="unitSetNamespace">The unit set namespace.</param>
     public virtual void Visit(IUnitSetNamespace unitSetNamespace) {
       unitSetNamespace.Dispatch(this);
     }
 
+    /// <summary>
+    /// Performs some computation with the given Win32 resource.
+    /// </summary>
+    /// <param name="win32Resource"></param>
     public virtual void Visit(IWin32Resource win32Resource) {
     }
 
     #endregion
   }
 
-#pragma warning restore 1591
 }
 

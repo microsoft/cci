@@ -614,6 +614,11 @@ namespace Microsoft.Cci {
       get { return this; }
     }
 
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
     }
@@ -1063,32 +1068,67 @@ namespace Microsoft.Cci {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <typeparam name="ParameterType"></typeparam>
   public abstract class SpecializedGenericParameter<ParameterType> : IGenericParameter
     where ParameterType : IGenericParameter {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="unspecializedParameter"></param>
+    /// <param name="internFactory"></param>
     protected SpecializedGenericParameter(ParameterType/*!*/ unspecializedParameter, IInternFactory internFactory) {
       this.unspecializedParameter = unspecializedParameter;
       this.internFactory = internFactory;
     }
 
+    /// <summary>
+    /// Zero or more classes from which this type is derived.
+    /// For CLR types this collection is empty for interfaces and System.Object and populated with exactly one base type for all other types.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeReference> BaseClasses {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
     }
 
+    /// <summary>
+    /// A list of classes or interfaces. All type arguments matching this parameter must be derived from all of the classes and implement all of the interfaces.
+    /// </summary>
+    /// <value></value>
     public abstract IEnumerable<ITypeReference> Constraints { get; }
 
+    /// <summary>
+    /// Zero or more parameters that can be used as type annotations.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IGenericTypeParameter> GenericParameters {
       get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
     }
 
+    /// <summary>
+    /// Zero or more interfaces implemented by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeReference> Interfaces {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
     }
 
+    /// <summary>
+    /// An instance of this generic type that has been obtained by using the generic parameters as the arguments.
+    /// Use this instance to look up members
+    /// </summary>
+    /// <value></value>
     public IGenericTypeInstanceReference InstanceType {
       get { return Dummy.GenericTypeInstance; }
     }
 
+    /// <summary>
+    /// A way to get to platform types such as System.Object.
+    /// </summary>
+    /// <value></value>
     public IPlatformType PlatformType {
       get { return this.UnspecializedParameter.PlatformType; }
     }
@@ -1100,24 +1140,44 @@ namespace Microsoft.Cci {
     }
     readonly ParameterType/*!*/ unspecializedParameter;
 
+    /// <summary>
+    /// Zero or more implementation overrides provided by the class.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
       get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
     }
 
     #region IGenericParameter Members
 
+    /// <summary>
+    /// True if all type arguments matching this parameter are constrained to be reference types.
+    /// </summary>
+    /// <value></value>
     public bool MustBeReferenceType {
       get { return this.UnspecializedParameter.MustBeReferenceType; }
     }
 
+    /// <summary>
+    /// True if all type arguments matching this parameter are constrained to be value types.
+    /// </summary>
+    /// <value></value>
     public bool MustBeValueType {
       get { return this.UnspecializedParameter.MustBeValueType; }
     }
 
+    /// <summary>
+    /// True if all type arguments matching this parameter are constrained to be value types or concrete classes with visible default constructors.
+    /// </summary>
+    /// <value></value>
     public bool MustHaveDefaultConstructor {
       get { return this.UnspecializedParameter.MustHaveDefaultConstructor; }
     }
 
+    /// <summary>
+    /// Indicates if the generic type or method with this type parameter is co-, contra-, or non variant with respect to this type parameter.
+    /// </summary>
+    /// <value></value>
     public TypeParameterVariance Variance {
       get { return this.UnspecializedParameter.Variance; }
     }
@@ -1126,134 +1186,273 @@ namespace Microsoft.Cci {
 
     #region ITypeDefinition Members
 
+    /// <summary>
+    /// The byte alignment that values of the given type ought to have. Must be a power of 2. If zero, the alignment is decided at runtime.
+    /// </summary>
+    /// <value></value>
     public ushort Alignment {
       get { return this.UnspecializedParameter.Alignment; }
     }
 
+    /// <summary>
+    /// Zero or more events defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IEventDefinition> Events {
       get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
     }
 
+    /// <summary>
+    /// Zero or more fields defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IFieldDefinition> Fields {
       get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
     }
 
+    /// <summary>
+    /// The number of generic parameters. Zero if the type is not generic.
+    /// </summary>
+    /// <value></value>
     public ushort GenericParameterCount {
       get { return this.UnspecializedParameter.GenericParameterCount; }
     }
 
+    /// <summary>
+    /// True if the type may not be instantiated.
+    /// </summary>
+    /// <value></value>
     public bool IsAbstract {
       get { return this.UnspecializedParameter.IsAbstract; }
     }
 
+    /// <summary>
+    /// True if the type is a class (it is not an interface or type parameter and does not extend a special base class).
+    /// Corresponds to C# class.
+    /// </summary>
+    /// <value></value>
     public bool IsClass {
       get { return this.UnspecializedParameter.IsClass; }
     }
 
+    /// <summary>
+    /// True if the type is a delegate (it extends System.MultiCastDelegate). Corresponds to C# delegate
+    /// </summary>
+    /// <value></value>
     public bool IsDelegate {
       get { return this.UnspecializedParameter.IsDelegate; }
     }
 
+    /// <summary>
+    /// True if the type is an enumeration (it extends System.Enum and is sealed). Corresponds to C# enum.
+    /// </summary>
+    /// <value></value>
     public bool IsEnum {
       get { return this.UnspecializedParameter.IsEnum; }
     }
 
+    /// <summary>
+    /// True if this type is parameterized (this.GenericParameters is a non empty collection).
+    /// </summary>
+    /// <value></value>
     public bool IsGeneric {
       get { return this.UnspecializedParameter.IsGeneric; }
     }
 
+    /// <summary>
+    /// True if the type is an interface.
+    /// </summary>
+    /// <value></value>
     public bool IsInterface {
       get { return this.UnspecializedParameter.IsInterface; }
     }
 
+    /// <summary>
+    /// True if the type is a reference type. A reference type is non static class or interface or a suitably constrained type parameter.
+    /// A type parameter for which MustBeReferenceType (the class constraint in C#) is true returns true for this property
+    /// as does a type parameter with a constraint that is a class.
+    /// </summary>
+    /// <value></value>
     public bool IsReferenceType {
       get { return this.UnspecializedParameter.IsReferenceType; }
     }
 
+    /// <summary>
+    /// True if the type may not be subtyped.
+    /// </summary>
+    /// <value></value>
     public bool IsSealed {
       get { return this.UnspecializedParameter.IsSealed; }
     }
 
+    /// <summary>
+    /// True if the type is an abstract sealed class that directly extends System.Object and declares no constructors.
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get { return this.UnspecializedParameter.IsStatic; }
     }
 
+    /// <summary>
+    /// True if the type is a value type.
+    /// Value types are sealed and extend System.ValueType or System.Enum.
+    /// A type parameter for which MustBeValueType (the struct constraint in C#) is true also returns true for this property.
+    /// </summary>
+    /// <value></value>
     public bool IsValueType {
       get { return this.UnspecializedParameter.IsValueType; }
     }
 
+    /// <summary>
+    /// True if the type is a struct (its not Primitive, is sealed and base is System.ValueType).
+    /// </summary>
+    /// <value></value>
     public bool IsStruct {
       get { return this.UnspecializedParameter.IsStruct; }
     }
 
+    /// <summary>
+    /// The collection of member instances that are members of this scope.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeDefinitionMember> Members {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
+    /// <summary>
+    /// Zero or more methods defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IMethodDefinition> Methods {
       get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
     }
 
+    /// <summary>
+    /// Zero or more nested types defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<INestedTypeDefinition> NestedTypes {
       get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
     }
 
+    /// <summary>
+    /// Zero or more properties defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IPropertyDefinition> Properties {
       get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
     }
 
+    /// <summary>
+    /// Size of an object of this type. In bytes. If zero, the size is unspecified and will be determined at runtime.
+    /// </summary>
+    /// <value></value>
     public uint SizeOf {
       get { return this.UnspecializedParameter.SizeOf; }
     }
 
+    /// <summary>
+    /// Declarative security actions for this type. Will be empty if this.HasSecurity is false.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
       get { return this.UnspecializedParameter.SecurityAttributes; }
     }
 
+    /// <summary>
+    /// Returns a reference to the underlying (integral) type on which this (enum) type is based.
+    /// </summary>
+    /// <value></value>
     public ITypeReference UnderlyingType {
       get { return this.UnspecializedParameter.UnderlyingType; }
     }
 
+    /// <summary>
+    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive" CLR type (such as System.Int32) and
+    /// the type code identifies which of the primitive types it corresponds to.
+    /// </summary>
+    /// <value></value>
     public PrimitiveTypeCode TypeCode {
       get { return this.UnspecializedParameter.TypeCode; }
     }
 
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ILocation> Locations {
       get { return this.UnspecializedParameter.Locations; }
     }
 
+    /// <summary>
+    /// Layout of the type.
+    /// </summary>
+    /// <value></value>
     public LayoutKind Layout {
       get { return this.UnspecializedParameter.Layout; }
     }
 
+    /// <summary>
+    /// True if the type has special name.
+    /// </summary>
+    /// <value></value>
     public bool IsSpecialName {
       get { return this.UnspecializedParameter.IsSpecialName; }
     }
 
+    /// <summary>
+    /// Is this imported from COM type library
+    /// </summary>
+    /// <value></value>
     public bool IsComObject {
       get { return this.UnspecializedParameter.IsComObject; }
     }
 
+    /// <summary>
+    /// True if this type is serializable.
+    /// </summary>
+    /// <value></value>
     public bool IsSerializable {
       get { return this.UnspecializedParameter.IsSerializable; }
     }
 
+    /// <summary>
+    /// Is type initialized anytime before first access to static field
+    /// </summary>
+    /// <value></value>
     public bool IsBeforeFieldInit {
       get { return this.UnspecializedParameter.IsBeforeFieldInit; }
     }
 
+    /// <summary>
+    /// Default marshalling of the Strings in this class.
+    /// </summary>
+    /// <value></value>
     public StringFormatKind StringFormat {
       get { return this.UnspecializedParameter.StringFormat; }
     }
 
+    /// <summary>
+    /// True if this type gets special treatment from the runtime.
+    /// </summary>
+    /// <value></value>
     public bool IsRuntimeSpecial {
       get { return this.UnspecializedParameter.IsRuntimeSpecial; }
     }
 
+    /// <summary>
+    /// True if this type has a non empty collection of SecurityAttributes or the System.Security.SuppressUnmanagedCodeSecurityAttribute.
+    /// </summary>
+    /// <value></value>
     public bool HasDeclarativeSecurity {
       get { return this.UnspecializedParameter.HasDeclarativeSecurity; }
     }
 
+    /// <summary>
+    /// Zero or more private type members generated by the compiler for implementation purposes. These members
+    /// are only available after a complete visit of all of the other members of the type, including the bodies of methods.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
       get { return this.UnspecializedParameter.PrivateHelperMembers; }
     }
@@ -1262,6 +1461,10 @@ namespace Microsoft.Cci {
 
     #region IDefinition Members
 
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
       get { return this.UnspecializedParameter.Attributes; }
     }
@@ -1281,6 +1484,10 @@ namespace Microsoft.Cci {
 
     #region IParameterListEntry Members
 
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
     public ushort Index {
       get { return this.UnspecializedParameter.Index; }
     }
@@ -1289,6 +1496,10 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    /// <value></value>
     public IName Name {
       get { return this.UnspecializedParameter.Name; }
     }
@@ -1298,21 +1509,44 @@ namespace Microsoft.Cci {
     #region IScope<ITypeDefinitionMember> Members
 
     //^ [Pure]
+    /// <summary>
+    /// Return true if the given member instance is a member of this scope.
+    /// </summary>
+    /// <param name="member"></param>
+    /// <returns></returns>
     public bool Contains(ITypeDefinitionMember member) {
       return false;
     }
 
     //^ [Pure]
+    /// <summary>
+    /// Returns the list of members with the given name that also satisfy the given predicate.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="ignoreCase"></param>
+    /// <param name="predicate"></param>
+    /// <returns></returns>
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
     //^ [Pure]
+    /// <summary>
+    /// Returns the list of members that satisfy the given predicate.
+    /// </summary>
+    /// <param name="predicate"></param>
+    /// <returns></returns>
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
     //^ [Pure]
+    /// <summary>
+    /// Returns the list of members with the given name.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="ignoreCase"></param>
+    /// <returns></returns>
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
@@ -1321,10 +1555,18 @@ namespace Microsoft.Cci {
 
     #region ITypeReference Members
 
+    /// <summary>
+    /// Indicates if this type reference resolved to an alias rather than a type
+    /// </summary>
+    /// <value></value>
     public bool IsAlias {
       get { return false; }
     }
 
+    /// <summary>
+    /// Gives the alias for the type
+    /// </summary>
+    /// <value></value>
     public IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
@@ -1337,15 +1579,29 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    /// <summary>
+    /// The type definition being referred to.
+    /// In case this type was alias, this is also the type of the aliased type
+    /// </summary>
+    /// <value></value>
     ITypeDefinition ITypeReference.ResolvedType {
       get { return this; }
     }
 
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
     }
     readonly IInternFactory internFactory;
 
+    /// <summary>
+    /// Returns the unique interned key associated with the type. This takes unification/aliases/custom modifiers into account.
+    /// </summary>
+    /// <value></value>
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
@@ -1360,10 +1616,19 @@ namespace Microsoft.Cci {
 
     #region INamedTypeReference Members
 
+    /// <summary>
+    /// If true, the persisted type name is mangled by appending "`n" where n is the number of type parameters, if the number of type parameters is greater than 0.
+    /// </summary>
+    /// <value></value>
     public bool MangleName {
       get { return false; }
     }
 
+    /// <summary>
+    /// The type definition being referred to.
+    /// In case this type was alias, this is also the type of the aliased type
+    /// </summary>
+    /// <value></value>
     public INamedTypeDefinition ResolvedType {
       get { return this; }
     }
@@ -1371,13 +1636,26 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class SpecializedGenericTypeParameter : SpecializedGenericParameter<IGenericTypeParameter>, IGenericTypeParameter {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="unspecializedGenericParameter"></param>
+    /// <param name="definingTypeInstance"></param>
+    /// <param name="internFactory"></param>
     public SpecializedGenericTypeParameter(IGenericTypeParameter unspecializedGenericParameter, IGenericTypeInstanceReference definingTypeInstance, IInternFactory internFactory)
       : base(unspecializedGenericParameter, internFactory) {
       this.definingType = definingTypeInstance;
     }
 
+    /// <summary>
+    /// A list of classes or interfaces. All type arguments matching this parameter must be derived from all of the classes and implement all of the interfaces.
+    /// </summary>
+    /// <value></value>
     public override IEnumerable<ITypeReference> Constraints {
       get {
         foreach (ITypeReference unspecializedConstraint in this.Constraints)
@@ -1392,6 +1670,10 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// The generic type that defines this type parameter.
+    /// </summary>
+    /// <value></value>
     public IGenericTypeInstanceReference DefiningType {
       get { return this.definingType; }
     }
@@ -1418,14 +1700,28 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class SpecializedNestedTypeDefinition : Scope<ITypeDefinitionMember>, ISpecializedNestedTypeDefinition, ISpecializedNestedTypeReference {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="unspecializedVersion"></param>
+    /// <param name="containingGenericTypeInstance"></param>
+    /// <param name="internFactory"></param>
     public SpecializedNestedTypeDefinition(INestedTypeDefinition unspecializedVersion, IGenericTypeInstanceReference containingGenericTypeInstance, IInternFactory internFactory) {
       this.unspecializedVersion = unspecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
       this.internFactory = internFactory;
     }
 
+    /// <summary>
+    /// Zero or more classes from which this type is derived.
+    /// For CLR types this collection is empty for interfaces and System.Object and populated with exactly one base type for all other types.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeReference> BaseClasses {
       get {
         foreach (ITypeReference unspecializedBaseClassRef in this.unspecializedVersion.BaseClasses)
@@ -1433,6 +1729,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Zero or more parameters that can be used as type annotations.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IGenericTypeParameter> GenericParameters {
       get {
         foreach (IGenericTypeParameter unspecializedTypeParameter in this.unspecializedVersion.GenericParameters)
@@ -1446,10 +1746,18 @@ namespace Microsoft.Cci {
     }
     readonly IGenericTypeInstanceReference containingGenericTypeInstance;
 
+    /// <summary>
+    /// Zero or more implementation overrides provided by the class.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
       get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
     }
 
+    /// <summary>
+    /// Zero or more interfaces implemented by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeReference> Interfaces {
       get {
         foreach (ITypeReference unspecializedInterfaceRef in this.unspecializedVersion.Interfaces)
@@ -1457,39 +1765,79 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// An instance of this generic type that has been obtained by using the generic parameters as the arguments.
+    /// Use this instance to look up members
+    /// </summary>
+    /// <value></value>
     public IGenericTypeInstanceReference InstanceType {
       get { return Dummy.GenericTypeInstance; }
     }
 
+    /// <summary>
+    /// Zero or more methods defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IMethodDefinition> Methods {
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IMethodDefinition>(this.Members); }
     }
 
+    /// <summary>
+    /// A way to get to platform types such as System.Object.
+    /// </summary>
+    /// <value></value>
     public IPlatformType PlatformType {
       get { return this.UnspecializedVersion.PlatformType; }
     }
 
+    /// <summary>
+    /// Zero or more nested types defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<INestedTypeDefinition> NestedTypes {
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, INestedTypeDefinition>(this.Members); }
     }
 
+    /// <summary>
+    /// Zero or more private type members generated by the compiler for implementation purposes. These members
+    /// are only available after a complete visit of all of the other members of the type, including the bodies of methods.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
+    /// <summary>
+    /// Zero or more properties defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IPropertyDefinition> Properties {
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IPropertyDefinition>(this.Members); }
     }
 
+    /// <summary>
+    /// Returns a reference to the underlying (integral) type on which this (enum) type is based.
+    /// </summary>
+    /// <value></value>
     public ITypeReference UnderlyingType {
       get { return Dummy.TypeReference; }
     }
 
+    /// <summary>
+    /// The nested type that has been specialized to obtain this nested type. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
+    /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
+    /// corresponds to a definition that is not obtained via specialization.)
+    /// </summary>
+    /// <value></value>
     public INestedTypeDefinition UnspecializedVersion {
       get { return this.unspecializedVersion; }
     }
     readonly INestedTypeDefinition unspecializedVersion;
 
+    /// <summary>
+    /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
+    /// </summary>
+    /// <value></value>
     public TypeMemberVisibility Visibility {
       get {
         if (this.visibility == TypeMemberVisibility.Default) {
@@ -1503,6 +1851,10 @@ namespace Microsoft.Cci {
 
     #region INestedTypeDefinition Members
 
+    /// <summary>
+    /// The type definition that contains this member.
+    /// </summary>
+    /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
       get { return this.ContainingGenericTypeInstance.ResolvedType; }
     }
@@ -1511,70 +1863,143 @@ namespace Microsoft.Cci {
 
     #region ITypeDefinition Members
 
+    /// <summary>
+    /// The byte alignment that values of the given type ought to have. Must be a power of 2. If zero, the alignment is decided at runtime.
+    /// </summary>
+    /// <value></value>
     public ushort Alignment {
       get { return this.UnspecializedVersion.Alignment; }
     }
 
+    /// <summary>
+    /// Zero or more events defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IEventDefinition> Events {
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IEventDefinition>(this.Members); }
     }
 
+    /// <summary>
+    /// Zero or more fields defined by this type.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<IFieldDefinition> Fields {
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IFieldDefinition>(this.Members); }
     }
 
+    /// <summary>
+    /// The number of generic parameters. Zero if the type is not generic.
+    /// </summary>
+    /// <value></value>
     public ushort GenericParameterCount {
       get { return this.UnspecializedVersion.GenericParameterCount; }
     }
 
+    /// <summary>
+    /// True if the type may not be instantiated.
+    /// </summary>
+    /// <value></value>
     public bool IsAbstract {
       get { return this.UnspecializedVersion.IsAbstract; }
     }
 
+    /// <summary>
+    /// True if the type is a class (it is not an interface or type parameter and does not extend a special base class).
+    /// Corresponds to C# class.
+    /// </summary>
+    /// <value></value>
     public bool IsClass {
       get { return this.UnspecializedVersion.IsClass; }
     }
 
+    /// <summary>
+    /// True if the type is a delegate (it extends System.MultiCastDelegate). Corresponds to C# delegate
+    /// </summary>
+    /// <value></value>
     public bool IsDelegate {
       get { return this.UnspecializedVersion.IsDelegate; }
     }
 
+    /// <summary>
+    /// True if the type is an enumeration (it extends System.Enum and is sealed). Corresponds to C# enum.
+    /// </summary>
+    /// <value></value>
     public bool IsEnum {
       get { return this.UnspecializedVersion.IsEnum; }
     }
 
+    /// <summary>
+    /// True if this type is parameterized (this.GenericParameters is a non empty collection).
+    /// </summary>
+    /// <value></value>
     public bool IsGeneric {
       get { return this.UnspecializedVersion.IsGeneric; }
     }
 
+    /// <summary>
+    /// True if the type is an interface.
+    /// </summary>
+    /// <value></value>
     public bool IsInterface {
       get { return this.UnspecializedVersion.IsInterface; }
     }
 
+    /// <summary>
+    /// True if the type is a reference type. A reference type is non static class or interface or a suitably constrained type parameter.
+    /// A type parameter for which MustBeReferenceType (the class constraint in C#) is true returns true for this property
+    /// as does a type parameter with a constraint that is a class.
+    /// </summary>
+    /// <value></value>
     public bool IsReferenceType {
       get { return this.UnspecializedVersion.IsReferenceType; }
     }
 
+    /// <summary>
+    /// True if the type may not be subtyped.
+    /// </summary>
+    /// <value></value>
     public bool IsSealed {
       get { return this.UnspecializedVersion.IsSealed; }
     }
 
+    /// <summary>
+    /// True if the type is an abstract sealed class that directly extends System.Object and declares no constructors.
+    /// </summary>
+    /// <value></value>
     public bool IsStatic {
       get { return this.UnspecializedVersion.IsStatic; }
     }
 
+    /// <summary>
+    /// True if the type is a value type.
+    /// Value types are sealed and extend System.ValueType or System.Enum.
+    /// A type parameter for which MustBeValueType (the struct constraint in C#) is true also returns true for this property.
+    /// </summary>
+    /// <value></value>
     public bool IsValueType {
       get { return this.UnspecializedVersion.IsValueType; }
     }
 
+    /// <summary>
+    /// True if the type is a struct (its not Primitive, is sealed and base is System.ValueType).
+    /// </summary>
+    /// <value></value>
     public bool IsStruct {
       get { return this.UnspecializedVersion.IsStruct; }
     }
 
+    /// <summary>
+    /// Size of an object of this type. In bytes. If zero, the size is unspecified and will be determined at runtime.
+    /// </summary>
+    /// <value></value>
     public uint SizeOf {
       get { return this.UnspecializedVersion.SizeOf; }
     }
 
+    /// <summary>
+    /// Declarative security actions for this type. Will be empty if this.HasSecurity is false.
+    /// </summary>
+    /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
       get
         //^^ requires this.HasSecurityAttributes;
@@ -1583,6 +2008,11 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive" CLR type (such as System.Int32) and
+    /// the type code identifies which of the primitive types it corresponds to.
+    /// </summary>
+    /// <value></value>
     public PrimitiveTypeCode TypeCode {
       get { return this.UnspecializedVersion.TypeCode; }
     }
@@ -1981,6 +2411,11 @@ namespace Microsoft.Cci {
       get { return this; }
     }
 
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
     }

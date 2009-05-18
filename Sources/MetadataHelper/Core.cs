@@ -24,11 +24,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    /// <param name="nameTable">
-    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.
-    /// </param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
     /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
@@ -161,7 +159,9 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns the intern factory.
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
     /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
@@ -441,11 +441,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    /// <param name="nameTable">
-    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.
-    /// </param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
     protected MetadataReaderHost(INameTable nameTable)
       : this(nameTable, 0) {
     }
@@ -453,11 +451,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    /// <param name="nameTable">
-    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.
-    /// </param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
     /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and

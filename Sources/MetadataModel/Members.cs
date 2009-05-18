@@ -572,7 +572,7 @@ namespace Microsoft.Cci {
     bool PreserveSignature { get; }
 
     /// <summary>
-    /// Detailed information about the PInvoke call. Identifies which method to call, which module has the method and calling convention among other things.
+    /// Detailed information about the PInvoke stub. Identifies which method to call, which module has the method and the calling convention among other things.
     /// </summary>
     IPlatformInvokeInformation PlatformInvokeData {
       get;

@@ -111,7 +111,9 @@ namespace Microsoft.Cci {
     /// Finds a type in the given module using the given type name, expressed in C# notion with dots separating both namespaces and types.
     /// If no such type can be found Dummy.NamespaceTypeDefinition is returned.
     /// </summary>
-    /// <param name="nameTable">The table used to intern name strings.</param>
+    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
     /// <param name="module">The module to search for the type.</param>
     /// <param name="typeName">A string containing the fully qualified type name, using C# formatting conventions.</param>
     public static INamedTypeDefinition FindType(INameTable nameTable, IModule module, string typeName) {

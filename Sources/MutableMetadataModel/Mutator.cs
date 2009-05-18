@@ -13,16 +13,37 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <typeparam name="ImmutableObject"></typeparam>
   public interface ICopyFrom<ImmutableObject> {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="objectToCopy"></param>
+    /// <param name="internFactory"></param>
     void Copy(ImmutableObject objectToCopy, IInternFactory internFactory);
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class MetadataMutator {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
     public MetadataMutator(IMetadataHost host) {
       this.host = host;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
     public MetadataMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable) {
       this.host = host;
       this.copyOnlyIfNotAlreadyMutable = copyOnlyIfNotAlreadyMutable;
@@ -33,6 +54,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     protected Dictionary<object, object> cache = new Dictionary<object, object>();
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected readonly bool copyOnlyIfNotAlreadyMutable;
 
     /// <summary>
@@ -42,14 +66,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     protected Dictionary<object, object> referenceCache = new Dictionary<object, object>();
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected List<INamedTypeDefinition> flatListOfTypes = new List<INamedTypeDefinition>();
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected IMetadataHost host;
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected System.Collections.Stack path = new System.Collections.Stack();
 
+    /// <summary>
+    /// 
+    /// </summary>
     protected bool stopTraversal;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public IMethodDefinition GetCurrentMethod() {
       foreach (object parent in this.path) {
         IMethodDefinition/*?*/ method = parent as IMethodDefinition;
@@ -58,6 +98,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.Method;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public IUnitNamespace GetCurrentNamespace() {
       foreach (object parent in this.path) {
         IUnitNamespace/*?*/ ns = parent as IUnitNamespace;
@@ -66,6 +110,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.RootUnitNamespace;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public ISignature GetCurrentSignature() {
       foreach (object parent in this.path) {
         ISignature/*?*/ signature = parent as ISignature;
@@ -74,6 +122,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.Method;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public ITypeDefinition GetCurrentType() {
       foreach (object parent in this.path) {
         ITypeDefinition/*?*/ type = parent as ITypeDefinition;
@@ -82,6 +134,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.Type;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public IUnit GetCurrentUnit() {
       foreach (object parent in this.path) {
         IUnit/*?*/ unit = parent as IUnit;
@@ -90,6 +146,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.Unit;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="assembly"></param>
+    /// <returns></returns>
     public virtual Assembly GetMutableCopy(IAssembly assembly) {
       Assembly/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -107,6 +168,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="assemblyReference"></param>
+    /// <returns></returns>
     public virtual AssemblyReference GetMutableCopy(IAssemblyReference assemblyReference) {
       AssemblyReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -124,24 +190,44 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="customAttribute"></param>
+    /// <returns></returns>
     public virtual CustomAttribute GetMutableCopy(ICustomAttribute customAttribute) {
       CustomAttribute result = new CustomAttribute();
       result.Copy(customAttribute, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="customModifier"></param>
+    /// <returns></returns>
     public virtual CustomModifier GetMutableCopy(ICustomModifier customModifier) {
       CustomModifier result = new CustomModifier();
       result.Copy(customModifier, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="eventDefinition"></param>
+    /// <returns></returns>
     public virtual EventDefinition GetMutableCopy(IEventDefinition eventDefinition) {
       EventDefinition result = new EventDefinition();
       result.Copy(eventDefinition, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
+    /// <returns></returns>
     public virtual FieldDefinition GetMutableCopy(IFieldDefinition fieldDefinition) {
       FieldDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -159,6 +245,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fieldReference"></param>
+    /// <returns></returns>
     public virtual FieldReference GetMutableCopy(IFieldReference fieldReference) {
       FieldReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -176,12 +267,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fileReference"></param>
+    /// <returns></returns>
     public virtual FileReference GetMutableCopy(IFileReference fileReference) {
       FileReference result = new FileReference();
       result.Copy(fileReference, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="functionPointerTypeReference"></param>
+    /// <returns></returns>
     public virtual FunctionPointerTypeReference GetMutableCopy(IFunctionPointerTypeReference functionPointerTypeReference) {
       FunctionPointerTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -199,6 +300,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericMethodInstanceReference"></param>
+    /// <returns></returns>
     public virtual GenericMethodInstanceReference GetMutableCopy(IGenericMethodInstanceReference genericMethodInstanceReference) {
       GenericMethodInstanceReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -216,6 +322,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericMethodParameter"></param>
+    /// <returns></returns>
     public virtual GenericMethodParameter GetMutableCopy(IGenericMethodParameter genericMethodParameter) {
       GenericMethodParameter/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -233,6 +344,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericMethodParameterReference"></param>
+    /// <returns></returns>
     public virtual GenericMethodParameterReference GetMutableCopy(IGenericMethodParameterReference genericMethodParameterReference) {
       GenericMethodParameterReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -250,6 +366,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericTypeInstanceReference"></param>
+    /// <returns></returns>
     public virtual GenericTypeInstanceReference GetMutableCopy(IGenericTypeInstanceReference genericTypeInstanceReference) {
       GenericTypeInstanceReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -267,6 +388,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericTypeParameter"></param>
+    /// <returns></returns>
     public virtual GenericTypeParameter GetMutableCopy(IGenericTypeParameter genericTypeParameter) {
       GenericTypeParameter/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -284,6 +410,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericTypeParameterReference"></param>
+    /// <returns></returns>
     public virtual GenericTypeParameterReference GetMutableCopy(IGenericTypeParameterReference genericTypeParameterReference) {
       GenericTypeParameterReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -301,6 +432,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="globalFieldDefinition"></param>
+    /// <returns></returns>
     public virtual GlobalFieldDefinition GetMutableCopy(IGlobalFieldDefinition globalFieldDefinition) {
       GlobalFieldDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -318,6 +454,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="globalMethodDefinition"></param>
+    /// <returns></returns>
     public virtual GlobalMethodDefinition GetMutableCopy(IGlobalMethodDefinition globalMethodDefinition) {
       GlobalMethodDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -335,6 +476,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="localDefinition"></param>
+    /// <returns></returns>
     public virtual LocalDefinition GetMutableCopy(ILocalDefinition localDefinition) {
       LocalDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -352,36 +498,66 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="marshallingInformation"></param>
+    /// <returns></returns>
     public virtual MarshallingInformation GetMutableCopy(IMarshallingInformation marshallingInformation) {
       MarshallingInformation result = new MarshallingInformation();
       result.Copy(marshallingInformation, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="metadataConstant"></param>
+    /// <returns></returns>
     public virtual MetadataConstant GetMutableCopy(IMetadataConstant metadataConstant) {
       MetadataConstant result = new MetadataConstant();
       result.Copy(metadataConstant, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="metadataCreateArray"></param>
+    /// <returns></returns>
     public virtual MetadataCreateArray GetMutableCopy(IMetadataCreateArray metadataCreateArray) {
       MetadataCreateArray result = new MetadataCreateArray();
       result.Copy(metadataCreateArray, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="metadataNamedArgument"></param>
+    /// <returns></returns>
     public virtual MetadataNamedArgument GetMutableCopy(IMetadataNamedArgument metadataNamedArgument) {
       MetadataNamedArgument result = new MetadataNamedArgument();
       result.Copy(metadataNamedArgument, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="metadataTypeOf"></param>
+    /// <returns></returns>
     public virtual MetadataTypeOf GetMutableCopy(IMetadataTypeOf metadataTypeOf) {
       MetadataTypeOf result = new MetadataTypeOf();
       result.Copy(metadataTypeOf, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <returns></returns>
     public virtual MethodDefinition GetMutableCopy(IMethodDefinition methodDefinition) {
       MethodDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -399,18 +575,33 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodBody"></param>
+    /// <returns></returns>
     public virtual MethodBody GetMutableCopy(IMethodBody methodBody) {
       MethodBody result = new MethodBody();
       result.Copy(methodBody, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodImplementation"></param>
+    /// <returns></returns>
     public virtual MethodImplementation GetMutableCopy(IMethodImplementation methodImplementation) {
       MethodImplementation result = new MethodImplementation();
       result.Copy(methodImplementation, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodReference"></param>
+    /// <returns></returns>
     public virtual MethodReference GetMutableCopy(IMethodReference methodReference) {
       MethodReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -428,6 +619,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="modifiedTypeReference"></param>
+    /// <returns></returns>
     public virtual ModifiedTypeReference GetMutableCopy(IModifiedTypeReference modifiedTypeReference) {
       ModifiedTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -445,6 +641,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="module"></param>
+    /// <returns></returns>
     public virtual Module GetMutableCopy(IModule module) {
       Module/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -462,6 +663,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="moduleReference"></param>
+    /// <returns></returns>
     public virtual ModuleReference GetMutableCopy(IModuleReference moduleReference) {
       ModuleReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -479,12 +685,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="namespaceAliasForType"></param>
+    /// <returns></returns>
     public virtual NamespaceAliasForType GetMutableCopy(INamespaceAliasForType namespaceAliasForType) {
       NamespaceAliasForType result = new NamespaceAliasForType();
       result.Copy(namespaceAliasForType, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="namespaceTypeDefinition"></param>
+    /// <returns></returns>
     public virtual NamespaceTypeDefinition GetMutableCopy(INamespaceTypeDefinition namespaceTypeDefinition) {
       NamespaceTypeDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -502,6 +718,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="namespaceTypeReference"></param>
+    /// <returns></returns>
     public virtual NamespaceTypeReference GetMutableCopy(INamespaceTypeReference namespaceTypeReference) {
       NamespaceTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -519,12 +740,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nestedAliasForType"></param>
+    /// <returns></returns>
     public virtual NestedAliasForType GetMutableCopy(INestedAliasForType nestedAliasForType) {
       NestedAliasForType result = new NestedAliasForType();
       result.Copy(nestedAliasForType, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nestedTypeDefinition"></param>
+    /// <returns></returns>
     public virtual NestedTypeDefinition GetMutableCopy(INestedTypeDefinition nestedTypeDefinition) {
       NestedTypeDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -542,6 +773,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nestedTypeReference"></param>
+    /// <returns></returns>
     public virtual NestedTypeReference GetMutableCopy(INestedTypeReference nestedTypeReference) {
       NestedTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -559,6 +795,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nestedUnitNamespace"></param>
+    /// <returns></returns>
     public virtual NestedUnitNamespace GetMutableCopy(INestedUnitNamespace nestedUnitNamespace) {
       NestedUnitNamespace/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -576,6 +817,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nestedUnitNamespaceReference"></param>
+    /// <returns></returns>
     public virtual NestedUnitNamespaceReference GetMutableCopy(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
       NestedUnitNamespaceReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -593,18 +839,33 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="operation"></param>
+    /// <returns></returns>
     public virtual Operation GetMutableCopy(IOperation operation) {
       var result = new Operation();
       result.Copy(operation, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="operationExceptionInformation"></param>
+    /// <returns></returns>
     public virtual OperationExceptionInformation GetMutableCopy(IOperationExceptionInformation operationExceptionInformation) {
       var result = new OperationExceptionInformation();
       result.Copy(operationExceptionInformation, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="parameterDefinition"></param>
+    /// <returns></returns>
     public virtual ParameterDefinition GetMutableCopy(IParameterDefinition parameterDefinition) {
       ParameterDefinition/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -622,18 +883,33 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="parameterTypeInformation"></param>
+    /// <returns></returns>
     public virtual ParameterTypeInformation GetMutableCopy(IParameterTypeInformation parameterTypeInformation) {
       var result = new ParameterTypeInformation();
       result.Copy(parameterTypeInformation, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="platformInvokeInformation"></param>
+    /// <returns></returns>
     public virtual PlatformInvokeInformation GetMutableCopy(IPlatformInvokeInformation platformInvokeInformation) {
       var result = new PlatformInvokeInformation();
       result.Copy(platformInvokeInformation, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="pointerTypeReference"></param>
+    /// <returns></returns>
     public virtual PointerTypeReference GetMutableCopy(IPointerTypeReference pointerTypeReference) {
       PointerTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -651,12 +927,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="propertyDefinition"></param>
+    /// <returns></returns>
     public virtual PropertyDefinition GetMutableCopy(IPropertyDefinition propertyDefinition) {
       var result = new PropertyDefinition();
       result.Copy(propertyDefinition, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="resourceReference"></param>
+    /// <returns></returns>
     public virtual ResourceReference GetMutableCopy(IResourceReference resourceReference) {
       ResourceReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -674,6 +960,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="rootUnitNamespace"></param>
+    /// <returns></returns>
     public virtual RootUnitNamespace GetMutableCopy(IRootUnitNamespace rootUnitNamespace) {
       RootUnitNamespace/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -691,6 +982,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="rootUnitNamespaceReference"></param>
+    /// <returns></returns>
     public virtual RootUnitNamespaceReference GetMutableCopy(IRootUnitNamespaceReference rootUnitNamespaceReference) {
       RootUnitNamespaceReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -708,12 +1004,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="securityAttribute"></param>
+    /// <returns></returns>
     public virtual SecurityAttribute GetMutableCopy(ISecurityAttribute securityAttribute) {
       var result = new SecurityAttribute();
       result.Copy(securityAttribute, this.host.InternFactory);
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedFieldReference"></param>
+    /// <returns></returns>
     public virtual SpecializedFieldReference GetMutableCopy(ISpecializedFieldReference specializedFieldReference) {
       SpecializedFieldReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -731,6 +1037,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedMethodReference"></param>
+    /// <returns></returns>
     public virtual SpecializedMethodReference GetMutableCopy(ISpecializedMethodReference specializedMethodReference) {
       SpecializedMethodReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -748,6 +1059,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedNestedTypeReference"></param>
+    /// <returns></returns>
     public virtual SpecializedNestedTypeReference GetMutableCopy(ISpecializedNestedTypeReference specializedNestedTypeReference) {
       SpecializedNestedTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -765,6 +1081,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="matrixTypeReference"></param>
+    /// <returns></returns>
     public virtual MatrixTypeReference GetMutableMatrixCopy(IArrayTypeReference matrixTypeReference) {
       MatrixTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -782,6 +1103,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="vectorTypeReference"></param>
+    /// <returns></returns>
     public virtual VectorTypeReference GetMutableVectorCopy(IArrayTypeReference vectorTypeReference) {
       VectorTypeReference/*?*/ result;
       if (this.copyOnlyIfNotAlreadyMutable) {
@@ -799,6 +1125,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodReference"></param>
+    /// <returns></returns>
     public virtual IMethodReference GetTypeSpecificMutableCopy(IMethodReference methodReference) {
       ISpecializedMethodReference/*?*/ specializedMethodReference = methodReference as ISpecializedMethodReference;
       if (specializedMethodReference != null)
@@ -818,6 +1149,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Visits the specified aliases for types.
+    /// </summary>
+    /// <param name="aliasesForTypes">The aliases for types.</param>
+    /// <returns></returns>
     public virtual List<IAliasForType> Visit(List<IAliasForType> aliasesForTypes) {
       if (this.stopTraversal) return aliasesForTypes;
       for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
@@ -825,6 +1161,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       return aliasesForTypes;
     }
 
+
+    /// <summary>
+    /// Visits the specified alias for type.
+    /// </summary>
+    /// <param name="aliasForType">Type of the alias for.</param>
+    /// <returns></returns>
     public virtual IAliasForType Visit(IAliasForType aliasForType) {
       if (this.stopTraversal) return aliasForType;
       INamespaceAliasForType/*?*/ namespaceAliasForType = aliasForType as INamespaceAliasForType;
@@ -835,6 +1177,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return aliasForType;
     }
 
+    /// <summary>
+    /// Visits the specified assembly.
+    /// </summary>
+    /// <param name="assembly">The assembly.</param>
+    /// <returns></returns>
     public virtual Assembly Visit(Assembly assembly) {
       if (this.stopTraversal) return assembly;
       this.path.Push(assembly);
@@ -849,6 +1196,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return assembly;
     }
 
+    /// <summary>
+    /// Visits the specified assembly references.
+    /// </summary>
+    /// <param name="assemblyReferences">The assembly references.</param>
+    /// <returns></returns>
     public virtual List<IAssemblyReference> Visit(List<IAssemblyReference> assemblyReferences) {
       if (this.stopTraversal) return assemblyReferences;
       for (int i = 0, n = assemblyReferences.Count; i < n; i++)
@@ -856,10 +1208,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return assemblyReferences;
     }
 
+    /// <summary>
+    /// Visits the specified assembly reference.
+    /// </summary>
+    /// <param name="assemblyReference">The assembly reference.</param>
+    /// <returns></returns>
     public virtual IAssemblyReference Visit(IAssemblyReference assemblyReference) {
       return this.Visit(this.GetMutableCopy(assemblyReference));
     }
 
+    /// <summary>
+    /// Visits the specified assembly reference.
+    /// </summary>
+    /// <param name="assemblyReference">The assembly reference.</param>
+    /// <returns></returns>
     public virtual AssemblyReference Visit(AssemblyReference assemblyReference) {
       if (assemblyReference.ResolvedAssembly != Dummy.Assembly) {
         object/*?*/ mutatedResolvedAssembly = null;
@@ -869,6 +1231,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return assemblyReference;
     }
 
+    /// <summary>
+    /// Visits the specified custom attributes.
+    /// </summary>
+    /// <param name="customAttributes">The custom attributes.</param>
+    /// <returns></returns>
     public virtual List<ICustomAttribute> Visit(List<ICustomAttribute> customAttributes) {
       if (this.stopTraversal) return customAttributes;
       for (int i = 0, n = customAttributes.Count; i < n; i++)
@@ -876,6 +1243,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return customAttributes;
     }
 
+    /// <summary>
+    /// Visits the specified custom attribute.
+    /// </summary>
+    /// <param name="customAttribute">The custom attribute.</param>
+    /// <returns></returns>
     public virtual CustomAttribute Visit(CustomAttribute customAttribute) {
       if (this.stopTraversal) return customAttribute;
       this.path.Push(customAttribute);
@@ -886,6 +1258,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return customAttribute;
     }
 
+    /// <summary>
+    /// Visits the specified custom modifiers.
+    /// </summary>
+    /// <param name="customModifiers">The custom modifiers.</param>
+    /// <returns></returns>
     public virtual List<ICustomModifier> Visit(List<ICustomModifier> customModifiers) {
       if (this.stopTraversal) return customModifiers;
       for (int i = 0, n = customModifiers.Count; i < n; i++)
@@ -893,6 +1270,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return customModifiers;
     }
 
+    /// <summary>
+    /// Visits the specified custom modifier.
+    /// </summary>
+    /// <param name="customModifier">The custom modifier.</param>
+    /// <returns></returns>
     public virtual CustomModifier Visit(CustomModifier customModifier) {
       if (this.stopTraversal) return customModifier;
       this.path.Push(customModifier);
@@ -901,6 +1283,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return customModifier;
     }
 
+    /// <summary>
+    /// Visits the specified event definitions.
+    /// </summary>
+    /// <param name="eventDefinitions">The event definitions.</param>
+    /// <returns></returns>
     public virtual List<IEventDefinition> Visit(List<IEventDefinition> eventDefinitions) {
       if (this.stopTraversal) return eventDefinitions;
       for (int i = 0, n = eventDefinitions.Count; i < n; i++)
@@ -908,10 +1295,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return eventDefinitions;
     }
 
+    /// <summary>
+    /// Visits the specified event definition.
+    /// </summary>
+    /// <param name="eventDefinition">The event definition.</param>
+    /// <returns></returns>
     public virtual IEventDefinition Visit(IEventDefinition eventDefinition) {
       return this.Visit(this.GetMutableCopy(eventDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified event definition.
+    /// </summary>
+    /// <param name="eventDefinition">The event definition.</param>
+    /// <returns></returns>
     public virtual EventDefinition Visit(EventDefinition eventDefinition) {
       if (this.stopTraversal) return eventDefinition;
       this.Visit((TypeDefinitionMember)eventDefinition);
@@ -926,6 +1323,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return eventDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified field definitions.
+    /// </summary>
+    /// <param name="fieldDefinitions">The field definitions.</param>
+    /// <returns></returns>
     public virtual List<IFieldDefinition> Visit(List<IFieldDefinition> fieldDefinitions) {
       if (this.stopTraversal) return fieldDefinitions;
       for (int i = 0, n = fieldDefinitions.Count; i < n; i++)
@@ -933,6 +1335,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return fieldDefinitions;
     }
 
+    /// <summary>
+    /// Visits the specified field definition.
+    /// </summary>
+    /// <param name="fieldDefinition">The field definition.</param>
+    /// <returns></returns>
     public virtual FieldDefinition Visit(FieldDefinition fieldDefinition) {
       if (this.stopTraversal) return fieldDefinition;
       this.Visit((TypeDefinitionMember)fieldDefinition);
@@ -946,10 +1353,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return fieldDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified field definition.
+    /// </summary>
+    /// <param name="fieldDefinition">The field definition.</param>
+    /// <returns></returns>
     public virtual IFieldDefinition Visit(IFieldDefinition fieldDefinition) {
       return this.Visit(this.GetMutableCopy(fieldDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified field reference.
+    /// </summary>
+    /// <param name="fieldReference">The field reference.</param>
+    /// <returns></returns>
     public virtual IFieldReference Visit(IFieldReference fieldReference) {
       if (this.stopTraversal) return fieldReference;
       if (fieldReference == Dummy.FieldReference || fieldReference == Dummy.Field) return Dummy.FieldReference;
@@ -965,6 +1382,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(fieldReference));
     }
 
+    /// <summary>
+    /// Visits the specified field reference.
+    /// </summary>
+    /// <param name="fieldReference">The field reference.</param>
+    /// <returns></returns>
     public virtual FieldReference Visit(FieldReference fieldReference) {
       if (this.stopTraversal) return fieldReference;
       this.path.Push(fieldReference);
@@ -976,6 +1398,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return fieldReference;
     }
 
+    /// <summary>
+    /// Visits the specified file references.
+    /// </summary>
+    /// <param name="fileReferences">The file references.</param>
+    /// <returns></returns>
     public virtual List<IFileReference> Visit(List<IFileReference> fileReferences) {
       if (this.stopTraversal) return fileReferences;
       for (int i = 0, n = fileReferences.Count; i < n; i++)
@@ -983,10 +1410,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return fileReferences;
     }
 
+    /// <summary>
+    /// Visits the specified file reference.
+    /// </summary>
+    /// <param name="fileReference">The file reference.</param>
+    /// <returns></returns>
     public virtual FileReference Visit(FileReference fileReference) {
       return fileReference;
     }
 
+    /// <summary>
+    /// Visits the specified function pointer type reference.
+    /// </summary>
+    /// <param name="functionPointerTypeReference">The function pointer type reference.</param>
+    /// <returns></returns>
     public virtual FunctionPointerTypeReference Visit(FunctionPointerTypeReference functionPointerTypeReference) {
       if (this.stopTraversal) return functionPointerTypeReference;
       this.Visit((TypeReference)functionPointerTypeReference);
@@ -1000,6 +1437,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return functionPointerTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified generic method instance reference.
+    /// </summary>
+    /// <param name="genericMethodInstanceReference">The generic method instance reference.</param>
+    /// <returns></returns>
     public virtual GenericMethodInstanceReference Visit(GenericMethodInstanceReference genericMethodInstanceReference) {
       if (this.stopTraversal) return genericMethodInstanceReference;
       this.Visit((MethodReference)genericMethodInstanceReference);
@@ -1010,6 +1452,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericMethodInstanceReference;
     }
 
+    /// <summary>
+    /// Visits the specified generic method parameters.
+    /// </summary>
+    /// <param name="genericMethodParameters">The generic method parameters.</param>
+    /// <param name="declaringMethod">The declaring method.</param>
+    /// <returns></returns>
     public virtual List<IGenericMethodParameter> Visit(List<IGenericMethodParameter> genericMethodParameters, IMethodDefinition declaringMethod) {
       if (this.stopTraversal) return genericMethodParameters;
       for (int i = 0, n = genericMethodParameters.Count; i < n; i++)
@@ -1017,6 +1465,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericMethodParameters;
     }
 
+    /// <summary>
+    /// Visits the specified generic method parameter.
+    /// </summary>
+    /// <param name="genericMethodParameter">The generic method parameter.</param>
+    /// <returns></returns>
     public virtual GenericMethodParameter Visit(GenericMethodParameter genericMethodParameter) {
       if (this.stopTraversal) return genericMethodParameter;
       this.Visit((GenericParameter)genericMethodParameter);
@@ -1024,6 +1477,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericMethodParameter;
     }
 
+    /// <summary>
+    /// Visits the specified generic method parameter reference.
+    /// </summary>
+    /// <param name="genericMethodParameterReference">The generic method parameter reference.</param>
+    /// <returns></returns>
     public virtual GenericMethodParameterReference Visit(GenericMethodParameterReference genericMethodParameterReference) {
       if (this.stopTraversal) return genericMethodParameterReference;
       this.Visit((TypeReference)genericMethodParameterReference);
@@ -1037,6 +1495,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericMethodParameterReference;
     }
 
+    /// <summary>
+    /// Visits the specified generic type parameter reference.
+    /// </summary>
+    /// <param name="genericTypeParameterReference">The generic type parameter reference.</param>
+    /// <returns></returns>
     public virtual GenericTypeParameterReference Visit(GenericTypeParameterReference genericTypeParameterReference) {
       if (this.stopTraversal) return genericTypeParameterReference;
       this.Visit((TypeReference)genericTypeParameterReference);
@@ -1046,6 +1509,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericTypeParameterReference;
     }
 
+    /// <summary>
+    /// Visits the specified global field definition.
+    /// </summary>
+    /// <param name="globalFieldDefinition">The global field definition.</param>
+    /// <returns></returns>
     public virtual GlobalFieldDefinition Visit(GlobalFieldDefinition globalFieldDefinition) {
       if (this.stopTraversal) return globalFieldDefinition;
       this.path.Push(this.Visit(globalFieldDefinition.ContainingType));
@@ -1055,6 +1523,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return globalFieldDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified global method definition.
+    /// </summary>
+    /// <param name="globalMethodDefinition">The global method definition.</param>
+    /// <returns></returns>
     public virtual GlobalMethodDefinition Visit(GlobalMethodDefinition globalMethodDefinition) {
       if (this.stopTraversal) return globalMethodDefinition;
       this.path.Push(this.Visit(globalMethodDefinition.ContainingType));
@@ -1064,6 +1537,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return globalMethodDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified generic type instance reference.
+    /// </summary>
+    /// <param name="genericTypeInstanceReference">The generic type instance reference.</param>
+    /// <returns></returns>
     public virtual GenericTypeInstanceReference Visit(GenericTypeInstanceReference genericTypeInstanceReference) {
       if (this.stopTraversal) return genericTypeInstanceReference;
       this.Visit((TypeReference)genericTypeInstanceReference);
@@ -1074,6 +1552,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericTypeInstanceReference;
     }
 
+    /// <summary>
+    /// Visits the specified generic parameter.
+    /// </summary>
+    /// <param name="genericParameter">The generic parameter.</param>
+    /// <returns></returns>
     public virtual GenericParameter Visit(GenericParameter genericParameter) {
       if (this.stopTraversal) return genericParameter;
       this.path.Push(genericParameter);
@@ -1083,6 +1566,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericParameter;
     }
 
+    /// <summary>
+    /// Visits the specified generic type parameters.
+    /// </summary>
+    /// <param name="genericTypeParameters">The generic type parameters.</param>
+    /// <returns></returns>
     public virtual List<IGenericTypeParameter> Visit(List<IGenericTypeParameter> genericTypeParameters) {
       if (this.stopTraversal) return genericTypeParameters;
       for (int i = 0, n = genericTypeParameters.Count; i < n; i++)
@@ -1090,6 +1578,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericTypeParameters;
     }
 
+    /// <summary>
+    /// Visits the specified generic type parameter.
+    /// </summary>
+    /// <param name="genericTypeParameter">The generic type parameter.</param>
+    /// <returns></returns>
     public virtual GenericTypeParameter Visit(GenericTypeParameter genericTypeParameter) {
       if (this.stopTraversal) return genericTypeParameter;
       this.Visit((GenericParameter)genericTypeParameter);
@@ -1097,6 +1590,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericTypeParameter;
     }
 
+    /// <summary>
+    /// Visits the specified locations.
+    /// </summary>
+    /// <param name="locations">The locations.</param>
+    /// <returns></returns>
     public virtual List<ILocation> Visit(List<ILocation> locations) {
       if (this.stopTraversal) return locations;
       for (int i = 0, n = locations.Count; i < n; i++)
@@ -1104,10 +1602,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return locations;
     }
 
+    /// <summary>
+    /// Visits the specified location.
+    /// </summary>
+    /// <param name="location">The location.</param>
+    /// <returns></returns>
     public virtual ILocation Visit(ILocation location) {
       return location;
     }
 
+    /// <summary>
+    /// Visits the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The local definition.</param>
+    /// <returns></returns>
     public virtual LocalDefinition Visit(LocalDefinition localDefinition) {
       if (this.stopTraversal) return localDefinition;
       this.path.Push(localDefinition);
@@ -1117,6 +1625,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return localDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified marshalling information.
+    /// </summary>
+    /// <param name="marshallingInformation">The marshalling information.</param>
+    /// <returns></returns>
     public virtual MarshallingInformation Visit(MarshallingInformation marshallingInformation) {
       if (this.stopTraversal) return marshallingInformation;
       this.path.Push(marshallingInformation);
@@ -1131,6 +1644,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return marshallingInformation;
     }
 
+    /// <summary>
+    /// Visits the specified constant.
+    /// </summary>
+    /// <param name="constant">The constant.</param>
+    /// <returns></returns>
     public virtual MetadataConstant Visit(MetadataConstant constant) {
       if (this.stopTraversal) return constant;
       this.path.Push(constant);
@@ -1140,6 +1658,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return constant;
     }
 
+    /// <summary>
+    /// Visits the specified create array.
+    /// </summary>
+    /// <param name="createArray">The create array.</param>
+    /// <returns></returns>
     public virtual MetadataCreateArray Visit(MetadataCreateArray createArray) {
       if (this.stopTraversal) return createArray;
       this.path.Push(createArray);
@@ -1151,6 +1674,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return createArray;
     }
 
+    /// <summary>
+    /// Visits the specified metadata expressions.
+    /// </summary>
+    /// <param name="metadataExpressions">The metadata expressions.</param>
+    /// <returns></returns>
     public virtual List<IMetadataExpression> Visit(List<IMetadataExpression> metadataExpressions) {
       if (this.stopTraversal) return metadataExpressions;
       for (int i = 0, n = metadataExpressions.Count; i < n; i++)
@@ -1158,6 +1686,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return metadataExpressions;
     }
 
+    /// <summary>
+    /// Visits the specified expression.
+    /// </summary>
+    /// <param name="expression">The expression.</param>
+    /// <returns></returns>
     public virtual IMetadataExpression Visit(IMetadataExpression expression) {
       if (this.stopTraversal) return expression;
       IMetadataConstant/*?*/ metadataConstant = expression as IMetadataConstant;
@@ -1169,6 +1702,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return expression;
     }
 
+    /// <summary>
+    /// Visits the specified named arguments.
+    /// </summary>
+    /// <param name="namedArguments">The named arguments.</param>
+    /// <returns></returns>
     public virtual List<IMetadataNamedArgument> Visit(List<IMetadataNamedArgument> namedArguments) {
       if (this.stopTraversal) return namedArguments;
       for (int i = 0, n = namedArguments.Count; i < n; i++)
@@ -1176,6 +1714,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namedArguments;
     }
 
+    /// <summary>
+    /// Visits the specified named argument.
+    /// </summary>
+    /// <param name="namedArgument">The named argument.</param>
+    /// <returns></returns>
     public virtual MetadataNamedArgument Visit(MetadataNamedArgument namedArgument) {
       if (this.stopTraversal) return namedArgument;
       this.path.Push(namedArgument);
@@ -1186,6 +1729,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namedArgument;
     }
 
+    /// <summary>
+    /// Visits the specified type of.
+    /// </summary>
+    /// <param name="typeOf">The type of.</param>
+    /// <returns></returns>
     public virtual MetadataTypeOf Visit(MetadataTypeOf typeOf) {
       if (this.stopTraversal) return typeOf;
       this.path.Push(typeOf);
@@ -1196,6 +1744,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeOf;
     }
 
+    /// <summary>
+    /// Visits the specified matrix type reference.
+    /// </summary>
+    /// <param name="matrixTypeReference">The matrix type reference.</param>
+    /// <returns></returns>
     public virtual MatrixTypeReference Visit(MatrixTypeReference matrixTypeReference) {
       if (this.stopTraversal) return matrixTypeReference;
       this.Visit((TypeReference)matrixTypeReference);
@@ -1205,6 +1758,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return matrixTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
+    /// <returns></returns>
     public virtual MethodBody Visit(MethodBody methodBody) {
       if (this.stopTraversal) return methodBody;
       this.path.Push(methodBody);
@@ -1216,6 +1774,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodBody;
     }
 
+    /// <summary>
+    /// Visits the specified exception informations.
+    /// </summary>
+    /// <param name="exceptionInformations">The exception informations.</param>
+    /// <returns></returns>
     public virtual List<IOperationExceptionInformation> Visit(List<IOperationExceptionInformation> exceptionInformations) {
       if (this.stopTraversal) return exceptionInformations;
       for (int i = 0, n = exceptionInformations.Count; i < n; i++)
@@ -1223,6 +1786,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return exceptionInformations;
     }
 
+    /// <summary>
+    /// Visits the specified operation exception information.
+    /// </summary>
+    /// <param name="operationExceptionInformation">The operation exception information.</param>
+    /// <returns></returns>
     public virtual OperationExceptionInformation Visit(OperationExceptionInformation operationExceptionInformation) {
       if (this.stopTraversal) return operationExceptionInformation;
       this.path.Push(operationExceptionInformation);
@@ -1231,6 +1799,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return operationExceptionInformation;
     }
 
+    /// <summary>
+    /// Visits the specified operations.
+    /// </summary>
+    /// <param name="operations">The operations.</param>
+    /// <returns></returns>
     public virtual List<IOperation> Visit(List<IOperation> operations) {
       if (this.stopTraversal) return operations;
       for (int i = 0, n = operations.Count; i < n; i++)
@@ -1238,6 +1811,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return operations;
     }
 
+    /// <summary>
+    /// Visits the specified operation.
+    /// </summary>
+    /// <param name="operation">The operation.</param>
+    /// <returns></returns>
     public virtual Operation Visit(Operation operation) {
       if (this.stopTraversal) return operation;
       this.path.Push(operation);
@@ -1268,18 +1846,33 @@ namespace Microsoft.Cci.MutableCodeModel {
       return operation;
     }
 
+    /// <summary>
+    /// Gets the mutable copy if it exists.
+    /// </summary>
+    /// <param name="parameterDefinition">The parameter definition.</param>
+    /// <returns></returns>
     public virtual object GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
       object/*?*/ cachedValue;
       this.cache.TryGetValue(parameterDefinition, out cachedValue);
       return cachedValue != null ? cachedValue : parameterDefinition;
     }
 
+    /// <summary>
+    /// Gets the mutable copy if it exists.
+    /// </summary>
+    /// <param name="localDefinition">The local definition.</param>
+    /// <returns></returns>
     public virtual object GetMutableCopyIfItExists(ILocalDefinition localDefinition) {
       object/*?*/ cachedValue;
       this.cache.TryGetValue(localDefinition, out cachedValue);
       return cachedValue != null ? cachedValue : localDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified locals.
+    /// </summary>
+    /// <param name="locals">The locals.</param>
+    /// <returns></returns>
     public virtual List<ILocalDefinition> Visit(List<ILocalDefinition> locals) {
       if (this.stopTraversal) return locals;
       for (int i = 0, n = locals.Count; i < n; i++)
@@ -1287,6 +1880,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return locals;
     }
 
+    /// <summary>
+    /// Visits the specified method definitions.
+    /// </summary>
+    /// <param name="methodDefinitions">The method definitions.</param>
+    /// <returns></returns>
     public virtual List<IMethodDefinition> Visit(List<IMethodDefinition> methodDefinitions) {
       if (this.stopTraversal) return methodDefinitions;
       for (int i = 0, n = methodDefinitions.Count; i < n; i++)
@@ -1294,18 +1892,38 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodDefinitions;
     }
 
+    /// <summary>
+    /// Visits the specified global field definition.
+    /// </summary>
+    /// <param name="globalFieldDefinition">The global field definition.</param>
+    /// <returns></returns>
     public virtual IGlobalFieldDefinition Visit(IGlobalFieldDefinition globalFieldDefinition) {
       return this.Visit(this.GetMutableCopy(globalFieldDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified global method definition.
+    /// </summary>
+    /// <param name="globalMethodDefinition">The global method definition.</param>
+    /// <returns></returns>
     public virtual IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
       return this.Visit(this.GetMutableCopy(globalMethodDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
     public virtual IMethodDefinition Visit(IMethodDefinition methodDefinition) {
       return this.Visit(this.GetMutableCopy(methodDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
     public virtual MethodDefinition Visit(MethodDefinition methodDefinition) {
       if (this.stopTraversal) return methodDefinition;
       if (methodDefinition == Dummy.Method) return methodDefinition;
@@ -1330,6 +1948,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified method implementations.
+    /// </summary>
+    /// <param name="methodImplementations">The method implementations.</param>
+    /// <returns></returns>
     public virtual List<IMethodImplementation> Visit(List<IMethodImplementation> methodImplementations) {
       if (this.stopTraversal) return methodImplementations;
       for (int i = 0, n = methodImplementations.Count; i < n; i++)
@@ -1337,6 +1960,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodImplementations;
     }
 
+    /// <summary>
+    /// Visits the specified method implementation.
+    /// </summary>
+    /// <param name="methodImplementation">The method implementation.</param>
+    /// <returns></returns>
     public virtual MethodImplementation Visit(MethodImplementation methodImplementation) {
       if (this.stopTraversal) return methodImplementation;
       this.path.Push(methodImplementation);
@@ -1347,6 +1975,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodImplementation;
     }
 
+    /// <summary>
+    /// Visits the specified method references.
+    /// </summary>
+    /// <param name="methodReferences">The method references.</param>
+    /// <returns></returns>
     public virtual List<IMethodReference> Visit(List<IMethodReference> methodReferences) {
       if (this.stopTraversal) return methodReferences;
       for (int i = 0, n = methodReferences.Count; i < n; i++)
@@ -1354,10 +1987,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodReferences;
     }
 
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
+    /// <returns></returns>
     public virtual IMethodBody Visit(IMethodBody methodBody) {
       return this.Visit(this.GetMutableCopy(methodBody));
     }
 
+    /// <summary>
+    /// Visits the specified method reference.
+    /// </summary>
+    /// <param name="methodReference">The method reference.</param>
+    /// <returns></returns>
     public virtual IMethodReference Visit(IMethodReference methodReference) {
       if (this.stopTraversal) return methodReference;
       if (methodReference == Dummy.MethodReference || methodReference == Dummy.Method) return Dummy.MethodReference;
@@ -1379,6 +2022,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Visits the specified method reference.
+    /// </summary>
+    /// <param name="methodReference">The method reference.</param>
+    /// <returns></returns>
     public virtual MethodReference Visit(MethodReference methodReference) {
       if (this.stopTraversal) return methodReference;
       this.path.Push(methodReference);
@@ -1394,6 +2042,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return methodReference;
     }
 
+    /// <summary>
+    /// Visits the specified modules.
+    /// </summary>
+    /// <param name="modules">The modules.</param>
+    /// <returns></returns>
     public virtual List<IModule> Visit(List<IModule> modules) {
       if (this.stopTraversal) return modules;
       for (int i = 0, n = modules.Count; i < n; i++) {
@@ -1403,6 +2056,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return modules;
     }
 
+    /// <summary>
+    /// Visits the specified modified type reference.
+    /// </summary>
+    /// <param name="modifiedTypeReference">The modified type reference.</param>
+    /// <returns></returns>
     public virtual ModifiedTypeReference Visit(ModifiedTypeReference modifiedTypeReference) {
       if (this.stopTraversal) return modifiedTypeReference;
       this.Visit((TypeReference)modifiedTypeReference);
@@ -1413,6 +2071,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return modifiedTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified module.
+    /// </summary>
+    /// <param name="module">The module.</param>
+    /// <returns></returns>
     public virtual Module Visit(Module module) {
       if (this.stopTraversal) return module;
       this.path.Push(module);
@@ -1450,6 +2113,12 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.oldOrder.Add(TypeHelper.GetTypeName(oldTypeList[i], NameFormattingOptions.TypeParameters), i);
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="x"></param>
+      /// <param name="y"></param>
+      /// <returns></returns>
       public override int Compare(INamedTypeDefinition x, INamedTypeDefinition y) {
         int xi = 0;
         int yi = int.MaxValue;
@@ -1461,6 +2130,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Visits the specified module references.
+    /// </summary>
+    /// <param name="moduleReferences">The module references.</param>
+    /// <returns></returns>
     public virtual List<IModuleReference> Visit(List<IModuleReference> moduleReferences) {
       if (this.stopTraversal) return moduleReferences;
       for (int i = 0, n = moduleReferences.Count; i < n; i++)
@@ -1468,6 +2142,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return moduleReferences;
     }
 
+    /// <summary>
+    /// Visits the specified module reference.
+    /// </summary>
+    /// <param name="moduleReference">The module reference.</param>
+    /// <returns></returns>
     public virtual ModuleReference Visit(ModuleReference moduleReference) {
       if (moduleReference.ResolvedModule != Dummy.Module) {
         object/*?*/ mutatedResolvedModule = null;
@@ -1477,6 +2156,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return moduleReference;
     }
 
+    /// <summary>
+    /// Visits the specified namespace members.
+    /// </summary>
+    /// <param name="namespaceMembers">The namespace members.</param>
+    /// <returns></returns>
     public virtual List<INamespaceMember> Visit(List<INamespaceMember> namespaceMembers) {
       if (this.stopTraversal) return namespaceMembers;
       for (int i = 0, n = namespaceMembers.Count; i < n; i++)
@@ -1484,6 +2168,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namespaceMembers;
     }
 
+    /// <summary>
+    /// Visits the specified namespace member.
+    /// </summary>
+    /// <param name="namespaceMember">The namespace member.</param>
+    /// <returns></returns>
     public virtual INamespaceMember Visit(INamespaceMember namespaceMember) {
       if (this.stopTraversal) return namespaceMember;
       INamespaceTypeDefinition/*?*/ namespaceTypeDefinition = namespaceMember as INamespaceTypeDefinition;
@@ -1497,6 +2186,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namespaceMember;
     }
 
+    /// <summary>
+    /// Visits the specified namespace alias for type.
+    /// </summary>
+    /// <param name="namespaceAliasForType">Type of the namespace alias for.</param>
+    /// <returns></returns>
     public virtual NamespaceAliasForType Visit(NamespaceAliasForType namespaceAliasForType) {
       if (this.stopTraversal) return namespaceAliasForType;
       this.path.Push(namespaceAliasForType);
@@ -1508,6 +2202,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namespaceAliasForType;
     }
 
+    /// <summary>
+    /// Visits the specified namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
+    /// <returns></returns>
     public virtual NamespaceTypeDefinition Visit(NamespaceTypeDefinition namespaceTypeDefinition) {
       if (this.stopTraversal) return namespaceTypeDefinition;
       this.Visit((TypeDefinition)namespaceTypeDefinition);
@@ -1515,6 +2214,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namespaceTypeDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified namespace type reference.
+    /// </summary>
+    /// <param name="namespaceTypeReference">The namespace type reference.</param>
+    /// <returns></returns>
     public virtual NamespaceTypeReference Visit(NamespaceTypeReference namespaceTypeReference) {
       if (this.stopTraversal) return namespaceTypeReference;
       this.Visit((TypeReference)namespaceTypeReference);
@@ -1524,6 +2228,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return namespaceTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified nested alias for type.
+    /// </summary>
+    /// <param name="nestedAliasForType">Type of the nested alias for.</param>
+    /// <returns></returns>
     public virtual NestedAliasForType Visit(NestedAliasForType nestedAliasForType) {
       if (this.stopTraversal) return nestedAliasForType;
       this.path.Push(nestedAliasForType);
@@ -1535,6 +2244,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return nestedAliasForType;
     }
 
+    /// <summary>
+    /// Visits the specified nested type definitions.
+    /// </summary>
+    /// <param name="nestedTypeDefinitions">The nested type definitions.</param>
+    /// <returns></returns>
     public virtual List<INestedTypeDefinition> Visit(List<INestedTypeDefinition> nestedTypeDefinitions) {
       if (this.stopTraversal) return nestedTypeDefinitions;
       for (int i = 0, n = nestedTypeDefinitions.Count; i < n; i++)
@@ -1542,6 +2256,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return nestedTypeDefinitions;
     }
 
+    /// <summary>
+    /// Visits the specified nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition">The nested type definition.</param>
+    /// <returns></returns>
     public virtual NestedTypeDefinition Visit(NestedTypeDefinition nestedTypeDefinition) {
       if (this.stopTraversal) return nestedTypeDefinition;
       this.Visit((TypeDefinition)nestedTypeDefinition);
@@ -1549,6 +2268,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return nestedTypeDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified nested type reference.
+    /// </summary>
+    /// <param name="nestedTypeReference">The nested type reference.</param>
+    /// <returns></returns>
     public virtual NestedTypeReference Visit(NestedTypeReference nestedTypeReference) {
       if (this.stopTraversal) return nestedTypeReference;
       this.Visit((TypeReference)nestedTypeReference);
@@ -1558,6 +2282,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return nestedTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified specialized field reference.
+    /// </summary>
+    /// <param name="specializedFieldReference">The specialized field reference.</param>
+    /// <returns></returns>
     public virtual SpecializedFieldReference Visit(SpecializedFieldReference specializedFieldReference) {
       if (this.stopTraversal) return specializedFieldReference;
       this.Visit((FieldReference)specializedFieldReference);
@@ -1567,6 +2296,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return specializedFieldReference;
     }
 
+    /// <summary>
+    /// Visits the specified specialized method reference.
+    /// </summary>
+    /// <param name="specializedMethodReference">The specialized method reference.</param>
+    /// <returns></returns>
     public virtual SpecializedMethodReference Visit(SpecializedMethodReference specializedMethodReference) {
       if (this.stopTraversal) return specializedMethodReference;
       this.Visit((MethodReference)specializedMethodReference);
@@ -1576,6 +2310,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return specializedMethodReference;
     }
 
+    /// <summary>
+    /// Visits the specified specialized nested type reference.
+    /// </summary>
+    /// <param name="specializedNestedTypeReference">The specialized nested type reference.</param>
+    /// <returns></returns>
     public virtual SpecializedNestedTypeReference Visit(SpecializedNestedTypeReference specializedNestedTypeReference) {
       if (this.stopTraversal) return specializedNestedTypeReference;
       this.Visit((NestedTypeReference)specializedNestedTypeReference);
@@ -1612,6 +2351,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Pop();
     }
 
+    /// <summary>
+    /// Visits the private helper members.
+    /// </summary>
+    /// <param name="typeDefinitions">The type definitions.</param>
     public virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
       if (this.stopTraversal) return;
       for (int i = 0, n = typeDefinitions.Count; i < n; i++) {
@@ -1623,6 +2366,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Visits the specified type definition members.
+    /// </summary>
+    /// <param name="typeDefinitionMembers">The type definition members.</param>
+    /// <returns></returns>
     public virtual List<ITypeDefinitionMember> Visit(List<ITypeDefinitionMember> typeDefinitionMembers) {
       if (this.stopTraversal) return typeDefinitionMembers;
       for (int i = 0, n = typeDefinitionMembers.Count; i < n; i++)
@@ -1630,6 +2378,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeDefinitionMembers;
     }
 
+    /// <summary>
+    /// Visits the specified type definition member.
+    /// </summary>
+    /// <param name="typeDefinitionMember">The type definition member.</param>
+    /// <returns></returns>
     public virtual ITypeDefinitionMember Visit(ITypeDefinitionMember typeDefinitionMember) {
       IEventDefinition/*?*/ eventDef = typeDefinitionMember as IEventDefinition;
       if (eventDef != null) return this.Visit(eventDef);
@@ -1645,6 +2398,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeDefinitionMember;
     }
 
+    /// <summary>
+    /// Visits the specified type references.
+    /// </summary>
+    /// <param name="typeReferences">The type references.</param>
+    /// <returns></returns>
     public virtual List<ITypeReference> Visit(List<ITypeReference> typeReferences) {
       if (this.stopTraversal) return typeReferences;
       for (int i = 0, n = typeReferences.Count; i < n; i++)
@@ -1652,6 +2410,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeReferences;
     }
 
+    /// <summary>
+    /// Visits the specified namespace type reference.
+    /// </summary>
+    /// <param name="namespaceTypeReference">The namespace type reference.</param>
+    /// <returns></returns>
     public virtual INamespaceTypeReference Visit(INamespaceTypeReference namespaceTypeReference) {
       INamespaceTypeDefinition/*?*/ namespaceTypeDefinition = namespaceTypeReference as INamespaceTypeDefinition;
       if (namespaceTypeDefinition != null)
@@ -1659,6 +2422,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(namespaceTypeReference));
     }
 
+    /// <summary>
+    /// Visits the specified nested type reference.
+    /// </summary>
+    /// <param name="nestedTypeReference">The nested type reference.</param>
+    /// <returns></returns>
     public virtual INestedTypeReference Visit(INestedTypeReference nestedTypeReference) {
       ISpecializedNestedTypeReference/*?*/ specializedNestedTypeReference = nestedTypeReference as ISpecializedNestedTypeReference;
       if (specializedNestedTypeReference != null)
@@ -1669,6 +2437,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(nestedTypeReference));
     }
 
+    /// <summary>
+    /// Visits the specified generic method parameter reference.
+    /// </summary>
+    /// <param name="genericMethodParameterReference">The generic method parameter reference.</param>
+    /// <returns></returns>
     public virtual IGenericMethodParameterReference Visit(IGenericMethodParameterReference genericMethodParameterReference) {
       IGenericMethodParameter/*?*/ genericMethodParameter = genericMethodParameterReference as IGenericMethodParameter;
       if (genericMethodParameter != null)
@@ -1677,9 +2450,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Array types are not nominal types, so always visit the reference, even if
-    /// it is a definition.
+    /// Visits the specified array type reference.
     /// </summary>
+    /// <param name="arrayTypeReference">The array type reference.</param>
+    /// <returns></returns>
+    /// <remarks>Array types are not nominal types, so always visit the reference, even if it is a definition.</remarks>
     public virtual IArrayTypeReference Visit(IArrayTypeReference arrayTypeReference) {
       if (arrayTypeReference.IsVector)
         return this.Visit(this.GetMutableVectorCopy(arrayTypeReference));
@@ -1687,6 +2462,11 @@ namespace Microsoft.Cci.MutableCodeModel {
         return this.Visit(this.GetMutableMatrixCopy(arrayTypeReference));
     }
 
+    /// <summary>
+    /// Visits the specified generic type parameter reference.
+    /// </summary>
+    /// <param name="genericTypeParameterReference">The generic type parameter reference.</param>
+    /// <returns></returns>
     public virtual IGenericTypeParameterReference Visit(IGenericTypeParameterReference genericTypeParameterReference) {
       IGenericTypeParameter/*?*/ genericTypeParameter = genericTypeParameterReference as IGenericTypeParameter;
       if (genericTypeParameter != null)
@@ -1694,18 +2474,33 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(genericTypeParameterReference));
     }
 
+    /// <summary>
+    /// Visits the specified generic type instance reference.
+    /// </summary>
+    /// <param name="genericTypeInstanceReference">The generic type instance reference.</param>
+    /// <returns></returns>
     public virtual IGenericTypeInstanceReference Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
       return this.Visit(this.GetMutableCopy(genericTypeInstanceReference));
     }
 
     /// <summary>
+    /// Visits the specified pointer type reference.
+    /// </summary>
+    /// <param name="pointerTypeReference">The pointer type reference.</param>
+    /// <returns></returns>
+    /// <remarks>
     /// Pointer types are not nominal types, so always visit the reference, even if
     /// it is a definition.
-    /// </summary>
+    /// </remarks>
     public virtual IPointerTypeReference Visit(IPointerTypeReference pointerTypeReference) {
       return this.Visit(this.GetMutableCopy(pointerTypeReference));
     }
 
+    /// <summary>
+    /// Visits the specified function pointer type reference.
+    /// </summary>
+    /// <param name="functionPointerTypeReference">The function pointer type reference.</param>
+    /// <returns></returns>
     public virtual IFunctionPointerTypeReference Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
       IFunctionPointer/*?*/ functionPointer = functionPointerTypeReference as IFunctionPointer;
       if (functionPointer != null)
@@ -1713,22 +2508,47 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(functionPointerTypeReference));
     }
 
+    /// <summary>
+    /// Visits the specified modified type reference.
+    /// </summary>
+    /// <param name="modifiedTypeReference">The modified type reference.</param>
+    /// <returns></returns>
     public virtual IModifiedTypeReference Visit(IModifiedTypeReference modifiedTypeReference) {
       return this.Visit(this.GetMutableCopy(modifiedTypeReference));
     }
 
+    /// <summary>
+    /// Visits the specified module reference.
+    /// </summary>
+    /// <param name="moduleReference">The module reference.</param>
+    /// <returns></returns>
     public virtual IModuleReference Visit(IModuleReference moduleReference) {
       return this.Visit(this.GetMutableCopy(moduleReference));
     }
 
+    /// <summary>
+    /// Visits the specified namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
+    /// <returns></returns>
     public virtual INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
       return this.Visit(this.GetMutableCopy(namespaceTypeDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition">The nested type definition.</param>
+    /// <returns></returns>
     public virtual INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
       return this.Visit(this.GetMutableCopy(nestedTypeDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified type reference.
+    /// </summary>
+    /// <param name="typeReference">The type reference.</param>
+    /// <returns></returns>
     public virtual ITypeReference Visit(ITypeReference typeReference) {
       INamespaceTypeReference/*?*/ namespaceTypeReference = typeReference as INamespaceTypeReference;
       if (namespaceTypeReference != null)
@@ -1761,6 +2581,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeReference;
     }
 
+    /// <summary>
+    /// Visits the specified unit namespace reference.
+    /// </summary>
+    /// <param name="unitNamespaceReference">The unit namespace reference.</param>
+    /// <returns></returns>
     public virtual IUnitNamespaceReference Visit(IUnitNamespaceReference unitNamespaceReference) {
       IRootUnitNamespaceReference/*?*/ rootUnitNamespaceReference = unitNamespaceReference as IRootUnitNamespaceReference;
       if (rootUnitNamespaceReference != null)
@@ -1772,10 +2597,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return unitNamespaceReference;
     }
 
+    /// <summary>
+    /// Visits the specified nested unit namespace.
+    /// </summary>
+    /// <param name="nestedUnitNamespace">The nested unit namespace.</param>
+    /// <returns></returns>
     public virtual INestedUnitNamespace Visit(INestedUnitNamespace nestedUnitNamespace) {
       return this.Visit(this.GetMutableCopy(nestedUnitNamespace));
     }
 
+    /// <summary>
+    /// Visits the specified nested unit namespace reference.
+    /// </summary>
+    /// <param name="nestedUnitNamespaceReference">The nested unit namespace reference.</param>
+    /// <returns></returns>
     public virtual INestedUnitNamespaceReference Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
       INestedUnitNamespace/*?*/ nestedUnitNamespace = nestedUnitNamespaceReference as INestedUnitNamespace;
       if (nestedUnitNamespace != null)
@@ -1783,6 +2618,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(this.GetMutableCopy(nestedUnitNamespaceReference));
     }
 
+    /// <summary>
+    /// Visits the specified nested unit namespace.
+    /// </summary>
+    /// <param name="nestedUnitNamespace">The nested unit namespace.</param>
+    /// <returns></returns>
     public virtual NestedUnitNamespace Visit(NestedUnitNamespace nestedUnitNamespace) {
       if (this.stopTraversal) return nestedUnitNamespace;
       this.Visit((UnitNamespace)nestedUnitNamespace);
@@ -1790,6 +2630,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return nestedUnitNamespace;
     }
 
+    /// <summary>
+    /// Visits the specified nested unit namespace reference.
+    /// </summary>
+    /// <param name="nestedUnitNamespaceReference">The nested unit namespace reference.</param>
+    /// <returns></returns>
     public virtual NestedUnitNamespaceReference Visit(NestedUnitNamespaceReference nestedUnitNamespaceReference) {
       if (this.stopTraversal) return nestedUnitNamespaceReference;
       this.Visit((UnitNamespaceReference)nestedUnitNamespaceReference);
@@ -1797,6 +2642,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return nestedUnitNamespaceReference;
     }
 
+    /// <summary>
+    /// Visits the specified unit reference.
+    /// </summary>
+    /// <param name="unitReference">The unit reference.</param>
+    /// <returns></returns>
     public virtual IUnitReference Visit(IUnitReference unitReference) {
       IAssemblyReference/*?*/ assemblyReference = unitReference as IAssemblyReference;
       if (assemblyReference != null)
@@ -1808,6 +2658,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return unitReference;
     }
 
+    /// <summary>
+    /// Visits the specified parameter definitions.
+    /// </summary>
+    /// <param name="parameterDefinitions">The parameter definitions.</param>
+    /// <returns></returns>
     public virtual List<IParameterDefinition> Visit(List<IParameterDefinition> parameterDefinitions) {
       if (this.stopTraversal) return parameterDefinitions;
       for (int i = 0, n = parameterDefinitions.Count; i < n; i++)
@@ -1815,6 +2670,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterDefinitions;
     }
 
+    /// <summary>
+    /// Visits the specified parameter definition.
+    /// </summary>
+    /// <param name="parameterDefinition">The parameter definition.</param>
+    /// <returns></returns>
     public virtual ParameterDefinition Visit(ParameterDefinition parameterDefinition) {
       if (this.stopTraversal) return parameterDefinition;
       this.path.Push(parameterDefinition);
@@ -1830,6 +2690,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified parameter type information list.
+    /// </summary>
+    /// <param name="parameterTypeInformationList">The parameter type information list.</param>
+    /// <returns></returns>
     public virtual List<IParameterTypeInformation> Visit(List<IParameterTypeInformation> parameterTypeInformationList) {
       if (this.stopTraversal) return parameterTypeInformationList;
       for (int i = 0, n = parameterTypeInformationList.Count; i < n; i++)
@@ -1837,6 +2702,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterTypeInformationList;
     }
 
+    /// <summary>
+    /// Visits the specified parameter type information.
+    /// </summary>
+    /// <param name="parameterTypeInformation">The parameter type information.</param>
+    /// <returns></returns>
     public virtual ParameterTypeInformation Visit(ParameterTypeInformation parameterTypeInformation) {
       if (this.stopTraversal) return parameterTypeInformation;
       this.path.Push(parameterTypeInformation);
@@ -1847,6 +2717,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterTypeInformation;
     }
 
+    /// <summary>
+    /// Visits the specified platform invoke information.
+    /// </summary>
+    /// <param name="platformInvokeInformation">The platform invoke information.</param>
+    /// <returns></returns>
     public virtual PlatformInvokeInformation Visit(PlatformInvokeInformation platformInvokeInformation) {
       if (this.stopTraversal) return platformInvokeInformation;
       this.path.Push(platformInvokeInformation);
@@ -1855,6 +2730,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return platformInvokeInformation;
     }
 
+    /// <summary>
+    /// Visits the specified property definitions.
+    /// </summary>
+    /// <param name="propertyDefinitions">The property definitions.</param>
+    /// <returns></returns>
     public virtual List<IPropertyDefinition> Visit(List<IPropertyDefinition> propertyDefinitions) {
       if (this.stopTraversal) return propertyDefinitions;
       for (int i = 0, n = propertyDefinitions.Count; i < n; i++)
@@ -1862,10 +2742,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       return propertyDefinitions;
     }
 
+    /// <summary>
+    /// Visits the specified property definition.
+    /// </summary>
+    /// <param name="propertyDefinition">The property definition.</param>
+    /// <returns></returns>
     public virtual IPropertyDefinition Visit(IPropertyDefinition propertyDefinition) {
       return this.Visit(this.GetMutableCopy(propertyDefinition));
     }
 
+    /// <summary>
+    /// Visits the specified property definition.
+    /// </summary>
+    /// <param name="propertyDefinition">The property definition.</param>
+    /// <returns></returns>
     public virtual PropertyDefinition Visit(PropertyDefinition propertyDefinition) {
       if (this.stopTraversal) return propertyDefinition;
       this.Visit((TypeDefinitionMember)propertyDefinition);
@@ -1886,6 +2776,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return propertyDefinition;
     }
 
+    /// <summary>
+    /// Visits the specified pointer type reference.
+    /// </summary>
+    /// <param name="pointerTypeReference">The pointer type reference.</param>
+    /// <returns></returns>
     public virtual PointerTypeReference Visit(PointerTypeReference pointerTypeReference) {
       if (this.stopTraversal) return pointerTypeReference;
       this.Visit((TypeReference)pointerTypeReference);
@@ -1895,6 +2790,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return pointerTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified resource references.
+    /// </summary>
+    /// <param name="resourceReferences">The resource references.</param>
+    /// <returns></returns>
     public virtual List<IResourceReference> Visit(List<IResourceReference> resourceReferences) {
       if (this.stopTraversal) return resourceReferences;
       for (int i = 0, n = resourceReferences.Count; i < n; i++)
@@ -1902,6 +2802,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return resourceReferences;
     }
 
+    /// <summary>
+    /// Visits the specified resource reference.
+    /// </summary>
+    /// <param name="resourceReference">The resource reference.</param>
+    /// <returns></returns>
     public virtual IResourceReference Visit(ResourceReference resourceReference) {
       if (this.stopTraversal) return resourceReference;
       resourceReference.Attributes = this.Visit(resourceReference.Attributes);
@@ -1909,6 +2814,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return resourceReference;
     }
 
+    /// <summary>
+    /// Visits the specified security attributes.
+    /// </summary>
+    /// <param name="securityAttributes">The security attributes.</param>
+    /// <returns></returns>
     public virtual List<ISecurityAttribute> Visit(List<ISecurityAttribute> securityAttributes) {
       if (this.stopTraversal) return securityAttributes;
       for (int i = 0, n = securityAttributes.Count; i < n; i++)
@@ -1916,24 +2826,45 @@ namespace Microsoft.Cci.MutableCodeModel {
       return securityAttributes;
     }
 
+    /// <summary>
+    /// Visits the specified root unit namespace reference.
+    /// </summary>
+    /// <param name="rootUnitNamespaceReference">The root unit namespace reference.</param>
+    /// <returns></returns>
     public virtual IRootUnitNamespaceReference Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
       IRootUnitNamespace/*?*/ rootUnitNamespace = rootUnitNamespaceReference as IRootUnitNamespace;
       if (rootUnitNamespace != null)
         return this.GetMutableCopy(rootUnitNamespace);
       return this.Visit(this.GetMutableCopy(rootUnitNamespaceReference));
     }
+
+    /// <summary>
+    /// Visits the specified root unit namespace.
+    /// </summary>
+    /// <param name="rootUnitNamespace">The root unit namespace.</param>
+    /// <returns></returns>
     public virtual RootUnitNamespace Visit(RootUnitNamespace rootUnitNamespace) {
       if (this.stopTraversal) return rootUnitNamespace;
       this.Visit((UnitNamespace)rootUnitNamespace);
       return rootUnitNamespace;
     }
 
+    /// <summary>
+    /// Visits the specified root unit namespace reference.
+    /// </summary>
+    /// <param name="rootUnitNamespaceReference">The root unit namespace reference.</param>
+    /// <returns></returns>
     public virtual RootUnitNamespaceReference Visit(RootUnitNamespaceReference rootUnitNamespaceReference) {
       if (this.stopTraversal) return rootUnitNamespaceReference;
       rootUnitNamespaceReference.Unit = this.Visit(rootUnitNamespaceReference.Unit);
       return rootUnitNamespaceReference;
     }
 
+    /// <summary>
+    /// Visits the specified security attribute.
+    /// </summary>
+    /// <param name="securityAttribute">The security attribute.</param>
+    /// <returns></returns>
     public virtual SecurityAttribute Visit(SecurityAttribute securityAttribute) {
       if (this.stopTraversal) return securityAttribute;
       this.path.Push(securityAttribute);
@@ -1942,6 +2873,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return securityAttribute;
     }
 
+    /// <summary>
+    /// Visits the specified type definition member.
+    /// </summary>
+    /// <param name="typeDefinitionMember">The type definition member.</param>
+    /// <returns></returns>
     public virtual ITypeDefinitionMember Visit(TypeDefinitionMember typeDefinitionMember) {
       if (this.stopTraversal) return typeDefinitionMember;
       this.path.Push(typeDefinitionMember);
@@ -1952,6 +2888,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeDefinitionMember;
     }
 
+    /// <summary>
+    /// Visits the specified type reference.
+    /// </summary>
+    /// <param name="typeReference">The type reference.</param>
+    /// <returns></returns>
     public virtual TypeReference Visit(TypeReference typeReference) {
       if (this.stopTraversal) return typeReference;
       this.path.Push(typeReference);
@@ -1961,6 +2902,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeReference;
     }
 
+    /// <summary>
+    /// Visits the specified unit.
+    /// </summary>
+    /// <param name="unit">The unit.</param>
+    /// <returns></returns>
     public virtual Unit Visit(Unit unit) {
       if (this.stopTraversal) return unit;
       this.path.Push(unit);
@@ -1971,6 +2917,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return unit;
     }
 
+    /// <summary>
+    /// Visits the specified unit namespace.
+    /// </summary>
+    /// <param name="unitNamespace">The unit namespace.</param>
+    /// <returns></returns>
     public virtual UnitNamespace Visit(UnitNamespace unitNamespace) {
       if (this.stopTraversal) return unitNamespace;
       this.path.Push(unitNamespace);
@@ -1982,6 +2933,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return unitNamespace;
     }
 
+    /// <summary>
+    /// Visits the specified unit namespace reference.
+    /// </summary>
+    /// <param name="unitNamespaceReference">The unit namespace reference.</param>
+    /// <returns></returns>
     public virtual UnitNamespaceReference Visit(UnitNamespaceReference unitNamespaceReference) {
       if (this.stopTraversal) return unitNamespaceReference;
       this.path.Push(unitNamespaceReference);
@@ -1991,6 +2947,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return unitNamespaceReference;
     }
 
+    /// <summary>
+    /// Visits the specified vector type reference.
+    /// </summary>
+    /// <param name="vectorTypeReference">The vector type reference.</param>
+    /// <returns></returns>
     public virtual VectorTypeReference Visit(VectorTypeReference vectorTypeReference) {
       if (this.stopTraversal) return vectorTypeReference;
       this.Visit((TypeReference)vectorTypeReference);
@@ -2000,6 +2961,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return vectorTypeReference;
     }
 
+    /// <summary>
+    /// Visits the specified win32 resources.
+    /// </summary>
+    /// <param name="win32Resources">The win32 resources.</param>
+    /// <returns></returns>
     public virtual List<IWin32Resource> Visit(List<IWin32Resource> win32Resources) {
       if (this.stopTraversal) return win32Resources;
       for (int i = 0, n = win32Resources.Count; i < n; i++)
@@ -2007,22 +2973,47 @@ namespace Microsoft.Cci.MutableCodeModel {
       return win32Resources;
     }
 
+    /// <summary>
+    /// Visits the specified win32 resource.
+    /// </summary>
+    /// <param name="win32Resource">The win32 resource.</param>
+    /// <returns></returns>
     public virtual IWin32Resource Visit(IWin32Resource win32Resource) {
       return win32Resource;
     }
 
+    /// <summary>
+    /// Visits the property return value attributes.
+    /// </summary>
+    /// <param name="customAttributes">The custom attributes.</param>
+    /// <returns></returns>
     public virtual List<ICustomAttribute> VisitPropertyReturnValueAttributes(List<ICustomAttribute> customAttributes) {
       return this.Visit(customAttributes);
     }
 
+    /// <summary>
+    /// Visits the method return value attributes.
+    /// </summary>
+    /// <param name="customAttributes">The custom attributes.</param>
+    /// <returns></returns>
     public virtual List<ICustomAttribute> VisitMethodReturnValueAttributes(List<ICustomAttribute> customAttributes) {
       return this.Visit(customAttributes);
     }
 
+    /// <summary>
+    /// Visits the method return value custom modifiers.
+    /// </summary>
+    /// <param name="customModifers">The custom modifers.</param>
+    /// <returns></returns>
     public virtual List<ICustomModifier> VisitMethodReturnValueCustomModifiers(List<ICustomModifier> customModifers) {
       return this.Visit(customModifers);
     }
 
+    /// <summary>
+    /// Visits the method return value marshalling information.
+    /// </summary>
+    /// <param name="marshallingInformation">The marshalling information.</param>
+    /// <returns></returns>
     public virtual IMarshallingInformation VisitMethodReturnValueMarshallingInformation(MarshallingInformation marshallingInformation) {
       return this.Visit(marshallingInformation);
     }
