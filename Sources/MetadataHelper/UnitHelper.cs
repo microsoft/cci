@@ -114,11 +114,11 @@ namespace Microsoft.Cci {
     /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
     /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
-    /// <param name="module">The module to search for the type.</param>
+    /// <param name="unit">The unit of metadata to search for the type.</param>
     /// <param name="typeName">A string containing the fully qualified type name, using C# formatting conventions.</param>
-    public static INamedTypeDefinition FindType(INameTable nameTable, IModule module, string typeName) {
+    public static INamedTypeDefinition FindType(INameTable nameTable, IUnit unit, string typeName) {
       int offset = 0;
-      INamedTypeDefinition/*?*/ result = GetType(nameTable, module.UnitNamespaceRoot, typeName, ref offset);
+      INamedTypeDefinition/*?*/ result = GetType(nameTable, unit.UnitNamespaceRoot, typeName, ref offset);
       if (result != null) return result;
       return Dummy.NamespaceTypeDefinition;
     }
