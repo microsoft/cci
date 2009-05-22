@@ -24,9 +24,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
     /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
@@ -100,6 +102,9 @@ namespace Microsoft.Cci {
     /// If none of the loaded units have an opinion, the identity of the runtime executing the compiler itself is returned.
     /// </summary>
     protected virtual AssemblyIdentity GetCoreAssemblySymbolicIdentity() {
+      var coreAssemblyName = typeof(object).Assembly.GetName();
+      string/*?*/ loc = coreAssemblyName.CodeBase;
+      if (loc == null) loc = ""; //TODO: is this really needed? I.e. can coreAssemblyName.CodeBase ever be null?
       if (this.unitCache.Count > 0) {
         AssemblyIdentity/*?*/ result = null;
         foreach (IUnit unit in this.unitCache.Values) {
@@ -107,11 +112,26 @@ namespace Microsoft.Cci {
           if (coreId.Name.Value.Length == 0) continue;
           if (result == null || result.Version < coreId.Version) result = coreId;
         }
-        if (result != null) return result;
+        if (result != null) {
+          //The loaded assemblies have an opinion on the identity of the core assembly. By default, we are going to respect that opinion.
+          if (result.Location.Length == 0) {
+            //However, they do not know where to find it. (This will only be non empty if one of the loaded assemblies itself is the core assembly.)
+            if (loc.Length > 0) {
+              //We don't know where to find the core assembly that the loaded assemblies want, but we do know where to find the core assembly
+              //that we are running on. Perhaps it is the same assembly as the one we've identified. In that case we know where it can be found.
+              var myCore = new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), loc);
+              if (myCore.Equals(result)) return myCore; //myCore is the same as result, but also has a non null location.
+            }
+            //TODO: if the core assembly being referenced is not the same as the one running the host, probe in the standard places to find its location.
+            //put this probing logic in a separate, overridable method and use it in LoadAssembly and LoadModule.
+            //Hook it up with the GAC.
+          }
+          return result;
+        }
       }
-      var coreAssemblyName = typeof(object).Assembly.GetName();
-      string/*?*/ loc = coreAssemblyName.CodeBase;
-      if (loc == null) loc = "";
+      //If we get here, none of the assemblies in the unit cache has an opinion on the identity of the core assembly.
+      //Usually this will be because this method was called before any assemblies have been loaded.
+      //In this case, we have little option but to choose the identity of the core assembly of the platform we are running on.
       return new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), loc);
     }
 
@@ -342,7 +362,7 @@ namespace Microsoft.Cci {
     readonly Dictionary<UnitIdentity, IUnit> unitCache = new Dictionary<UnitIdentity, IUnit>();
 
     /// <summary>
-    /// Default implementation of UnifyAssemblyReference. Override this method to change the behaviour.
+    /// Default implementation of ProbeAssemblyReference. Override this method to change the behaviour.
     /// </summary>
     /// <param name="referringUnit"></param>
     /// <param name="referencedAssembly"></param>
@@ -441,9 +461,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
     protected MetadataReaderHost(INameTable nameTable)
       : this(nameTable, 0) {
     }
@@ -451,9 +473,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
     /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
@@ -637,6 +661,7 @@ namespace Microsoft.Cci {
       internal readonly bool ReturnValueIsByRef;
       internal readonly uint ReturnValueCustomModifiersListInteredId;
       internal readonly uint ReturnTypeReferenceInternedId;
+      internal readonly uint GenericParameterCount;
       internal readonly uint InternedId;
       internal SignatureStore(
        CallingConvention callingConvention,
@@ -645,6 +670,7 @@ namespace Microsoft.Cci {
        bool returnValueIsByRef,
        uint returnValueCustomModifiersListInteredId,
        uint returnTypeReferenceInteredId,
+       uint genericParameterCount,
        uint internedId
       ) {
         this.CallingConvention = callingConvention;
@@ -653,6 +679,7 @@ namespace Microsoft.Cci {
         this.ReturnValueIsByRef = returnValueIsByRef;
         this.ReturnValueCustomModifiersListInteredId = returnValueCustomModifiersListInteredId;
         this.ReturnTypeReferenceInternedId = returnTypeReferenceInteredId;
+        this.GenericParameterCount = genericParameterCount;
         this.InternedId = internedId;
       }
     }
@@ -1032,7 +1059,7 @@ namespace Microsoft.Cci {
           return signatureStore.InternedId;
         }
       }
-      SignatureStore signatureStore1 = new SignatureStore(callingConvention, requiredParameterTypesInternedId, extraArgumentTypesInteredId, returnValueIsByRef, returnValueCustomModifiersInternedId, returnTypeReferenceInternedId, this.CurrentSignatureInternValue++);
+      SignatureStore signatureStore1 = new SignatureStore(callingConvention, requiredParameterTypesInternedId, extraArgumentTypesInteredId, returnValueIsByRef, returnValueCustomModifiersInternedId, returnTypeReferenceInternedId, 0, this.CurrentSignatureInternValue++);
       this.SignatureHashtable.Add(requiredParameterTypesInternedId, signatureStore1);
       return signatureStore1.InternedId;
     }
@@ -1043,6 +1070,7 @@ namespace Microsoft.Cci {
       uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(methodReference.ContainingType);
       uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(methodReference.Parameters.GetEnumerator());
       uint returnValueCustomModifiersInternedId = 0;
+      uint genericParameterCount = methodReference.GenericParameterCount;
       if (methodReference.ReturnValueIsModified)
         returnValueCustomModifiersInternedId = this.GetCustomModifierListInternId(methodReference.ReturnValueCustomModifiers.GetEnumerator());
       uint returnTypeReferenceInternedId = this.GetTypeReferenceInternId(methodReference.Type);
@@ -1058,12 +1086,13 @@ namespace Microsoft.Cci {
           && signatureStore.ReturnValueCustomModifiersListInteredId == returnValueCustomModifiersInternedId
           && signatureStore.ReturnValueIsByRef == methodReference.ReturnValueIsByRef
           && signatureStore.ReturnTypeReferenceInternedId == returnTypeReferenceInternedId
+          && signatureStore.GenericParameterCount == genericParameterCount
         ) {
           return signatureStore.InternedId;
         }
       }
       SignatureStore signatureStore1 = new SignatureStore(methodReference.CallingConvention, requiredParameterTypesInternedId,
-        0, methodReference.ReturnValueIsByRef, returnValueCustomModifiersInternedId, returnTypeReferenceInternedId,
+        0, methodReference.ReturnValueIsByRef, returnValueCustomModifiersInternedId, returnTypeReferenceInternedId, genericParameterCount,
         this.CurrentMethodReferenceInternValue++);
       methods.Add((uint)methodReference.Name.UniqueKey, signatureStore1);
       return signatureStore1.InternedId;
