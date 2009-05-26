@@ -991,14 +991,15 @@ namespace Microsoft.Cci.Ast {
       if (TypeHelper.TypesAreEquivalent(expression.Type, targetType)) return expression;
       CompileTimeConstant/*?*/ cconst = expression as CompileTimeConstant;
       if (cconst != null) {
+        NullLiteral nullLiteral;
         ITypeDefinition tType = this.RemoveNullableWrapper(targetType);
         bool targetIsNullable = tType != targetType;
         if (tType.IsEnum && ExpressionHelper.IsIntegralZero(cconst)) {
           if (!targetIsNullable) return cconst.ConvertToTargetTypeIfIntegerInRangeOf(tType.UnderlyingType.ResolvedType, true);
           return this.AddNullableWrapperIfNeeded(expression, tType, targetType);
-        } else if (cconst is NullLiteral) {
+        } else if ((nullLiteral = cconst as NullLiteral) != null) {
           if (tType.IsReferenceType || targetIsNullable || tType is IPointerTypeReference)
-            return new NullLiteral(expression.SourceLocation, targetType);
+            return new DefaultValue(nullLiteral, targetType);
         } else {
           ITypeDefinition tt = tType;
           if (tType.IsEnum && isExplicitConversion) {
@@ -2847,10 +2848,13 @@ namespace Microsoft.Cci.Ast {
         this.ReportError(new AstErrorMessage(expression, Error.BadReturnType,
           this.GetMethodSignature(methodToComplainAbout, 
             NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters|NameFormattingOptions.UseTypeKeywords)));
-        //TODO: related error location
+        //TODO: related error locations
         return;
       }
-      //TODO: message about ambiguous overloads
+      this.ReportError(new AstErrorMessage(expression, Error.NoMatchingOverload, this.GetTypeName(targetType),
+          this.GetMethodSignature(methodToComplainAbout,
+            NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters|NameFormattingOptions.UseTypeKeywords)));
+      //TODO: related error locations
     }
 
     /// <summary>

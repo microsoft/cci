@@ -258,6 +258,11 @@ namespace Microsoft.Cci.Ast {
     NoImplicitConversionForValue,
 
     /// <summary>
+    /// No overload for '{1}' matches delegate '{0}'.
+    /// </summary>
+    NoMatchingOverload,
+
+    /// <summary>
     /// No source files to compile.
     /// </summary>
     NoSourceFiles,

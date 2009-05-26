@@ -6540,7 +6540,7 @@ namespace Microsoft.Cci.Ast {
       this.elementType = elementType;
       this.elementTypeExpression = null;
       this.initializers = initializers;
-      this.lowerBounds = new Expression[] { new CompileTimeConstant(0, SourceDummy.SourceLocation) };
+      this.lowerBounds = new Expression[0];
       this.rank = 1;
       this.sizes = new Expression[] { new CompileTimeConstant(IteratorHelper.EnumerableCount(initializers), SourceDummy.SourceLocation) };
     }
@@ -7266,6 +7266,17 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Allocates a default value expression that is equivalent in effect to the given nullLiteral when converted to the given type.
+    /// </summary>
+    /// <param name="nullLiteral">A null literal expression.</param>
+    /// <param name="type">The type whose default value is the result of the expression being allocated.</param>
+    public DefaultValue(NullLiteral nullLiteral, ITypeDefinition type)
+      : base(nullLiteral.SourceLocation) {
+      this.defaultValueType = TypeExpression.For(type);
+      this.SetContainingExpression(nullLiteral);
+    }
+
+    /// <summary>
     /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
     /// </summary>
     /// <param name="containingBlock">A new value for containing block. This replaces template.ContainingBlock in the resulting copy of template.</param>
@@ -7964,7 +7975,9 @@ namespace Microsoft.Cci.Ast {
     /// If not, it returns this.
     /// </summary>
     /// <param name="operand">An operand that is being tested for equality or inequality with the null literal.</param>
-    protected virtual Expression CallHasValue(Expression operand) {
+    protected virtual Expression CallHasValue(Expression operand)
+      //^ requires operand.Type.IsValueType;
+    {
       List<Expression> args = new List<Expression>(0);
       foreach (ITypeDefinitionMember member in operand.Type.GetMembersNamed(this.NameTable.HasValue, false)) {
         IPropertyDefinition/*?*/ hasValue = member as IPropertyDefinition;
@@ -7974,6 +7987,8 @@ namespace Microsoft.Cci.Ast {
           //^ assume false;
           continue;
         }
+        operand = new AddressOf(new AddressableExpression(operand), true, operand.SourceLocation);
+        operand.SetContainingExpression(this);
         ResolvedMethodCall hasValueCall = new ResolvedMethodCall(get_HasValue.ResolvedMethod, operand, args, this.SourceLocation);
         hasValueCall.SetContainingExpression(this);
         return hasValueCall;
@@ -13929,15 +13944,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Allocates a compile time constant that represents the null literal for a given type.
-    /// </summary>
-    /// <param name="sourceLocation">The location in the source text of the expression that corresponds to this constant.</param>
-    /// <param name="type">The type of null. (The value of this.Type after construction.) </param>
-    public NullLiteral(ISourceLocation sourceLocation, ITypeDefinition type)
-      : base(null, false, false, type, sourceLocation) {
-    }
-
-    /// <summary>
     /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
     /// </summary>
     /// <param name="containingBlock">A new value for containing block. This replaces template.ContainingBlock in the resulting copy of template.</param>
@@ -17553,6 +17559,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires !typeDefinition.IsGeneric;
       //^ ensures result == null || result is ITypeGroup || (!restrictToNamespacesAndTypes && result is ITypeDefinitionMember);
     {
+      if (typeDefinition == Dummy.Type || typeDefinition == Dummy.NamespaceTypeDefinition) return null;
       IEnumerable<ITypeDefinitionMember> members = typeDefinition.GetMembersNamed(this.Name, this.ignoreCase);
       foreach (ITypeDefinitionMember member in members) {
         //TODO: filter out members that are not visible to this expression

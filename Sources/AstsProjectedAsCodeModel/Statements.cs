@@ -886,7 +886,7 @@ namespace Microsoft.Cci.Ast {
       LocalDeclaration localDeclaration = new LocalDeclaration(false, false, this.Name, null, this.Name.SourceLocation);
       declarations.Add(localDeclaration);
       localDeclarationsStatement.SetContainingBlock(this.Body.ContainingBlock); //TODO: perhaps a new block?
-      return new LocalDefinition(localDeclaration);
+      return localDeclaration.LocalVariable;
     }
 
     /// <summary>
@@ -2080,7 +2080,7 @@ namespace Microsoft.Cci.Ast {
       SourceLocationBuilder sloc = new SourceLocationBuilder(this.VariableType.SourceLocation);
       sloc.UpdateToSpan(this.VariableName.SourceLocation);
       LocalDeclaration localDeclaration = new LocalDeclaration(false, false, this.VariableName, null, this.VariableName.SourceLocation);
-      loopVar = new LocalDefinition(localDeclaration);
+      loopVar = localDeclaration.LocalVariable;
       List<LocalDeclaration> decls = new List<LocalDeclaration>(1);
       decls.Add(localDeclaration);
       LocalDeclarationsStatement localDeclarationsStatement = new LocalDeclarationsStatement(false, false, false, this.VariableType, decls, sloc);

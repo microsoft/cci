@@ -189,6 +189,9 @@
   <data name="NoImplicitConversion" xml:space="preserve">
     <value>Cannot implicitly convert type '{0}' to '{1}'.</value>
   </data>
+  <data name="NoMatchingOverload">
+    <value>No overload for '{1}' matches delegate '{0}'.</value>
+  </data>
   <data name="NoSourceFiles" xml:space="preserve">
     <value>No source files to compile.</value>
   </data>
