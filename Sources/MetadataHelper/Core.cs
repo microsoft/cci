@@ -105,6 +105,10 @@ namespace Microsoft.Cci {
       var coreAssemblyName = typeof(object).Assembly.GetName();
       string/*?*/ loc = coreAssemblyName.CodeBase;
       if (loc == null) loc = ""; //TODO: is this really needed? I.e. can coreAssemblyName.CodeBase ever be null?
+      //If the code base represents a file (could it ever be different for mscorlib?), then
+      //CodeBase is the file path with \ flipped to / and file:/// or file:// prepended to it.
+      if (loc.StartsWith("file:///")) loc = loc.Substring(8);
+      else if (loc.StartsWith("file://")) loc = loc.Substring(7);
       if (this.unitCache.Count > 0) {
         AssemblyIdentity/*?*/ result = null;
         foreach (IUnit unit in this.unitCache.Values) {
