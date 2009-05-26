@@ -103,7 +103,7 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Readonly_);
         IArrayTypeReference arrayType = (IArrayTypeReference)arrayIndexer.IndexedObject.Type;
         if (arrayType.IsVector)
-          this.generator.Emit(OperationCode.Ldelema, arrayType);
+          this.generator.Emit(OperationCode.Ldelema, arrayType.ElementType);
         else
           this.generator.Emit(OperationCode.Array_Addr, arrayType);
         return;
@@ -131,6 +131,11 @@ namespace Microsoft.Cci {
       IAddressableExpression/*?*/ addressableExpression = container as IAddressableExpression;
       if (addressableExpression != null) {
         this.LoadAddressOf(addressableExpression.Definition, addressableExpression.Instance);
+        return;
+      }
+      ITargetExpression/*?*/ targetExpression = container as ITargetExpression;
+      if (targetExpression != null) {
+        this.LoadAddressOf(targetExpression.Definition, targetExpression.Instance);
         return;
       }
       IExpression/*?*/ expression = container as IExpression;
@@ -1024,6 +1029,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="expressionStatement">The expression statement.</param>
     public override void Visit(IExpressionStatement expressionStatement) {
+      if (expressionStatement.Expression == CodeDummy.Expression) return;
       IAssignment/*?*/ assigment = expressionStatement.Expression as IAssignment;
       if (assigment != null) {
         this.VisitAssignment(assigment, true);
@@ -1041,9 +1047,68 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="forEachStatement">For each statement.</param>
     public override void Visit(IForEachStatement forEachStatement) {
-      //TODO: special case for arrays
+      var arrayType = forEachStatement.Collection.Type as IArrayTypeReference;
+      if (arrayType != null && arrayType.IsVector) {
+        this.VisitForeachArrayElement(forEachStatement, arrayType);
+        return;
+      }
       //TODO: special case for enumerator that is sealed and does not implement IDisposable
       base.Visit(forEachStatement);
+    }
+
+    /// <summary>
+    /// Generates IL code for the given for each statement for the special case where the collection is known
+    /// to be vector type.
+    /// </summary>
+    /// <param name="forEachStatement">The foreach statement to visit.</param>
+    /// <param name="arrayType">The vector type of the collection.</param>
+    public virtual void VisitForeachArrayElement(IForEachStatement forEachStatement, IArrayTypeReference arrayType)
+      //^ requires arrayType.IsVector;
+    {
+      ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
+      ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
+      this.currentBreakTarget = new ILGeneratorLabel();
+      this.currentContinueTarget = new ILGeneratorLabel();
+      if (this.currentTryCatch != null) {
+        this.mostNestedTryCatchFor.Add(this.currentBreakTarget, this.currentTryCatch);
+        this.mostNestedTryCatchFor.Add(this.currentContinueTarget, this.currentTryCatch);
+      }
+      ILGeneratorLabel conditionCheck = new ILGeneratorLabel();
+      ILGeneratorLabel loopStart = new ILGeneratorLabel();
+
+      this.EmitSequencePoint(forEachStatement.Variable.Locations);
+      this.Visit(forEachStatement.Collection);
+      this.generator.Emit(OperationCode.Dup);
+      var array = new TemporaryVariable(arrayType);
+      this.VisitAssignmentTo(array);
+      var length = new TemporaryVariable(this.host.PlatformType.SystemInt32);
+      this.generator.Emit(OperationCode.Ldlen);
+      this.generator.Emit(OperationCode.Conv_I4);
+      this.VisitAssignmentTo(length);
+      var counter = new TemporaryVariable(this.host.PlatformType.SystemInt32);
+      this.generator.Emit(OperationCode.Ldc_I4_0);
+      this.VisitAssignmentTo(counter);
+      this.generator.Emit(OperationCode.Br, conditionCheck);
+      this.generator.MarkLabel(loopStart);
+      this.LoadLocal(array);
+      this.LoadLocal(counter);
+      this.LoadVectorElement(arrayType.ElementType);
+      this.VisitAssignmentTo(forEachStatement.Variable);
+      this.Visit(forEachStatement.Body);
+      this.generator.MarkLabel(this.currentContinueTarget);
+      this.LoadLocal(counter);
+      this.generator.Emit(OperationCode.Ldc_I4_1);
+      this.generator.Emit(OperationCode.Add);
+      this.VisitAssignmentTo(counter);
+      this.generator.MarkLabel(conditionCheck);
+      this.EmitSequencePoint(forEachStatement.Collection.Locations);
+      this.LoadLocal(counter);
+      this.LoadLocal(length);
+      this.generator.Emit(OperationCode.Blt, loopStart);
+      this.generator.MarkLabel(this.currentBreakTarget);
+
+      this.currentBreakTarget = savedCurrentBreakTarget;
+      this.currentContinueTarget = savedCurrentContinueTarget;
     }
 
     /// <summary>
@@ -1427,9 +1492,11 @@ namespace Microsoft.Cci {
     public override void Visit(IReturnStatement returnStatement) {
       if (returnStatement.Expression != null) {
         this.Visit(returnStatement.Expression);
-        if (!this.minizeCodeSize) //TODO: error if this.returnLocal is null
+        if (!this.minizeCodeSize || this.currentTryCatch != null) {
+          if (this.returnLocal == null)
+            this.returnLocal = new TemporaryVariable(this.method.Type);
           this.VisitAssignmentTo(this.returnLocal);
-        else
+        } else
           this.StackSize--;
       }
       if (this.currentTryCatch != null)
@@ -3728,15 +3795,11 @@ namespace Microsoft.Cci {
     public virtual void ConvertToIL(IMethodDefinition method, IBlockStatement body) {
       this.method = method;
       ITypeReference returnType = method.Type;
-      if (returnType.TypeCode != PrimitiveTypeCode.Void && !this.minizeCodeSize)
-        this.returnLocal = new TemporaryVariable(returnType);
-
       new LabelAndTryBlockAssociater(this.mostNestedTryCatchFor).Visit(body);
       this.Visit(body);
-      if (!this.minizeCodeSize) {
-        this.generator.MarkLabel(this.endOfMethod);
-        if (this.returnLocal != null)
-          this.LoadLocal(this.returnLocal);
+      this.generator.MarkLabel(this.endOfMethod);
+      if (this.returnLocal != null) {
+        this.LoadLocal(this.returnLocal);
         this.generator.Emit(OperationCode.Ret);
       } else if (returnType.TypeCode == PrimitiveTypeCode.Void && !this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Ret);
