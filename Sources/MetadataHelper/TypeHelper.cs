@@ -471,7 +471,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="typeDef">The type whose base class is to be returned.</param>
     //^ [Confined]
-    public static ITypeDefinition/*?*/ BaseClass(ITypeDefinition typeDef) 
+    public static ITypeDefinition/*?*/ BaseClass(ITypeDefinition typeDef)
       //^ ensures result == null || result.IsClass;
     {
       foreach (ITypeReference baseClass in typeDef.BaseClasses) {
@@ -488,7 +488,7 @@ namespace Microsoft.Cci {
     /// generic parameter must derive from.
     /// </summary>
     //^ [Pure]
-    public static ITypeDefinition EffectiveBaseClass(IGenericParameter genericParameter) 
+    public static ITypeDefinition EffectiveBaseClass(IGenericParameter genericParameter)
       //^ ensures result.IsClass;
     {
       ITypeDefinition result = Dummy.Type;
@@ -498,8 +498,8 @@ namespace Microsoft.Cci {
         return result;
       }
       //^ assert result == Dummy.Type || result.IsClass;
-      foreach (ITypeReference cref in genericParameter.Constraints) 
-        // ^ invariant result == Dummy.Type || result.IsClass; //TODO: figure out why assertions hold, but invariant does not
+      foreach (ITypeReference cref in genericParameter.Constraints)
+      // ^ invariant result == Dummy.Type || result.IsClass; //TODO: figure out why assertions hold, but invariant does not
       {
         //^ assume result == Dummy.Type || result.IsClass;
         ITypeDefinition constraint = cref.ResolvedType;
@@ -807,7 +807,7 @@ namespace Microsoft.Cci {
     public static IFieldDefinition GetField(ITypeDefinition declaringType, IFieldReference fieldReference) {
       foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(fieldReference.Name, false)) {
         IFieldDefinition/*?*/ field = member as IFieldDefinition;
-        if (field == null) continue;        
+        if (field == null) continue;
         if (!TypeHelper.TypesAreEquivalent(field.Type, fieldReference.Type)) continue;
         //TODO: check that custom modifiers are the same
         return field;
@@ -987,7 +987,7 @@ namespace Microsoft.Cci {
       }
       //^ assume type1.IsClass && type2.IsClass;
       while (depth1 > 0)
-        //^ invariant type1.IsClass && type2.IsClass;
+      //^ invariant type1.IsClass && type2.IsClass;
       {
         if (TypeHelper.TypesAreEquivalent(type1, type2))
           return type1;
@@ -1045,7 +1045,7 @@ namespace Microsoft.Cci {
         if (!TypeHelper.ParametersAreEquivalent(parameter1, parameter2))
           return false;
       }
-      if (parameterEnumerator2.MoveNext()) 
+      if (parameterEnumerator2.MoveNext())
         return false;
       return true;
     }
@@ -1066,7 +1066,7 @@ namespace Microsoft.Cci {
         }
       }
       if (parameterEnumerator2.MoveNext())
-          return false;
+        return false;
       return true;
     }
 
@@ -1146,7 +1146,7 @@ namespace Microsoft.Cci {
             if (field == null || field.IsStatic) continue;
             ITypeDefinition fieldType = field.Type.ResolvedType;
             ushort fieldAlignment;
-            if (rootType == fieldType || fieldType.IsReferenceType) 
+            if (rootType == fieldType || fieldType.IsReferenceType)
               fieldAlignment = type.PlatformType.PointerSize;
             else
               fieldAlignment = (ushort)(TypeHelper.TypeAlignment(fieldType)*8);
@@ -1198,7 +1198,7 @@ namespace Microsoft.Cci {
       return TypeAlignment(type, type, mayUseAlignmentProperty);
     }
 
-    private static ushort TypeAlignment(ITypeReference type, ITypeReference rootType, bool mayUseAlignmentProperty) { 
+    private static ushort TypeAlignment(ITypeReference type, ITypeReference rootType, bool mayUseAlignmentProperty) {
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           return sizeof(Boolean);
@@ -1244,7 +1244,7 @@ namespace Microsoft.Cci {
             if (field == null || field.IsStatic) continue;
             ITypeDefinition fieldType = field.Type.ResolvedType;
             ushort fieldAlignment;
-            if (fieldType == rootType || fieldType.IsReferenceType) 
+            if (fieldType == rootType || fieldType.IsReferenceType)
               fieldAlignment = type.PlatformType.PointerSize;
             else
               fieldAlignment = TypeHelper.TypeAlignment(fieldType);
@@ -1500,7 +1500,7 @@ namespace Microsoft.Cci {
         }
         sb.Append(">");
         typeName = sb.ToString();
-      } else if ((formattingOptions & NameFormattingOptions.UseGenericTypeNameSuffix) != 0 && genericParameterCount > 0 && type.ResolvedType != Dummy.Type) {
+      } else if ((formattingOptions & NameFormattingOptions.UseGenericTypeNameSuffix) != 0 && genericParameterCount > 0) {
         typeName = typeName + "`" + genericParameterCount;
       }
       return typeName;
@@ -1566,7 +1566,7 @@ namespace Microsoft.Cci {
     protected virtual string GetModifiedTypeName(IModifiedTypeReference modifiedType, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       sb.Append(this.GetTypeName(modifiedType.UnmodifiedType, formattingOptions));
-      foreach (ICustomModifier modifier in modifiedType.CustomModifiers){
+      foreach (ICustomModifier modifier in modifiedType.CustomModifiers) {
         sb.Append(modifier.IsOptional ? " optmod " : " reqmod ");
         sb.Append(this.GetTypeName(modifier.Modifier, formattingOptions));
       }
