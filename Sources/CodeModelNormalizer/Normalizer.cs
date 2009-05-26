@@ -57,7 +57,7 @@ namespace Microsoft.Cci {
     /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
     /// </summary>
     /// <param name="mutator"></param>
-    public CodeModelNormalizer(CodeAndContractMutator mutator) 
+    public CodeModelNormalizer(CodeAndContractMutator mutator)
       : base(mutator) {
     }
 
@@ -171,7 +171,7 @@ namespace Microsoft.Cci {
       if (statements.Count > 0) {
         statements.AddRange(blockStatement.Statements);
         blockStatement.Statements = statements;
-      }      
+      }
     }
 
     private IStatement InitializeBoundFieldFromParameter(BoundField boundField, IParameterDefinition parameter) {
@@ -407,14 +407,14 @@ namespace Microsoft.Cci {
       return Visit(mutableBlockStatement, method, methodContract);
     }
 
-    private IBlockStatement Visit(BlockStatement blockStatement, IMethodDefinition/*?*/ method, IMethodContract/*?*/ methodContract) 
+    private IBlockStatement Visit(BlockStatement blockStatement, IMethodDefinition/*?*/ method, IMethodContract/*?*/ methodContract)
       //^ requires method == null ==> methodContract == null;
       //^ requires methodContract != null ==> this.contractProvider != null;
     {
       NestedTypeDefinition savedCurrentClosureClass = this.currentClosureClass;
       this.CreateClosureClassIfNecessary(blockStatement, methodContract);
       blockStatement.Statements = this.Visit(blockStatement.Statements);
-      if (methodContract != null) 
+      if (methodContract != null)
         this.contractProvider.AssociateMethodWithContract(method, this.Visit(methodContract));
       if (savedCurrentClosureClass != this.currentClosureClass) {
         this.currentClosureClass = savedCurrentClosureClass;
@@ -477,11 +477,11 @@ namespace Microsoft.Cci {
           var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
           var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = boundField.Field, Type = boundField.Type };
           var assignment = new Assignment() { Target = target, Source = source, Type = boundField.Type };
-          return new ExpressionStatement() { Expression = assignment };
+          return new ExpressionStatement() { Expression = assignment, Locations = localDeclarationStatement.Locations };
         } else {
           var target = new TargetExpression() { Definition = localDeclarationStatement.LocalVariable, Type = localDeclarationStatement.LocalVariable.Type };
           var assignment = new Assignment() { Target = target, Source = source, Type = target.Type };
-          return new ExpressionStatement() { Expression = assignment };
+          return new ExpressionStatement() { Expression = assignment, Locations = localDeclarationStatement.Locations };
         }
       }
       return localDeclarationStatement;
