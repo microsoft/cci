@@ -4,6 +4,7 @@
 //
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
+using System.Diagnostics;
 
 //^ using Microsoft.Contracts;
 
@@ -60,6 +61,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that, if correct, resolves to an INamespace instance or an ITypeDefinition instance.
     /// </summary>
     public Expression ReferencedNamespaceOrType {
+      [DebuggerNonUserCode]
       get {
         return this.referencedNamespaceOrType;
       }
@@ -70,6 +72,7 @@ namespace Microsoft.Cci.Ast {
     /// Resolves the ReferencedNamespaceOrType expression. If the expression fails to resolve an error is generated and a dummy namespace is returned.
     /// </summary>
     public virtual object ResolvedNamespaceOrType {
+      [DebuggerNonUserCode]
       get
         //^ ensures result is INamespaceDefinition || result is ITypeDefinition;
       {
@@ -191,6 +194,7 @@ namespace Microsoft.Cci.Ast {
     /// These correspond to the using id = ... clauses that can follow a C# namespace declaration.
     /// </summary>
     public IEnumerable<AliasDeclaration> Aliases {
+      [DebuggerNonUserCode]
       get {
         if (this.aliases == null)
           this.aliases = this.ComputeAliases();
@@ -200,6 +204,7 @@ namespace Microsoft.Cci.Ast {
     IEnumerable<AliasDeclaration> aliases;
 
     private Microsoft.Cci.UtilityDataStructures.Hashtable<AliasDeclaration> CaseInsensitiveAliasTable {
+      [DebuggerNonUserCode]
       get {
         if (this.caseInsensitiveAliasTable == null) {
           this.caseInsensitiveAliasTable = this.ComputeAliasTable(true);
@@ -210,6 +215,7 @@ namespace Microsoft.Cci.Ast {
     Microsoft.Cci.UtilityDataStructures.Hashtable<AliasDeclaration> caseInsensitiveAliasTable;
 
     private Microsoft.Cci.UtilityDataStructures.Hashtable<AliasDeclaration> CaseSensitiveAliasTable {
+      [DebuggerNonUserCode]
       get {
         if (this.caseSensitiveAliasTable == null) {
           this.caseSensitiveAliasTable = this.ComputeAliasTable(false);
@@ -243,6 +249,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
       }
@@ -258,6 +265,7 @@ namespace Microsoft.Cci.Ast {
     /// The compilation to which this namespace declaration belongs.
     /// </summary>
     public Compilation Compilation {
+      [DebuggerNonUserCode]
       get {
         return this.CompilationPart.Compilation;
       }
@@ -343,6 +351,7 @@ namespace Microsoft.Cci.Ast {
     /// An instance of a language specific class containing methods that are of general utility. 
     /// </summary>
     public LanguageSpecificCompilationHelper Helper {
+      [DebuggerNonUserCode]
       get { return this.CompilationPart.Helper; }
     }
 
@@ -351,6 +360,7 @@ namespace Microsoft.Cci.Ast {
     /// These correspond to the using clauses that can follow a C# namespace declaration.
     /// </summary>
     public IEnumerable<NamespaceImportDeclaration> Imports {
+      [DebuggerNonUserCode]
       get {
         if (this.imports == null)
           this.imports = this.ComputeImportList();
@@ -388,6 +398,7 @@ namespace Microsoft.Cci.Ast {
     /// The members of this namespace declaration. Members can include things such as types, nested namespaces, alias declarations, and so on.
     /// </summary>
     public IEnumerable<INamespaceDeclarationMember> Members {
+      [DebuggerNonUserCode]
       get {
         if (this.cachedMembers == null)
           this.cachedMembers = this.ComputeCachedMemberList();
@@ -459,6 +470,7 @@ namespace Microsoft.Cci.Ast {
     /// A scope containing all of the members in the associated namespace as well as all of the members of any namespaces imported by the namespace declaration.
     /// </summary>
     public NamespaceScope Scope {
+      [DebuggerNonUserCode]
       get {
         if (this.scope == null) {
           lock (GlobalLock.LockingObject) {
@@ -475,6 +487,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
+      [DebuggerNonUserCode]
       get {
         if (this.cachedSourceAttributes == null)
           this.cachedSourceAttributes = this.ComputeCachedSourceAttributes();
@@ -514,6 +527,7 @@ namespace Microsoft.Cci.Ast {
     /// These correspond to the "extern alias name;" syntax in C#.
     /// </summary>
     public IEnumerable<UnitSetAliasDeclaration> UnitSetAliases {
+      [DebuggerNonUserCode]
       get {
         if (this.unitSetAliases == null)
           this.unitSetAliases = this.ComputeUnitSetAliases();
@@ -559,6 +573,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainer<IAggregatableNamespaceDeclarationMember> Members
 
     IEnumerable<IAggregatableNamespaceDeclarationMember> IContainer<IAggregatableNamespaceDeclarationMember>.Members {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetFilterEnumerable<INamespaceDeclarationMember, IAggregatableNamespaceDeclarationMember>(this.Members);
       }
@@ -605,6 +620,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public NamespaceDeclaration ContainingNamespaceDeclaration {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.containingNamespaceDeclaration;
       {
@@ -631,6 +647,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual NameDeclaration Name {
+      [DebuggerNonUserCode]
       get {
         return this.name;
       }
@@ -651,6 +668,7 @@ namespace Microsoft.Cci.Ast {
     #region INamespaceDeclarationMember Members
 
     NamespaceDeclaration INamespaceDeclarationMember.ContainingNamespaceDeclaration {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.containingNamespaceDeclaration;
       {
@@ -675,6 +693,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     IName INamedEntity.Name {
+      [DebuggerNonUserCode]
       get {
         return this.Name;
       }
@@ -685,12 +704,14 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<NamespaceDeclaration> Members
 
     NamespaceDeclaration IContainerMember<NamespaceDeclaration>.Container {
+      [DebuggerNonUserCode]
       get {
         return this.ContainingNamespaceDeclaration;
       }
     }
 
     IName IContainerMember<NamespaceDeclaration>.Name {
+      [DebuggerNonUserCode]
       get {
         return this.Name;
       }
@@ -754,6 +775,7 @@ namespace Microsoft.Cci.Ast {
     /// A reference to the namespace being imported. Includes the source expression.
     /// </summary>
     public NamespaceReferenceExpression ImportedNamespace {
+      [DebuggerNonUserCode]
       get {
         return this.importedNamespace;
       }
@@ -854,6 +876,7 @@ namespace Microsoft.Cci.Ast {
     /// The collection of member instances that are members of this scope.
     /// </summary>
     public IEnumerable<INamespaceMember> Members {
+      [DebuggerNonUserCode]
       get {
         if (this.namespaceDeclaration.BusyResolvingAnAliasOrImport) yield break;
         foreach (INamespaceMember member in this.namespaceDeclaration.UnitSetNamespace.Members)
@@ -918,6 +941,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public NamespaceDeclaration ContainingNamespaceDeclaration {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.containingNamespaceDeclaration;
       {
@@ -935,6 +959,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The compilation part.</value>
     public override CompilationPart CompilationPart {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespaceDeclaration.CompilationPart; }
     }
 
@@ -950,6 +975,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public override BlockStatement DummyBlock {
+      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
@@ -1012,6 +1038,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public NameDeclaration Name {
+      [DebuggerNonUserCode]
       get {
         return this.name;
       }
@@ -1022,6 +1049,7 @@ namespace Microsoft.Cci.Ast {
     /// The corresponding symbol table object.
     /// </summary>
     public NestedUnitNamespace NestedUnitNamespace {
+      [DebuggerNonUserCode]
       get {
         if (this.nestedUnitNamespace == null) {
           this.GetOrCreateNestedUnitNamepace();
@@ -1048,6 +1076,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IUnitNamespace UnitNamespace {
+      [DebuggerNonUserCode]
       get {
         return this.NestedUnitNamespace;
       }
@@ -1090,6 +1119,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public override IUnitSetNamespace UnitSetNamespace {
+      [DebuggerNonUserCode]
       get {
         if (this.unitSetNamespace == null) {
           lock (GlobalLock.LockingObject) {
@@ -1112,6 +1142,7 @@ namespace Microsoft.Cci.Ast {
     #region INamespaceDeclarationMember Members
 
     NamespaceDeclaration INamespaceDeclarationMember.ContainingNamespaceDeclaration {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.containingNamespaceDeclaration;
       {
@@ -1135,12 +1166,14 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<NamespaceDeclaration> Members
 
     NamespaceDeclaration IContainerMember<NamespaceDeclaration>.Container {
+      [DebuggerNonUserCode]
       get {
         return this.ContainingNamespaceDeclaration;
       }
     }
 
     IName IContainerMember<NamespaceDeclaration>.Name {
+      [DebuggerNonUserCode]
       get {
         return this.Name;
       }
@@ -1151,6 +1184,7 @@ namespace Microsoft.Cci.Ast {
     #region IAggregatableNamespaceDeclarationMember Members
 
     INamespaceMember IAggregatableNamespaceDeclarationMember.AggregatedMember {
+      [DebuggerNonUserCode]
       get { return this.NestedUnitNamespace; }
     }
 
@@ -1159,6 +1193,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     IName INamedEntity.Name {
+      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 
@@ -1210,6 +1245,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, strings are compared by doing binary comparisons between the character elements. 
     /// </summary>
     public bool CompareStringsAsBinary {
+      [DebuggerNonUserCode]
       get { return (this.flags & 1) != 0; }
     }
 
@@ -1224,6 +1260,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, all local variables must be explicitly declared.
     /// </summary>
     public bool Explicit {
+      [DebuggerNonUserCode]
       get { return (this.flags & 2) != 0; }
     }
 
@@ -1261,6 +1298,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, type annotations must be present and all operations must resolve at compile time.
     /// </summary>
     public bool Strict {
+      [DebuggerNonUserCode]
       get { return (this.flags & 4) != 0; }
     }
 
@@ -1308,6 +1346,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public bool CompareStringsAsBinary {
+      [DebuggerNonUserCode]
       get { return (this.flags & 1) != 0; }
     }
 
@@ -1315,6 +1354,7 @@ namespace Microsoft.Cci.Ast {
     /// The compilation part for which this is the root namespace declaration.
     /// </summary>
     public override CompilationPart CompilationPart {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.compilationPart != null;
         return this.compilationPart;
@@ -1331,6 +1371,7 @@ namespace Microsoft.Cci.Ast {
     /// field declarations.
     /// </summary>
     public override BlockStatement DummyBlock {
+      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
@@ -1377,6 +1418,7 @@ namespace Microsoft.Cci.Ast {
     /// corresponds to the Option explicit directive in VB.
     /// </summary>
     public bool Explicit {
+      [DebuggerNonUserCode]
       get { return (this.flags & 2) != 0; }
     }
 
@@ -1394,6 +1436,7 @@ namespace Microsoft.Cci.Ast {
     /// inside this namespace declaration.
     /// </summary>
     public bool Strict {
+      [DebuggerNonUserCode]
       get { return (this.flags & 4) != 0; }
     }
 
@@ -1403,6 +1446,7 @@ namespace Microsoft.Cci.Ast {
     /// this compilation.
     /// </summary>
     public override IUnitNamespace UnitNamespace {
+      [DebuggerNonUserCode]
       get {
         return this.Compilation.Result.UnitNamespaceRoot;
       }
@@ -1413,6 +1457,7 @@ namespace Microsoft.Cci.Ast {
     /// In effect this is the root of a symbol table that includes all of the symbols imported from external libraries (assemblies).
     /// </summary>
     public override IUnitSetNamespace UnitSetNamespace {
+      [DebuggerNonUserCode]
       get {
         return this.Compilation.UnitSet.UnitSetNamespaceRoot;
       }
@@ -1500,6 +1545,7 @@ namespace Microsoft.Cci.Ast {
     /// The unit set referenced by the alias.
     /// </summary>
     public IUnitSet UnitSet {
+      [DebuggerNonUserCode]
       get {
         IUnitSet/*?*/ result;
         if ((result = this.unitSet) == null) {

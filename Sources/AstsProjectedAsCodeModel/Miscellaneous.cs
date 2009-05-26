@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Diagnostics;
 
 //^ using Microsoft.Contracts;
 
@@ -34,6 +35,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies whether more than one instance of this type of attribute is allowed on same element. This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public bool AllowMultiple {
+      [DebuggerNonUserCode]
       get { return this.sourceAttribute.AllowMultiple; }
     }
 
@@ -41,6 +43,7 @@ namespace Microsoft.Cci.Ast {
     /// A list zero or more positional arguments for the attribute constructor, followed by zero or more named arguments that specify values for fields and properties of the attribute.
     /// </summary>
     public IEnumerable<Expression> Arguments {
+      [DebuggerNonUserCode]
       get { return this.sourceAttribute.Arguments; }
     }
 
@@ -48,6 +51,7 @@ namespace Microsoft.Cci.Ast {
     /// A reference to the constructor that will be used to instantiate this custom attribute during execution (if the attribute is inspected via Reflection).
     /// </summary>
     public IMethodReference Constructor {
+      [DebuggerNonUserCode]
       get { return this.sourceAttribute.Constructor; }
     }
 
@@ -62,6 +66,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies whether this attribute applies to derived types and/or overridden methods. This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public bool Inherited {
+      [DebuggerNonUserCode]
       get { return this.sourceAttribute.Inherited; }
     }
 
@@ -69,6 +74,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of the attribute. For example System.AttributeUsageAttribute.
     /// </summary>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.sourceAttribute.Type.ResolvedType; }
     }
 
@@ -76,12 +82,14 @@ namespace Microsoft.Cci.Ast {
     /// Specifies the symbol table elements on which it is valid to apply this attribute. This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public AttributeTargets ValidOn {
+      [DebuggerNonUserCode]
       get { return this.sourceAttribute.ValidOn; }
     }
 
     #region ICustomAttribute Members
 
     IEnumerable<IMetadataExpression> ICustomAttribute.Arguments {
+      [DebuggerNonUserCode]
       get {
         foreach (Expression expression in this.Arguments) {
           if (expression is NamedArgument) break;
@@ -91,12 +99,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     IMethodReference ICustomAttribute.Constructor {
+      [DebuggerNonUserCode]
       get {
         return this.Constructor;
       }
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
+      [DebuggerNonUserCode]
       get {
         foreach (Expression expression in this.Arguments) {
           NamedArgument/*?*/ namedArgument = expression as NamedArgument;
@@ -107,6 +117,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ushort ICustomAttribute.NumberOfNamedArguments {
+      [DebuggerNonUserCode]
       get {
         ushort result = 0;
         foreach (Expression expression in this.Arguments) {
@@ -138,6 +149,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of tagged (and attributed) elements that define the structured documentation.
     /// </summary>
     public IEnumerable<DocumentationElement> Elements {
+      [DebuggerNonUserCode]
       get { return this.elements; }
     }
     readonly IEnumerable<DocumentationElement> elements;
@@ -146,6 +158,7 @@ namespace Microsoft.Cci.Ast {
     /// The contents of the comment in plain text form.
     /// </summary>
     public virtual string Text {
+      [DebuggerNonUserCode]
       get {
         if (this.text == null) {
           this.text = string.Empty;
@@ -184,6 +197,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of the attribute.
     /// </summary>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -192,6 +206,7 @@ namespace Microsoft.Cci.Ast {
     /// The value of the attribute.
     /// </summary>
     public string Value {
+      [DebuggerNonUserCode]
       get { return this.value; }
     }
     readonly string value;
@@ -245,6 +260,7 @@ namespace Microsoft.Cci.Ast {
     /// The attributes defined for the element. These are included in the start tag.
     /// </summary>
     public IEnumerable<DocumentationAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return this.attributes; }
     }
     readonly IEnumerable<DocumentationAttribute> attributes;
@@ -253,6 +269,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of tagged (and untagged text) elements that collectively make up the contents of the parent element.
     /// </summary>
     public IEnumerable<DocumentationElement> Children {
+      [DebuggerNonUserCode]
       get { return this.children; }
     }
     readonly IEnumerable<DocumentationElement> children;
@@ -261,6 +278,7 @@ namespace Microsoft.Cci.Ast {
     /// The (tag) name of the element (for example "summary"). May be Dummy.Name, in which case the element is really just text and the Attributes and Children collections will be empty.
     /// </summary>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -269,6 +287,7 @@ namespace Microsoft.Cci.Ast {
     /// The contents of the element in plain text form.
     /// </summary>
     public string Text {
+      [DebuggerNonUserCode]
       get {
         if (this.text == null) {
           lock (GlobalLock.LockingObject) {
@@ -333,9 +352,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="customMarshallerRuntimeArgument">
     /// An argument string (cookie) passed to the custom marshaller at run time. Must not be be null if unmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler.
     /// </param>
-    public MarshallingInformation(System.Runtime.InteropServices.UnmanagedType unmanagedType, 
+    public MarshallingInformation(System.Runtime.InteropServices.UnmanagedType unmanagedType,
       System.Runtime.InteropServices.UnmanagedType elementType, uint elementSize, uint elementSizeMultiplier, uint iidParameterIndex, uint numberOfElements, uint? paramIndex,
-      System.Runtime.InteropServices.VarEnum safeArrayElementSubtype, ITypeReference/*?*/ safeArrayElementUserDefinedSubtype, 
+      System.Runtime.InteropServices.VarEnum safeArrayElementSubtype, ITypeReference/*?*/ safeArrayElementUserDefinedSubtype,
       ITypeReference/*?*/ customMarshaller, string/*?*/ customMarshallerRuntimeArgument)
       //^ requires unmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler ==> 
       //^   customMarshaller != null && customMarshallerRuntimeArgument != null;
@@ -363,6 +382,7 @@ namespace Microsoft.Cci.Ast {
     /// A reference to the type implementing the custom marshaller.
     /// </summary>
     public ITypeReference CustomMarshaller {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.customMarshaller != null; //follows from the precondition
         return this.customMarshaller;
@@ -374,6 +394,7 @@ namespace Microsoft.Cci.Ast {
     /// An argument string (cookie) passed to the custom marshaller at run time.
     /// </summary>
     public string CustomMarshallerRuntimeArgument {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.customMarshallerRuntimeArgument != null; //follows from the precondition
         return this.customMarshallerRuntimeArgument;
@@ -385,6 +406,7 @@ namespace Microsoft.Cci.Ast {
     /// The size of an element of the fixed sized umanaged array.
     /// </summary>
     public uint ElementSize {
+      [DebuggerNonUserCode]
       get { return this.elementSize; }
     }
     readonly uint elementSize;
@@ -393,6 +415,7 @@ namespace Microsoft.Cci.Ast {
     /// The unmanged element type of the unmanaged array.
     /// </summary>
     public System.Runtime.InteropServices.UnmanagedType ElementType {
+      [DebuggerNonUserCode]
       get { return this.elementType; }
     }
     readonly System.Runtime.InteropServices.UnmanagedType elementType;
@@ -401,6 +424,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies the index of the parameter that contains the value of the Inteface Identifier (IID) of the marshalled object.
     /// </summary>
     public uint IidParameterIndex {
+      [DebuggerNonUserCode]
       get { return this.iidParameterIndex; }
     }
     readonly uint iidParameterIndex;
@@ -410,6 +434,7 @@ namespace Microsoft.Cci.Ast {
     /// is decided at runtime.
     /// </summary>
     public System.Runtime.InteropServices.UnmanagedType UnmanagedType {
+      [DebuggerNonUserCode]
       get { return this.unmanagedType; }
     }
     readonly System.Runtime.InteropServices.UnmanagedType unmanagedType;
@@ -418,6 +443,7 @@ namespace Microsoft.Cci.Ast {
     /// The number of elements in the fixed size portion of the unmanaged array.
     /// </summary>
     public uint NumberOfElements {
+      [DebuggerNonUserCode]
       get { return this.numberOfElements; }
     }
     readonly uint numberOfElements;
@@ -427,6 +453,7 @@ namespace Microsoft.Cci.Ast {
     /// If the index is null, the variable portion is of size zero, or the caller conveys the size of the variable portion of the array to the unmanaged method in some other way.
     /// </summary>
     public uint? ParamIndex {
+      [DebuggerNonUserCode]
       get { return this.paramIndex; }
     }
     readonly uint? paramIndex;
@@ -436,6 +463,7 @@ namespace Microsoft.Cci.Ast {
     /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
     /// </summary>
     public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
+      [DebuggerNonUserCode]
       get { return this.safeArrayElementSubtype; }
     }
     readonly System.Runtime.InteropServices.VarEnum safeArrayElementSubtype;
@@ -446,6 +474,7 @@ namespace Microsoft.Cci.Ast {
     /// The "user defined sub type" specifies the type of value the ppdispVal/ppunkVal/pvRecord fields of the element values may point to.)
     /// </summary>
     public ITypeReference SafeArrayElementUserDefinedSubtype {
+      [DebuggerNonUserCode]
       get {
         //^ assume safeArrayElementUserDefinedSubtype != null; //follows from the precondition
         return this.safeArrayElementUserDefinedSubtype;
@@ -457,6 +486,7 @@ namespace Microsoft.Cci.Ast {
     /// A multiplier that must be applied to the value of the parameter specified by ParamIndex in order to work out the total size of the unmanaged array.
     /// </summary>
     public uint ElementSizeMultiplier {
+      [DebuggerNonUserCode]
       get { return this.elementSizeMultiplier; }
     }
     readonly uint elementSizeMultiplier;
@@ -500,6 +530,7 @@ namespace Microsoft.Cci.Ast {
     /// The name being declared.
     /// </summary>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -516,6 +547,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ISourceLocation SourceLocation {
+      [DebuggerNonUserCode]
       get { return this.sourceLocation; }
     }
     readonly ISourceLocation sourceLocation;
@@ -534,6 +566,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public int UniqueKey {
+      [DebuggerNonUserCode]
       get { return this.name.UniqueKey; }
     }
 
@@ -544,6 +577,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public int UniqueKeyIgnoringCase {
+      [DebuggerNonUserCode]
       get { return this.name.UniqueKeyIgnoringCase; }
     }
 
@@ -552,6 +586,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public string Value {
+      [DebuggerNonUserCode]
       get { return this.name.Value; }
     }
 
@@ -575,7 +610,7 @@ namespace Microsoft.Cci.Ast {
       int entryPointKey = nameTable.GetNameFor("EntryPoint").UniqueKey;
       int exactSpellingKey = nameTable.GetNameFor("ExactSpelling").UniqueKey;
       int setLastErrorKey = nameTable.GetNameFor("SetLastError").UniqueKey;
-      int throwOnUnmappableCharKey = nameTable.GetNameFor("ThrowOnUnmappableChar").UniqueKey;     
+      int throwOnUnmappableCharKey = nameTable.GetNameFor("ThrowOnUnmappableChar").UniqueKey;
 
       foreach (Expression expr in dllImportAttribute.Arguments) {
         CompileTimeConstant cc = expr as CompileTimeConstant;
@@ -639,41 +674,49 @@ namespace Microsoft.Cci.Ast {
     }
 
     public IModuleReference ImportModule {
+      [DebuggerNonUserCode]
       get { return this.importModule; }
     }
     IModuleReference importModule;
 
     public IName ImportName {
+      [DebuggerNonUserCode]
       get { return this.importName; }
     }
     IName importName;
 
     public bool NoMangle {
+      [DebuggerNonUserCode]
       get { return this.noMangle; }
     }
     bool noMangle;
 
     public StringFormatKind StringFormat {
+      [DebuggerNonUserCode]
       get { return this.stringFormat; }
     }
     StringFormatKind stringFormat;
 
     public PInvokeCallingConvention PInvokeCallingConvention {
+      [DebuggerNonUserCode]
       get { return this.pinvokeCallingConvention; }
     }
     PInvokeCallingConvention pinvokeCallingConvention;
 
     public bool SupportsLastError {
+      [DebuggerNonUserCode]
       get { return this.supportsLastError; }
     }
     bool supportsLastError;
 
     public bool? UseBestFit {
+      [DebuggerNonUserCode]
       get { return this.useBestFit; }
     }
     bool? useBestFit;
 
     public bool? ThrowExceptionForUnmappableChar {
+      [DebuggerNonUserCode]
       get { return this.throwExceptionForUnmappableChar; }
     }
     bool? throwExceptionForUnmappableChar;
@@ -693,8 +736,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="arguments"></param>
     /// <param name="sourceLocation"></param>
     public SourceCustomAttribute(AttributeTargets targets, AttributeTypeExpression type, List<Expression> arguments, ISourceLocation sourceLocation)
-      : base(sourceLocation)
-    {
+      : base(sourceLocation) {
       this.arguments = arguments;
       this.targets = targets;
       this.type = type;
@@ -719,6 +761,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies whether more than one instance of this type of attribute is allowed on same element. This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public bool AllowMultiple {
+      [DebuggerNonUserCode]
       get {
         if (this.flags == 0) this.GetUsageInformation();
         return (this.flags & 0x20000000) != 0;
@@ -729,6 +772,7 @@ namespace Microsoft.Cci.Ast {
     /// A list zero or more postional arguments for the attribute constructor, followed by zero or more named arguments that specify values for fields and properties of the attribute.
     /// </summary>
     public IEnumerable<Expression> Arguments {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.arguments.Count; i < n; i++)
           yield return this.arguments[i] = this.arguments[i].MakeCopyFor(this.ContainingBlock);
@@ -740,6 +784,7 @@ namespace Microsoft.Cci.Ast {
     /// A reference to the constructor of the custom attribute.
     /// </summary>
     public IMethodReference Constructor {
+      [DebuggerNonUserCode]
       get {
         if (this.constructor == null)
           this.constructor = this.GetConstructor();
@@ -753,6 +798,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of zero of more positional arguments for the attribute constructor.
     /// </summary>
     public IEnumerable<Expression> ConstructorArguments {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.arguments.Count; i < n; i++) {
           if (this.arguments[i] is NamedArgument) yield break;
@@ -765,11 +811,11 @@ namespace Microsoft.Cci.Ast {
     /// The (dummy) block used to provide a scope chain for the type expression and the argument expressions.
     /// </summary>
     public BlockStatement ContainingBlock {
-      get 
+      get
         //^ ensures result == this.containingBlock;
-      { 
+      {
         //^ assume this.containingBlock != null;
-        return this.containingBlock; 
+        return this.containingBlock;
       }
     }
     /// <summary>
@@ -857,6 +903,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies whether this attribute applies to derived types and/or overridden methods. This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public bool Inherited {
+      [DebuggerNonUserCode]
       get {
         if (this.flags == 0) this.GetUsageInformation();
         return (this.flags & 0x10000000) != 0;
@@ -867,6 +914,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies the symbol table elements on which it is valid to apply this attribute. This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public AttributeTargets ValidOn {
+      [DebuggerNonUserCode]
       get {
         if (this.flags == 0) this.GetUsageInformation();
         return ((AttributeTargets)this.flags) & AttributeTargets.All;
@@ -890,6 +938,7 @@ namespace Microsoft.Cci.Ast {
     /// Zero if not specified in source. Usually at most one target is specified.
     /// </summary>
     public AttributeTargets Targets {
+      [DebuggerNonUserCode]
       get { return this.targets; }
     }
     readonly AttributeTargets targets;
@@ -909,6 +958,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of the attribute. For example System.AttributeUsageAttribute.
     /// </summary>
     public AttributeTypeExpression Type {
+      [DebuggerNonUserCode]
       get { return this.type; }
     }
     readonly AttributeTypeExpression type;

@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
+using System.Diagnostics;
 
 //^ using Microsoft.Contracts;
 
@@ -77,11 +78,12 @@ namespace Microsoft.Cci.Ast {
     /// A list of type declaration members that correspond to global variables and functions.
     /// </summary>
     public IEnumerable<ITypeDeclarationMember> GlobalMembers {
+      [DebuggerNonUserCode]
       get
         //^ ensures result is List<ITypeDeclarationMember>; //The return type is different so that a downcast is required before the members can be modified.
         //TODO: make the post condition valid only while the class has not yet been fully initialized.
-      { 
-        return this.globalMembers; 
+      {
+        return this.globalMembers;
       }
     }
     List<ITypeDeclarationMember> globalMembers;
@@ -90,10 +92,11 @@ namespace Microsoft.Cci.Ast {
     /// A scope containing global variables and functions.
     /// </summary>
     public IScope<ITypeDeclarationMember> GlobalScope {
+      [DebuggerNonUserCode]
       get {
         if (this.globalScope == null)
           this.globalScope = new GlobalDeclarationScope(this.GlobalMembers);
-        return this.globalScope; 
+        return this.globalScope;
       }
     }
     //^ [Once]
@@ -105,7 +108,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="targetNamespaceDeclaration">The containing namespace of the result.</param>
     /// <returns></returns>
-    public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)      
+    public override INamespaceDeclarationMember MakeShallowCopyFor(NamespaceDeclaration targetNamespaceDeclaration)
       //^^ ensures result.GetType() == this.GetType();
       //^^ ensures result.ContainingNamespaceDeclaration == targetNamespaceDeclaration;
     {
@@ -160,6 +163,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IEnumerable<ITypeDeclarationMember> Members {
+      [DebuggerNonUserCode]
       get { return this.Members; }
     }
     IEnumerable<ITypeDeclarationMember> members;
@@ -182,9 +186,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="mustBeValueType"></param>
     /// <param name="mustHaveDefaultConstructor"></param>
     /// <param name="sourceLocation"></param>
-    protected GenericParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, ushort index, List<TypeExpression> constraints, 
+    protected GenericParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, ushort index, List<TypeExpression> constraints,
       TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor, ISourceLocation sourceLocation)
-      : base(sourceLocation) 
+      : base(sourceLocation)
       //^ requires !mustBeReferenceType || !mustBeValueType;
     {
       this.constraints = constraints;
@@ -218,6 +222,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); //TODO: extract attributes from SourceAttributes.
       }
@@ -237,6 +242,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of classes or interfaces. All type arguments matching this parameter must be derived from all of the classes and implement all of the interfaces.
     /// </summary>
     public IEnumerable<TypeExpression> Constraints {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.constraints.Count; i < n; i++)
           yield return this.constraints[i] = (TypeExpression)this.constraints[i].MakeCopyFor(this.ContainingBlock);
@@ -248,7 +254,8 @@ namespace Microsoft.Cci.Ast {
     /// The compilation that contains this statement.
     /// </summary>
     public Compilation Compilation {
-      get { return this.ContainingBlock.Compilation;  }
+      [DebuggerNonUserCode]
+      get { return this.ContainingBlock.Compilation; }
     }
 
     /// <summary>
@@ -256,6 +263,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CompilationPart CompilationPart {
+      [DebuggerNonUserCode]
       get { return this.ContainingBlock.CompilationPart; }
     }
 
@@ -263,9 +271,10 @@ namespace Microsoft.Cci.Ast {
     /// The block that contains this declaration.
     /// </summary>
     public BlockStatement ContainingBlock {
-      get { 
+      [DebuggerNonUserCode]
+      get {
         //^ assume this.containingBlock != null;
-        return this.containingBlock; 
+        return this.containingBlock;
       }
     }
     /// <summary>
@@ -280,6 +289,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ushort Index {
+      [DebuggerNonUserCode]
       get { return this.index; }
     }
     readonly ushort index;
@@ -288,11 +298,12 @@ namespace Microsoft.Cci.Ast {
     /// True if all type arguments matching this parameter are constrained to be reference types.
     /// </summary>
     public bool MustBeReferenceType {
+      [DebuggerNonUserCode]
       get
         //^ ensures result ==> !this.MustBeValueType;
         //^ ensures result == ((this.flags & 0x60000000) == 0x40000000);
-      { 
-        bool result = (this.flags & 0x60000000) == 0x40000000; 
+      {
+        bool result = (this.flags & 0x60000000) == 0x40000000;
         //^ assume result ==> !this.MustBeValueType;
         return result;
       }
@@ -306,9 +317,10 @@ namespace Microsoft.Cci.Ast {
     /// True if all type arguments matching this parameter are constrained to be value types.
     /// </summary>
     public bool MustBeValueType {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == ((this.flags & 0x60000000) == 0x20000000);
-      { 
+      {
         bool result = (this.flags & 0x60000000) == 0x20000000;
         //^ assume result ==> !this.MustBeReferenceType;
         return result;
@@ -323,6 +335,7 @@ namespace Microsoft.Cci.Ast {
     /// True if all type arguments matching this parameter are constrained to be value types or concrete classes with visible default constructors.
     /// </summary>
     public bool MustHaveDefaultConstructor {
+      [DebuggerNonUserCode]
       get { return (this.flags & 0x10000000) != 0; }
       protected set { if (value) this.flags |= 0x10000000; else this.flags &= ~0x10000000; }
     }
@@ -332,6 +345,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public NameDeclaration Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly NameDeclaration name;
@@ -353,6 +367,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
+      [DebuggerNonUserCode]
       get {
         List<SourceCustomAttribute> sourceAttributes;
         if (this.sourceAttributes == null)
@@ -371,6 +386,7 @@ namespace Microsoft.Cci.Ast {
     /// Indicates if the generic type or method with this type parameter is co-, contra-, or non variant with respect to this type parameter.
     /// </summary>
     public TypeParameterVariance Variance {
+      [DebuggerNonUserCode]
       get { return ((TypeParameterVariance)this.flags) & TypeParameterVariance.Mask; }
       protected set { this.flags |= (int)value; }
     }
@@ -378,6 +394,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     IName INamedEntity.Name {
+      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 
@@ -402,7 +419,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="mustBeValueType"></param>
     /// <param name="mustHaveDefaultConstructor"></param>
     /// <param name="sourceLocation"></param>
-    public GenericTypeParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name, 
+    public GenericTypeParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, NameDeclaration name,
       ushort index, List<TypeExpression> constraints, TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor, ISourceLocation sourceLocation)
       : base(sourceAttributes, name, index, constraints, variance, mustBeReferenceType, mustBeValueType, mustHaveDefaultConstructor, sourceLocation)
       //^ requires !mustBeReferenceType || !mustBeValueType;
@@ -438,7 +455,8 @@ namespace Microsoft.Cci.Ast {
     /// The generic type that declares this type parameter.
     /// </summary>
     public TypeDeclaration DeclaringType {
-      get { 
+      [DebuggerNonUserCode]
+      get {
         //^ assume this.declaringType != null;
         return this.declaringType;
       }
@@ -450,6 +468,7 @@ namespace Microsoft.Cci.Ast {
     /// The symbol table entity that corresponds to this source construct.
     /// </summary>
     public IGenericTypeParameter GenericTypeParameterDefinition {
+      [DebuggerNonUserCode]
       get {
         foreach (GenericTypeParameter genericTypeParameter in this.DeclaringType.TypeDefinition.GenericParameters)
           if (genericTypeParameter.Index == this.Index) return genericTypeParameter;
@@ -462,7 +481,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     /// <param name="declaringType"></param>
-    public virtual void SetDeclaringType(TypeDeclaration declaringType) 
+    public virtual void SetDeclaringType(TypeDeclaration declaringType)
       //^ requires this.declaringType == null;
     {
       DummyExpression containingExpression = new DummyExpression(declaringType.OuterDummyBlock, SourceDummy.SourceLocation);
@@ -489,8 +508,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="sourceLocation"></param>
     public NamespaceClassDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
-    {
+      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -566,10 +584,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="genericParameters"></param>
     /// <param name="signature"></param>
     /// <param name="sourceLocation"></param>
-    public NamespaceDelegateDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, 
+    public NamespaceDelegateDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
       Flags flags, NameDeclaration name, List<GenericTypeParameterDeclaration> genericParameters, SignatureDeclaration signature, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, new List<TypeExpression>(0), new List<ITypeDeclarationMember>(0), sourceLocation)
-    {
+      : base(sourceAttributes, flags, name, genericParameters, new List<TypeExpression>(0), new List<ITypeDeclarationMember>(0), sourceLocation) {
       this.signature = signature;
     }
 
@@ -655,6 +672,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public SignatureDeclaration Signature {
+      [DebuggerNonUserCode]
       get {
         return this.signature;
       }
@@ -664,8 +682,9 @@ namespace Microsoft.Cci.Ast {
     #region IDelegateDeclaration Members
 
     ISignatureDeclaration IDelegateDeclaration.Signature {
-      get { 
-        return this.Signature; 
+      [DebuggerNonUserCode]
+      get {
+        return this.Signature;
       }
     }
 
@@ -687,10 +706,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="underlyingType"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    public NamespaceEnumDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NamespaceEnumDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
        TypeExpression/*?*/ underlyingType, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), members, sourceLocation)
-    {
+      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), members, sourceLocation) {
       this.underlyingType = underlyingType;
     }
 
@@ -762,9 +780,9 @@ namespace Microsoft.Cci.Ast {
       TypeExpression/*?*/ thisType = this.UnderlyingType;
       if (thisType == null) thisType = TypeExpression.For(containingNamespaceDeclaration.Helper.PlatformType.SystemInt32.ResolvedType);
       NameDeclaration value__ = new NameDeclaration(containingNamespaceDeclaration.Helper.NameTable.GetNameFor("value__"), SourceDummy.SourceLocation);
-      FieldDeclaration field = new FieldDeclaration(null, FieldDeclaration.Flags.RuntimeSpecial|FieldDeclaration.Flags.SpecialName, 
+      FieldDeclaration field = new FieldDeclaration(null, FieldDeclaration.Flags.RuntimeSpecial|FieldDeclaration.Flags.SpecialName,
         TypeMemberVisibility.Public, thisType, value__, null, SourceDummy.SourceLocation);
-      this.AddHelperMember(field); 
+      this.AddHelperMember(field);
       base.SetContainingNamespaceDeclaration(containingNamespaceDeclaration, recurse);
       field.SetContainingTypeDeclaration(this, true);
       if (this.UnderlyingType != null)
@@ -776,6 +794,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeExpression/*?*/ UnderlyingType {
+      [DebuggerNonUserCode]
       get {
         return this.underlyingType;
       }
@@ -785,8 +804,9 @@ namespace Microsoft.Cci.Ast {
     #region IEnumDeclaration Members
 
     TypeExpression/*?*/ IEnumDeclaration.UnderlyingType {
-      get { 
-        return this.UnderlyingType; 
+      [DebuggerNonUserCode]
+      get {
+        return this.UnderlyingType;
       }
     }
 
@@ -811,8 +831,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="sourceLocation"></param>
     public NamespaceInterfaceDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
-    {
+      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -885,10 +904,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="baseTypes"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    public NamespaceStructDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NamespaceStructDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, genericParameters, baseTypes, members, sourceLocation) 
-    {
+      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -934,6 +952,7 @@ namespace Microsoft.Cci.Ast {
     /// Layout of the type declaration.
     /// </summary>
     public override LayoutKind Layout {
+      [DebuggerNonUserCode]
       get {
         return LayoutKind.Sequential; //TODO: get this from a custom attribute
       }
@@ -975,8 +994,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="sourceLocation"></param>
     protected NamespaceTypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
-    {
+      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -1008,6 +1026,7 @@ namespace Microsoft.Cci.Ast {
     /// The namespace that contains this member.
     /// </summary>
     public NamespaceDeclaration ContainingNamespaceDeclaration {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.containingNamespaceDeclaration;
       {
@@ -1026,6 +1045,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override BlockStatement DummyBlock {
+      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
@@ -1071,6 +1091,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, this type is accessible outside of the unit that contains it.
     /// </summary>
     public virtual bool IsPublic {
+      [DebuggerNonUserCode]
       get {
         return (((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask) == TypeMemberVisibility.Public;
       }
@@ -1096,6 +1117,7 @@ namespace Microsoft.Cci.Ast {
     /// The symbol table entity that corresponds to this source construct.
     /// </summary>
     public NamespaceTypeDefinition NamespaceTypeDefinition {
+      [DebuggerNonUserCode]
       get {
         if (this.namespaceTypeDefinition == null)
           this.namespaceTypeDefinition = this.GetOrCreateType();
@@ -1111,6 +1133,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override BlockStatement OuterDummyBlock {
+      [DebuggerNonUserCode]
       get {
         BlockStatement/*?*/ outerDummyBlock = this.outerDummyBlock;
         if (outerDummyBlock == null) {
@@ -1143,6 +1166,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override TypeDefinition TypeDefinition {
+      [DebuggerNonUserCode]
       get { return this.NamespaceTypeDefinition; }
     }
 
@@ -1173,6 +1197,7 @@ namespace Microsoft.Cci.Ast {
     #region INamespaceDeclarationMember Members
 
     NamespaceDeclaration INamespaceDeclarationMember.ContainingNamespaceDeclaration {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespaceDeclaration; }
     }
 
@@ -1190,10 +1215,12 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<NamespaceDeclaration> Members
 
     NamespaceDeclaration IContainerMember<NamespaceDeclaration>.Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespaceDeclaration; }
     }
 
     IName IContainerMember<NamespaceDeclaration>.Name {
+      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 
@@ -1202,6 +1229,7 @@ namespace Microsoft.Cci.Ast {
     #region IAggregatableNamespaceDeclarationMember Members
 
     INamespaceMember IAggregatableNamespaceDeclarationMember.AggregatedMember {
+      [DebuggerNonUserCode]
       get { return this.NamespaceTypeDefinition; }
     }
 
@@ -1224,10 +1252,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="baseTypes"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    public NestedClassDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NestedClassDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation)
-    {
+      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -1235,8 +1262,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="sourceClassDeclaration"></param>
     public NestedClassDeclaration(NamespaceClassDeclaration sourceClassDeclaration)
-      : base(sourceClassDeclaration)
-    {
+      : base(sourceClassDeclaration) {
     }
 
     /// <summary>
@@ -1306,11 +1332,10 @@ namespace Microsoft.Cci.Ast {
     /// <param name="genericParameters"></param>
     /// <param name="signature"></param>
     /// <param name="sourceLocation"></param>
-    public NestedDelegateDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NestedDelegateDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration> genericParameters, SignatureDeclaration signature, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, 
-      genericParameters, new List<TypeExpression>(0), new List<ITypeDeclarationMember>(0), sourceLocation)
-    {
+      : base(sourceAttributes, flags, name,
+      genericParameters, new List<TypeExpression>(0), new List<ITypeDeclarationMember>(0), sourceLocation) {
       this.signature = signature;
     }
 
@@ -1373,6 +1398,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public SignatureDeclaration Signature {
+      [DebuggerNonUserCode]
       get {
         return this.signature;
       }
@@ -1382,6 +1408,7 @@ namespace Microsoft.Cci.Ast {
     #region IDelegateDeclaration Members
 
     ISignatureDeclaration IDelegateDeclaration.Signature {
+      [DebuggerNonUserCode]
       get {
         return this.signature;
       }
@@ -1405,10 +1432,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="underlyingType"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    public NestedEnumDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NestedEnumDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       TypeExpression/*?*/ underlyingType, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), members, sourceLocation)
-    {
+      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, new List<GenericTypeParameterDeclaration>(0), new List<TypeExpression>(0), members, sourceLocation) {
       this.underlyingType = underlyingType;
     }
 
@@ -1476,7 +1502,7 @@ namespace Microsoft.Cci.Ast {
       TypeExpression/*?*/ thisType = this.UnderlyingType;
       if (thisType == null) thisType = TypeExpression.For(compilationPart.Helper.PlatformType.SystemInt32.ResolvedType);
       NameDeclaration value__ = new NameDeclaration(compilationPart.Helper.NameTable.GetNameFor("value__"), SourceDummy.SourceLocation);
-      FieldDeclaration field = new FieldDeclaration(null, FieldDeclaration.Flags.RuntimeSpecial|FieldDeclaration.Flags.SpecialName, 
+      FieldDeclaration field = new FieldDeclaration(null, FieldDeclaration.Flags.RuntimeSpecial|FieldDeclaration.Flags.SpecialName,
         TypeMemberVisibility.Public, thisType, value__, null, SourceDummy.SourceLocation);
       this.AddHelperMember(field);
       base.SetCompilationPart(compilationPart, recurse);
@@ -1493,6 +1519,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeExpression/*?*/ UnderlyingType {
+      [DebuggerNonUserCode]
       get {
         return this.underlyingType;
       }
@@ -1502,6 +1529,7 @@ namespace Microsoft.Cci.Ast {
     #region IEnumDeclaration Members
 
     TypeExpression/*?*/ IEnumDeclaration.UnderlyingType {
+      [DebuggerNonUserCode]
       get {
         return this.UnderlyingType;
       }
@@ -1525,10 +1553,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="baseTypes"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    public NestedInterfaceDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NestedInterfaceDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) 
-    {
+      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -1599,10 +1626,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="baseTypes"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    public NestedStructDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    public NestedStructDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, genericParameters, baseTypes, members, sourceLocation)
-    {
+      : base(sourceAttributes, flags|TypeDeclaration.Flags.Sealed, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -1639,6 +1665,7 @@ namespace Microsoft.Cci.Ast {
     /// Layout of the type declaration.
     /// </summary>
     public override LayoutKind Layout {
+      [DebuggerNonUserCode]
       get {
         return LayoutKind.Sequential; //TODO: get this from a custom attribute
       }
@@ -1688,10 +1715,9 @@ namespace Microsoft.Cci.Ast {
     /// <param name="baseTypes"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    protected NestedTypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    protected NestedTypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration> genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
-      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) 
-    {
+      : base(sourceAttributes, flags, name, genericParameters, baseTypes, members, sourceLocation) {
     }
 
     /// <summary>
@@ -1699,8 +1725,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="sourceTypeDeclaration"></param>
     protected NestedTypeDeclaration(NamespaceTypeDeclaration sourceTypeDeclaration)
-        : base(sourceTypeDeclaration.CompilationPart, sourceTypeDeclaration)
-    {
+      : base(sourceTypeDeclaration.CompilationPart, sourceTypeDeclaration) {
     }
 
     /// <summary>
@@ -1733,9 +1758,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeDeclaration ContainingTypeDeclaration {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.containingTypeDeclaration != null;
-        return this.containingTypeDeclaration; 
+        return this.containingTypeDeclaration;
       }
     }
     //^ [SpecPublic]
@@ -1747,6 +1773,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override BlockStatement DummyBlock {
+      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
@@ -1796,6 +1823,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsNew {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.New) != 0;
       }
@@ -1823,6 +1851,7 @@ namespace Microsoft.Cci.Ast {
     /// The symbol table entity that corresponds to this source construct.
     /// </summary>
     public NestedTypeDefinition NestedTypeDefinition {
+      [DebuggerNonUserCode]
       get {
         if (this.nestedTypeDefinition == null) {
           lock (GlobalLock.LockingObject) {
@@ -1830,7 +1859,7 @@ namespace Microsoft.Cci.Ast {
               this.nestedTypeDefinition = this.GetOrCreateNestedType();
           }
         }
-        return this.nestedTypeDefinition; 
+        return this.nestedTypeDefinition;
       }
     }
     NestedTypeDefinition/*?*/ nestedTypeDefinition;
@@ -1842,6 +1871,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override BlockStatement OuterDummyBlock {
+      [DebuggerNonUserCode]
       get {
         if (this.outerDummyBlock == null) {
           lock (GlobalLock.LockingObject) {
@@ -1875,6 +1905,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override TypeDefinition TypeDefinition {
+      [DebuggerNonUserCode]
       get { return this.NestedTypeDefinition; }
     }
 
@@ -1909,6 +1940,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeMemberVisibility Visibility {
+      [DebuggerNonUserCode]
       get {
         return ((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask;
       }
@@ -1917,6 +1949,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeDeclarationMember Members
 
     TypeDeclaration ITypeDeclarationMember.ContainingTypeDeclaration {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDeclaration; }
     }
 
@@ -1930,6 +1963,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ITypeDefinitionMember/*?*/ ITypeDeclarationMember.TypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this.NestedTypeDefinition; }
     }
 
@@ -1938,10 +1972,12 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<TypeDeclaration> Members
 
     TypeDeclaration IContainerMember<TypeDeclaration>.Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDeclaration; }
     }
 
     IName IContainerMember<TypeDeclaration>.Name {
+      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 
@@ -1950,6 +1986,7 @@ namespace Microsoft.Cci.Ast {
     #region IAggregatableMember Members
 
     ITypeDefinitionMember IAggregatableTypeDeclarationMember.AggregatedMember {
+      [DebuggerNonUserCode]
       get { return this.NestedTypeDefinition; }
     }
 
@@ -1969,32 +2006,32 @@ namespace Microsoft.Cci.Ast {
       /// <summary>
       /// 
       /// </summary>
-      None     = 0x00000000,
+      None=0x00000000,
 
       /// <summary>
       /// 
       /// </summary>
-      Abstract = 0x40000000,
+      Abstract=0x40000000,
       /// <summary>
       /// 
       /// </summary>
-      New =      0x20000000,
+      New=0x20000000,
       /// <summary>
       /// 
       /// </summary>
-      Partial =  0x10000000,
+      Partial=0x10000000,
       /// <summary>
       /// 
       /// </summary>
-      Sealed =   0x08000000,
+      Sealed=0x08000000,
       /// <summary>
       /// 
       /// </summary>
-      Static =   0x04000000,
+      Static=0x04000000,
       /// <summary>
       /// 
       /// </summary>
-      Unsafe =   0x02000000,
+      Unsafe=0x02000000,
     }
 
     /// <summary>
@@ -2012,7 +2049,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="baseTypes"></param>
     /// <param name="members"></param>
     /// <param name="sourceLocation"></param>
-    protected TypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name, 
+    protected TypeDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes, Flags flags, NameDeclaration name,
       List<GenericTypeParameterDeclaration>/*?*/ genericParameters, List<TypeExpression> baseTypes, List<ITypeDeclarationMember> members, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.sourceAttributes = sourceAttributes;
@@ -2071,8 +2108,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    public virtual uint GetFieldOffset(object item)
-    {
+    public virtual uint GetFieldOffset(object item) {
       return 0;
     }
 
@@ -2092,6 +2128,7 @@ namespace Microsoft.Cci.Ast {
     /// The byte alignment that values of the given type ought to have. Must be a power of 2. If zero, the alignment is decided at runtime.
     /// </summary>
     public virtual ushort Alignment {
+      [DebuggerNonUserCode]
       get { return 0; } //TODO: provide a default implementation that extracts this from a custom attribute
     }
 
@@ -2100,19 +2137,21 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get {
         foreach (SourceCustomAttribute attribute in this.SourceAttributes) {
           yield return new CustomAttribute(attribute);
           //TODO: filter out pseudo custom attributes
         }
         //TODO: cache the result of this property
-      } 
+      }
     }
 
     /// <summary>
     /// A collection of expressions that refer to the base types (classes and interfaces) of this type.
     /// </summary>
     public IEnumerable<TypeExpression> BaseTypes {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.baseTypes.Count; i < n; i++)
           yield return this.baseTypes[i] = (TypeExpression)this.baseTypes[i].MakeCopyFor(this.OuterDummyBlock);
@@ -2135,6 +2174,7 @@ namespace Microsoft.Cci.Ast {
     /// The compilation to which this type declaration belongs.
     /// </summary>
     public Compilation Compilation {
+      [DebuggerNonUserCode]
       get { return this.CompilationPart.Compilation; }
     }
 
@@ -2142,7 +2182,8 @@ namespace Microsoft.Cci.Ast {
     /// The compilation part to which this type declaration belongs.
     /// </summary>
     public CompilationPart CompilationPart {
-      get { 
+      [DebuggerNonUserCode]
+      get {
         //^ assume this.compilationPart != null;
         return this.compilationPart;
       }
@@ -2160,6 +2201,7 @@ namespace Microsoft.Cci.Ast {
     /// The type parameters, if any, of this type.
     /// </summary>
     public IEnumerable<GenericTypeParameterDeclaration> GenericParameters {
+      [DebuggerNonUserCode]
       get {
         List<GenericTypeParameterDeclaration> genericParameters;
         if (this.genericParameters == null)
@@ -2176,6 +2218,7 @@ namespace Microsoft.Cci.Ast {
     /// The number of generic parameters. Zero if the type is not generic.
     /// </summary>
     public virtual ushort GenericParameterCount {
+      [DebuggerNonUserCode]
       get {
         return (ushort)(this.genericParameters == null ? 0 : this.genericParameters.Count);
       }
@@ -2193,6 +2236,7 @@ namespace Microsoft.Cci.Ast {
     /// An instance of a language specific class containing methods that are of general utility. 
     /// </summary>
     public LanguageSpecificCompilationHelper Helper {
+      [DebuggerNonUserCode]
       get { return this.CompilationPart.Helper; }
     }
 
@@ -2200,6 +2244,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, instances of this type will all be instances of some subtype of this type.
     /// </summary>
     public virtual bool IsAbstract {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Abstract) != 0;
       }
@@ -2209,6 +2254,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, this type declaration may be aggregated with other type declarations into a single type definition.
     /// </summary>
     public virtual bool IsPartial {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Partial) != 0;
       }
@@ -2218,6 +2264,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, this type has no subtypes.
     /// </summary>
     public virtual bool IsSealed {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Sealed) != 0;
       }
@@ -2227,6 +2274,7 @@ namespace Microsoft.Cci.Ast {
     /// A static class can not have instance members. A static class is sealed.
     /// </summary>
     public virtual bool IsStatic {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Static) != 0;
       }
@@ -2236,6 +2284,7 @@ namespace Microsoft.Cci.Ast {
     /// If true, this type can contain "unsafe" constructs such as pointers.
     /// </summary>
     public virtual bool IsUnsafe {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Unsafe) != 0;
       }
@@ -2245,6 +2294,7 @@ namespace Microsoft.Cci.Ast {
     /// Layout of the type declaration.
     /// </summary>
     public virtual LayoutKind Layout {
+      [DebuggerNonUserCode]
       get {
         return LayoutKind.Auto; //TODO: get this from a custom attribute
       }
@@ -2254,6 +2304,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of the type.
     /// </summary>
     public NameDeclaration Name {
+      [DebuggerNonUserCode]
       get {
         return this.name;
       }
@@ -2271,6 +2322,7 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty collection of type members that are added by the compiler to help with the implementation of language features.
     /// </summary>
     public virtual IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      [DebuggerNonUserCode]
       get {
         if (this.helperMembers == null)
           yield break;
@@ -2290,6 +2342,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of metadata declarative security attributes that are associated with this type.
     /// </summary>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); } //TODO: extract these from the source attributes
     }
 
@@ -2320,12 +2373,12 @@ namespace Microsoft.Cci.Ast {
     public virtual void SetMemberContainingTypeDeclaration(ITypeDeclarationMember member) {
       TypeDeclarationMember/*?*/ tmem = member as TypeDeclarationMember;
       if (tmem != null) {
-        tmem.SetContainingTypeDeclaration(this, true); 
+        tmem.SetContainingTypeDeclaration(this, true);
         return;
       }
       NestedTypeDeclaration/*?*/ ntdecl = member as NestedTypeDeclaration;
       if (ntdecl != null) {
-        ntdecl.SetContainingTypeDeclaration(this, true); 
+        ntdecl.SetContainingTypeDeclaration(this, true);
         return;
       }
     }
@@ -2334,6 +2387,7 @@ namespace Microsoft.Cci.Ast {
     /// Size of an object of this type. In bytes. If zero, the size is unspecified and will be determined at runtime.
     /// </summary>
     public virtual uint SizeOf {
+      [DebuggerNonUserCode]
       get {
         //TODO: run through the attributes and see if one of them specifies the size of the type.
         return 0;
@@ -2345,6 +2399,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<SourceCustomAttribute> SourceAttributes {
+      [DebuggerNonUserCode]
       get {
         List<SourceCustomAttribute> sourceAttributes;
         if (this.sourceAttributes == null)
@@ -2370,6 +2425,7 @@ namespace Microsoft.Cci.Ast {
     /// The collection of things that are considered members of this type. For example: events, fields, method, properties and nested types.
     /// </summary>
     public IEnumerable<ITypeDeclarationMember> TypeDeclarationMembers {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.typeDeclarationMembers.Count; i < n; i++)
           yield return this.typeDeclarationMembers[i] = this.typeDeclarationMembers[i].MakeShallowCopyFor(this);
@@ -2387,7 +2443,7 @@ namespace Microsoft.Cci.Ast {
       List<ITypeDeclarationMember> members;
       if (this.caseSensitiveMemberNameToMemberListMap.TryGetValue(uniqueKey, out members)) {
         List<ITypeDeclarationMember> result = new List<ITypeDeclarationMember>(members.Count);
-        foreach (var member in members) 
+        foreach (var member in members)
           result.Add(member.MakeShallowCopyFor(this));
         return result;
       } else {
@@ -2395,7 +2451,7 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    private static readonly  List<ITypeDeclarationMember> emptyMemberList = new List<ITypeDeclarationMember>(0);
+    private static readonly List<ITypeDeclarationMember> emptyMemberList = new List<ITypeDeclarationMember>(0);
 
     private void InitializeIfNecessary() {
       if (this.caseSensitiveMemberNameToMemberListMap == null) {
@@ -2433,6 +2489,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainer<IAggregatableTypeDeclarationMember> Members
 
     IEnumerable<IAggregatableTypeDeclarationMember> IContainer<IAggregatableTypeDeclarationMember>.Members {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetFilterEnumerable<ITypeDeclarationMember, IAggregatableTypeDeclarationMember>(this.TypeDeclarationMembers);
       }
@@ -2443,6 +2500,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainer<ITypeDeclarationMember> Members
 
     IEnumerable<ITypeDeclarationMember> IContainer<ITypeDeclarationMember>.Members {
+      [DebuggerNonUserCode]
       get {
         return this.TypeDeclarationMembers;
       }
@@ -2453,6 +2511,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     IName INamedEntity.Name {
+      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 

@@ -44,6 +44,7 @@ namespace Microsoft.Cci.Ast {
     /// The addition must be performed with a check for arithmetic overflow if the operands are integers.
     /// </summary>
     public virtual bool CheckOverflow {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & 1) != 0;
       }
@@ -101,6 +102,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "+"; }
     }
 
@@ -251,6 +253,7 @@ namespace Microsoft.Cci.Ast {
       readonly Addition addition;
 
       public bool CheckOverflow {
+        [DebuggerNonUserCode]
         get { return this.addition.CheckOverflow; }
       }
 
@@ -263,20 +266,24 @@ namespace Microsoft.Cci.Ast {
       }
 
       public IExpression LeftOperand {
+        [DebuggerNonUserCode]
         get { return this.leftOperand.ProjectAsIExpression(); }
       }
       readonly Expression leftOperand;
 
       public IEnumerable<ILocation> Locations {
+        [DebuggerNonUserCode]
         get { return this.addition.Locations; }
       }
 
       public IExpression RightOperand {
+        [DebuggerNonUserCode]
         get { return this.rightOperand.ProjectAsIExpression(); }
       }
       readonly Expression rightOperand;
 
       public ITypeDefinition Type {
+        [DebuggerNonUserCode]
         get { return this.addition.Type; }
       }
 
@@ -285,6 +292,7 @@ namespace Microsoft.Cci.Ast {
       /// </summary>
       /// <value></value>
       public bool IsPure {
+        [DebuggerNonUserCode]
         get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
 
@@ -292,6 +300,7 @@ namespace Microsoft.Cci.Ast {
       #region IExpression Members
 
       ITypeReference IExpression.Type {
+        [DebuggerNonUserCode]
         get { return this.Type; }
       }
 
@@ -470,6 +479,7 @@ namespace Microsoft.Cci.Ast {
     /// The local variable, parameter, field, array element, pointer target or method that this expression denotes.
     /// </summary>
     public new object/*?*/ Definition {
+      [DebuggerNonUserCode]
       get
         //^^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
         //^^   || result is IAddressDereference || result is IMethodReference || result is IThisReference;
@@ -535,6 +545,7 @@ namespace Microsoft.Cci.Ast {
     #region IAddressableExpression Members
 
     IExpression/*?*/ IAddressableExpression.Instance {
+      [DebuggerNonUserCode]
       get {
         Expression/*?*/ instance = this.Instance;
         if (instance == null) return null;
@@ -547,6 +558,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -735,6 +747,7 @@ namespace Microsoft.Cci.Ast {
     /// double word (32-bit alignment). 
     /// </summary>
     public byte Alignment {
+      [DebuggerNonUserCode]
       get
         //^^ requires IsUnaligned;
         //^^ ensures result == 1 || result == 2 || result == 4;
@@ -756,6 +769,7 @@ namespace Microsoft.Cci.Ast {
     /// The local variable, parameter, field, property, array element or pointer target that this expression denotes.
     /// </summary>
     public new object/*?*/ Definition {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldDefinition || result is IArrayIndexer 
         //^   || result is IAddressDereference || result is IPropertyDefinition;
@@ -818,6 +832,7 @@ namespace Microsoft.Cci.Ast {
     /// For example if the field type is Int32 and the field is aligned on an Int16 boundary.
     /// </summary>
     public bool IsUnaligned {
+      [DebuggerNonUserCode]
       get { return this.alignment != 0; }
     }
 
@@ -825,6 +840,7 @@ namespace Microsoft.Cci.Ast {
     /// The bound Definition is a volatile field and its contents may not be cached.
     /// </summary>
     public bool IsVolatile {
+      [DebuggerNonUserCode]
       get {
         IFieldDefinition field = this.Definition as IFieldDefinition;
         return field != null && MemberHelper.IsVolatile(field);
@@ -834,6 +850,7 @@ namespace Microsoft.Cci.Ast {
     #region ITargetExpression Members
 
     IExpression/*?*/ ITargetExpression.Instance {
+      [DebuggerNonUserCode]
       get {
         Expression/*?*/ instance = this.Instance;
         if (instance == null) return null;
@@ -846,6 +863,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -1020,6 +1038,7 @@ namespace Microsoft.Cci.Ast {
     /// The local variable, parameter, field, array element, pointer target or method that this expression denotes.
     /// </summary>
     public object/*?*/ Definition {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IEventDefinition || 
         //^   result is IFieldDefinition || result is IArrayIndexer || result is IAddressDereference || result is IMethodDefinition || 
@@ -1072,6 +1091,7 @@ namespace Microsoft.Cci.Ast {
     /// If the instance to be used with an instance field or the array.
     /// </summary>
     public Expression/*?*/ Instance {
+      [DebuggerNonUserCode]
       get {
         if (this.instance == null) {
           Expression expression = this.Expression;
@@ -1225,6 +1245,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that represents an addressable location in memory.
     /// </summary>
     public AddressableExpression Address {
+      [DebuggerNonUserCode]
       get { return this.address; }
     }
     readonly AddressableExpression address;
@@ -1287,6 +1308,7 @@ namespace Microsoft.Cci.Ast {
     /// exposes no public fields or mutator methods cannot be changed using this address.
     /// </summary>
     public bool ObjectControlsMutability {
+      [DebuggerNonUserCode]
       get { return this.objectControlsMutability; }
     }
     readonly bool objectControlsMutability;
@@ -1328,6 +1350,7 @@ namespace Microsoft.Cci.Ast {
     #region IAddressOf Members
 
     IAddressableExpression IAddressOf.Expression {
+      [DebuggerNonUserCode]
       get { return this.Address; }
     }
 
@@ -1336,6 +1359,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -1375,6 +1399,7 @@ namespace Microsoft.Cci.Ast {
     /// The address to dereference.
     /// </summary>
     public Expression Address {
+      [DebuggerNonUserCode]
       get { return this.address; }
     }
     readonly Expression address;
@@ -1384,6 +1409,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, a value of 1 specifies that the pointer is byte aligned, whereas the target type may be word sized.
     /// </summary>
     public virtual ushort Alignment {
+      [DebuggerNonUserCode]
       get { return 1; }
     }
 
@@ -1433,6 +1459,7 @@ namespace Microsoft.Cci.Ast {
     /// address is specified by this.Alignment.
     /// </summary>
     public virtual bool IsUnaligned {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1440,6 +1467,7 @@ namespace Microsoft.Cci.Ast {
     /// The location at Address is volatile and its contents may not be cached.
     /// </summary>
     public bool IsVolatile {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1508,6 +1536,7 @@ namespace Microsoft.Cci.Ast {
     #region IAddressDereference Members
 
     IExpression IAddressDereference.Address {
+      [DebuggerNonUserCode]
       get { return this.Address.ProjectAsIExpression(); }
     }
 
@@ -1516,6 +1545,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -1588,6 +1618,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public SimpleName NameExpression {
+      [DebuggerNonUserCode]
       get { return this.nameExpression; }
     }
     readonly SimpleName nameExpression;
@@ -1596,6 +1627,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Expression Qualifier {
+      [DebuggerNonUserCode]
       get { return this.qualifier; }
     }
     readonly Expression qualifier;
@@ -1654,6 +1686,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IBlockStatement Body {
+      [DebuggerNonUserCode]
       get {
         return this.body = (BlockStatement)this.body.MakeCopyFor(this.DummyBlock);
       }
@@ -1683,6 +1716,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     private BlockStatement DummyBlock {
+      [DebuggerNonUserCode]
       get {
         BlockStatement/*?*/ result = this.dummyBlock;
         if (result == null) {
@@ -1718,6 +1752,7 @@ namespace Microsoft.Cci.Ast {
     /// The parameters this anonymous method.
     /// </summary>
     public IEnumerable<ParameterDeclaration> Parameters {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.parameters.Count; i < n; i++)
           yield return this.parameters[i] = this.parameters[i].MakeShallowCopyFor(this, this.ContainingBlock);
@@ -1741,6 +1776,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference ReturnType {
+      [DebuggerNonUserCode]
       get { return this.ContainingBlock.Helper.GetInvokeMethod(this.delegateType).Type; }
     }
 
@@ -1749,12 +1785,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition Type {
+      [DebuggerNonUserCode]
       get { return this.delegateType; }
     }
 
     #region IAnonymousDelegate Members
 
     IEnumerable<IParameterDefinition> IAnonymousDelegate.Parameters {
+      [DebuggerNonUserCode]
       get {
         foreach (ParameterDeclaration parameterDeclaration in this.Parameters)
           yield return parameterDeclaration.ParameterDefinition;
@@ -1762,6 +1800,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ITypeReference IAnonymousDelegate.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -1771,6 +1810,7 @@ namespace Microsoft.Cci.Ast {
 
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -1779,28 +1819,34 @@ namespace Microsoft.Cci.Ast {
     #region ISignature Members
 
     CallingConvention ISignature.CallingConvention {
+      [DebuggerNonUserCode]
       get { return CallingConvention.HasThis; }
     }
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get {
         foreach (var par in this.Parameters) yield return par.ParameterDefinition;
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
     bool ISignature.ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     bool ISignature.ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     ITypeReference ISignature.Type {
+      [DebuggerNonUserCode]
       get { return this.ReturnType; }
     }
 
@@ -1809,6 +1855,7 @@ namespace Microsoft.Cci.Ast {
     #region ISignatureDeclaration Members
 
     TypeExpression ISignatureDeclaration.Type {
+      [DebuggerNonUserCode]
       get {
         if (this.returnType == null)
           this.returnType = TypeExpression.For(this.Helper.GetInvokeMethod(this.delegateType).Type);
@@ -1818,6 +1865,7 @@ namespace Microsoft.Cci.Ast {
     TypeExpression/*?*/ returnType;
 
     ISignature ISignatureDeclaration.SignatureDefinition {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -1859,6 +1907,7 @@ namespace Microsoft.Cci.Ast {
     /// A block of statements providing the implementation of this anonymous method.
     /// </summary>
     public BlockStatement Body {
+      [DebuggerNonUserCode]
       get {
         return this.body = (BlockStatement)this.body.MakeCopyFor(this.DummyBlock);
       }
@@ -1880,6 +1929,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     private BlockStatement DummyBlock {
+      [DebuggerNonUserCode]
       get {
         BlockStatement/*?*/ result = this.dummyBlock;
         if (result == null) {
@@ -1935,6 +1985,7 @@ namespace Microsoft.Cci.Ast {
     /// The parameters this anonymous method.
     /// </summary>
     public IEnumerable<ParameterDeclaration> Parameters {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.parameters.Count; i < n; i++)
           yield return this.parameters[i] = this.parameters[i].MakeShallowCopyFor(this, this.ContainingBlock);
@@ -1946,6 +1997,7 @@ namespace Microsoft.Cci.Ast {
     /// The symbol table object that represents the metadata for this signature.
     /// </summary>
     public ISignature SignatureDefinition {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -1976,10 +2028,12 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CallingConvention CallingConvention {
+      [DebuggerNonUserCode]
       get { return CallingConvention.HasThis; }
     }
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get {
         foreach (ParameterDeclaration parDecl in this.Parameters)
           yield return parDecl.ParameterDefinition;
@@ -1991,6 +2045,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
@@ -1999,6 +2054,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -2007,10 +2063,12 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     ITypeReference ISignature.Type {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
@@ -2053,6 +2111,7 @@ namespace Microsoft.Cci.Ast {
     /// The alias that qualifies SimpleName. I.e. the a in a::b.
     /// </summary>
     public Expression Alias {
+      [DebuggerNonUserCode]
       get
         //^ ensures result is SimpleName || result is RootNamespaceExpression;
       {
@@ -2226,6 +2285,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of a member of the namespace or type denoted by Alias.
     /// </summary>
     public SimpleName SimpleName {
+      [DebuggerNonUserCode]
       get { return this.simpleName; }
     }
     readonly SimpleName simpleName;
@@ -2283,6 +2343,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of the elements of this array.
     /// </summary>
     public TypeExpression ElementType {
+      [DebuggerNonUserCode]
       get { return this.elementType; }
     }
     readonly TypeExpression elementType;
@@ -2303,6 +2364,7 @@ namespace Microsoft.Cci.Ast {
     /// The number of array dimensions.
     /// </summary>
     public uint Rank {
+      [DebuggerNonUserCode]
       get
         //^ ensures result > 0;
       {
@@ -2376,6 +2438,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that performs an implicit conversion of this.Source to this.Type.
     /// </summary>
     public Expression ConvertedSourceExpression {
+      [DebuggerNonUserCode]
       get {
         if (this.convertedSourceExpression == null)
           this.convertedSourceExpression = this.GetConvertedSourceExpression();
@@ -2543,6 +2606,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -2623,6 +2687,7 @@ namespace Microsoft.Cci.Ast {
     /// The this argument of the base class constructor.
     /// </summary>
     public override Expression ThisArgument {
+      [DebuggerNonUserCode]
       get
         //^^ requires !this.ResolvedMethod.IsStatic;
       {
@@ -2733,6 +2798,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -2774,6 +2840,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Expression ConvertedLeftOperand {
+      [DebuggerNonUserCode]
       get {
         MethodCall/*?*/ overloadedCall = this.OverloadMethodCall;
         if (overloadedCall != null) {
@@ -2789,6 +2856,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Expression ConvertedRightOperand {
+      [DebuggerNonUserCode]
       get {
         MethodCall/*?*/ overloadedCall = this.OverloadMethodCall;
         if (overloadedCall != null) {
@@ -2806,6 +2874,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get {
         if (this.Value == null) return false;
         if (this.LeftOperand.CouldBeInterpretedAsNegativeSignedInteger)
@@ -2900,6 +2969,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected virtual IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
       }
@@ -2983,6 +3053,7 @@ namespace Microsoft.Cci.Ast {
     /// The left operand.
     /// </summary>
     public Expression LeftOperand {
+      [DebuggerNonUserCode]
       get { return this.leftOperand; }
     }
     readonly Expression leftOperand;
@@ -3005,6 +3076,7 @@ namespace Microsoft.Cci.Ast {
     /// If no such method can be found, the value of this property is null.
     /// </summary>
     public MethodCall/*?*/ OverloadMethodCall {
+      [DebuggerNonUserCode]
       get {
         if (this.overloadMethodCall == null) {
           lock (GlobalLock.LockingObject) {
@@ -3064,6 +3136,7 @@ namespace Microsoft.Cci.Ast {
     /// The right operand.
     /// </summary>
     public Expression RightOperand {
+      [DebuggerNonUserCode]
       get { return this.rightOperand; }
     }
     readonly Expression rightOperand;
@@ -3086,6 +3159,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get {
         return this.Value != null && this.LeftOperand.ValueIsPolymorphicCompileTimeConstant && this.RightOperand.ValueIsPolymorphicCompileTimeConstant;
       }
@@ -3094,10 +3168,12 @@ namespace Microsoft.Cci.Ast {
     #region IBinaryOperation Members
 
     IExpression IBinaryOperation.LeftOperand {
+      [DebuggerNonUserCode]
       get { return this.ConvertedLeftOperand.ProjectAsIExpression(); }
     }
 
     IExpression IBinaryOperation.RightOperand {
+      [DebuggerNonUserCode]
       get { return this.ConvertedRightOperand.ProjectAsIExpression(); }
     }
 
@@ -3106,6 +3182,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -3170,6 +3247,7 @@ namespace Microsoft.Cci.Ast {
     /// The left operand and assignment target.
     /// </summary>
     public TargetExpression LeftOperand {
+      [DebuggerNonUserCode]
       get { return this.leftOperand; }
     }
     readonly TargetExpression leftOperand;
@@ -3233,6 +3311,7 @@ namespace Microsoft.Cci.Ast {
     /// The right operand.
     /// </summary>
     public Expression RightOperand {
+      [DebuggerNonUserCode]
       get { return this.rightOperand; }
     }
     readonly Expression rightOperand;
@@ -3367,6 +3446,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -3558,6 +3638,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -3682,6 +3763,7 @@ namespace Microsoft.Cci.Ast {
     /// The statements are executed before evaluation of Expression occurs.
     /// </summary>
     public BlockStatement BlockStatement {
+      [DebuggerNonUserCode]
       get { return this.blockStatement; }
     }
     readonly BlockStatement blockStatement;
@@ -3705,6 +3787,7 @@ namespace Microsoft.Cci.Ast {
     /// This expression can contain references to the local variables that are declared inside BlockStatement.
     /// </summary>
     public Expression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     internal Expression expression;
@@ -3770,10 +3853,12 @@ namespace Microsoft.Cci.Ast {
     #region IBlockExpression Members
 
     IBlockStatement IBlockExpression.BlockStatement {
+      [DebuggerNonUserCode]
       get { return this.BlockStatement; }
     }
 
     IExpression IBlockExpression.Expression {
+      [DebuggerNonUserCode]
       get { return this.Expression.ProjectAsIExpression(); }
     }
 
@@ -3783,6 +3868,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -3828,6 +3914,7 @@ namespace Microsoft.Cci.Ast {
     /// double word (32-bit alignment). 
     /// </summary>
     public byte Alignment {
+      [DebuggerNonUserCode]
       get
         //^^ requires IsUnaligned;
         //^^ ensures result == 1 || result == 2 || result == 4;
@@ -3851,6 +3938,7 @@ namespace Microsoft.Cci.Ast {
     /// The local variable, parameter or field that this expression binds to.
     /// </summary>
     public object Definition {
+      [DebuggerNonUserCode]
       get
         //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldDefinition;
       {
@@ -3899,6 +3987,7 @@ namespace Microsoft.Cci.Ast {
     /// If the expression binds to an instance field then this property is not null and contains the instance.
     /// </summary>
     public IExpression/*?*/ Instance {
+      [DebuggerNonUserCode]
       get {
         if (this.cachedInstance == null) {
           IFieldDefinition/*?*/ field = this.definition as IFieldDefinition;
@@ -3924,6 +4013,7 @@ namespace Microsoft.Cci.Ast {
     /// For example if the field type is Int32 and the field is aligned on an Int16 boundary.
     /// </summary>
     public bool IsUnaligned {
+      [DebuggerNonUserCode]
       get { return this.alignment != 0; }
     }
 
@@ -3931,6 +4021,7 @@ namespace Microsoft.Cci.Ast {
     /// The bound Definition is a volatile field and its contents may not be cached.
     /// </summary>
     public bool IsVolatile {
+      [DebuggerNonUserCode]
       get {
         IFieldDefinition field = this.Definition as IFieldDefinition;
         return field != null && MemberHelper.IsVolatile(field);
@@ -4105,6 +4196,7 @@ namespace Microsoft.Cci.Ast {
     /// The type to which the value must be cast. If the value is not of this type, the expression results in a null value of this type.
     /// </summary>
     public TypeExpression TargetType {
+      [DebuggerNonUserCode]
       get { return this.targetType; }
     }
     readonly TypeExpression targetType;
@@ -4121,6 +4213,7 @@ namespace Microsoft.Cci.Ast {
     /// The value to cast if possible.
     /// </summary>
     public Expression ValueToCast {
+      [DebuggerNonUserCode]
       get { return this.valueToCast; }
     }
     readonly Expression valueToCast;
@@ -4209,6 +4302,7 @@ namespace Microsoft.Cci.Ast {
     /// The type to which the value must be cast. If the value is not of this type, the expression results in a null value of this type.
     /// </summary>
     public TypeExpression TargetType {
+      [DebuggerNonUserCode]
       get { return this.targetType; }
     }
     readonly TypeExpression targetType;
@@ -4225,6 +4319,7 @@ namespace Microsoft.Cci.Ast {
     /// The value to cast if possible.
     /// </summary>
     public Expression ValueToCast {
+      [DebuggerNonUserCode]
       get { return this.valueToCast; }
     }
     readonly Expression valueToCast;
@@ -4232,10 +4327,12 @@ namespace Microsoft.Cci.Ast {
     #region ICastIfPossible Members
 
     IExpression ICastIfPossible.ValueToCast {
+      [DebuggerNonUserCode]
       get { return this.ValueToCast.ProjectAsIExpression(); }
     }
 
     ITypeReference ICastIfPossible.TargetType {
+      [DebuggerNonUserCode]
       get { return this.TargetType.ResolvedType; }
     }
 
@@ -4245,6 +4342,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -4307,6 +4405,7 @@ namespace Microsoft.Cci.Ast {
     /// The this argument of the chained constructor.
     /// </summary>
     public override Expression ThisArgument {
+      [DebuggerNonUserCode]
       get
         //^^ requires !this.ResolvedMethod.IsStatic;
       {
@@ -4397,6 +4496,7 @@ namespace Microsoft.Cci.Ast {
     /// The value on which the operation is performed.
     /// </summary>
     public Expression Operand {
+      [DebuggerNonUserCode]
       get { return this.operand; }
     }
     readonly Expression operand;
@@ -4502,6 +4602,7 @@ namespace Microsoft.Cci.Ast {
     /// The value to check.
     /// </summary>
     public Expression Operand {
+      [DebuggerNonUserCode]
       get { return this.operand; }
     }
     readonly Expression operand;
@@ -4539,6 +4640,7 @@ namespace Microsoft.Cci.Ast {
     /// The type to which the value must belong for this expression to evaluate as true.
     /// </summary>
     public TypeExpression TypeToCheck {
+      [DebuggerNonUserCode]
       get { return this.typeToCheck; }
     }
     readonly TypeExpression typeToCheck;
@@ -4546,10 +4648,12 @@ namespace Microsoft.Cci.Ast {
     #region ICheckIfInstance Members
 
     IExpression ICheckIfInstance.Operand {
+      [DebuggerNonUserCode]
       get { return this.Operand.ProjectAsIExpression(); }
     }
 
     ITypeReference ICheckIfInstance.TypeToCheck {
+      [DebuggerNonUserCode]
       get { return this.TypeToCheck.ResolvedType; }
     }
 
@@ -4559,6 +4663,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -4705,6 +4810,7 @@ namespace Microsoft.Cci.Ast {
     /// The arguments to pass to the constructor, indexer or method, as they are before they have been converted to match the parameters of the resolved method.
     /// </summary>
     public virtual IEnumerable<Expression> OriginalArguments {
+      [DebuggerNonUserCode]
       get { return this.originalArguments; }
     }
     readonly IEnumerable<Expression> originalArguments;
@@ -4713,6 +4819,7 @@ namespace Microsoft.Cci.Ast {
     /// The constructor, indexer or method that is being called.
     /// </summary>
     public IMethodDefinition ResolvedMethod {
+      [DebuggerNonUserCode]
       get {
         if (this.resolvedMethod == null)
           this.resolvedMethod = this.ResolveMethod();
@@ -4846,6 +4953,7 @@ namespace Microsoft.Cci.Ast {
     /// If true and ValueToConvert is a number and ResultType is a numeric type, check that ValueToConvert falls within the range of ResultType and throw an exception if not.
     /// </summary>
     public bool CheckNumericRange {
+      [DebuggerNonUserCode]
       get { return this.ValueToConvert.ContainingBlock.UseCheckedArithmetic; }
     }
 
@@ -4989,6 +5097,7 @@ namespace Microsoft.Cci.Ast {
     /// The value to convert.
     /// </summary>
     public Expression ValueToConvert {
+      [DebuggerNonUserCode]
       get { return this.valueToConvert; }
     }
     readonly Expression valueToConvert;
@@ -4996,10 +5105,12 @@ namespace Microsoft.Cci.Ast {
     #region IConversion Members
 
     ITypeReference IConversion.TypeAfterConversion {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
     IExpression IConversion.ValueToConvert {
+      [DebuggerNonUserCode]
       get { return this.ValueToConvert.ProjectAsIExpression(); }
     }
 
@@ -5009,6 +5120,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -5646,6 +5758,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return this.couldBeInterpretedAsNegativeSignedInteger; }
     }
     readonly bool couldBeInterpretedAsNegativeSignedInteger;
@@ -5655,6 +5768,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 1 &lt;&lt; 31 could also be interpreted as a convenient way of writing 0x80000000.
     /// </summary>
     public override bool CouldBeInterpretedAsUnsignedInteger {
+      [DebuggerNonUserCode]
       get { return this.couldBeInterpretedAsUnsignedInteger; }
     }
     readonly bool couldBeInterpretedAsUnsignedInteger;
@@ -5741,6 +5855,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns true if the value of this compile constant is numeric.
     /// </summary>
     public bool IsNumericConstant {
+      [DebuggerNonUserCode]
       get {
         IConvertible/*?*/ ic = this.Value as IConvertible;
         if (ic == null) return false;
@@ -5801,6 +5916,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.valueIsPolymorphicCompileTimeConstant; }
     }
     readonly bool valueIsPolymorphicCompileTimeConstant;
@@ -5812,6 +5928,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ITypeReference IMetadataExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -5820,6 +5937,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -5927,6 +6045,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -6012,6 +6131,7 @@ namespace Microsoft.Cci.Ast {
     /// The condition that determines which subexpression to evaluate.
     /// </summary>
     public Expression Condition {
+      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -6020,6 +6140,7 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     private Expression ConvertedCondition {
+      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -6032,6 +6153,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate as the value of the overall expression if the condition is false, after conversion has been applied to it.
     /// </summary>
     public Expression ConvertedResultIfFalse {
+      [DebuggerNonUserCode]
       get { return this.Helper.ImplicitConversion(this.ResultIfFalse, this.Type); }
     }
 
@@ -6039,6 +6161,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate as the value of the overall expression if the condition is false, after conversion has been applied to it.
     /// </summary>
     public Expression ConvertedResultIfTrue {
+      [DebuggerNonUserCode]
       get { return this.Helper.ImplicitConversion(this.ResultIfTrue, this.Type); }
     }
 
@@ -6047,6 +6170,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get {
         return this.Value != null && this.ResultIfTrue.CouldBeInterpretedAsNegativeSignedInteger && this.ResultIfFalse.CouldBeInterpretedAsNegativeSignedInteger;
       }
@@ -6143,6 +6267,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate as the value of the overall expression if the condition is false.
     /// </summary>
     public Expression ResultIfFalse {
+      [DebuggerNonUserCode]
       get { return this.resultIfFalse; }
     }
     readonly Expression resultIfFalse;
@@ -6151,6 +6276,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate as the value of the overall expression if the condition is true.
     /// </summary>
     public Expression ResultIfTrue {
+      [DebuggerNonUserCode]
       get { return this.resultIfTrue; }
     }
     readonly Expression resultIfTrue;
@@ -6186,6 +6312,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get {
         return this.Value != null && this.ResultIfTrue.ValueIsPolymorphicCompileTimeConstant && this.ResultIfFalse.ValueIsPolymorphicCompileTimeConstant;
       }
@@ -6194,14 +6321,17 @@ namespace Microsoft.Cci.Ast {
     #region IConditional Members
 
     IExpression IConditional.Condition {
+      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
     IExpression IConditional.ResultIfTrue {
+      [DebuggerNonUserCode]
       get { return this.ConvertedResultIfTrue.ProjectAsIExpression(); }
     }
 
     IExpression IConditional.ResultIfFalse {
+      [DebuggerNonUserCode]
       get { return this.ConvertedResultIfFalse.ProjectAsIExpression(); }
     }
 
@@ -6210,6 +6340,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -6275,6 +6406,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the method to call is determined at run time.
     /// </summary>
     public override bool IsVirtualCall {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -6294,6 +6426,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of object to create.
     /// </summary>
     public TypeExpression ObjectType {
+      [DebuggerNonUserCode]
       get { return this.objectType; }
     }
     readonly TypeExpression objectType;
@@ -6336,6 +6469,7 @@ namespace Microsoft.Cci.Ast {
     #region ICreateObjectInstance Members
 
     IEnumerable<IExpression> ICreateObjectInstance.Arguments {
+      [DebuggerNonUserCode]
       get {
         foreach (Expression convertedArgument in this.ConvertedArguments)
           yield return convertedArgument.ProjectAsIExpression();
@@ -6343,6 +6477,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     IMethodReference ICreateObjectInstance.MethodToCall {
+      [DebuggerNonUserCode]
       get { return this.ResolvedMethod; }
     }
 
@@ -6351,6 +6486,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -6454,6 +6590,7 @@ namespace Microsoft.Cci.Ast {
     /// A sequence of assignments that collectively initialize the new object instance.
     /// </summary>
     public IEnumerable<Expression> Initializers {
+      [DebuggerNonUserCode]
       get { return this.initializers; }
     }
     readonly IEnumerable<Expression> initializers;
@@ -6567,6 +6704,7 @@ namespace Microsoft.Cci.Ast {
     /// The lowerbound for each dimension of the array instance.
     /// </summary>
     public IEnumerable<int> ComputedLowerBounds {
+      [DebuggerNonUserCode]
       get
         // ^ ensures count{int lb in result} == this.Rank;
       {
@@ -6588,6 +6726,7 @@ namespace Microsoft.Cci.Ast {
     /// The size of each dimension of the array instance.
     /// </summary>
     public IEnumerable<ulong> ComputedSizes {
+      [DebuggerNonUserCode]
       get
         // ^ ensures count{int lb in result;true} == this.Rank;
       {
@@ -6611,6 +6750,7 @@ namespace Microsoft.Cci.Ast {
     /// If no initializers are present, the size defaults to zero.
     /// </summary>
     public IEnumerable<Expression> ConvertedSizes {
+      [DebuggerNonUserCode]
       get {
         int i = 0;
         foreach (Expression size in this.Sizes) {
@@ -6659,6 +6799,7 @@ namespace Microsoft.Cci.Ast {
     /// The element type of the array.
     /// </summary>
     public ITypeReference ElementType {
+      [DebuggerNonUserCode]
       get {
         if (this.elementType == null)
           this.elementType = this.ElementTypeExpression.ResolvedType;
@@ -6671,6 +6812,7 @@ namespace Microsoft.Cci.Ast {
     /// A type expression for the element type of the array.
     /// </summary>
     public TypeExpression ElementTypeExpression {
+      [DebuggerNonUserCode]
       get {
         if (this.elementTypeExpression == null) {
           this.elementTypeExpression = new NamedTypeExpression(new SimpleName(Dummy.Name, SourceDummy.SourceLocation, true));
@@ -6714,6 +6856,7 @@ namespace Microsoft.Cci.Ast {
     /// The initial values of the array elements. May be empty.
     /// </summary>
     public IEnumerable<Expression> Initializers {
+      [DebuggerNonUserCode]
       get { return this.initializers; }
     }
     readonly IEnumerable<Expression> initializers;
@@ -6722,6 +6865,7 @@ namespace Microsoft.Cci.Ast {
     /// A potentially empty list of expressions that supply lower bounds for the dimensions of the array instance.
     /// </summary>
     public IEnumerable<Expression> LowerBounds {
+      [DebuggerNonUserCode]
       get { return this.lowerBounds; }
     }
     readonly IEnumerable<Expression> lowerBounds;
@@ -6752,6 +6896,7 @@ namespace Microsoft.Cci.Ast {
     /// The number of dimensions of the array instance.
     /// </summary>
     public uint Rank {
+      [DebuggerNonUserCode]
       get { return this.rank; }
     }
     readonly uint rank; //^ invariant rank > 0;
@@ -6774,6 +6919,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of expressions that supply sizes for the dimensions of the array instance. May be empty if the sizes are to be determined from the initializers.
     /// </summary>
     public IEnumerable<Expression> Sizes {
+      [DebuggerNonUserCode]
       get { return this.sizes; }
     }
     readonly IEnumerable<Expression> sizes;
@@ -6795,6 +6941,7 @@ namespace Microsoft.Cci.Ast {
     #region ICreateArray Members
 
     ITypeReference ICreateArray.ElementType {
+      [DebuggerNonUserCode]
       get {
         if (this.elementTypeExpression != null)
           return this.elementTypeExpression.ResolvedType;
@@ -6805,14 +6952,17 @@ namespace Microsoft.Cci.Ast {
 
     //  Issue: Refactor this into seperate method for ProjectAsIExpression.
     IEnumerable<IExpression> ICreateArray.Initializers {
+      [DebuggerNonUserCode]
       get { foreach (Expression initializer in this.Initializers) yield return initializer.ProjectAsIExpression(); }
     }
 
     IEnumerable<int> ICreateArray.LowerBounds {
+      [DebuggerNonUserCode]
       get { return this.ComputedLowerBounds; }
     }
 
     IEnumerable<IExpression> ICreateArray.Sizes {
+      [DebuggerNonUserCode]
       get { foreach (Expression size in this.ConvertedSizes) yield return size.ProjectAsIExpression(); }
     }
 
@@ -6821,24 +6971,29 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataCreateArray Members
 
     ITypeReference IMetadataCreateArray.ElementType {
+      [DebuggerNonUserCode]
       get { return ((ICreateArray)this).ElementType; }
     }
 
     IEnumerable<IMetadataExpression> IMetadataCreateArray.Initializers {
+      [DebuggerNonUserCode]
       get { foreach (Expression initializer in this.Initializers) yield return initializer.ProjectAsIMetadataExpression(); }
     }
 
     IEnumerable<int> IMetadataCreateArray.LowerBounds {
+      [DebuggerNonUserCode]
       get { return ((ICreateArray)this).LowerBounds; }
     }
 
     uint IMetadataCreateArray.Rank {
+      [DebuggerNonUserCode]
       get { return this.Rank; }
     }
 
 
 
     IEnumerable<ulong> IMetadataCreateArray.Sizes {
+      [DebuggerNonUserCode]
       get { return this.ComputedSizes; }
     }
 
@@ -6851,6 +7006,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ITypeReference IMetadataExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -6859,6 +7015,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -6922,6 +7079,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that evaluates to the instance (if any) on which this.MethodToCallViaDelegate must be called (via the delegate).
     /// </summary>
     public Expression/*?*/ Instance {
+      [DebuggerNonUserCode]
       get
         //^ ensures this.MethodToCallViaDelegate.IsStatic <==> result == null;
       {
@@ -6947,6 +7105,7 @@ namespace Microsoft.Cci.Ast {
     /// The method that is to be be called when the delegate instance is invoked.
     /// </summary>
     public IMethodDefinition MethodToCallViaDelegate {
+      [DebuggerNonUserCode]
       get { return this.methodToCallViaDelegate; }
     }
     readonly IMethodDefinition methodToCallViaDelegate;
@@ -6973,6 +7132,7 @@ namespace Microsoft.Cci.Ast {
     #region ICreateDelegateInstance Members
 
     IExpression/*?*/ ICreateDelegateInstance.Instance {
+      [DebuggerNonUserCode]
       get
         //^^ ensures this.MethodToCallViaDelegate.Method.IsStatic <==> result == null;
       {
@@ -6982,6 +7142,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     IMethodReference ICreateDelegateInstance.MethodToCallViaDelegate {
+      [DebuggerNonUserCode]
       get { return this.MethodToCallViaDelegate; }
     }
 
@@ -6990,6 +7151,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -7035,6 +7197,7 @@ namespace Microsoft.Cci.Ast {
     /// The element type of the array. This is computed from the types of the intial values of the elements.
     /// </summary>
     public ITypeDefinition ElementType {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; } //TODO: unify types of all the initializer expressions
     }
 
@@ -7052,6 +7215,7 @@ namespace Microsoft.Cci.Ast {
     /// The initial values of the array elements. May not be empty. Used to determine the element type of the array.
     /// </summary>
     public IEnumerable<Expression> Initializers {
+      [DebuggerNonUserCode]
       get { return this.initializers; }
     }
     readonly IEnumerable<Expression> initializers;
@@ -7164,6 +7328,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of the elements of the stack array.
     /// </summary>
     public TypeExpression ElementType {
+      [DebuggerNonUserCode]
       get { return this.elementType; }
     }
     readonly TypeExpression elementType;
@@ -7194,6 +7359,7 @@ namespace Microsoft.Cci.Ast {
     /// The size (number of elements) of the stack array.
     /// </summary>
     public Expression Size {
+      [DebuggerNonUserCode]
       get { return this.size; }
     }
     readonly Expression size;
@@ -7226,10 +7392,12 @@ namespace Microsoft.Cci.Ast {
     #region IStackArrayCreate Members
 
     ITypeReference IStackArrayCreate.ElementType {
+      [DebuggerNonUserCode]
       get { return this.ElementType.ResolvedType; }
     }
 
     IExpression IStackArrayCreate.Size {
+      [DebuggerNonUserCode]
       get {
         CompileTimeConstant elementSize = new CompileTimeConstant(TypeHelper.SizeOfType(this.ElementType.ResolvedType), this.ElementType.SourceLocation);
         Multiplication sizeInBytes = new Multiplication(this.Size, elementSize, this.Size.SourceLocation);
@@ -7243,6 +7411,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -7293,6 +7462,7 @@ namespace Microsoft.Cci.Ast {
     /// The type whose default value is the result of this expression.
     /// </summary>
     public TypeExpression DefaultValueType {
+      [DebuggerNonUserCode]
       get { return this.defaultValueType; }
     }
     readonly TypeExpression defaultValueType;
@@ -7387,6 +7557,7 @@ namespace Microsoft.Cci.Ast {
     #region IDefaultValue Members
 
     ITypeReference IDefaultValue.DefaultValueType {
+      [DebuggerNonUserCode]
       get { return this.DefaultValueType.ResolvedType; }
     }
 
@@ -7395,6 +7566,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -7436,6 +7608,7 @@ namespace Microsoft.Cci.Ast {
     /// The division must be performed with a check for arithmetic overflow if the operands are integers.
     /// </summary>
     public virtual bool CheckOverflow {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & 1) != 0;
       }
@@ -7482,6 +7655,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "/"; }
     }
 
@@ -7564,6 +7738,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -7757,6 +7932,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -7876,6 +8052,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "=="; }
     }
 
@@ -8148,6 +8325,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "^"; }
     }
 
@@ -8211,6 +8389,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -8394,6 +8573,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "^"; }
     }
 
@@ -8422,6 +8602,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
       }
@@ -8548,6 +8729,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could also be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public virtual bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -8556,6 +8738,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 1 &lt;&lt; 31 could also be interpreted as a convenient way of writing 0x80000000.
     /// </summary>
     public virtual bool CouldBeInterpretedAsUnsignedInteger {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -8590,6 +8773,7 @@ namespace Microsoft.Cci.Ast {
     /// An empty collection of expressions.
     /// </summary>
     public static IEnumerable<Expression> EmptyCollection {
+      [DebuggerNonUserCode]
       get { return Expression.emptyCollection; }
     }
     static readonly IEnumerable<Expression> emptyCollection = new List<Expression>(0).AsReadOnly();
@@ -8651,6 +8835,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value><c>true</c> if this instance is pure; otherwise, <c>false</c>.</value>
     public bool IsPure {
+      [DebuggerNonUserCode]
       get { return !this.HasSideEffect(false); }
     }
 
@@ -8679,6 +8864,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public virtual bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get {
         return false;
       }
@@ -8786,6 +8972,7 @@ namespace Microsoft.Cci.Ast {
     /// The compile time value of the expression. Can be null.
     /// </summary>
     public object/*?*/ Value {
+      [DebuggerNonUserCode]
       get {
         if (this.value == null) {
           this.value = this.GetValue();
@@ -8898,6 +9085,7 @@ namespace Microsoft.Cci.Ast {
     /// The type values to match with the generic parameters of the method or type to instantiate.
     /// </summary>
     public IEnumerable<TypeExpression> ArgumentTypes {
+      [DebuggerNonUserCode]
       get { return this.argumentTypes; }
     }
     readonly IEnumerable<TypeExpression> argumentTypes;
@@ -8922,6 +9110,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that should resolve to a method group or a type group.
     /// </summary>
     public Expression GenericTypeOrMethod {
+      [DebuggerNonUserCode]
       get { return this.genericTypeOrMethod; }
     }
     readonly Expression genericTypeOrMethod;
@@ -9050,6 +9239,7 @@ namespace Microsoft.Cci.Ast {
     /// The type values to match with the generic parameters of the type to instantiate.
     /// </summary>
     public IEnumerable<TypeExpression> ArgumentTypes {
+      [DebuggerNonUserCode]
       get { return this.argumentTypes; }
     }
     readonly IEnumerable<TypeExpression> argumentTypes;
@@ -9065,6 +9255,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that should resolve to a type group.
     /// </summary>
     public TypeExpression GenericType {
+      [DebuggerNonUserCode]
       get { return this.genericType; }
     }
     readonly TypeExpression genericType;
@@ -9190,6 +9381,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that should result in a value of type System.TypedReference.
     /// </summary>
     public Expression TypedReference {
+      [DebuggerNonUserCode]
       get { return this.typedReference; }
     }
     readonly Expression typedReference;
@@ -9197,6 +9389,7 @@ namespace Microsoft.Cci.Ast {
     #region IGetTypeOfTypedReference Members
 
     IExpression IGetTypeOfTypedReference.TypedReference {
+      [DebuggerNonUserCode]
       get { return this.TypedReference.ProjectAsIExpression(); }
     }
 
@@ -9205,6 +9398,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -9284,6 +9478,7 @@ namespace Microsoft.Cci.Ast {
     /// The type to which the value part of the typed reference must be converted.
     /// </summary>
     public TypeExpression TargetType {
+      [DebuggerNonUserCode]
       get { return this.targetType; }
     }
     readonly TypeExpression targetType;
@@ -9300,6 +9495,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that results in a value of type System.TypedReference.
     /// </summary>
     public Expression TypedReference {
+      [DebuggerNonUserCode]
       get { return this.typedReference; }
     }
     readonly Expression typedReference;
@@ -9307,10 +9503,12 @@ namespace Microsoft.Cci.Ast {
     #region IGetValueOfTypedReference Members
 
     IExpression IGetValueOfTypedReference.TypedReference {
+      [DebuggerNonUserCode]
       get { return this.TypedReference.ProjectAsIExpression(); }
     }
 
     ITypeReference IGetValueOfTypedReference.TargetType {
+      [DebuggerNonUserCode]
       get { return this.TargetType.ResolvedType; }
     }
 
@@ -9319,6 +9517,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -9372,6 +9571,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return ">"; }
     }
 
@@ -9477,6 +9677,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return ">="; }
     }
 
@@ -9640,6 +9841,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "==>"; }
     }
 
@@ -9859,6 +10061,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that results in value whose type is expected to be an array, or to define a default indexed property that matches the indices.
     /// </summary>
     public Expression IndexedObject {
+      [DebuggerNonUserCode]
       get { return this.indexedObject; }
     }
     readonly Expression indexedObject;
@@ -9867,6 +10070,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the method to call is determined at run time, based on the runtime type of IndexedObject.
     /// </summary>
     public override bool IsVirtualCall {
+      [DebuggerNonUserCode]
       get {
         IMethodDefinition methodToCall = this.ResolvedMethod;
         return (methodToCall.IsVirtual && !(methodToCall.ContainingTypeDefinition.IsStruct) &&
@@ -9957,10 +10161,12 @@ namespace Microsoft.Cci.Ast {
     #region IArrayIndexer Members
 
     IEnumerable<IExpression> IArrayIndexer.Indices {
+      [DebuggerNonUserCode]
       get { foreach (Expression index in this.ConvertedArguments) yield return index.ProjectAsIExpression(); }
     }
 
     IExpression IArrayIndexer.IndexedObject {
+      [DebuggerNonUserCode]
       get { return this.IndexedObject.ProjectAsIExpression(); }
     }
 
@@ -9969,6 +10175,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -10031,6 +10238,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of (identifier, expression) pairs used to initialize the contructed object via assignments to fields and properties.
     /// </summary>
     public IEnumerable<NamedArgument> NamedArguments {
+      [DebuggerNonUserCode]
       get { return this.namedArguments; }
     }
     readonly IEnumerable<NamedArgument> namedArguments;
@@ -10039,6 +10247,7 @@ namespace Microsoft.Cci.Ast {
     /// The newly constructed object to initialize.
     /// </summary>
     public Expression ObjectToInitialize {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.objectToInitialize != null;
         return this.objectToInitialize;
@@ -10115,6 +10324,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "\\"; }
     }
 
@@ -10156,6 +10366,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
       }
@@ -10233,6 +10444,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "IsFalse"; }
     }
 
@@ -10253,6 +10465,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpBoolean;
@@ -10324,6 +10537,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "IsTrue"; }
     }
 
@@ -10373,6 +10587,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpBoolean;
@@ -10422,6 +10637,7 @@ namespace Microsoft.Cci.Ast {
     /// A block of statements that contains a return statement that returns the value of calling the lambda.
     /// </summary>
     public BlockStatement/*?*/ Body {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null <==> this.Expression != null;
         //^ ensures result != null <==> this.Expression == null;
@@ -10452,6 +10668,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression that specifies the result of calling the lambda.
     /// </summary>
     public Expression/*?*/ Expression {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null <==> this.Body != null;
         //^ ensures result != null <==> this.Body == null;
@@ -10490,6 +10707,7 @@ namespace Microsoft.Cci.Ast {
     /// The parameters.
     /// </summary>
     public IEnumerable<LambdaParameter> Parameters {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0; i < this.parameters.Count; i++) {
           LambdaParameter param = this.parameters[i];
@@ -10577,6 +10795,7 @@ namespace Microsoft.Cci.Ast {
     /// The lambda expression that is parameterized by this parameter.
     /// </summary>
     public Lambda ContainingLambda {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.containingLambda != null;
         return this.containingLambda;
@@ -10600,6 +10819,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the lambda assigns a value to this parameter.
     /// </summary>
     public bool IsOut {
+      [DebuggerNonUserCode]
       get { return (this.flags & 1) != 0; }
     }
 
@@ -10607,6 +10827,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the argument value is passed by reference.
     /// </summary>
     public bool IsRef {
+      [DebuggerNonUserCode]
       get { return (this.flags & 2) != 0; }
     }
 
@@ -10623,6 +10844,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of value that may be assigned to this parameter. May be null, in which case the type is inferred from usage.
     /// </summary>
     public TypeExpression/*?*/ ParameterType {
+      [DebuggerNonUserCode]
       get { return this.parameterType; }
     }
     readonly TypeExpression/*?*/ parameterType;
@@ -10631,6 +10853,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of the parameter.
     /// </summary>
     public NameDeclaration ParameterName {
+      [DebuggerNonUserCode]
       get { return this.parameterName; }
     }
     readonly NameDeclaration parameterName;
@@ -10681,6 +10904,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return this.Value != null && this.LeftOperand.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
@@ -10702,6 +10926,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "<<"; }
     }
 
@@ -10754,6 +10979,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -10768,6 +10994,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.Value != null && this.LeftOperand.ValueIsPolymorphicCompileTimeConstant; }
     }
 
@@ -10883,6 +11110,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "<"; }
     }
 
@@ -10988,6 +11216,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "<="; }
     }
 
@@ -11159,6 +11388,7 @@ namespace Microsoft.Cci.Ast {
     /// The conversion to lift. If this is null, the unlifted conversion is built-in (for example from int to long).
     /// </summary>
     public IMethodDefinition/*?*/ UserDefinedUnliftedConversion {
+      [DebuggerNonUserCode]
       get { return this.userDefinedUnliftedConversion; }
     }
     readonly IMethodDefinition/*?*/ userDefinedUnliftedConversion;
@@ -11204,6 +11434,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "Like"; }
     }
 
@@ -11279,6 +11510,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "&&"; }
     }
 
@@ -11422,6 +11654,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.BoolOpBool;
@@ -11490,6 +11723,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "!"; }
     }
 
@@ -11510,6 +11744,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpBoolean;
@@ -11519,6 +11754,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -11572,6 +11808,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "||"; }
     }
 
@@ -11712,6 +11949,7 @@ namespace Microsoft.Cci.Ast {
     /// The value to box in a typed reference.
     /// </summary>
     public Expression Operand {
+      [DebuggerNonUserCode]
       get { return this.operand; }
     }
     readonly Expression operand;
@@ -11737,6 +11975,7 @@ namespace Microsoft.Cci.Ast {
     #region IMakeTypedReference Members
 
     IExpression IMakeTypedReference.Operand {
+      [DebuggerNonUserCode]
       get { return this.Operand.ProjectAsIExpression(); }
     }
 
@@ -11745,6 +11984,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -11791,6 +12031,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The type of the target.</value>
     public TypeExpression TargetType {
+      [DebuggerNonUserCode]
       get { return this.targetType; }
     }
     readonly TypeExpression targetType;
@@ -12183,6 +12424,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the method to call is static (has no this parameter).
     /// </summary>
     public bool IsStaticCall {
+      [DebuggerNonUserCode]
       get { return this.ResolvedMethod.IsStatic; }
     }
 
@@ -12191,6 +12433,7 @@ namespace Microsoft.Cci.Ast {
     /// and can be removed before executing the call.
     /// </summary>
     public virtual bool IsTailCall {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -12198,6 +12441,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the method to call is determined at run time, based on the runtime type of ThisArgument.
     /// </summary>
     public override bool IsVirtualCall {
+      [DebuggerNonUserCode]
       get {
         IMethodDefinition methodToCall = this.ResolvedMethod;
         if (!methodToCall.IsVirtual) return false;
@@ -12224,6 +12468,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that, if correct, results in a delegate or method group.
     /// </summary>
     public Expression MethodExpression {
+      [DebuggerNonUserCode]
       get { return this.methodExpression; }
     }
     readonly Expression methodExpression;
@@ -12233,6 +12478,7 @@ namespace Microsoft.Cci.Ast {
     /// the reference will contain the types of the extra arguments.
     /// </summary>
     public IMethodReference MethodToCall {
+      [DebuggerNonUserCode]
       get {
         if (this.methodToCall == null)
           this.methodToCall = this.GetReferenceToMethodToCall();
@@ -12291,6 +12537,7 @@ namespace Microsoft.Cci.Ast {
     /// The this argument of the method to call.
     /// </summary>
     public virtual Expression ThisArgument {
+      [DebuggerNonUserCode]
       get
         //^ requires !this.ResolvedMethod.IsStatic;
       {
@@ -12371,6 +12618,7 @@ namespace Microsoft.Cci.Ast {
     #region IMethodCall Members
 
     IEnumerable<IExpression> IMethodCall.Arguments {
+      [DebuggerNonUserCode]
       get {
         foreach (Expression convertedArgument in this.ConvertedArguments)
           yield return convertedArgument.ProjectAsIExpression();
@@ -12378,6 +12626,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     IExpression IMethodCall.ThisArgument {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.ResolvedMethod == ((IMethodCall)this).MethodToCall.ResolvedMethod;
         return this.ThisArgument.ProjectAsIExpression();
@@ -12389,6 +12638,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -12457,6 +12707,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that selects one or more methods. For example, this can be a SimpleName or a QualifiedName.
     /// </summary>
     public Expression Selector {
+      [DebuggerNonUserCode]
       get { return this.selector; }
     }
     readonly Expression selector;
@@ -12528,6 +12779,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "%"; }
     }
 
@@ -12597,6 +12849,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -12708,6 +12961,7 @@ namespace Microsoft.Cci.Ast {
     /// The multiplication must be performed with a check for arithmetic overflow if the operands are integers.
     /// </summary>
     public virtual bool CheckOverflow {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & 1) != 0;
       }
@@ -12736,6 +12990,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "*"; }
     }
 
@@ -12809,6 +13064,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -12935,6 +13191,7 @@ namespace Microsoft.Cci.Ast {
     /// An empty collection of NamedArguments.
     /// </summary>
     new public static IEnumerable<NamedArgument> EmptyCollection {
+      [DebuggerNonUserCode]
       get { return NamedArgument.emptyCollection; }
     }
     readonly static IEnumerable<NamedArgument> emptyCollection = new List<NamedArgument>(0).AsReadOnly();
@@ -12943,6 +13200,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of the parameter or property or field that corresponds to the argument.
     /// </summary>
     public SimpleName ArgumentName {
+      [DebuggerNonUserCode]
       get { return this.argumentName; }
     }
     readonly SimpleName argumentName;
@@ -12951,6 +13209,7 @@ namespace Microsoft.Cci.Ast {
     /// The value of the argument.
     /// </summary>
     public Expression ArgumentValue {
+      [DebuggerNonUserCode]
       get { return this.argumentValue; }
     }
     readonly Expression argumentValue;
@@ -12959,6 +13218,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression that contains the named argument. For example, an object construction expression used in a custom attribute.
     /// </summary>
     public Expression ContainingExpression {
+      [DebuggerNonUserCode]
       get {
         //^ assume containingExpression != null;
         return this.containingExpression;
@@ -12970,6 +13230,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the named argument provides the value of a field.
     /// </summary>
     public bool IsField {
+      [DebuggerNonUserCode]
       get { return this.ResolvedDefinition is IFieldDefinition; }
     }
 
@@ -12999,6 +13260,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns either null or the parameter or property or field that corresponds to this argument.
     /// </summary>
     public object/*?*/ ResolvedDefinition {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result is IParameterDefinition || result is IPropertyDefinition || result is IFieldDefinition;
       {
@@ -13031,10 +13293,12 @@ namespace Microsoft.Cci.Ast {
     #region INamedArgument Members
 
     IName INamedArgument.ArgumentName {
+      [DebuggerNonUserCode]
       get { return this.ArgumentName.Name; }
     }
 
     IExpression INamedArgument.ArgumentValue {
+      [DebuggerNonUserCode]
       get { return this.ArgumentValue.ProjectAsIExpression(); }
     }
 
@@ -13043,14 +13307,17 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataNamedArgument Members
 
     IName IMetadataNamedArgument.ArgumentName {
+      [DebuggerNonUserCode]
       get { return this.ArgumentName.Name; }
     }
 
     IMetadataExpression IMetadataNamedArgument.ArgumentValue {
+      [DebuggerNonUserCode]
       get { return this.ArgumentValue.ProjectAsIMetadataExpression(); }
     }
 
     object/*?*/ IMetadataNamedArgument.ResolvedDefinition {
+      [DebuggerNonUserCode]
       get { return this.ResolvedDefinition; }
     }
 
@@ -13063,6 +13330,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ITypeReference IMetadataExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -13071,6 +13339,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -13119,6 +13388,7 @@ namespace Microsoft.Cci.Ast {
     /// Will be an instance of SimpleName, QualifiedName or AliasQualifiedName.
     /// </summary>
     public Expression Expression {
+      [DebuggerNonUserCode]
       get
         //^ ensures result is SimpleName || result is QualifiedName || result is AliasQualifiedName;
       {
@@ -13266,6 +13536,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that should be the name of an INamespace instance. Must be an instance of SimpleName, QualifiedName or AliasQualifiedName.
     /// </summary>
     public Expression Expression {
+      [DebuggerNonUserCode]
       get
         //^ ensures result is SimpleName || result is QualifiedName || result is AliasQualifiedName;
       {
@@ -13375,6 +13646,7 @@ namespace Microsoft.Cci.Ast {
     /// The (name) expression to resolve.
     /// </summary>
     public Expression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression expression;
@@ -13404,6 +13676,7 @@ namespace Microsoft.Cci.Ast {
     /// The types that the expression has resolved to.
     /// </summary>
     public IEnumerable<ITypeDefinition> Types {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetFilterEnumerable<INamespaceMember, ITypeDefinition>(this.namespaceScope.GetMembersNamed(this.simpleName.Name, this.simpleName.IgnoreCase));
       }
@@ -13412,6 +13685,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeGroup Members
 
     IExpression ITypeGroup.Expression {
+      [DebuggerNonUserCode]
       get { return this.Expression.ProjectAsIExpression(); }
     }
 
@@ -13443,6 +13717,7 @@ namespace Microsoft.Cci.Ast {
     /// The (name) expression to resolve.
     /// </summary>
     public Expression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression expression;
@@ -13510,6 +13785,7 @@ namespace Microsoft.Cci.Ast {
     /// The types that the expression has resolved to.
     /// </summary>
     public IEnumerable<ITypeDefinition> Types {
+      [DebuggerNonUserCode]
       get {
         return this.GetNestedTypes(this.containingType);
       }
@@ -13518,6 +13794,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeGroup Members
 
     IExpression ITypeGroup.Expression {
+      [DebuggerNonUserCode]
       get { return this.Expression.ProjectAsIExpression(); }
     }
 
@@ -13564,6 +13841,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The type of the element.</value>
     public TypeExpression ElementType {
+      [DebuggerNonUserCode]
       get { return this.elementType; }
     }
     readonly TypeExpression elementType;
@@ -13645,6 +13923,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "!="; }
     }
 
@@ -13752,6 +14031,7 @@ namespace Microsoft.Cci.Ast {
     /// The non nullable type on which this nullable type is to be based.
     /// </summary>
     public TypeExpression ElementType {
+      [DebuggerNonUserCode]
       get { return this.elementType; }
     }
     readonly TypeExpression elementType;
@@ -13856,6 +14136,7 @@ namespace Microsoft.Cci.Ast {
     /// The left operand.
     /// </summary>
     public Expression LeftOperand {
+      [DebuggerNonUserCode]
       get { return this.leftOperand; }
     }
     readonly Expression leftOperand;
@@ -13899,6 +14180,7 @@ namespace Microsoft.Cci.Ast {
     /// The right operand.
     /// </summary>
     public Expression RightOperand {
+      [DebuggerNonUserCode]
       get { return this.rightOperand; }
     }
     readonly Expression rightOperand;
@@ -14025,6 +14307,7 @@ namespace Microsoft.Cci.Ast {
     /// The target that is assigned to as a result of the method call.
     /// </summary>
     public TargetExpression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly TargetExpression expression;
@@ -14072,6 +14355,7 @@ namespace Microsoft.Cci.Ast {
     #region IOutArgument Members
 
     ITargetExpression IOutArgument.Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
 
@@ -14080,6 +14364,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -14141,6 +14426,7 @@ namespace Microsoft.Cci.Ast {
     /// The expression whose value at the start of method execution is referred to in the method postcondition.
     /// </summary>
     public Expression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression expression;
@@ -14196,6 +14482,7 @@ namespace Microsoft.Cci.Ast {
     #region IOldValue Members
 
     IExpression IOldValue.Expression {
+      [DebuggerNonUserCode]
       get { return this.Expression.ProjectAsIExpression(); }
     }
 
@@ -14204,6 +14491,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -14241,6 +14529,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get {
         if (this.Operand.ValueIsPolymorphicCompileTimeConstant && !this.Operand.CouldBeInterpretedAsNegativeSignedInteger) return true;
         return false;
@@ -14252,6 +14541,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 1 &lt;&lt; 31 could also be interpreted as a convenient way of writing 0x80000000.
     /// </summary>
     public override bool CouldBeInterpretedAsUnsignedInteger {
+      [DebuggerNonUserCode]
       get {
         if (this.Operand.ValueIsPolymorphicCompileTimeConstant && this.Operand.CouldBeInterpretedAsNegativeSignedInteger) return true;
         return false;
@@ -14305,6 +14595,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "~"; }
     }
 
@@ -14325,6 +14616,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpInt32;
@@ -14340,6 +14632,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -14386,6 +14679,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return this.ParenthesizedExpression.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
@@ -14436,6 +14730,7 @@ namespace Microsoft.Cci.Ast {
     /// The parenthesized expression.
     /// </summary>
     public Expression ParenthesizedExpression {
+      [DebuggerNonUserCode]
       get { return this.parenthesizedExpression; }
     }
     readonly Expression parenthesizedExpression;
@@ -14461,6 +14756,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns a string representation of the expression for debugging and logging uses.
+    /// </summary>
+    public override string ToString() {
+      return "(" + this.ParenthesizedExpression.ToString() + ")";
+    }
+
+    /// <summary>
     /// The type of value that the expression will evaluate to, as determined at compile time.
     /// </summary>
     public override ITypeDefinition Type {
@@ -14473,6 +14775,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.ParenthesizedExpression.ValueIsPolymorphicCompileTimeConstant; }
     }
 
@@ -14551,6 +14854,7 @@ namespace Microsoft.Cci.Ast {
     /// If the expression binds to an instance field then this property is not null and contains the instance.
     /// </summary>
     public override Expression/*?*/ Instance {
+      [DebuggerNonUserCode]
       get {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
         if (qualifierType == Dummy.Type) return null;
@@ -14617,6 +14921,7 @@ namespace Microsoft.Cci.Ast {
     /// The arguments to pass to the method, after they have been converted to match the parameters of the method.
     /// </summary>
     public IEnumerable<IExpression> Arguments {
+      [DebuggerNonUserCode]
       get { return this.arguments; }
     }
     readonly IEnumerable<IExpression> arguments;
@@ -14633,6 +14938,7 @@ namespace Microsoft.Cci.Ast {
     /// and can be removed before executing the call.
     /// </summary>
     public bool IsTailCall {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -14640,6 +14946,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that results at runtime in a function pointer that points to the actual method to call.
     /// </summary>
     public IExpression Pointer {
+      [DebuggerNonUserCode]
       get
         //^ ensures result.Type is IFunctionPointer;
       {
@@ -14679,6 +14986,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -14732,6 +15040,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of value that the pointer points to.
     /// </summary>
     public TypeExpression ElementType {
+      [DebuggerNonUserCode]
       get { return this.elementType; }
     }
     readonly TypeExpression elementType;
@@ -14815,6 +15124,7 @@ namespace Microsoft.Cci.Ast {
     /// The newly constructed collection to populate.
     /// </summary>
     public Expression CollectionToPopulate {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.collectionToPopulate != null;
         return this.collectionToPopulate;
@@ -14833,6 +15143,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of expressions that result in values that are added to the constructed object via calls to ICollection.Add.
     /// </summary>
     public IEnumerable<Expression> ElementValues {
+      [DebuggerNonUserCode]
       get { return this.elementValues; }
     }
     readonly IEnumerable<Expression> elementValues;
@@ -14926,6 +15237,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "--"; }
     }
 
@@ -14989,6 +15301,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "++"; }
     }
 
@@ -15160,6 +15473,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "--"; }
     }
 
@@ -15223,6 +15537,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "++"; }
     }
 
@@ -15457,6 +15772,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override Expression Condition {
+      [DebuggerNonUserCode]
       get {
         if (cachedCondition != null) return cachedCondition;
         Expression inRegionRef = NamespaceHelper.CreateInSystemDiagnosticsContractsCodeContractExpr(this.NameTable, "InRegion");
@@ -15579,6 +15895,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public virtual Expression/*?*/ Instance {
+      [DebuggerNonUserCode]
       get {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
         if (qualifierType == Dummy.Type) return null;
@@ -15631,6 +15948,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that binds to an object or a type or a namespace, or something else that can serve to constrain what the name binds to.
     /// </summary>
     public Expression Qualifier {
+      [DebuggerNonUserCode]
       get { return this.qualifier; }
     }
     readonly Expression qualifier;
@@ -15817,6 +16135,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of an entity that is associated with the qualifier object.
     /// </summary>
     public SimpleName SimpleName {
+      [DebuggerNonUserCode]
       get { return this.simpleName; }
     }
     readonly SimpleName simpleName;
@@ -15891,6 +16210,7 @@ namespace Microsoft.Cci.Ast {
     /// The Forall expression is true if this.Condition is true for every possible binding of values to these variables.
     /// </summary>
     public IEnumerable<LocalDeclarationsStatement> BoundVariables {
+      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.boundVariables.Count; i < n; i++)
           yield return this.boundVariables[i] = (LocalDeclarationsStatement)this.boundVariables[i].MakeCopyFor(this.ContainingBlock);
@@ -15916,6 +16236,7 @@ namespace Microsoft.Cci.Ast {
     /// Typically, the expression contains references to the variables defined in this.BoundVariables.
     /// </summary>
     public virtual Expression Condition {
+      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -16186,6 +16507,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression resulting in the number ending the range.
     /// </summary>
     public Expression EndValue {
+      [DebuggerNonUserCode]
       get { return this.endValue; }
     }
     readonly Expression endValue;
@@ -16227,6 +16549,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression resulting in the number starting the range.
     /// </summary>
     public Expression StartValue {
+      [DebuggerNonUserCode]
       get { return this.startValue; }
     }
     readonly Expression startValue;
@@ -16289,6 +16612,7 @@ namespace Microsoft.Cci.Ast {
     /// The target that is assigned to as a result of the method call, but whose value is also passed to the method at the start of the call.
     /// </summary>
     public AddressableExpression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly AddressableExpression expression;
@@ -16336,6 +16660,7 @@ namespace Microsoft.Cci.Ast {
     #region IRefArgument Members
 
     IAddressableExpression IRefArgument.Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
 
@@ -16345,6 +16670,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -16399,6 +16725,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return this.Value != null && this.LeftOperand.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
@@ -16406,6 +16733,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return ">>"; }
     }
 
@@ -16458,6 +16786,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -16472,6 +16801,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.Value != null && this.LeftOperand.ValueIsPolymorphicCompileTimeConstant; }
     }
 
@@ -16585,6 +16915,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "Is"; }
     }
 
@@ -16623,6 +16954,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
       }
@@ -16675,6 +17007,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "IsNot"; }
     }
 
@@ -16713,6 +17046,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
       }
@@ -16803,6 +17137,7 @@ namespace Microsoft.Cci.Ast {
     /// The this argument of the method.
     /// </summary>
     public override Expression ThisArgument {
+      [DebuggerNonUserCode]
       get
         //^^ requires !this.ResolvedMethod.IsStatic;
       {
@@ -16924,6 +17259,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -17070,6 +17406,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -17237,6 +17574,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the case of the simple name must be ignored when resolving it.
     /// </summary>
     public bool IgnoreCase {
+      [DebuggerNonUserCode]
       get { return this.ignoreCase; }
     }
     private readonly bool ignoreCase;
@@ -17257,6 +17595,7 @@ namespace Microsoft.Cci.Ast {
     /// The name corresponding to the source expression.
     /// </summary>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -17734,6 +18073,7 @@ namespace Microsoft.Cci.Ast {
     /// The type to size.
     /// </summary>
     public TypeExpression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly TypeExpression expression;
@@ -17818,12 +18158,14 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.Value != null; }
     }
 
     #region ISizeOf Members
 
     ITypeReference ISizeOf.TypeToSize {
+      [DebuggerNonUserCode]
       get { return this.Expression.ResolvedType; }
     }
 
@@ -17832,6 +18174,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -17881,6 +18224,7 @@ namespace Microsoft.Cci.Ast {
     /// An expression that results in a collection or sort (such as a string).
     /// </summary>
     public Expression Collection {
+      [DebuggerNonUserCode]
       get { return this.collection; }
     }
     readonly Expression collection;
@@ -17903,6 +18247,7 @@ namespace Microsoft.Cci.Ast {
     /// The number of elements that form part of the slice.
     /// </summary>
     public Expression Length {
+      [DebuggerNonUserCode]
       get { return this.length; }
     }
     readonly Expression length;
@@ -17945,6 +18290,7 @@ namespace Microsoft.Cci.Ast {
     /// The index of the first element from the collection that forms part of the slice.
     /// </summary>
     public Expression StartIndex {
+      [DebuggerNonUserCode]
       get { return this.startIndex; }
     }
     readonly Expression startIndex;
@@ -18005,6 +18351,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "&"; }
     }
 
@@ -18033,6 +18380,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
       }
@@ -18074,6 +18422,7 @@ namespace Microsoft.Cci.Ast {
     /// The subtraction must be performed with a check for arithmetic overflow if the operands are integers.
     /// </summary>
     public virtual bool CheckOverflow {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & 1) != 0;
       }
@@ -18102,6 +18451,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "-"; }
     }
 
@@ -18223,6 +18573,7 @@ namespace Microsoft.Cci.Ast {
       readonly Subtraction subtraction;
 
       public bool CheckOverflow {
+        [DebuggerNonUserCode]
         get { return this.subtraction.CheckOverflow; }
       }
 
@@ -18235,20 +18586,24 @@ namespace Microsoft.Cci.Ast {
       }
 
       public IExpression LeftOperand {
+        [DebuggerNonUserCode]
         get { return this.leftOperand.ProjectAsIExpression(); }
       }
       readonly Expression leftOperand;
 
       public IEnumerable<ILocation> Locations {
+        [DebuggerNonUserCode]
         get { return this.subtraction.Locations; }
       }
 
       public IExpression RightOperand {
+        [DebuggerNonUserCode]
         get { return this.rightOperand.ProjectAsIExpression(); }
       }
       readonly Expression rightOperand;
 
       public ITypeDefinition Type {
+        [DebuggerNonUserCode]
         get { return this.subtraction.Type; }
       }
 
@@ -18257,12 +18612,14 @@ namespace Microsoft.Cci.Ast {
       /// </summary>
       /// <value></value>
       public bool IsPure {
+        [DebuggerNonUserCode]
         get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
 
       #region IExpression Members
 
       ITypeReference IExpression.Type {
+        [DebuggerNonUserCode]
         get { return this.Type; }
       }
 
@@ -18286,6 +18643,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.Int32opInt32;
@@ -18474,6 +18832,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -18613,6 +18972,7 @@ namespace Microsoft.Cci.Ast {
     /// If the expression does not resolve to exactly one type, an error is added to the error collection of the compilation context.
     /// </summary>
     public ITypeDefinition ResolvedType {
+      [DebuggerNonUserCode]
       get {
         if (this.resolvedType == null) {
           //this.resolvedType = Dummy.Type;
@@ -18665,6 +19025,7 @@ namespace Microsoft.Cci.Ast {
     /// The type that will be represented by the System.Type instance.
     /// </summary>
     public TypeExpression Expression {
+      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly TypeExpression expression;
@@ -18726,6 +19087,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeOf Members
 
     ITypeReference ITypeOf.TypeToGet {
+      [DebuggerNonUserCode]
       get { return this.Expression.ResolvedType; }
     }
 
@@ -18735,6 +19097,7 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataTypeOf Members
 
     ITypeReference IMetadataTypeOf.TypeToGet {
+      [DebuggerNonUserCode]
       get { return this.Expression.ResolvedType; }
     }
 
@@ -18747,6 +19110,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     ITypeReference IMetadataExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -18755,6 +19119,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -18792,6 +19157,7 @@ namespace Microsoft.Cci.Ast {
     /// The subtraction must be performed with a check for arithmetic overflow if the operands are integers.
     /// </summary>
     public virtual bool CheckOverflow {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & 1) != 0;
       }
@@ -18840,6 +19206,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "-"; }
     }
 
@@ -18901,6 +19268,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpInt32;
@@ -18914,6 +19282,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -18953,6 +19322,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Expression ConvertedOperand {
+      [DebuggerNonUserCode]
       get {
         MethodCall/*?*/ overloadedCall = this.OverloadCall();
         if (overloadedCall != null) {
@@ -18969,6 +19339,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return this.Operand.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
@@ -19097,6 +19468,7 @@ namespace Microsoft.Cci.Ast {
     /// The value on which the operation is performed.
     /// </summary>
     public Expression Operand {
+      [DebuggerNonUserCode]
       get { return this.operand; }
     }
     readonly Expression operand;
@@ -19116,6 +19488,7 @@ namespace Microsoft.Cci.Ast {
     /// If no such method can be found, the value of this property is null.
     /// </summary>
     public MethodCall/*?*/ OverloadMethodCall {
+      [DebuggerNonUserCode]
       get {
         if (this.overloadMethodCall == null) {
           lock (GlobalLock.LockingObject) {
@@ -19186,12 +19559,14 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.Operand.ValueIsPolymorphicCompileTimeConstant; }
     }
 
     #region IUnaryOperation Members
 
     IExpression IUnaryOperation.Operand {
+      [DebuggerNonUserCode]
       get { return this.ConvertedOperand.ProjectAsIExpression(); }
     }
 
@@ -19200,6 +19575,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -19293,6 +19669,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpInt8;
@@ -19377,6 +19754,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return "+"; }
     }
 
@@ -19404,6 +19782,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
         yield return dummyMethods.OpInt32;
@@ -19419,6 +19798,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -19466,6 +19846,7 @@ namespace Microsoft.Cci.Ast {
     /// For example, 0x80000000, could be interpreted as a convenient way of writing int.MinValue.
     /// </summary>
     public override bool CouldBeInterpretedAsNegativeSignedInteger {
+      [DebuggerNonUserCode]
       get { return this.Operand.CouldBeInterpretedAsNegativeSignedInteger; }
     }
 
@@ -19507,6 +19888,7 @@ namespace Microsoft.Cci.Ast {
     /// The value on which the operation is performed.
     /// </summary>
     public Expression Operand {
+      [DebuggerNonUserCode]
       get { return this.operand; }
     }
     readonly Expression operand;
@@ -19546,6 +19928,7 @@ namespace Microsoft.Cci.Ast {
     /// Constant expressions such as 2*16 are polymorhpic if both operands are polymorhic.
     /// </summary>
     public override bool ValueIsPolymorphicCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.Operand.ValueIsPolymorphicCompileTimeConstant; }
     }
 
@@ -19609,6 +19992,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the string used to identify the operator in error messages
     /// </summary>
     protected override string OperationSymbolForErrorMessage {
+      [DebuggerNonUserCode]
       get { return ">>>"; }
     }
 
@@ -19625,6 +20009,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
       }
@@ -19743,6 +20128,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition Type {
+      [DebuggerNonUserCode]
       get { return this.Vector.Type.PlatformType.SystemIntPtr.ResolvedType; }
     }
 
@@ -19751,6 +20137,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public Expression Vector {
+      [DebuggerNonUserCode]
       get { return this.vector; }
     }
     readonly Expression vector;
@@ -19759,6 +20146,7 @@ namespace Microsoft.Cci.Ast {
     #region IVectorLength Members
 
     IExpression IVectorLength.Vector {
+      [DebuggerNonUserCode]
       get { return this.Vector.ProjectAsIExpression(); }
     }
 
@@ -19767,6 +20155,7 @@ namespace Microsoft.Cci.Ast {
     #region IExpression Members
 
     ITypeReference IExpression.Type {
+      [DebuggerNonUserCode]
       get { return this.Type; }
     }
 
@@ -19800,6 +20189,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public static string SystemDiagnosticsContractsCodeContractString {
+      [DebuggerNonUserCode]
       get { return "System.Diagnostics.Contracts.CodeContract"; }
     }
   }

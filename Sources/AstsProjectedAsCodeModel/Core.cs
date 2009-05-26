@@ -50,8 +50,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="result">A "unit of compilation" that holds the result of this compilation. Once the Compilation has been constructed, result can be navigated causing
     /// on demand compilation to occur.</param>
     /// <param name="options">Compilation options, for example whether or not checked arithmetic is the default.</param>
-    protected Compilation(ISourceEditHost hostEnvironment, Unit result, FrameworkOptions options) 
-    {
+    protected Compilation(ISourceEditHost hostEnvironment, Unit result, FrameworkOptions options) {
       this.hostEnvironment = hostEnvironment;
       this.result = result;
       this.options = options;
@@ -65,8 +64,7 @@ namespace Microsoft.Cci.Ast {
     /// on demand compilation to occur.</param>
     /// <param name="parts">A parts list that is incrementally different from the parts of previous version of this compilation.</param>
     /// <param name="options">Compilation options, for example whether or not checked arithmetic is the default.</param>
-    protected Compilation(ISourceEditHost hostEnvironment, Unit result, FrameworkOptions options, IEnumerable<CompilationPart> parts)
-    {
+    protected Compilation(ISourceEditHost hostEnvironment, Unit result, FrameworkOptions options, IEnumerable<CompilationPart> parts) {
       this.hostEnvironment = hostEnvironment;
       this.result = result;
       this.options = options;
@@ -79,6 +77,7 @@ namespace Microsoft.Cci.Ast {
     /// conversions to apply to the arguments.
     /// </summary>
     public BuiltinMethods BuiltinMethods {
+      [DebuggerNonUserCode]
       get {
         if (this.builtinMethods == null) {
           lock (GlobalLock.LockingObject) {
@@ -137,6 +136,7 @@ namespace Microsoft.Cci.Ast {
     /// The class that contains any global variables and funcions.
     /// </summary>
     public GlobalsClass GlobalsClass {
+      [DebuggerNonUserCode]
       get {
         if (this.globalsClass == null)
           this.globalsClass = new GlobalsClass(this);
@@ -158,6 +158,7 @@ namespace Microsoft.Cci.Ast {
     /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops. 
     /// </summary>
     public SourceContractProvider ContractProvider {
+      [DebuggerNonUserCode]
       get {
         if (this.contractProvider == null) {
           lock (this) {
@@ -175,6 +176,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public ModuleClass ModuleClass {
+      [DebuggerNonUserCode]
       get {
         if (this.moduleClass == null)
           this.moduleClass = new ModuleClass(this);
@@ -198,6 +200,7 @@ namespace Microsoft.Cci.Ast {
     /// Compilation options, for example whether or not checked arithmetic is the default.
     /// </summary>
     public FrameworkOptions Options {
+      [DebuggerNonUserCode]
       get { return this.options; }
     }
     readonly FrameworkOptions options;
@@ -206,6 +209,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of ASTs, each of which corresponds to source input to the compilation.
     /// </summary>
     public IEnumerable<CompilationPart> Parts {
+      [DebuggerNonUserCode]
       get {
         if (this.parts == null) {
           lock (GlobalLock.LockingObject) {
@@ -251,6 +255,7 @@ namespace Microsoft.Cci.Ast {
     /// metadata in a PE file, as well as compiled method bodies that corresponds to the instructions streams in a PE file.
     /// </summary>
     public Unit Result {
+      [DebuggerNonUserCode]
       get { return this.result; }
     }
     readonly Unit result;
@@ -259,10 +264,11 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public ISourceLocationProvider SourceLocationProvider {
+      [DebuggerNonUserCode]
       get {
         if (this.sourceLocationProvider == null)
           this.sourceLocationProvider = this.GetSourceLocationProvider();
-        return this.sourceLocationProvider; 
+        return this.sourceLocationProvider;
       }
     }
     ISourceLocationProvider/*?*/ sourceLocationProvider;
@@ -276,6 +282,7 @@ namespace Microsoft.Cci.Ast {
     /// A set of units comprised by the result of the compilation along with all of the units referenced by this compilation.
     /// </summary>
     public UnitSet UnitSet {
+      [DebuggerNonUserCode]
       get {
         if (this.unitSet == null) {
           lock (GlobalLock.LockingObject) {
@@ -303,16 +310,19 @@ namespace Microsoft.Cci.Ast {
     #region ICompilation Members
 
     IPlatformType ICompilation.PlatformType {
+      [DebuggerNonUserCode]
       get { return this.PlatformType; }
     }
 
     IUnit ICompilation.Result {
+      [DebuggerNonUserCode]
       get {
         return this.Result;
       }
     }
 
     IUnitSet ICompilation.UnitSet {
+      [DebuggerNonUserCode]
       get { return this.UnitSet; }
     }
 
@@ -354,7 +364,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="helper">The helper object the new copy. This should be different from the helper object the template part.</param>
     /// <param name="template">The compilation part to copy.</param>
     protected CompilationPart(LanguageSpecificCompilationHelper helper, CompilationPart template)
-      : base(template.SourceLocation) 
+      : base(template.SourceLocation)
       //^ requires helper != template.Helper;
     {
       this.helper = helper;
@@ -380,6 +390,7 @@ namespace Microsoft.Cci.Ast {
     /// A class that contains global variables and methods as its members.
     /// </summary>
     public GlobalDeclarationContainerClass GlobalDeclarationContainer {
+      [DebuggerNonUserCode]
       get { return this.globalDeclarationContainer; }
     }
     readonly GlobalDeclarationContainerClass globalDeclarationContainer;
@@ -408,6 +419,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public virtual RootNamespaceDeclaration RootNamespace {
       //^ [MustOverride] //TODO Boogie: perhaps MustOverride should also mean that the override may not call back? If not, an additional attribute is needed.
+      [DebuggerNonUserCode]
       get {
         //^ assume this.rootNamespace != null; //This assumes that the derived class will not call back here
         return this.rootNamespace;
@@ -539,9 +551,9 @@ namespace Microsoft.Cci.Ast {
       //^ ensures result.CompilationPart.GetType() == this.GetType();
     {
       while (true)
-        //^ invariant newMember is NamespaceDeclarationMember || newMember is NamespaceTypeDeclaration || newMember is NestedNamespaceDeclaration;
-        // ^ invariant oldMember.ContainingNamespaceDeclaration.CompilationPart == this;
-        // ^ invariant edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDocument);
+      //^ invariant newMember is NamespaceDeclarationMember || newMember is NamespaceTypeDeclaration || newMember is NestedNamespaceDeclaration;
+      // ^ invariant oldMember.ContainingNamespaceDeclaration.CompilationPart == this;
+      // ^ invariant edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDocument);
       {
         //^ assume oldMember.ContainingNamespaceDeclaration.CompilationPart == this;
         List<INamespaceDeclarationMember> newMembers = new List<INamespaceDeclarationMember>(oldMember.ContainingNamespaceDeclaration.Members);
@@ -798,6 +810,7 @@ namespace Microsoft.Cci.Ast {
     /// Call this only when holding a lock on GlobalLock.LockingObject. Use the result only while holding the lock.
     /// </summary>
     internal Dictionary<MethodDeclaration, IPlatformInvokeInformation> PlatformInvokeInformationTable {
+      [DebuggerNonUserCode]
       get {
         if (this.platformInvokeInformationTable == null)
           this.platformInvokeInformationTable = new Dictionary<MethodDeclaration, IPlatformInvokeInformation>();
@@ -859,6 +872,7 @@ namespace Microsoft.Cci.Ast {
     /// The source location that should be contained by namespace or type member, if any, that this instance is going to try and find.
     /// </summary>
     protected ISourceLocation LocationToContain {
+      [DebuggerNonUserCode]
       get { return this.locationToContain; }
     }
     private ISourceLocation locationToContain;
@@ -868,6 +882,7 @@ namespace Microsoft.Cci.Ast {
     /// May be null, in which case either no such member exists, or this visitor has not yet been dispatched on a member that contains the location.
     /// </summary>
     public INamespaceDeclarationMember/*?*/ MostNestedContainingNamespaceDeclarationMember {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
       {
@@ -883,6 +898,7 @@ namespace Microsoft.Cci.Ast {
     /// May be null, in which case either no such member exists, or this visitor has not yet been dispatched on a member that contains the location.
     /// </summary>
     public ITypeDeclarationMember/*?*/ MostNestedContainingTypeDeclarationMember {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
       {
@@ -1016,8 +1032,8 @@ namespace Microsoft.Cci.Ast {
             }
           }
           //The constant cannot be converted to the target type without a loss of information
-          if (expression.ContainingBlock.UseCheckedArithmetic) 
-          //TODO: this should be !expression.ContainingBlock.UseUncheckedArithmetic, the latter being true only if an explicit unchecked expression is encountered
+          if (expression.ContainingBlock.UseCheckedArithmetic)
+            //TODO: this should be !expression.ContainingBlock.UseUncheckedArithmetic, the latter being true only if an explicit unchecked expression is encountered
             return new DummyExpression(expression.SourceLocation);
         }
       } else {
@@ -1066,14 +1082,14 @@ namespace Microsoft.Cci.Ast {
         //^ assume sType == this.RemoveNullableWrapper(sourceType);
         if (targetIsNullable) return this.LiftedConversionExpression(expression, sType, sourceType, tType, targetType, isExplicitConversion);
         if (sType.IsEnum && TypeHelper.TypesAreEquivalent(targetType, systemEnum)) return this.ConversionExpression(expression, tType);
-        if (TypeHelper.TypesAreEquivalent(tType, systemValueType) || TypeHelper.TypesAreEquivalent(tType, systemObject) || (tType.IsInterface && TypeHelper.Type1ImplementsType2(sType, tType))) 
+        if (TypeHelper.TypesAreEquivalent(tType, systemValueType) || TypeHelper.TypesAreEquivalent(tType, systemObject) || (tType.IsInterface && TypeHelper.Type1ImplementsType2(sType, tType)))
           return this.ConversionExpression(expression, tType); //boxes the nullable type, which strips the wrapper
-        if (isExplicitConversion) 
+        if (isExplicitConversion)
           return this.Conversion(this.UnboxedNullable(expression, sType, sourceType), tType, allowUserDefinedConversion, isExplicitConversion);
         return new DummyExpression(expression.SourceLocation); //Can't implicitly convert from a nullable type to anything but a base type or implemented interface
       } else if (sType.IsValueType) {
         if (sType.IsEnum && TypeHelper.TypesAreEquivalent(targetType, systemEnum)) return this.ConversionExpression(expression, tType);
-        if (TypeHelper.TypesAreEquivalent(tType, systemValueType) || TypeHelper.TypesAreEquivalent(tType, systemObject) || (tType.IsInterface && TypeHelper.Type1ImplementsType2(sType, tType))) 
+        if (TypeHelper.TypesAreEquivalent(tType, systemValueType) || TypeHelper.TypesAreEquivalent(tType, systemObject) || (tType.IsInterface && TypeHelper.Type1ImplementsType2(sType, tType)))
           return this.ConversionExpression(expression, tType);
       }
       if (TypeHelper.Type1DerivesFromOrIsTheSameAsType2(sType, tType) || (targetType.IsInterface && TypeHelper.Type1ImplementsType2(sType, tType) || TypeHelper.Type1IsCovariantWithType2(sType, tType)))
@@ -1417,7 +1433,7 @@ namespace Microsoft.Cci.Ast {
         //TODO: ignore method if it is not visible (needs an extra parameter)
         if (genericArgumentCount == 0)
           yield return method;
-        else if (method.GenericParameterCount != genericArgumentCount) 
+        else if (method.GenericParameterCount != genericArgumentCount)
           continue;
         else
           yield return new GenericMethodInstance(method, genericArguments, this.Compilation.HostEnvironment.InternFactory);
@@ -1503,8 +1519,7 @@ namespace Microsoft.Cci.Ast {
       return this.ImplicitConversion(expression, targetType);
     }
 
-    struct Pair : IEquatable<Pair>
-    {
+    struct Pair : IEquatable<Pair> {
       internal Expression s;
       internal uint t;
 
@@ -1530,7 +1545,7 @@ namespace Microsoft.Cci.Ast {
 
       #endregion
     }
-    
+
     Dictionary<Pair, bool> expressionConversionCache = new Dictionary<Pair, bool>();
     DoubleHashtable<object> typeConversionCache = new DoubleHashtable<object>();
 
@@ -1584,7 +1599,7 @@ namespace Microsoft.Cci.Ast {
       }
       if (targetType.IsDelegate) {
         AnonymousMethod/*?*/ anonMeth = expression as AnonymousMethod;
-        if (anonMeth != null) return this.ImplicitConversionFromAnonymousMethodExists(anonMeth, targetType);        
+        if (anonMeth != null) return this.ImplicitConversionFromAnonymousMethodExists(anonMeth, targetType);
       }
       //TODO: lambdas
       ITypeDefinition expressionType = expression.Type;
@@ -1599,13 +1614,14 @@ namespace Microsoft.Cci.Ast {
     /// Returns true if a value of an enumeration type can be implicitly converted to an integer type.
     /// </summary>
     protected virtual bool ImplicitEnumToIntegerConversionIsAllowed {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     /// <summary>
     /// Returns true if the given anonymous method expression can be implicitly converted to the given target type.
     /// </summary>
-    public virtual bool ImplicitConversionFromAnonymousMethodExists(AnonymousMethod anonMeth, ITypeDefinition targetType) 
+    public virtual bool ImplicitConversionFromAnonymousMethodExists(AnonymousMethod anonMeth, ITypeDefinition targetType)
       //^ requires targetType.IsDelegate;
     {
       return true; //TODO: implement this for real
@@ -1627,17 +1643,17 @@ namespace Microsoft.Cci.Ast {
       bool sourceIsNullable = sType != sourceType;
       bool targetIsNullable = tType != targetType;
       if (sourceIsNullable && !targetIsNullable) {
-        if (sourceType.IsEnum && TypeHelper.TypesAreEquivalent(targetType, this.PlatformType.SystemEnum)) 
+        if (sourceType.IsEnum && TypeHelper.TypesAreEquivalent(targetType, this.PlatformType.SystemEnum))
           result = true;
-        else 
+        else
           result = TypeHelper.TypesAreEquivalent(targetType, this.PlatformType.SystemValueType);
       } else {
-        if (this.ImplicitStandardConversionExists(sType, tType)) 
+        if (this.ImplicitStandardConversionExists(sType, tType))
           result = true;
-        else 
-        if (sType.TypeCode == PrimitiveTypeCode.NotPrimitive || tType.TypeCode == PrimitiveTypeCode.NotPrimitive) {
-          if (this.ImplicitUserDefinedConversionExists(sType, tType)) result = true;
-        } 
+        else
+          if (sType.TypeCode == PrimitiveTypeCode.NotPrimitive || tType.TypeCode == PrimitiveTypeCode.NotPrimitive) {
+            if (this.ImplicitUserDefinedConversionExists(sType, tType)) result = true;
+          }
       }
       this.typeConversionCache.Add(sourceType.InternedKey, targetType.InternedKey, result);
       return result;
@@ -1942,8 +1958,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns true if the given type is to be treated as a pointer type
     /// </summary>
-    public virtual bool IsPointerType(ITypeDefinition type)
-    {
+    public virtual bool IsPointerType(ITypeDefinition type) {
       return type is IPointerTypeReference;
     }
 
@@ -1973,6 +1988,7 @@ namespace Microsoft.Cci.Ast {
     /// A string identifying the specific language for which this is a compilation helper.
     /// </summary>
     public string LanguageName {
+      [DebuggerNonUserCode]
       get { return this.languageName; }
     }
     readonly string languageName;
@@ -2059,7 +2075,7 @@ namespace Microsoft.Cci.Ast {
           if (!allowTypeMismatch) {
             if (mParam.IsOut) {
               if (!(argument is OutArgument)) return false;
-            }else if (mParam.IsByReference) {
+            } else if (mParam.IsByReference) {
               if (!(argument is RefArgument)) return false;
             } else {
               if (argument is RefArgument || argument is OutArgument) return false;
@@ -2733,7 +2749,7 @@ namespace Microsoft.Cci.Ast {
         ambiguousMatches.Add(candidate);
       }
       if (ambiguousMatches != null) return Dummy.Method;
-      if (bestSoFar == Dummy.Method && allowTypeMismatches) 
+      if (bestSoFar == Dummy.Method && allowTypeMismatches)
         return this.SingleCandidateWithTheGivenNumberOfArguments(candidateMethods, arguments);
       else
         return bestSoFar;
@@ -2773,7 +2789,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="error">The error to report.</param>
     public void ReportError(IErrorMessage error) {
       this.Compilation.HostEnvironment.ReportError(error);
-    }    
+    }
 
     /// <summary>
     /// Reports an error to the effect that the given expression cannot be implicitly converted to the given type.
@@ -2786,9 +2802,9 @@ namespace Microsoft.Cci.Ast {
     public virtual void ReportFailedImplicitConversion(Expression expression, ITypeDefinition targetType) {
       if (expression.HasErrors() || targetType == Dummy.Type) return;
       if (expression.Type == Dummy.Type) {
-        if (targetType.IsDelegate) 
+        if (targetType.IsDelegate)
           this.ReportFailedMethodGroupToDelegateConversion(expression, targetType);
-        else 
+        else
           this.ReportError(new AstErrorMessage(expression, Error.NoImplicitConversionForValue, expression.SourceLocation.Source, this.GetTypeName(targetType)));
         return;
       }
@@ -2796,7 +2812,7 @@ namespace Microsoft.Cci.Ast {
       string targetTypeName = this.GetTypeName(targetType);
       if (this.ExpressionIsNumericLiteral(expression)) {
         //^ assert expression.Value != null;
-          this.ReportError(new AstErrorMessage(expression, Error.ConstOutOfRange, String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", expression.Value), targetTypeName));
+        this.ReportError(new AstErrorMessage(expression, Error.ConstOutOfRange, String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", expression.Value), targetTypeName));
       } else if (!this.ReportAreYouMissingACast || this.ExplicitConversion(expression, targetType) is DummyExpression)
         this.ReportError(new AstErrorMessage(expression, Error.NoImplicitConversion, sourceTypeName, targetTypeName));
       else
@@ -2806,8 +2822,8 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
-    protected virtual bool ReportAreYouMissingACast
-    {
+    protected virtual bool ReportAreYouMissingACast {
+      [DebuggerNonUserCode]
       get { return true; }
     }
 
@@ -2840,13 +2856,13 @@ namespace Microsoft.Cci.Ast {
         if (methodToComplainAbout == null) methodToComplainAbout = method;
       }
       if (sawOnlyGenericMethods && methodToComplainAbout != null) {
-        this.ReportError(new AstErrorMessage(expression, Error.CantInferMethTypeArgs, 
+        this.ReportError(new AstErrorMessage(expression, Error.CantInferMethTypeArgs,
           this.GetMethodSignature(methodToComplainAbout, NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters|NameFormattingOptions.UseTypeKeywords)));
         return;
       }
       if (methodToComplainAbout != null && this.ParametersAreConsistent(invokeMethod, methodToComplainAbout)) {
         this.ReportError(new AstErrorMessage(expression, Error.BadReturnType,
-          this.GetMethodSignature(methodToComplainAbout, 
+          this.GetMethodSignature(methodToComplainAbout,
             NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters|NameFormattingOptions.UseTypeKeywords)));
         //TODO: related error locations
         return;
@@ -2860,7 +2876,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns true if expression represents a compile time constant that can be regarded as a single numeric literal, such as -1.
     /// </summary>
-    public virtual bool ExpressionIsNumericLiteral(Expression expression) 
+    public virtual bool ExpressionIsNumericLiteral(Expression expression)
       //^ ensures result ==> expression.Value != null;
     {
       UnaryOperation/*?*/ unary = expression as UnaryOperation;
@@ -2921,6 +2937,7 @@ namespace Microsoft.Cci.Ast {
     /// A language specific object that formats type member signatures according to syntax of the language.
     /// </summary>
     SignatureFormatter SignatureFormatter {
+      [DebuggerNonUserCode]
       get {
         if (this.signatureFormatter == null)
           this.signatureFormatter = this.CreateSignatureFormatter();
@@ -2955,6 +2972,7 @@ namespace Microsoft.Cci.Ast {
     /// A language specific object that formats type names according to syntax of the language.
     /// </summary>
     TypeNameFormatter TypeNameFormatter {
+      [DebuggerNonUserCode]
       get {
         if (this.typeNameFormatter == null)
           this.typeNameFormatter = this.CreateTypeNameFormatter();
@@ -3047,10 +3065,10 @@ namespace Microsoft.Cci.Ast {
       IMethodDefinition/*?*/ mostSpecificConversion = null;
       ITypeDefinition sourceTypeOrBase = sourceType;
       while (sourceTypeOrBase != Dummy.Type)
-        //^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
+      //^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
       {
         foreach (ITypeDefinitionMember member in sourceTypeOrBase.GetMembersNamed(conversionName, false))
-          // ^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
+        // ^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
         {
           //^ assume mostSpecificSourceType == null <==> mostSpecificTargetType == null;
           IMethodDefinition/*?*/ conversion = member as IMethodDefinition;
@@ -3091,7 +3109,7 @@ namespace Microsoft.Cci.Ast {
         //^ assume mostSpecificSourceType == null <==> mostSpecificTargetType == null;
       }
       foreach (ITypeDefinitionMember member in targetType.GetMembersNamed(conversionName, false))
-        // ^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
+      // ^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
       {
         //^ assume mostSpecificSourceType == null <==> mostSpecificTargetType == null;
         IMethodDefinition/*?*/ conversion = member as IMethodDefinition;
@@ -3202,6 +3220,7 @@ namespace Microsoft.Cci.Ast {
     /// The collection of member instances that are members of this scope.
     /// </summary>
     public IEnumerable<MemberType> Members {
+      [DebuggerNonUserCode]
       get { return this.members; }
     }
     IEnumerable<MemberType> members;
@@ -3211,7 +3230,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An object that has been derived from a portion of a source document.
   /// </summary>
-  public abstract class SourceItem : ISourceItem {
+  public abstract class SourceItem : ISourceItem, IObjectWithLocations {
 
     /// <summary>
     /// Initializes an object that has been derived from a portion of a source document.
@@ -3241,6 +3260,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection with exactly one element, namely this.SourceLocation.
     /// </summary>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.SourceLocation); }
     }
 
@@ -3249,6 +3269,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     public ISourceLocation SourceLocation {
+      [DebuggerNonUserCode]
       get {
         SourceLocationBuilder/*?*/ bldr = this.sourceLocation as SourceLocationBuilder;
         if (bldr != null)
@@ -3295,7 +3316,7 @@ namespace Microsoft.Cci.Ast {
               yield return psl;
           }
         }
-      }        
+      }
     }
 
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsForDefinitionOf(ILocalDefinition localDefinition) {
@@ -7320,6 +7341,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Statement/*?*/ MostNestedStatement {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
       {

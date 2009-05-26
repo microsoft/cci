@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Cci.UtilityDataStructures;
+using System.Diagnostics;
 
 //^ using Microsoft.Contracts;
 
@@ -46,6 +47,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The base classes.</value>
     public override IEnumerable<ITypeReference> BaseClasses {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
     }
 
@@ -54,6 +56,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ITypeReference> Constraints {
+      [DebuggerNonUserCode]
       get {
         bool hadConstraints = false;
         foreach (GenericParameterDeclaration parameterDeclaration in this.GetDeclarations()) {
@@ -71,6 +74,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ushort Index {
+      [DebuggerNonUserCode]
       get { return this.index; }
     }
     readonly ushort index;
@@ -82,6 +86,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override bool IsReferenceType {
+      [DebuggerNonUserCode]
       get {
         if (((int)this.flags & 0x00004000) != 0) {
           this.flags &= (TypeDefinition.Flags)~0x00004000;
@@ -108,6 +113,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override bool IsValueType {
+      [DebuggerNonUserCode]
       get {
         if (((int)this.flags & 0x00004000) != 0) {
           this.flags &= (TypeDefinition.Flags)~0x00004000;
@@ -132,6 +138,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool MustBeReferenceType {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == (((int)this.flags & 0x00200000) != 0);
       {
@@ -146,6 +153,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool MustBeValueType {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == (((int)this.flags & 0x00010000) != 0);
       {
@@ -160,6 +168,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool MustHaveDefaultConstructor {
+      [DebuggerNonUserCode]
       get { return ((int)this.flags & 0x00008000) != 0; }
     }
 
@@ -168,6 +177,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -207,12 +217,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeParameterVariance Variance {
+      [DebuggerNonUserCode]
       get { return ((TypeParameterVariance)((int)this.flags >> 4)) & TypeParameterVariance.Mask; }
     }
 
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
+      [DebuggerNonUserCode]
       get {
         return this.Attributes;
       }
@@ -228,6 +240,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedTypeReference Members
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -273,6 +286,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeDefinition DefiningType {
+      [DebuggerNonUserCode]
       get
         //^ ensures result.IsGeneric;
       {
@@ -303,6 +317,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The parameter declarations.</value>
     public IEnumerable<GenericTypeParameterDeclaration> ParameterDeclarations {
+      [DebuggerNonUserCode]
       get { return this.parameterDeclarations.AsReadOnly(); }
     }
     //^ [Owned]    
@@ -314,12 +329,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IPlatformType PlatformType {
+      [DebuggerNonUserCode]
       get { return this.DefiningType.PlatformType; }
     }
 
     #region IGenericTypeParameter Members
 
     ITypeDefinition IGenericTypeParameter.DefiningType {
+      [DebuggerNonUserCode]
       get { return this.DefiningType; }
     }
 
@@ -332,6 +349,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get {
         foreach (GenericParameterDeclaration parameterDeclaration in this.ParameterDeclarations)
           yield return parameterDeclaration.SourceLocation;
@@ -343,10 +361,12 @@ namespace Microsoft.Cci.Ast {
     #region IGenericTypeParameterReference Members
 
     ITypeReference IGenericTypeParameterReference.DefiningType {
+      [DebuggerNonUserCode]
       get { return this.DefiningType; }
     }
 
     IGenericTypeParameter IGenericTypeParameterReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -386,6 +406,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value><c>true</c> if this instance is public; otherwise, <c>false</c>.</value>
     public override bool IsPublic {
+      [DebuggerNonUserCode]
       get { return true; }
     }
 
@@ -394,6 +415,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IEnumerable<ITypeDefinitionMember> Members {
+      [DebuggerNonUserCode]
       get {
         if (this.members == null) {
           var memberList = new List<ITypeDefinitionMember>();
@@ -417,6 +439,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IPlatformType PlatformType {
+      [DebuggerNonUserCode]
       get { return this.compilation.PlatformType; }
     }
 
@@ -452,6 +475,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ContainingType {
+      [DebuggerNonUserCode]
       get { return this.containingType; }
     }
     readonly ITypeDefinition containingType;
@@ -469,6 +493,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodReference ImplementedMethod {
+      [DebuggerNonUserCode]
       get { return this.implementedMethod; }
     }
     readonly IMethodReference implementedMethod;
@@ -478,6 +503,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodReference ImplementingMethod {
+      [DebuggerNonUserCode]
       get { return this.implementingMethod; }
     }
     readonly IMethodReference implementingMethod;
@@ -506,6 +532,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IPlatformType PlatformType {
+      [DebuggerNonUserCode]
       get { return this.compilation.PlatformType; }
     }
 
@@ -514,6 +541,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override bool IsPublic {
+      [DebuggerNonUserCode]
       get { return true; }
     }
 
@@ -549,6 +577,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IUnitNamespace ContainingUnitNamespace {
+      [DebuggerNonUserCode]
       get { return this.containingUnitNamespace; }
     }
     readonly IUnitNamespace containingUnitNamespace;
@@ -559,6 +588,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IPlatformType PlatformType {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations)
           return typeDeclaration.Compilation.PlatformType;
@@ -597,6 +627,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsPublic {
+      [DebuggerNonUserCode]
       get {
         TypeMemberVisibility result = ((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask;
         if (result == TypeMemberVisibility.Default) {
@@ -618,6 +649,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public INamespaceDefinition ContainingNamespace {
+      [DebuggerNonUserCode]
       get { return this.ContainingUnitNamespace; }
     }
 
@@ -630,6 +662,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public INamespaceDefinition Container {
+      [DebuggerNonUserCode]
       get { return this.containingUnitNamespace; }
     }
 
@@ -642,6 +675,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IScope<INamespaceMember> ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.containingUnitNamespace; }
     }
 
@@ -654,6 +688,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -679,6 +714,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations)
           yield return typeDeclaration.SourceLocation;
@@ -690,10 +726,12 @@ namespace Microsoft.Cci.Ast {
     #region INamespaceTypeReference Members
 
     IUnitNamespaceReference INamespaceTypeReference.ContainingUnitNamespace {
+      [DebuggerNonUserCode]
       get { return this.ContainingUnitNamespace; }
     }
 
     INamespaceTypeDefinition INamespaceTypeReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -702,6 +740,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedTypeReference Members
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -731,6 +770,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IPlatformType PlatformType {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition.PlatformType; }
     }
 
@@ -749,6 +789,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeMemberVisibility Visibility {
+      [DebuggerNonUserCode]
       get {
         TypeMemberVisibility result = ((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask;
         if (result == TypeMemberVisibility.Default) {
@@ -768,6 +809,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get { return this.containingTypeDefinition; }
     }
     ITypeDefinition containingTypeDefinition;
@@ -781,6 +823,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition Container {
+      [DebuggerNonUserCode]
       get { return this.containingTypeDefinition; }
     }
 
@@ -793,6 +836,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IScope<ITypeDefinitionMember> ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.containingTypeDefinition; }
     }
 
@@ -805,6 +849,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly IName name;
@@ -825,6 +870,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeMemberReference Members
 
     ITypeReference ITypeMemberReference.ContainingType {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -833,6 +879,7 @@ namespace Microsoft.Cci.Ast {
     #region INestedTypeReference Members
 
     INestedTypeDefinition INestedTypeReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -845,6 +892,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations)
           yield return typeDeclaration.SourceLocation;
@@ -860,6 +908,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -868,6 +917,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedTypeReference Members
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -954,6 +1004,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual ushort Alignment {
+      [DebuggerNonUserCode]
       get {
         if (this.alignment == 0) {
           foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations) {
@@ -974,6 +1025,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.typeDeclarations) {
           foreach (ICustomAttribute customAttribute in typeDeclaration.Attributes)
@@ -988,6 +1040,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual IEnumerable<ITypeReference> BaseClasses {
+      [DebuggerNonUserCode]
       get {
         if (this.baseClasses == null) {
           lock (GlobalLock.LockingObject) {
@@ -1085,6 +1138,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      [DebuggerNonUserCode]
       get {
         foreach (IMethodImplementation implementation in this.ImplementationMap.Values) {
           if (implementation.ImplementingMethod.ResolvedMethod.Visibility != TypeMemberVisibility.Public)
@@ -1103,6 +1157,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual IEnumerable<GenericTypeParameter> GenericParameters {
+      [DebuggerNonUserCode]
       get { return this.genericParameters.AsReadOnly(); }
     }
     readonly List<GenericTypeParameter> genericParameters = new List<GenericTypeParameter>();
@@ -1112,6 +1167,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual ushort GenericParameterCount {
+      [DebuggerNonUserCode]
       get {
         int result = this.genericParameters.Count;
         //^ assume !this.IsGeneric ==> result == 0;
@@ -1133,6 +1189,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     MultiHashtable<IMethodImplementation> ImplementationMap {
+      [DebuggerNonUserCode]
       get {
         if (this.implementationMap == null)
           this.implementationMap = this.ComputeImplementationMap();
@@ -1315,6 +1372,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual IEnumerable<ITypeReference> Interfaces {
+      [DebuggerNonUserCode]
       get {
         if (this.interfaces == null) {
           lock (GlobalLock.LockingObject) {
@@ -1336,6 +1394,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IGenericTypeInstanceReference InstanceType {
+      [DebuggerNonUserCode]
       get
         //^^ requires this.IsGeneric;
         //^^ ensures !result.IsGeneric;
@@ -1362,6 +1421,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsAbstract {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & (Flags.Abstract | Flags.Interface)) != 0;
       }
@@ -1373,6 +1433,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsClass {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Class) != 0;
       }
@@ -1383,6 +1444,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsDelegate {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Delegate) != 0;
       }
@@ -1393,6 +1455,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsEnum {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Enum) != 0;
       }
@@ -1403,6 +1466,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.genericParameters.Count > 0;
       {
@@ -1415,6 +1479,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsInterface {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Interface) != 0;
       }
@@ -1427,6 +1492,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsReferenceType {
+      [DebuggerNonUserCode]
       get { return (this.flags & (Flags.Enum | Flags.ValueType | Flags.Static)) == 0; }
     }
 
@@ -1435,6 +1501,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsSealed {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Sealed) != 0;
       }
@@ -1445,6 +1512,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsStatic {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Static) != 0;
       }
@@ -1457,6 +1525,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsValueType {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.ValueType) != 0;
       }
@@ -1467,6 +1536,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsStruct {
+      [DebuggerNonUserCode]
       get {
         return (this.flags & Flags.Struct) != 0;
       }
@@ -1485,6 +1555,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations) {
           foreach (ITypeDefinitionMember member in typeDeclaration.PrivateHelperMembers)
@@ -1526,6 +1597,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations) {
           foreach (ISecurityAttribute securityAttribute in typeDeclaration.SecurityAttributes)
@@ -1538,6 +1610,7 @@ namespace Microsoft.Cci.Ast {
     /// Size of an object of this type. In bytes. If zero, the size is unspecified and will be determined at runtime.
     /// </summary>
     public virtual uint SizeOf {
+      [DebuggerNonUserCode]
       get {
         if (this.sizeOf == 0) {
           foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations) {
@@ -1571,6 +1644,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual PrimitiveTypeCode TypeCode {
+      [DebuggerNonUserCode]
       get { return PrimitiveTypeCode.NotPrimitive; }
       //TODO: need to return something else when compiling mscorlib and this is a special type
       //get a map from the compilation's target platform
@@ -1580,6 +1654,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of the type declarations that collectively define this type definition.
     /// </summary>
     public IEnumerable<TypeDeclaration> TypeDeclarations {
+      [DebuggerNonUserCode]
       get { return this.typeDeclarations.AsReadOnly(); }
     }
     readonly List<TypeDeclaration> typeDeclarations = new List<TypeDeclaration>();
@@ -1589,6 +1664,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference UnderlyingType {
+      [DebuggerNonUserCode]
       get
         //^^ requires this.IsEnum;
       {
@@ -1651,6 +1727,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeDefinition Members
 
     IEnumerable<IGenericTypeParameter> ITypeDefinition.GenericParameters {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<GenericTypeParameter, IGenericTypeParameter>(this.GenericParameters);
       }
@@ -1660,6 +1737,7 @@ namespace Microsoft.Cci.Ast {
     /// Layout of the type.
     /// </summary>
     public LayoutKind Layout {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations) {
           LayoutKind layout = typeDeclaration.Layout;
@@ -1674,6 +1752,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return false; } //TODO: when could it be special?
     }
 
@@ -1682,6 +1761,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsComObject {
+      [DebuggerNonUserCode]
       get { return false; } //TODO: when could this be true?
     }
 
@@ -1690,6 +1770,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSerializable {
+      [DebuggerNonUserCode]
       get { return false; } //TODO: get this from a custom attribute
     }
 
@@ -1698,6 +1779,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsBeforeFieldInit {
+      [DebuggerNonUserCode]
       get { return !this.IsDelegate; } //TODO: when could this be false?
     }
 
@@ -1706,6 +1788,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public StringFormatKind StringFormat {
+      [DebuggerNonUserCode]
       get { return StringFormatKind.Ansi; } //TODO: get this from a custom attribute
     }
 
@@ -1714,6 +1797,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return false; } //TODO: when could this be true?
     }
 
@@ -1722,6 +1806,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool HasDeclarativeSecurity {
+      [DebuggerNonUserCode]
       get { return false; } //TODO: get this from the attributes
     }
 
@@ -1730,6 +1815,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IEventDefinition> Events {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IEventDefinition>(this.Members); }
     }
 
@@ -1738,6 +1824,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IFieldDefinition> Fields {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IFieldDefinition>(this.Members); }
     }
 
@@ -1753,6 +1840,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IEnumerable<ITypeDefinitionMember> Members {
+      [DebuggerNonUserCode]
       get {
         foreach (ITypeDefinitionMember member in this.GetBaseMembers()) {
           yield return member;
@@ -1774,6 +1862,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IMethodDefinition> Methods {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IMethodDefinition>(this.Members); }
     }
 
@@ -1782,6 +1871,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<INestedTypeDefinition> NestedTypes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, INestedTypeDefinition>(this.Members); }
     }
 
@@ -1790,6 +1880,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IPropertyDefinition> Properties {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IPropertyDefinition>(this.Members); }
     }
 
@@ -1798,12 +1889,14 @@ namespace Microsoft.Cci.Ast {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
+      [DebuggerNonUserCode]
       get {
         return this.Attributes;
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeDeclaration declaration in this.TypeDeclarations)
           yield return declaration.SourceLocation;
@@ -1819,6 +1912,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsAlias {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1827,6 +1921,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IAliasForType AliasForType {
+      [DebuggerNonUserCode]
       get { return Dummy.AliasForType; }
     }
 
@@ -1834,6 +1929,7 @@ namespace Microsoft.Cci.Ast {
     /// The list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     public IEnumerable<ICustomModifier> CustomModifiers {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
@@ -1841,6 +1937,7 @@ namespace Microsoft.Cci.Ast {
     /// This parameter has one or more custom modifiers associated with it.
     /// </summary>
     public bool IsModified {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1850,6 +1947,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -1859,6 +1957,7 @@ namespace Microsoft.Cci.Ast {
     /// references to the given metadata model objects.
     /// </summary>
     public IInternFactory InternFactory {
+      [DebuggerNonUserCode]
       get { return this.internFactory; }
     }
     readonly IInternFactory internFactory;
@@ -1868,6 +1967,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public uint InternedKey {
+      [DebuggerNonUserCode]
       get {
         if (this.internedKey == 0) {
           this.internedKey = this.InternFactory.GetTypeReferenceInternedKey(this);

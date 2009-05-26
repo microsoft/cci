@@ -33,117 +33,143 @@ namespace Microsoft.Cci.Ast {
     #region IMethodDefinition Members
 
     public bool AcceptsExtraArguments {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public IMethodBody Body {
-      get { 
+      [DebuggerNonUserCode]
+      get {
         //^ assume false;
-        return Dummy.MethodBody; 
+        return Dummy.MethodBody;
       }
     }
 
     public CallingConvention CallingConvention {
+      [DebuggerNonUserCode]
       get { return CallingConvention.Standard; }
     }
 
     public IEnumerable<IGenericMethodParameter> GenericParameters {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
     }
 
     public bool HasDeclarativeSecurity {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool HasExplicitThisParameter {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsAbstract {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsAccessCheckedOnOverride {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsCil {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsExternal {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsForwardReference {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsGeneric {
-      get 
+      get
         //^ ensures result == false;
-      { 
-        return false; 
+      {
+        return false;
       }
     }
 
     public bool IsHiddenBySignature {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsNativeCode {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsNewSlot {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsNeverInlined {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsNeverOptimized {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsPlatformInvoke {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsRuntimeImplemented {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsRuntimeInternal {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsSealed {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsStatic {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsSynchronized {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsVirtual {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsUnmanaged {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -154,42 +180,52 @@ namespace Microsoft.Cci.Ast {
     readonly List<IParameterDefinition> parameters;
 
     public ushort ParameterCount {
+      [DebuggerNonUserCode]
       get { return (ushort)this.parameters.Count; }
     }
 
     public bool PreserveSignature {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool RequiresSecurityObject {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
     public bool ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool ReturnValueIsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public IMarshallingInformation ReturnValueMarshallingInformation {
+      [DebuggerNonUserCode]
       get { return Dummy.MarshallingInformation; }
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
     }
 
@@ -202,18 +238,22 @@ namespace Microsoft.Cci.Ast {
     }
 
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.resultType; }
     }
 
     public bool IsConstructor {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsStaticConstructor {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public IPlatformInvokeInformation PlatformInvokeData {
+      [DebuggerNonUserCode]
       get { return Dummy.PlatformInvokeInformation; }
     }
 
@@ -222,15 +262,18 @@ namespace Microsoft.Cci.Ast {
     #region ITypeDefinitionMember Members
 
     public ITypeDefinition ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
     //^ [Pure]
     public ushort GenericParameterCount {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
     public TypeMemberVisibility Visibility {
+      [DebuggerNonUserCode]
       get { return TypeMemberVisibility.Other; }
     }
 
@@ -239,6 +282,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<ITypeDefinition> Members
 
     public ITypeDefinition Container {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
@@ -247,6 +291,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.name; }
     }
 
@@ -255,10 +300,12 @@ namespace Microsoft.Cci.Ast {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
@@ -274,6 +321,7 @@ namespace Microsoft.Cci.Ast {
     #region IScopeMember<IScope<ITypeDefinitionMember>> Members
 
     public IScope<ITypeDefinitionMember> ContainingScope {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
@@ -282,6 +330,7 @@ namespace Microsoft.Cci.Ast {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
     }
 
@@ -290,14 +339,17 @@ namespace Microsoft.Cci.Ast {
     #region IMethodReference Members
 
     uint IMethodReference.InternedKey {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
     public IMethodDefinition ResolvedMethod {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
     }
 
@@ -306,10 +358,12 @@ namespace Microsoft.Cci.Ast {
     #region ITypeMemberReference Members
 
     public ITypeReference ContainingType {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -338,6 +392,7 @@ namespace Microsoft.Cci.Ast {
     /// bool operator op(bool x, bool y)
     /// </summary>
     public IMethodDefinition BoolOpBool {
+      [DebuggerNonUserCode]
       get {
         if (this.boolOpBool == null) {
           lock (GlobalLock.LockingObject) {
@@ -354,6 +409,7 @@ namespace Microsoft.Cci.Ast {
     /// short operator op(short x, short y)
     /// </summary>
     public IMethodDefinition Int16opInt16 {
+      [DebuggerNonUserCode]
       get {
         if (this.int16opInt16 == null) {
           lock (GlobalLock.LockingObject) {
@@ -370,6 +426,7 @@ namespace Microsoft.Cci.Ast {
     /// int operator op(int x, int y)
     /// </summary>
     public IMethodDefinition Int32opInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.int32opInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -386,6 +443,7 @@ namespace Microsoft.Cci.Ast {
     /// int operator op(int x, uint y)
     /// </summary>
     public IMethodDefinition Int32opUInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.int32opUInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -402,6 +460,7 @@ namespace Microsoft.Cci.Ast {
     /// long operator op(long x, int y)
     /// </summary>
     public IMethodDefinition Int64opInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.int64opInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -418,6 +477,7 @@ namespace Microsoft.Cci.Ast {
     /// long operator op(long x, long y)
     /// </summary>
     public IMethodDefinition Int64opInt64 {
+      [DebuggerNonUserCode]
       get {
         if (this.int64opInt64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -434,6 +494,7 @@ namespace Microsoft.Cci.Ast {
     /// long operator op(long x, uint y)
     /// </summary>
     public IMethodDefinition Int64opUInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.int64opUInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -450,6 +511,7 @@ namespace Microsoft.Cci.Ast {
     /// long operator op(long x, ulong y)
     /// </summary>
     public IMethodDefinition Int64opUInt64 {
+      [DebuggerNonUserCode]
       get {
         if (this.int64opUInt64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -466,6 +528,7 @@ namespace Microsoft.Cci.Ast {
     /// sbyte operator op(sbyte x, sbyte y)
     /// </summary>
     public IMethodDefinition Int8opInt8 {
+      [DebuggerNonUserCode]
       get {
         if (this.int8opInt8 == null) {
           lock (GlobalLock.LockingObject) {
@@ -482,6 +545,7 @@ namespace Microsoft.Cci.Ast {
     /// uint operator op(uint x, int y)
     /// </summary>
     public IMethodDefinition UInt32opInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.uint32opInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -498,6 +562,7 @@ namespace Microsoft.Cci.Ast {
     /// uint operator op(uint x, uint y)
     /// </summary>
     public IMethodDefinition UInt32opUInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.uint32opUInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -514,6 +579,7 @@ namespace Microsoft.Cci.Ast {
     /// ulong operator op(ulong x, int y)
     /// </summary>
     public IMethodDefinition UInt64opInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.uint64opInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -530,6 +596,7 @@ namespace Microsoft.Cci.Ast {
     /// ulong operator op(ulong x, int y)
     /// </summary>
     public IMethodDefinition UInt64opUInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.uint64opUInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -546,6 +613,7 @@ namespace Microsoft.Cci.Ast {
     /// ulong operator op(ulong x, ulong y)
     /// </summary>
     public IMethodDefinition UInt64opUInt64 {
+      [DebuggerNonUserCode]
       get {
         if (this.uint64opUInt64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -562,6 +630,7 @@ namespace Microsoft.Cci.Ast {
     /// UIntPtr operator op(UIntPtr x, UIntPtr y)
     /// </summary>
     public IMethodDefinition UIntPtrOpUIntPtr {
+      [DebuggerNonUserCode]
       get {
         if (this.uIntPtrOpUIntPtr == null) {
           lock (GlobalLock.LockingObject) {
@@ -578,6 +647,7 @@ namespace Microsoft.Cci.Ast {
     /// void* operator op(void* x, void* y)
     /// </summary>
     public IMethodDefinition VoidPtrOpVoidPtr {
+      [DebuggerNonUserCode]
       get {
         if (this.voidPtrOpVoidPtr == null) {
           lock (GlobalLock.LockingObject) {
@@ -594,6 +664,7 @@ namespace Microsoft.Cci.Ast {
     /// float operator op(float x, float y)
     /// </summary>
     public IMethodDefinition Float32opFloat32 {
+      [DebuggerNonUserCode]
       get {
         if (this.float32opFloat32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -610,6 +681,7 @@ namespace Microsoft.Cci.Ast {
     /// double operator op(double x, double y)
     /// </summary>
     public IMethodDefinition Float64opFloat64 {
+      [DebuggerNonUserCode]
       get {
         if (this.float64opFloat64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -626,6 +698,7 @@ namespace Microsoft.Cci.Ast {
     /// decimal operator op(decimal x, decimal y)
     /// </summary>
     public IMethodDefinition DecimalOpDecimal {
+      [DebuggerNonUserCode]
       get {
         if (this.decimalOpDecimal == null) {
           lock (GlobalLock.LockingObject) {
@@ -642,6 +715,7 @@ namespace Microsoft.Cci.Ast {
     /// bool operator op(object x, object y)
     /// </summary>
     public IMethodDefinition ObjectOpObject {
+      [DebuggerNonUserCode]
       get {
         if (this.objectOpObject == null) {
           lock (GlobalLock.LockingObject) {
@@ -658,6 +732,7 @@ namespace Microsoft.Cci.Ast {
     /// string operator op(object x, string y)
     /// </summary>
     public IMethodDefinition ObjectOpString {
+      [DebuggerNonUserCode]
       get {
         if (this.objectOpString == null) {
           lock (GlobalLock.LockingObject) {
@@ -674,6 +749,7 @@ namespace Microsoft.Cci.Ast {
     /// bool operator op(bool x)
     /// </summary>
     public IMethodDefinition OpBoolean {
+      [DebuggerNonUserCode]
       get {
         if (this.opBoolean == null) {
           lock (GlobalLock.LockingObject) {
@@ -690,6 +766,7 @@ namespace Microsoft.Cci.Ast {
     /// char operator op(char x)
     /// </summary>
     public IMethodDefinition OpChar {
+      [DebuggerNonUserCode]
       get {
         if (this.opChar == null) {
           lock (GlobalLock.LockingObject) {
@@ -706,6 +783,7 @@ namespace Microsoft.Cci.Ast {
     /// decimal operator op(decimal x)
     /// </summary>
     public IMethodDefinition OpDecimal {
+      [DebuggerNonUserCode]
       get {
         if (this.opDecimal == null) {
           lock (GlobalLock.LockingObject) {
@@ -722,6 +800,7 @@ namespace Microsoft.Cci.Ast {
     /// float operator op(float x)
     /// </summary>
     public IMethodDefinition OpFloat32 {
+      [DebuggerNonUserCode]
       get {
         if (this.opFloat32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -738,6 +817,7 @@ namespace Microsoft.Cci.Ast {
     /// double operator op(double x)
     /// </summary>
     public IMethodDefinition OpFloat64 {
+      [DebuggerNonUserCode]
       get {
         if (this.opFloat64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -754,6 +834,7 @@ namespace Microsoft.Cci.Ast {
     /// sbyte operator op(sbyte x)
     /// </summary>
     public IMethodDefinition OpInt8 {
+      [DebuggerNonUserCode]
       get {
         if (this.opInt8 == null) {
           lock (GlobalLock.LockingObject) {
@@ -770,6 +851,7 @@ namespace Microsoft.Cci.Ast {
     /// short operator op(short x)
     /// </summary>
     public IMethodDefinition OpInt16 {
+      [DebuggerNonUserCode]
       get {
         if (this.opInt16 == null) {
           lock (GlobalLock.LockingObject) {
@@ -786,6 +868,7 @@ namespace Microsoft.Cci.Ast {
     /// int operator op(int x)
     /// </summary>
     public IMethodDefinition OpInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.opInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -802,6 +885,7 @@ namespace Microsoft.Cci.Ast {
     /// long operator op(long x)
     /// </summary>
     public IMethodDefinition OpInt64 {
+      [DebuggerNonUserCode]
       get {
         if (this.opInt64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -818,6 +902,7 @@ namespace Microsoft.Cci.Ast {
     /// byte operator op(byte x)
     /// </summary>
     public IMethodDefinition OpUInt8 {
+      [DebuggerNonUserCode]
       get {
         if (this.opUInt8 == null) {
           lock (GlobalLock.LockingObject) {
@@ -834,6 +919,7 @@ namespace Microsoft.Cci.Ast {
     /// ushort operator op(ushort x)
     /// </summary>
     public IMethodDefinition OpUInt16 {
+      [DebuggerNonUserCode]
       get {
         if (this.opUInt16 == null) {
           lock (GlobalLock.LockingObject) {
@@ -850,6 +936,7 @@ namespace Microsoft.Cci.Ast {
     /// uint operator op(uint x)
     /// </summary>
     public IMethodDefinition OpUInt32 {
+      [DebuggerNonUserCode]
       get {
         if (this.opUInt32 == null) {
           lock (GlobalLock.LockingObject) {
@@ -866,6 +953,7 @@ namespace Microsoft.Cci.Ast {
     /// ulong operator op(ulong x)
     /// </summary>
     public IMethodDefinition OpUInt64 {
+      [DebuggerNonUserCode]
       get {
         if (this.opUInt64 == null) {
           lock (GlobalLock.LockingObject) {
@@ -882,6 +970,7 @@ namespace Microsoft.Cci.Ast {
     /// string operator op(string x, object y)
     /// </summary>
     public IMethodDefinition StringOpObject {
+      [DebuggerNonUserCode]
       get {
         if (this.stringOpObject == null) {
           lock (GlobalLock.LockingObject) {
@@ -898,6 +987,7 @@ namespace Microsoft.Cci.Ast {
     /// string operator op(string x, string y)
     /// </summary>
     public IMethodDefinition StringOpString {
+      [DebuggerNonUserCode]
       get {
         if (this.stringOpString == null) {
           lock (GlobalLock.LockingObject) {
@@ -961,7 +1051,7 @@ namespace Microsoft.Cci.Ast {
       if (this.enumPlusNumMethodFor == null)
         this.enumPlusNumMethodFor = new Dictionary<ITypeDefinition, IMethodDefinition>();
       IMethodDefinition/*?*/ result;
-      if (this.enumPlusNumMethodFor.TryGetValue(enumType, out result)){
+      if (this.enumPlusNumMethodFor.TryGetValue(enumType, out result)) {
         //^ assume result != null;
         return result;
       }
@@ -1112,6 +1202,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<MethodDefinition> Accessors {
+      [DebuggerNonUserCode]
       get {
         foreach (MethodDeclaration accessor in this.declaration.Accessors)
           yield return accessor.MethodDefinition;
@@ -1122,6 +1213,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public override ITypeDeclarationMember Declaration {
+      [DebuggerNonUserCode]
       get { return this.declaration; }
     }
     readonly EventDeclaration declaration;
@@ -1138,10 +1230,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodDefinition Adder {
+      [DebuggerNonUserCode]
       get {
         MethodDeclaration/*?*/ adder = this.declaration.Adder;
         if (adder == null) return Dummy.Method; //TODO: get a default implementation from the declaration
-        return adder.MethodDefinition; 
+        return adder.MethodDefinition;
       }
     }
 
@@ -1150,6 +1243,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public MethodDefinition/*?*/ Caller {
+      [DebuggerNonUserCode]
       get {
         MethodDeclaration/*?*/ callerDeclaration = this.declaration.Caller;
         if (callerDeclaration == null) return null;
@@ -1161,6 +1255,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IEnumerable<EventDeclaration> EventDeclarations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<EventDeclaration>(this.declaration); }
     }
 
@@ -1168,6 +1263,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the event gets special treatment from the runtime.
     /// </summary>
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsRuntimeSpecial; }
     }
 
@@ -1176,6 +1272,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsSpecialName; }
     }
 
@@ -1184,10 +1281,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodDefinition Remover {
+      [DebuggerNonUserCode]
       get {
         MethodDeclaration/*?*/ remover = this.declaration.Remover;
         if (remover == null) return Dummy.Method; //TODO: get a default implementation from the declaration
-        return remover.MethodDefinition; 
+        return remover.MethodDefinition;
       }
     }
 
@@ -1198,24 +1296,29 @@ namespace Microsoft.Cci.Ast {
     #region IEventDefinition Members
 
     IEnumerable<IMethodReference> IEventDefinition.Accessors {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<MethodDefinition, IMethodReference>(this.Accessors);
       }
     }
 
     IMethodReference IEventDefinition.Adder {
+      [DebuggerNonUserCode]
       get { return this.Adder; }
     }
 
     IMethodReference/*?*/ IEventDefinition.Caller {
+      [DebuggerNonUserCode]
       get { return this.Caller; }
     }
 
     IMethodReference IEventDefinition.Remover {
+      [DebuggerNonUserCode]
       get { return this.Remover; }
     }
 
     ITypeReference IEventDefinition.Type {
+      [DebuggerNonUserCode]
       get { return this.declaration.Type.ResolvedType; }
     }
 
@@ -1240,6 +1343,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public uint BitLength {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.BitLength; }
     }
 
@@ -1248,8 +1352,9 @@ namespace Microsoft.Cci.Ast {
     /// If the field does not have a valid compile time value, Dummy.Constant is returned.
     /// </summary>
     public CompileTimeConstant CompileTimeValue {
+      [DebuggerNonUserCode]
       get {
-        return this.FieldDeclaration.CompileTimeValue; 
+        return this.FieldDeclaration.CompileTimeValue;
       }
     }
 
@@ -1258,6 +1363,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override ITypeDeclarationMember Declaration {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration; }
     }
 
@@ -1272,6 +1378,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public FieldDeclaration FieldDeclaration {
+      [DebuggerNonUserCode]
       get { return this.fieldDeclaration; }
     }
     readonly FieldDeclaration fieldDeclaration;
@@ -1280,6 +1387,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IEnumerable<FieldDeclaration> FieldDeclarations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<FieldDeclaration>(this.FieldDeclaration); }
     }
 
@@ -1287,6 +1395,7 @@ namespace Microsoft.Cci.Ast {
     /// The field is aligned on a bit boundary and uses only the BitLength number of least significant bits of the representation of a Type value.
     /// </summary>
     public bool IsBitField {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.IsBitField; }
     }
 
@@ -1295,10 +1404,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsCompileTimeConstant {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.FieldDeclaration.IsCompileTimeConstant;
       {
-        return this.FieldDeclaration.IsCompileTimeConstant; 
+        return this.FieldDeclaration.IsCompileTimeConstant;
       }
     }
 
@@ -1307,6 +1417,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsMapped {
+      [DebuggerNonUserCode]
       get {
         bool result = this.FieldDeclaration.IsMapped;
         //^ assume this.IsStatic == this.FieldDeclaration.IsStatic; //post condition of this.IsStatic;
@@ -1319,10 +1430,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.FieldDeclaration.IsMarshalledExplicitly;
       {
-        return this.FieldDeclaration.IsMarshalledExplicitly; 
+        return this.FieldDeclaration.IsMarshalledExplicitly;
       }
     }
 
@@ -1331,6 +1443,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNotSerialized {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.IsNotSerialized; }
     }
 
@@ -1339,6 +1452,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsReadOnly {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.IsReadOnly; }
     }
 
@@ -1347,6 +1461,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.IsRuntimeSpecial; }
     }
 
@@ -1355,6 +1470,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.IsSpecialName; }
     }
 
@@ -1363,10 +1479,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsStatic {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.FieldDeclaration.IsStatic;
       {
-        return this.FieldDeclaration.IsStatic; 
+        return this.FieldDeclaration.IsStatic;
       }
     }
 
@@ -1375,6 +1492,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public uint Offset {
+      [DebuggerNonUserCode]
       get { return this.FieldDeclaration.Offset; }  //  TODO: Implement this...
     }
 
@@ -1383,6 +1501,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public int SequenceNumber {
+      [DebuggerNonUserCode]
       get { return -1; }  //  TODO: Implement this...
     }
 
@@ -1391,11 +1510,12 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMarshallingInformation MarshallingInformation {
+      [DebuggerNonUserCode]
       get
         //^^ requires this.IsMarshalledExplicitly;
       {
         //^ assume this.FieldDeclaration.IsMarshalledExplicitly; //follows from post condition on this.IsMarshalledExplicitly
-        return this.FieldDeclaration.MarshallingInformation; 
+        return this.FieldDeclaration.MarshallingInformation;
       }
     }
 
@@ -1404,13 +1524,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get {
         if (this.type == null) {
           if (this.FieldDeclaration.IsVolatile) {
             ICustomModifier volatileModifier = new CustomModifier(true, this.FieldDeclaration.PlatformType.SystemRuntimeCompilerServicesIsVolatile);
             this.type = new ModifiedTypeReference(this.fieldDeclaration.Compilation.HostEnvironment, this.fieldDeclaration.Type.ResolvedType,
               IteratorHelper.GetSingletonEnumerable(volatileModifier));
-          }else
+          } else
             this.type = this.FieldDeclaration.Type.ResolvedType;
         }
         return this.type;
@@ -1422,6 +1543,7 @@ namespace Microsoft.Cci.Ast {
     /// Information of the location where this field is mapped to
     /// </summary>
     public ISectionBlock FieldMapping {
+      [DebuggerNonUserCode]
       get
         //^^ requires this.IsMapped;
       {
@@ -1432,13 +1554,15 @@ namespace Microsoft.Cci.Ast {
     #region IFieldDefinition Members
 
     IMetadataConstant IFieldDefinition.CompileTimeValue {
+      [DebuggerNonUserCode]
       get {
         if (this.CompileTimeValue is DummyConstant) return Dummy.Constant;
-        return this.CompileTimeValue; 
+        return this.CompileTimeValue;
       }
     }
 
     IMarshallingInformation IFieldDefinition.MarshallingInformation {
+      [DebuggerNonUserCode]
       get { return this.MarshallingInformation; }
     }
 
@@ -1452,6 +1576,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IFieldDefinition ResolvedField {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -1460,6 +1585,7 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataConstantContainer
 
     IMetadataConstant IMetadataConstantContainer.Constant {
+      [DebuggerNonUserCode]
       get { return this.CompileTimeValue; }
     }
 
@@ -1483,42 +1609,52 @@ namespace Microsoft.Cci.Ast {
     #region IParameterDefinition Members
 
     public ISignature ContainingSignature {
+      [DebuggerNonUserCode]
       get { return this.parameterTypeInformation.ContainingSignature; }
     }
 
     public IMetadataConstant DefaultValue {
+      [DebuggerNonUserCode]
       get { return Dummy.Constant; }
     }
 
     public bool HasDefaultValue {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsIn {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsOptional {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsOut {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public bool IsParameterArray {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
     public IMarshallingInformation MarshallingInformation {
+      [DebuggerNonUserCode]
       get { return Dummy.MarshallingInformation; }
     }
 
     public ITypeReference ParamArrayElementType {
+      [DebuggerNonUserCode]
       get { return Dummy.TypeReference; }
     }
 
@@ -1527,10 +1663,12 @@ namespace Microsoft.Cci.Ast {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
@@ -1539,6 +1677,7 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     public IName Name {
+      [DebuggerNonUserCode]
       get { return Dummy.Name; }
     }
 
@@ -1547,6 +1686,7 @@ namespace Microsoft.Cci.Ast {
     #region IParameterListEntry Members
 
     public ushort Index {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
@@ -1555,18 +1695,22 @@ namespace Microsoft.Cci.Ast {
     #region IParameterTypeInformation Members
 
     public IEnumerable<ICustomModifier> CustomModifiers {
+      [DebuggerNonUserCode]
       get { return this.parameterTypeInformation.CustomModifiers; }
     }
 
     public bool IsByReference {
+      [DebuggerNonUserCode]
       get { return this.parameterTypeInformation.IsByReference; }
     }
 
     public bool IsModified {
+      [DebuggerNonUserCode]
       get { return this.parameterTypeInformation.IsModified; }
     }
 
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.parameterTypeInformation.Type; }
     }
 
@@ -1575,6 +1719,7 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataConstantContainer
 
     IMetadataConstant IMetadataConstantContainer.Constant {
+      [DebuggerNonUserCode]
       get { return this.DefaultValue; }
     }
 
@@ -1599,6 +1744,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IFunctionPointerTypeReference FunctionPointer {
+      [DebuggerNonUserCode]
       get { return this.functionPointer; }
     }
     readonly IFunctionPointerTypeReference functionPointer;
@@ -1610,6 +1756,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool AcceptsExtraArguments {
+      [DebuggerNonUserCode]
       get { return (this.functionPointer.CallingConvention & CallingConvention.ExtraArguments) != 0; }
     }
 
@@ -1618,6 +1765,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual IMethodBody Body {
+      [DebuggerNonUserCode]
       get {
         //^ assume false;
         return Dummy.MethodBody;
@@ -1629,6 +1777,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CallingConvention CallingConvention {
+      [DebuggerNonUserCode]
       get { return this.functionPointer.CallingConvention; }
     }
 
@@ -1637,6 +1786,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IGenericMethodParameter> GenericParameters {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
     }
 
@@ -1645,6 +1795,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool HasDeclarativeSecurity {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1653,6 +1804,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool HasExplicitThisParameter {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1661,6 +1813,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsAbstract {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1669,6 +1822,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsAccessCheckedOnOverride {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1677,6 +1831,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsCil {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1685,6 +1840,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsExternal {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1693,6 +1849,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsForwardReference {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1701,6 +1858,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == false;
       {
@@ -1714,6 +1872,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsHiddenBySignature {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1722,6 +1881,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNativeCode {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1731,6 +1891,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNewSlot {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1739,6 +1900,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNeverInlined {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1747,6 +1909,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNeverOptimized {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1755,6 +1918,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsPlatformInvoke {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1763,6 +1927,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeImplemented {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1771,6 +1936,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeInternal {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1779,6 +1945,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1787,6 +1954,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSealed {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1795,6 +1963,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1803,6 +1972,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsStatic {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1811,6 +1981,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSynchronized {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1819,6 +1990,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsVirtual {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1827,6 +1999,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsUnmanaged {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1851,6 +2024,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ushort ParameterCount {
+      [DebuggerNonUserCode]
       get { return (ushort)IteratorHelper.EnumerableCount(this.FunctionPointer.Parameters); }
     }
 
@@ -1859,6 +2033,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool PreserveSignature {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1868,6 +2043,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool RequiresSecurityObject {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1876,6 +2052,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
@@ -1884,6 +2061,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
@@ -1892,6 +2070,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1900,6 +2079,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1908,6 +2088,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1916,6 +2097,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMarshallingInformation ReturnValueMarshallingInformation {
+      [DebuggerNonUserCode]
       get { return Dummy.MarshallingInformation; }
     }
 
@@ -1924,6 +2106,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
     }
 
@@ -1941,6 +2124,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.functionPointer.Type; }
     }
 
@@ -1949,6 +2133,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsConstructor {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1957,6 +2142,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsStaticConstructor {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -1965,6 +2151,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IPlatformInvokeInformation PlatformInvokeData {
+      [DebuggerNonUserCode]
       get { return Dummy.PlatformInvokeInformation; }
     }
 
@@ -1977,6 +2164,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual ITypeDefinition ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
@@ -1986,6 +2174,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ushort GenericParameterCount {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
@@ -1994,6 +2183,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeMemberVisibility Visibility {
+      [DebuggerNonUserCode]
       get { return TypeMemberVisibility.Other; }
     }
 
@@ -2006,6 +2196,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition Container {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
@@ -2018,6 +2209,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return Dummy.Name; }
     }
 
@@ -2030,6 +2222,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
@@ -2038,6 +2231,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
@@ -2061,6 +2255,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IScope<ITypeDefinitionMember> ContainingScope {
+      [DebuggerNonUserCode]
       get { return Dummy.Type; }
     }
 
@@ -2073,6 +2268,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get { return this.functionPointer.Parameters; }
     }
 
@@ -2086,6 +2282,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     uint IMethodReference.InternedKey {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
@@ -2094,6 +2291,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodDefinition ResolvedMethod {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -2102,6 +2300,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      [DebuggerNonUserCode]
       get { return this.functionPointer.ExtraArgumentTypes; }
     }
 
@@ -2114,6 +2313,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference ContainingType {
+      [DebuggerNonUserCode]
       get { return Dummy.TypeReference; }
     }
 
@@ -2122,6 +2322,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -2153,10 +2354,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public MethodDefinition DefiningMethod {
-      get 
+      get
         //^ ensures result.IsGeneric;
-      { 
-        return this.definingMethod; 
+      {
+        return this.definingMethod;
       }
     }
     readonly MethodDefinition definingMethod;
@@ -2182,6 +2383,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IEnumerable<GenericMethodParameterDeclaration> ParameterDeclarations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<GenericMethodParameterDeclaration>(this.declaration); }
     }
     readonly GenericMethodParameterDeclaration declaration;
@@ -2192,14 +2394,16 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IPlatformType PlatformType {
+      [DebuggerNonUserCode]
       get { return this.DefiningMethod.ContainingTypeDefinition.PlatformType; }
     }
 
     #region IGenericMethodParameter Members
 
     IMethodDefinition IGenericMethodParameter.DefiningMethod {
-      get { 
-        IMethodDefinition result = this.DefiningMethod; 
+      [DebuggerNonUserCode]
+      get {
+        IMethodDefinition result = this.DefiningMethod;
         //^ assume result == ((IGenericMethodParameter)this).DefiningMethod; //the next statement makes this true
         return result;
       }
@@ -2215,6 +2419,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.declaration.SourceLocation); }
     }
 
@@ -2223,10 +2428,12 @@ namespace Microsoft.Cci.Ast {
     #region IGenericMethodParameterReference Members
 
     IMethodReference IGenericMethodParameterReference.DefiningMethod {
+      [DebuggerNonUserCode]
       get { return this.DefiningMethod; }
     }
 
     IGenericMethodParameter IGenericMethodParameterReference.ResolvedType {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -2267,6 +2474,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.Attributes; }
     }
 
@@ -2274,6 +2482,7 @@ namespace Microsoft.Cci.Ast {
     /// The number of least significant bits that form part of the value of the field.
     /// </summary>
     public uint BitLength {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.BitLength; }
     }
 
@@ -2282,6 +2491,7 @@ namespace Microsoft.Cci.Ast {
     /// If the field does not have a valid compile time value, an instance of DummyConstant is returned.
     /// </summary>
     public CompileTimeConstant CompileTimeValue {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.CompileTimeValue; }
     }
 
@@ -2289,6 +2499,7 @@ namespace Microsoft.Cci.Ast {
     /// The namespace that contains this member.
     /// </summary>
     public INamespaceDefinition ContainingNamespace {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.ContainingNamespaceDeclaration.UnitNamespace; }
     }
 
@@ -2296,6 +2507,7 @@ namespace Microsoft.Cci.Ast {
     /// The type reference of the containing type.
     /// </summary>
     public ITypeReference ContainingType {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.GlobalDefinitionsContainerType; }
     }
 
@@ -2303,6 +2515,7 @@ namespace Microsoft.Cci.Ast {
     /// The type definition that contains this member.
     /// </summary>
     public ITypeDefinition ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.GlobalDefinitionsContainerType; }
     }
 
@@ -2317,10 +2530,11 @@ namespace Microsoft.Cci.Ast {
     /// The global field declaration that projects onto this global field definition.
     /// </summary>
     public GlobalFieldDeclaration GlobalFieldDeclaration {
+      [DebuggerNonUserCode]
       get {
         if (this.globalFieldDeclaration == null)
           this.globalFieldDeclaration = this.GetGlobalFieldDeclaration();
-        return this.globalFieldDeclaration; 
+        return this.globalFieldDeclaration;
       }
     }
     //^ [SpecPublic]
@@ -2330,6 +2544,7 @@ namespace Microsoft.Cci.Ast {
     /// Information of the location where this field is mapped to
     /// </summary>
     public ISectionBlock FieldMapping {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.FieldMapping; }
     }
 
@@ -2360,6 +2575,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The global field declarations.</value>
     public IEnumerable<GlobalFieldDeclaration> GlobalFieldDeclarations {
+      [DebuggerNonUserCode]
       get {
         if (this.globalFieldDeclarations != null) return this.globalFieldDeclarations.AsReadOnly();
         //^ assert this.globalFieldDeclaration != null;
@@ -2374,6 +2590,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsBitField {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsBitField; }
     }
 
@@ -2381,6 +2598,7 @@ namespace Microsoft.Cci.Ast {
     /// This field is a compile-time constant. The field has no runtime location and cannot be directly addressed from IL.
     /// </summary>
     public bool IsCompileTimeConstant {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsCompileTimeConstant; }
     }
 
@@ -2388,6 +2606,7 @@ namespace Microsoft.Cci.Ast {
     /// This field is mapped to an explicitly initialized (static) memory location.
     /// </summary>
     public bool IsMapped {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsMapped; }
     }
 
@@ -2395,6 +2614,7 @@ namespace Microsoft.Cci.Ast {
     /// This field has associated field marshalling information.
     /// </summary>
     public bool IsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsMarshalledExplicitly; }
     }
 
@@ -2402,6 +2622,7 @@ namespace Microsoft.Cci.Ast {
     /// The field does not have to be serialized when its containing instance is serialized.
     /// </summary>
     public bool IsNotSerialized {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsNotSerialized; }
     }
 
@@ -2409,6 +2630,7 @@ namespace Microsoft.Cci.Ast {
     /// This field can only be read. Initialization takes place in a constructor.
     /// </summary>
     public bool IsReadOnly {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsReadOnly; }
     }
 
@@ -2416,6 +2638,7 @@ namespace Microsoft.Cci.Ast {
     /// This field has a special name reserved for the internal use of the Common Language Runtime.
     /// </summary>
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -2423,6 +2646,7 @@ namespace Microsoft.Cci.Ast {
     /// This field is special in some way, as specified by the name.
     /// </summary>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsSpecialName; }
     }
 
@@ -2430,6 +2654,7 @@ namespace Microsoft.Cci.Ast {
     /// This field is static (shared by all instances of its declaring type).
     /// </summary>
     public bool IsStatic {
+      [DebuggerNonUserCode]
       get { return true; }
     }
 
@@ -2437,6 +2662,7 @@ namespace Microsoft.Cci.Ast {
     /// A potentially empty collection of locations that correspond to this IGlobalFieldDefinition instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.GlobalFieldDeclaration.SourceLocation); }
     }
 
@@ -2444,6 +2670,7 @@ namespace Microsoft.Cci.Ast {
     /// Specifies how this field is marshalled when it is accessed from unmanaged code.
     /// </summary>
     public IMarshallingInformation MarshallingInformation {
+      [DebuggerNonUserCode]
       get { return Dummy.MarshallingInformation; }
     }
 
@@ -2451,6 +2678,7 @@ namespace Microsoft.Cci.Ast {
     /// The name of the global field.
     /// </summary>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.Name; }
     }
 
@@ -2458,6 +2686,7 @@ namespace Microsoft.Cci.Ast {
     /// Offset of the field.
     /// </summary>
     public uint Offset {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
@@ -2465,6 +2694,7 @@ namespace Microsoft.Cci.Ast {
     /// The position of the field starting from 0 within the class.
     /// </summary>
     public int SequenceNumber {
+      [DebuggerNonUserCode]
       get { return 0; }
     }
 
@@ -2472,6 +2702,7 @@ namespace Microsoft.Cci.Ast {
     /// The type of value that is stored in this field.
     /// </summary>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.Type.ResolvedType; }
     }
 
@@ -2479,12 +2710,14 @@ namespace Microsoft.Cci.Ast {
     /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
     /// </summary>
     public TypeMemberVisibility Visibility {
+      [DebuggerNonUserCode]
       get { return this.GlobalFieldDeclaration.IsPublic ? TypeMemberVisibility.Public : TypeMemberVisibility.Assembly; }
     }
 
     #region IFieldDefinition Members
 
     IMetadataConstant IFieldDefinition.CompileTimeValue {
+      [DebuggerNonUserCode]
       get { return this.CompileTimeValue; }
     }
 
@@ -2493,6 +2726,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<INamespaceDefinition> Members
 
     INamespaceDefinition IContainerMember<INamespaceDefinition>.Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespace; }
     }
 
@@ -2501,6 +2735,7 @@ namespace Microsoft.Cci.Ast {
     #region IScopeMember<IScope<INamespaceMember>> Members
 
     IScope<INamespaceMember> IScopeMember<IScope<INamespaceMember>>.ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespace; }
     }
 
@@ -2509,6 +2744,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<ITypeDefinition> Members
 
     ITypeDefinition IContainerMember<ITypeDefinition>.Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -2517,6 +2753,7 @@ namespace Microsoft.Cci.Ast {
     #region IScopeMember<IScope<ITypeDefinitionMember>> Members
 
     IScope<ITypeDefinitionMember> IScopeMember<IScope<ITypeDefinitionMember>>.ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -2525,6 +2762,7 @@ namespace Microsoft.Cci.Ast {
     #region IFieldReference Members
 
     IFieldDefinition IFieldReference.ResolvedField {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -2533,6 +2771,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeMemberReference Members
 
     ITypeDefinitionMember ITypeMemberReference.ResolvedTypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -2541,6 +2780,7 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataConstantContainer
 
     IMetadataConstant IMetadataConstantContainer.Constant {
+      [DebuggerNonUserCode]
       get { return this.CompileTimeValue; }
     }
 
@@ -2557,15 +2797,15 @@ namespace Microsoft.Cci.Ast {
     /// Allocates a global method definition to correspond to a given global method declaration.
     /// </summary>
     /// <param name="globalMethodDeclaration">The global method declaration that corresponds to the definition being allocated.</param>
-    protected internal GlobalMethodDefinition(GlobalMethodDeclaration globalMethodDeclaration) 
-      : base(globalMethodDeclaration)
-    {
+    protected internal GlobalMethodDefinition(GlobalMethodDeclaration globalMethodDeclaration)
+      : base(globalMethodDeclaration) {
     }
 
     /// <summary>
     /// The namespace that contains this member.
     /// </summary>
     public INamespaceDefinition ContainingNamespace {
+      [DebuggerNonUserCode]
       get { return this.GlobalMethodDeclaration.ContainingNamespaceDeclaration.UnitNamespace; }
     }
 
@@ -2580,15 +2820,17 @@ namespace Microsoft.Cci.Ast {
     /// The global method declaration that projects onto this global method definition.
     /// </summary>
     public GlobalMethodDeclaration GlobalMethodDeclaration {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.Declaration is GlobalMethodDeclaration; //guaranteed by constructor
-        return (GlobalMethodDeclaration)this.Declaration; 
+        return (GlobalMethodDeclaration)this.Declaration;
       }
     }
 
     #region IContainerMember<INamespaceDefinition> Members
 
     INamespaceDefinition IContainerMember<INamespaceDefinition>.Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespace; }
     }
 
@@ -2597,6 +2839,7 @@ namespace Microsoft.Cci.Ast {
     #region IScopeMember<IScope<INamespaceMember>> Members
 
     IScope<INamespaceMember> IScopeMember<IScope<INamespaceMember>>.ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.ContainingNamespace; }
     }
 
@@ -2629,6 +2872,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public BlockStatement Block {
+      [DebuggerNonUserCode]
       get {
         //^ assume this.block != null; //implied by the precondition
         return this.block;
@@ -2652,7 +2896,7 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
-    private void GenerateIL() 
+    private void GenerateIL()
       //^ ensures this.privateHelperTypes != null;
     {
       this.ilWasGenerated = true;
@@ -2666,11 +2910,11 @@ namespace Microsoft.Cci.Ast {
         return;
       }
 
-      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment, null, ProvideSourceToILConverter, 
+      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment, null, ProvideSourceToILConverter,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
 
-      CodeModelToILConverter converter = new CodeModelToILConverter(this.Block.Compilation.HostEnvironment, 
+      CodeModelToILConverter converter = new CodeModelToILConverter(this.Block.Compilation.HostEnvironment,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
       converter.ConvertToIL(this.MethodDefinition, normalizedBody.Block);
 
@@ -2691,6 +2935,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the locals are initialized by zeroeing the stack upon method entry.
     /// </summary>
     public bool LocalsAreZeroed {
+      [DebuggerNonUserCode]
       get { return this.localsAreZeroed; }
     }
     bool localsAreZeroed;
@@ -2700,6 +2945,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocalDefinition> LocalVariables {
+      [DebuggerNonUserCode]
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
         return this.localVariables;
@@ -2721,9 +2967,10 @@ namespace Microsoft.Cci.Ast {
     /// The maximum number of elements on the evaluation stack during the execution of the method.
     /// </summary>
     public ushort MaxStack {
+      [DebuggerNonUserCode]
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
-        return this.maxStack; 
+        return this.maxStack;
       }
     }
     ushort maxStack;
@@ -2733,6 +2980,7 @@ namespace Microsoft.Cci.Ast {
     /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
     public IMethodDefinition MethodDefinition {
+      [DebuggerNonUserCode]
       get { return this.methodDefinition; }
     }
     readonly IMethodDefinition methodDefinition;
@@ -2741,9 +2989,10 @@ namespace Microsoft.Cci.Ast {
     /// A list CLR IL operations that implement this method body.
     /// </summary>
     public IEnumerable<IOperation> Operations {
+      [DebuggerNonUserCode]
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
-        return this.operations; 
+        return this.operations;
       }
     }
     IEnumerable<IOperation>/*?*/ operations;
@@ -2752,6 +3001,7 @@ namespace Microsoft.Cci.Ast {
     /// A list exception data within the method body IL.
     /// </summary>
     public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
+      [DebuggerNonUserCode]
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
         return this.operationExceptionInformation;
@@ -2766,6 +3016,7 @@ namespace Microsoft.Cci.Ast {
     /// which are local to method.
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
+      [DebuggerNonUserCode]
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
         return this.privateHelperTypes;
@@ -2776,6 +3027,7 @@ namespace Microsoft.Cci.Ast {
     #region ISourceMethodBody Members
 
     IBlockStatement ISourceMethodBody.Block {
+      [DebuggerNonUserCode]
       get { return this.Block; }
     }
 
@@ -2800,6 +3052,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool AcceptsExtraArguments {
+      [DebuggerNonUserCode]
       get { return this.declaration.AcceptsExtraArguments; }
     }
 
@@ -2808,6 +3061,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public MethodBody Body {
+      [DebuggerNonUserCode]
       get
         //^ requires !this.IsAbstract && !this.IsExternal;
       {
@@ -2824,6 +3078,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CallingConvention CallingConvention {
+      [DebuggerNonUserCode]
       get { return this.declaration.CallingConvention; }
     }
 
@@ -2832,6 +3087,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override ITypeDeclarationMember Declaration {
+      [DebuggerNonUserCode]
       get { return this.declaration; }
     }
     //^ [SpecPublic]
@@ -2848,6 +3104,7 @@ namespace Microsoft.Cci.Ast {
     /// An empty collection of method definitions.
     /// </summary>
     public static IEnumerable<IMethodDefinition> EmptyCollection {
+      [DebuggerNonUserCode]
       get { return MethodDefinition.emptyCollection; }
     }
     static readonly IEnumerable<IMethodDefinition> emptyCollection = new List<IMethodDefinition>(0).AsReadOnly();
@@ -2857,6 +3114,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<GenericMethodParameter> GenericParameters {
+      [DebuggerNonUserCode]
       get {
         foreach (GenericMethodParameterDeclaration parameterDeclaration in this.declaration.GenericParameters)
           yield return parameterDeclaration.GenericMethodParameterDefinition;
@@ -2872,6 +3130,7 @@ namespace Microsoft.Cci.Ast {
       //^^ ensures !this.IsGeneric ==> result == 0;
       //^^ ensures this.IsGeneric ==> result > 0;
     {
+      [DebuggerNonUserCode]
       get {
         ushort result = (ushort)this.declaration.GenericParameterCount;
         //^ assume this.declaration.IsGeneric == this.IsGeneric;
@@ -2884,6 +3143,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool HasDeclarativeSecurity {
+      [DebuggerNonUserCode]
       get { return this.declaration.HasDeclarativeSecurity; }
     }
 
@@ -2891,6 +3151,7 @@ namespace Microsoft.Cci.Ast {
     /// True if this is an instance method that explicitly declares the type and name of its first parameter (the instance).
     /// </summary>
     public bool HasExplicitThisParameter {
+      [DebuggerNonUserCode]
       get { return this.declaration.HasExplicitThisParameter; }
     }
 
@@ -2898,6 +3159,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of interfaces whose corresponding abstract methods are implemented by this method.
     /// </summary>
     public IEnumerable<ITypeDefinition> ImplementedInterfaces {
+      [DebuggerNonUserCode]
       get {
         foreach (TypeExpression texpr in this.declaration.ImplementedInterfaces)
           yield return texpr.ResolvedType;
@@ -2910,6 +3172,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public uint InternedKey {
+      [DebuggerNonUserCode]
       get {
         if (this.internedKey == 0) {
           this.internedKey = this.Declaration.CompilationPart.Compilation.HostEnvironment.InternFactory.GetMethodInternedKey(this);
@@ -2924,6 +3187,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsAbstract {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsAbstract; }
     }
 
@@ -2931,6 +3195,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the method can only be overridden when it is also accessible. 
     /// </summary>
     public bool IsAccessCheckedOnOverride {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsAccessCheckedOnOverride; }
     }
 
@@ -2939,6 +3204,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsCil {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsCil; }
     }
 
@@ -2947,6 +3213,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsExternal {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsExternal; }
     }
 
@@ -2955,6 +3222,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsForwardReference {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsForwardReference; }
     }
 
@@ -2963,10 +3231,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
-      get 
+      get
         //^ ensures result == this.declaration.IsGeneric;
-      { 
-        return this.declaration.IsGeneric; 
+      {
+        return this.declaration.IsGeneric;
       }
     }
 
@@ -2976,6 +3244,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsHiddenBySignature {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsHiddenBySignature; }
     }
 
@@ -2984,6 +3253,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNativeCode {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsNativeCode; }
     }
 
@@ -2993,6 +3263,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNewSlot {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsVirtual && !this.declaration.IsOverride; }
     }
 
@@ -3001,6 +3272,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNeverInlined {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsNeverInlined; }
     }
 
@@ -3009,6 +3281,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsNeverOptimized {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsNeverOptimized; }
     }
 
@@ -3017,6 +3290,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsPlatformInvoke {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsPlatformInvoke; }
     }
 
@@ -3025,6 +3299,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeImplemented {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsRuntimeImplemented; }
     }
 
@@ -3033,6 +3308,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeInternal {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsRuntimeInternal; }
     }
 
@@ -3041,6 +3317,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsRuntimeSpecial; }
     }
 
@@ -3049,6 +3326,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSealed {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsSealed; }
     }
 
@@ -3057,6 +3335,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsSpecialName; }
     }
 
@@ -3065,6 +3344,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsStatic {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsStatic; }
     }
 
@@ -3073,6 +3353,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsSynchronized {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsSynchronized; }
     }
 
@@ -3081,8 +3362,9 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsVirtual {
-      get { 
-        bool result = this.declaration.IsVirtual || this.declaration.IsOverride || this.declaration.IsAbstract; 
+      [DebuggerNonUserCode]
+      get {
+        bool result = this.declaration.IsVirtual || this.declaration.IsOverride || this.declaration.IsAbstract;
         //^ assume result ==> !this.IsStatic;
         return result;
       }
@@ -3093,6 +3375,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsUnmanaged {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsUnmanaged; }
     }
 
@@ -3101,6 +3384,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IName Name {
+      [DebuggerNonUserCode]
       get { return this.declaration.QualifiedName; }
     }
 
@@ -3109,6 +3393,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool PreserveSignature {
+      [DebuggerNonUserCode]
       get { return this.declaration.PreserveSignature; }
     }
 
@@ -3118,6 +3403,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool RequiresSecurityObject {
+      [DebuggerNonUserCode]
       get { return this.declaration.RequiresSecurityObject; }
     }
 
@@ -3126,6 +3412,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueAttributes; }
     }
 
@@ -3134,6 +3421,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
@@ -3142,6 +3430,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsByRef; }
     }
 
@@ -3150,6 +3439,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsModified; }
     }
 
@@ -3158,6 +3448,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsMarshalledExplicitly; }
     }
 
@@ -3166,6 +3457,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMarshallingInformation ReturnValueMarshallingInformation {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueMarshallingInformation; }
     }
 
@@ -3174,6 +3466,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      [DebuggerNonUserCode]
       get { return this.declaration.SecurityAttributes; }
     }
 
@@ -3181,6 +3474,7 @@ namespace Microsoft.Cci.Ast {
     /// The parameters of this method.
     /// </summary>
     public virtual IEnumerable<ParameterDefinition> Parameters {
+      [DebuggerNonUserCode]
       get {
         foreach (ParameterDeclaration parameter in this.declaration.Parameters)
           yield return parameter.ParameterDefinition;
@@ -3192,6 +3486,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ushort ParameterCount {
+      [DebuggerNonUserCode]
       get {
         if (this.declaration.parameters == null) return 0;
         return (ushort)this.declaration.parameters.Count;
@@ -3203,6 +3498,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.declaration.Type.ResolvedType; }
     }
 
@@ -3211,6 +3507,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsConstructor {
+      [DebuggerNonUserCode]
       get { return this.Name.Value.Equals(".ctor"); } //  TODO: Implement this properly
     }
 
@@ -3219,6 +3516,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsStaticConstructor {
+      [DebuggerNonUserCode]
       get { return this.Name.Value.Equals(".cctor"); }  //  TODO: Implement this properly
     }
 
@@ -3227,6 +3525,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IPlatformInvokeInformation PlatformInvokeData {
+      [DebuggerNonUserCode]
       get { return this.declaration.PlatformInvokeData; }
     }
 
@@ -3236,7 +3535,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     public override string ToString() {
-      return MemberHelper.GetMethodSignature(this, 
+      return MemberHelper.GetMethodSignature(this,
         NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName);
     }
 
@@ -3244,21 +3543,24 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public IName UnqualifiedName {
+      [DebuggerNonUserCode]
       get { return this.declaration.Name; }
     }
 
     #region IMethodDefinition Members
 
     IMethodBody IMethodDefinition.Body {
+      [DebuggerNonUserCode]
       get
         //^^ requires !this.IsAbstract && !this.IsExternal;
       {
         //^ assume !this.IsAbstract && !this.IsExternal;
-        return this.Body; 
+        return this.Body;
       }
     }
 
     IEnumerable<IGenericMethodParameter> IMethodDefinition.GenericParameters {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<GenericMethodParameter, IGenericMethodParameter>(this.GenericParameters);
       }
@@ -3274,12 +3576,14 @@ namespace Microsoft.Cci.Ast {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<ParameterDefinition, IParameterTypeInformation>(this.Parameters);
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get {
         return this.ReturnValueCustomModifiers;
       }
@@ -3294,6 +3598,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodDefinition ResolvedMethod {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -3302,6 +3607,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
     }
 
@@ -3327,6 +3633,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return this.declaration.Attributes; }
     }
 
@@ -3335,8 +3642,9 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ISignature ContainingSignature {
-      get { 
-        return this.declaration.ContainingSignature.SignatureDefinition; 
+      [DebuggerNonUserCode]
+      get {
+        return this.declaration.ContainingSignature.SignatureDefinition;
       }
     }
 
@@ -3345,6 +3653,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<CustomModifier> CustomModifiers {
+      [DebuggerNonUserCode]
       get { return this.declaration.CustomModifiers; }
     }
 
@@ -3356,7 +3665,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CompileTimeConstant DefaultValue {
-      get 
+      get
         //^^ requires this.HasDefaultValue;
       {
         //^ assume this.HasDefaultValue == ((IParameterDefinition)this).HasDefaultValue;
@@ -3379,10 +3688,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool HasDefaultValue {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.declaration.HasDefaultValue;
-      { 
-        return this.declaration.HasDefaultValue; 
+      {
+        return this.declaration.HasDefaultValue;
       }
     }
 
@@ -3391,6 +3701,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ushort Index {
+      [DebuggerNonUserCode]
       get { return this.declaration.Index; }
     }
 
@@ -3399,6 +3710,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsByReference {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsOut || this.declaration.IsRef; }
     }
 
@@ -3407,6 +3719,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsIn {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsIn; }
     }
 
@@ -3415,6 +3728,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsMarshalledExplicitly {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsMarshalledExplicitly; }
     }
 
@@ -3423,6 +3737,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsModified {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsModified; }
     }
 
@@ -3431,6 +3746,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsOptional {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsOptional; }
     }
 
@@ -3439,6 +3755,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsOut {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsOut; }
     }
 
@@ -3447,6 +3764,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool IsParameterArray {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsParameterArray; }
     }
 
@@ -3455,6 +3773,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMarshallingInformation MarshallingInformation {
+      [DebuggerNonUserCode]
       get { return Dummy.MarshallingInformation; }
     }
 
@@ -3463,10 +3782,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference ParamArrayElementType {
+      [DebuggerNonUserCode]
       get
         //^^ requires this.IsParameterArray;
-      { 
-        return this.declaration.ParamArrayElementType; 
+      {
+        return this.declaration.ParamArrayElementType;
       }
     }
 
@@ -3475,6 +3795,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The parameter declarations.</value>
     public IEnumerable<ParameterDeclaration> ParameterDeclarations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ParameterDeclaration>(this.declaration); }
     }
 
@@ -3483,6 +3804,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.declaration.Name; }
     }
 
@@ -3491,18 +3813,21 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.declaration.Type.ResolvedType; }
     }
 
     #region IParameterDefinition Members
 
     IEnumerable<ICustomModifier> IParameterTypeInformation.CustomModifiers {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
       }
     }
 
     IMetadataConstant IParameterDefinition.DefaultValue {
+      [DebuggerNonUserCode]
       get { return this.DefaultValue; }
     }
 
@@ -3515,6 +3840,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get {
         foreach (ParameterDeclaration parameterDeclaration in this.ParameterDeclarations)
           yield return parameterDeclaration.SourceLocation;
@@ -3526,6 +3852,7 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataConstantContainer
 
     IMetadataConstant IMetadataConstantContainer.Constant {
+      [DebuggerNonUserCode]
       get { return this.DefaultValue; }
     }
 
@@ -3550,6 +3877,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of methods that are associated with the property.
     /// </summary>
     public IEnumerable<IMethodReference> Accessors {
+      [DebuggerNonUserCode]
       get {
         foreach (MethodDeclaration accessor in this.declaration.Accessors)
           yield return accessor.MethodDefinition;
@@ -3561,6 +3889,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override ITypeDeclarationMember Declaration {
+      [DebuggerNonUserCode]
       get { return this.declaration; }
     }
     readonly PropertyDeclaration declaration;
@@ -3570,13 +3899,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CompileTimeConstant DefaultValue {
+      [DebuggerNonUserCode]
       get
         //^^ requires this.HasDefaultValue;
-      { 
+      {
         //^ assume this.declaration.HasDefaultValue; //follows from precondition
         CompileTimeConstant/*?*/ defaultValue = this.declaration.DefaultValue as CompileTimeConstant;
         if (defaultValue == null) defaultValue = new DummyConstant(this.declaration.DefaultValue.SourceLocation);
-        return defaultValue; 
+        return defaultValue;
       }
     }
 
@@ -3592,6 +3922,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodDefinition/*?*/ Getter {
+      [DebuggerNonUserCode]
       get {
         MethodDeclaration/*?*/ getter = this.declaration.Getter;
         if (getter == null) return null;
@@ -3604,6 +3935,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool HasDefaultValue {
+      [DebuggerNonUserCode]
       get { return this.declaration.HasDefaultValue; }
     }
 
@@ -3611,6 +3943,7 @@ namespace Microsoft.Cci.Ast {
     /// True if the property gets special treatment from the runtime.
     /// </summary>
     public bool IsRuntimeSpecial {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsRuntimeSpecial; }
     }
 
@@ -3618,6 +3951,7 @@ namespace Microsoft.Cci.Ast {
     /// True if this property is special in some way, as specified by the name.
     /// </summary>
     public bool IsSpecialName {
+      [DebuggerNonUserCode]
       get { return this.declaration.IsSpecialName; }
     }
 
@@ -3626,6 +3960,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ParameterDefinition> Parameters {
+      [DebuggerNonUserCode]
       get {
         foreach (ParameterDeclaration parameter in this.declaration.Parameters)
           yield return parameter.ParameterDefinition;
@@ -3637,6 +3972,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The property declarations.</value>
     public IEnumerable<PropertyDeclaration> PropertyDeclarations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<PropertyDeclaration>(this.declaration); }
     }
 
@@ -3645,6 +3981,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public override IName Name {
+      [DebuggerNonUserCode]
       get { return this.declaration.QualifiedName; }
     }
 
@@ -3653,6 +3990,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueAttributes; }
     }
 
@@ -3661,6 +3999,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
@@ -3669,6 +4008,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsByRef; }
     }
 
@@ -3677,6 +4017,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsModified; }
     }
 
@@ -3685,6 +4026,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IMethodReference/*?*/ Setter {
+      [DebuggerNonUserCode]
       get {
         MethodDeclaration/*?*/ setter = this.declaration.Setter;
         if (setter == null) return null;
@@ -3695,10 +4037,12 @@ namespace Microsoft.Cci.Ast {
     #region IPropertyDefinition Members
 
     IMetadataConstant IPropertyDefinition.DefaultValue {
+      [DebuggerNonUserCode]
       get { return this.DefaultValue; }
     }
 
     IMethodReference/*?*/ IPropertyDefinition.Getter {
+      [DebuggerNonUserCode]
       get { return this.Getter; }
     }
 
@@ -3707,6 +4051,7 @@ namespace Microsoft.Cci.Ast {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<ParameterDefinition, IParameterTypeInformation>(this.Parameters);
       }
@@ -3717,10 +4062,12 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.declaration.Type.ResolvedType; }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get {
         return this.ReturnValueCustomModifiers;
       }
@@ -3731,6 +4078,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CallingConvention CallingConvention {
+      [DebuggerNonUserCode]
       get { return CallingConvention.Default; }
     }
 
@@ -3740,6 +4088,7 @@ namespace Microsoft.Cci.Ast {
 
 
     IEnumerable<IParameterDefinition> IPropertyDefinition.Parameters {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetConversionEnumerable<ParameterDefinition, IParameterDefinition>(this.Parameters); }
     }
 
@@ -3748,6 +4097,7 @@ namespace Microsoft.Cci.Ast {
     #region IMetadataConstantContainer
 
     IMetadataConstant IMetadataConstantContainer.Constant {
+      [DebuggerNonUserCode]
       get { return this.DefaultValue; }
     }
 
@@ -3775,6 +4125,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ParameterDefinition> Parameters {
+      [DebuggerNonUserCode]
       get {
         foreach (ParameterDeclaration parameterDeclaration in this.declaration.Parameters)
           yield return parameterDeclaration.ParameterDefinition;
@@ -3786,6 +4137,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The return value attributes.</value>
     public IEnumerable<CustomAttribute> ReturnValueAttributes {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueAttributes; }
     }
 
@@ -3794,6 +4146,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<CustomModifier> ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
@@ -3802,6 +4155,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsByRef {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsByRef; }
     }
 
@@ -3810,6 +4164,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
+      [DebuggerNonUserCode]
       get { return this.declaration.ReturnValueIsModified; }
     }
 
@@ -3818,6 +4173,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The signature declarations.</value>
     public IEnumerable<SignatureDeclaration> SignatureDeclarations {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetSingletonEnumerable<SignatureDeclaration>(this.declaration);
       }
@@ -3828,6 +4184,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
+      [DebuggerNonUserCode]
       get { return this.declaration.Type.ResolvedType; }
     }
 
@@ -3836,18 +4193,21 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public CallingConvention CallingConvention {
+      [DebuggerNonUserCode]
       get { return CallingConvention.Default; }
     }
 
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<ParameterDefinition, IParameterTypeInformation>(this.Parameters);
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
+      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.ReturnValueCustomModifiers);
       }
@@ -3878,6 +4238,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public GenericTypeInstance ContainingGenericTypeInstance {
+      [DebuggerNonUserCode]
       get { return this.containingGenericTypeInstance; }
     }
     readonly GenericTypeInstance containingGenericTypeInstance;
@@ -3894,10 +4255,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeMemberVisibility Visibility {
+      [DebuggerNonUserCode]
       get {
         ITypeDefinitionMember unspecializedVersion = this.UnspecializedVersion;
         //^ assume unspecializedVersion != null; //The type system guarantees this
-        return TypeHelper.VisibilityIntersection(unspecializedVersion.Visibility, 
+        return TypeHelper.VisibilityIntersection(unspecializedVersion.Visibility,
           TypeHelper.TypeVisibilityAsTypeMemberVisibility(this.ContainingGenericTypeInstance));
       }
     }
@@ -3906,6 +4268,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public MemberType/*!*/ UnspecializedVersion {
+      [DebuggerNonUserCode]
       get { return this.unspecializedVersion; }
     }
     readonly MemberType/*!*/ unspecializedVersion;
@@ -3917,10 +4280,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get
         //^ ensures result == this.ContainingGenericTypeInstance;
-      { 
-        return this.ContainingGenericTypeInstance; 
+      {
+        return this.ContainingGenericTypeInstance;
       }
     }
 
@@ -3933,6 +4297,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference ContainingType {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -3941,6 +4306,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -3953,6 +4319,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -3965,6 +4332,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IName Name {
+      [DebuggerNonUserCode]
       get { return this.UnspecializedVersion.Name; }
     }
 
@@ -3977,6 +4345,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return this.UnspecializedVersion.Attributes; }
     }
 
@@ -3985,6 +4354,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return this.UnspecializedVersion.Locations; }
     }
 
@@ -3997,6 +4367,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IScope<ITypeDefinitionMember> ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -4014,6 +4385,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
+      [DebuggerNonUserCode]
       get { return this.Declaration.Attributes; }
     }
 
@@ -4022,6 +4394,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get { return this.Declaration.ContainingTypeDeclaration.TypeDefinition; }
     }
 
@@ -4042,6 +4415,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public virtual IName Name {
+      [DebuggerNonUserCode]
       get { return this.Declaration.Name; }
     }
 
@@ -4050,7 +4424,8 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public TypeMemberVisibility Visibility {
-      get { 
+      [DebuggerNonUserCode]
+      get {
         TypeMemberVisibility result = this.Declaration.Visibility;
         if (result == TypeMemberVisibility.Default)
           result = this.Declaration.GetDefaultVisibility();
@@ -4062,6 +4437,7 @@ namespace Microsoft.Cci.Ast {
     #region ITypeDefinitionMember Members
 
     ITypeDefinition ITypeDefinitionMember.ContainingTypeDefinition {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -4074,6 +4450,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeReference ContainingType {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -4082,6 +4459,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -4090,6 +4468,7 @@ namespace Microsoft.Cci.Ast {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
+      [DebuggerNonUserCode]
       get {
         return this.Attributes;
       }
@@ -4100,6 +4479,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
+      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.Declaration.SourceLocation); }
     }
 
@@ -4108,6 +4488,7 @@ namespace Microsoft.Cci.Ast {
     #region IContainerMember<ITypeDefinition> Members
 
     ITypeDefinition IContainerMember<ITypeDefinition>.Container {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
@@ -4116,6 +4497,7 @@ namespace Microsoft.Cci.Ast {
     #region IScopeMember<IScope<ITypeDefinitionMember>> Members
 
     IScope<ITypeDefinitionMember> IScopeMember<IScope<ITypeDefinitionMember>>.ContainingScope {
+      [DebuggerNonUserCode]
       get { return this.ContainingTypeDefinition; }
     }
 
