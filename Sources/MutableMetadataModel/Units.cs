@@ -988,7 +988,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IUnit unit, IInternFactory internFactory) {
       ((ICopyFrom<IUnitReference>)this).Copy(unit, internFactory);
-      this.contractAssemblySymbolicIdentity = unit.CoreAssemblySymbolicIdentity;
+      this.contractAssemblySymbolicIdentity = unit.ContractAssemblySymbolicIdentity;
       this.coreAssemblySymbolicIdentity = unit.CoreAssemblySymbolicIdentity;
       this.location = unit.Location;
       this.platformType = unit.PlatformType;
