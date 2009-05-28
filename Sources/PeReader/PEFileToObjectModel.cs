@@ -1687,6 +1687,7 @@ namespace Microsoft.Cci.MetadataReader {
           TypeRefReference/*?*/ parentModuleTypeReference = this.GetTypeRefReferenceAtRowWorker(resolutionScopeRowId);
           if (parentModuleTypeReference == null) {
             this.PEFileReader.ErrorContainer.AddMetadataError(TableIndices.TypeRef, typeRefRowId, MetadataReaderErrorKind.NestedClassParentError);
+            this.ModuleTypeRefReferenceLoadState[typeRefRowId] = LoadState.Loaded;
             return null;
           }
           typeRefReference = this.CreateTypeRefReference(typeRefRowId, typeRefRow, parentModuleTypeReference, parentModuleTypeReference.ModuleReference,
@@ -1697,16 +1698,20 @@ namespace Microsoft.Cci.MetadataReader {
             AssemblyReference/*?*/ assemblyRef = this.GetAssemblyReferenceAt(resolutionScopeRowId);
             if (assemblyRef == null) {
               //  TODO: MDError
+              this.ModuleTypeRefReferenceLoadState[typeRefRowId] = LoadState.Loaded;
               return null;
             }
             moduleReference = assemblyRef;
-          } else {
+          } else if (resolutionScopeKind == TokenTypeIds.ModuleRef) {
             ModuleReference/*?*/ moduleRef = this.GetModuleReferenceAt(resolutionScopeRowId);
             if (moduleRef == null) {
               //  TODO: MDError
+              this.ModuleTypeRefReferenceLoadState[typeRefRowId] = LoadState.Loaded;
               return null;
             }
             moduleReference = moduleRef;
+          } else {
+            moduleReference = this.Module;
           }
           typeRefReference = this.CreateTypeRefReference(typeRefRowId, typeRefRow, null, moduleReference,
             mustBeStruct ? ModuleSignatureTypeCode.ValueType : ModuleSignatureTypeCode.NotModulePrimitive);
@@ -1746,8 +1751,8 @@ namespace Microsoft.Cci.MetadataReader {
           this.GetTypeRefReferenceAtRowWorker(typeRefRowId, mustBeStruct);
         }
       }
-      TypeRefReference result = this.ModuleTypeRefReferenceArray[typeRefRowId];
-      if (mustBeStruct) result.isValueType = true;
+      TypeRefReference/*?*/ result = this.ModuleTypeRefReferenceArray[typeRefRowId];
+      if (mustBeStruct && result != null) result.isValueType = true;
       return result;
     }
     internal TypeSpecReference/*?*/ GetTypeSpecReferenceAtRow(
