@@ -110,8 +110,8 @@ namespace Microsoft.Cci.SmallBasic {
       return new RootClassDeclaration(this.Name, newMembers, targetNamespaceDeclaration.SourceLocation.SourceDocument.GetCorrespondingSourceLocation(this.SourceLocation));
     }
 
-    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members, ISourceDocumentEdit edit) {
-      return new RootClassDeclaration(this.Name, members, edit.SourceDocumentAfterEdit.GetCorrespondingSourceLocation(this.SourceLocation));
+    protected override NamespaceTypeDeclaration MakeShallowCopy(List<ITypeDeclarationMember> members) {
+      return new RootClassDeclaration(this.Name, members, this.sourceLocation);
     }
 
     Dictionary<int, int> labelIndex = new Dictionary<int, int>();
