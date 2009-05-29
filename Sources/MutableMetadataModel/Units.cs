@@ -435,6 +435,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.sizeOfHeapReserve = 0x100000;
       this.sizeOfStackCommit = 0x1000;
       this.sizeOfStackReserve = 0x100000;
+      this.strings = new List<string>();
       this.targetRuntimeVersion = "";
       this.trackDebugData = false;
       this.usePublicKeyTokensForAssemblyReferences = false;
@@ -475,6 +476,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.sizeOfHeapReserve = module.SizeOfHeapReserve;
       this.sizeOfStackCommit = module.SizeOfStackCommit;
       this.sizeOfStackReserve = module.SizeOfStackReserve;
+      this.strings = new List<string>(module.GetStrings());
       this.targetRuntimeVersion = module.TargetRuntimeVersion;
       this.trackDebugData = module.TrackDebugData;
       this.usePublicKeyTokensForAssemblyReferences = module.UsePublicKeyTokensForAssemblyReferences;
