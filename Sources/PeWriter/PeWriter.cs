@@ -644,6 +644,7 @@ namespace Microsoft.Cci {
     }
 
     private void FillInSectionHeaders() {
+      uint sizeOfWin32Resources = this.ComputeSizeOfWin32Resources(); //Do this first, so that win32 resources get serialized before pe header size gets computed.
       uint sizeOfPeHeaders = this.ComputeSizeOfPeHeaders();
       uint sizeOfTextSection = this.ComputeSizeOfTextSection();
 
@@ -705,7 +706,6 @@ namespace Microsoft.Cci {
       this.resourceSection.PointerToRawData = this.tlsSection.PointerToRawData+this.tlsSection.SizeOfRawData;
       this.resourceSection.PointerToRelocations = 0;
       this.resourceSection.RelativeVirtualAddress = Aligned(this.tlsSection.RelativeVirtualAddress+this.tlsSection.VirtualSize, 0x2000);
-      uint sizeOfWin32Resources = this.ComputeSizeOfWin32Resources();
       this.resourceSection.SizeOfRawData = Aligned(sizeOfWin32Resources, this.module.FileAlignment);
       this.resourceSection.VirtualSize = sizeOfWin32Resources;
 
