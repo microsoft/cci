@@ -32,6 +32,21 @@ namespace ModuleReaderTests {
       this.RegisterAsLatest(result);
       return result;
     }
+
+    /// <summary>
+    /// Open the binary document as a memory block in host dependent fashion.
+    /// </summary>
+    /// <param name="sourceDocument">The binary document that is to be opened.</param>
+    /// <returns>The unmanaged memory block corresponding to the source document.</returns>
+    public override IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
+      try {
+        IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
+        return binDocMemoryBlock;
+      } catch (IOException) {
+        return null;
+      }
+    }
+
   }
 
   internal class Helper {
