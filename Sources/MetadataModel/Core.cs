@@ -509,7 +509,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the interned key for the namespace type constructed with the given parameters
     /// </summary>
-    uint GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount, bool forPrivateModuleType);
+    uint GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount);
 
     /// <summary>
     /// Returns the interned key for the nested type constructed with the given parameters

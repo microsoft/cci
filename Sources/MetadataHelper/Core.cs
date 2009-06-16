@@ -791,10 +791,7 @@ namespace Microsoft.Cci {
       return mStore1;
     }
 
-    uint GetUnitRootNamespaceInternId(
-      IUnitReference unitReference,
-      bool forPrivateModuleType
-    ) {
+    uint GetUnitRootNamespaceInternId(IUnitReference unitReference) {
       IAssemblyReference/*?*/ assemblyReference = unitReference as IAssemblyReference;
       if (assemblyReference != null) {
         AssemblyStore assemblyStore = this.GetAssemblyStore(assemblyReference.UnifiedAssemblyIdentity);
@@ -802,10 +799,6 @@ namespace Microsoft.Cci {
       }
       IModuleReference/*?*/ moduleReference = unitReference as IModuleReference;
       if (moduleReference != null) {
-        if (forPrivateModuleType && moduleReference.ContainingAssembly != null) {
-          AssemblyStore assemblyStore = this.GetAssemblyStore(moduleReference.ContainingAssembly.UnifiedAssemblyIdentity);
-          return assemblyStore.RootNamespaceInternedId;
-        }
         ModuleStore moduleStore = this.GetModuleStore(moduleReference.ModuleIdentity);
         return moduleStore.RootNamespaceInternedId;
       }
@@ -813,10 +806,9 @@ namespace Microsoft.Cci {
     }
 
     uint GetNestedNamespaceInternId(
-      INestedUnitNamespaceReference nestedUnitNamespaceReference,
-      bool forPrivateModuleType
+      INestedUnitNamespaceReference nestedUnitNamespaceReference
     ) {
-      uint parentNamespaceInternedId = this.GetUnitNamespaceInternId(nestedUnitNamespaceReference.ContainingUnitNamespace, forPrivateModuleType);
+      uint parentNamespaceInternedId = this.GetUnitNamespaceInternId(nestedUnitNamespaceReference.ContainingUnitNamespace);
       uint value = this.NestedNamespaceHashtable.Find(parentNamespaceInternedId, (uint)nestedUnitNamespaceReference.Name.UniqueKey);
       if (value == 0) {
         value = this.CurrentNamespaceInternValue++;
@@ -826,23 +818,21 @@ namespace Microsoft.Cci {
     }
 
     uint GetUnitNamespaceInternId(
-      IUnitNamespaceReference unitNamespaceReference,
-      bool forPrivateModuleType
+      IUnitNamespaceReference unitNamespaceReference
     ) {
       INestedUnitNamespaceReference/*?*/ nestedUnitNamespaceReference = unitNamespaceReference as INestedUnitNamespaceReference;
       if (nestedUnitNamespaceReference != null) {
-        return this.GetNestedNamespaceInternId(nestedUnitNamespaceReference, forPrivateModuleType);
+        return this.GetNestedNamespaceInternId(nestedUnitNamespaceReference);
       }
-      return this.GetUnitRootNamespaceInternId(unitNamespaceReference.Unit, forPrivateModuleType);
+      return this.GetUnitRootNamespaceInternId(unitNamespaceReference.Unit);
     }
 
     uint GetNamespaceTypeReferenceInternId(
       IUnitNamespaceReference containingUnitNamespace,
       IName typeName,
-      uint genericParameterCount,
-      bool forPrivateModuleType
+      uint genericParameterCount
     ) {
-      uint containingUnitNamespaceInteredId = this.GetUnitNamespaceInternId(containingUnitNamespace, forPrivateModuleType);
+      uint containingUnitNamespaceInteredId = this.GetUnitNamespaceInternId(containingUnitNamespace);
       foreach (NamespaceTypeStore nsTypeStore in this.NamespaceTypeHashtable.GetValuesFor((uint)typeName.UniqueKey)) {
         if (
           nsTypeStore.ContainingNamespaceInternedId == containingUnitNamespaceInteredId
@@ -1158,8 +1148,7 @@ namespace Microsoft.Cci {
         return this.GetNamespaceTypeReferenceInternId(
           namespaceTypeReference.ContainingUnitNamespace,
           namespaceTypeReference.Name,
-          namespaceTypeReference.GenericParameterCount,
-          !(namespaceTypeReference.ResolvedType == Dummy.NamespaceTypeDefinition || namespaceTypeReference.ResolvedType.IsPublic)
+          namespaceTypeReference.GenericParameterCount
         );
       }
       INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
@@ -1324,9 +1313,9 @@ namespace Microsoft.Cci {
       }
     }
 
-    uint IInternFactory.GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount, bool forPrivateModuleType) {
+    uint IInternFactory.GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount) {
       lock (GlobalLock.LockingObject) {
-        return this.GetNamespaceTypeReferenceInternId(containingUnitNamespace, typeName, genericParameterCount, forPrivateModuleType);
+        return this.GetNamespaceTypeReferenceInternId(containingUnitNamespace, typeName, genericParameterCount);
       }
     }
 

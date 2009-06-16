@@ -108,7 +108,7 @@ namespace Microsoft.Cci {
 
     public static IGenericTypeInstance GenericTypeInstance {
       [DebuggerNonUserCode]
-      get 
+      get
         //^ ensures !result.IsGeneric;
       {
         if (Dummy.genericTypeInstance == null)
@@ -726,7 +726,7 @@ namespace Microsoft.Cci {
     }
 
     public ushort DllCharacteristics {
-      get { return 0; } 
+      get { return 0; }
     }
 
     public IMethodReference EntryPoint {
@@ -848,9 +848,9 @@ namespace Microsoft.Cci {
     }
 
     public IRootUnitNamespace UnitNamespaceRoot {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.RootUnitNamespace; 
+        return Dummy.RootUnitNamespace;
       }
     }
 
@@ -878,7 +878,7 @@ namespace Microsoft.Cci {
     public INamespaceDefinition NamespaceRoot {
       get {
         //^ assume false;
-        return Dummy.RootUnitNamespace; 
+        return Dummy.RootUnitNamespace;
       }
     }
 
@@ -1149,7 +1149,7 @@ namespace Microsoft.Cci {
     #region ITypeMemberReference Members
 
     public ITypeReference ContainingType {
-      get { return Dummy.TypeReference; } 
+      get { return Dummy.TypeReference; }
     }
 
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
@@ -1231,7 +1231,7 @@ namespace Microsoft.Cci {
     public bool IsBitField {
       get { return false; }
     }
-    
+
     public bool IsCompileTimeConstant {
       get { return false; }
     }
@@ -1411,9 +1411,9 @@ namespace Microsoft.Cci {
     }
 
     public ITypeReference GenericType {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.TypeReference; 
+        return Dummy.TypeReference;
       }
     }
 
@@ -1458,9 +1458,9 @@ namespace Microsoft.Cci {
     }
 
     public ushort GenericParameterCount {
-      get { 
+      get {
         //^ assume false;
-        return 0; 
+        return 0;
       }
     }
 
@@ -1489,9 +1489,9 @@ namespace Microsoft.Cci {
     }
 
     public bool IsGeneric {
-      get 
+      get
         //^ ensures result == false;
-      { 
+      {
         return false;
       }
     }
@@ -1531,7 +1531,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
       get { return this.Members; }
     }
-    
+
     public uint SizeOf {
       get { return 0; }
     }
@@ -1931,9 +1931,9 @@ namespace Microsoft.Cci {
     #region IGenericMethodParameter Members
 
     public IMethodDefinition DefiningMethod {
-      get { 
+      get {
         //^ assume false; //TODO; need a dummy generic method
-        return Dummy.Method; 
+        return Dummy.Method;
       }
     }
 
@@ -2283,9 +2283,9 @@ namespace Microsoft.Cci {
     }
 
     public ushort GenericParameterCount {
-      get { 
+      get {
         //^ assume false;
-        return 0; 
+        return 0;
       }
     }
 
@@ -2577,7 +2577,7 @@ namespace Microsoft.Cci {
     public IMethodDefinition ResolvedMethod {
       get {
         //^ assume false;
-        return Dummy.Method; 
+        return Dummy.Method;
       }
     }
 
@@ -2805,9 +2805,9 @@ namespace Microsoft.Cci {
     }
 
     public IRootUnitNamespace UnitNamespaceRoot {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.RootUnitNamespace; 
+        return Dummy.RootUnitNamespace;
       }
     }
 
@@ -2833,9 +2833,9 @@ namespace Microsoft.Cci {
     #region INamespaceRootOwner Members
 
     public INamespaceDefinition NamespaceRoot {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.RootUnitNamespace; 
+        return Dummy.RootUnitNamespace;
       }
     }
 
@@ -3841,7 +3841,7 @@ namespace Microsoft.Cci {
     public IName Concat {
       get { return Dummy.Name; }
     }
-    
+
     public IName DateTime {
       get { return Dummy.Name; }
     }
@@ -4803,9 +4803,9 @@ namespace Microsoft.Cci {
     }
 
     ITypeDefinition ITypeReference.ResolvedType {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.Type; 
+        return Dummy.Type;
       }
     }
 
@@ -4876,7 +4876,7 @@ namespace Microsoft.Cci {
     }
 
     public IRootUnitNamespace UnitNamespaceRoot {
-      get { 
+      get {
         //^ assume false;
         return Dummy.RootUnitNamespace;
       }
@@ -4904,9 +4904,9 @@ namespace Microsoft.Cci {
     #region INamespaceRootOwner Members
 
     public INamespaceDefinition NamespaceRoot {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.RootUnitNamespace; 
+        return Dummy.RootUnitNamespace;
       }
     }
 
@@ -5146,9 +5146,9 @@ namespace Microsoft.Cci {
     }
 
     public IUnitSetNamespace UnitSetNamespaceRoot {
-      get { 
+      get {
         //^ assume false;
-        return Dummy.RootUnitSetNamespace; 
+        return Dummy.RootUnitSetNamespace;
       }
     }
 
@@ -5157,7 +5157,7 @@ namespace Microsoft.Cci {
     #region INamespaceRootOwner Members
 
     public INamespaceDefinition NamespaceRoot {
-      get { 
+      get {
         //^ assume false;
         return Dummy.RootUnitSetNamespace;
       }
@@ -5942,9 +5942,9 @@ namespace Microsoft.Cci {
 
     //^ [Pure]
     public ushort GenericParameterCount {
-      get { 
+      get {
         //^ assume false;
-        return 0; 
+        return 0;
       }
     }
 
@@ -6965,9 +6965,9 @@ namespace Microsoft.Cci {
 
     //^ [Pure]
     public ushort GenericParameterCount {
-      get { 
+      get {
         //^ assume false;
-        return 0; 
+        return 0;
       }
     }
 
@@ -7482,7 +7482,7 @@ namespace Microsoft.Cci {
       return 0;
     }
 
-    public uint GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount, bool forPrivateModuleType) {
+    public uint GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount) {
       return 0;
     }
 
