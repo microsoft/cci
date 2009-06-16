@@ -270,7 +270,7 @@ namespace Microsoft.Cci.Pdb {
               bits.SkipCString(out block.name);
               bits.Position = stop;
 
-              scopes[scope] = new PdbScope(block, bits, out slotToken);
+              scopes[scope++] = new PdbScope(block, bits, out slotToken);
               bits.Position = (int)block.end;
               break;
             }
