@@ -359,7 +359,7 @@ namespace Microsoft.Cci {
       if (this.tlsDataWriter.BaseStream.Length > 0) numberOfSections++; //.tls
       if (this.rdataWriter.BaseStream.Length > 0) numberOfSections++; //.rdata
       if (this.sdataWriter.BaseStream.Length > 0) numberOfSections++; //.sdata
-      if (this.win32ResourceWriter.BaseStream.Length > 0) numberOfSections++; //.rsrc
+      if (!IteratorHelper.EnumerableIsEmpty(this.module.Win32Resources)) numberOfSections++; //.rsrc;
 
       this.ntHeader.NumberOfSections = numberOfSections;
       uint sizeOfPeHeaders = 128 + 4 + 20 + 224 + 40u*numberOfSections;
@@ -644,7 +644,6 @@ namespace Microsoft.Cci {
     }
 
     private void FillInSectionHeaders() {
-      uint sizeOfWin32Resources = this.ComputeSizeOfWin32Resources(); //Do this first, so that win32 resources get serialized before pe header size gets computed.
       uint sizeOfPeHeaders = this.ComputeSizeOfPeHeaders();
       uint sizeOfTextSection = this.ComputeSizeOfTextSection();
 
@@ -706,6 +705,7 @@ namespace Microsoft.Cci {
       this.resourceSection.PointerToRawData = this.tlsSection.PointerToRawData+this.tlsSection.SizeOfRawData;
       this.resourceSection.PointerToRelocations = 0;
       this.resourceSection.RelativeVirtualAddress = Aligned(this.tlsSection.RelativeVirtualAddress+this.tlsSection.VirtualSize, 0x2000);
+      uint sizeOfWin32Resources = this.ComputeSizeOfWin32Resources();
       this.resourceSection.SizeOfRawData = Aligned(sizeOfWin32Resources, this.module.FileAlignment);
       this.resourceSection.VirtualSize = sizeOfWin32Resources;
 
