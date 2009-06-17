@@ -443,6 +443,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    ///  Returns a C#-like string that corresponds to the signature of the referenced method.
+    /// </summary>
+    public override string ToString() {
+      return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.TypeParameters|NameFormattingOptions.Signature);
+    }
+
+    /// <summary>
     /// The return type of the referenced method.
     /// </summary>
     public ITypeReference Type {

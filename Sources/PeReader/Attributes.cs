@@ -1463,7 +1463,7 @@ namespace Microsoft.Cci.MetadataReader {
       }
       if (ctorReference == Dummy.MethodReference) {
         ctorReference = new MethodReference(this.PEFileToObjectModel.ModuleReader.metadataReaderHost, moduleTypeReference,
-          CallingConvention.Default, this.PEFileToObjectModel.PlatformType.SystemVoid,
+          CallingConvention.Default|CallingConvention.HasThis, this.PEFileToObjectModel.PlatformType.SystemVoid,
           this.PEFileToObjectModel.NameTable.Ctor, 0, this.PEFileToObjectModel.PlatformType.SystemSecurityPermissionsSecurityAction);
       }
 
