@@ -5124,6 +5124,9 @@ namespace Microsoft.Cci {
       this.Visit(resourceReference.DefiningAssembly);
     }
 
+    public override void Visit(ISecurityAttribute securityAttribute) {
+    }
+
     public override void Visit(ITypeDefinition typeDefinition) {
       if (this.traverseAttributes)
         this.Visit(typeDefinition.Attributes);
