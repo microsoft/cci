@@ -3870,6 +3870,7 @@ namespace Microsoft.Cci {
           dataWriter.WriteUint(r.CodePage);
           dataWriter.WriteUint(0);
           dataWriter.WriteBytes(data);
+          while ((dataWriter.BaseStream.Length % 4) != 0) dataWriter.WriteByte(0);
         }
         if (id >= 0)
           writer.WriteInt(id);
