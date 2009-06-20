@@ -22,7 +22,7 @@ namespace Microsoft.Cci.Pdb {
     internal PdbFileHeader(Stream reader, BitAccess bits) {
       bits.MinCapacity(56);
       reader.Seek(0, SeekOrigin.Begin);
-      bits.FillBuffer(reader, 56);
+      bits.FillBuffer(reader, 52);
 
       this.magic = new byte[32];
       bits.ReadBytes(this.magic);                 //   0..31
@@ -31,7 +31,11 @@ namespace Microsoft.Cci.Pdb {
       bits.ReadInt32(out this.pagesUsed);         //  40..43
       bits.ReadInt32(out this.directorySize);     //  44..47
       bits.ReadInt32(out this.zero);              //  48..51
-      bits.ReadInt32(out this.directoryRoot);     //  52..55
+
+      int directoryPages = ((((directorySize + pageSize - 1) / pageSize) * 4) + pageSize - 1) / pageSize;
+      this.directoryRoot = new int[directoryPages];
+      bits.FillBuffer(reader, directoryPages * 4);
+      bits.ReadInt32(this.directoryRoot);
     }
 
     //internal string Magic {
@@ -39,7 +43,7 @@ namespace Microsoft.Cci.Pdb {
     //}
 
     //internal void Write(Stream writer, BitAccess bits) {
-    //  bits.MinCapacity(56);
+    //  bits.MinCapacity(pageSize);
     //  bits.WriteBytes(magic);                     //   0..31
     //  bits.WriteInt32(pageSize);                  //  32..35
     //  bits.WriteInt32(freePageMap);               //  36..39
@@ -49,7 +53,7 @@ namespace Microsoft.Cci.Pdb {
     //  bits.WriteInt32(directoryRoot);             //  52..55
 
     //  writer.Seek(0, SeekOrigin.Begin);
-    //  bits.WriteBuffer(writer, 56);
+    //  bits.WriteBuffer(writer, pageSize);
     //}
 
     //////////////////////////////////////////////////// Helper Functions.
@@ -75,7 +79,7 @@ namespace Microsoft.Cci.Pdb {
     internal int pagesUsed;
     internal int directorySize;
     internal readonly int zero;
-    internal int directoryRoot;
+    internal int[] directoryRoot;
   }
 
 }

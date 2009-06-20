@@ -25,6 +25,17 @@ namespace Microsoft.Cci.Pdb {
       offset = 0;
     }
 
+    internal void Append(Stream stream, int count) {
+      int newCapacity = offset + count;
+      if (buffer.Length < newCapacity) {
+        byte[] newBuffer = new byte[newCapacity];
+        Array.Copy(buffer, newBuffer, buffer.Length);
+        buffer = newBuffer;
+      }
+      stream.Read(buffer, offset, count);
+      offset += count;
+    }
+
     internal int Position {
       get { return offset; }
       set { offset = value; }
