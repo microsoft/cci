@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A6BABD10-C384-4F9F-93D7-99B935A41719}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -51,6 +51,14 @@
     <Reference Include="vjslib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
       <Private>True</Private>
     </Reference>
+    <Reference Include="xunit, Version=1.4.9.1416, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\External\Xunit\xunit.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.console, Version=1.4.9.1416, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\External\Xunit\xunit.console.exe</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyModuleTests.cs" />
@@ -96,14 +104,6 @@
     <ProjectReference Include="..\..\Sources\MetadataModel\MetadataModel.csproj">
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Xunit\Main\xunit.console\xunit.console.csproj">
-      <Project>{19C75545-5E0E-4E38-9995-511ED2DF6D30}</Project>
-      <Name>xunit.console</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Xunit\Main\xunit\xunit.csproj">
-      <Project>{09EF9917-4B00-4646-8C3F-96EFACC8BF51}</Project>
-      <Name>xunit</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />

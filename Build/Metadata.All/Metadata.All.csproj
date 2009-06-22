@@ -83,22 +83,6 @@
       <Project>{71B89CE8-CD33-4BC1-A411-4002D367F38D}</Project>
       <Name>RoundtripTests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Xunit\Main\xunit.console\xunit.console.csproj">
-      <Project>{19C75545-5E0E-4E38-9995-511ED2DF6D30}</Project>
-      <Name>xunit.console</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Xunit\Main\xunit.gui\xunit.gui.csproj">
-      <Project>{380A0890-48E0-405A-9E3F-45A69EEE8E01}</Project>
-      <Name>xunit.gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Xunit\Main\xunit.runner.utility\xunit.runner.utility.csproj">
-      <Project>{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}</Project>
-      <Name>xunit.runner.utility</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Xunit\Main\xunit\xunit.csproj">
-      <Project>{09EF9917-4B00-4646-8C3F-96EFACC8BF51}</Project>
-      <Name>xunit</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Empty.cs" />

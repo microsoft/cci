@@ -7,10 +7,9 @@
   <UsingTask
     TaskName="Microsoft.Cci.MsBuild.Zip"
     AssemblyFile="Microsoft.Cci.MsBuild.dll" />
-
-  <UsingTask TaskName="UploadFiles" AssemblyFile="CodePlex.WebServices.Client.dll" />
   <!-- constants -->
   <PropertyGroup>
+    <CodeplexProjectName>ccimetadata</CodeplexProjectName>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
     <TraceFile>$(CCNetListenerFile)</TraceFile>
     
@@ -20,16 +19,6 @@
     <BinDirectory>$(RootDirectory)\bin</BinDirectory>
     <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
     <BinReleaseDirectory>$(BinDirectory)\release</BinReleaseDirectory>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <CodeplexProjectName>ccimetadata</CodeplexProjectName>
-    <CodeplexReleaseName>Latest Build</CodeplexReleaseName>
-    <!-- 
-      <CodeplexUser/>
-      <CodeplexPassword/> 
-      <CleanRootDirectory />
-      -->
   </PropertyGroup>
 
   <PropertyGroup>
@@ -81,6 +70,8 @@ using System.Reflection;
       TestDebug;
       BuildRelease;
       TestRelease;
+      BuildDocumentation;
+      CreateReleaseZips;
       " />
   <!-- night long build -->
   <Target
@@ -91,17 +82,6 @@ using System.Reflection;
       BuildRelease;
       TestNightly;
       " />
-  <!-- uploads new release -->  
-  <Target
-    Name="CreateCodePlexRelease"
-    DependsOnTargets="
-      Clean;
-      CreateVersion;
-      BuildRelease;
-      BuildDocumentation;
-      UploadRelease
-    "
-    />
 
   <Target Name="Clean">
     <RemoveDir Directories="$(BinDirectory)"  ContinueOnError="true" />
@@ -152,10 +132,7 @@ using System.Reflection;
       Command="PEReaderTests.exe /xml ..\PEReaderTests.ret.results.xml" />
   </Target>
 
-  <Target Name="UploadRelease">
-    <Error Condition="$(CodeplexUser) == ''" Text="CodeplexUser property is not set" />
-    <Error Condition="$(CodeplexPassword) == ''" Text="CodeplexPassword property is not set" />
-
+  <Target Name="CreateReleaseZips">
     <CreateItem Include="
       $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
       $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
@@ -171,17 +148,6 @@ using System.Reflection;
     <Zip Files="@(Assemblies)" OutputFile="@(ZipBinaries)" />
     <Zip Files="@(Symbols)" OutputFile="@(ZipSymbols)" />
     <Zip Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
-
-    <UploadFiles
-      ProjectName="$(CodeplexProjectName)"
-      ReleaseName="$(CodeplexReleaseName)"
-      ReleaseFiles="
-        @(ZipBinaries);
-        @(ZipSymbols);
-        @(ZipSources)  
-      "
-      Username="$(CodeplexUser)"
-      Password="$(CodeplexPassword)" />
   </Target>
 
   <Target Name="TestNightly">
