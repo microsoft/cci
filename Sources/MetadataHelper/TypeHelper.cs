@@ -656,7 +656,7 @@ namespace Microsoft.Cci {
     /// </summary>
     //^ [Pure]
     public static TypeMemberVisibility TypeVisibilityAsTypeMemberVisibility(ITypeDefinition type) {
-      TypeMemberVisibility result = TypeMemberVisibility.Default;
+      TypeMemberVisibility result = TypeMemberVisibility.Public; // supposedly the only thing that doesn't meet any of the below tests are type parameters and their "default" is public.
       INamespaceTypeDefinition/*?*/ nsType = type as INamespaceTypeDefinition;
       if (nsType != null)
         result = nsType.IsPublic ? TypeMemberVisibility.Public : TypeMemberVisibility.Assembly;
