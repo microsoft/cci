@@ -2648,7 +2648,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(ITypeReference typeReference, IInternFactory internFactory) {
       this.aliasForType = typeReference.AliasForType;
-      this.attributes = new List<ICustomAttribute>(typeReference.Attributes);
+      if (typeReference is ITypeDefinition)
+        this.attributes = new List<ICustomAttribute>(); //the attributes of a type definition are not the same as the attributes of a type reference
+        //so when a definition is being copied as a reference, it should get not attributes of its own.
+      else
+        this.attributes = new List<ICustomAttribute>(typeReference.Attributes);
+      this.internFactory = internFactory;
       this.internFactory = internFactory;
       this.isEnum = typeReference.IsEnum;
       this.isValueType = typeReference.IsValueType;
