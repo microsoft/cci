@@ -14,10 +14,12 @@ namespace Microsoft.Cci.Pdb {
       bits.MinCapacity(head.directorySize);
       int directoryRootPages = head.directoryRoot.Length;
       int pagesPerPage = head.pageSize / 4;
+      int pagesToGo = pages;
       for (int i = 0; i < directoryRootPages; i++) {
-        int pagesInThisPage = (i == directoryRootPages - 1) ? pages % pagesPerPage : pagesPerPage;
+        int pagesInThisPage = pagesToGo <= pagesPerPage ? pagesToGo : pagesPerPage;
         reader.Seek(head.directoryRoot[i], 0);
         bits.Append(reader.reader, pagesInThisPage * 4);
+        pagesToGo -= pagesInThisPage;
       }
       bits.Position = 0;
 
