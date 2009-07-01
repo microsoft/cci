@@ -163,7 +163,7 @@ namespace Microsoft.Cci.Ast {
         if (this.contractProvider == null) {
           lock (this) {
             if (this.contractProvider == null)
-              this.contractProvider = new SourceContractProvider(new ContractMethods(this.HostEnvironment));
+              this.contractProvider = new SourceContractProvider(new ContractMethods(this.HostEnvironment), this.Result);
           }
         }
         return this.contractProvider;

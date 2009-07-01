@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
+using System.Text;
 
 namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
@@ -27,6 +28,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     bool sawVolatile;
     byte alignment;
     bool contractsOnly;
+    internal ContractExtractor/*?*/ contractExtractor; // invariant: !contractsOnly || contractExtractor != null
 
     /// <summary>
     /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
@@ -61,9 +63,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
     /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
     /// embedded in the given method body.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly) 
-      : this(ilMethodBody, host, contractProvider, pdbReader) { 
-      this.contractsOnly = contractsOnly; 
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly)
+      : this(ilMethodBody, host, contractProvider, pdbReader) {
+      this.contractsOnly = contractsOnly;
+      this.contractExtractor = new ContractExtractor(this, this.contractProvider);
     }
 
     /// <summary>
@@ -152,7 +155,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (cc == null) return 0; //TODO: error
       IConvertible/*?*/ ic = cc.Value as IConvertible;
       if (ic == null) return 0; //TODO: error
-      switch (ic.GetTypeCode()){
+      switch (ic.GetTypeCode()) {
         case TypeCode.SByte:
         case TypeCode.Byte:
         case TypeCode.Int16:
@@ -229,7 +232,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private void CreateBlocksForExceptionHandlers(){
+    private void CreateBlocksForExceptionHandlers() {
       foreach (IOperationExceptionInformation exinfo in this.ilMethodBody.OperationExceptionInformation) {
         BasicBlock bb = this.GetOrCreateBlock(exinfo.TryStartOffset, false);
         bb.NumberOfTryBlocksStartingHere++;
@@ -258,7 +261,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       BasicBlock currentBlock = result;
       int lastContractOffset = 0; // dummy value
       if (this.contractsOnly) {
-        lastContractOffset = OffsetOfLastContractCallOrNegativeOne(this.ilMethodBody.Operations);
+        lastContractOffset = OffsetOfLastContractCallOrNegativeOne();
         if (lastContractOffset == -1) return result;
       }
       while (this.operationEnumerator.MoveNext()) {
@@ -276,34 +279,38 @@ namespace Microsoft.Cci.ILToCodeModel {
       return this.Transform(result);
     }
 
-    private static int OffsetOfLastContractCallOrNegativeOne(IEnumerable<IOperation> operations) {
-      List<IOperation> instrs = new List<IOperation>(operations);
+    private int OffsetOfLastContractCallOrNegativeOne() {
+      List<IOperation> instrs = new List<IOperation>(this.ilMethodBody.Operations);
       for (int i = instrs.Count - 1; 0 <= i; i--) {
         IOperation op = instrs[i];
         if (op.OperationCode != OperationCode.Call) continue;
         IMethodReference method = op.Value as IMethodReference;
         if (method == null) continue;
         var methodName = method.Name.Value;
-        if (TypeHelper.TypesAreEquivalent(method.ContainingType, method.ContainingType.PlatformType.SystemDiagnosticsContractsContract)
-          && !(methodName.Equals("Assert") || methodName.Equals("Assume"))
+        if (this.contractExtractor != null &&
+          this.contractExtractor.IsContractMethod(method) && !(methodName.Equals("Assert") || methodName.Equals("Assume"))
           ) return (int)op.Offset;
       }
       return -1; // not found
     }
 
     private IBlockStatement Transform(BasicBlock rootBlock) {
-      new PatternDecompiler(this).Visit(rootBlock);
+      new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new Unstacker(this).Visit(rootBlock);
-      new ControlFlowDecompiler(this.host.PlatformType).Visit(rootBlock);
+      new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
       IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      if (this.contractProvider != null)
-        result = new ContractExtractor(this, this.contractProvider).Visit(result);
+      if (this.contractProvider != null) {
+        if (this.contractExtractor == null) {
+          this.contractExtractor = new ContractExtractor(this, this.contractProvider);
+        }
+        result = this.contractExtractor.Visit(result);
+      }
       result = new AssertAssumeExtractor(this).Visit(result);
       return result;
     }
@@ -345,6 +352,20 @@ namespace Microsoft.Cci.ILToCodeModel {
       LabeledStatement result;
       if (label is uint && this.targetStatementFor.TryGetValue((uint)label, out result)) return result;
       return CodeDummy.LabeledStatement;
+    }
+    private GotoStatement MakeGoto(IOperation currentOperation) {
+      GotoStatement gotoStatement = new GotoStatement();
+      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      List<IGotoStatement> values;
+      var found = this.predecessors.TryGetValue(gotoStatement.TargetStatement, out values);
+      if (!found) {
+        var l = new List<IGotoStatement>();
+        l.Add(gotoStatement);
+        this.predecessors.Add(gotoStatement.TargetStatement, l);
+      } else {
+        values.Add(gotoStatement);
+      }
+      return gotoStatement;
     }
 
     private Expression ParseAddition(OperationCode currentOpcode) {
@@ -596,14 +617,14 @@ namespace Microsoft.Cci.ILToCodeModel {
           condition = this.ParseBinaryOperation(new NotEquality());
           break;
       }
-      GotoStatement gotoStatement = new GotoStatement();
-      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      GotoStatement gotoStatement = MakeGoto(currentOperation);
       ConditionalStatement ifStatement = new ConditionalStatement();
       ifStatement.Condition = condition;
       ifStatement.TrueBranch = gotoStatement;
       ifStatement.FalseBranch = new EmptyStatement();
       return ifStatement;
     }
+
 
     private Expression ParseBoundExpression(IOperation currentOperation) {
       if (currentOperation.Value == null)
@@ -702,8 +723,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Conv_Ovf_U2_Un:
         case OperationCode.Conv_Ovf_U4_Un:
         case OperationCode.Conv_Ovf_U8_Un:
-          result.ValueToConvert = this.ConvertToUnsigned(valueToConvert); 
-          result.CheckNumericRange = true;  break;
+          result.ValueToConvert = this.ConvertToUnsigned(valueToConvert);
+          result.CheckNumericRange = true; break;
         case OperationCode.Conv_Ovf_I:
         case OperationCode.Conv_Ovf_I1:
         case OperationCode.Conv_Ovf_I2:
@@ -1332,8 +1353,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Statement ParseUnaryConditionalBranch(IOperation currentOperation) {
       Expression condition = this.PopOperandStack();
-      GotoStatement gotoStatement = new GotoStatement();
-      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      GotoStatement gotoStatement = MakeGoto(currentOperation);
       ConditionalStatement ifStatement = new ConditionalStatement();
       ifStatement.Condition = condition;
       switch (currentOperation.OperationCode) {
@@ -1353,8 +1373,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private Statement ParseUnconditionalBranch(IOperation currentOperation) {
-      GotoStatement gotoStatement = new GotoStatement();
-      gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
+      GotoStatement gotoStatement = this.MakeGoto(currentOperation);
       return gotoStatement;
     }
 
@@ -1396,6 +1415,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private Dictionary<uint, LabeledStatement> targetStatementFor = new Dictionary<uint, LabeledStatement>();
+    private Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors = new Dictionary<ILabeledStatement, List<IGotoStatement>>();
+
 
   }
+
 }

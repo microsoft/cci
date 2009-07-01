@@ -5,6 +5,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics; // needed for DebuggerNonUserCodeAttribute
 
 //^ using Microsoft.Contracts;
 
@@ -108,6 +109,12 @@ namespace Microsoft.Cci.Contracts {
     /// A collection of methods that can be called in a way that provides tools with information about contracts.
     /// </summary>
     IContractMethods/*?*/ ContractMethods { get; }
+
+    /// <summary>
+    /// The unit that this is a contract provider for. Intentional design:
+    /// no provider works on more than one unit.
+    /// </summary>
+    IUnit/*?*/ Unit { get; }
 
   }
 
@@ -302,6 +309,50 @@ namespace Microsoft.Cci.Contracts {
   }
 
   /// <summary>
+  /// A common supertype for contracts like preconditions, postconditions,
+  /// object invariants, and loop invariants.
+  /// </summary>
+  public interface IContractElement : IErrorCheckable, IObjectWithLocations {
+    /// <summary>
+    /// The condition associated with this particular contract element.
+    /// 
+    /// For  a loop invariant, the condition that must be true at the start of every iteration of a loop.
+    /// For a precondition, it is the condition that must be true for a caller to call the associated
+    /// method.
+    /// For a postcondition, it is the condition that must be true at the end of the method that is
+    /// associated with this instance.
+    /// For an object invariant, well, it is complicated. In general it is a condition that must be
+    /// true at the end of a public constructor and is both a pre- and postcondition for public methods
+    /// on the type with which the object invariant is associated.
+    /// 
+    /// The meaning of the condition is dependent on the type of contract. For instance, mostly this
+    /// will be a boolean-valued expression. But it could also be used for loop variant functions in
+    /// which case this would be an expression which represents a natural number.
+    /// </summary>
+    IExpression Condition { get; }
+
+    /// <summary>
+    /// An optional expression that is associated with this particular contract element. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    IExpression/*?*/ Description { get; }
+
+    /// <summary>
+    /// The original source representation of the contract element.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    string/*?*/ OriginalSource { get; }
+  }
+
+  /// <summary>
   /// A collection of collections of objects that describe a loop.
   /// </summary>
   public interface ILoopContract : IErrorCheckable, IObjectWithLocations {
@@ -320,11 +371,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true at the start of every iteration of a loop.
   /// </summary>
-  public interface ILoopInvariant : IErrorCheckable, IObjectWithLocations {
-    /// <summary>
-    /// The condition that must be true at the start of every iteration of a loop.
-    /// </summary>
-    IExpression Condition { get; }
+  public interface ILoopInvariant : IContractElement {
   }
 
   /// <summary>
@@ -382,17 +429,12 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
   /// </summary>
-  public interface IPrecondition : IErrorCheckable, IObjectWithLocations {
+  public interface IPrecondition : IContractElement {
 
     /// <summary>
     /// The precondition is always checked at runtime, even in release builds.
     /// </summary>
     bool AlwaysCheckedAtRuntime { get; }
-
-    /// <summary>
-    /// The condition that must be true at the start of the method that is associated with this instance.
-    /// </summary>
-    IExpression Condition { get; }
 
     /// <summary>
     /// One of three things:
@@ -408,13 +450,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true at the end of a method.
   /// </summary>
-  public interface IPostcondition : IErrorCheckable, IObjectWithLocations {
-
-    /// <summary>
-    /// The condition that must be true at the end of the method that is associated with this instance.
-    /// </summary>
-    IExpression Condition { get; }
-
+  public interface IPostcondition : IContractElement {
   }
 
   /// <summary>
@@ -459,11 +495,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true after an object has been constructed and that is by default a part of the precondition and postcondition of every public method of the associated type.
   /// </summary>
-  public interface ITypeInvariant : IErrorCheckable, IObjectWithLocations {
-    /// <summary>
-    /// The condition that must be true after an object of the type associated with this invariant has been constructed.
-    /// </summary>
-    IExpression Condition { get; }
+  public interface ITypeInvariant : IContractElement {
 
     /// <summary>
     /// An axiom is a type invariant whose truth is assumed rather than derived. Commonly used to make statements about the meaning of contract methods.
@@ -477,5 +509,119 @@ namespace Microsoft.Cci.Contracts {
 
   }
 
+#pragma warning disable 1591
+
+  public static class ContractDummy {
+    public static IMethodContract MethodContract {
+      [DebuggerNonUserCode]
+      get {
+        if (ContractDummy.methodContract == null)
+          ContractDummy.methodContract = new DummyMethodContract();
+        return ContractDummy.methodContract;
+      }
+    }
+    private static IMethodContract/*?*/ methodContract;
+    public static ITypeContract TypeContract {
+      [DebuggerNonUserCode]
+      get {
+        if (ContractDummy.typeContract == null)
+          ContractDummy.typeContract = new DummyTypeContract();
+        return ContractDummy.typeContract;
+      }
+    }
+    private static ITypeContract/*?*/ typeContract;
+  }
+  internal sealed class DummyMethodContract : IMethodContract {
+    #region IMethodContract Members
+
+    public IEnumerable<IExpression> Allocates {
+      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+    }
+
+    public IEnumerable<IExpression> Frees {
+      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+    }
+
+    public IEnumerable<IAddressableExpression> ModifiedVariables {
+      get { return IteratorHelper.GetEmptyEnumerable<IAddressableExpression>(); }
+    }
+
+    public bool MustInline {
+      get { return false; }
+    }
+
+    public IEnumerable<IPostcondition> Postconditions {
+      get { return IteratorHelper.GetEmptyEnumerable<IPostcondition>(); }
+    }
+
+    public IEnumerable<IPrecondition> Preconditions {
+      get { return IteratorHelper.GetEmptyEnumerable<IPrecondition>(); }
+    }
+
+    public IEnumerable<IExpression> Reads {
+      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+    }
+
+    public IEnumerable<IThrownException> ThrownExceptions {
+      get { return IteratorHelper.GetEmptyEnumerable<IThrownException>(); }
+    }
+
+    public IEnumerable<IExpression> Writes {
+      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+    }
+
+    #endregion
+
+    #region IErrorCheckable Members
+
+    public bool HasErrors() {
+      return false;
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+    }
+
+    #endregion
+  }
+  internal sealed class DummyTypeContract : ITypeContract {
+    #region ITypeContract Members
+
+    public IEnumerable<IFieldDefinition> ContractFields {
+      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+    }
+
+    public IEnumerable<IMethodDefinition> ContractMethods {
+      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+    }
+
+    public IEnumerable<ITypeInvariant> Invariants {
+      get { return IteratorHelper.GetEmptyEnumerable<ITypeInvariant>(); }
+    }
+
+    #endregion
+
+    #region IErrorCheckable Members
+
+    public bool HasErrors() {
+      return false;
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+    }
+
+    #endregion
+  }
+
+#pragma warning restore 1591
 
 }

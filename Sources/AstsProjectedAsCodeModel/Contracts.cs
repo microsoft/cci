@@ -21,8 +21,9 @@ namespace Microsoft.Cci.Ast {
     /// Allocates an object that associates contracts, such as preconditions and postconditions, with methods, types and loops. 
     /// </summary>
     /// <param name="contractMethods">A collection of methods that can be called in a way that provides tools with information about contracts.</param>
-    public SourceContractProvider(IContractMethods contractMethods)
-      : base(contractMethods) {
+    /// <param name="unit">The unit for which this is a contract provider.</param>
+    public SourceContractProvider(IContractMethods contractMethods, IUnit unit)
+      : base(contractMethods, unit) {
     }
 
     /// <summary>
@@ -116,6 +117,25 @@ namespace Microsoft.Cci.Ast {
       get { return this.condition; }
     }
     readonly Expression condition;
+
+    /// <summary>
+    /// An optional expression that is associated with this particular contract element. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public IExpression/*?*/ Description {
+      get { return null; }
+    }
+
+    /// <summary>
+    /// An optional string that is the "string-ified" version of the condition.
+    /// </summary>
+    public string/*?*/ OriginalSource {
+      get {
+        // TODO: Store text from sourceLocation so it can be returned from here
+        return null;
+      }
+    }
 
     /// <summary>
     /// IsTrue(this.Condition)
@@ -329,7 +349,7 @@ namespace Microsoft.Cci.Ast {
 
     #region ILoopInvariant Members
 
-    IExpression ILoopInvariant.Condition {
+    IExpression IContractElement.Condition {
       [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
@@ -716,6 +736,25 @@ namespace Microsoft.Cci.Ast {
     readonly Expression condition;
 
     /// <summary>
+    /// An optional expression that is associated with this particular contract element. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public IExpression/*?*/ Description {
+      get { return null; }
+    }
+
+    /// <summary>
+    /// An optional string that is the "string-ified" version of the condition.
+    /// </summary>
+    public string/*?*/ OriginalSource {
+      get {
+        // TODO: Store text from sourceLocation so it can be returned from here
+        return null;
+      }
+    }
+
+    /// <summary>
     /// The condition that must be true at the start or end of the method that is associated with this MethodContractItem instance.
     /// </summary>
     public Expression ConvertedCondition {
@@ -842,7 +881,7 @@ namespace Microsoft.Cci.Ast {
 
     #region IPrecondition Members
 
-    IExpression IPrecondition.Condition {
+    IExpression IContractElement.Condition {
       [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
@@ -908,7 +947,7 @@ namespace Microsoft.Cci.Ast {
 
     #region IPostcondition Members
 
-    IExpression IPostcondition.Condition {
+    IExpression IContractElement.Condition {
       [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
@@ -1264,7 +1303,7 @@ namespace Microsoft.Cci.Ast {
 
     #region ITypeInvariant Members
 
-    IExpression ITypeInvariant.Condition {
+    IExpression IContractElement.Condition {
       [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }

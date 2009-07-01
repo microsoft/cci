@@ -25,7 +25,7 @@ namespace CodeModelTests {
         Stream pdbStream = File.OpenRead(pdbFile);
         pdbReader = new PdbReader(pdbStream, host);
       }
-      ContractProvider contractProvider = new ContractProvider(new ContractMethods(host));
+      ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), assembly);
 
       SourceEmitterContext sourceEmitterContext = new SourceEmitterContext();
       SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString(sourceEmitterContext);

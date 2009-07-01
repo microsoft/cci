@@ -20,8 +20,10 @@ namespace Microsoft.Cci.Contracts {
     /// If the object is already associated with a contract, that association will be lost as a result of this call.
     /// </summary>
     /// <param name="contractMethods">A collection of methods that can be called in a way that provides tools with information about contracts.</param>
-    public ContractProvider(IContractMethods contractMethods) {
+    /// <param name="unit">The unit that this is a contract provider for.</param>
+    public ContractProvider(IContractMethods contractMethods, IUnit unit) {
       this.contractMethods = contractMethods;
+      this.unit = unit;
     }
 
     /// <summary>
@@ -140,6 +142,14 @@ namespace Microsoft.Cci.Contracts {
     }
     private readonly Dictionary<object, ITypeContract> typeContractFor = new Dictionary<object, ITypeContract>();
 
+    /// <summary>
+    /// The unit that this is a contract provider for. Intentional design:
+    /// no provider works on more than one unit.
+    /// </summary>
+    public IUnit/*?*/ Unit {
+      get { return this.unit; }
+    }
+    IUnit/*?*/ unit;
 
   }
 
@@ -148,18 +158,11 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class LoopContract : ILoopContract {
 
-    /// <summary>
-    /// 
-    /// </summary>
     public LoopContract() {
       this.invariants = new List<ILoopInvariant>();
       this.locations = new List<ILocation>(1);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="loopContract"></param>
     public LoopContract(ILoopContract loopContract) {
       this.invariants = new List<ILoopInvariant>(loopContract.Invariants);
       this.locations = new List<ILocation>(loopContract.Locations);
@@ -207,9 +210,8 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Checks the object for errors and returns true if any have been found
+    /// Checks the expression for errors and returns true if any were found.
     /// </summary>
-    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -228,63 +230,22 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true at the start of every iteration of a loop.
   /// </summary>
-  public sealed class LoopInvariant : ILoopInvariant {
+  public sealed class LoopInvariant : ContractElement, ILoopInvariant {
 
     /// <summary>
-    /// 
+    /// Creates a fresh loop invariant.
     /// </summary>
     public LoopInvariant() {
-      this.condition = CodeDummy.Expression;
-      this.locations = new List<ILocation>(1);
     }
 
     /// <summary>
-    /// 
+    /// Creates a loop invariant that shares all of the information in <paramref name="loopInvariant"/>.
     /// </summary>
     /// <param name="loopInvariant"></param>
-    public LoopInvariant(ILoopInvariant loopInvariant) {
-      this.condition = loopInvariant.Condition;
-      this.locations = new List<ILocation>(loopInvariant.Locations);
+    public LoopInvariant(ILoopInvariant loopInvariant)
+      : base(loopInvariant) {
     }
 
-
-    /// <summary>
-    /// The condition that must be true at the start of every iteration of a loop.
-    /// </summary>
-    public IExpression Condition {
-      get { return this.condition; }
-      set { this.condition = value; }
-    }
-    IExpression condition;
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
-    }
-    List<ILocation> locations;
-
-    #region ILoopInvariant Members
-
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    /// <returns></returns>
-    public bool HasErrors() {
-      return false;
-    }
-
-    #endregion
-
-    #region IObjectWithLocations Members
-
-    IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.Locations.AsReadOnly(); }
-    }
-
-    #endregion
   }
 
   /// <summary>
@@ -293,9 +254,6 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class MethodContract : IMethodContract {
 
-    /// <summary>
-    /// 
-    /// </summary>
     public MethodContract() {
       this.allocates = new List<IExpression>();
       this.frees = new List<IExpression>();
@@ -309,10 +267,6 @@ namespace Microsoft.Cci.Contracts {
       this.writes = new List<IExpression>();
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="methodContract"></param>
     public MethodContract(IMethodContract methodContract) {
       this.allocates = new List<IExpression>(methodContract.Allocates);
       this.frees = new List<IExpression>(methodContract.Frees);
@@ -418,10 +372,6 @@ namespace Microsoft.Cci.Contracts {
 
     #region IMethodContract Members
 
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -472,27 +422,25 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
   /// </summary>
-  public sealed class Precondition : IPrecondition {
+  public sealed class Precondition : ContractElement, IPrecondition {
 
     /// <summary>
-    /// 
+    /// Creates a fresh precondition.
     /// </summary>
-    public Precondition() {
+    public Precondition()
+      : base() {
       this.alwaysCheckedAtRuntime = false;
-      this.condition = CodeDummy.Expression;
       this.exceptionToThrow = null;
-      this.locations = new List<ILocation>(1);
     }
 
     /// <summary>
-    /// 
+    /// Creates a precondition that shares all of the information in <paramref name="precondition"/>.
     /// </summary>
     /// <param name="precondition"></param>
-    public Precondition(IPrecondition precondition) {
+    public Precondition(IPrecondition precondition)
+      : base(precondition) {
       this.alwaysCheckedAtRuntime = precondition.AlwaysCheckedAtRuntime;
-      this.condition = precondition.Condition;
       this.exceptionToThrow = precondition.ExceptionToThrow;
-      this.locations = new List<ILocation>(precondition.Locations);
     }
 
     /// <summary>
@@ -505,15 +453,6 @@ namespace Microsoft.Cci.Contracts {
     bool alwaysCheckedAtRuntime;
 
     /// <summary>
-    /// The condition that must be true at the start of the method that is associated with this instance.
-    /// </summary>
-    public IExpression Condition {
-      get { return this.condition; }
-      set { this.condition = value; }
-    }
-    IExpression condition;
-
-    /// <summary>
     /// An exeption that will be thrown if Condition is not true at the start of the method that is associated with this instance.
     /// May be null. If null, the runtime behavior of the associated method is undefined when Condition is not true.
     /// </summary>
@@ -523,83 +462,28 @@ namespace Microsoft.Cci.Contracts {
     }
     IExpression/*?*/ exceptionToThrow;
 
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
-    }
-    List<ILocation> locations;
-
-    /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors() {
-      return false;
-    }
-
-    #region IObjectWithLocations Members
-
-    IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.Locations.AsReadOnly(); }
-    }
-
-    #endregion
   }
 
   /// <summary>
   /// A condition that must be true at the end of a method.
   /// </summary>
-  public sealed class PostCondition : IPostcondition {
+  public sealed class PostCondition : ContractElement, IPostcondition {
 
     /// <summary>
-    /// 
+    /// Creates a fresh postcondition.
     /// </summary>
-    public PostCondition() {
-      this.condition = CodeDummy.Expression;
-      this.locations = new List<ILocation>(1);
+    public PostCondition()
+      : base() {
     }
 
     /// <summary>
-    /// 
+    /// Creates a postcondition that shares all of the information in <paramref name="postcondition"/>
     /// </summary>
     /// <param name="postcondition"></param>
-    public PostCondition(IPostcondition postcondition) {
-      this.condition = postcondition.Condition;
-      this.locations = new List<ILocation>(postcondition.Locations);
+    public PostCondition(IPostcondition postcondition)
+      : base(postcondition) {
     }
 
-    /// <summary>
-    /// The condition that must be true at the end of the method that is associated with this instance.
-    /// </summary>
-    public IExpression Condition {
-      get { return this.condition; }
-      set { this.condition = value; }
-    }
-    IExpression condition;
-
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
-    }
-    List<ILocation> locations;
-
-    /// <summary>
-    /// Checks the postcondition for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors() { return false; }
-
-    #region IObjectWithLocations Members
-
-    IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.Locations.AsReadOnly(); }
-    }
-
-    #endregion
   }
 
   /// <summary>
@@ -607,18 +491,11 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class ThrownException : IThrownException {
 
-    /// <summary>
-    /// 
-    /// </summary>
     public ThrownException() {
       this.exceptionType = Dummy.TypeReference;
       this.postconditions = new List<IPostcondition>();
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="thrownException"></param>
     public ThrownException(IThrownException thrownException) {
       this.exceptionType = thrownException.ExceptionType;
       this.postconditions = new List<IPostcondition>(thrownException.Postconditions);
@@ -658,9 +535,6 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class TypeContract : ITypeContract {
 
-    /// <summary>
-    /// 
-    /// </summary>
     public TypeContract() {
       this.contractFields = new List<IFieldDefinition>();
       this.contractMethods = new List<IMethodDefinition>();
@@ -668,10 +542,6 @@ namespace Microsoft.Cci.Contracts {
       this.locations = new List<ILocation>(1);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="typeContract"></param>
     public TypeContract(ITypeContract typeContract) {
       this.contractFields = new List<IFieldDefinition>(typeContract.ContractFields);
       this.contractMethods = new List<IMethodDefinition>(typeContract.ContractMethods);
@@ -718,10 +588,6 @@ namespace Microsoft.Cci.Contracts {
 
     #region ITypeContract Members
 
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -752,37 +618,26 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A condition that must be true after an object has been constructed and that is by default a part of the precondition and postcondition of every public method of the associated type.
   /// </summary>
-  public sealed class TypeInvariant : ITypeInvariant {
+  public sealed class TypeInvariant : ContractElement, ITypeInvariant {
 
     /// <summary>
-    /// 
+    /// Creates a fresh type invariant.
     /// </summary>
-    public TypeInvariant() {
-      this.condition = CodeDummy.Expression;
+    public TypeInvariant()
+      : base() {
       this.isAxiom = false;
-      this.locations = new List<ILocation>(1);
       this.name = null;
     }
 
     /// <summary>
-    /// 
+    /// Creates a type invariant that shares all of the information in <paramref name="typeInvariant"/>.
     /// </summary>
     /// <param name="typeInvariant"></param>
-    public TypeInvariant(ITypeInvariant typeInvariant) {
-      this.condition = typeInvariant.Condition;
+    public TypeInvariant(ITypeInvariant typeInvariant)
+      : base(typeInvariant) {
       this.isAxiom = typeInvariant.IsAxiom;
-      this.locations = new List<ILocation>(typeInvariant.Locations);
       this.name = typeInvariant.Name;
     }
-
-    /// <summary>
-    /// The condition that must be true after an object of the type associated with this invariant has been constructed.
-    /// </summary>
-    public IExpression Condition {
-      get { return this.condition; }
-      set { this.condition = value; }
-    }
-    IExpression condition;
 
     /// <summary>
     /// An axiom is a type invariant whose truth is assumed rather than derived. Commonly used to make statements about the meaning of contract methods.
@@ -793,14 +648,6 @@ namespace Microsoft.Cci.Contracts {
     }
     bool isAxiom;
 
-    /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
-    /// </summary>
-    public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
-    }
-    List<ILocation> locations;
 
     /// <summary>
     /// The name of the invariant. Used in error diagnostics. May be null.
@@ -811,20 +658,103 @@ namespace Microsoft.Cci.Contracts {
     }
     IName/*?*/ name;
 
+  }
 
-    #region ITypeInvariant Members
+  /// <summary>
+  /// A common supertype providing a shared implementation used by the classes
+  /// LoopInvariant, Precondition, PostCondition, and TypeInvariant.
+  /// </summary>
+  public abstract class ContractElement : IContractElement {
 
     /// <summary>
-    /// Checks the object for errors and returns true if any have been found
+    /// Creates a fresh contract element with no information in it.
     /// </summary>
-    /// <returns></returns>
-    public bool HasErrors() {
+    protected ContractElement() {
+      this.condition = CodeDummy.Expression;
+      this.description = null;
+      this.conditionAsText = null;
+      this.locations = new List<ILocation>(1);
+    }
+
+    /// <summary>
+    /// Creates a contract element that shares all of the information in <paramref name="element"/>.
+    /// </summary>
+    /// <param name="element"></param>
+    protected ContractElement(IContractElement element) {
+      this.condition = element.Condition;
+      this.description = element.Description;
+      this.conditionAsText = element.OriginalSource;
+      this.locations = new List<ILocation>(element.Locations);
+    }
+
+    #region IContractElement Members
+
+    /// <summary>
+    /// The condition associated with this particular contract element.
+    /// 
+    /// For  a loop invariant, the condition that must be true at the start of every iteration of a loop.
+    /// For a precondition, it is the condition that must be true for a caller to call the associated
+    /// method.
+    /// For a postcondition, it is the condition that must be true at the end of the method that is
+    /// associated with this instance.
+    /// For an object invariant, well, it is complicated. In general it is a condition that must be
+    /// true at the end of a public constructor and is both a pre- and postcondition for public methods
+    /// on the type with which the object invariant is associated.
+    /// 
+    /// The meaning of the condition is dependent on the type of contract. For instance, mostly this
+    /// will be a boolean-valued expression. But it could also be used for loop variant functions in
+    /// which case this would be an expression which represents a natural number.
+    /// </summary>
+    public virtual IExpression Condition {
+      get { return this.condition; }
+      set { this.condition = value; }
+    }
+    IExpression condition;
+
+    /// <summary>
+    /// An optional expression that is associated with this particular contract element. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public virtual IExpression/*?*/ Description {
+      get { return this.description; }
+      set { this.description = value; }
+    }
+    IExpression description;
+
+    /// <summary>
+    /// As an option, tools that provide contracts may want to have a "string-ified" version
+    /// of the condition.
+    /// </summary>
+    public virtual string/*?*/ OriginalSource {
+      get { return this.conditionAsText; }
+      set { this.conditionAsText = value; }
+    }
+    string conditionAsText;
+
+    #endregion
+
+    #region IErrorCheckable Members
+
+    /// <summary>
+    /// Checks the expression for errors and returns true if any were found.
+    /// </summary>
+    public virtual bool HasErrors() {
       return false;
     }
 
     #endregion
 
     #region IObjectWithLocations Members
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public virtual List<ILocation> Locations {
+      get { return this.locations; }
+      set { this.locations = value; }
+    }
+    List<ILocation> locations;
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get { return this.Locations.AsReadOnly(); }

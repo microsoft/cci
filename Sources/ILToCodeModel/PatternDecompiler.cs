@@ -12,15 +12,17 @@ using System;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class PatternDecompiler : BaseCodeTraverser{
+  internal class PatternDecompiler : BaseCodeTraverser {
 
     INameTable nameTable;
     SourceMethodBody sourceMethodBody;
     List<ILocalDefinition> blockLocalVariables;
+    Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors;
 
-    internal PatternDecompiler(SourceMethodBody sourceMethodBody) {
+    internal PatternDecompiler(SourceMethodBody sourceMethodBody, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors) {
       this.nameTable = sourceMethodBody.nameTable;
       this.sourceMethodBody = sourceMethodBody;
+      this.predecessors = predecessors;
     }
 
     public override void Visit(IBlockStatement block) {
@@ -143,12 +145,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (pop == null) return false;
       statements.RemoveAt(i);
       assignment.Source = push.ValueToPush;
-      assignment2.Source = new BoundExpression() { Definition = local};
+      assignment2.Source = new BoundExpression() { Definition = local };
       this.sourceMethodBody.numberOfReferences[local]++;
       return true;
     }
 
-    private void ReplacePushPopPattern (List<IStatement> statements, int i) {
+    private void ReplacePushPopPattern(List<IStatement> statements, int i) {
       if (i > statements.Count - 2) return;
       int count = 0;
       while (i+count < statements.Count-1 && statements[i+count] is Push) count++;
@@ -176,6 +178,29 @@ namespace Microsoft.Cci.ILToCodeModel {
       statements.RemoveAt(i);
     }
 
+    /// <summary>
+    /// Finds the following pattern:
+    /// i   :  c ? A : B; // either A or B must be an empty statement and the other is "goto L1;"
+    /// i+1 :  push x;
+    /// i+2 :  goto L2;
+    /// i+3 :  Block1
+    ///        0  : L1;
+    ///        1  : push y;
+    ///        2  : Block2
+    ///             0 : L2;
+    ///             1 : (rest of statements in Block2)
+    ///             
+    /// Transforms it into:
+    /// i   : push d ? X : Y;
+    /// i+1 : (rest of statements in Block2)
+    /// 
+    /// Where if A is the empty statement, then
+    ///   d == c, X == x, Y == y
+    /// If B is the empty statement, then if y is zero,
+    ///   d == !c, X == x, Y == y
+    /// If B is the empty statement, then if y is not zero,
+    ///   d == c, X == y, Y == x
+    /// </summary>
     private bool ReplaceShortCircuitPattern(List<IStatement> statements, int i) {
       if (i > statements.Count - 4) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i] as ConditionalStatement;
@@ -191,6 +216,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (block.Statements.Count < 3) return false;
       LabeledStatement/*?*/ label = block.Statements[0] as LabeledStatement;
       if (label == null) return false;
+      List<IGotoStatement> branchesToThisLabel;
+      if (this.predecessors.TryGetValue(label, out branchesToThisLabel)) {
+        if (1 < branchesToThisLabel.Count) return false;
+      }
       Push/*?*/ push2 = block.Statements[1] as Push;
       if (push2 == null) return false;
       BasicBlock/*?*/ block2 = block.Statements[2] as BasicBlock;
@@ -205,6 +234,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         statements.RemoveRange(i+1, 3);
         block2.Statements.RemoveAt(0);
         statements.InsertRange(i+1, block2.Statements);
+
         return true;
       }
       if (conditionalStatement.FalseBranch is EmptyStatement) {
@@ -223,6 +253,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         statements.RemoveRange(i+1, 3);
         block2.Statements.RemoveAt(0);
         statements.InsertRange(i+1, block2.Statements);
+
         return true;
       }
       return false;
@@ -234,7 +265,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (conditionalStatement == null) return false;
       ConditionalStatement/*?*/ conditionalStatement2 = statements[i+1] as ConditionalStatement;
       if (conditionalStatement2 == null) return false;
-      if (statements[i+2] is ConditionalStatement){
+      if (statements[i+2] is ConditionalStatement) {
         if (!ReplaceShortCircuitPattern2(statements, i+1)) return false;
         if (i > statements.Count - 3) return false;
         conditionalStatement2 = statements[i+1] as ConditionalStatement;
@@ -352,11 +383,18 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private bool ReplaceChainedShortCircuitBooleanPattern(List<IStatement> statements, int i) {
       ConditionalStatement conditionalStatement = (ConditionalStatement)statements[i];
-      if (!this.ReplaceShortCircuitPattern(statements, i+1)) return false;
+      if (!this.ReplaceShortCircuitPattern(statements, i + 1)) {
+        if (!this.ReplaceShortCircuitPatternCreatedByCCI2(statements, i + 1)) return false;
+      }
+      //if (!this.ReplaceShortCircuitPattern(statements, i+1)) return false;
       Push/*?*/ push = statements[i+1] as Push;
       if (push == null) return false;
       Conditional/*?*/ chainedConditional = push.ValueToPush as Conditional;
       if (chainedConditional == null) return false;
+
+      return this.ReplaceShortCircuitPattern(statements, i);
+      // The code below seems wrong to me, but I don't have the repro anymore.
+
       if (conditionalStatement.TrueBranch is EmptyStatement) {
         Conditional conditional = new Conditional();
         conditional.Condition = conditionalStatement.Condition;
@@ -375,6 +413,91 @@ namespace Microsoft.Cci.ILToCodeModel {
         push.ValueToPush = conditional;
         statements[i] = push;
         statements.RemoveRange(i+1, 1);
+        return true;
+      }
+      return false;
+    }
+
+    /// <summary>
+    /// Finds the following pattern:
+    /// i   :  c ? A : B; // either A or B must be an empty statement and the other is "goto L1;"
+    /// i+1 :  push x;
+    /// i+2 :  goto L2;
+    /// i+3 :  Block1
+    ///        0  : L1;
+    ///        1  : push y;
+    ///        2  : goto L2;
+    ///        3  : Block2
+    ///             0 : whatever (but presumably it is the label L2)
+    ///             
+    /// Transforms it into:
+    /// i   : push d ? X : Y;
+    /// i+1 : goto L1;
+    /// i+2 : Block 2
+    /// 
+    /// Where if A is the empty statement,
+    ///   d == c, X == x, Y == y
+    /// If B is the empty statement and y is zero
+    ///   d == !c, X == x, Y == y
+    /// If B is the empty statement and y is not zero
+    ///   d == c, X == y, Y == x
+    /// And Block1 is deleted from the list.
+    /// </summary>
+    private bool ReplaceShortCircuitPatternCreatedByCCI2(List<IStatement> statements, int i) {
+      if (i > statements.Count - 4) return false;
+      ConditionalStatement/*?*/ conditionalStatement = statements[i] as ConditionalStatement;
+      if (conditionalStatement == null) return false;
+      Push/*?*/ push1 = statements[i + 1] as Push;
+      if (push1 == null) return false;
+      GotoStatement/*?*/ Goto = statements[i + 2] as GotoStatement;
+      if (Goto == null) return false;
+      BasicBlock/*?*/ block1 = statements[i + 3] as BasicBlock;
+      if (block1 == null) return false;
+      if (block1.Statements.Count < 4) return false;
+      LabeledStatement/*?*/ label = block1.Statements[0] as LabeledStatement;
+      if (label == null) return false;
+      List<IGotoStatement> branchesToThisLabel;
+      if (this.predecessors.TryGetValue(label, out branchesToThisLabel)) {
+        //Console.WriteLine("there are " + branchesToThisLabel.Count + " branches to " + label.Label.Value);
+        if (1 < branchesToThisLabel.Count) return false;
+      }
+      // TODO? Should we make sure that one of the branches in the conditionalStatement is
+      // to label?
+      Push/*?*/ push2 = block1.Statements[1] as Push;
+      if (push2 == null) return false;
+      GotoStatement/*?*/ Goto2 = block1.Statements[2] as GotoStatement;
+      if (Goto2 == null) return false;
+      if (Goto.TargetStatement != Goto2.TargetStatement) return false;
+      BasicBlock/*?*/ block2 = block1.Statements[3] as BasicBlock;
+      if (block2 == null) return false;
+      if (conditionalStatement.TrueBranch is EmptyStatement) {
+        Conditional conditional = new Conditional();
+        conditional.Condition = conditionalStatement.Condition;
+        conditional.ResultIfTrue = push1.ValueToPush;
+        conditional.ResultIfFalse = push2.ValueToPush;
+        push1.ValueToPush = conditional;
+        statements[i] = push1;
+        statements[i + 1] = statements[i + 2]; // move the goto up
+        statements[i + 2] = block2;
+        statements.RemoveRange(i + 3, 1);
+        return true;
+      }
+      if (conditionalStatement.FalseBranch is EmptyStatement) {
+        Conditional conditional = new Conditional();
+        if (ExpressionHelper.IsIntegralZero(push2.ValueToPush)) {
+          conditional.Condition = InvertCondition(conditionalStatement.Condition);
+          conditional.ResultIfTrue = push1.ValueToPush;
+          conditional.ResultIfFalse = push2.ValueToPush;
+        } else {
+          conditional.Condition = conditionalStatement.Condition;
+          conditional.ResultIfTrue = push2.ValueToPush;
+          conditional.ResultIfFalse = push1.ValueToPush;
+        }
+        push1.ValueToPush = conditional;
+        statements[i] = push1;
+        statements[i + 1] = statements[i + 2]; // move the goto up
+        statements[i + 2] = block2;
+        statements.RemoveRange(i + 3, 1);
         return true;
       }
       return false;
@@ -472,7 +595,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       get {
         if (this.initializeArray == null)
           this.initializeArray = this.nameTable.GetNameFor("InitializeArray");
-        return this.initializeArray; 
+        return this.initializeArray;
       }
     }
     IName/*?*/ initializeArray;
@@ -492,7 +615,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     List<IStatement> statements;
     int i;
 
-    internal PopReplacer(IMetadataHost host, List<IStatement> statements, int i) 
+    internal PopReplacer(IMetadataHost host, List<IStatement> statements, int i)
       : base(host) {
       this.statements = statements;
       this.i = i;

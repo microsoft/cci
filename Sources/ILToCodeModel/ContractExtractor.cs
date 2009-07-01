@@ -37,6 +37,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
     private bool extractingTypeContract;
+    private ITypeReference contractClass;
+    private ITypeReference contractClassDefinedInReferenceAssembly;
+
 
     private static bool TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
       foreach (ICustomAttribute attribute in attributes) {
@@ -44,12 +47,40 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return false;
     }
+
+    public bool IsContractMethod(IMethodReference/*?*/ method) {
+      if (method == null) return false;
+      if (method.ContainingType.InternedKey == this.contractClass.InternedKey) return true;
+      // Reference assemblies define their own internal versions of the contract methods
+      return this.contractClassDefinedInReferenceAssembly != null &&
+        (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
+    }
+
     internal ContractExtractor(SourceMethodBody sourceMethodBody, ContractProvider contractProvider)
       : base(sourceMethodBody.host, true) {
       this.sourceMethodBody = sourceMethodBody;
       this.contractProvider = contractProvider;
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
-      this.oldAndResultExtractor = new OldAndResultExtractor(sourceMethodBody, this.cache, this.referenceCache);
+
+      //IUnitNamespaceReference ns;
+      //string[] names;
+      NamespaceTypeReference contractTypeAsSeenByThisUnit;
+      AssemblyReference contractAssemblyReference = new AssemblyReference(host, contractProvider.Unit.ContractAssemblySymbolicIdentity);
+      contractTypeAsSeenByThisUnit = CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
+      this.contractClass = contractTypeAsSeenByThisUnit;
+
+      IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
+      IAssemblyReference ar = ur as IAssemblyReference;
+      if (ar != null) {
+        var refAssemblyAttribute = CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
+        if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
+          // then we're extracting contracts from a reference assembly
+          var contractTypeAsDefinedInReferenceAssembly = CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
+          this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
+        }
+      }
+
+      this.oldAndResultExtractor = new OldAndResultExtractor(sourceMethodBody, this.cache, this.referenceCache, contractTypeAsSeenByThisUnit);
 
       this.extractingFromACtorInAClass = 
         sourceMethodBody.MethodDefinition.IsConstructor
@@ -58,7 +89,19 @@ namespace Microsoft.Cci.ILToCodeModel {
       // TODO: this field makes sense only if extracting a type contract and not a method contract
       // TODO: Need the type loaded so don't have to use a string comparison
       this.extractingTypeContract = TemporaryKludge(sourceMethodBody.MethodDefinition.Attributes, "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
-        
+
+    }
+
+    //private static NamespaceTypeReference CreateTypeReference(IMetadataHost host, AssemblyIdentity assemblyIdentity, string typeName) {
+    //  var assemblyReference = new AssemblyReference(host, assemblyIdentity);
+    //  return CreateTypeReference(host, assemblyReference, typeName);
+    //}
+    private static NamespaceTypeReference CreateTypeReference(IMetadataHost host, IAssemblyReference assemblyReference, string typeName) {
+      IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
+      string[] names = typeName.Split('.');
+      for (int i = 0, n = names.Length - 1; i < n; i++)
+        ns = new NestedUnitNamespaceReference(ns, host.NameTable.GetNameFor(names[i]));
+      return new NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, PrimitiveTypeCode.NotPrimitive);
     }
 
     public override IBlockStatement Visit(BlockStatement blockStatement) {
@@ -80,6 +123,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           int numArgs = arguments.Count;
           TypeInvariant invariant = new TypeInvariant() {
             Condition = this.Visit(arguments[0]), // REVIEW: Does this need to be visited?
+            Description = numArgs >= 2 ? arguments[1] : null,
+            OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
             Locations = locations
           };
           this.CurrentTypeContract.Invariants.Add(invariant);
@@ -147,7 +192,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
         if (methodCall == null) continue;
         IMethodReference methodToCall = methodCall.MethodToCall;
-        if (!TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract))
+        if (!IsContractMethod(methodToCall))
           continue;
         string mname = methodToCall.Name.Value;
         if (mname == "EndContractBlock") return i;
@@ -162,13 +207,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       return localDeclarationStatement.InitialValue == null;
     }
 
-    private bool IsPreconditionOrPostcondition (IStatement statement) {
+    private bool IsPreconditionOrPostcondition(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false;
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
       if (methodCall == null) return false;
       IMethodReference methodToCall = methodCall.MethodToCall;
-      if (!TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract)) return false;
+      if (!IsContractMethod(methodToCall))
+        return false;
       string mname = methodToCall.Name.Value;
       if (mname == "EnsuresOnThrow") {
         IGenericMethodInstanceReference/*?*/ genericMethodToCall = methodToCall as IGenericMethodInstanceReference;
@@ -183,6 +229,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       EmptyStatement empty = conditional.FalseBranch as EmptyStatement;
       if (empty == null) return false;
       IBlockStatement blockStatement = conditional.TrueBranch as IBlockStatement;
+      if (blockStatement == null) return false;
       List<IStatement> statements = new List<IStatement>(blockStatement.Statements);
       if (statements.Count != 1) return false;
       IStatement stmt = statements[0];
@@ -205,7 +252,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
       if (methodCall == null) return false;
       IMethodReference methodToCall = methodCall.MethodToCall;
-      if (!TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract)) return false;
+      if (!IsContractMethod(methodToCall)) return false;
       string mname = methodToCall.Name.Value;
       return mname == "Invariant";
     }
@@ -219,7 +266,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       // One or more calls to Contract.Invariant
       if (!(IsInvariant(statements[i]))) return false;
       while (i < statements.Count && IsInvariant(statements[i])) i++;
-      return statements[i] is IReturnStatement && i == statements.Count - 1;
+      return i == statements.Count || (statements[i] is IReturnStatement && i == statements.Count - 1);
     }
 
     private static bool IsAssignmentToLocal(IStatement statement) {
@@ -237,7 +284,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return stmt != null && stmt.InitialValue != null;
     }
 
-    private static List<T> MkList<T> (T t) { var xs = new List<T>(); xs.Add(t); return xs; }
+    private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
 
     private void ExtractContractCall(List<IStatement> statements, int lo, int hi) {
       //^ requires lo <= hi;
@@ -267,7 +314,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (false && genericMethodToCall != null) { // REVIEW: What difference does it make if it is generic?
         //TODO: ensuresOnThrow
       } else {
-        if (TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract)) {
+        if (IsContractMethod(methodToCall)) {
           string mname = methodToCall.Name.Value;
           List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
           List<ILocation> locations = new List<ILocation>(methodCall.Locations);
@@ -275,7 +322,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (numArgs == 0) {
             if (mname == "EndContractBlock") return;
           }
-          if (numArgs == 1 || numArgs == 2) {
+          if (numArgs == 1 || numArgs == 2 || numArgs == 3) {
             if (mname == "Ensures") {
               if (be != null) {
                 be.BlockStatement = this.oldAndResultExtractor.Visit(be.BlockStatement);
@@ -288,8 +335,11 @@ namespace Microsoft.Cci.ILToCodeModel {
               }
               PostCondition postcondition = new PostCondition() {
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
+                Description = numArgs >=2 ? arguments[1] : null,
+                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
                 Locations = locations
               };
+
               this.CurrentMethodContract.Postconditions.Add(postcondition);
               return;
             }
@@ -305,6 +355,8 @@ namespace Microsoft.Cci.ILToCodeModel {
                 ExceptionType = genericArgs[0],
                 Postconditions = MkList((IPostcondition)new PostCondition() {
                   Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
+                  Description = numArgs >= 2 ? arguments[1] : null,
+                  OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
                   Locations = locations
                 })
               };
@@ -321,6 +373,8 @@ namespace Microsoft.Cci.ILToCodeModel {
               Precondition precondition = new Precondition() {
                 AlwaysCheckedAtRuntime = mname == "RequiresAlways",
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
+                Description = numArgs >= 2 ? arguments[1] : null,
+                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
                 Locations = locations
               };
               this.CurrentMethodContract.Preconditions.Add(precondition);
@@ -330,6 +384,15 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       return;
+    }
+
+    private static string GetStringFromArgument(IExpression arg) {
+      string s = null;
+      ICompileTimeConstant c = arg as ICompileTimeConstant;
+      if (c != null) {
+        s = c.Value as string;
+      }
+      return s;
     }
 
     // Extract preconditions from legacy-requires, i.e., preconditions
@@ -377,17 +440,19 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private class OldAndResultExtractor : MethodBodyCodeMutator {
       SourceMethodBody sourceMethodBody;
-      internal OldAndResultExtractor (SourceMethodBody sourceMethodBody, Dictionary<object, object> cache, Dictionary<object, object> referenceCache)
-        : base(sourceMethodBody.host,true) {
+      ITypeReference contractClass;
+      internal OldAndResultExtractor(SourceMethodBody sourceMethodBody, Dictionary<object, object> cache, Dictionary<object, object> referenceCache, ITypeReference contractClass)
+        : base(sourceMethodBody.host, true) {
         this.sourceMethodBody = sourceMethodBody;
         this.cache = cache;
         this.referenceCache = referenceCache;
+        this.contractClass = contractClass;
       }
 
-      public override IExpression Visit (MethodCall methodCall) {
+      public override IExpression Visit(MethodCall methodCall) {
         IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
         if (methodToCall != null) {
-          if (TypeHelper.TypesAreEquivalent(methodToCall.GenericMethod.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract)) {
+          if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey) {
             //TODO: exists, forall
             if (methodToCall.GenericMethod.Name.Value == "Result") {
               ReturnValue returnValue = new ReturnValue() {

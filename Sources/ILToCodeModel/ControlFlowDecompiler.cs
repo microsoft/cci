@@ -15,9 +15,11 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class ControlFlowDecompiler : BaseCodeTraverser {
 
     IPlatformType platformType;
+    Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors;
 
-    internal ControlFlowDecompiler(IPlatformType platformType) {
+    internal ControlFlowDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors) {
       this.platformType = platformType;
+      this.predecessors = predecessors;
     }
 
     public override void Visit(IBlockStatement block) {
@@ -26,7 +28,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.Visit(b);
     }
 
-    private void Visit(BasicBlock b){
+    private void Visit(BasicBlock b) {
       if (b.NumberOfTryBlocksStartingHere > 0) {
         BasicBlock firstHandler = null;
         TryCatchFinallyStatement/*?*/ tryStatement = new TryCatchFinallyStatement();
@@ -127,7 +129,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return bb;
     }
 
-    private static bool DecompileIfThenElseStatement(List<IStatement> statements, int i) {
+    private bool DecompileIfThenElseStatement(List<IStatement> statements, int i) {
       if (i >= statements.Count) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
       if (conditionalStatement == null) return false;
@@ -145,6 +147,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (falseBlock == null || falseBlock.Statements.Count < 1) return false;
       LabeledStatement/*?*/ elseLabel = falseBlock.Statements[0] as LabeledStatement;
       if (elseLabel == null || gotoElse.TargetStatement != elseLabel) return false;
+      List<IGotoStatement> branchesToThisLabel;
+      if (this.predecessors.TryGetValue(elseLabel, out branchesToThisLabel)) {
+        if (1 < branchesToThisLabel.Count) return false;
+      }
       BasicBlock/*?*/ blockAfterIf = null;
       int k = 1;
       while (k < falseBlock.Statements.Count) {
@@ -154,6 +160,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         k++;
       }
       if (blockAfterIf == null || k >= falseBlock.Statements.Count) return false;
+      ILabeledStatement labelAfterIf = blockAfterIf.Statements[0] as ILabeledStatement;
+      if (labelAfterIf == null) return false;
       BasicBlock ifBlock = ExtractAsBasicBlock(statements, i, j-1);
       BasicBlock elseBlock = ExtractAsBasicBlock(falseBlock.Statements, 1, k);
       LogicalNot not = new LogicalNot();
@@ -163,7 +171,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       conditionalStatement.FalseBranch = elseBlock;
       statements.RemoveRange(i, j-i);
       falseBlock.Statements.RemoveRange(0, k);
-      blockAfterIf.Statements.RemoveAt(0);
+      if (this.predecessors.TryGetValue(labelAfterIf, out branchesToThisLabel)) {
+        if (branchesToThisLabel.Count <= 1)
+          blockAfterIf.Statements.RemoveAt(0);
+      }
       return true;
     }
 
@@ -177,6 +188,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       IName afterThenLabelName = gotoAfterThen.TargetStatement.Label;
       LabeledStatement/*?*/ afterThenLabel = this.FindLabeledStatement(statements, i, afterThenLabelName);
       if (afterThenLabel == null) return false;
+      List<IGotoStatement> branchesToThisLabel;
+      if (this.predecessors.TryGetValue(afterThenLabel, out branchesToThisLabel)) {
+        if (1 < branchesToThisLabel.Count) return false;
+      }
       // TODO? Check the putative ifBlock to make sure it is self-contained: i.e., it has no branches outside of itself
       BasicBlock ifBlock = this.ExtractBasicBlockUpto(statements, i, afterThenLabel);
       this.Visit(ifBlock);
@@ -250,7 +265,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       BasicBlock result = new BasicBlock(0);
       for (int j = i, n = statements.Count; j < n; j++) {
         IStatement s = statements[j];
-        if (s == label){
+        if (s == label) {
           statements.RemoveRange(i, j-i);
           return result;
         }
