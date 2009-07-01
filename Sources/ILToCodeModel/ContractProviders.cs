@@ -13,6 +13,140 @@ using Microsoft.Cci.Contracts;
 namespace Microsoft.Cci.ILToCodeModel {
 
   /// <summary>
+  /// A contract provider that layers on top of an existing contract provider and which
+  /// takes into account the way contracts for abstract methods are represented
+  /// when IL uses the Code Contracts library. Namely, the containing type of an abstract method has an
+  /// attribute that points to a class of proxy methods which hold the contracts for the corresponding
+  /// abstract method.
+  /// This provider wraps an existing non-code-contracts-aware provider and caches to avoid recomputing
+  /// whether a contract exists or not.
+  /// </summary>
+  public class CodeContractsContractProvider : IContractProvider {
+
+    /// <summary>
+    /// needed to be able to map the contracts from a contract class proxy method to an abstract method
+    /// </summary>
+    IMetadataHost host;
+    /// <summary>
+    /// The (non-aware) provider that was used to extract the contracts from the IL.
+    /// </summary>
+    IContractProvider underlyingContractProvider;
+    /// <summary>
+    /// Used just to cache results to that the underlyingContractProvider doesn't have to get asked
+    /// more than once.
+    /// </summary>
+    ContractProvider contractProviderCache;
+
+    /// <summary>
+    /// Creates a contract provider which is aware of how abstract methods have their contracts encoded.
+    /// </summary>
+    /// <param name="host">
+    /// The host that was used to load the unit for which the <paramref name="underlyingContractProvider"/>
+    /// is a provider for.
+    /// </param>
+    /// <param name="underlyingContractProvider">
+    /// The (non-aware) provider that was used to extract the contracts from the IL.
+    /// </param>
+    public CodeContractsContractProvider(IMetadataHost host, IContractProvider underlyingContractProvider) {
+      this.host = host;
+      this.underlyingContractProvider = underlyingContractProvider;
+      this.contractProviderCache = new ContractProvider(underlyingContractProvider.ContractMethods, underlyingContractProvider.Unit);
+    }
+
+    #region IContractProvider Members
+
+    /// <summary>
+    /// Returns the loop contract, if any, that has been associated with the given object. Returns null if no association exits.
+    /// </summary>
+    /// <param name="loop">An object that might have been associated with a loop contract. This can be any kind of object.</param>
+    /// <returns></returns>
+    public ILoopContract/*?*/ GetLoopContractFor(object loop) {
+      return this.underlyingContractProvider.GetLoopContractFor(loop);
+    }
+
+    /// <summary>
+    /// Returns the method contract, if any, that has been associated with the given object. Returns null if no association exits.
+    /// </summary>
+    /// <param name="method">An object that might have been associated with a method contract. This can be any kind of object.</param>
+    /// <returns></returns>
+    public IMethodContract/*?*/ GetMethodContractFor(object method) {
+
+      IMethodContract contract = this.contractProviderCache.GetMethodContractFor(method);
+      if (contract != null) return contract == ContractDummy.MethodContract ? null : contract;
+
+      IMethodReference methodReference = method as IMethodReference;
+      if (methodReference == null) {
+        this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        return null;
+      }
+      IMethodDefinition methodDefinition = methodReference.ResolvedMethod;
+      if (methodDefinition == Dummy.Method) {
+        this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        return null;
+      }
+      if (!methodDefinition.IsAbstract) {
+        contract = this.underlyingContractProvider.GetMethodContractFor(method);
+        if (contract != null) {
+          return contract;
+        } else {
+          this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+          return null;
+        }
+      }
+
+      // But if it is an abstract method, then check to see if its containing type points to a class holding the contract
+      IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(methodDefinition);
+      if (proxyMethod == null) {
+        this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        return null;
+      }
+      contract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
+      if (contract == null) return null;
+      SubstituteParameters sps = new SubstituteParameters(this.host, methodDefinition, proxyMethod);
+      MethodContract modifiedContract = sps.Visit(contract) as MethodContract;
+      this.contractProviderCache.AssociateMethodWithContract(methodDefinition, modifiedContract);
+      return modifiedContract;
+    }
+
+    /// <summary>
+    /// Returns the triggers, if any, that have been associated with the given object. Returns null if no association exits.
+    /// </summary>
+    /// <param name="quantifier">An object that might have been associated with triggers. This can be any kind of object.</param>
+    /// <returns></returns>
+    public IEnumerable<IEnumerable<IExpression>>/*?*/ GetTriggersFor(object quantifier) {
+      return this.underlyingContractProvider.GetTriggersFor(quantifier);
+    }
+
+    /// <summary>
+    /// Returns the type contract, if any, that has been associated with the given object. Returns null if no association exits.
+    /// </summary>
+    /// <param name="type">An object that might have been associated with a type contract. This can be any kind of object.</param>
+    /// <returns></returns>
+    public ITypeContract/*?*/ GetTypeContractFor(object type) {
+      return this.underlyingContractProvider.GetTypeContractFor(type);
+    }
+
+    /// <summary>
+    /// A collection of methods that can be called in a way that provides tools with information about contracts.
+    /// </summary>
+    /// <value></value>
+    public IContractMethods/*?*/ ContractMethods {
+      get { return this.underlyingContractProvider.ContractMethods; }
+    }
+
+    /// <summary>
+    /// The unit that this is a contract provider for. Intentional design:
+    /// no provider works on more than one unit.
+    /// </summary>
+    /// <value></value>
+    public IUnit/*?*/ Unit {
+      get { return this.underlyingContractProvider.Unit; }
+    }
+
+    #endregion
+  }
+
+  /// <summary>
   /// A contract provider that can be used to get contracts from a unit by querying in
   /// a random-access manner. That is, the unit is *not* traversed eagerly.
   /// </summary>
@@ -96,15 +230,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         return null;
       }
 
-      #region Interface methods don't contain contracts directly, but point to a class holding their contracts
-      if (methodDefinition.ContainingTypeDefinition.IsInterface) {
-        IMethodDefinition/*?*/ contractClassMethod = ContractHelper.GetMethodFromContractClass(methodDefinition);
-        if (contractClassMethod != null) {
-          methodDefinition = contractClassMethod;
-        }
-      }
-      #endregion Interface methods don't contain contracts directly, but point to a class holding their contracts
-
       if (methodDefinition.IsAbstract || methodDefinition.IsExternal) { // precondition of Body getter
         this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
@@ -162,50 +287,18 @@ namespace Microsoft.Cci.ILToCodeModel {
         return null;
       }
       IMethodBody methodBody = invariantMethod.Body;
-      ISourceMethodBody/*?*/ srcMethodBody = methodBody as ISourceMethodBody;
-      Microsoft.Cci.ILToCodeModel.SourceMethodBody sourceMethodBody;
-      if (srcMethodBody == null)
-        sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, this.host, null, null);
-      else
-        sourceMethodBody = srcMethodBody as Microsoft.Cci.ILToCodeModel.SourceMethodBody; // Remove all this once the code is moved into CCI2 and can access platformType
-      BaseCodeTraverser bct = new BaseCodeTraverser();
-      bct.Visit(sourceMethodBody.Block);
-      // If it was properly decompiled, then it should just contain a sequence of calls to Contract.Invariant
-      // although there might be empty statements and then a final return statement
-      // REVIEW: Should this be done with a visitor?
-      TypeContract tc = new TypeContract();
-      foreach (var s in sourceMethodBody.Block.Statements) {
-        IExpressionStatement/*?*/ expressionStatement = s as IExpressionStatement;
-        if (expressionStatement == null) continue;
-        IMethodCall/*?*/ methodCall = expressionStatement.Expression as IMethodCall;
-        if (methodCall == null) continue;
-        IMethodReference methodToCall = methodCall.MethodToCall;
-        // Use this commented out line when the code is moved into CCI2
-        //if (TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, sourceMethodBody.platformType.SystemDiagnosticsContractsCodeContract)) {
-        INamespaceTypeReference ntr = methodToCall.ContainingType as INamespaceTypeReference;
-        if (ntr != null && ntr.Name.Value == "Contract") {
-          string mname = methodToCall.Name.Value;
-          List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
-          int numArgs = arguments.Count;
-          if (numArgs == 1 && mname == "Invariant") {
-            List<ILocation> locations = new List<ILocation>(methodCall.Locations);
-            TypeInvariant ti = new TypeInvariant();
-            ti.Condition = arguments[0];
-            ti.IsAxiom = false;
-            ti.Locations = locations;
-            tc.Invariants.Add(ti);
-          }
-        }
+      ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
+      if (sourceMethodBody == null) {
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.underlyingContractProvider, this.pdbReader, true);
       }
-      if (0 < tc.Invariants.Count) {
-        this.underlyingContractProvider.AssociateTypeWithContract(typeReference, tc);
-        return tc;
-      } else {
-        this.underlyingContractProvider.AssociateTypeWithContract(typeReference, ContractDummy.TypeContract);
-        return null;
+      var dummyJustToGetDecompilationAndContractExtraction = sourceMethodBody.Block;
+
+      // Now ask for the contract
+      typeContract = this.underlyingContractProvider.GetTypeContractFor(typeDefinition);
+      if (typeContract == null) {
+        this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract); // so we don't try to extract more than once
       }
-
-
+      return typeContract;
     }
 
     /// <summary>
@@ -353,7 +446,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// These are optional. If non-null, then it must be a finite sequence of pairs: each pair is a contract provider
     /// and the host that loaded the unit for which it is a provider.
     /// </param>
-    public AggregatingContractProvider(IMetadataHost host, IContractProvider primaryProvider, IEnumerable<KeyValuePair<IContractProvider,IMetadataHost>>/*?*/ oobProvidersAndHosts) {
+    public AggregatingContractProvider(IMetadataHost host, IContractProvider primaryProvider, IEnumerable<KeyValuePair<IContractProvider, IMetadataHost>>/*?*/ oobProvidersAndHosts) {
       var primaryUnit = primaryProvider.Unit;
       this.unit = primaryUnit;
       this.primaryProvider = primaryProvider;
@@ -410,7 +503,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
           MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
           var oobMethod = primaryToOobMapper.Visit(methodReference);
-          
+
           if (oobMethod == null) continue;
 
           var oobContract = oobProvider.GetMethodContractFor(oobMethod);

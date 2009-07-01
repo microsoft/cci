@@ -395,27 +395,27 @@ namespace Microsoft.Cci.ILToCodeModel {
       return this.ReplaceShortCircuitPattern(statements, i);
       // The code below seems wrong to me, but I don't have the repro anymore.
 
-      if (conditionalStatement.TrueBranch is EmptyStatement) {
-        Conditional conditional = new Conditional();
-        conditional.Condition = conditionalStatement.Condition;
-        conditional.ResultIfTrue = chainedConditional;
-        conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
-        push.ValueToPush = conditional;
-        statements[i] = push;
-        statements.RemoveRange(i+1, 1);
-        return true;
-      }
-      if (conditionalStatement.FalseBranch is EmptyStatement) {
-        Conditional conditional = new Conditional();
-        conditional.Condition = conditionalStatement.Condition;
-        conditional.ResultIfTrue = chainedConditional.ResultIfTrue;
-        conditional.ResultIfFalse = chainedConditional;
-        push.ValueToPush = conditional;
-        statements[i] = push;
-        statements.RemoveRange(i+1, 1);
-        return true;
-      }
-      return false;
+      //if (conditionalStatement.TrueBranch is EmptyStatement) {
+      //  Conditional conditional = new Conditional();
+      //  conditional.Condition = conditionalStatement.Condition;
+      //  conditional.ResultIfTrue = chainedConditional;
+      //  conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
+      //  push.ValueToPush = conditional;
+      //  statements[i] = push;
+      //  statements.RemoveRange(i+1, 1);
+      //  return true;
+      //}
+      //if (conditionalStatement.FalseBranch is EmptyStatement) {
+      //  Conditional conditional = new Conditional();
+      //  conditional.Condition = conditionalStatement.Condition;
+      //  conditional.ResultIfTrue = chainedConditional.ResultIfTrue;
+      //  conditional.ResultIfFalse = chainedConditional;
+      //  push.ValueToPush = conditional;
+      //  statements[i] = push;
+      //  statements.RemoveRange(i+1, 1);
+      //  return true;
+      //}
+      //return false;
     }
 
     /// <summary>

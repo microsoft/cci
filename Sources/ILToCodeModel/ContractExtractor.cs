@@ -62,20 +62,18 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.contractProvider = contractProvider;
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
-      //IUnitNamespaceReference ns;
-      //string[] names;
       NamespaceTypeReference contractTypeAsSeenByThisUnit;
       AssemblyReference contractAssemblyReference = new AssemblyReference(host, contractProvider.Unit.ContractAssemblySymbolicIdentity);
-      contractTypeAsSeenByThisUnit = CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
+      contractTypeAsSeenByThisUnit = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
       this.contractClass = contractTypeAsSeenByThisUnit;
 
       IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
       IAssemblyReference ar = ur as IAssemblyReference;
       if (ar != null) {
-        var refAssemblyAttribute = CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
+        var refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
         if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
           // then we're extracting contracts from a reference assembly
-          var contractTypeAsDefinedInReferenceAssembly = CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
+          var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
           this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
         }
       }
@@ -96,28 +94,24 @@ namespace Microsoft.Cci.ILToCodeModel {
     //  var assemblyReference = new AssemblyReference(host, assemblyIdentity);
     //  return CreateTypeReference(host, assemblyReference, typeName);
     //}
-    private static NamespaceTypeReference CreateTypeReference(IMetadataHost host, IAssemblyReference assemblyReference, string typeName) {
-      IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
-      string[] names = typeName.Split('.');
-      for (int i = 0, n = names.Length - 1; i < n; i++)
-        ns = new NestedUnitNamespaceReference(ns, host.NameTable.GetNameFor(names[i]));
-      return new NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, PrimitiveTypeCode.NotPrimitive);
-    }
-
     public override IBlockStatement Visit(BlockStatement blockStatement) {
       if (blockStatement == null) return blockStatement;
       var stmts = blockStatement.Statements;
       List<IStatement> newStmts = new List<IStatement>();
       if (this.extractingTypeContract) {
-        if (!IsInvariantMethodBody(stmts)) {
-          // REVIEW: What to do? Something is wrong with the body of the invariant method
-          return blockStatement;
+        var i = 0;
+        // Zero or more local declarations, as long as they don't have initial values
+        // REVIEW: If the decompiler was better at finding the first use of a local, then there wouldn't be any of these here
+        // REVIEW: But this is an invariant method, so what does it mean to leave these out of the invariants?
+        while (i < stmts.Count && IsLocalDeclarationWithoutInitializer(stmts[i])) {
+          newStmts.Add(stmts[i]);
+          i++;
         }
-        for (int i = 0, n = stmts.Count - 1; i < n; i++) {
+        // One or more calls to Contract.Invariant
+        while (i < stmts.Count && IsInvariant(stmts[i])) {
           ExpressionStatement expressionStatement = stmts[i] as ExpressionStatement;
           IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
           IMethodReference methodToCall = methodCall.MethodToCall;
-          string mname = methodToCall.Name.Value;
           List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
           List<ILocation> locations = new List<ILocation>(methodCall.Locations);
           int numArgs = arguments.Count;
@@ -128,8 +122,12 @@ namespace Microsoft.Cci.ILToCodeModel {
             Locations = locations
           };
           this.CurrentTypeContract.Invariants.Add(invariant);
+          i++;
         }
-        newStmts.Add(stmts[stmts.Count - 1]);
+        while (i < stmts.Count) { // This should be at most just a return statement
+          newStmts.Add(stmts[i]);
+          i++;
+        }
         blockStatement.Statements = newStmts;
         return blockStatement;
       }
