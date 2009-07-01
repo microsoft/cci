@@ -200,6 +200,24 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns the method from the derived class that overrides the given method.
+    /// If no such method exists, Dummy.Method is returned.
+    /// </summary>
+    public static IMethodDefinition GetImplicitlyOverridingDerivedClassMethod(IMethodDefinition baseClassMethod, ITypeDefinition derivedClass) {
+      foreach (ITypeDefinitionMember baseMember in derivedClass.GetMembersNamed(baseClassMethod.Name, false)) {
+        IMethodDefinition/*?*/ baseMethod = baseMember as IMethodDefinition;
+        if (baseMethod == null) continue;
+        if (MemberHelper.SignaturesAreEqual(baseClassMethod, baseMethod)) {
+          if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.Method;
+          return baseMethod;
+        } else {
+          if (!baseClassMethod.IsHiddenBySignature) return Dummy.Method;
+        }
+      }
+      return Dummy.Method;
+    }
+
+    /// <summary>
     /// Returns a C#-like string that corresponds to the given type member definition and that conforms to the specified formatting options.
     /// </summary>
     //^ [Pure]
