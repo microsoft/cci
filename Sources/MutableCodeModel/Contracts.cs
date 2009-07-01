@@ -158,11 +158,18 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class LoopContract : ILoopContract {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public LoopContract() {
       this.invariants = new List<ILoopInvariant>();
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="loopContract"></param>
     public LoopContract(ILoopContract loopContract) {
       this.invariants = new List<ILoopInvariant>(loopContract.Invariants);
       this.locations = new List<ILocation>(loopContract.Locations);
@@ -254,6 +261,9 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class MethodContract : IMethodContract {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public MethodContract() {
       this.allocates = new List<IExpression>();
       this.frees = new List<IExpression>();
@@ -267,6 +277,10 @@ namespace Microsoft.Cci.Contracts {
       this.writes = new List<IExpression>();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="methodContract"></param>
     public MethodContract(IMethodContract methodContract) {
       this.allocates = new List<IExpression>(methodContract.Allocates);
       this.frees = new List<IExpression>(methodContract.Frees);
@@ -372,6 +386,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region IMethodContract Members
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }
@@ -491,14 +509,21 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class ThrownException : IThrownException {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ThrownException() {
       this.exceptionType = Dummy.TypeReference;
-      this.postconditions = new List<IPostcondition>();
+      this.postcondition = ContractDummy.Postcondition;
     }
-
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="thrownException"></param>
     public ThrownException(IThrownException thrownException) {
       this.exceptionType = thrownException.ExceptionType;
-      this.postconditions = new List<IPostcondition>(thrownException.Postconditions);
+      this.postcondition = thrownException.Postcondition;
     }
 
     /// <summary>
@@ -511,22 +536,14 @@ namespace Microsoft.Cci.Contracts {
     ITypeReference exceptionType;
 
     /// <summary>
-    /// The postconditions that hold if the associated method throws this exception. Can be empty (but not null).
+    /// The postcondition that holds if the associated method throws this exception.
     /// </summary>
-    public List<IPostcondition> Postconditions {
-      get { return this.postconditions; }
-      set { this.postconditions = value; }
+    public IPostcondition Postcondition {
+      get { return this.postcondition; }
+      set { this.postcondition = value; }
     }
-    List<IPostcondition> postconditions;
+    IPostcondition postcondition;
 
-    #region IThrownException Members
-
-
-    IEnumerable<IPostcondition> IThrownException.Postconditions {
-      get { return this.Postconditions.AsReadOnly(); }
-    }
-
-    #endregion
   }
 
   /// <summary>
@@ -535,6 +552,9 @@ namespace Microsoft.Cci.Contracts {
   /// </summary>
   public sealed class TypeContract : ITypeContract {
 
+    /// <summary>
+    /// 
+    /// </summary>
     public TypeContract() {
       this.contractFields = new List<IFieldDefinition>();
       this.contractMethods = new List<IMethodDefinition>();
@@ -542,6 +562,10 @@ namespace Microsoft.Cci.Contracts {
       this.locations = new List<ILocation>(1);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="typeContract"></param>
     public TypeContract(ITypeContract typeContract) {
       this.contractFields = new List<IFieldDefinition>(typeContract.ContractFields);
       this.contractMethods = new List<IMethodDefinition>(typeContract.ContractMethods);
@@ -588,6 +612,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region ITypeContract Members
 
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    /// <returns></returns>
     public bool HasErrors() {
       return false;
     }

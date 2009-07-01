@@ -732,7 +732,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
         mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         return mutableSourceMethodBody;
-      } 
+      }
       return base.Visit(methodBody);
     }
 
@@ -2475,7 +2475,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IThrownException Visit(IThrownException thrownException) {
       ThrownException mutableThrownException = new ThrownException(thrownException);
       mutableThrownException.ExceptionType = this.Visit(mutableThrownException.ExceptionType);
-      mutableThrownException.Postconditions = this.Visit(mutableThrownException.Postconditions);
+      mutableThrownException.Postcondition = this.Visit(mutableThrownException.Postcondition);
       return mutableThrownException;
     }
 

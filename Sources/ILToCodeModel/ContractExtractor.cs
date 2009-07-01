@@ -353,12 +353,12 @@ namespace Microsoft.Cci.ILToCodeModel {
               }
               ThrownException exceptionalPostcondition = new ThrownException() {
                 ExceptionType = genericArgs[0],
-                Postconditions = MkList((IPostcondition)new PostCondition() {
+                Postcondition = new PostCondition() {
                   Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                   Description = numArgs >= 2 ? arguments[1] : null,
                   OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
                   Locations = locations
-                })
+                }
               };
               this.CurrentMethodContract.ThrownExceptions.Add(exceptionalPostcondition);
               return;

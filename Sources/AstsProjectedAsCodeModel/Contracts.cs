@@ -965,12 +965,12 @@ namespace Microsoft.Cci.Ast {
     /// Allocates an exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.
     /// </summary>
     /// <param name="exceptionType">The exception that can be thrown by the associated method.</param>
-    /// <param name="postconditions">The postconditions that hold if the associated method throws this exception.</param>
+    /// <param name="postcondition">The postcondition that holds if the associated method throws this exception.</param>
     /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
-    public ThrownException(TypeExpression exceptionType, IList<Postcondition> postconditions, ISourceLocation sourceLocation)
+    public ThrownException(TypeExpression exceptionType, Postcondition postcondition, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.exceptionType = exceptionType;
-      this.postconditions = postconditions;
+      this.postcondition = postcondition;
     }
 
     /// <summary>
@@ -981,7 +981,7 @@ namespace Microsoft.Cci.Ast {
     private ThrownException(BlockStatement containingBlock, ThrownException template)
       : base(template.SourceLocation) {
       this.exceptionType = (TypeExpression)template.ExceptionType.MakeCopyFor(containingBlock);
-      this.postconditions = new List<Postcondition>(template.Postconditions);
+      this.postcondition = template.Postcondition.MakeCopyFor(containingBlock);
     }
 
     /// <summary>
@@ -990,8 +990,7 @@ namespace Microsoft.Cci.Ast {
     protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = this.ExceptionType.HasErrors();
       //TODO: check that ExceptionType really is an exception.
-      foreach (Postcondition postcondition in this.Postconditions)
-        result |= postcondition.HasErrors();
+      result |= this.Postcondition.HasErrors();
       return result;
     }
 
@@ -1039,16 +1038,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// The postconditions that hold if the associated method throws this exception.
+    /// The postcondition that holds if the associated method throws this exception.
     /// </summary>
-    public IEnumerable<Postcondition> Postconditions {
+    public Postcondition Postcondition {
       [DebuggerNonUserCode]
-      get {
-        for (int i = 0, n = this.postconditions.Count; i < n; i++)
-          yield return this.postconditions[i] = this.postconditions[i].MakeCopyFor(this.ExceptionType.ContainingBlock);
-      }
+      get { return this.postcondition; }
     }
-    readonly IList<Postcondition> postconditions;
+    Postcondition postcondition;
 
     /// <summary>
     /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
@@ -1057,8 +1053,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public virtual void SetContainingExpression(Expression containingExpression) {
       this.ExceptionType.SetContainingExpression(containingExpression);
-      foreach (Postcondition postCond in this.Postconditions)
-        postCond.SetContainingExpression(containingExpression);
+      this.Postcondition.SetContainingExpression(containingExpression);
     }
 
     #region IThrownException Members
@@ -1068,9 +1063,9 @@ namespace Microsoft.Cci.Ast {
       get { return this.ExceptionType.ResolvedType; }
     }
 
-    IEnumerable<IPostcondition> IThrownException.Postconditions {
+    IPostcondition IThrownException.Postcondition {
       [DebuggerNonUserCode]
-      get { return IteratorHelper.GetConversionEnumerable<Postcondition, IPostcondition>(this.Postconditions); }
+      get { return this.Postcondition; }
     }
 
     #endregion

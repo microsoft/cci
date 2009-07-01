@@ -464,9 +464,9 @@ namespace Microsoft.Cci.Contracts {
     ITypeReference ExceptionType { get; }
 
     /// <summary>
-    /// The postconditions that hold if the associated method throws this exception. Can be empty (but not null).
+    /// The postcondition that holds if the associated method throws this exception.
     /// </summary>
-    IEnumerable<IPostcondition> Postconditions { get; }
+    IPostcondition Postcondition { get; }
   }
 
   /// <summary>
@@ -530,6 +530,15 @@ namespace Microsoft.Cci.Contracts {
       }
     }
     private static ITypeContract/*?*/ typeContract;
+    public static IPostcondition Postcondition {
+      [DebuggerNonUserCode]
+      get {
+        if (ContractDummy.postcondition == null)
+          ContractDummy.postcondition = new DummyPostcondition();
+        return ContractDummy.postcondition;
+      }
+    }
+    private static IPostcondition/*?*/ postcondition;
   }
   internal sealed class DummyMethodContract : IMethodContract {
     #region IMethodContract Members
@@ -609,6 +618,39 @@ namespace Microsoft.Cci.Contracts {
 
     public bool HasErrors() {
       return false;
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+    }
+
+    #endregion
+  }
+  internal sealed class DummyPostcondition : IPostcondition {
+    #region IContractElement Members
+
+    public IExpression Condition {
+      get { return CodeDummy.Expression; }
+    }
+
+    public IExpression Description {
+      get { return CodeDummy.Expression; }
+    }
+
+    public string OriginalSource {
+      get { return null; }
+    }
+
+    #endregion
+
+    #region IErrorCheckable Members
+
+    public bool HasErrors() {
+      return true;
     }
 
     #endregion

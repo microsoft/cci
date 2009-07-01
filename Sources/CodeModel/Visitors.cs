@@ -2815,7 +2815,7 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(thrownException);
       this.Visit(thrownException.ExceptionType);
-      this.Visit(thrownException.Postconditions);
+      this.Visit(thrownException.Postcondition);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -2923,57 +2923,49 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Visits the given loop contract.
     /// </summary>
-    public virtual void Visit(ILoopContract loopContract)
-    {
+    public virtual void Visit(ILoopContract loopContract) {
     }
 
     /// <summary>
     /// Visits the given loop invariant.
     /// </summary>
-    public virtual void Visit(ILoopInvariant loopInvariant)
-    {
+    public virtual void Visit(ILoopInvariant loopInvariant) {
     }
 
     /// <summary>
     /// Visits the given method contract.
     /// </summary>
-    public virtual void Visit(IMethodContract methodContract)
-    {
+    public virtual void Visit(IMethodContract methodContract) {
     }
 
     /// <summary>
     /// Visits the given postCondition.
     /// </summary>
-    public virtual void Visit(IPostcondition postCondition)
-    {
+    public virtual void Visit(IPostcondition postCondition) {
     }
 
     /// <summary>
     /// Visits the given pre condition.
     /// </summary>
-    public virtual void Visit(IPrecondition precondition)
-    {
+    public virtual void Visit(IPrecondition precondition) {
     }
 
     /// <summary>
     /// Visits the given thrown exception.
     /// </summary>
-    public virtual void Visit(IThrownException thrownException)
-    {
+    public virtual void Visit(IThrownException thrownException) {
     }
 
     /// <summary>
     /// Visits the given type contract.
     /// </summary>
-    public virtual void Visit(ITypeContract typeContract)
-    {
+    public virtual void Visit(ITypeContract typeContract) {
     }
 
     /// <summary>
     /// Visits the given type invariant.
     /// </summary>
-    public virtual void Visit(ITypeInvariant typeInvariant)
-    {
+    public virtual void Visit(ITypeInvariant typeInvariant) {
     }
 
   }

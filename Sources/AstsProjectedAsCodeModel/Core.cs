@@ -7073,7 +7073,7 @@ namespace Microsoft.Cci.Ast {
       this.path.Push(thrownException);
       if (thrownException.ExceptionType != null)
         this.VisitTypeExpression(thrownException.ExceptionType);
-      this.Visit(thrownException.Postconditions);
+      this.Visit(thrownException.Postcondition);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
