@@ -7,7 +7,10 @@
   <UsingTask
     TaskName="Microsoft.Cci.MsBuild.Zip"
     AssemblyFile="Microsoft.Cci.MsBuild.dll" />
-  <!-- constants -->
+  <UsingTask 
+    TaskName="CreateRelease" 
+    AssemblyFile="CodePlex.WebServices.Client.dll" />
+  <!-- constants -->  
   <PropertyGroup>
     <CodeplexProjectName>ccimetadata</CodeplexProjectName>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
@@ -82,6 +85,17 @@ using System.Reflection;
       BuildRelease;
       TestNightly;
       " />
+  <!-- release upload -->
+  <Target
+    Name="CreateCodeplexRelease"
+    DependsOnTargets="
+      Clean;
+      CreateVersion;
+      BuildRelease;
+      BuildDocumentation;
+      CreateReleaseZips;
+      UploadCodePlexRelease
+      " />
 
   <Target Name="Clean">
     <RemoveDir Directories="$(BinDirectory)"  ContinueOnError="true" />
@@ -133,6 +147,7 @@ using System.Reflection;
   </Target>
 
   <Target Name="CreateReleaseZips">
+    <Error Condition="$(CleanRootDirectory) == ''" Text="CleanRootDirectory property not set" />
     <CreateItem Include="
       $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
       $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
@@ -151,6 +166,41 @@ using System.Reflection;
   </Target>
 
   <Target Name="TestNightly">
+  </Target>
+
+  <Target Name="UploadCodePlexRelease">
+    <Error Condition="$(BuildVersion) == ''" Text="BuildVersion property not set" />
+    <Error Condition="$(CodeplexUser) == ''" Text="CodeplexUser property not set" />
+    <Error Condition="$(CodeplexPassword) == ''" Text="CodeplexPassword property not set" />
+
+    <ItemGroup>
+      <ReleaseFiles Include="@(ZipBinaries)">
+        <Name>Compiled binaries</Name>
+        <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+      <ReleaseFiles Include="@(ZipSymbols)">
+        <Name>Symbols</Name>
+        <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+    </ItemGroup>
+
+    <CreateRelease
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(BuildVersion)"
+      IsDefaultRelease="true"
+      ShowToPublic="true"
+      ShowOnHomePage="true"
+      Description="Last build"
+      ReleaseStatus="Released"
+      User="$(CodeplexUser)"
+      Password="$(CodeplexPassword)" />
+    <UploadFiles
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(BuildVersion)"
+      ReleaseFiles="@(ReleaseFiles)"
+      User="$(CodeplexUser)"
+      Password="$(CodeplexPassword)"
+	    />
   </Target>
   
 </Project>
