@@ -96,6 +96,7 @@ using System.Reflection;
       CreateVersion;
       BuildRelease;
       BuildDocumentation;
+      TestRelease;
       CreateReleaseZips;
       UploadCodePlexRelease
       " />
@@ -184,6 +185,10 @@ using System.Reflection;
       <ReleaseFiles Include="@(ZipSymbols)">
         <Name>Symbols</Name>
         <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+      <ReleaseFiles Include="@(ZipSources)">
+        <Name>Sources</Name>
+        <FileType>SourceCode</FileType>
       </ReleaseFiles>
     </ItemGroup>
 
