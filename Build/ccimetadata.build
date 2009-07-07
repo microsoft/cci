@@ -10,6 +10,9 @@
   <UsingTask 
     TaskName="CreateRelease" 
     AssemblyFile="CodePlex.WebServices.Client.dll" />
+  <UsingTask
+    TaskName="UploadFiles"
+    AssemblyFile="CodePlex.WebServices.Client.dll" />
   <!-- constants -->  
   <PropertyGroup>
     <CodeplexProjectName>ccimetadata</CodeplexProjectName>
@@ -191,14 +194,15 @@ using System.Reflection;
       ShowToPublic="true"
       ShowOnHomePage="true"
       Description="Last build"
+      ReleaseDate="%(ZipBinaries.CreatedTime)"
       ReleaseStatus="Released"
-      User="$(CodeplexUser)"
+      Username="$(CodeplexUser)"
       Password="$(CodeplexPassword)" />
     <UploadFiles
       ProjectName="$(CodeplexProjectName)"
       ReleaseName="$(BuildVersion)"
       ReleaseFiles="@(ReleaseFiles)"
-      User="$(CodeplexUser)"
+      Username="$(CodeplexUser)"
       Password="$(CodeplexPassword)"
 	    />
   </Target>
