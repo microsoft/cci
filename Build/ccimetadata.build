@@ -186,10 +186,10 @@ using System.Reflection;
         <Name>Symbols</Name>
         <FileType>RuntimeBinary</FileType>
       </ReleaseFiles>
-      <ReleaseFiles Include="@(ZipSources)">
+<!--      <ReleaseFiles Include="@(ZipSources)">
         <Name>Sources</Name>
         <FileType>SourceCode</FileType>
-      </ReleaseFiles>
+      </ReleaseFiles> -->
     </ItemGroup>
 
     <CreateRelease
@@ -210,6 +210,7 @@ using System.Reflection;
       Username="$(CodeplexUser)"
       Password="$(CodeplexPassword)"
 	    />
+    <Message Text="YOU WILL NEED TO UPLOAD THE SOURCE MANUALLY FROM @(ZipSources)" />
   </Target>
   
 </Project>
