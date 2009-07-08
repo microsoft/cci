@@ -1154,7 +1154,7 @@ namespace Microsoft.Cci {
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
         methodDef = methodReference.ResolvedMethod;
-      if (methodDef != null && !methodDef.AcceptsExtraArguments && this.methodDefIndex.TryGetValue(methodDef, out methodDefIndex))
+      if (methodDef != null && (methodReference == methodDef || !methodReference.AcceptsExtraArguments) && this.methodDefIndex.TryGetValue(methodDef, out methodDefIndex))
         return 0x06000000 | methodDefIndex;
       else {
         IGenericMethodInstanceReference/*?*/ methodSpec = methodReference as IGenericMethodInstanceReference;
