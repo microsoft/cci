@@ -817,7 +817,8 @@ namespace Microsoft.Cci {
         sectionWriter.BaseStream.Position = sectionBlock.Offset;
       uint result = sectionWriter.BaseStream.Position;
       sectionWriter.WriteBytes(new List<byte>(sectionBlock.Data).ToArray());
-      sectionWriter.Align(8);
+      if (sectionWriter.BaseStream.Position == sectionWriter.BaseStream.Length)
+        sectionWriter.Align(8);
       return result;
     }
 
