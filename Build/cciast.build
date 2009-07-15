@@ -187,10 +187,6 @@ using System.Reflection;
         <Name>Symbols</Name>
         <FileType>RuntimeBinary</FileType>
       </ReleaseFiles>
-<!--      <ReleaseFiles Include="@(ZipSources)">
-        <Name>Sources</Name>
-        <FileType>SourceCode</FileType>
-      </ReleaseFiles> -->
     </ItemGroup>
 
     <CreateRelease
