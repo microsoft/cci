@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{98966A5A-CCE7-4E94-B6D9-34B1B45A19B9}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -34,6 +34,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="xunit, Version=1.4.9.1416, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Metadata\External\Xunit\xunit.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.console, Version=1.4.9.1416, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Metadata\External\Xunit\xunit.console.exe</HintPath>
+    </Reference>
+    <Reference Include="xunit.runner.utility, Version=1.4.9.1416, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Metadata\External\Xunit\xunit.runner.utility.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -76,18 +88,6 @@
     <ProjectReference Include="..\..\metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Metadata\Xunit\Main\xunit.console\xunit.console.csproj">
-      <Project>{19C75545-5E0E-4E38-9995-511ED2DF6D30}</Project>
-      <Name>xunit.console</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Metadata\Xunit\Main\xunit.runner.utility\xunit.runner.utility.csproj">
-      <Project>{2CE5D729-2E2A-4D36-8161-0F215B1C46AF}</Project>
-      <Name>xunit.runner.utility</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Metadata\Xunit\Main\xunit\xunit.csproj">
-      <Project>{09EF9917-4B00-4646-8C3F-96EFACC8BF51}</Project>
-      <Name>xunit</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\MutableCodeModel\MutableCodeModel.csproj">
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
