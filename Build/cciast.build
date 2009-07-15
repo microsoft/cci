@@ -133,26 +133,22 @@ using System.Reflection;
   </Target>
 
   <Target Name="TestDebug">
-    <!--
+    <ItemGroup>
+      <TestDebugAssembly Include="$(BinDebugDirectory)\*Tests.exe" />
+    </ItemGroup>
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="RoundtripTests.exe /xml ..\RountripTests.dbg.results.xml" />
-    <Exec
-      WorkingDirectory="$(BinDebugDirectory)"
-      Command="PEReaderTests.exe /xml ..\PEReaderTests.dbg.results.xml" />
-      -->
+      Command="%(TestDebugAssembly.FileName)%(TestDebugAssembly.FileExtension) /xml ..\%(TestDebugAssembly.FileName).dbg.results.xml" />
   </Target>
 
   <Target Name="TestRelease">
-    <!--
+    <ItemGroup>
+      <TestReleaseAssembly Include="$(BinReleaseDirectory)\*Tests.exe" />
+    </ItemGroup>
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="RoundtripTests.exe /xml ..\RountripTests.ret.results.xml" />
-    <Exec
-      WorkingDirectory="$(BinReleaseDirectory)"
-      Command="PEReaderTests.exe /xml ..\PEReaderTests.ret.results.xml" />
-    -->
-</Target>
+      Command="@(TestReleaseAssembly->'%(FileName).%(FileExtension)') /xml ..\@(TestReleaseAssembly->'%(FileName)').dbg.results.xml" />
+  </Target>
 
   <Target Name="CreateReleaseZips">
     <Error Condition="$(CleanRootDirectory) == ''" Text="CleanRootDirectory property not set" />
