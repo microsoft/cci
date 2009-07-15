@@ -2,19 +2,25 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
           DefaultTargets="ContinuousBuild">
   <UsingTask 
-    TaskName="UploadFiles" 
-    AssemblyName="CodePlex.WebServices.Client" />
+    TaskName="Microsoft.Cci.MsBuild.WriteFile" 
+    AssemblyFile="Microsoft.Cci.MsBuild.dll" />
   <UsingTask
-    TaskName="Microsoft.Cci.MsBuild.WriteFile"
-    AssemblyFile="..\Metadata\Build\Microsoft.Cci.MsBuild.dll" />
-
-  <!-- constants -->
+    TaskName="Microsoft.Cci.MsBuild.Zip"
+    AssemblyFile="Microsoft.Cci.MsBuild.dll" />
+  <UsingTask 
+    TaskName="CreateRelease" 
+    AssemblyFile="CodePlex.WebServices.Client.dll" />
+  <UsingTask
+    TaskName="UploadFiles"
+    AssemblyFile="CodePlex.WebServices.Client.dll" />
+  <!-- constants -->  
   <PropertyGroup>
+    <CodeplexProjectName>cciast</CodeplexProjectName>
     <BuildVersion>$(CCNetLabel)</BuildVersion>
     <TraceFile>$(CCNetListenerFile)</TraceFile>
     
     <RootDirectory>..</RootDirectory>
-    <MetadataSolution>$(RootDirectory)\Ast.sln</MetadataSolution>
+    <AstSolution>$(RootDirectory)\Ast.sln</AstSolution>
 
     <BinDirectory>$(RootDirectory)\bin</BinDirectory>
     <BinDebugDirectory>$(BinDirectory)\debug</BinDebugDirectory>
@@ -22,19 +28,27 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <CodePlexProjectName>cciast</CodePlexProjectName>
-    <CodePlexReleaseName>Latest Build</CodePlexReleaseName>
-    <!-- set by the ccnet server
-    <CodePlexUser />
-    <CodePlexPassword /> 
-     -->
+    <BinCodePlexDirectory>$(BinDirectory)\CodePlex</BinCodePlexDirectory>
   </PropertyGroup>
+  <ItemGroup>
+    <ZipBinaries Include="$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion).zip">
+      <Name>Binaries and Xml documentation files</Name>
+      <FileType>RuntimeBinary</FileType>
+    </ZipBinaries>
+    <ZipSymbols Include="$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion)-symbols.zip">
+      <Name>Symbols</Name>
+      <FileType>RuntimeBinary</FileType>
+    </ZipSymbols>
+    <ZipSources  Include="$(BinCodePlexDirectory)\$(CodeplexProjectName)-$(BuildVersion)-sources.zip">
+      <Name>Source code drop</Name>
+      <FileType>SourceCode</FileType>
+    </ZipSources>
+  </ItemGroup>
 
   <PropertyGroup>
-    <MetadataVersionFile>$(RootDirectory)\Metadata\Sources\common\include\version.cs</MetadataVersionFile>
     <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
     <VersionSource>
-      <![CDATA[// ==++==
+<![CDATA[// ==++==
 //
 //   Copyright (c) Microsoft Corporation.  All rights reserved.
 //
@@ -51,45 +65,54 @@ using System.Reflection;
     </VersionSource>
   </PropertyGroup>
 
-
   <!-- target definitions  -->
   <!-- quick build -->
   <Target 
     Name="ContinuousBuild" 
     DependsOnTargets="
+      Clean;
       CreateVersion;
       BuildDebug;
       TestDebug;
       BuildRelease;
       TestRelease;
+      BuildDocumentation;
+      CreateReleaseZips;
       " />
   <!-- night long build -->
   <Target
     Name="NighltyBuild"
     DependsOnTargets="
+      Clean;
       CreateVersion;
       BuildRelease;
       TestNightly;
       " />
-  <!-- uploads new release -->  
+  <!-- release upload -->
   <Target
-    Name="ContinuousCodePlexRelease"
+    Name="CreateCodeplexRelease"
     DependsOnTargets="
+      Clean;
       CreateVersion;
       BuildRelease;
-      CreateCodePlexRelease
-    "
-    />
+      BuildDocumentation;
+      TestRelease;
+      CreateReleaseZips;
+      UploadCodePlexRelease
+      " />
 
-  <Target Name="CreateVersion">
-    <Message Text="Writing version file $(VersionFile) and $(MetadataVersionFile)" />
-    <WriteFile File="$(MetadataVersionFile)" Content="$(VersionSource)" />
-    <WriteFile File="$(VersionFile)" Content="$(VersionSource)" />
+  <Target Name="Clean">
+    <RemoveDir Directories="$(BinDirectory)"  ContinueOnError="true" />
   </Target>
 
+  <Target Name="CreateVersion">
+    <Message Text="Writing version file $(VersionFile) with $(VersionSource)" />
+    <WriteFile File="$(VersionFile)" Content="$(VersionSource)" />    
+  </Target>
+  
   <Target Name="BuildDebug">
     <MSBuild
-      Projects="$(MetadataSolution)" 
+      Projects="$(AstSolution)" 
       Targets="Clean;Build"
       Properties="
         Configuration=Debug
@@ -98,11 +121,15 @@ using System.Reflection;
 
   <Target Name="BuildRelease">
     <MSBuild
-      Projects="$(MetadataSolution)"
+      Projects="$(AstSolution)"
       Targets="Clean;Build"
       Properties="
         Configuration=Release
       " />
+  </Target>
+
+  <Target Name="BuildDocumentation">
+    
   </Target>
 
   <Target Name="TestDebug">
@@ -112,7 +139,7 @@ using System.Reflection;
       Command="RoundtripTests.exe /xml ..\RountripTests.dbg.results.xml" />
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.dbg.results.xml" />
+      Command="PEReaderTests.exe /xml ..\PEReaderTests.dbg.results.xml" />
       -->
   </Target>
 
@@ -123,30 +150,71 @@ using System.Reflection;
       Command="RoundtripTests.exe /xml ..\RountripTests.ret.results.xml" />
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="ModuleReaderTests.exe /xml ..\ModuleReaderTests.ret.results.xml" />
-      -->
+      Command="PEReaderTests.exe /xml ..\PEReaderTests.ret.results.xml" />
+    -->
+</Target>
+
+  <Target Name="CreateReleaseZips">
+    <Error Condition="$(CleanRootDirectory) == ''" Text="CleanRootDirectory property not set" />
+    <CreateItem Include="
+      $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
+      $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
+      ">
+      <Output TaskParameter="Include" ItemName="Assemblies"/>
+    </CreateItem>
+    <CreateItem Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb">
+      <Output TaskParameter="Include" ItemName="Symbols"/>
+    </CreateItem>
+    <Exec Command="svn update &quot;$(CleanRootDirectory)&quot;" />
+
+    <MakeDir Directories="$(BinCodePlexDirectory)" />
+    <Zip Files="@(Assemblies)" OutputFile="@(ZipBinaries)" />
+    <Zip Files="@(Symbols)" OutputFile="@(ZipSymbols)" />
+    <Zip Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
   </Target>
 
   <Target Name="TestNightly">
   </Target>
-  
-  <Target Name="CreateCodePlexRelease" Condition="False">
-    <Error Condition="$(CodePlexUser) == ''" Text="You must provide your codeplex user name (/p:CodePlexUser=John)" />
-    <Error Condition="$(CodePlexPassword) == ''" Text="You must provide your codeplex password (/p:CodePlexPassword=123456)" />
-    <CreateItem
-      Include="$(BinReleaseDirectory)\Microsoft.Cci.*.dll" 
-      AdditionalMetadata="
-        FileType=RuntimeBinary;
-      ">
-      <Output TaskParameter="Include" ItemName="ReleaseFiles"/>
-    </CreateItem>
-    <UploadFiles
-      ProjectName="$(CodePlexProjectName)"
-      ReleaseName="$(CodePlexReleaseName)"
-      ReleaseFiles="@(ReleaseFiles)"
-      User="$(CodePlexUser)"
-      Password="$(CodePlexPassword)"
-	    />
-  </Target>
 
+  <Target Name="UploadCodePlexRelease">
+    <Error Condition="$(BuildVersion) == ''" Text="BuildVersion property not set" />
+    <Error Condition="$(CodeplexUser) == ''" Text="CodeplexUser property not set" />
+    <Error Condition="$(CodeplexPassword) == ''" Text="CodeplexPassword property not set" />
+
+    <ItemGroup>
+      <ReleaseFiles Include="@(ZipBinaries)">
+        <Name>Compiled binaries</Name>
+        <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+      <ReleaseFiles Include="@(ZipSymbols)">
+        <Name>Symbols</Name>
+        <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+<!--      <ReleaseFiles Include="@(ZipSources)">
+        <Name>Sources</Name>
+        <FileType>SourceCode</FileType>
+      </ReleaseFiles> -->
+    </ItemGroup>
+
+    <CreateRelease
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(BuildVersion)"
+      IsDefaultRelease="true"
+      ShowToPublic="true"
+      ShowOnHomePage="true"
+      Description="Latest build"
+      ReleaseDate="%(ZipBinaries.CreatedTime)"
+      ReleaseStatus="Released"
+      Username="$(CodeplexUser)"
+      Password="$(CodeplexPassword)" />
+    <UploadFiles
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(BuildVersion)"
+      ReleaseFiles="@(ReleaseFiles)"
+      Username="$(CodeplexUser)"
+      Password="$(CodeplexPassword)"
+	    />
+    <Message Text="YOU WILL NEED TO UPLOAD THE SOURCE MANUALLY FROM @(ZipSources)" />
+  </Target>
+  
 </Project>
