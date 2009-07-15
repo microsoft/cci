@@ -133,40 +133,41 @@ using System.Reflection;
   </Target>
 
   <Target Name="TestDebug">
+    <ItemGroup>
+      <TestDebugAssembly Include="$(BinDebugDirectory)\*Tests.exe" />
+    </ItemGroup>
     <Exec
       WorkingDirectory="$(BinDebugDirectory)"
-      Command="RoundtripTests.exe /xml ..\RountripTests.dbg.results.xml" />
-    <Exec
-      WorkingDirectory="$(BinDebugDirectory)"
-      Command="PEReaderTests.exe /xml ..\PEReaderTests.dbg.results.xml" />
+      Command="%(TestDebugAssembly.FileName)%(TestDebugAssembly.FileExtension) /xml ..\%(TestDebugAssembly.FileName).dbg.results.xml" />
   </Target>
 
   <Target Name="TestRelease">
+    <ItemGroup>
+      <TestReleaseAssembly Include="$(BinReleaseDirectory)\*Tests.exe" />
+    </ItemGroup>
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="RoundtripTests.exe /xml ..\RountripTests.ret.results.xml" />
-    <Exec
-      WorkingDirectory="$(BinReleaseDirectory)"
-      Command="PEReaderTests.exe /xml ..\PEReaderTests.ret.results.xml" />
+      Command="@(TestReleaseAssembly->'%(FileName).%(FileExtension)') /xml ..\@(TestReleaseAssembly->'%(FileName)').dbg.results.xml" />
   </Target>
 
   <Target Name="CreateReleaseZips">
-    <Error Condition="$(CleanRootDirectory) == ''" Text="CleanRootDirectory property not set" />
-    <CreateItem Include="
+    <ItemGroup>
+      <Assembly Include="
       $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
       $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
-      ">
-      <Output TaskParameter="Include" ItemName="Assemblies"/>
-    </CreateItem>
-    <CreateItem Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb">
-      <Output TaskParameter="Include" ItemName="Symbols"/>
-    </CreateItem>
-    <Exec Command="svn update &quot;$(CleanRootDirectory)&quot;" />
+      " />
+      <Assembly Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb" />
+    </ItemGroup>
+    <Exec
+      Condition="$(CleanRootDirectory) != ''"
+      Command="svn update &quot;$(CleanRootDirectory)&quot;" />
 
     <MakeDir Directories="$(BinCodePlexDirectory)" />
     <Zip Files="@(Assemblies)" OutputFile="@(ZipBinaries)" />
     <Zip Files="@(Symbols)" OutputFile="@(ZipSymbols)" />
-    <Zip Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
+    <Zip
+      Condition="$(CleanRootDirectory) != ''"
+      Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
   </Target>
 
   <Target Name="TestNightly">
@@ -186,10 +187,6 @@ using System.Reflection;
         <Name>Symbols</Name>
         <FileType>RuntimeBinary</FileType>
       </ReleaseFiles>
-<!--      <ReleaseFiles Include="@(ZipSources)">
-        <Name>Sources</Name>
-        <FileType>SourceCode</FileType>
-      </ReleaseFiles> -->
     </ItemGroup>
 
     <CreateRelease
@@ -198,7 +195,7 @@ using System.Reflection;
       IsDefaultRelease="true"
       ShowToPublic="true"
       ShowOnHomePage="true"
-      Description="Last build"
+      Description="Latest build"
       ReleaseDate="%(ZipBinaries.CreatedTime)"
       ReleaseStatus="Released"
       Username="$(CodeplexUser)"
