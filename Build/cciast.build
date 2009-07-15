@@ -151,22 +151,23 @@ using System.Reflection;
   </Target>
 
   <Target Name="CreateReleaseZips">
-    <Error Condition="$(CleanRootDirectory) == ''" Text="CleanRootDirectory property not set" />
-    <CreateItem Include="
+    <ItemGroup>
+      <Assembly Include="
       $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
       $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
-      ">
-      <Output TaskParameter="Include" ItemName="Assemblies"/>
-    </CreateItem>
-    <CreateItem Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb">
-      <Output TaskParameter="Include" ItemName="Symbols"/>
-    </CreateItem>
-    <Exec Command="svn update &quot;$(CleanRootDirectory)&quot;" />
+      " />
+      <Assembly Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb" />
+    </ItemGroup>
+    <Exec 
+      Condition="$(CleanRootDirectory) != ''"
+      Command="svn update &quot;$(CleanRootDirectory)&quot;" />
 
     <MakeDir Directories="$(BinCodePlexDirectory)" />
     <Zip Files="@(Assemblies)" OutputFile="@(ZipBinaries)" />
     <Zip Files="@(Symbols)" OutputFile="@(ZipSymbols)" />
-    <Zip Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
+    <Zip 
+      Condition="$(CleanRootDirectory) != ''"      
+      Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
   </Target>
 
   <Target Name="TestNightly">
