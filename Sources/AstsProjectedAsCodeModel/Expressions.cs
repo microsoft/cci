@@ -539,7 +539,7 @@ namespace Microsoft.Cci.Ast {
     /// Reports the error.
     /// </summary>
     protected override void ReportError() {
-      this.Helper.ReportError(new AstErrorMessage(this, Error.LValueRequired, "&"));
+      this.Helper.ReportError(new AstErrorMessage(this, Error.CannotTakeAddress, "&"));
     }
 
     #region IAddressableExpression Members

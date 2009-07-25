@@ -189,7 +189,7 @@
   <data name="NoImplicitConversion" xml:space="preserve">
     <value>Cannot implicitly convert type '{0}' to '{1}'.</value>
   </data>
-  <data name="NoMatchingOverload">
+  <data name="NoMatchingOverload" xml:space="preserve">
     <value>No overload for '{1}' matches delegate '{0}'.</value>
   </data>
   <data name="NoSourceFiles" xml:space="preserve">
@@ -255,8 +255,8 @@
   <data name="UnknownSize" xml:space="preserve">
     <value>'{0}' : unknown size</value>
   </data>
-  <data name="LValueRequired" xml:space="preserve">
-    <value>'{0}' requires l-value</value>
+  <data name="CannotTakeAddress" xml:space="preserve">
+    <value>Cannot take the address of the given expression.</value>
   </data>
   <data name="RedefinitionOfFormalParameter" xml:space="preserve">
     <value>redefinition of formal parameter '{0}'</value>

@@ -5,6 +5,7 @@
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
 using System.Diagnostics;
+using System;
 
 //^ using Microsoft.Contracts;
 
@@ -115,7 +116,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An enumeration of errors that are reported by the AST base classes.
   /// </summary>
-  public enum Error { //TODO: there are VCC specific errors in here. Remove them.
+  public enum Error {
 
     /// <summary>
     /// Alias '{0}' not found.
@@ -178,7 +179,7 @@ namespace Microsoft.Cci.Ast {
     BatchFileNotRead,
 
     /// <summary>
-    /// 
+    /// '{0}' is not a method and cannot be called.
     /// </summary>
     CannotCallNonMethod,
 
@@ -200,6 +201,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The declaration of function '{0}' already specifies contracts. Discarding the contracts of the definition.
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     DiscardedContractAtDefinition,
 
     /// <summary>
@@ -305,21 +307,24 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Access to the ghost member {0} requires a pointer value
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     PointerExpectedForGhostMember,
 
     /// <summary>
     /// Equality '==' binds stronger than '&amp;&amp;' and '||' which is possibly not what you wanted;  use '&lt;==&gt;' or parenthesize the equality.
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     PotentialPrecedenceErrorInLogicalExpression,
 
     /// <summary>
-    /// '{0}' probably does not mean what you wantend; use two conjoined conditions to express an interval or parenthesize the '{1}' comparison.
+    /// '{0}' probably does not express what you intended; use two conjoined conditions to express an interval or parenthesize the {1} comparison.
     /// </summary>
     PotentialUnintendRangeComparison,
 
     /// <summary>
     /// redefinition of formal parameter '{0}'
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     RedefinitionOfFormalParameter,
 
     /// <summary>
@@ -330,6 +335,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The size of '{0}' is unknown in the current context; note that the use of sizeof may be due to SAL __in ,__inout, or __out annotations.
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     SizeOfUnknown,
 
     /// <summary>
@@ -345,26 +351,30 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Cannot use 'this' in this context.
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     ThisNotAllowedHere,
 
     /// <summary>
     /// '{0}' : unknown size
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     UnknownSize,
 
     /// <summary>
     /// '{0}' : unknown element size
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     UnknownElementSize,
 
     /// <summary>
-    /// '{0}' requires l-value
+    /// Cannot take the address of the given expression.
     /// </summary>
-    LValueRequired,
+    CannotTakeAddress,
 
     /// <summary>
     /// '&amp;' on bit field ignored
     /// </summary>
+    [Obsolete("Please move this message to VCC specific code")]
     AddressOfBitField,
 
     /// <summary>
@@ -379,7 +389,7 @@ namespace Microsoft.Cci.Ast {
 
 
     /// <summary>
-    /// 
+    /// Not an actual error message, but a convenient place holder during development.
     /// </summary>
     ToBeDefined
   }
