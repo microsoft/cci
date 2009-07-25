@@ -218,7 +218,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         IGenericMethodInstanceReference/*?*/ genericMethodToCall = methodToCall as IGenericMethodInstanceReference;
         return IteratorHelper.EnumerableCount(genericMethodToCall.GenericArguments) == 1;
       }
-      return mname == "Requires" || mname == "RequiresAlways" || mname == "Ensures";
+      return mname == "Requires" || mname == "Ensures";
     }
 
     private static bool IsLegacyRequires(IStatement statement) {
@@ -361,19 +361,33 @@ namespace Microsoft.Cci.ILToCodeModel {
               this.CurrentMethodContract.ThrownExceptions.Add(exceptionalPostcondition);
               return;
             }
-            if (mname == "Requires" || mname == "RequiresAlways") {
+            if (mname == "Requires") {
               var arg = arguments[0];
               if (be != null) {
                 be.Expression = arg;
                 arg = be;
                 locations.AddRange(be.BlockStatement.Locations);
               }
+              IExpression thrownException = null;
+              IGenericMethodInstanceReference genericMethodInstance = methodToCall as IGenericMethodInstanceReference;
+              if (genericMethodInstance != null && 0 < genericMethodInstance.GenericParameterCount) {
+                foreach (var a in genericMethodInstance.GenericArguments) {
+                  thrownException = new TypeOf() {
+                    Type = this.sourceMethodBody.platformType.SystemType,
+                    TypeToGet = a,
+                    Locations = new List<ILocation>(a.Locations),
+                  };
+                  break;
+                }
+              }
+
               Precondition precondition = new Precondition() {
-                AlwaysCheckedAtRuntime = mname == "RequiresAlways",
+                AlwaysCheckedAtRuntime = false,
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                 Description = numArgs >= 2 ? arguments[1] : null,
                 OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
-                Locations = locations
+                Locations = locations,
+                ExceptionToThrow = thrownException,
               };
               this.CurrentMethodContract.Preconditions.Add(precondition);
               return;
