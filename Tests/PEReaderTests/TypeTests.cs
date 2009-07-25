@@ -65,12 +65,10 @@ namespace ModuleReaderTests {
 
     public bool RunTypeTests() {
       bool ret = true;
-      // TODO: depends on metadata ordering, disabled.
-      //if (!this.TestMscorlibList1())
-      //{
-      //  Console.WriteLine("TestMscorlibList1 - Failed");
-      //  ret = false;
-      //}
+      if (!this.TestMscorlibList1()) {
+        Console.WriteLine("TestMscorlibList1 - Failed");
+        ret = false;
+      }
       if (!this.TestGeneric1FieldType()) {
         Console.WriteLine("TestGeneric1FieldType - Failed");
         ret = false;
@@ -185,13 +183,13 @@ namespace ModuleReaderTests {
   {
     .argument const(""Item"",System.String)
   }
-  .custom instance void System.Diagnostics.DebuggerTypeProxyAttribute::.ctor(System.Type)
-  {
-    .argument typeof(System.Collections.Generic.Mscorlib_CollectionDebugView`1)
-  }
   .custom instance void System.Diagnostics.DebuggerDisplayAttribute::.ctor(System.String)
   {
     .argument const(""Count = {Count}"",System.String)
+  }
+  .custom instance void System.Diagnostics.DebuggerTypeProxyAttribute::.ctor(System.Type)
+  {
+    .argument typeof(System.Collections.Generic.Mscorlib_CollectionDebugView`1)
   }
   .class Enumerator
   .field _defaultCapacity : int32
@@ -302,7 +300,138 @@ namespace ModuleReaderTests {
   .override instance void System.Collections.IList::Remove(System.Object) with instance void System.Collections.Generic.List`1::System.Collections.IList.Remove(System.Object)
 }
 ";
-      return result.Equals(stringPaper.Content);
+      string vistaResult =
+@".class public auto ansi serializable beforefieldinit System.Collections.Generic.List`1<T>
+  extends  System.Object
+  implements  System.Collections.Generic.IList`1<!0>,
+              System.Collections.Generic.ICollection`1<!0>,
+              System.Collections.Generic.IEnumerable`1<!0>,
+              System.Collections.IList,
+              System.Collections.ICollection,
+              System.Collections.IEnumerable
+{
+  .custom instance void System.Diagnostics.DebuggerDisplayAttribute::.ctor(System.String)
+  {
+    .argument const(""Count = {Count}"",System.String)
+  }
+  .custom instance void System.Diagnostics.DebuggerTypeProxyAttribute::.ctor(System.Type)
+  {
+    .argument typeof(System.Collections.Generic.Mscorlib_CollectionDebugView`1)
+  }
+  .custom instance void System.Reflection.DefaultMemberAttribute::.ctor(System.String)
+  {
+    .argument const(""Item"",System.String)
+  }
+  .class Enumerator
+  .field _defaultCapacity : int32
+  .field _emptyArray : !0[]
+  .field _items : !0[]
+  .field _size : int32
+  .field _syncRoot : System.Object
+  .field _version : int32
+  .method .cctor : void()
+  .method .ctor : void()
+  .method .ctor : void(int32)
+  .method .ctor : void(System.Collections.Generic.IEnumerable`1<!0>)
+  .method Add : void(!0)
+  .method AddRange : void(System.Collections.Generic.IEnumerable`1<!0>)
+  .method AsReadOnly : System.Collections.ObjectModel.ReadOnlyCollection`1<!0>()
+  .method BinarySearch : int32(!0)
+  .method BinarySearch : int32(!0,System.Collections.Generic.IComparer`1<!0>)
+  .method BinarySearch : int32(int32,int32,!0,System.Collections.Generic.IComparer`1<!0>)
+  .method Clear : void()
+  .method Contains : bool(!0)
+  .method ConvertAll : System.Collections.Generic.List`1<!!0>(System.Converter`2<!0,!!0>)
+  .method CopyTo : void(!0[])
+  .method CopyTo : void(!0[],int32)
+  .method CopyTo : void(int32,!0[],int32,int32)
+  .method EnsureCapacity : void(int32)
+  .method Exists : bool(System.Predicate`1<!0>)
+  .method Find : !0(System.Predicate`1<!0>)
+  .method FindAll : System.Collections.Generic.List`1<!0>(System.Predicate`1<!0>)
+  .method FindIndex : int32(int32,int32,System.Predicate`1<!0>)
+  .method FindIndex : int32(int32,System.Predicate`1<!0>)
+  .method FindIndex : int32(System.Predicate`1<!0>)
+  .method FindLast : !0(System.Predicate`1<!0>)
+  .method FindLastIndex : int32(int32,int32,System.Predicate`1<!0>)
+  .method FindLastIndex : int32(int32,System.Predicate`1<!0>)
+  .method FindLastIndex : int32(System.Predicate`1<!0>)
+  .method ForEach : void(System.Action`1<!0>)
+  .method get_Capacity : int32()
+  .method get_Count : int32()
+  .method get_Item : !0(int32)
+  .method GetEnumerator : System.Collections.Generic.List`1<!0>/Enumerator()
+  .method GetRange : System.Collections.Generic.List`1<!0>(int32,int32)
+  .method IndexOf : int32(!0)
+  .method IndexOf : int32(!0,int32)
+  .method IndexOf : int32(!0,int32,int32)
+  .method Insert : void(int32,!0)
+  .method InsertRange : void(int32,System.Collections.Generic.IEnumerable`1<!0>)
+  .method IsCompatibleObject : bool(System.Object)
+  .method LastIndexOf : int32(!0)
+  .method LastIndexOf : int32(!0,int32)
+  .method LastIndexOf : int32(!0,int32,int32)
+  .method Remove : bool(!0)
+  .method RemoveAll : int32(System.Predicate`1<!0>)
+  .method RemoveAt : void(int32)
+  .method RemoveRange : void(int32,int32)
+  .method Reverse : void()
+  .method Reverse : void(int32,int32)
+  .method set_Capacity : void(int32)
+  .method set_Item : void(int32,!0)
+  .method Sort : void()
+  .method Sort : void(int32,int32,System.Collections.Generic.IComparer`1<!0>)
+  .method Sort : void(System.Collections.Generic.IComparer`1<!0>)
+  .method Sort : void(System.Comparison`1<!0>)
+  .method System.Collections.Generic.ICollection<T>.get_IsReadOnly : bool()
+  .method System.Collections.Generic.IEnumerable<T>.GetEnumerator : System.Collections.Generic.IEnumerator`1<!0>()
+  .method System.Collections.ICollection.CopyTo : void(System.Array,int32)
+  .method System.Collections.ICollection.get_IsSynchronized : bool()
+  .method System.Collections.ICollection.get_SyncRoot : System.Object()
+  .method System.Collections.IEnumerable.GetEnumerator : System.Collections.IEnumerator()
+  .method System.Collections.IList.Add : int32(System.Object)
+  .method System.Collections.IList.Contains : bool(System.Object)
+  .method System.Collections.IList.get_IsFixedSize : bool()
+  .method System.Collections.IList.get_IsReadOnly : bool()
+  .method System.Collections.IList.get_Item : System.Object(int32)
+  .method System.Collections.IList.IndexOf : int32(System.Object)
+  .method System.Collections.IList.Insert : void(int32,System.Object)
+  .method System.Collections.IList.Remove : void(System.Object)
+  .method System.Collections.IList.set_Item : void(int32,System.Object)
+  .method ToArray : !0[]()
+  .method TrimExcess : void()
+  .method TrueForAll : bool(System.Predicate`1<!0>)
+  .method VerifyValueType : void(System.Object)
+  .property Capacity : int32()
+  .property Count : int32()
+  .property Item : !0(int32)
+  .property System.Collections.Generic.ICollection<T>.IsReadOnly : bool()
+  .property System.Collections.ICollection.IsSynchronized : bool()
+  .property System.Collections.ICollection.SyncRoot : System.Object()
+  .property System.Collections.IList.IsFixedSize : bool()
+  .property System.Collections.IList.IsReadOnly : bool()
+  .property System.Collections.IList.Item : System.Object(int32)
+  .flags class reftype
+  .pack 0
+  .size 0
+  .override instance bool System.Collections.IList::Contains(System.Object) with instance bool System.Collections.Generic.List`1::System.Collections.IList.Contains(System.Object)
+  .override instance bool System.Collections.Generic.ICollection`1<!0>::get_IsReadOnly() with instance bool System.Collections.Generic.List`1::System.Collections.Generic.ICollection<T>.get_IsReadOnly()
+  .override instance bool System.Collections.IList::get_IsReadOnly() with instance bool System.Collections.Generic.List`1::System.Collections.IList.get_IsReadOnly()
+  .override instance bool System.Collections.ICollection::get_IsSynchronized() with instance bool System.Collections.Generic.List`1::System.Collections.ICollection.get_IsSynchronized()
+  .override instance System.Object System.Collections.ICollection::get_SyncRoot() with instance System.Object System.Collections.Generic.List`1::System.Collections.ICollection.get_SyncRoot()
+  .override instance System.Object System.Collections.IList::get_Item(int32) with instance System.Object System.Collections.Generic.List`1::System.Collections.IList.get_Item(int32)
+  .override instance void System.Collections.IList::set_Item(int32,System.Object) with instance void System.Collections.Generic.List`1::System.Collections.IList.set_Item(int32,System.Object)
+  .override instance int32 System.Collections.IList::Add(System.Object) with instance int32 System.Collections.Generic.List`1::System.Collections.IList.Add(System.Object)
+  .override instance bool System.Collections.IList::get_IsFixedSize() with instance bool System.Collections.Generic.List`1::System.Collections.IList.get_IsFixedSize()
+  .override instance void System.Collections.ICollection::CopyTo(System.Array,int32) with instance void System.Collections.Generic.List`1::System.Collections.ICollection.CopyTo(System.Array,int32)
+  .override instance System.Collections.Generic.IEnumerator`1<!0>System.Collections.Generic.IEnumerable`1<!0>::GetEnumerator() with instance System.Collections.Generic.IEnumerator`1<!0>System.Collections.Generic.List`1::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
+  .override instance System.Collections.IEnumerator System.Collections.IEnumerable::GetEnumerator() with instance System.Collections.IEnumerator System.Collections.Generic.List`1::System.Collections.IEnumerable.GetEnumerator()
+  .override instance int32 System.Collections.IList::IndexOf(System.Object) with instance int32 System.Collections.Generic.List`1::System.Collections.IList.IndexOf(System.Object)
+  .override instance void System.Collections.IList::Insert(int32,System.Object) with instance void System.Collections.Generic.List`1::System.Collections.IList.Insert(int32,System.Object)
+  .override instance void System.Collections.IList::Remove(System.Object) with instance void System.Collections.Generic.List`1::System.Collections.IList.Remove(System.Object)
+}
+";
+      return result.Equals(stringPaper.Content) || vistaResult.Equals(stringPaper.Content);
     }
 
     public bool TestGeneric1FieldType() {
@@ -721,18 +850,6 @@ namespace ModuleReaderTests {
 @".class public auto ansi beforefieldinit TypeTest
   extends [mscorlib]System.Object
 {
-  .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
-  {
-    .argument typeof(int32[,][])
-  }
-  .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
-  {
-    .argument typeof(float32**)
-  }
-  .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
-  {
-    .argument typeof(Faa`1<TestAttribute>/Baa`1<int32>)
-  }
   .custom instance void DAttribute::.ctor([mscorlib]System.String,int32,float64,[mscorlib]System.Type,TestEnum)
   {
     .argument const(""DDD"",[mscorlib]System.String)
@@ -742,6 +859,18 @@ namespace ModuleReaderTests {
     .argument const(0,TestEnum)
     .argument .field Array : [mscorlib]System.Object[]=array([mscorlib]System.Object[]){const(null,[mscorlib]System.String), const(null,[mscorlib]System.String)}
     .argument .field IntArray : int32[]=array(int32[]){const(6,int32), const(6,int32), const(6,int32)}
+  }
+  .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
+  {
+    .argument typeof(int32[,][])
+  }
+  .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
+  {
+    .argument typeof(Faa`1<TestAttribute>/Baa`1<int32>)
+  }
+  .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
+  {
+    .argument typeof(float32**)
   }
   .field Foo : [.module MRW_Module1.netmodule]Module1.Foo
   .field FooNested : [.module MRW_Module1.netmodule]Module1.Foo/Nested

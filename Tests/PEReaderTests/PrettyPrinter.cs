@@ -715,7 +715,7 @@ namespace ModuleReaderTests {
       IArrayTypeReference arrayType = typeDefinition as IArrayTypeReference;
       if (arrayType != null) {
         this.TypeReference(arrayType.ElementType);
-          this.ILDasmPaper.Symbol("[");
+        this.ILDasmPaper.Symbol("[");
         if (!arrayType.IsVector) {
           if (arrayType.Rank == 1) {
             this.ILDasmPaper.Symbol("*");
@@ -906,7 +906,7 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Directive(".class extern");
         this.QualifiedAliasForType(nestedAlias.ContainingAlias);
       }
-        this.ILDasmPaper.NewLine();
+      this.ILDasmPaper.NewLine();
       this.ILDasmPaper.CloseBlock();
     }
 
@@ -1176,7 +1176,7 @@ namespace ModuleReaderTests {
         default:
           break;
       }
-      if(pInvokeInfo.SupportsLastError)
+      if (pInvokeInfo.SupportsLastError)
         this.ILDasmPaper.Keyword("lasterr");
       this.ILDasmPaper.Symbol(")");
     }
@@ -1526,7 +1526,7 @@ namespace ModuleReaderTests {
       this.TypeReference(methodDefinition.Type);
       if (methodDefinition.ReturnValueIsByRef)
         this.ILDasmPaper.Symbol("&");
-      if(methodDefinition.ReturnValueIsModified)
+      if (methodDefinition.ReturnValueIsModified)
         this.CustomModifiers(methodDefinition.ReturnValueCustomModifiers);
       this.ILDasmPaper.Identifier(methodDefinition.Name.Value);
       if (genericMethodInst != null) {
@@ -1610,7 +1610,7 @@ namespace ModuleReaderTests {
       }
       this.TypeReference(fieldDefinition.Type);
       this.ILDasmPaper.Identifier(fieldDefinition.Name.Value);
-      if(fieldDefinition.IsCompileTimeConstant){
+      if (fieldDefinition.IsCompileTimeConstant) {
         this.ILDasmPaper.Symbol("=");
         this.Expression(fieldDefinition.CompileTimeValue);
       }
@@ -1799,9 +1799,15 @@ namespace ModuleReaderTests {
     }
 
     public void CustomAttributes(IEnumerable<ICustomAttribute> customAttributes) {
-      foreach (ICustomAttribute ca in customAttributes) {
+      var custAttrs = new List<ICustomAttribute>(customAttributes);
+      custAttrs.Sort(CompareTypeNames);
+      foreach (ICustomAttribute ca in custAttrs) {
         this.CustomAttribute(ca);
       }
+    }
+
+    private static int CompareTypeNames(ICustomAttribute x, ICustomAttribute y) {
+      return string.CompareOrdinal(TypeHelper.GetTypeName(x.Type), TypeHelper.GetTypeName(y.Type));
     }
 
     public void SecurityAttribute(ISecurityAttribute securityAttribute) {
