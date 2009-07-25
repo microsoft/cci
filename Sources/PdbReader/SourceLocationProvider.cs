@@ -15,7 +15,8 @@ using System.Diagnostics.SymbolStore;
 namespace Microsoft.Cci {
 
   /// <summary>
-  /// An object that maps offsets in an IL stream to source locations.
+  /// An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
+  /// For example, a PDB reader that maps offsets in an IL stream to source locations.
   /// </summary>
   public sealed class PdbReader : ISourceLocationProvider, ILocalScopeProvider {
 
@@ -23,7 +24,8 @@ namespace Microsoft.Cci {
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
 
     /// <summary>
-    /// Allocates an object that maps offsets in an IL stream to source locations.
+    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
+    /// For example, a PDB reader that maps offsets in an IL stream to source locations.
     /// </summary>
     public PdbReader(Stream pdbStream, IMetadataHost host) {
       this.host = host;
@@ -333,7 +335,7 @@ namespace Microsoft.Cci {
     internal LocalNameSourceLocation(string source) {
       this.source = source;
     }
-     
+
     #region IPrimarySourceLocation Members
 
     public int EndColumn {
@@ -413,9 +415,8 @@ namespace Microsoft.Cci {
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
     /// <param name="pdbSourceFile">Information about the document, such as its location.</param>
     /// <param name="streamReader">A StreamReader instance whose BaseStream produces the contents of the document.</param>
-    internal PdbSourceDocument(IName name, PdbSource pdbSourceFile, StreamReader streamReader) 
-      : base(name, pdbSourceFile.name, streamReader)
-    {
+    internal PdbSourceDocument(IName name, PdbSource pdbSourceFile, StreamReader streamReader)
+      : base(name, pdbSourceFile.name, streamReader) {
       this.pdbSourceFile = pdbSourceFile;
     }
 
@@ -530,9 +531,9 @@ namespace Microsoft.Cci {
     }
 
     public int EndIndex {
-      get { 
+      get {
         if (this.endIndex == -1)
-          this.endIndex = this.primarySourceDocument.ToPosition(this.endLine, this.endColumn); 
+          this.endIndex = this.primarySourceDocument.ToPosition(this.endLine, this.endColumn);
         return this.endIndex;
       }
     }
@@ -542,7 +543,7 @@ namespace Microsoft.Cci {
       get {
         int result = this.EndIndex - this.StartIndex;
         if (result < 0) result = this.EndColumn - this.StartColumn;
-        return result; 
+        return result;
       }
     }
 
@@ -557,7 +558,7 @@ namespace Microsoft.Cci {
     }
 
     public int StartIndex {
-      get { 
+      get {
         if (this.startIndex == -1)
           this.startIndex = this.primarySourceDocument.ToPosition(this.startLine, this.startColumn);
         return this.startIndex;
@@ -590,7 +591,7 @@ namespace Microsoft.Cci {
     #region ILocalDefinition Members
 
     public IMetadataConstant CompileTimeValue {
-      get { 
+      get {
         if (this.compileTimeValue == null)
           this.compileTimeValue = new PdbMetadataConstant(this.pdbConstant.value, this.Type);
         return this.compileTimeValue;
@@ -657,7 +658,7 @@ namespace Microsoft.Cci {
     }
 
     public ITypeReference Type {
-      get { 
+      get {
         if (this.type == null)
           this.type = this.GetTypeForConstant();
         return this.type;
@@ -750,7 +751,7 @@ namespace Microsoft.Cci {
     /// The offset of the first operation in the scope.
     /// </summary>
     public uint Offset {
-      get { return this.pdbScope.address; }
+      get { return this.pdbScope.offset; }
     }
 
     /// <summary>

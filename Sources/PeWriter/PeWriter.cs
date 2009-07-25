@@ -2862,6 +2862,7 @@ namespace Microsoft.Cci {
 
     List<MemoryStream> customDebugMetadataForCurrentMethod = new List<MemoryStream>();
     IEnumerator<ILocalScope>/*?*/ scopeEnumerator;
+    bool scopeEnumeratorIsValid;
     Stack<ILocalScope> scopeStack = new Stack<ILocalScope>();
 
     private void SerializeMethodBody(IMethodBody methodBody, BinaryWriter writer) {
@@ -2874,7 +2875,7 @@ namespace Microsoft.Cci {
           this.scopeStack.Clear();
           this.customDebugMetadataForCurrentMethod.Clear();
           this.scopeEnumerator = this.localScopeProvider.GetLocalScopes(methodBody).GetEnumerator();
-          if (scopeEnumerator.MoveNext()) this.Initialize(scopeEnumerator.Current);
+          this.scopeEnumeratorIsValid = this.scopeEnumerator.MoveNext();
           this.SerializeNamespaceScopes(methodBody);
         }
       }
@@ -3244,18 +3245,22 @@ namespace Microsoft.Cci {
       if (this.pdbWriter == null) return;
       ILocalScope/*?*/ currentScope = null;
       while (this.scopeStack.Count > 0) {
-        currentScope = this.scopeStack.Pop();
+        currentScope = this.scopeStack.Peek();
         if (operation.Offset < currentScope.Offset+currentScope.Length) break;
+        this.scopeStack.Pop();
         this.pdbWriter.CloseScope(operation.Offset);
         currentScope = null;
       }
-      if (currentScope == null && this.scopeEnumerator != null && this.scopeEnumerator.MoveNext()) {
+      while (this.scopeEnumeratorIsValid) {
         currentScope = this.scopeEnumerator.Current;
-        this.pdbWriter.OpenScope(currentScope.Offset);
-        this.Initialize(currentScope);
+        if (currentScope.Offset <= operation.Offset && operation.Offset < currentScope.Offset+currentScope.Length) {
+          this.scopeStack.Push(currentScope);
+          this.pdbWriter.OpenScope(currentScope.Offset);
+          this.Initialize(currentScope);
+          this.scopeEnumeratorIsValid = this.scopeEnumerator.MoveNext();
+        } else
+          break;
       }
-      if (currentScope != null)
-        this.scopeStack.Push(currentScope);
       if (this.sourceLocationProvider != null)
         this.pdbWriter.DefineSequencePoint(operation.Location, operation.Offset);
     }
