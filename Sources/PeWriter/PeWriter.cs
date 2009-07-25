@@ -2939,7 +2939,9 @@ namespace Microsoft.Cci {
     }
 
     private bool DebuggerShouldHideMethod(IMethodBody methodBody) {
-      if (IteratorHelper.EnumerableIsEmpty(methodBody.Operations)) return true;
+      IOperation/*?*/ firstOperation = null;
+      foreach (var op in methodBody.Operations) { firstOperation = op; break; }
+      if (firstOperation == null) return true;
       foreach (ICustomAttribute attribute in methodBody.MethodDefinition.Attributes) {
         INamespaceTypeReference/*?*/ nsTypeRef = attribute.Type as INamespaceTypeReference;
         if (nsTypeRef != null && nsTypeRef.Name.UniqueKey == this.host.NameTable.DebuggerHiddenAttribute.UniqueKey) {
@@ -2953,8 +2955,8 @@ namespace Microsoft.Cci {
       }
       if (!methodBody.MethodDefinition.IsConstructor) return false;
       if (IteratorHelper.EnumerableIsNotEmpty(methodBody.MethodDefinition.Parameters)) return false;
-      if (this.localScopeProvider == null) return true;
-      return IteratorHelper.EnumerableIsEmpty(this.localScopeProvider.GetLocalScopes(methodBody));
+      if (this.sourceLocationProvider == null) return true;
+      return IteratorHelper.EnumerableIsEmpty(this.sourceLocationProvider.GetPrimarySourceLocationsFor(firstOperation.Location));
     }
 
     private void SerializeNamespaceScopes(IMethodBody methodBody) {
