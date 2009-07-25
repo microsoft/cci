@@ -58,6 +58,10 @@ namespace Microsoft.Cci {
         break;
       }
       if (ploc == null) return;
+      if (this.lastLocation != null && this.lastLocation.Document == ploc.Document && 
+        this.lastLocation.StartLine == ploc.StartLine && this.lastLocation.EndLine == ploc.EndLine &&
+        this.lastLocation.StartColumn == ploc.StartColumn && this.lastLocation.EndColumn == ploc.EndColumn)
+        return;
       if (ploc.Document != this.currentDocument)
         this.DefineSequencePointsForCurrentDocument();
       this.currentDocument = ploc.PrimarySourceDocument;
@@ -66,8 +70,10 @@ namespace Microsoft.Cci {
       this.startColumns.Add((uint)ploc.StartColumn);
       this.endLines.Add((uint)ploc.EndLine);
       this.endColumns.Add((uint)ploc.EndColumn);
+      this.lastLocation = ploc;
     }
 
+    IPrimarySourceLocation lastLocation;
     IPrimarySourceDocument currentDocument = SourceDummy.PrimarySourceDocument;
     List<uint> offsets = new List<uint>();
     List<uint> startLines = new List<uint>();
@@ -133,6 +139,7 @@ namespace Microsoft.Cci {
       this.currentMethodToken = methodToken;
       this.SymWriter.OpenMethod(methodToken);
       this.SymWriter.OpenScope(0);
+      this.lastLocation = null;
     }
 
     public void OpenScope(uint offset) {
