@@ -614,10 +614,20 @@ namespace Microsoft.Cci {
     /// </summary>
     //^ [Pure]
     public virtual string GetEventSignature(IEventDefinition eventDef, NameFormattingOptions formattingOptions) {
-      string result = eventDef.Name.Value;
-      if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0)
-        result = this.typeNameFormatter.GetTypeName(eventDef.ContainingType, formattingOptions) + "." + result;
-      return result;
+      StringBuilder sb = new StringBuilder();
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
+        sb.Append("E:");
+      }
+      if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
+        sb.Append(this.typeNameFormatter.GetTypeName(eventDef.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(".");
+      }
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
+        sb.Append(this.MapToDocumentationIdName(eventDef.Name.Value));
+      } else {
+        sb.Append(eventDef.Name.Value);
+      }
+      return sb.ToString();
     }
 
     /// <summary>
@@ -625,10 +635,20 @@ namespace Microsoft.Cci {
     /// </summary>
     //^ [Pure]
     public virtual string GetFieldSignature(IFieldReference field, NameFormattingOptions formattingOptions) {
-      string result = field.Name.Value;
-      if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0)
-        result = this.typeNameFormatter.GetTypeName(field.ContainingType, formattingOptions) + "." + result;
-      return result;
+      StringBuilder sb = new StringBuilder();
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
+        sb.Append("F:");
+      }
+      if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
+        sb.Append(this.typeNameFormatter.GetTypeName(field.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(".");
+      }
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
+        sb.Append(this.MapToDocumentationIdName(field.Name.Value));
+      } else {
+        sb.Append(field.Name.Value);
+      }
+      return sb.ToString();
     }
 
     /// <summary>
@@ -646,7 +666,9 @@ namespace Microsoft.Cci {
       if (field != null) return this.GetFieldSignature(field, formattingOptions);
       IPropertyDefinition/*?*/ property = member as IPropertyDefinition;
       if (property != null) return this.GetPropertySignature(property, formattingOptions);
-      return member.Name.Value;
+      string name = member.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) name = this.MapToDocumentationIdName(name);
+      return name;
     }
 
     /// <summary>
@@ -663,6 +685,10 @@ namespace Microsoft.Cci {
       else if (method.IsGeneric)
         this.AppendGenericParameters(method, formattingOptions, sb);
       this.AppendMethodParameters(method.Parameters, formattingOptions, sb);
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 && method.ResolvedMethod.IsSpecialName && (method.Name.Value.Contains("op_Explicit") || method.Name.Value.Contains("op_Implicit"))) {
+        sb.Append('~');
+        sb.Append(this.typeNameFormatter.GetTypeName(method.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+      }
       return sb.ToString();
     }
 
@@ -697,21 +723,26 @@ namespace Microsoft.Cci {
     /// </summary>
     protected virtual void AppendGenericParameters(IMethodReference method, NameFormattingOptions formattingOptions, StringBuilder sb) {
       if ((formattingOptions & NameFormattingOptions.TypeParameters) == 0) return;
-      sb.Append("<");
-      bool first = true;
-      string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
-      foreach (ITypeReference argument in method.ResolvedMethod.GenericParameters) {
-        if (first) first = false; else sb.Append(delim);
-        sb.Append(this.typeNameFormatter.GetTypeName(argument, formattingOptions));
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
+        sb.Append("``");
+        sb.Append(method.GenericParameterCount);
+      } else {
+        sb.Append("<");
+        bool first = true;
+        string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
+        foreach (ITypeReference argument in method.ResolvedMethod.GenericParameters) {
+          if (first) first = false; else sb.Append(delim);
+          sb.Append(this.typeNameFormatter.GetTypeName(argument, formattingOptions));
+        }
+        sb.Append(">");
       }
-      sb.Append(">");
     }
 
     /// <summary>
     /// Appends a formatted string of parameters. Enclosed in parentheses and comma-delimited.
     /// </summary>
     protected virtual void AppendMethodParameters(IEnumerable<IParameterTypeInformation> parameters, NameFormattingOptions formattingOptions, StringBuilder sb) {
-      if ((formattingOptions & NameFormattingOptions.Signature) == 0) return;
+      if ((formattingOptions & NameFormattingOptions.Signature) == 0 || ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 && !IteratorHelper.EnumerableIsNotEmpty<IParameterTypeInformation>(parameters))) return;
       sb.Append('(');
       bool first = true;
       string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
@@ -726,12 +757,16 @@ namespace Microsoft.Cci {
     /// Appends the method name, optionally including the containing type name and using special names for methods with IsSpecialName set to true.
     /// </summary>
     protected virtual void AppendMethodName(IMethodReference method, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
+        sb.Append("M:");
+      }
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, formattingOptions));
+        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
         sb.Append('.');
       }
       // Special name translation
       string methodName = method.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) methodName = this.MapToDocumentationIdName(methodName);
       if (method.ResolvedMethod.IsSpecialName && (formattingOptions & NameFormattingOptions.PreserveSpecialNames) == 0) {
         if (methodName.StartsWith("get_")) {
           //^ assume methodName.Length >= 4;
@@ -758,7 +793,10 @@ namespace Microsoft.Cci {
         else if (def.IsParameterArray) sb.Append("params ");
         else if (def.IsByReference) sb.Append("ref ");
       }
-      sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions));
+      sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+      if (def != null && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
+        if (def.IsOut || def.IsByReference) sb.Append("@");
+      }
       if (def != null && (formattingOptions & NameFormattingOptions.ParameterName) != 0) {
         sb.Append(" ");
         sb.Append(def.Name.Value);
@@ -769,12 +807,19 @@ namespace Microsoft.Cci {
     /// Appends the method name, optionally including the containing type name.
     /// </summary>
     protected virtual void AppendPropertyName(IPropertyDefinition property, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
+        sb.Append("P:");
+      }
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(property.ContainingType, formattingOptions));
+        sb.Append(this.typeNameFormatter.GetTypeName(property.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
         sb.Append(".");
       }
       //TODO: if property name appears in a default members attribute of the containing type and not PreserveSpecialNames, use "this"
-      sb.Append(property.Name.Value);
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
+        sb.Append(this.MapToDocumentationIdName(property.Name.Value));
+      } else {
+        sb.Append(property.Name.Value);
+      }
     }
 
     /// <summary>
@@ -783,13 +828,13 @@ namespace Microsoft.Cci {
     protected virtual void AppendPropertyParameters(IEnumerable<IParameterDefinition> parameters, NameFormattingOptions formattingOptions, StringBuilder sb) {
       if ((formattingOptions & NameFormattingOptions.Signature) == 0) return;
       bool isNotEmpty = IteratorHelper.EnumerableIsNotEmpty(parameters);
-      if (isNotEmpty) sb.Append('[');
+      if (isNotEmpty) sb.Append((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? '(' : '[');
       bool first = true;
       foreach (IParameterTypeInformation param in parameters) {
         if (first) first = false; else sb.Append(',');
         this.AppendParameter(param, formattingOptions, sb);
       }
-      if (isNotEmpty) sb.Append(']');
+      if (isNotEmpty) sb.Append((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? ')' : ']');
     }
 
     /// <summary>
@@ -799,6 +844,20 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.ReturnType) == 0) return;
       sb.Append(this.typeNameFormatter.GetTypeName(sig.Type, formattingOptions));
       sb.Append(' ');
+    }
+
+    /// <summary>
+    /// Replaces characters that are not allowed in a documentation id with legal characters.
+    /// </summary>
+    protected virtual string MapToDocumentationIdName(string name) {
+      char[] c = name.ToCharArray();
+      for (int i = 0; i < c.Length; i++) {
+        if (c[i] == '.') c[i] = '#';
+        if (c[i] == '<') c[i] = '{';
+        if (c[i] == '>') c[i] = '}';
+        if (c[i] == ',') c[i] = '@';
+      }
+      return new string(c);
     }
   }
 

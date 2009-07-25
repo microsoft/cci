@@ -342,9 +342,21 @@ namespace Microsoft.Cci {
     ContractNullable=1,
 
     /// <summary>
+    /// Format for a unique id string like the ones generated in XML reference files. 
+    /// <remarks>To generate a truly unique and compliant id, this option should not be used in conjunction with other NameFormattingOptions.</remarks>
+    /// </summary>
+    DocumentationId=NameFormattingOptions.FormattingForDocumentationId|NameFormattingOptions.DocumentationIdMemberKind|NameFormattingOptions.PreserveSpecialNames|NameFormattingOptions.TypeParameters|NameFormattingOptions.UseGenericTypeNameSuffix|NameFormattingOptions.Signature|NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter,
+
+    /// <summary>
+    /// Prefix the kind of member or type to the name. For example "T:System.AppDomain" or "M:System.Object.Equals".
+    /// <para>Full list of prefixes: "T:" = Type, "M:" = Method, "F:" = Field, "E:" = Event, "P:" = Property.</para>
+    /// </summary>
+    DocumentationIdMemberKind=ContractNullable << 1,
+
+    /// <summary>
     /// Include empty type parameter lists with the names of generic types.
     /// </summary>
-    EmptyTypeParameterList=ContractNullable << 1,
+    EmptyTypeParameterList=DocumentationIdMemberKind << 1,
 
     /// <summary>
     /// If the name of the member is the same as keyword, format the name using the keyword escape syntax. For example: "@if" rather than just "if".
@@ -352,9 +364,15 @@ namespace Microsoft.Cci {
     EscapeKeyword=EmptyTypeParameterList << 1,
 
     /// <summary>
+    /// Perform multiple miscellaneous formatting changes needed for a documentation id.
+    /// <remarks>This option does not perform all formatting necessary for a documentation id; instead use the <see cref="DocumentationId"/> option for a complete id string like the ones generated in XML reference files.</remarks>
+    /// </summary>
+    FormattingForDocumentationId=EscapeKeyword << 1,
+
+    /// <summary>
     /// Prefix the kind of member or type to the name. For example "class System.AppDomain".
     /// </summary>
-    MemberKind=EscapeKeyword << 1,
+    MemberKind=FormattingForDocumentationId << 1,
 
     /// <summary>
     /// Include the type constraints of generic methods in their names.
@@ -1490,7 +1508,7 @@ namespace Microsoft.Cci {
     /// <param name="formattingOptions">A set of flags that specify how the type name is to be formatted.</param>
     /// <param name="typeName">The unmangled, unaugmented name of the type.</param>
     protected virtual string AddGenericParametersIfNeeded(ITypeReference type, ushort genericParameterCount, NameFormattingOptions formattingOptions, string typeName) {
-      if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && genericParameterCount > 0 && type.ResolvedType != Dummy.Type) {
+      if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0 && genericParameterCount > 0 && type.ResolvedType != Dummy.Type) {
         StringBuilder sb = new StringBuilder(typeName);
         sb.Append("<");
         bool first = true;
@@ -1507,19 +1525,32 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a C#-like specific string that corresponds to the given type definition and that conforms to the specified formatting options.
+    /// Returns a C#-like string that corresponds to the given type reference and that conforms to the specified formatting options.
     /// </summary>
     //^ [Pure]
     protected virtual string GetArrayTypeName(IArrayTypeReference arrayType, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
-      return this.GetArrayTypeName(arrayType, sb, formattingOptions);
+      ITypeReference elementType = arrayType.ElementType;
+      IArrayTypeReference elementAsArray = elementType as IArrayTypeReference;
+      while (elementAsArray != null) {
+        elementType = elementAsArray.ElementType;
+        elementAsArray = elementType as IArrayTypeReference;
+      }
+      sb.Append(this.GetTypeName(elementType, formattingOptions));
+      this.AppendArrayDimensions(arrayType, sb, formattingOptions);
+      return sb.ToString();
     }
 
     /// <summary>
-    /// Appends a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options to the given string builder.
+    /// Appends a C#-like specific string of the dimensions of the given array type reference to the given StringBuilder.
+    /// <example>For example, this appends the "[][,]" part of an array like "int[][,]".</example>
     /// </summary>
-    //^ [Pure]
-    protected virtual string GetArrayTypeName(IArrayTypeReference arrayType, StringBuilder sb, NameFormattingOptions formattingOptions) {
+    protected virtual void AppendArrayDimensions(IArrayTypeReference arrayType, StringBuilder sb, NameFormattingOptions formattingOptions) {
+      IArrayTypeReference/*?*/ elementArrayType = arrayType.ElementType as IArrayTypeReference;
+      bool outerToInner = (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0;
+      if (outerToInner && elementArrayType != null) { //Append the outer dimensions of the array first
+        this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
+      }
       bool first = true;
       IEnumerator<int> lowerBounds = arrayType.LowerBounds.GetEnumerator();
       IEnumerator<ulong> sizes = arrayType.Sizes.GetEnumerator();
@@ -1529,25 +1560,35 @@ namespace Microsoft.Cci {
           if (!first) sb.Append(","); first = false;
           if (lowerBounds.MoveNext()) {
             sb.Append(lowerBounds.Current);
-            if (sizes.MoveNext()) sb.Append(":" + sizes.Current);
+            sb.Append(":");
+            if (sizes.MoveNext()) sb.Append(sizes.Current);
           } else {
             if (sizes.MoveNext()) sb.Append("0:" + sizes.Current);
           }
         }
       }
       sb.Append("]");
-      ITypeReference elementType = arrayType.ElementType;
-      IArrayTypeReference/*?*/ elementArrayType = elementType as IArrayTypeReference;
-      if (elementArrayType != null) return this.GetArrayTypeName(elementArrayType, sb, formattingOptions);
-      return this.GetTypeName(elementType, formattingOptions) + sb.ToString();
+      if (!outerToInner && elementArrayType != null) { //Append the inner dimensions of the array first
+        this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
+      }
     }
 
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
     //^ [Pure]
-    protected virtual string GetGenericParameterName(IGenericParameterReference genericParameter) {
-      return genericParameter.Name.Value;
+    protected virtual string GetGenericMethodParameterName(IGenericMethodParameterReference genericMethodParameter, NameFormattingOptions formattingOptions) {
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "``" + genericMethodParameter.Index;
+      return genericMethodParameter.Name.Value;
+    }
+
+    /// <summary>
+    /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
+    /// </summary>
+    //^ [Pure]
+    protected virtual string GetGenericTypeParameterName(IGenericTypeParameterReference genericTypeParameter, NameFormattingOptions formattingOptions) {
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "`" + genericTypeParameter.Index;
+      return genericTypeParameter.Name.Value;
     }
 
     /// <summary>
@@ -1581,6 +1622,8 @@ namespace Microsoft.Cci {
       string tname = this.AddGenericParametersIfNeeded(nsType, nsType.GenericParameterCount, formattingOptions, nsType.Name.Value);
       if ((formattingOptions & NameFormattingOptions.OmitContainingNamespace) == 0 && !(nsType.ContainingUnitNamespace is IRootUnitNamespaceReference))
         tname = this.GetNamespaceName(nsType.ContainingUnitNamespace, formattingOptions) + "." + tname;
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
+        tname = "T:" + tname;
       if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
         tname = this.GetTypeKind(nsType) + " " + tname;
       return tname;
@@ -1670,9 +1713,10 @@ namespace Microsoft.Cci {
       if (arrayType != null) return this.GetArrayTypeName(arrayType, formattingOptions);
       IFunctionPointerTypeReference/*?*/ functionPointerType = type as IFunctionPointerTypeReference;
       if (functionPointerType != null) return this.GetFunctionPointerTypeName(functionPointerType, formattingOptions);
-      IGenericParameterReference/*?*/ genericParam = type as IGenericMethodParameterReference;
-      if (genericParam == null) genericParam = type as IGenericTypeParameterReference;
-      if (genericParam != null) return this.GetGenericParameterName(genericParam);
+      IGenericTypeParameterReference/*?*/ genericTypeParam = type as IGenericTypeParameterReference;
+      if (genericTypeParam != null) return this.GetGenericTypeParameterName(genericTypeParam, formattingOptions);
+      IGenericMethodParameterReference/*?*/ genericMethodParam = type as IGenericMethodParameterReference;
+      if (genericMethodParam != null) return this.GetGenericMethodParameterName(genericMethodParam, formattingOptions);
       IGenericTypeInstanceReference/*?*/ genericInstance = type as IGenericTypeInstanceReference;
       if (genericInstance != null) return this.GetGenericTypeInstanceName(genericInstance, formattingOptions);
       INestedTypeReference/*?*/ ntTypeDef = type as INestedTypeReference;
@@ -1737,15 +1781,16 @@ namespace Microsoft.Cci {
       }
       if ((formattingOptions & NameFormattingOptions.OmitTypeArguments) == 0) {
         // Don't include the type parameters if we are to include the type arguments
-        StringBuilder sb = new StringBuilder(this.GetTypeName(genericType, formattingOptions&~NameFormattingOptions.TypeParameters));
-        sb.Append("<");
+        // If formatting for a documentation id, don't use generic type name suffixes.
+        StringBuilder sb = new StringBuilder(this.GetTypeName(genericType, formattingOptions & ~(NameFormattingOptions.TypeParameters | ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? NameFormattingOptions.UseGenericTypeNameSuffix : NameFormattingOptions.None))));
+        if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append("{"); else sb.Append("<");
         bool first = true;
         string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
         foreach (ITypeReference argument in genericTypeInstance.GenericArguments) {
           if (first) first = false; else sb.Append(delim);
           sb.Append(this.GetTypeName(argument, formattingOptions));
         }
-        sb.Append(">");
+        if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append("}"); else sb.Append(">");
         return sb.ToString();
       }
       //If type arguments are not wanted, then type parameters are not going to be welcome either.
