@@ -210,9 +210,6 @@
   <data name="PointerExpected" xml:space="preserve">
     <value>The left of '{0}' must point to a struct or union.</value>
   </data>
-  <data name="PotentialPrecedenceErrorInLogicalExpression" xml:space="preserve">
-    <value>Operator '==' binds stronger than '&amp;&amp;' and '||' which is possibly not what you wanted;  use '&lt;==&gt;' or parenthesize the equality.</value>
-  </data>
   <data name="SingleTypeNameNotFound" xml:space="preserve">
     <value>The type or namespace name '{0}' could not be found (are you missing a using directive or an assembly reference?)</value>
   </data>
@@ -222,17 +219,8 @@
   <data name="SourceFileTooLarge" xml:space="preserve">
     <value>Source file '{0}' is too large to be compiled.</value>
   </data>
-  <data name="DiscardedContractAtDefinition" xml:space="preserve">
-    <value>The declaration of function '{0}' already specifies contracts. Discarding the contracts of the definition.</value>
-  </data>
-  <data name="PointerExpectedForGhostMember" xml:space="preserve">
-    <value>Access to the ghost member '{0}' requires a pointer value</value>
-  </data>
   <data name="PotentialUnintendRangeComparison" xml:space="preserve">
     <value>'{0}' probably does not express what you intended; use two conjoined conditions to express an interval or parenthesize the {1} comparison.</value>
-  </data>
-  <data name="SizeOfUnknown" xml:space="preserve">
-    <value>The size of '{0}' is unknown in the current context.</value>
   </data>
   <data name="CannotCallNonMethod" xml:space="preserve">
     <value>'{0}' is not a method and cannot be called.</value>
@@ -246,23 +234,8 @@
   <data name="NoImplicitConversionForValue" xml:space="preserve">
     <value>Cannot implicitly convert value '{0}' to type '{1}'.</value>
   </data>
-  <data name="ThisNotAllowedHere" xml:space="preserve">
-    <value>Cannot use 'this' in this context.</value>
-  </data>
-  <data name="UnknownElementSize" xml:space="preserve">
-    <value>'{0}' : unknown element size</value>
-  </data>
-  <data name="UnknownSize" xml:space="preserve">
-    <value>'{0}' : unknown size</value>
-  </data>
   <data name="CannotTakeAddress" xml:space="preserve">
     <value>Cannot take the address of the given expression.</value>
-  </data>
-  <data name="RedefinitionOfFormalParameter" xml:space="preserve">
-    <value>redefinition of formal parameter '{0}'</value>
-  </data>
-  <data name="AddressOfBitField" xml:space="preserve">
-    <value>'&amp;' on bit field ignored</value>
   </data>
   <data name="CannotInferTypeOfConditional" xml:space="preserve">
     <value>Type of conditional expression cannot be determined.</value>

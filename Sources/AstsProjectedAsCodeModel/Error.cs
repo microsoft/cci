@@ -76,10 +76,7 @@ namespace Microsoft.Cci.Ast {
           case Error.BadReferenceCompareLeft:
           case Error.BadReferenceCompareRight:
           case Error.ConstInReadsOrWritesClause:
-          case Error.DiscardedContractAtDefinition:
-          case Error.PotentialPrecedenceErrorInLogicalExpression:
           case Error.PotentialUnintendRangeComparison:
-          case Error.SizeOfUnknown:
           case Error.ExpressionStatementHasNoSideEffect:
             return true;
         }
@@ -199,12 +196,6 @@ namespace Microsoft.Cci.Ast {
     ConstOutOfRange,
 
     /// <summary>
-    /// The declaration of function '{0}' already specifies contracts. Discarding the contracts of the definition.
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    DiscardedContractAtDefinition,
-
-    /// <summary>
     /// Response file '{0}' included multiple times.
     /// </summary>
     DuplicateResponseFile,
@@ -305,38 +296,14 @@ namespace Microsoft.Cci.Ast {
     PointerExpected,
 
     /// <summary>
-    /// Access to the ghost member {0} requires a pointer value
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    PointerExpectedForGhostMember,
-
-    /// <summary>
-    /// Equality '==' binds stronger than '&amp;&amp;' and '||' which is possibly not what you wanted;  use '&lt;==&gt;' or parenthesize the equality.
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    PotentialPrecedenceErrorInLogicalExpression,
-
-    /// <summary>
     /// '{0}' probably does not express what you intended; use two conjoined conditions to express an interval or parenthesize the {1} comparison.
     /// </summary>
     PotentialUnintendRangeComparison,
 
     /// <summary>
-    /// redefinition of formal parameter '{0}'
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    RedefinitionOfFormalParameter,
-
-    /// <summary>
     /// The type or namespace name '{0}' could not be found (are you missing a using directive or an assembly reference?)
     /// </summary>
     SingleTypeNameNotFound,
-
-    /// <summary>
-    /// The size of '{0}' is unknown in the current context; note that the use of sizeof may be due to SAL __in ,__inout, or __out annotations.
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    SizeOfUnknown,
 
     /// <summary>
     /// Source file '{0}' could not be read. {1}.
@@ -349,33 +316,9 @@ namespace Microsoft.Cci.Ast {
     SourceFileTooLarge,
 
     /// <summary>
-    /// Cannot use 'this' in this context.
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    ThisNotAllowedHere,
-
-    /// <summary>
-    /// '{0}' : unknown size
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    UnknownSize,
-
-    /// <summary>
-    /// '{0}' : unknown element size
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    UnknownElementSize,
-
-    /// <summary>
     /// Cannot take the address of the given expression.
     /// </summary>
     CannotTakeAddress,
-
-    /// <summary>
-    /// '&amp;' on bit field ignored
-    /// </summary>
-    [Obsolete("Please move this message to VCC specific code")]
-    AddressOfBitField,
 
     /// <summary>
     /// Type of conditional expression cannot be determined.
