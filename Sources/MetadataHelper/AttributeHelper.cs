@@ -39,10 +39,7 @@ namespace Microsoft.Cci {
       foreach (ICustomAttribute ca in attributeType.Attributes) {
         if (!TypeHelper.TypesAreEquivalent(ca.Type, attributeType.PlatformType.SystemAttributeUsageAttribute))
           continue;
-        foreach (IMetadataExpression expr in ca.Arguments) {
-          IMetadataNamedArgument/*?*/ namedArgument = expr as IMetadataNamedArgument;
-          if (namedArgument == null)
-            continue;
+        foreach (IMetadataNamedArgument namedArgument in ca.NamedArguments) {
           if (namedArgument.ArgumentName.UniqueKey == nameTable.AllowMultiple.UniqueKey) {
             IMetadataConstant/*?*/ compileTimeConst = namedArgument.ArgumentValue as IMetadataConstant;
             if (compileTimeConst == null || compileTimeConst.Value == null || !(compileTimeConst.Value is bool))
@@ -63,10 +60,7 @@ namespace Microsoft.Cci {
       foreach (ICustomAttribute ca in attributeType.Attributes) {
         if (!TypeHelper.TypesAreEquivalent(ca.Type, attributeType.PlatformType.SystemAttributeUsageAttribute))
           continue;
-        foreach (IMetadataExpression expr in ca.Arguments) {
-          IMetadataNamedArgument/*?*/ namedArgument = expr as IMetadataNamedArgument;
-          if (namedArgument == null)
-            continue;
+        foreach (IMetadataNamedArgument namedArgument in ca.NamedArguments) {
           if (namedArgument.ArgumentName.UniqueKey == nameTable.AllowMultiple.UniqueKey) {
             IMetadataConstant/*?*/ compileTimeConst = namedArgument.ArgumentValue as IMetadataConstant;
             if (compileTimeConst == null || compileTimeConst.Value == null || !(compileTimeConst.Value is bool))
@@ -83,7 +77,7 @@ namespace Microsoft.Cci {
     /// Specifies the symbol table elements on which it is valid to apply this attribute.
     /// This information is obtained from an attribute on the attribute type definition.
     /// </summary>
-    public static AttributeTargets ValidOn(ITypeDefinition attributeType){
+    public static AttributeTargets ValidOn(ITypeDefinition attributeType) {
       foreach (ICustomAttribute ca in attributeType.Attributes) {
         if (!TypeHelper.TypesAreEquivalent(ca.Type, attributeType.PlatformType.SystemAttributeUsageAttribute))
           continue;
