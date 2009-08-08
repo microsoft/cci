@@ -782,7 +782,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         int rowOffset = (int)(rowId - 1) * this.RowSize;
         byte type = this.ConstantTableMemoryReader.PeekByte(rowOffset + this.TypeOffset);
         uint parent = this.ConstantTableMemoryReader.PeekReference(rowOffset + this.ParentOffset, this.IsHasConstantRefSizeSmall);
-        HasConstantTag.ConvertToToken(parent);
+        parent = HasConstantTag.ConvertToToken(parent);
         uint value = this.ConstantTableMemoryReader.PeekReference(rowOffset + this.ValueOffset, this.IsBlobHeapRefSizeSmall);
         ConstantRow constantRow = new ConstantRow(type, parent, value);
         return constantRow;
