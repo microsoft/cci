@@ -26,6 +26,9 @@ namespace Microsoft.Cci.Pdb {
 
     //internal byte[] metadata;
     internal PdbScope[] scopes;
+    internal PdbSlot[] slots;
+    internal PdbConstant[] constants;
+    internal string[] usedNamespaces;
     internal PdbLines[] lines;
     internal ushort[]/*?*/ usingCounts;
     internal IEnumerable<INamespaceScope>/*?*/ namespaceScopes;
@@ -216,8 +219,17 @@ namespace Microsoft.Cci.Pdb {
       int slotCount;
       int usedNamespacesCount;
       CountScopesAndSlots(bits, proc.end, out constantCount, out scopeCount, out slotCount, out usedNamespacesCount);
-      scopes = new PdbScope[scopeCount];
-      int scope = 0;
+      int scope = constantCount > 0 || slotCount > 0 || usedNamespacesCount > 0 ? 1 : 0;
+      int slot = 0;
+      int constant = 0;
+      int usedNs = 0;
+      scopes = new PdbScope[scopeCount+scope];
+      slots = new PdbSlot[slotCount];
+      constants = new PdbConstant[constantCount];
+      usedNamespaces = new string[usedNamespacesCount];
+
+      if (scope > 0)
+        scopes[0] = new PdbScope(this.address, proc.len, slots, constants, usedNamespaces);
 
       while (bits.Position < proc.end) {
         ushort siz;
@@ -270,13 +282,24 @@ namespace Microsoft.Cci.Pdb {
               bits.SkipCString(out block.name);
               bits.Position = stop;
 
-              this.address = block.off;
               scopes[scope++] = new PdbScope(this.address, block, bits, out slotToken);
               bits.Position = (int)block.end;
               break;
             }
 
+          case SYM.S_MANSLOT:
+            uint typind;
+            slots[slot++] = new PdbSlot(bits, out typind);
+            bits.Position = stop;
+            break;
+
+          case SYM.S_MANCONSTANT:
+            constants[constant++] = new PdbConstant(bits);
+            bits.Position = stop;
+            break;
+
           case SYM.S_UNAMESPACE:
+            bits.ReadCString(out usedNamespaces[usedNs++]);
             bits.Position = stop;
             break;
 

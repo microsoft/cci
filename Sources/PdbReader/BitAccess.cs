@@ -94,14 +94,14 @@ namespace Microsoft.Cci.Pdb {
     }
 
     internal void ReadInt64(out long value) {
-      value = (long)((buffer[offset + 0] & 0xFF) |
-                           (buffer[offset + 1] << 8) |
-                           (buffer[offset + 2] << 16) |
-                           (buffer[offset + 3] << 24) |
-                           (buffer[offset + 4] << 32) |
-                           (buffer[offset + 5] << 40) |
-                           (buffer[offset + 6] << 48) |
-                           (buffer[offset + 7] << 56));
+      value = (long)(((ulong)buffer[offset + 0] & 0xFF) |
+                           ((ulong)buffer[offset + 1] << 8) |
+                           ((ulong)buffer[offset + 2] << 16) |
+                           ((ulong)buffer[offset + 3] << 24) |
+                           ((ulong)buffer[offset + 4] << 32) |
+                           ((ulong)buffer[offset + 5] << 40) |
+                           ((ulong)buffer[offset + 6] << 48) |
+                           ((ulong)buffer[offset + 7] << 56));
       offset += 8;
     }
 
@@ -125,14 +125,14 @@ namespace Microsoft.Cci.Pdb {
     }
 
     internal void ReadUInt64(out ulong value) {
-      value = (ulong)((buffer[offset + 0] & 0xFF) |
-                           (buffer[offset + 1] << 8) |
-                           (buffer[offset + 2] << 16) |
-                           (buffer[offset + 3] << 24) |
-                           (buffer[offset + 4] << 32) |
-                           (buffer[offset + 5] << 40) |
-                           (buffer[offset + 6] << 48) |
-                           (buffer[offset + 7] << 56));
+      value = (ulong)(((ulong)buffer[offset + 0] & 0xFF) |
+                           ((ulong)buffer[offset + 1] << 8) |
+                           ((ulong)buffer[offset + 2] << 16) |
+                           ((ulong)buffer[offset + 3] << 24) |
+                           ((ulong)buffer[offset + 4] << 32) |
+                           ((ulong)buffer[offset + 5] << 40) |
+                           ((ulong)buffer[offset + 6] << 48) |
+                           ((ulong)buffer[offset + 7] << 56));
       offset += 8;
     }
 

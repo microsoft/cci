@@ -17,6 +17,15 @@ namespace Microsoft.Cci.Pdb {
     internal uint offset;
     internal uint length;
 
+    internal PdbScope(uint address, uint length, PdbSlot[] slots, PdbConstant[] constants, string[] usedNamespaces) {
+      this.constants = constants;
+      this.slots = slots;
+      this.scopes = new PdbScope[0];
+      this.usedNamespaces = usedNamespaces;
+      this.address = address;
+      this.offset = 0;
+      this.length = length;
+    }
 
     internal PdbScope(uint funcOffset, BlockSym32 block, BitAccess bits, out uint typind) {
       //this.segment = block.seg;
