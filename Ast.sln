@@ -51,7 +51,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5795EBEE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoundtripTests", "Metadata\Tests\RoundtripTests\RoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D367F38D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToPe", "Samples\PeToPe\PeToPe.csproj", "{47D44A88-A9EE-46E9-8781-5B42A503A493}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToPeViaCodeModel", "Samples\PeToPe\PeToPeViaCodeModel.csproj", "{47D44A88-A9EE-46E9-8781-5B42A503A493}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelRoundtripTests", "Tests\CodeModelRoundtripTests\CodeModelRoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D377F38D}"
 EndProject

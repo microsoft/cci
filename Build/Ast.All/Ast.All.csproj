@@ -50,7 +50,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Metadata\Samples\PeToPe\PeToPe.csproj">
       <Project>{47D44A88-A9EE-46E9-8780-5B42A503A493}</Project>
-      <Name>PeToPe %28Metadata\Tests\PeToPe%29</Name>
+      <Name>PeToPe</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\ILGenerator\ILGenerator.csproj">
       <Project>{08156C78-403A-4112-AD81-8646AC51CD2F}</Project>
@@ -96,9 +96,9 @@
       <Project>{71B89CE8-CD33-4BC1-A411-4002D367F38D}</Project>
       <Name>RoundtripTests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Samples\PeToPe\PeToPe.csproj">
+    <ProjectReference Include="..\..\Samples\PeToPe\PeToPeViaCodeModel.csproj">
       <Project>{47D44A88-A9EE-46E9-8781-5B42A503A493}</Project>
-      <Name>PeToPe %28Samples\PeToPe%29</Name>
+      <Name>PeToPeViaCodeModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Samples\PeToText\PeToText.csproj">
       <Project>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</Project>
