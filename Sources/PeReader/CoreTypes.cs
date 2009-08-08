@@ -155,7 +155,7 @@ namespace Microsoft.Cci.MetadataReader {
         AssemblyReference/*?*/ coreAssemblyRef = peFileToObjectModel.FindAssemblyReference(peReader.metadataReaderHost.CoreAssemblySymbolicIdentity);
         if (coreAssemblyRef == null) {
           //  Error...
-          throw new MetadataReaderException("Core Assembly not referenced");
+          return;
         }
         uint coreAssemblyRefToken = coreAssemblyRef.TokenValue;
         uint numberOfTypeRefs = peFileReader.TypeRefTable.NumberOfRows;
