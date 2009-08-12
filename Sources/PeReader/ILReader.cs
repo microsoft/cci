@@ -613,11 +613,11 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               IMethodReference methodReference = this.GetMethod(memReader.ReadUInt32());
               IArrayTypeReference/*?*/ arrayType = methodReference.ContainingType as IArrayTypeReference;
               if (arrayType != null) {
-                if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.GetNameFor("Set").UniqueKey) {
+                if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
                   cilOpCode = OperationCode.Array_Set;
                 } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Get.UniqueKey) {
                   cilOpCode = OperationCode.Array_Get;
-                } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.GetNameFor("Address").UniqueKey) {
+                } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Address.UniqueKey) {
                   cilOpCode = OperationCode.Array_Addr;
                 }
                 value = arrayType;
@@ -727,8 +727,22 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           case OperationCode.Conv_U4:
           case OperationCode.Conv_U8:
             break;
-          case OperationCode.Callvirt:
-            value = this.GetMethod(memReader.ReadUInt32());
+          case OperationCode.Callvirt: {
+              IMethodReference methodReference = this.GetMethod(memReader.ReadUInt32());
+              IArrayTypeReference/*?*/ arrayType = methodReference.ContainingType as IArrayTypeReference;
+              if (arrayType != null) {
+                if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
+                  cilOpCode = OperationCode.Array_Set;
+                } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Get.UniqueKey) {
+                  cilOpCode = OperationCode.Array_Get;
+                } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Address.UniqueKey) {
+                  cilOpCode = OperationCode.Array_Addr;
+                }
+                value = arrayType;
+              } else {
+                value = methodReference;
+              }
+            }
             break;
           case OperationCode.Cpobj:
           case OperationCode.Ldobj:
