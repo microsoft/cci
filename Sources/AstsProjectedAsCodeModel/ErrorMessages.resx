@@ -246,4 +246,7 @@
   <data name="OutParameterReferenceNotAllowedHere" xml:space="preserve">
     <value>Reference to out parameter '{0}' not allowed in this context.</value>
   </data>
+  <data name="UndefinedOperationOnVoidPointers" xml:space="preserve">
+    <value>The operation in question is undefined on void pointers.</value>
+  </data>
 </root>

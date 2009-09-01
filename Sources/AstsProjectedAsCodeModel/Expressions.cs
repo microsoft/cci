@@ -170,6 +170,34 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      if (!result) {
+        IMethodCall overloadMethodCall = this.OverloadMethodCall;
+        if (overloadMethodCall != null) {
+          IMethodDefinition/*?*/ overloadMethod = overloadMethodCall.MethodToCall.ResolvedMethod;
+          if (overloadMethod is BuiltinMethodDefinition) {
+            if (this.Helper.IsPointerType(this.LeftOperand.Type)) {
+              if (this.Helper.GetPointerTargetType(this.LeftOperand.Type).ResolvedType.TypeCode == PrimitiveTypeCode.Void) {
+                this.Helper.ReportError(new AstErrorMessage(this, Error.UndefinedOperationOnVoidPointers));
+                result = true;
+              }
+            }
+            if (this.Helper.IsPointerType(this.RightOperand.Type)) {
+              if (this.Helper.GetPointerTargetType(this.RightOperand.Type).ResolvedType.TypeCode == PrimitiveTypeCode.Void) {
+                this.Helper.ReportError(new AstErrorMessage(this, Error.UndefinedOperationOnVoidPointers));
+                result = true;
+              }
+            }
+          }
+        }
+      }
+      return result;
+    }
+
+    /// <summary>
     /// Returns an object that implements IExpression and that represents this expression after language specific rules have been
     /// applied to it in order to determine its semantics. The resulting expression is a standard representation of the semantics
     /// of this expression, suitable for use by language agnostic clients and complete enough for translation of the expression
@@ -18405,6 +18433,34 @@ namespace Microsoft.Cci.Ast {
     {
       if (containingBlock == this.ContainingBlock) return this;
       return new Subtraction(containingBlock, this);
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      if (!result) {
+        IMethodCall overloadMethodCall = this.OverloadMethodCall;
+        if (overloadMethodCall != null) {
+          IMethodDefinition/*?*/ overloadMethod = overloadMethodCall.MethodToCall.ResolvedMethod;
+          if (overloadMethod is BuiltinMethodDefinition) {
+            if (this.Helper.IsPointerType(this.LeftOperand.Type)) {
+              if (this.Helper.GetPointerTargetType(this.LeftOperand.Type).ResolvedType.TypeCode == PrimitiveTypeCode.Void) {
+                this.Helper.ReportError(new AstErrorMessage(this, Error.UndefinedOperationOnVoidPointers));
+                result = true;
+              }
+            }
+            if (this.Helper.IsPointerType(this.RightOperand.Type)) {
+              if (this.Helper.GetPointerTargetType(this.RightOperand.Type).ResolvedType.TypeCode == PrimitiveTypeCode.Void) {
+                this.Helper.ReportError(new AstErrorMessage(this, Error.UndefinedOperationOnVoidPointers));
+                result = true;
+              }
+            }
+          }
+        }
+      }
+      return result;
     }
 
     /// <summary>

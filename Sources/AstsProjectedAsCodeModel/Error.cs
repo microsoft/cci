@@ -330,6 +330,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     CannotInferTypeOfConditionalDueToAmbiguity,
 
+    /// <summary>
+    /// The operation in question is undefined on void pointers.
+    /// </summary>
+    UndefinedOperationOnVoidPointers,
 
     /// <summary>
     /// Not an actual error message, but a convenient place holder during development.
