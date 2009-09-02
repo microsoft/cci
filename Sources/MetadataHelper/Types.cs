@@ -857,7 +857,7 @@ namespace Microsoft.Cci {
 
   }
 
-  public class ModifiedPointerType : PointerType {
+  public class ModifiedPointerType : PointerType, IModifiedTypeReference {
 
     private ModifiedPointerType(ITypeReference targetType, IEnumerable<ICustomModifier> customModifiers, IInternFactory internFactory)
       : base(targetType, internFactory)
@@ -877,6 +877,10 @@ namespace Microsoft.Cci {
       get { return this.customModifiers; }
     }
     readonly IEnumerable<ICustomModifier> customModifiers;
+
+    public ITypeReference UnmodifiedType {
+      get { return this; }
+    }
   }
 
   public class ModifiedTypeReference : IModifiedTypeReference {
