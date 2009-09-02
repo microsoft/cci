@@ -869,6 +869,29 @@ namespace Microsoft.Cci {
       get { return true; }
     }
 
+    /// <summary>
+    /// If the given pointer has a target type that involves a type parameter from the generic method from which the given method was instantiated,
+    /// then return a new pointer using a target type that has been specialized with the type arguments of the given generic method instance.
+    /// </summary>
+    public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(ModifiedPointerType modifiedPointer, IGenericMethodInstanceReference containingMethodInstance, IInternFactory internFactory) {
+      ITypeReference targetType = modifiedPointer.TargetType;
+      ITypeReference specializedtargetType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(targetType, containingMethodInstance, internFactory);
+      if (targetType == specializedtargetType) return modifiedPointer;
+      return GetPointerType(specializedtargetType, modifiedPointer.CustomModifiers, internFactory);
+    }
+
+    /// <summary>
+    /// If the given pointer has a target type that involves a type parameter from the generic type from which the given type was instantiated,
+    /// then return a new pointer using a target type that has been specialized with the type arguments of the given generic type instance.
+    /// </summary>
+    public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(ModifiedPointerType modifiedPointer, IGenericTypeInstanceReference containingTypeInstance, IInternFactory internFactory) {
+      ITypeReference targetType = modifiedPointer.TargetType;
+      ITypeReference specializedtargetType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(targetType, containingTypeInstance, internFactory);
+      if (targetType == specializedtargetType) return modifiedPointer;
+      return GetPointerType(specializedtargetType, modifiedPointer.CustomModifiers, internFactory);
+    }
+
+
     public static ModifiedPointerType GetPointerType(ITypeReference targetType, IEnumerable<ICustomModifier> customModifiers, IInternFactory internFactory) {
       return new ModifiedPointerType(targetType, customModifiers, internFactory);
     }
@@ -2458,6 +2481,8 @@ namespace Microsoft.Cci {
       if (genericTypeInstance != null) return GenericTypeInstance.SpecializeIfConstructedFromApplicableTypeParameter(genericTypeInstance, containingMethodInstance, internFactory);
       IManagedPointerTypeReference/*?*/ managedPointerType = unspecializedType as IManagedPointerTypeReference;
       if (managedPointerType != null) return ManagedPointerType.SpecializeIfConstructedFromApplicableTypeParameter(managedPointerType, containingMethodInstance, internFactory);
+      ModifiedPointerType/*?*/ modifiedPointer = unspecializedType as ModifiedPointerType;
+      if (modifiedPointer != null) return ModifiedPointerType.SpecializeIfConstructedFromApplicableTypeParameter(modifiedPointer, containingMethodInstance, internFactory);
       IPointerTypeReference/*?*/ pointerType = unspecializedType as IPointerTypeReference;
       if (pointerType != null) return PointerType.SpecializeIfConstructedFromApplicableTypeParameter(pointerType, containingMethodInstance, internFactory);
       return unspecializedType;
@@ -2481,6 +2506,8 @@ namespace Microsoft.Cci {
       if (genericTypeInstance != null) return GenericTypeInstance.SpecializeIfConstructedFromApplicableTypeParameter(genericTypeInstance, containingTypeInstance, internFactory);
       IManagedPointerTypeReference/*?*/ managedPointerType = unspecializedType as IManagedPointerTypeReference;
       if (managedPointerType != null) return ManagedPointerType.SpecializeIfConstructedFromApplicableTypeParameter(managedPointerType, containingTypeInstance, internFactory);
+      ModifiedPointerType/*?*/ modifiedPointer = unspecializedType as ModifiedPointerType;
+      if (modifiedPointer != null) return ModifiedPointerType.SpecializeIfConstructedFromApplicableTypeParameter(modifiedPointer, containingTypeInstance, internFactory);
       IPointerTypeReference/*?*/ pointerType = unspecializedType as IPointerTypeReference;
       if (pointerType != null) return PointerType.SpecializeIfConstructedFromApplicableTypeParameter(pointerType, containingTypeInstance, internFactory);
       return unspecializedType;
