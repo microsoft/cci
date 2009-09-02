@@ -1528,6 +1528,10 @@ namespace Microsoft.Cci.Ast {
         this.t = t;
       }
 
+      public override string ToString() {
+        return "[" + s.ToString() + ", " + t.ToString() + "]";
+      }
+
       public override bool Equals(object obj) {
         if (!(obj is Pair)) return false;
         return this.Equals((Pair)obj);
