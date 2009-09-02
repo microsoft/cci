@@ -857,6 +857,28 @@ namespace Microsoft.Cci {
 
   }
 
+  public class ModifiedPointerType : PointerType {
+
+    private ModifiedPointerType(ITypeReference targetType, IEnumerable<ICustomModifier> customModifiers, IInternFactory internFactory)
+      : base(targetType, internFactory)
+    {
+      this.customModifiers = customModifiers;
+    }
+
+    public override bool IsModified {
+      get { return true; }
+    }
+
+    public static ModifiedPointerType GetPointerType(ITypeReference targetType, IEnumerable<ICustomModifier> customModifiers, IInternFactory internFactory) {
+      return new ModifiedPointerType(targetType, customModifiers, internFactory);
+    }
+
+    public override IEnumerable<ICustomModifier> CustomModifiers {
+      get { return this.customModifiers; }
+    }
+    readonly IEnumerable<ICustomModifier> customModifiers;
+  }
+
   public class ModifiedTypeReference : IModifiedTypeReference {
 
     public ModifiedTypeReference(IMetadataHost host, ITypeReference unmodifiedType, IEnumerable<ICustomModifier> customModifiers) {
