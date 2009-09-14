@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -72,6 +72,21 @@
     <AssemblyOriginatorKeyFile>..\Common\ToolsPublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
     <DocumentationFile>bin\NightlyRelease\Microsoft.Cci.MetadataHelper.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'CompilerOnly|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\CompilerOnly\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Debug\Microsoft.Cci.MetadataHelper.XML</DocumentationFile>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <WarningsAsErrors>1591</WarningsAsErrors>
+    <CodeAnalysisRuleAssemblies>C:\Program Files (x86)\Microsoft Visual Studio 9.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleAssemblies>
+    <CodeAnalysisRules>-Microsoft.Design#CA1062;-Microsoft.Design#CA1005;-Microsoft.Design#CA1011;-Microsoft.Design#CA1051;-Microsoft.Design#CA1002;-Microsoft.Design#CA1004;-Microsoft.Design#CA1033;-Microsoft.Design#CA1014;-Microsoft.Design#CA1060;-Microsoft.Design#CA1034;-Microsoft.Design#CA1024;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA2101;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1502;-Microsoft.Maintainability#CA1500;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1715;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1725;-Microsoft.Naming#CA1721;-Microsoft.Performance#CA1815;-Microsoft.Performance#CA1814;-Microsoft.Reliability#CA2001;-Microsoft.Reliability#CA2006;-Microsoft.Security#CA2105;-Microsoft.Security#CA2104;-Microsoft.Usage#CA1806;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2233</CodeAnalysisRules>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\common\include\version.cs">

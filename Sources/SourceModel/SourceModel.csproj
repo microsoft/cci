@@ -45,6 +45,19 @@
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
     <DocumentationFile>bin\Release\Microsoft.Cci.SourceModel.XML</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'CompilerOnly|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\CompilerOnly\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>bin\Debug\Microsoft.Cci.SourceModel.XML</DocumentationFile>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleAssemblies>C:\Program Files (x86)\Microsoft Visual Studio 9.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleAssemblies>
+    <CodeAnalysisRules>-Microsoft.Design#CA1040;-Microsoft.Design#CA1021;-Microsoft.Design#CA1033;-Microsoft.Design#CA1014;-Microsoft.Design#CA1024;-Microsoft.Globalization#CA1305;-Microsoft.Maintainability#CA1500;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1721;-Microsoft.Security#CA2104</CodeAnalysisRules>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Common\Include\Version.cs">
       <Link>Build\Version.cs</Link>
