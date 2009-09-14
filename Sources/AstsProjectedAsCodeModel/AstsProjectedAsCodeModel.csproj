@@ -75,6 +75,20 @@
     <DocumentationFile>bin\NightlyRelease\Microsoft.Cci.AstsProjectedAsCodeModel.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'CompilerOnly|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\CompilerOnly\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Debug\Microsoft.Cci.AstsProjectedAsCodeModel.xml</DocumentationFile>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleAssemblies>C:\Program Files (x86)\Microsoft Visual Studio 9.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleAssemblies>
+    <CodeAnalysisRules>-Microsoft.Design#CA1062;-Microsoft.Globalization#CA1303;-Microsoft.Usage#CA2209;-Microsoft.Design#CA2210;-Microsoft.Design#CA1040;-Microsoft.Design#CA1005;-Microsoft.Design#CA1020;-Microsoft.Design#CA1021;-Microsoft.Design#CA1011;-Microsoft.Design#CA1009;-Microsoft.Design#CA1031;-Microsoft.Design#CA1051;-Microsoft.Design#CA1002;-Microsoft.Design#CA1006;-Microsoft.Design#CA1045;-Microsoft.Design#CA1004;-Microsoft.Design#CA1033;-Microsoft.Design#CA1014;-Microsoft.Design#CA1034;-Microsoft.Design#CA1024;-Microsoft.Globalization#CA1301;-Microsoft.Globalization#CA1302;-Microsoft.Globalization#CA1306;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1300;-Microsoft.Globalization#CA1307;-Microsoft.Globalization#CA1309;-Microsoft.Maintainability#CA1506;-Microsoft.Maintainability#CA1502;-Microsoft.Maintainability#CA1501;-Microsoft.Maintainability#CA1505;-Microsoft.Maintainability#CA1500;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1708;-Microsoft.Naming#CA1715;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1711;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1717;-Microsoft.Naming#CA1721;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1811;-Microsoft.Performance#CA1823;-Microsoft.Performance#CA1800;-Microsoft.Performance#CA1805;-Microsoft.Performance#CA1824;-Microsoft.Performance#CA1822;-Microsoft.Performance#CA1814;-Microsoft.Security#CA2104;-Microsoft.Security#CA2122;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2211;-Microsoft.Usage#CA2231</CodeAnalysisRules>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\common\include\version.cs">
       <Link>Build\version.cs</Link>
