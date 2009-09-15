@@ -417,7 +417,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         int rowOffset = (int)(rowId - 1) * this.RowSize;
         FieldFlags flags = (FieldFlags)this.FieldTableMemoryReader.PeekUInt16(rowOffset + this.FlagsOffset);
         uint name = this.FieldTableMemoryReader.PeekReference(rowOffset + this.NameOffset, this.IsStringHeapRefSizeSmall);
-        uint signature = this.FieldTableMemoryReader.PeekReference(rowOffset + this.NameOffset, this.IsBlobHeapRefSizeSmall);
+        uint signature = this.FieldTableMemoryReader.PeekReference(rowOffset + this.SignatureOffset, this.IsBlobHeapRefSizeSmall);
         FieldRow fieldRow = new FieldRow(flags, name, signature);
         return fieldRow;
       }
@@ -539,7 +539,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     ) {
       int nextRVA = int.MaxValue;
       int endOffset = (int)this.NumberOfRows * this.RowSize;
-      for (int iterOffset = this.RVAOffset; iterOffset < endOffset; ++iterOffset) {
+      for (int iterOffset = this.RVAOffset; iterOffset < endOffset; iterOffset += this.RowSize) {
         int currentRVA = this.MethodTableMemoryReader.PeekInt32(iterOffset);
         if (currentRVA > rva && currentRVA < nextRVA) {
           nextRVA = currentRVA;
@@ -1795,7 +1795,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     ) {
       int nextRVA = int.MaxValue;
       int endOffset = (int)this.NumberOfRows * this.RowSize;
-      for (int iterOffset = this.RVAOffset; iterOffset < endOffset; ++iterOffset) {
+      for (int iterOffset = this.RVAOffset; iterOffset < endOffset; iterOffset += this.RowSize) {
         int currentRVA = this.FieldRVATableMemoryReader.PeekInt32(iterOffset);
         if (currentRVA > rva && currentRVA < nextRVA) {
           nextRVA = currentRVA;
@@ -3892,11 +3892,13 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         }
         bool sectFatFormat = (sectHeader & CILMethodFlags.SectFatFormat) == CILMethodFlags.SectFatFormat;
         int dataSize = memReader.ReadByte();
-        dataSize += (int)memReader.ReadUInt16() << 8;
-        if (sectFatFormat)
+        if (sectFatFormat) {
+          dataSize += (int)memReader.ReadUInt16() << 8;
           sehTableEntries = PEFileReader.GetFatSEHEntries(memReader, dataSize / 24);
-        else
+        } else {
+          memReader.SkipBytes(2); //skip over reserved field
           sehTableEntries = PEFileReader.GetSmallSEHEntries(memReader, dataSize / 12);
+        }
       }
       return new MethodIL(
         localVarInited,
