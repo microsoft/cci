@@ -13,12 +13,12 @@ using System.Runtime.InteropServices;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// 
+  /// A metadata custom attribute.
   /// </summary>
   public sealed class CustomAttribute : ICustomAttribute, ICopyFrom<ICustomAttribute> {
 
     /// <summary>
-    /// 
+    /// Allocates a metadata custom attribute.
     /// </summary>
     public CustomAttribute() {
       this.arguments = new List<IMetadataExpression>();
@@ -97,12 +97,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Represents a file referenced by an assembly.
   /// </summary>
   public sealed class FileReference : IFileReference, ICopyFrom<IFileReference> {
 
     /// <summary>
-    /// 
+    /// Allocates an object that represents a file referenced by an assembly.
     /// </summary>
     public FileReference() {
       this.containingAssembly = Dummy.Assembly;
@@ -173,12 +173,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Information about how values of managed types should be marshalled to and from unmanaged types.
   /// </summary>
   public sealed class MarshallingInformation : IMarshallingInformation, ICopyFrom<IMarshallingInformation> {
 
     /// <summary>
-    /// 
+    /// Allocates an object containig information about how values of managed types should be marshalled to and from unmanaged types.
     /// </summary>
     public MarshallingInformation() {
       this.customMarshaller = Dummy.TypeReference;
@@ -364,12 +364,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A single CLR IL operation.
   /// </summary>
   public sealed class Operation : IOperation, ICopyFrom<IOperation> {
 
     /// <summary>
-    /// 
+    /// Allocates a single CLR IL operation.
     /// </summary>
     public Operation() {
       this.location = Dummy.Location;
@@ -433,12 +433,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Exception information of the method body expressed in terms of offsets in CLR IL.
   /// </summary>
   public sealed class OperationExceptionInformation : IOperationExceptionInformation, ICopyFrom<IOperationExceptionInformation> {
 
     /// <summary>
-    /// 
+    /// Allocates an object that provides exception information of the method body expressed in terms of offsets in CLR IL.
     /// </summary>
     public OperationExceptionInformation() {
       this.exceptionType = Dummy.TypeReference;
@@ -539,12 +539,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Information that describes how a method from the underlying Platform is to be invoked.
   /// </summary>
   public sealed class PlatformInvokeInformation : IPlatformInvokeInformation, ICopyFrom<IPlatformInvokeInformation> {
 
     /// <summary>
-    /// 
+    /// Allocates an object that provides information that describes how a method from the underlying Platform is to be invoked.
     /// </summary>
     public PlatformInvokeInformation() {
       this.importModule = Dummy.ModuleReference;
@@ -656,12 +656,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A named data resource that is stored as part of CLR metadata.
   /// </summary>
   public sealed class Resource : IResource, ICopyFrom<IResource> {
 
     /// <summary>
-    /// 
+    /// Allocates a named data resource that is stored as part of CLR metadata.
     /// </summary>
     public Resource() {
       this.attributes = new List<ICustomAttribute>();
@@ -783,12 +783,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to an IResource instance.
   /// </summary>
   public sealed class ResourceReference : IResourceReference, ICopyFrom<IResourceReference> {
 
     /// <summary>
-    /// 
+    /// Allocates a reference to an IResource instance.
     /// </summary>
     public ResourceReference() {
       this.attributes = new List<ICustomAttribute>();
@@ -871,12 +871,81 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Represents a block of data stored at a given offset within a specified section of the PE file.
+  /// </summary>
+  public sealed class SectionBlock : ISectionBlock, ICopyFrom<ISectionBlock> {
+
+    /// <summary>
+    /// Allocates an object that represents a block of 
+    /// </summary>
+    public SectionBlock() {
+      this.data = new List<byte>();
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="sectionBlock"></param>
+    /// <param name="internFactory"></param>
+    public void Copy(ISectionBlock sectionBlock, IInternFactory internFactory) {
+      this.data = new List<byte>(sectionBlock.Data);
+      this.offset = sectionBlock.Offset;
+      this.peSectionKind = sectionBlock.PESectionKind;
+      this.size = sectionBlock.Size;
+    }
+
+    /// <summary>
+    /// Byte information stored in the block.
+    /// </summary>
+    public List<byte> Data {
+      get { return this.data; }
+      set { this.data = value; }
+    }
+    List<byte> data;
+
+    /// <summary>
+    /// Offset into section where the block resides.
+    /// </summary>
+    public uint Offset {
+      get { return this.offset; }
+      set { this.offset = value; }
+    }
+    uint offset;
+
+    /// <summary>
+    /// Section where the block resides.
+    /// </summary>
+    public PESectionKind PESectionKind {
+      get { return this.peSectionKind; }
+      set { this.peSectionKind = value; }
+    }
+    PESectionKind peSectionKind;
+
+    /// <summary>
+    /// Size of the block.
+    /// </summary>
+    public uint Size {
+      get { return this.size; }
+      set { this.size = value; }
+    }
+    uint size;
+
+
+    #region ISectionBlock Members
+
+    IEnumerable<byte> ISectionBlock.Data {
+      get { return this.Data.AsReadOnly(); }
+    }
+
+    #endregion
+  }
+
+  /// <summary>
+  /// A declarative specification of a security action applied to a set of permissions. Used by the CLR loader to enforce security restrictions.
   /// </summary>
   public sealed class SecurityAttribute : ISecurityAttribute, ICopyFrom<ISecurityAttribute> {
 
     /// <summary>
-    /// 
+    /// Allocates a declarative specification of a security action applied to a set of permissions. Used by the CLR loader to enforce security restrictions.
     /// </summary>
     public SecurityAttribute() {
       this.action = (SecurityAction)0;
@@ -925,12 +994,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A resource file formatted according to Win32 API conventions and typically obtained from a Portable Executable (PE) file.
   /// </summary>
   public sealed class Win32Resource : IWin32Resource, ICopyFrom<IWin32Resource> {
 
     /// <summary>
-    /// 
+    /// Allocates a resource file formatted according to Win32 API conventions and typically obtained from a Portable Executable (PE) file.
     /// </summary>
     public Win32Resource() {
       this.codePage = 0;

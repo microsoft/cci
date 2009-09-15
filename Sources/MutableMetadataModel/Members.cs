@@ -139,7 +139,8 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A field is a member that represents a variable associated with an object or class.
+  /// This interface models the metadata representation of a field.
   /// </summary>
   public class FieldDefinition : TypeDefinitionMember, IFieldDefinition, ICopyFrom<IFieldDefinition> {
 

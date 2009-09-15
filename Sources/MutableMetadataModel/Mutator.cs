@@ -248,6 +248,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="sectionBlock"></param>
+    /// <returns></returns>
+    public virtual SectionBlock GetMutableCopy(ISectionBlock sectionBlock) {
+      SectionBlock/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = sectionBlock as SectionBlock;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(sectionBlock, out cachedValue);
+      result = cachedValue as SectionBlock;
+      if (result != null) return result;
+      result = new SectionBlock();
+      this.cache.Add(sectionBlock, result);
+      this.cache.Add(result, result);
+      result.Copy(sectionBlock, this.host.InternFactory);
+      return result;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="fieldReference"></param>
     /// <returns></returns>
     public virtual FieldReference GetMutableCopy(IFieldReference fieldReference) {
@@ -1346,6 +1368,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(fieldDefinition);
       if (fieldDefinition.IsCompileTimeConstant)
         fieldDefinition.CompileTimeValue = this.Visit(this.GetMutableCopy(fieldDefinition.CompileTimeValue));
+      if (fieldDefinition.IsMapped)
+        fieldDefinition.FieldMapping = this.Visit(this.GetMutableCopy(fieldDefinition.FieldMapping));
       if (fieldDefinition.IsMarshalledExplicitly)
         fieldDefinition.MarshallingInformation = this.Visit(this.GetMutableCopy(fieldDefinition.MarshallingInformation));
       fieldDefinition.Type = this.Visit(fieldDefinition.Type);
@@ -2871,6 +2895,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       securityAttribute.Attributes = this.Visit(securityAttribute.Attributes);
       this.path.Pop();
       return securityAttribute;
+    }
+
+    /// <summary>
+    /// Visits the specified section block.
+    /// </summary>
+    /// <param name="sectionBlock">The section block.</param>
+    /// <returns></returns>
+    public virtual SectionBlock Visit(SectionBlock sectionBlock) {
+      return sectionBlock;
     }
 
     /// <summary>
