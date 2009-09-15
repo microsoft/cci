@@ -3177,7 +3177,7 @@ namespace Microsoft.Cci.Ast {
   }
 
   /// <summary>
-  /// 
+  /// Represents a block of section.
   /// </summary>
   internal unsafe sealed class StaticDataSectionBlock : ISectionBlock {
 
