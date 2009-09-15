@@ -5097,6 +5097,7 @@ namespace Microsoft.Cci {
     }
 
     public override void Visit(INestedTypeReference nestedTypeReference) {
+      if (!this.typeReferenceNeedsToken && nestedTypeReference is ISpecializedNestedTypeReference) return;
       this.peWriter.RecordTypeReference(nestedTypeReference);
     }
 
@@ -5197,7 +5198,7 @@ namespace Microsoft.Cci {
           this.alreadyHasToken.Add(typeReference.InternedKey, true);
         }
         if (nestedTypeReference != null) {
-          this.typeReferenceNeedsToken = true;
+          this.typeReferenceNeedsToken = !(typeReference is ISpecializedNestedTypeReference);
           this.Visit(nestedTypeReference.ContainingType);
         }
       }
