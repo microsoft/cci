@@ -2623,6 +2623,7 @@ namespace Microsoft.Cci.MetadataReader {
         case ".sdata": sectionKind = PESectionKind.StaticData; break;
         case ".tls": sectionKind = PESectionKind.ThreadLocalStorage; break;
         case ".rdata": sectionKind = PESectionKind.ConstantData; break;
+        case ".cover": sectionKind = PESectionKind.CoverageData; break;
       }
       int sizeOfField = (int)this.GetFieldSizeIfPossibleToDoSoWithoutResolving(fieldDefinition.Type);
       if (sizeOfField == 0) {

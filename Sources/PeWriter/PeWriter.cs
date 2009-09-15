@@ -42,6 +42,8 @@ namespace Microsoft.Cci {
     BinaryWriter blobWriter = new BinaryWriter(new MemoryStream(1024), true);
     ClrHeader clrHeader = new ClrHeader();
     //List<IMetadataConstantContainer> constantList = new List<IMetadataConstantContainer>();
+    BinaryWriter coverageDataWriter = new BinaryWriter(new MemoryStream());
+    SectionHeader coverSection = new SectionHeader();
     Dictionary<ICustomAttribute, uint> customAtributeSignatureIndex = new Dictionary<ICustomAttribute, uint>();
     PeDebugDirectory/*?*/ debugDirectory;
     List<IEventDefinition> eventDefList = new List<IEventDefinition>();
@@ -232,6 +234,7 @@ namespace Microsoft.Cci {
       writer.WriteTextSection();
       writer.WriteRdataSection();
       writer.WriteSdataSection();
+      writer.WriteCoverSection();
       writer.WriteTlsSection();
       writer.WriteResourceSection();
       writer.WriteRelocSection();
@@ -359,6 +362,7 @@ namespace Microsoft.Cci {
       if (this.tlsDataWriter.BaseStream.Length > 0) numberOfSections++; //.tls
       if (this.rdataWriter.BaseStream.Length > 0) numberOfSections++; //.rdata
       if (this.sdataWriter.BaseStream.Length > 0) numberOfSections++; //.sdata
+      if (this.coverageDataWriter.BaseStream.Length > 0) numberOfSections++; //.cover
       if (!IteratorHelper.EnumerableIsEmpty(this.module.Win32Resources)) numberOfSections++; //.rsrc;
 
       this.ntHeader.NumberOfSections = numberOfSections;
@@ -601,7 +605,7 @@ namespace Microsoft.Cci {
       ntHeader.BaseOfData = this.rdataSection.RelativeVirtualAddress;
       ntHeader.PointerToSymbolTable = 0;
       ntHeader.SizeOfCode = this.textSection.SizeOfRawData;
-      ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData;
+      ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.coverSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData;
       ntHeader.SizeOfHeaders = Aligned(this.ComputeSizeOfPeHeaders(), this.module.FileAlignment);
       ntHeader.SizeOfImage = Aligned(this.relocSection.RelativeVirtualAddress+this.relocSection.VirtualSize, 0x2000);
       ntHeader.SizeOfUninitializedData = 0;
@@ -686,14 +690,25 @@ namespace Microsoft.Cci {
       this.sdataSection.SizeOfRawData = Aligned(this.sdataWriter.BaseStream.Length, this.module.FileAlignment);
       this.sdataSection.VirtualSize = this.sdataWriter.BaseStream.Length;
 
+      this.coverSection.Characteristics = 0xC8000040; //section is not paged + write + read + initialized 
+      this.coverSection.Name = ".cover";
+      this.coverSection.NumberOfLinenumbers = 0;
+      this.coverSection.NumberOfRelocations = 0;
+      this.coverSection.PointerToLinenumbers = 0;
+      this.coverSection.PointerToRawData = this.sdataSection.PointerToRawData+this.sdataSection.SizeOfRawData;
+      this.coverSection.PointerToRelocations = 0;
+      this.coverSection.RelativeVirtualAddress = Aligned(this.sdataSection.RelativeVirtualAddress+this.sdataSection.VirtualSize, 0x2000);
+      this.coverSection.SizeOfRawData = Aligned(this.coverageDataWriter.BaseStream.Length, this.module.FileAlignment);
+      this.coverSection.VirtualSize = this.coverageDataWriter.BaseStream.Length;
+
       this.tlsSection.Characteristics = 0xC0000040; //section is write + read + initialized 
       this.tlsSection.Name = ".tls";
       this.tlsSection.NumberOfLinenumbers = 0;
       this.tlsSection.NumberOfRelocations = 0;
       this.tlsSection.PointerToLinenumbers = 0;
-      this.tlsSection.PointerToRawData = this.sdataSection.PointerToRawData+this.sdataSection.SizeOfRawData;
+      this.tlsSection.PointerToRawData = this.coverSection.PointerToRawData+this.coverSection.SizeOfRawData;
       this.tlsSection.PointerToRelocations = 0;
-      this.tlsSection.RelativeVirtualAddress = Aligned(this.sdataSection.RelativeVirtualAddress+this.sdataSection.VirtualSize, 0x2000);
+      this.tlsSection.RelativeVirtualAddress = Aligned(this.coverSection.RelativeVirtualAddress+this.coverSection.VirtualSize, 0x2000);
       this.tlsSection.SizeOfRawData = Aligned(this.tlsDataWriter.BaseStream.Length, this.module.FileAlignment);
       this.tlsSection.VirtualSize = this.tlsDataWriter.BaseStream.Length;
 
@@ -806,6 +821,7 @@ namespace Microsoft.Cci {
       BinaryWriter sectionWriter;
       switch (sectionBlock.PESectionKind) {
         case PESectionKind.ConstantData: sectionWriter = this.rdataWriter; break;
+        case PESectionKind.CoverageData: sectionWriter = this.coverageDataWriter; break;
         case PESectionKind.StaticData: sectionWriter = this.sdataWriter; break;
         case PESectionKind.Text: sectionWriter = this.textDataWriter; break;
         case PESectionKind.ThreadLocalStorage: sectionWriter = this.tlsDataWriter; break;
@@ -1224,6 +1240,7 @@ namespace Microsoft.Cci {
     private SectionHeader GetSection(PESectionKind section) {
       switch (section) {
         case PESectionKind.ConstantData: return this.rdataSection;
+        case PESectionKind.CoverageData: return this.coverSection;
         case PESectionKind.StaticData: return this.sdataSection;
         case PESectionKind.ThreadLocalStorage: return this.tlsSection;
         default: return this.textDataSection;
@@ -4043,6 +4060,7 @@ namespace Microsoft.Cci {
       WriteSectionHeader(this.textSection, writer);
       WriteSectionHeader(this.rdataSection, writer);
       WriteSectionHeader(this.sdataSection, writer);
+      WriteSectionHeader(this.coverSection, writer);
       WriteSectionHeader(this.resourceSection, writer);
       WriteSectionHeader(this.relocSection, writer);
       WriteSectionHeader(this.tlsSection, writer);
@@ -4228,6 +4246,11 @@ namespace Microsoft.Cci {
         writer.WriteUlong(this.ntHeader.ImportAddressTable.RelativeVirtualAddress + this.module.BaseAddress); //12
 
       writer.BaseStream.WriteTo(this.peStream);
+    }
+
+    private void WriteCoverSection() {
+      this.peStream.Position = this.coverSection.PointerToRawData;
+      this.coverageDataWriter.BaseStream.WriteTo(this.peStream);
     }
 
     private void WriteRdataSection() {

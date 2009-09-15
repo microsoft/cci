@@ -156,15 +156,14 @@ namespace Microsoft.Cci {
     /// has length 0.
     /// </summary>
     //^ [Pure]
-    public static bool EnumerableHasLength<T>(IEnumerable<T>/*?*/ enumerable, ulong length)
-    {
+    public static bool EnumerableHasLength<T>(IEnumerable<T>/*?*/ enumerable, ulong length) {
       if (enumerable == null) return (length == 0);
       IEnumerator<T> enumerator = enumerable.GetEnumerator();
       while (length > 0) {
         if (!enumerator.MoveNext()) return false;
         length--;
       }
-      return (!enumerator.MoveNext());        
+      return (!enumerator.MoveNext());
     }
 
 
@@ -174,8 +173,7 @@ namespace Microsoft.Cci {
     /// <typeparam name="T">The element type of the collection</typeparam>
     /// <param name="left">An enumeration of elements. The enumeration may be null.</param>
     /// <param name="right">An enumeration of elements. The enumeration may be null.</param>
-    public static IEnumerable<T> Concat<T>(IEnumerable<T>/*?*/ left, IEnumerable<T>/*?*/ right)
-    {
+    public static IEnumerable<T> Concat<T>(IEnumerable<T>/*?*/ left, IEnumerable<T>/*?*/ right) {
       if (left != null)
         foreach (T e in left)
           yield return e;
@@ -243,15 +241,14 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Immediate data such as a string, the address of a branch target, or a metadata reference, such as a Field
     /// </summary>
-    object/*?*/ Value { 
-      get; 
+    object/*?*/ Value {
+      get;
     }
   }
 
   /// <summary>
-  /// Corresponds to a metadata custom attribute.
+  /// A metadata custom attribute.
   /// </summary>
-  [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix")]
   public interface ICustomAttribute {
 
     /// <summary>
@@ -305,7 +302,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A hash of the file contents.
     /// </summary>
-    IEnumerable<byte> HashValue { get;}
+    IEnumerable<byte> HashValue { get; }
   }
 
   /// <summary>
@@ -321,7 +318,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The resource is in external file
     /// </summary>
-    bool IsInExternalFile { get;}
+    bool IsInExternalFile { get; }
 
     /// <summary>
     /// The external file that contains the resource.
@@ -371,82 +368,82 @@ namespace Microsoft.Cci {
     /// <summary>
     /// No Security Action.
     /// </summary>
-    ActionNil = 0x0000,
+    ActionNil=0x0000,
 
     /// <summary>
     /// Specify the security requried to run.
     /// </summary>
-    Request = 0x0001,
+    Request=0x0001,
 
     /// <summary>
     /// Check that all callers in the call chain have been granted specified permissions, all of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    Demand = 0x0002,
+    Demand=0x0002,
 
     /// <summary>
     /// Without further checks, satisfy Demand for the specified permissions, all of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    Assert = 0x0003,
+    Assert=0x0003,
 
     /// <summary>
     /// Without further checks refuse Demand for the specified permissions, all of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    Deny = 0x0004,
+    Deny=0x0004,
 
     /// <summary>
     /// Without further checks, refuse Demand for all permissions other than those specified, all of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    PermitOnly = 0x0005,
+    PermitOnly=0x0005,
 
     /// <summary>
     /// Check that immediate caller has been granted the specified permissions, all of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    LinkDemand = 0x0006,
+    LinkDemand=0x0006,
 
     /// <summary>
     /// Check that all derived classes have been granted the specified permissions, all of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    InheritanceDemand = 0x0007,
+    InheritanceDemand=0x0007,
 
     /// <summary>
     /// Specify the minimum permissions required to run.
     /// </summary>
-    RequestMinimum = 0x0008,
+    RequestMinimum=0x0008,
 
     /// <summary>
     /// Specify the optional permissions to grant.
     /// </summary>
-    RequestOptional = 0x0009,
+    RequestOptional=0x0009,
 
     /// <summary>
     /// Specify the permissions not to be granted.
     /// </summary>
-    RequestRefuse = 0x000A,
+    RequestRefuse=0x000A,
 
     /// <summary>
     /// Reserved for implementation specific use.
     /// </summary>
-    PrejitGrant = 0x000B,
+    PrejitGrant=0x000B,
 
     /// <summary>
     /// Reserved for implementation specific use.
     /// </summary>
-    PrejitDenied = 0x000C,
+    PrejitDenied=0x000C,
 
     /// <summary>
     /// Check that all callers in the call chain have been granted the specified permissions, none of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    NonCasDemand = 0x000D,
+    NonCasDemand=0x000D,
 
     /// <summary>
     /// Check that the immediate caller has been granted the specified permissions, none of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    NonCasLinkDemand = 0x000E,
+    NonCasLinkDemand=0x000E,
 
     /// <summary>
     /// Check that all derived classes have been granted the specified permissions, none of which derive from System.Security.Permissions.CodeAccessPermission.
     /// </summary>
-    NonCasInheritance = 0x000F,
+    NonCasInheritance=0x000F,
   }
 
   /// <summary>
@@ -468,8 +465,7 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// When managed code calls unmanaged methods or exposes managed fields to unmanaged code, it is sometimes necessary to provide specific information about how the 
-  /// managed types should be marshalled to and from the unmanaged types.
+  /// Information about how values of managed types should be marshalled to and from unmanaged types.
   /// </summary>
   public interface IMarshallingInformation {
     /// <summary>
@@ -483,7 +479,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// An argument string (cookie) passed to the custom marshaller at run time.
     /// </summary>
-    string CustomMarshallerRuntimeArgument { 
+    string CustomMarshallerRuntimeArgument {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler;
     }
@@ -491,7 +487,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The size of an element of the fixed sized umanaged array.
     /// </summary>
-    uint ElementSize { 
+    uint ElementSize {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray;
     }
@@ -508,7 +504,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The unmanged element type of the unmanaged array.
     /// </summary>
-    System.Runtime.InteropServices.UnmanagedType ElementType { 
+    System.Runtime.InteropServices.UnmanagedType ElementType {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValArray ||
       //^ this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray;
@@ -531,7 +527,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The number of elements in the fixed size portion of the unmanaged array.
     /// </summary>
-    uint NumberOfElements { 
+    uint NumberOfElements {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValArray ||
       //^ this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValTStr ||
@@ -542,7 +538,7 @@ namespace Microsoft.Cci {
     /// The zero based index of the parameter in the unmanaged method that contains the number of elements in the variable portion of unmanaged array.
     /// If the index is null, the variable portion is of size zero, or the caller conveys the size of the variable portion of the array to the unmanaged method in some other way.
     /// </summary>
-    uint? ParamIndex { 
+    uint? ParamIndex {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray;
     }
@@ -551,7 +547,7 @@ namespace Microsoft.Cci {
     /// The type to which the variant values of all elements of the safe array must belong. See also SafeArrayElementUserDefinedSubtype.
     /// (The element type of a safe array is VARIANT. The "sub type" specifies the value of all of the tag fields (vt) of the element values. )
     /// </summary>
-    System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype { 
+    System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {
       get;
       //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray;
     }
@@ -580,7 +576,7 @@ namespace Microsoft.Cci {
     /// </summary>
     int UniqueKey {
       get;
-        //^ ensures result > 0;
+      //^ ensures result > 0;
     }
 
     /// <summary>
@@ -618,7 +614,7 @@ namespace Microsoft.Cci {
     /// A name with no characters. Often used as a dummy.
     /// </summary>
     IName EmptyName { get; }
-    
+
     /// <summary>
     /// Gets a cached IName instance corresponding to the given string. If no cached instance exists, a new instance is created.
     /// The method is only available to fully trusted code since it allows the caller to cause new objects to be added to the cache.
@@ -653,7 +649,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "Concat"
     /// </summary>
-    IName Concat { get;}
+    IName Concat { get; }
 
     /// <summary>
     /// "decimal op decimal"
@@ -678,7 +674,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "Equals"
     /// </summary>
-    IName Equals { get;}
+    IName Equals { get; }
 
     /// <summary>
     /// "float32 op float32"
@@ -1055,22 +1051,22 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "System"
     /// </summary>
-    IName System { get;}
+    IName System { get; }
 
     /// <summary>
     /// Void
     /// </summary>
-    IName Void { get;}
+    IName Void { get; }
 
     /// <summary>
     /// void* op void*
     /// </summary>
-    IName VoidPtrOpVoidPtr { get;}
-    
+    IName VoidPtrOpVoidPtr { get; }
+
     /// <summary>
     /// "Boolean"
     /// </summary>
-    IName Boolean { get;}
+    IName Boolean { get; }
 
     /// <summary>
     /// ".cctor"
@@ -1080,7 +1076,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Char
     /// </summary>
-    IName Char { get;}
+    IName Char { get; }
 
     /// <summary>
     /// ".ctor"
@@ -1090,62 +1086,62 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "Byte"
     /// </summary>
-    IName Byte { get;}
+    IName Byte { get; }
 
     /// <summary>
     /// "SByte"
     /// </summary>
-    IName SByte { get;}
+    IName SByte { get; }
 
     /// <summary>
     /// "Int16"
     /// </summary>
-    IName Int16 { get;}
+    IName Int16 { get; }
 
     /// <summary>
     /// "UInt16"
     /// </summary>
-    IName UInt16 { get;}
+    IName UInt16 { get; }
 
     /// <summary>
     /// "Int32"
     /// </summary>
-    IName Int32 { get;}
+    IName Int32 { get; }
 
     /// <summary>
     /// "UInt32"
     /// </summary>
-    IName UInt32 { get;}
+    IName UInt32 { get; }
 
     /// <summary>
     /// "Int64"
     /// </summary>
-    IName Int64 { get;}
+    IName Int64 { get; }
 
     /// <summary>
     /// "UInt64"
     /// </summary>
-    IName UInt64 { get;}
+    IName UInt64 { get; }
 
     /// <summary>
     /// "String"
     /// </summary>
-    IName String { get;}
+    IName String { get; }
 
     /// <summary>
     /// "IntPtr"
     /// </summary>
-    IName IntPtr { get;}
+    IName IntPtr { get; }
 
     /// <summary>
     /// "UIntPtr"
     /// </summary>
-    IName UIntPtr { get;}
+    IName UIntPtr { get; }
 
     /// <summary>
     /// "Object"
     /// </summary>
-    IName Object { get;}
+    IName Object { get; }
 
     /// <summary>
     /// "Remove"
@@ -1165,22 +1161,22 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "Single"
     /// </summary>
-    IName Single { get;}
+    IName Single { get; }
 
     /// <summary>
     /// "Double"
     /// </summary>
-    IName Double { get;}
+    IName Double { get; }
 
     /// <summary>
     /// "TypedReference"
     /// </summary>
-    IName TypedReference { get;}
+    IName TypedReference { get; }
 
     /// <summary>
     /// "Enum"
     /// </summary>
-    IName Enum { get;}
+    IName Enum { get; }
 
     /// <summary>
     /// "Length"
@@ -1195,37 +1191,37 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "MulticastDelegate"
     /// </summary>
-    IName MulticastDelegate { get;}
+    IName MulticastDelegate { get; }
 
     /// <summary>
     /// "ValueType"
     /// </summary>
-    IName ValueType { get;}
+    IName ValueType { get; }
 
     /// <summary>
     /// "Type"
     /// </summary>
-    IName Type { get;}
+    IName Type { get; }
 
     /// <summary>
     /// "Array"
     /// </summary>
-    IName Array { get;}
+    IName Array { get; }
 
     /// <summary>
     /// "Attribute"
     /// </summary>
-    IName Attribute { get;}
+    IName Attribute { get; }
 
     /// <summary>
     /// "AttributeUsageAttribute"
     /// </summary>
-    IName AttributeUsageAttribute { get;}
+    IName AttributeUsageAttribute { get; }
 
     /// <summary>
     /// "DateTime"
     /// </summary>
-    IName DateTime { get;}
+    IName DateTime { get; }
 
     /// <summary>
     /// "DebuggerHiddenAttribute"
@@ -1235,12 +1231,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "Decimal"
     /// </summary>
-    IName Decimal { get;}
+    IName Decimal { get; }
 
     /// <summary>
     /// "Delegate"
     /// </summary>
-    IName Delegate { get;}
+    IName Delegate { get; }
 
     /// <summary>
     /// "Diagnostics"
@@ -1250,12 +1246,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// "DBNull"
     /// </summary>
-    IName DBNull { get;}
+    IName DBNull { get; }
 
     /// <summary>
     /// "Nullable"
     /// </summary>
-    IName Nullable { get;}
+    IName Nullable { get; }
 
   }
 
@@ -2292,8 +2288,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId = "Member")]
-    No_ = 0xfe19,
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
+    No_=0xfe19,
     /// <summary>
     /// 
     /// </summary>
@@ -2315,27 +2311,27 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Instruction to create multidimensional array. The value will be Type reference to the matrix type.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId = "Member")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
     Array_Create,
     /// <summary>
     /// Instruction to create multidimensional array. The value will be Type reference to the matrix type.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId = "Member")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
     Array_Create_WithLowerBound,
     /// <summary>
     /// Instruction to read from element of a multidimensional array. The value will be Type reference to the matrix type.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId = "Member")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
     Array_Get,
     /// <summary>
     /// Instruction to store into element of a multidimensional array. The value will be Type reference to the matrix type.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId = "Member")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
     Array_Set,
     /// <summary>
     /// Instruction to get the address of element of a multidimensional array. The value will be Type reference to the matrix type.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId = "Member")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
     Array_Addr,
   }
 
@@ -2378,38 +2374,38 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// Information details of the P-Invoke call
+  /// Information that describes how a method from the underlying Platform is to be invoked.
   /// </summary>
   public interface IPlatformInvokeInformation {
     /// <summary>
     /// Name of the method/field providing the implementation.
     /// </summary>
-    IName ImportName { get;}
+    IName ImportName { get; }
 
     /// <summary>
     /// Module providing the method/field.
     /// </summary>
-    IModuleReference ImportModule { get;}
+    IModuleReference ImportModule { get; }
 
     /// <summary>
     /// Marshalling of the Strings for this method.
     /// </summary>
-    StringFormatKind StringFormat { get;}
+    StringFormatKind StringFormat { get; }
 
     /// <summary>
     /// If the PInvoke should use the name specified as is.
     /// </summary>
-    bool NoMangle { get;}
+    bool NoMangle { get; }
 
     /// <summary>
     /// The calling convention of the PInvoke call.
     /// </summary>
-    PInvokeCallingConvention PInvokeCallingConvention { get;}
+    PInvokeCallingConvention PInvokeCallingConvention { get; }
 
     /// <summary>
     /// If the target function supports getting last error.
     /// </summary>
-    bool SupportsLastError { get;}
+    bool SupportsLastError { get; }
 
     /// <summary>
     /// Enables or disables best-fit mapping behavior when converting Unicode characters to ANSI characters.
@@ -2431,23 +2427,23 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A string that identifies what type of resource this is. Only valid if this.TypeId &lt; 0.
     /// </summary>
-    string TypeName { 
-      get; 
+    string TypeName {
+      get;
       //^ requires this.TypeId < 0;
     }
 
     /// <summary>
     /// An integer tag that identifies what type of resource this is. If the value is less than 0, this.TypeName should be used instead.
     /// </summary>
-    int TypeId { 
-      get; 
+    int TypeId {
+      get;
     }
 
     /// <summary>
     /// The name of the resource. Only valid if this.Id &lt; 0.
     /// </summary>
-    string Name { 
-      get; 
+    string Name {
+      get;
       //^ requires this.Id < 0; 
     }
 
@@ -2481,15 +2477,15 @@ namespace Microsoft.Cci {
     /// <summary>
     /// No type check needs to be performed for next operation
     /// </summary>
-    NoTypeCheck = 0x01,
+    NoTypeCheck=0x01,
     /// <summary>
     /// No range check needs to be performed for next operation
     /// </summary>
-    NoRangeCheck = 0x02,
+    NoRangeCheck=0x02,
     /// <summary>
     /// No null check needs to be performed for next operation
     /// </summary>
-    NoNullCheck = 0x04,
+    NoNullCheck=0x04,
   }
 
   /// <summary>
@@ -2505,6 +2501,10 @@ namespace Microsoft.Cci {
     /// </summary>
     ConstantData,
     /// <summary>
+    /// Section for code coverage data.
+    /// </summary>
+    CoverageData,
+    /// <summary>
     /// Section for intialized writable data.
     /// </summary>
     StaticData,
@@ -2519,13 +2519,13 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// Represents a block of section.
+  /// Represents a block of data stored at a given offset within a specified section of the PE file.
   /// </summary>
   public interface ISectionBlock {
     /// <summary>
     /// Section where the block resides.
     /// </summary>
-    PESectionKind PESectionKind { get;}
+    PESectionKind PESectionKind { get; }
 
     /// <summary>
     /// Offset into section where the block resides.
@@ -2540,6 +2540,6 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Byte information stored in the block.
     /// </summary>
-    IEnumerable<byte> Data { get;}
+    IEnumerable<byte> Data { get; }
   }
 }
