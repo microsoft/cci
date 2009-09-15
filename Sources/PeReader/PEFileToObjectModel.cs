@@ -1085,6 +1085,10 @@ namespace Microsoft.Cci.MetadataReader {
       TypeBase parentModuleType
     ) {
       IName typeName = this.GetNameFromOffset(typeDefRow.Name);
+      if (typeDefRow.Namespace != 0) {
+        IName namespaceName = this.GetNameFromOffset(typeDefRow.Namespace);
+        typeName = this.NameTable.GetNameFor(namespaceName.Value+"."+typeName.Value);
+      }
       uint genericParamRowIdStart;
       uint genericParamRowIdEnd;
       this.GetGenericParamInfoForType(typeDefRowId, out genericParamRowIdStart, out genericParamRowIdEnd);
@@ -2206,7 +2210,7 @@ namespace Microsoft.Cci.MetadataReader {
           uint methodRowId = this.PEFileReader.MethodPtrTable.GetMethodFor(methodIter);
           MethodDefinition moduleMethod = this.ModuleMethodArray[methodRowId];
           if (moduleMethod == null) {
-            moduleMethod = this.CreateMethod(methodRowId, moduleType);
+            moduleMethod = this.CreateMethod(methodRowId, moduleType); //TODO: is the token for the method derived from methodIter or methodRowId?
             this.ModuleMethodArray[methodRowId] = moduleMethod;
           }
         }
