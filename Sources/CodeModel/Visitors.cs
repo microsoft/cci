@@ -1257,6 +1257,31 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some computation with the given method definition.
+    /// </summary>
+    /// <param name="method"></param>
+    public override void Visit(IMethodDefinition method)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(method);
+      this.VisitMethodReturnAttributes(method.ReturnValueAttributes);
+      if (method.ReturnValueIsModified)
+        this.Visit(method.ReturnValueCustomModifiers);
+      if (method.HasDeclarativeSecurity)
+        this.Visit(method.SecurityAttributes);
+      if (method.IsGeneric) this.Visit(method.GenericParameters);
+      this.Visit(method.Type);
+      this.Visit(method.Parameters);
+      if (method.IsPlatformInvoke)
+        this.Visit(method.PlatformInvokeData);
+      this.Visit(method.Body);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
     /// Performs some computation with the given method body.
     /// </summary>
     /// <param name="methodBody"></param>
