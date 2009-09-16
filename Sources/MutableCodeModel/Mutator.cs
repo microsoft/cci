@@ -1727,7 +1727,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IGreaterThan greaterThan) {
         GreaterThan mutableGreaterThan = greaterThan as GreaterThan;
         if (alwaysMakeACopy || mutableGreaterThan == null) mutableGreaterThan = new GreaterThan(greaterThan);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableGreaterThan);
+        this.resultExpression = this.myCodeMutator.Visit(mutableGreaterThan);
       }
 
       /// <summary>
@@ -1737,7 +1737,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
         GreaterThanOrEqual mutableGreaterThanOrEqual = greaterThanOrEqual as GreaterThanOrEqual;
         if (alwaysMakeACopy || mutableGreaterThanOrEqual == null) mutableGreaterThanOrEqual = new GreaterThanOrEqual(greaterThanOrEqual);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableGreaterThanOrEqual);
+        this.resultExpression = this.myCodeMutator.Visit(mutableGreaterThanOrEqual);
       }
 
       /// <summary>
@@ -1757,7 +1757,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(ILeftShift leftShift) {
         LeftShift mutableLeftShift = leftShift as LeftShift;
         if (alwaysMakeACopy || mutableLeftShift == null) mutableLeftShift = new LeftShift(leftShift);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableLeftShift);
+        this.resultExpression = this.myCodeMutator.Visit(mutableLeftShift);
       }
 
       /// <summary>
@@ -1767,7 +1767,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(ILessThan lessThan) {
         LessThan mutableLessThan = lessThan as LessThan;
         if (alwaysMakeACopy || mutableLessThan == null) mutableLessThan = new LessThan(lessThan);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableLessThan);
+        this.resultExpression = this.myCodeMutator.Visit(mutableLessThan);
       }
 
       /// <summary>
@@ -1777,7 +1777,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(ILessThanOrEqual lessThanOrEqual) {
         LessThanOrEqual mutableLessThanOrEqual = lessThanOrEqual as LessThanOrEqual;
         if (alwaysMakeACopy || mutableLessThanOrEqual == null) mutableLessThanOrEqual = new LessThanOrEqual(lessThanOrEqual);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableLessThanOrEqual);
+        this.resultExpression = this.myCodeMutator.Visit(mutableLessThanOrEqual);
       }
 
       /// <summary>
@@ -1837,7 +1837,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IModulus modulus) {
         Modulus mutableModulus = modulus as Modulus;
         if (alwaysMakeACopy || mutableModulus == null) mutableModulus = new Modulus(modulus);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableModulus);
+        this.resultExpression = this.myCodeMutator.Visit(mutableModulus);
       }
 
       /// <summary>
@@ -1867,7 +1867,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(INotEquality notEquality) {
         NotEquality mutableNotEquality = notEquality as NotEquality;
         if (alwaysMakeACopy || mutableNotEquality == null) mutableNotEquality = new NotEquality(notEquality);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableNotEquality);
+        this.resultExpression = this.myCodeMutator.Visit(mutableNotEquality);
       }
 
       /// <summary>
@@ -1967,7 +1967,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IRightShift rightShift) {
         RightShift mutableRightShift = rightShift as RightShift;
         if (alwaysMakeACopy || mutableRightShift == null) mutableRightShift = new RightShift(rightShift);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableRightShift);
+        this.resultExpression = this.myCodeMutator.Visit(mutableRightShift);
       }
 
       /// <summary>
@@ -2007,7 +2007,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(ISubtraction subtraction) {
         Subtraction mutableSubtraction = subtraction as Subtraction;
         if (alwaysMakeACopy || mutableSubtraction == null) mutableSubtraction = new Subtraction(subtraction);
-        this.resultExpression = this.myCodeMutator.Visit((BinaryOperation)mutableSubtraction);
+        this.resultExpression = this.myCodeMutator.Visit(mutableSubtraction);
       }
 
       /// <summary>
