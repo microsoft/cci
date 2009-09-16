@@ -21,7 +21,7 @@ namespace Microsoft.Cci.Pdb {
       bits.ReadGuid(out doctype);
     }
 
-    static Dictionary<string,int> LoadNameIndex(BitAccess bits) {
+    static Dictionary<string, int> LoadNameIndex(BitAccess bits) {
       Dictionary<string, int> result = new Dictionary<string, int>();
       int ver;
       int sig;
@@ -130,25 +130,21 @@ namespace Microsoft.Cci.Pdb {
 
     private static PdbFunction match = new PdbFunction();
 
-    private static PdbFunction FindFunction(PdbFunction[] funcs, ushort sec, uint off) {
+    private static int FindFunction(PdbFunction[] funcs, ushort sec, uint off) {
       match.segment = sec;
       match.address = off;
 
-      int item = Array.BinarySearch(funcs, match, PdbFunction.byAddress);
-      if (item >= 0) {
-        return funcs[item];
-      }
-      return null;
+      return Array.BinarySearch(funcs, match, PdbFunction.byAddress);
     }
 
     static void LoadManagedLines(PdbFunction[] funcs,
                                  IntHashTable names,
                                  BitAccess bits,
-                                 MsfDirectory dir, 
+                                 MsfDirectory dir,
                                  Dictionary<string, int> nameIndex,
                                  PdbReader reader,
                                  uint limit) {
-      Array.Sort(funcs, PdbFunction.byAddress);
+      Array.Sort(funcs, PdbFunction.byAddressAndToken);
       IntHashTable checks = new IntHashTable();
 
       // Read the files first
@@ -213,8 +209,25 @@ namespace Microsoft.Cci.Pdb {
               bits.ReadUInt16(out sec.sec);
               bits.ReadUInt16(out sec.flags);
               bits.ReadUInt32(out sec.cod);
-              PdbFunction func = FindFunction(funcs, sec.sec, sec.off);
-              if (func == null) break;
+              int funcIndex = FindFunction(funcs, sec.sec, sec.off);
+              if (funcIndex < 0) break;
+              var func = funcs[funcIndex];
+              if (func.lines == null) {
+                while (funcIndex > 0) {
+                  var f = funcs[funcIndex-1];
+                  if (f.lines != null || f.segment != sec.sec || f.address != sec.off) break;
+                  func = f;
+                  funcIndex--;
+                }
+              } else {
+                while (funcIndex < funcs.Length-1 && func.lines != null) {
+                  var f = funcs[funcIndex+1];
+                  if (f.segment != sec.sec || f.address != sec.off) break;
+                  func = f;
+                  funcIndex++;
+                }
+              }
+              if (func.lines != null) break;
 
               // Count the line blocks.
               int begSym = bits.Position;
@@ -283,7 +296,7 @@ namespace Microsoft.Cci.Pdb {
                                        IntHashTable names,
                                        ArrayList funcList,
                                        bool readStrings,
-                                       MsfDirectory dir, 
+                                       MsfDirectory dir,
                                        Dictionary<string, int> nameIndex,
                                        PdbReader reader) {
       PdbFunction[] funcs = null;
@@ -415,7 +428,7 @@ namespace Microsoft.Cci.Pdb {
       }
 
       //
-      Array.Sort(funcs, PdbFunction.byAddress);
+      Array.Sort(funcs, PdbFunction.byAddressAndToken);
       //Array.Sort(funcs, PdbFunction.byToken);
       return funcs;
     }
