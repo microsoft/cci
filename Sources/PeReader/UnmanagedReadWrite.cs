@@ -833,11 +833,30 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
     internal int ReadCompressedInt32() {
-      int i = this.ReadCompressedUInt32();
-      if ((i & 1) != 0)
-        return -(i >> 1);
-      else
-        return i >> 1;
+      byte headerByte = this.ReadByte();
+      int result;
+      if ((headerByte & 0x80) == 0x00) {
+        result = headerByte;
+        if ((result & 0x01) == 0)
+          result = result >> 1;
+        else
+          result = (result >> 1) - 0x40;
+      } else if ((headerByte & 0x40) == 0x00) {
+        result = ((headerByte & 0x3f) << 8) | this.ReadByte();
+        if ((result & 0x01) == 0)
+          result = result >> 1;
+        else
+          result = (result >> 1) - 0x2000;
+      } else if (headerByte == 0xFF)
+        result = -1;
+      else {
+        result = ((headerByte & 0x3f) << 24) | (this.ReadByte() << 16) | (this.ReadByte() << 8) | this.ReadByte();
+        if ((result & 0x01) == 0)
+          result = result >> 1;
+        else
+          result = (result >> 1) - 0x20000000;
+      }
+      return result;
     }
 
     internal string ReadASCIINullTerminated() {

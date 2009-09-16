@@ -18,7 +18,7 @@ namespace Microsoft.Cci {
       this.BaseStream = output;
       this.UTF8 = !unicode;
     }
-    
+
     internal MemoryStream BaseStream;
 
     private bool UTF8 = true;
@@ -31,7 +31,7 @@ namespace Microsoft.Cci {
         m.Position = i;
       }
     }
-    
+
     internal void WriteBool(bool value) {
       MemoryStream m = this.BaseStream;
       uint i = m.Position;
@@ -307,11 +307,30 @@ namespace Microsoft.Cci {
     }
 
     internal void WriteCompressedInt(int val) {
-      if (val < 0)
-        val = ((-val) << 1)|1;
-      else
+      if (val >= 0) {
         val = val << 1;
-      this.WriteCompressedUInt((uint)val);
+        this.WriteCompressedUInt((uint)val);
+      } else {
+        if (val > -0x40) {
+          val = 0x40 + val;
+          val = (val << 1)|1;
+          this.WriteByte((byte)val);
+        } else if (val >= -0x2000) {
+          val = 0x2000 - val;
+          val = (val << 1)|1;
+          this.WriteByte((byte)((val >> 8)|0x80));
+          this.WriteByte((byte)(val & 0xff));
+        } else if (val >= -0x20000000) {
+          val = 0x20000000 - val;
+          val = (val << 1)|1;
+          this.WriteByte((byte)((val >> 24)|0xc0));
+          this.WriteByte((byte)((val & 0xff0000)>>16));
+          this.WriteByte((byte)((val & 0xff00)>>8));
+          this.WriteByte((byte)(val & 0xff));
+        } else {
+          //^ assume false;
+        }
+      }
     }
 
     internal void WriteCompressedUInt(uint val) {
