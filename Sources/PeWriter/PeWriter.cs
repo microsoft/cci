@@ -2966,8 +2966,10 @@ namespace Microsoft.Cci {
           INestedUnitNamespaceReference/*?*/ nensRef = nsTypeRef.ContainingUnitNamespace as INestedUnitNamespaceReference;
           if (nensRef != null && nensRef.Name.UniqueKey == this.host.NameTable.Diagnostics.UniqueKey) {
             nensRef = nensRef.ContainingUnitNamespace as INestedUnitNamespaceReference;
-            if (nensRef != null && nensRef.Name.UniqueKey == this.host.NameTable.System.UniqueKey && nensRef.ContainingUnitNamespace is IRootUnitNamespaceReference)
-              return true;
+            if (nensRef != null && nensRef.Name.UniqueKey == this.host.NameTable.System.UniqueKey && nensRef.ContainingUnitNamespace is IRootUnitNamespaceReference) {
+              if (this.sourceLocationProvider == null) return true;
+              return IteratorHelper.EnumerableIsEmpty(this.sourceLocationProvider.GetPrimarySourceLocationsFor(firstOperation.Location));
+            }
           }
         }
       }
