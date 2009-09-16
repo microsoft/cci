@@ -270,14 +270,11 @@ namespace Microsoft.Cci {
       PdbFunction/*?*/ pdbFunction;
       if (!this.pdbFunctionMap.TryGetValue(mbLocation.Document.MethodToken, out pdbFunction)) return null;
       if (pdbFunction.lines == null) return null;
-      for (int j = 0, m = pdbFunction.lines.Length; j < m; j++) {
-        PdbLines pdbLines = pdbFunction.lines[j];
+      foreach (PdbLines pdbLines in pdbFunction.lines) {
         PdbSource pdbSourceFile = pdbLines.file;
         for (int i = 0, n = pdbLines.lines.Length; i < n; i++) {
           PdbLine line = pdbLines.lines[i];
-          if (mbLocation.Offset > line.offset && i < n - 1 && mbLocation.Offset >= pdbLines.lines[i+1].offset) continue;
-          if (i == n-1 && mbLocation.Offset != line.offset && j < m -1 && mbLocation.Offset >= pdbFunction.lines[j + 1].lines[0].offset) continue;
-          // Then either the current line is the last one, or else the current line's offset is the largest offset less than or equal to the IL offset.
+          if (line.offset != mbLocation.Offset) continue;
           PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(pdbSourceFile);
           return new PdbSourceLineLocation(psDoc, (int)line.lineBegin, line.colBegin, (int)line.lineEnd, line.colEnd);
         }
