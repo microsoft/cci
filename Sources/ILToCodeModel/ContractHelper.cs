@@ -50,6 +50,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (gmir != null) {
         result = gmir.GenericMethod;
       }
+      // REVIEW: This next block is needed because ISpecializedMethodDefinition isn't
+      // a subtype of ISpecializedMethodReference. Should it be?
+      ISpecializedMethodDefinition smd = result as ISpecializedMethodDefinition;
+      if (smd != null) {
+        result = smd.UnspecializedVersion;
+      }
       ISpecializedMethodReference smr = result as ISpecializedMethodReference;
       if (smr != null) {
         result = smr.UnspecializedVersion;
@@ -104,13 +110,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="methodDefinition"></param>
     /// <returns></returns>
     public static IMethodDefinition/*?*/ GetMethodFromContractClass(IMethodDefinition methodDefinition) {
-      ITypeDefinition definingType = methodDefinition.ContainingTypeDefinition;
+
+      var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
+      ITypeDefinition definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
+
       var typeHoldingContractDefinition = GetTypeDefinitionFromAttribute(definingType, "System.Diagnostics.Contracts.ContractClassAttribute");
       if (typeHoldingContractDefinition == null) return null;
       if (definingType.IsInterface) {
         foreach (IMethodImplementation methodImplementation in typeHoldingContractDefinition.ExplicitImplementationOverrides) {
           var implementedInterfaceMethod = UninstantiateAndUnspecialize(methodImplementation.ImplementedMethod);
-          if (methodDefinition.InternedKey == implementedInterfaceMethod.InternedKey)
+          if (unspecializedMethodDefinition.InternedKey == implementedInterfaceMethod.InternedKey)
             return methodImplementation.ImplementingMethod.ResolvedMethod;
         }
         return null;
