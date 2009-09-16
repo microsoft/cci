@@ -83,14 +83,12 @@ namespace Microsoft.Cci {
         IAssemblyName currentName;
         while (assemblyEnum.GetNextAssembly(out applicationContext, out currentName, 0) == 0) {
           //^ assume currentName != null;
-          AssemblyName assemblyName = new AssemblyName(currentName);
-          string/*?*/ location = assemblyName.GetLocation();
-          if (location == null) location = string.Empty;
-          if (assemblyIdentity.Equals(new AssemblyIdentity(metadataHost.NameTable.GetNameFor(assemblyName.Name), assemblyName.Culture, assemblyName.Version, assemblyName.PublicKeyToken, location))) {
-            string codeBase = assemblyName.CodeBase;
+          AssemblyName cn = new AssemblyName(currentName);
+          if (assemblyIdentity.Equals(new AssemblyIdentity(metadataHost.NameTable.GetNameFor(cn.Name), cn.Culture, cn.Version, cn.PublicKeyToken, ""))) {
+            string codeBase = cn.CodeBase;
             if (codeBase != null && codeBase.StartsWith("file:///"))
               return codeBase.Substring(8);
-            return assemblyName.GetLocation();
+            return cn.GetLocation();
           }
         }
         return null;
