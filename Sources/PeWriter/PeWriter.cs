@@ -5069,6 +5069,10 @@ namespace Microsoft.Cci {
       this.Visit(genericTypeInstanceReference.GenericArguments);
     }
 
+    public override void Visit(IMarshallingInformation marshallingInformation) {
+      //The type references in the marshalling information do not end up in tables, but are serialized as strings.
+    }
+
     public override void Visit(IMethodDefinition method) {
       base.Visit(method);
       if (this.traverseAttributes && !method.IsAbstract && !method.IsExternal) {
