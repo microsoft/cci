@@ -353,7 +353,7 @@ namespace ModuleReaderTests {
       prettyPrinter.MethodDefinition(method);
       string result =
 @".method public hidebysig static pinvokeimpl(gdi32.dll as CreateFontIndirectArray autochar winapi)explicit default native int CreateFontIndirectArray(
-  [vjslib]com.ms.win32.LOGFONT[]marshal(lpstruct,0,0,1) lplf
+  [vjslib]com.ms.win32.LOGFONT[]marshal(lpstruct,0,1) lplf
 )cil managed preservesig
 {
 }

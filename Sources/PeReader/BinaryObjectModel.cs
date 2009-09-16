@@ -4842,18 +4842,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class LPArrayMarshallingInformation : IMarshallingInformation {
     readonly System.Runtime.InteropServices.UnmanagedType ArrayElementType;
     int paramIndex;
-    uint elementSize;
     uint numElement;
 
-    internal LPArrayMarshallingInformation(
-      System.Runtime.InteropServices.UnmanagedType arrayElementType,
-      int paramIndex,
-      uint elementSize,
-      uint numElement
-    ) {
+    internal LPArrayMarshallingInformation(System.Runtime.InteropServices.UnmanagedType arrayElementType, int paramIndex, uint numElement) {
       this.ArrayElementType = arrayElementType;
       this.paramIndex = paramIndex;
-      this.elementSize = elementSize;
       this.numElement = numElement;
     }
 
@@ -4868,7 +4861,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public uint ElementSize {
-      get { return this.elementSize; }
+      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {

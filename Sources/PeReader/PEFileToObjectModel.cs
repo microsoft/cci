@@ -2853,15 +2853,20 @@ namespace Microsoft.Cci.MetadataReader {
         } else if (unmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray) {
           System.Runtime.InteropServices.UnmanagedType elementType = (System.Runtime.InteropServices.UnmanagedType)memoryReader.ReadByte();
           int paramIndex = -1;
-          uint elementSize = 0;
+          uint flag = 0;
           uint numElements = 0;
           if (memoryReader.NotEndOfBytes)
             paramIndex = (int)memoryReader.ReadCompressedUInt32();
           if (memoryReader.NotEndOfBytes)
-            elementSize = (uint)memoryReader.ReadCompressedUInt32();
-          if (memoryReader.NotEndOfBytes)
             numElements = (uint)memoryReader.ReadCompressedUInt32();
-          return new LPArrayMarshallingInformation(elementType, paramIndex, elementSize, numElements);
+          if (memoryReader.NotEndOfBytes) {
+            flag = (uint)memoryReader.ReadCompressedUInt32();
+            if (flag == 0) {
+              //TODO: check that paramIndex is 0
+              paramIndex = -1; //paramIndex is just a place holder so that numElements can be present
+            }
+          }
+          return new LPArrayMarshallingInformation(elementType, paramIndex, numElements);
         } else if (unmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray) {
           System.Runtime.InteropServices.VarEnum elementType = (System.Runtime.InteropServices.VarEnum)memoryReader.ReadByte();
           string subType = string.Empty;

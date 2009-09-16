@@ -3460,12 +3460,14 @@ namespace Microsoft.Cci {
           writer.WriteByte((byte)marshallingInformation.ElementType);
           if (marshallingInformation.ParamIndex.HasValue) {
             writer.WriteCompressedUInt(marshallingInformation.ParamIndex.Value);
-            if (marshallingInformation.ElementSize > 0) {
-              writer.WriteCompressedUInt(marshallingInformation.ElementSize);
-              if (marshallingInformation.NumberOfElements > 0) {
-                writer.WriteCompressedUInt(marshallingInformation.NumberOfElements);
-              }
+            if (marshallingInformation.NumberOfElements > 0) {
+              writer.WriteCompressedUInt(marshallingInformation.NumberOfElements);
+              writer.WriteByte(1); //The parameter number is valid
             }
+          } else if (marshallingInformation.NumberOfElements > 0) {
+            writer.WriteByte(0); //Dummy parameter value emitted so that NumberOfElements can be in a known position
+            writer.WriteCompressedUInt(marshallingInformation.NumberOfElements);
+            writer.WriteByte(0); //The parameter number is not valid
           }
           break;
         case System.Runtime.InteropServices.UnmanagedType.SafeArray:

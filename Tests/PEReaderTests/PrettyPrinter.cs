@@ -1982,8 +1982,6 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Symbol(",");
         this.ILDasmPaper.Int((int)marshallInfo.NumberOfElements);
         this.ILDasmPaper.Symbol(",");
-        this.ILDasmPaper.Int((int)marshallInfo.ElementSize);
-        this.ILDasmPaper.Symbol(",");
         this.ILDasmPaper.Int(marshallInfo.ParamIndex == null ? -1 : (int)marshallInfo.ParamIndex.Value);
       } else if (marshallInfo.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray) {
         this.ILDasmPaper.Identifier(marshallInfo.SafeArrayElementSubtype.ToString());
