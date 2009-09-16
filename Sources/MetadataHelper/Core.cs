@@ -455,11 +455,26 @@ namespace Microsoft.Cci {
   /// </summary>
   public abstract class MetadataReaderHost : MetadataHostEnvironment, IMetadataReaderHost {
 
+    readonly List<string> libPaths = new List<string>();
+
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
     protected MetadataReaderHost()
       : this(new NameTable(), 0) {
+    }
+
+    /// <summary>
+    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// </summary>
+    /// <param name="searchPaths">
+    /// A collection of strings that are interpreted as valid paths which are used to search for units.
+    /// </param>
+    protected MetadataReaderHost(IEnumerable<string> searchPaths)
+      : this() {
+      foreach (var s in searchPaths) {
+        this.libPaths.Add(s);
+      }
     }
 
     /// <summary>
@@ -493,6 +508,58 @@ namespace Microsoft.Cci {
       : base(nameTable, pointerSize)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
+    }
+
+    /// <summary>
+    /// Adds a new directory (path) to the list of search paths for which
+    /// to look in when searching for a unit to load.
+    /// </summary>
+    /// <param name="path"></param>
+    public virtual void AddLibPath(string path) { this.libPaths.Add(path); }
+
+    /// <summary>
+    /// Looks in the specified <paramref name="probeDir"/> to see if a file
+    /// exists, first with the extension "dll" and then with the extension "exe".
+    /// Returns null if not found, otherwise constructs a new AssemblyIdentity
+    /// </summary>
+    private AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
+      string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
+      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
+      path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
+      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
+      return null;
+    }
+
+    /// <summary>
+    /// Looks for the referenced assembly first in the same directory as the referring unit, then
+    /// in any search paths provided to the constructor, then finally the GAC.
+    /// </summary>
+    /// <param name="referringUnit"></param>
+    /// <param name="referencedAssembly"></param>
+    /// <returns></returns>
+    //^ [Pure]
+    public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      if (string.IsNullOrEmpty(referencedAssembly.Location)) {
+        // probe for in the same directory as the referring unit
+        string probeDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
+        AssemblyIdentity result = Probe(probeDir, referencedAssembly);
+        if (result != null) return result;
+        // Probe in the libPaths directories
+        foreach (string prefix in this.libPaths) {
+          result = Probe(prefix, referencedAssembly);
+          if (result != null) return result;
+        }
+        // Check platform location
+        probeDir = Path.GetDirectoryName(Path.GetFullPath(typeof(object).Assembly.Location));
+        result = Probe(probeDir, referencedAssembly);
+        if (result != null) return result;
+        // Check GAC
+        string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
+        if (gacLocation != null) {
+          return new AssemblyIdentity(referencedAssembly, gacLocation);
+        }
+      }
+      return base.ProbeAssemblyReference(referringUnit, referencedAssembly);
     }
 
     #region IMetadataReaderHost Members
@@ -540,11 +607,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// This method is called when the assebly reference is being resolved and its not already loaded by the Read/Write host.
+    /// This method is called when the assembly reference is being resolved and its not already loaded by the Read/Write host.
     /// </summary>
     /// <param name="referringUnit">The unit that is referencing the assembly.</param>
     /// <param name="referencedAssembly">Assembly identity for the assembly being referenced.</param>
     public virtual void ResolvingAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      if (!string.IsNullOrEmpty(referencedAssembly.Location)) {
+        this.LoadUnit(referencedAssembly);
+      } else {
+        AssemblyIdentity ai = this.ProbeAssemblyReference(referringUnit, referencedAssembly);
+        if (ai != null && !String.IsNullOrEmpty(ai.Location)) {
+          this.LoadUnit(ai);
+        }
+      }
     }
 
     /// <summary>
