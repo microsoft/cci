@@ -2704,6 +2704,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(parameterDefinition);
       parameterDefinition.Attributes = this.Visit(parameterDefinition.Attributes);
       parameterDefinition.ContainingSignature = this.GetCurrentSignature();
+      if (parameterDefinition.HasDefaultValue)
+        parameterDefinition.DefaultValue = this.Visit(this.GetMutableCopy(parameterDefinition.DefaultValue));
       if (parameterDefinition.IsModified)
         parameterDefinition.CustomModifiers = this.Visit(parameterDefinition.CustomModifiers);
       parameterDefinition.Locations = this.Visit(parameterDefinition.Locations);
