@@ -365,10 +365,24 @@ namespace Microsoft.Cci {
   public class BaseCodeTraverser : BaseMetadataTraverser, ICodeVisitor {
 
     /// <summary>
-    /// 
+    /// Allocates a visitor instance that traverses the code model in depth first, left to right order.
     /// </summary>
     public BaseCodeTraverser() {
     }
+
+    /// <summary>
+    /// Allocates a visitor instance that traverses a metadata model as a code model (via decompilation), in depth first, left to right order.
+    /// </summary>
+    public BaseCodeTraverser(SourceMethodBodyProvider/*?*/ ilToSourceProvider) {
+      this.ilToSourceProvider = ilToSourceProvider;
+    }
+
+    /// <summary>
+    /// A delegate that provides an ISourceMethodBody instance that corresponds to a given IMethodBody.
+    /// Typically this will be done by decompiling the operations of the given method body into a block of instructions.
+    /// It is assumed that the caller will already have tried to just cast the IMethodBody instance into an ISourceMethodBody instance.
+    /// </summary>
+    protected readonly SourceMethodBodyProvider/*?*/ ilToSourceProvider;
 
     #region ICodeVisitor Members
 
@@ -398,12 +412,37 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       object/*?*/ def = addressableExpression.Definition;
-      IAddressDereference/*?*/ adr = def as IAddressDereference;
-      if (adr != null)
-        this.Visit(adr);
+      var loc = def as ILocalDefinition;
+      if (loc != null)
+        this.VisitReference(loc);
       else {
-        IArrayIndexer/*?*/ indexer = def as IArrayIndexer;
-        if (indexer != null) { this.Visit(indexer); return; }
+        var par = def as IParameterDefinition;
+        if (par != null)
+          this.VisitReference(par);
+        else {
+          var fieldReference = def as IFieldReference;
+          if (fieldReference != null)
+            this.Visit(fieldReference);
+          else {
+            var indexer = def as IArrayIndexer;
+            if (indexer != null)
+              this.Visit(indexer);
+            else {
+              var adr = def as IAddressDereference;
+              if (adr != null)
+                this.Visit(adr);
+              else {
+                var meth = def as IMethodReference;
+                if (meth != null)
+                  this.Visit(meth);
+                else {
+                  var thisRef = (IThisReference)def;
+                  this.Visit(thisRef);
+                }
+              }
+            }
+          }
+        }
       }
       if (addressableExpression.Instance != null)
         this.Visit(addressableExpression.Instance);
@@ -797,6 +836,19 @@ namespace Microsoft.Cci {
     public virtual void Visit(IBoundExpression boundExpression) {
       if (this.stopTraversal) return;
       this.path.Push(boundExpression);
+      var definition = boundExpression.Definition;
+      var local = definition as ILocalDefinition;
+      if (local != null)
+        this.VisitReference(local);
+      else {
+        var parameter = definition as IParameterDefinition;
+        if (parameter != null)
+          this.VisitReference(parameter);
+        else {
+          var field = (IFieldReference)definition;
+          this.Visit(field);
+        }
+      }
       if (boundExpression.Instance != null)
         this.Visit(boundExpression.Instance);
       this.path.Pop();
@@ -812,7 +864,9 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       this.path.Push(customAttribute);
+      this.Visit(customAttribute.Constructor);
       this.Visit(customAttribute.Arguments);
+      this.Visit(customAttribute.NamedArguments);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -960,23 +1014,6 @@ namespace Microsoft.Cci {
       //^ int oldCount = this.path.Count;
       this.path.Push(expressionStatement);
       this.Visit(expressionStatement.Expression);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
-    /// Performs some computation with the given field definition.
-    /// </summary>
-    /// <param name="fieldDefinition"></param>
-    public override void Visit(IFieldDefinition fieldDefinition)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(fieldDefinition);
-      this.Visit(fieldDefinition.Attributes);
-      if (fieldDefinition.IsCompileTimeConstant)
-        this.Visit((IMetadataExpression)fieldDefinition.CompileTimeValue);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -1289,7 +1326,9 @@ namespace Microsoft.Cci {
       //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
-      ISourceMethodBody /*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
+      var sourceMethodBody = methodBody as ISourceMethodBody;
+      if (sourceMethodBody == null && this.ilToSourceProvider != null)
+        sourceMethodBody = this.ilToSourceProvider(methodBody);
       if (sourceMethodBody != null) {
         this.Visit(sourceMethodBody);
         return;
@@ -1310,6 +1349,7 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       this.path.Push(methodCall);
+      this.Visit(methodCall.MethodToCall);
       if (!methodCall.IsStaticCall)
         this.Visit(methodCall.ThisArgument);
       this.Visit(methodCall.Arguments);
@@ -1442,23 +1482,6 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given parameter definition.
-    /// </summary>
-    /// <param name="parameterDefinition"></param>
-    public override void Visit(IParameterDefinition parameterDefinition)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(parameterDefinition);
-      this.Visit(parameterDefinition.Attributes);
-      if (parameterDefinition.HasDefaultValue)
-        this.Visit((IMetadataExpression)parameterDefinition.DefaultValue);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
     /// Performs some computation with the given pointer call.
     /// </summary>
     /// <param name="pointerCall"></param>
@@ -1470,24 +1493,6 @@ namespace Microsoft.Cci {
       this.path.Push(pointerCall);
       this.Visit(pointerCall.Arguments);
       this.Visit(pointerCall.Pointer);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
-    /// Performs some computation with the given property definition.
-    /// </summary>
-    /// <param name="propertyDefinition"></param>
-    public override void Visit(IPropertyDefinition propertyDefinition)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(propertyDefinition);
-      this.Visit(propertyDefinition.Attributes);
-      this.Visit(propertyDefinition.Parameters);
-      if (propertyDefinition.HasDefaultValue)
-        this.Visit((IMetadataExpression)propertyDefinition.DefaultValue);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -1717,14 +1722,37 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       object/*?*/ def = targetExpression.Definition;
-      IAddressDereference/*?*/ adr = def as IAddressDereference;
-      if (adr != null)
-        this.Visit(adr);
+      var loc = def as ILocalDefinition;
+      if (loc != null)
+        this.VisitReference(loc);
       else {
-        IArrayIndexer/*?*/ indexer = def as IArrayIndexer;
-        if (indexer != null) {
-          this.Visit(indexer);
-          return;
+        var par = def as IParameterDefinition;
+        if (par != null)
+          this.VisitReference(par);
+        else {
+          var fieldReference = def as IFieldReference;
+          if (fieldReference != null)
+            this.Visit(fieldReference);
+          else {
+            var indexer = def as IArrayIndexer;
+            if (indexer != null) {
+              this.Visit(indexer);
+              return; //do not visit the instance again
+            } else {
+              var adr = def as IAddressDereference;
+              if (adr != null)
+                this.Visit(adr);
+              else {
+                var meth = def as IMethodReference;
+                if (meth != null)
+                  this.Visit(meth);
+                else {
+                  var propertyReference = (IPropertyDefinition)def;
+                  this.VisitReference(propertyReference);
+                }
+              }
+            }
+          }
         }
       }
       if (targetExpression.Instance != null)
@@ -1900,6 +1928,28 @@ namespace Microsoft.Cci {
     }
 
     #endregion
+
+    /// <summary>
+    /// Performs some computation on the reference to the given parameter definition.
+    /// </summary>
+    /// <param name="parameter">The parameter being referenced.</param>
+    public virtual void VisitReference(IParameterDefinition parameter) {
+    }
+
+    /// <summary>
+    /// Performs some computation on the reference to the given local definition.
+    /// </summary>
+    /// <param name="local">The local definition being referenced.</param>
+    public virtual void VisitReference(ILocalDefinition local) {
+    }
+
+    /// <summary>
+    /// Performs some computation on the reference to the given property definition.
+    /// </summary>
+    /// <param name="property">The property definition being referenced.</param>
+    public virtual void VisitReference(IPropertyDefinition property) {
+    }
+
   }
 
   /// <summary>
@@ -2970,7 +3020,7 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Visits the given pre condition.
+    /// Visits the given precondition.
     /// </summary>
     public virtual void Visit(IPrecondition precondition) {
     }

@@ -25,14 +25,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     private CreateMutableType createMutableType;
 
     /// <summary>
-    /// 
+    /// A delegate that provides an ISourceMethodBody instance that corresponds to a given IMethodBody.
+    /// Typically this will be done by decompiling the operations of the given method body into a block of instructions.
+    /// It is assumed that the caller will already have tried to just cast the IMethodBody instance into an ISourceMethodBody instance.
     /// </summary>
     protected readonly SourceMethodBodyProvider/*?*/ ilToSourceProvider;
+
     /// <summary>
     /// A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.
     /// </summary>
     protected readonly SourceToILConverterProvider/*?*/ sourceToILProvider;
+
     /// <summary>
     /// An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.
     /// </summary>
