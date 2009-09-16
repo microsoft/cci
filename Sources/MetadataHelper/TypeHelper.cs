@@ -1788,7 +1788,8 @@ namespace Microsoft.Cci {
         string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
         foreach (ITypeReference argument in genericTypeInstance.GenericArguments) {
           if (first) first = false; else sb.Append(delim);
-          sb.Append(this.GetTypeName(argument, formattingOptions));
+          // The member kind suffix should not be applied to generic arguments.
+          sb.Append(this.GetTypeName(argument, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
         }
         if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append("}"); else sb.Append(">");
         return sb.ToString();
