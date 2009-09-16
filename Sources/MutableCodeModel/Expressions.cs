@@ -369,7 +369,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// An expression that creates an instance of an array whose element type is determined by the initial values of the elements.
+  /// An expression that represents an array element access.
   /// </summary>
   public sealed class ArrayIndexer : Expression, IArrayIndexer {
 
