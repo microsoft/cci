@@ -471,7 +471,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
         }
         sb.Append(ch);
       }
-      numberOfBytesRead = (int)(pStart - pIter);
+      numberOfBytesRead = (int)(pIter - pStart);
       return sb.ToString();
     }
 
