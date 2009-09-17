@@ -168,6 +168,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal Int16 PeekInt16(
       int offset
     ) {
+#if COMPACTFX
+      if ((int)(this.CurrentPointer + offset) % 2 != 0) return UnalignedPeekInt16(offset);
+#endif
 #if LITTLEENDIAN
       return *(Int16*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -179,6 +182,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal Int32 PeekInt32(
       int offset
     ) {
+#if COMPACTFX
+      if ((int)(this.CurrentPointer + offset) % 4 != 0) return UnalignedPeekInt32(offset);
+#endif
 #if LITTLEENDIAN
       return *(Int32*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -198,6 +204,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal UInt16 PeekUInt16(
       int offset
     ) {
+#if COMPACTFX
+      if ((int)(this.CurrentPointer + offset) % 2 != 0) return UnalignedPeekUInt16(offset);
+#endif
 #if LITTLEENDIAN
       return *(UInt16*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -209,6 +218,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal UInt16 PeekUInt16(
       uint offset
     ) {
+#if COMPACTFX
+      if ((int)(this.CurrentPointer + offset) % 2 != 0) return UnalignedPeekUInt16(offset);
+#endif
 #if LITTLEENDIAN
       return *(UInt16*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -220,6 +232,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal UInt32 PeekUInt32(
       int offset
     ) {
+#if COMPACTFX
+      if ((int)(this.CurrentPointer + offset) % 4 != 0) return UnalignedPeekUInt32(offset);
+#endif
 #if LITTLEENDIAN
       return *(UInt32*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -233,6 +248,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal UInt32 PeekUInt32(
       uint offset
     ) {
+#if COMPACTFX
+      if ((int)(this.CurrentPointer + offset) % 4 != 0) return UnalignedPeekUInt32(offset);
+#endif
 #if LITTLEENDIAN
       return *(UInt32*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -242,6 +260,86 @@ namespace Microsoft.Cci.UtilityDataStructures {
       return uin;
 #endif
     }
+
+#if COMPACTFX
+    private Int16 UnalignedPeekInt16(
+      int offset
+    ) {
+      byte b1 = *(this.CurrentPointer + offset);
+      byte b2 = *(this.CurrentPointer + offset + 1);
+#if LITTLEENDIAN
+      return (Int16)((b2 << 8) | b1);
+#elif BIGENDIAN
+      return (Int16)((b1 << 8) | b2);
+#endif
+    }
+
+    private Int32 UnalignedPeekInt32(
+      int offset
+    ) {
+      byte b1 = *(this.CurrentPointer + offset);
+      byte b2 = *(this.CurrentPointer + offset + 1);
+      byte b3 = *(this.CurrentPointer + offset + 2);
+      byte b4 = *(this.CurrentPointer + offset + 3);
+#if LITTLEENDIAN
+      return (Int32)((b4 << 24) | (b3 << 16) | (b2 << 8) | b1);
+#elif BIGENDIAN
+      return (Int32)((b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
+#endif
+    }
+
+    private UInt16 UnalignedPeekUInt16(
+      int offset
+    ) {
+      byte b1 = *(this.CurrentPointer + offset);
+      byte b2 = *(this.CurrentPointer + offset + 1);
+#if LITTLEENDIAN
+      return (UInt16)((b2 << 8) | b1);
+#elif BIGENDIAN
+      return (UInt16)((b1 << 8) | b2);
+#endif
+    }
+
+    private UInt16 UnalignedPeekUInt16(
+      uint offset
+    ) {
+      byte b1 = *(this.CurrentPointer + offset);
+      byte b2 = *(this.CurrentPointer + offset + 1);
+#if LITTLEENDIAN
+      return (UInt16)((b2 << 8) | b1);
+#elif BIGENDIAN
+      return (UInt16)((b1 << 8) | b2);
+#endif
+    }
+
+    private UInt32 UnalignedPeekUInt32(
+      int offset
+    ) {
+      byte b1 = *(this.CurrentPointer + offset);
+      byte b2 = *(this.CurrentPointer + offset + 1);
+      byte b3 = *(this.CurrentPointer + offset + 2);
+      byte b4 = *(this.CurrentPointer + offset + 3);
+#if LITTLEENDIAN
+      return (UInt32)((b4 << 24) | (b3 << 16) | (b2 << 8) | b1);
+#elif BIGENDIAN
+      return (UInt32)((b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
+#endif
+    }
+
+    private UInt32 UnalignedPeekUInt32(
+      uint offset
+    ) {
+      byte b1 = *(this.CurrentPointer + offset);
+      byte b2 = *(this.CurrentPointer + offset + 1);
+      byte b3 = *(this.CurrentPointer + offset + 2);
+      byte b4 = *(this.CurrentPointer + offset + 3);
+#if LITTLEENDIAN
+      return (UInt32)((b4 << 24) | (b3 << 16) | (b2 << 8) | b1);
+#elif BIGENDIAN
+      return (UInt32)((b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
+#endif
+    }
+#endif
 
     internal UInt32 PeekReference(
       int offset,
@@ -264,9 +362,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal Guid PeekGuid(
       int offset
     ) {
-#if LITTLEENDIAN
+#if LITTLEENDIAN && !COMPACTFX
       return *(Guid*)(this.CurrentPointer + offset);
-#elif BIGENDIAN
+#else
       int int1 = this.PeekInt32(0);
       short short1 = this.PeekInt16(sizeof(int));
       short short2 = this.PeekInt16(sizeof(int) + sizeof(short));
@@ -294,6 +392,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
     private static string ScanUTF16WithSize(byte* bytePtr, int byteCount) {
+#if COMPACTFX
+      if ((int)bytePtr % 2 != 0) return UnalignedScanUTF16WithSize(bytePtr, byteCount);
+#endif
       int charsToRead = byteCount / sizeof(Char);
       char* pc = (char*)bytePtr;
       char[] buffer = new char[charsToRead];
@@ -311,6 +412,27 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
       return new String(buffer, 0, charsToRead);
     }
+
+#if COMPACTFX
+    private static string UnalignedScanUTF16WithSize(byte* bytePtr, int byteCount) {
+      int charsToRead = byteCount / sizeof(Char);
+      char[] buffer = new char[charsToRead];
+      fixed (char* uBuffer = buffer) {
+        char* iterBuffer = uBuffer;
+        char* endBuffer = uBuffer + charsToRead;
+        while (iterBuffer < endBuffer) {
+          byte b1 = *bytePtr++;
+          byte b2 = *bytePtr++;
+#if LITTLEENDIAN
+          *iterBuffer++ = (char)((b2 << 8) | b1);
+#else
+          *iterBuffer++ = (char)((b1 << 8) | b2);
+#endif
+        }
+      }
+      return new String(buffer, 0, charsToRead);
+    }
+#endif
 
     internal string PeekUTF16WithSize(
       int offset,
@@ -574,20 +696,18 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
     #region Read Methods
 
+#if COMPACTFX || BIGENDIAN   
     internal Char ReadChar() {
-#if LITTLEENDIAN
+      return (char)this.ReadUInt16();
+    }
+#else
+    internal Char ReadChar() {
       byte* pb = this.CurrentPointer;
       Char v = *(Char*)pb;
       this.CurrentPointer = pb + sizeof(Char);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      ushort v = *(ushort*)pb;
-      v = (ushort)((v << 8) | (v >> 8));
-      this.CurrentPointer = pb + sizeof(Char);
-      return (Char)v;
-#endif
     }
+#endif
 
     internal SByte ReadSByte() {
       byte* pb = this.CurrentPointer;
@@ -596,53 +716,56 @@ namespace Microsoft.Cci.UtilityDataStructures {
       return v;
     }
 
+#if COMPACTFX || BIGENDIAN
     internal Int16 ReadInt16() {
-#if LITTLEENDIAN
+      Int16 v = this.PeekInt16(0);
+      this.CurrentPointer += sizeof(Int16);
+      return v;
+    }
+#else
+    internal Int16 ReadInt16() {
       byte* pb = this.CurrentPointer;
       Int16 v = *(Int16*)pb;
       this.CurrentPointer = pb + sizeof(Int16);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      ushort v = *(ushort*)pb;
-      v = (ushort)((v << 8) | (v >> 8));
-      this.CurrentPointer = pb + sizeof(Int16);
-      return (Int16)v;
-#endif
     }
+#endif
 
+#if COMPACTFX || BIGENDIAN
     internal Int32 ReadInt32() {
-#if LITTLEENDIAN
+      Int32 v = this.PeekInt32(0);
+      this.CurrentPointer += sizeof(Int32);
+      return v;
+    }
+#else
+    internal Int32 ReadInt32() {
       byte* pb = this.CurrentPointer;
       Int32 v = *(Int32*)pb;
       this.CurrentPointer = pb + sizeof(Int32);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      uint uin = *(uint*)pb;
-      uin = (uin >> 16) | (uin << 16);
-      uin = (uin & 0xFF00FF00) >> 8 | (uin & 0x00FF00FF) << 8;
-      this.CurrentPointer = pb + sizeof(Int32);
-      return (Int32)uin;
-#endif
     }
+#endif
 
-    internal Int64 ReadInt64() {
+
+#if COMPACTFX
 #if LITTLEENDIAN
+    internal Int64 ReadInt64() {
+      Int32 lsi = this.ReadInt32();
+      return (this.ReadInt32() << 32) | lsi;
+    }
+#elif BIGENDIAN
+    internal Int64 ReadInt64() {
+      return (this.ReadInt32() << 32) | this.ReadInt32();
+    }
+#endif
+#else
+    internal Int64 ReadInt64() {
       byte* pb = this.CurrentPointer;
       Int64 v = *(Int64*)pb;
       this.CurrentPointer = pb + sizeof(Int64);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      ulong ulon = *(ulong*)pb;
-      ulon = (ulon >> 32) | (ulon << 32);
-      ulon = (ulon & 0xFFFF0000FFFF0000) >> 16 | (ulon & 0x0000FFFF0000FFFF) << 16;
-      ulon = (ulon & 0xFF00FF00FF00FF00) >> 8 | (ulon & 0x00FF00FF00FF00FF) << 8;
-      this.CurrentPointer = pb + sizeof(Int64);
-      return (Int64)ulon;
-#endif
     }
+#endif
 
     internal Byte ReadByte() {
       byte* pb = this.CurrentPointer;
@@ -651,67 +774,83 @@ namespace Microsoft.Cci.UtilityDataStructures {
       return v;
     }
 
+#if COMPACTFX || BIGENDIAN
     internal UInt16 ReadUInt16() {
-#if LITTLEENDIAN
+      UInt16 v = this.PeekUInt16(0);
+      this.CurrentPointer += sizeof(UInt16);
+      return v;
+    }
+#else
+    internal UInt16 ReadUInt16() {
       byte* pb = this.CurrentPointer;
       UInt16 v = *(UInt16*)pb;
       this.CurrentPointer = pb + sizeof(UInt16);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      ushort v = *(ushort*)pb;
-      v = (ushort)((v << 8) | (v >> 8));
-      this.CurrentPointer = pb + sizeof(UInt16);
-      return v;
-#endif
     }
+#endif
 
+#if COMPACTFX || BIGENDIAN
     internal UInt32 ReadUInt32() {
-#if LITTLEENDIAN
+      UInt32 v = this.PeekUInt32(0);
+      this.CurrentPointer += sizeof(UInt32);
+      return v;
+    }
+#else
+    internal UInt32 ReadUInt32() {
       byte* pb = this.CurrentPointer;
       UInt32 v = *(UInt32*)pb;
       this.CurrentPointer = pb + sizeof(UInt32);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      uint uin = *(uint*)pb;
-      uin = (uin >> 16) | (uin << 16);
-      uin = (uin & 0xFF00FF00) >> 8 | (uin & 0x00FF00FF) << 8;
-      this.CurrentPointer = pb + sizeof(UInt32);
-      return uin;
-#endif
     }
+#endif
 
-    internal UInt64 ReadUInt64() {
+#if COMPACTFX
 #if LITTLEENDIAN
+    internal UInt64 ReadUInt64() {
+      UInt32 lsi = this.ReadUInt32();
+      return (this.ReadUInt32() << 32) | lsi;
+    }
+#elif BIGENDIAN
+    internal UInt64 ReadUInt64() {
+      return (this.ReadUInt32() << 32) | this.ReadUInt32();
+    }
+#endif
+#else
+    internal UInt64 ReadUInt64() {
       byte* pb = this.CurrentPointer;
       UInt64 v = *(UInt64*)pb;
       this.CurrentPointer = pb + sizeof(UInt64);
       return v;
-#elif BIGENDIAN
-      byte* pb = this.CurrentPointer;
-      ulong ulon = *(ulong*)pb;
-      ulon = (ulon >> 32) | (ulon << 32);
-      ulon = (ulon & 0xFFFF0000FFFF0000) >> 16 | (ulon & 0x0000FFFF0000FFFF) << 16;
-      ulon = (ulon & 0xFF00FF00FF00FF00) >> 8 | (ulon & 0x00FF00FF00FF00FF) << 8;
-      this.CurrentPointer = pb + sizeof(UInt64);
-      return ulon;
-#endif
     }
+#endif
 
+#if COMPACTFX
+    internal Single ReadSingle() {
+      UInt32 u = this.ReadUInt32();
+      return *(Single*)&u;
+    }
+#else
     internal Single ReadSingle() {
       byte* pb = this.CurrentPointer;
       Single v = *(Single*)pb;
       this.CurrentPointer = pb + sizeof(Single);
       return v;
     }
+#endif
 
+#if COMPACTFX
+    internal Double ReadDouble() {
+      UInt64 u = this.ReadUInt64();
+      return *(Double*)&u;
+    }
+#else
     internal Double ReadDouble() {
       byte* pb = this.CurrentPointer;
       Double v = *(Double*)pb;
       this.CurrentPointer = pb + sizeof(Double);
       return v;
     }
+#endif
 
     internal OperationCode ReadOpcode() {
       int result = this.ReadByte();
