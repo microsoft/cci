@@ -440,8 +440,7 @@ namespace Microsoft.Cci {
     /// <summary>
     ///  Marks the Microsoft intermediate language (MSIL) stream's current position with the given label.
     /// </summary>
-    public void MarkLabel(ILGeneratorLabel label)
-    {
+    public void MarkLabel(ILGeneratorLabel label) {
       label.Offset = this.offset;
       this.operations.Add(new Operation((OperationCode)int.MaxValue, this.offset, Dummy.Location, label));
     }
@@ -454,7 +453,7 @@ namespace Microsoft.Cci {
       this.location = location;
     }
 
-    private static OperationCode LongVersionOf(OperationCode operationCode) {
+    public static OperationCode LongVersionOf(OperationCode operationCode) {
       switch (operationCode) {
         case OperationCode.Beq_S: return OperationCode.Beq;
         case OperationCode.Bge_S: return OperationCode.Bge;
@@ -474,7 +473,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    private static OperationCode ShortVersionOf(OperationCode operationCode) {
+    public static OperationCode ShortVersionOf(OperationCode operationCode) {
       switch (operationCode) {
         case OperationCode.Beq: return OperationCode.Beq_S;
         case OperationCode.Bge: return OperationCode.Bge_S;
@@ -517,7 +516,7 @@ namespace Microsoft.Cci {
     }
 
     private static uint SizeOfOperationCode(OperationCode opcode) {
-      if (((int)opcode) > 0xff) return 2;
+      if (((int)opcode) > 0xff && (opcode < OperationCode.Array_Create)) return 2;
       return 1;
     }
 
@@ -526,7 +525,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void UseNamespace(string namespaceToUse) {
       if (this.scopeStack.Count == 0) this.BeginScope();
-      this.scopeStack.Peek().usedNamespaces.Add(namespaceToUse);      
+      this.scopeStack.Peek().usedNamespaces.Add(namespaceToUse);
     }
 
     /// <summary>
@@ -602,7 +601,7 @@ namespace Microsoft.Cci {
     uint IOperationExceptionInformation.FilterDecisionStartOffset {
       get {
         if (this.FilterDecisionStart == null) return 0;
-        return this.FilterDecisionStart.Offset; 
+        return this.FilterDecisionStart.Offset;
       }
     }
 
@@ -635,7 +634,7 @@ namespace Microsoft.Cci {
     internal uint Offset {
       get {
         if (this.alias != null) return this.alias.Offset;
-        return this.offset; 
+        return this.offset;
       }
       set { this.offset = value; }
     }
@@ -746,7 +745,7 @@ namespace Microsoft.Cci {
           this.value = labelOffsets;
           return labelOffsets;
         }
-        return this.value;       
+        return this.value;
       }
     }
     internal object/*?*/ value;
