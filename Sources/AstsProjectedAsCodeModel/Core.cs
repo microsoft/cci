@@ -1308,6 +1308,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Create an expression that corresponds to the address of the parameter
+    /// </summary>
+    public virtual AddressOf GetAddressOf(Expression expr, ISourceLocation sourceLocation) {
+      return new AddressOf(new AddressableExpression(expr), sourceLocation);
+    }
+
+    /// <summary>
     /// If the type specifies a default member name, return a list of indexed properties with that name. If not, return an empty list.
     /// </summary>
     /// <param name="type">The type whose default indexed properties are wanted.</param>
@@ -1555,12 +1562,12 @@ namespace Microsoft.Cci.Ast {
 
 
     /// <summary>
-    /// 
+    /// Calls ImplicitConversionExists for its arguments and caches the result for subsequent invocations
+    ///
+    /// The purpose is to speed-up the mutiple type conversion checks that need to be performed during method
+    /// overloading resolution
     /// </summary>
-    /// <param name="expression"></param>
-    /// <param name="targetType"></param>
-    /// <returns></returns>
-    public virtual bool CachedImplicitConversionExists(Expression expression, ITypeDefinition targetType) {
+    private bool CachedImplicitConversionExists(Expression expression, ITypeDefinition targetType) {
       bool result;
       var pair = new Pair(expression, targetType.InternedKey);
       if (this.expressionConversionCache.TryGetValue(pair, out result)) {

@@ -1107,15 +1107,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="expr"></param>
-    /// <returns></returns>
-    protected virtual AddressableExpression CreateAddressableExpr(Expression expr) {
-      return new AddressableExpression(expr);
-    }
-
-    /// <summary>
     /// If the instance to be used with an instance field or the array.
     /// </summary>
     public Expression/*?*/ Instance {
@@ -1129,7 +1120,7 @@ namespace Microsoft.Cci.Ast {
           if (qualName != null) {
             this.instance = qualName.Instance;
             if (this.instance != null && this.instance.Type.IsValueType) {
-              this.instance = new AddressOf(this.CreateAddressableExpr(this.instance), this.instance.SourceLocation);
+              this.instance = this.Helper.GetAddressOf(this.instance, this.instance.SourceLocation);
               this.instance.SetContainingExpression(this);
             }
             return this.instance;
