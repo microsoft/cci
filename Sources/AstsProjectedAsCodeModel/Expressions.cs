@@ -1107,6 +1107,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Create and expression that represents the address of the instance
+    /// </summary>
+    protected virtual AddressOf GetAddressOfForInstance(Expression instance) {
+      return this.Helper.GetAddressOf(this.instance, this.instance.SourceLocation);
+    }
+
+    /// <summary>
     /// If the instance to be used with an instance field or the array.
     /// </summary>
     public Expression/*?*/ Instance {
@@ -1120,7 +1127,7 @@ namespace Microsoft.Cci.Ast {
           if (qualName != null) {
             this.instance = qualName.Instance;
             if (this.instance != null && this.instance.Type.IsValueType) {
-              this.instance = this.Helper.GetAddressOf(this.instance, this.instance.SourceLocation);
+              this.instance = this.GetAddressOfForInstance(this.instance);
               this.instance.SetContainingExpression(this);
             }
             return this.instance;
