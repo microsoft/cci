@@ -1230,7 +1230,7 @@ namespace Microsoft.Cci.Ast {
             ITypeDefinition parType = par.Type.ResolvedType;
             Expression arg = args.Current;
             if (lastParameter && par.IsParameterArray) {
-              if (!this.CachedImplicitConversionExists(arg, parType)) {
+              if (!this.ImplicitConversionExists(arg, parType)) {
                 convertedArg = this.GetParamArray(par, args); //an expression that collects the remaining arguments into a parameter array.
                 convertedArg.SetContainingExpression(arg);
                 convertedArgs.Add(convertedArg);
@@ -1557,27 +1557,6 @@ namespace Microsoft.Cci.Ast {
       #endregion
     }
 
-    Dictionary<Pair, bool> expressionConversionCache = new Dictionary<Pair, bool>();
-    DoubleHashtable<object> typeConversionCache = new DoubleHashtable<object>();
-
-
-    /// <summary>
-    /// Calls ImplicitConversionExists for its arguments and caches the result for subsequent invocations
-    ///
-    /// The purpose is to speed-up the mutiple type conversion checks that need to be performed during method
-    /// overloading resolution
-    /// </summary>
-    private bool CachedImplicitConversionExists(Expression expression, ITypeDefinition targetType) {
-      bool result;
-      var pair = new Pair(expression, targetType.InternedKey);
-      if (this.expressionConversionCache.TryGetValue(pair, out result)) {
-        return result;
-      }
-      result = this.ImplicitConversionExists(expression, targetType);
-      this.expressionConversionCache.Add(pair, result);
-      return result;
-    }
-
     /// <summary>
     /// Returns true if an implicit conversion is available to convert the value of the given expression to a corresponding value of the given target type.
     /// </summary>
@@ -1644,10 +1623,6 @@ namespace Microsoft.Cci.Ast {
     //^ [Pure]
     public virtual bool ImplicitConversionExists(ITypeDefinition sourceType, ITypeDefinition targetType) {
       if (TypeHelper.TypesAreEquivalent(targetType, this.PlatformType.SystemObject)) return true;
-
-      object cachedResult = this.typeConversionCache.Find(sourceType.InternedKey, targetType.InternedKey);
-      if (cachedResult != null) return (bool)cachedResult;
-
       bool result = false;
       ITypeDefinition sType = this.RemoveNullableWrapper(sourceType);
       ITypeDefinition tType = this.RemoveNullableWrapper(targetType);
@@ -1666,7 +1641,6 @@ namespace Microsoft.Cci.Ast {
             if (this.ImplicitUserDefinedConversionExists(sType, tType)) result = true;
           }
       }
-      this.typeConversionCache.Add(sourceType.InternedKey, targetType.InternedKey, result);
       return result;
     }
 
@@ -1676,8 +1650,8 @@ namespace Microsoft.Cci.Ast {
     //^ [Pure]
     protected virtual bool ImplicitConversionFromArgumentToType1isBetterThanImplicitConversionToType2(Expression argument, ITypeDefinition par1Type, ITypeDefinition par2Type) {
       if (TypeHelper.TypesAreEquivalent(par1Type, par2Type)) return false;
-      if (!this.CachedImplicitConversionExists(argument, par1Type)) return false;
-      if (!this.CachedImplicitConversionExists(argument, par2Type)) return true;
+      if (!this.ImplicitConversionExists(argument, par1Type)) return false;
+      if (!this.ImplicitConversionExists(argument, par2Type)) return true;
       bool t1tot2 = this.ImplicitConversionExists(par1Type, par2Type);
       bool t2tot1 = this.ImplicitConversionExists(par2Type, par1Type);
       if (t1tot2 && !t2tot1) return true;
@@ -2095,7 +2069,7 @@ namespace Microsoft.Cci.Ast {
           parType = mParam.Type.ResolvedType;
           if (mParam.IsParameterArray) {
             methodParamArrayElementType = mParam.ParamArrayElementType.ResolvedType;
-            if (!this.CachedImplicitConversionExists(argument, parType)) {
+            if (!this.ImplicitConversionExists(argument, parType)) {
               parType = methodParamArrayElementType;
             } else
               methodParamArrayElementType = Dummy.Type;
@@ -2108,7 +2082,7 @@ namespace Microsoft.Cci.Ast {
             return true;
           }
         }
-        if (!this.CachedImplicitConversionExists(argument, parType)) {
+        if (!this.ImplicitConversionExists(argument, parType)) {
           if (!allowTypeMismatch) return false;
         }
       }
@@ -2144,7 +2118,7 @@ namespace Microsoft.Cci.Ast {
           par1Type = m1Param.Type.ResolvedType;
           if (m1Param.IsParameterArray) {
             method1ParamArrayElementType = m1Param.ParamArrayElementType.ResolvedType;
-            if (!this.CachedImplicitConversionExists(argument, par1Type)) {
+            if (!this.ImplicitConversionExists(argument, par1Type)) {
               par1Type = method1ParamArrayElementType;
               method1MustBeExpanded = true;
             } else
@@ -2165,7 +2139,7 @@ namespace Microsoft.Cci.Ast {
           par2Type = m2Param.Type.ResolvedType;
           if (m2Param.IsParameterArray) {
             method2ParamArrayElementType = m2Param.ParamArrayElementType.ResolvedType;
-            if (!this.CachedImplicitConversionExists(argument, par2Type)) {
+            if (!this.ImplicitConversionExists(argument, par2Type)) {
               par2Type = method2ParamArrayElementType;
               method2MustBeExpanded = true;
             } else
@@ -2725,7 +2699,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     public virtual IMethodDefinition ResolveOverload(IEnumerable<IMethodDefinition> candidateMethods, IEnumerable<Expression> arguments, bool allowTypeMismatches) {
-      this.expressionConversionCache.Clear();
       IMethodDefinition bestSoFar = Dummy.Method;
       List<IMethodDefinition>/*?*/ ambiguousMatches = null;
       foreach (IMethodDefinition candidate in candidateMethods) {
