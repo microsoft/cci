@@ -126,5 +126,25 @@ namespace CodeModelTestInput {
         return "8";
       }
     }
+
+    void Method14() {
+      try {
+        return;
+      } catch (ApplicationException e) {
+        try {
+          int x = 4;
+          Console.WriteLine(x);
+          Console.WriteLine(e);
+          Console.WriteLine(e);
+        } catch (Exception e1) {
+          Console.WriteLine(e1);
+          return;
+        }
+        return;
+      } catch (Exception ex) {
+        Console.WriteLine(ex);
+        return;
+      }
+    }
   }
 }

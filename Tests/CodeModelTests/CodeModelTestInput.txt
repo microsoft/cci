@@ -139,6 +139,42 @@ namespace CodeModelTestInput
             }
         }
 
+        private void Method14()
+        {
+            try
+            {
+                goto IL_003a;
+            }
+            catch(System.ApplicationException e)
+            {
+                {
+                    int x;
+                    try
+                    {
+                        x = 4;
+                        System.Console.WriteLine(x);
+                        System.Console.WriteLine(e);
+                        System.Console.WriteLine(e);
+                        goto IL_002c;
+                    }
+                    catch(System.Exception e1)
+                    {
+                        System.Console.WriteLine(e1);
+                        goto IL_003a;
+                    }
+                IL_002c:
+                    goto IL_003a;
+                }
+            }
+            catch(System.Exception ex)
+            {
+                System.Console.WriteLine(ex);
+            }
+        IL_003a:
+            return;
+
+        }
+
         public void Method2()
         {
             byte[] local_11 = new byte[1];
