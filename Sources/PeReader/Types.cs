@@ -1990,15 +1990,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         MethodDefinition/*?*/ mm = tdm as MethodDefinition;
         if (mm == null)
           continue;
-        if (!TypeCache.CompareParameters(mm.RequiredModuleParameterInfos.RawArray, methodReference.RequiredModuleParameterInfos.RawArray))
+        if (mm.GenericParameterCount != methodReference.GenericParameterCount)
           continue;
         if (mm.ReturnType == null || methodReference.ReturnType == null)
           continue;
         if (mm.ReturnType.InternedKey != methodReference.ReturnType.InternedKey)
           continue;
+        if (mm.IsReturnByReference != methodReference.IsReturnByReference)
+          continue;
         if (!TypeCache.CompareCustomModifiers(mm.ReturnCustomModifiers, methodReference.ReturnCustomModifiers))
           continue;
-        if (mm.IsReturnByReference != methodReference.IsReturnByReference)
+        if (!TypeCache.CompareParameters(mm.RequiredModuleParameterInfos.RawArray, methodReference.RequiredModuleParameterInfos.RawArray))
           continue;
         return mm;
       }
