@@ -92,7 +92,6 @@ namespace CodeModelTestInput
                 }
                 catch(object )
                 {
-                    local_1 = "2";
                     local_1 = "3";
                     goto IL_007c;
                 }
@@ -121,14 +120,12 @@ namespace CodeModelTestInput
                 }
                 catch(object )
                 {
-                    local_1 = "6";
                     local_1 = "7";
                     goto IL_007c;
                 }
             }
             catch(object )
             {
-                local_1 = "7";
                 local_1 = "8";
             }
             {

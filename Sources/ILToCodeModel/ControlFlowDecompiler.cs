@@ -112,6 +112,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (bb.Statements.Count < 1) return result;
       ExpressionStatement es = bb.Statements[0] as ExpressionStatement;
       if (es == null) return result;
+      if (es.Expression is Pop) {
+        bb.Statements.RemoveAt(0);
+        return result;
+      }
       Assignment assign = es.Expression as Assignment;
       if (assign == null) return result;
       if (!(assign.Source is Pop)) return result;
