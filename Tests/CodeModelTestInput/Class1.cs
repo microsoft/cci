@@ -18,7 +18,7 @@ namespace CodeModelTestInput {
     }
 
     public void Method2() {
-      byte[] Bytes = new byte[] {byte.MaxValue };
+      byte[] Bytes = new byte[] { byte.MaxValue };
       ushort[] UShorts = new ushort[] { ushort.MaxValue };
       uint[] UInts = new uint[] { uint.MaxValue };
       ulong[] ULongs = new ulong[] { ulong.MaxValue };
@@ -26,8 +26,8 @@ namespace CodeModelTestInput {
       short[] Shorts = new short[] { short.MinValue };
       int[] Ints = new int[] { int.MinValue };
       long[] Longs = new long[] { long.MinValue };
-      char[] Chars = new char[] { 'a'};
-      bool[] Bools = new bool[] { true};
+      char[] Chars = new char[] { 'a' };
+      bool[] Bools = new bool[] { true };
       decimal[] Decimals = new decimal[] { 1.1m };
     }
 
@@ -99,6 +99,32 @@ namespace CodeModelTestInput {
           return true;
       }
       return false;
+    }
+
+    int c;
+    string Method13() {
+      try {
+        switch (c) {
+          case 0: return "1";
+          case 1: try {
+              return "2";
+            } catch {
+              return ("3");
+            }
+          default: int x = 0;
+            try {
+              switch (x + c) {
+                case 0: return "4";
+                case 1: return "5";
+                default: return "6";
+              }
+            } catch {
+              return "7";
+            }
+        }
+      } catch {
+        return "8";
+      }
     }
   }
 }

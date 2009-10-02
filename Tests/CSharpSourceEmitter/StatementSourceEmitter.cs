@@ -183,7 +183,7 @@ namespace CSharpSourceEmitter {
 
     public override void Visit(ISwitchCase switchCase) {
       if (switchCase.IsDefault)
-        this.sourceEmitterOutput.WriteLine("default:");
+        this.sourceEmitterOutput.WriteLine("default:", true);
       else {
         this.sourceEmitterOutput.Write("case ", true);
         this.Visit(switchCase.Expression);

@@ -29,6 +29,12 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void Visit(BasicBlock b) {
+      for (int i = 0; i < b.Statements.Count; i++) {
+        if (DecompileIfThenElseStatement(b.Statements, i)) continue;
+        this.DecompileIfThenStatement(b.Statements, i);
+        this.DecompileIfThenStatement2(b.Statements, i);
+        this.DecompileSwitch(b.Statements, i);
+      }
       if (b.NumberOfTryBlocksStartingHere > 0) {
         BasicBlock firstHandler = null;
         TryCatchFinallyStatement/*?*/ tryStatement = new TryCatchFinallyStatement();
@@ -49,13 +55,17 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         tryStatement.TryBody = this.GetBasicBlockUpto(b, firstHandler.StartOffset);
-        b.Statements.Insert(0, tryStatement);
-      }
-      for (int i = 0; i < b.Statements.Count; i++) {
-        if (DecompileIfThenElseStatement(b.Statements, i)) continue;
-        this.DecompileIfThenStatement(b.Statements, i);
-        this.DecompileIfThenStatement2(b.Statements, i);
-        this.DecompileSwitch(b.Statements, i);
+        BasicBlock tryBody = tryStatement.TryBody as BasicBlock;
+        int startPoint =0;
+        if (tryBody != null && tryBody.Statements.Count >0) {
+          ILabeledStatement labeledStatement = tryBody.Statements[0] as ILabeledStatement;
+          if (labeledStatement != null) {
+            tryBody.Statements.RemoveAt(0);
+            b.Statements.Insert(startPoint, labeledStatement);
+            startPoint++;
+          }
+        }
+        b.Statements.Insert(startPoint, tryStatement);
       }
     }
 
@@ -234,7 +244,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       SwitchStatement result = new SwitchStatement();
       result.Expression = switchInstruction.switchExpression;
       statements[i] = result;
-      statements.RemoveAt(i+1);
+      // statements.RemoveAt(i+1);
       for (int j = 0, n = switchInstruction.switchCases.Count; j < n; j++) {
         CompileTimeConstant caseLabel = new CompileTimeConstant() { Value = j, Type = this.platformType.SystemInt32 };
         BasicBlock currentCaseBody = switchInstruction.switchCases[j];
@@ -243,6 +253,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (j < n-1 && currentCaseBody == switchInstruction.switchCases[j+1]) continue;
         ExtractCaseBody(currentCaseBody, currentCase.Body);
       }
+      SwitchCase defaultCase = new SwitchCase() { }; // Default case is represented by a dummy Expression.
+      defaultCase.Body.Add(statements[i + 1]);
+      statements.RemoveAt(i + 1);
+      result.Cases.Add(defaultCase);
     }
 
     private static void ExtractCaseBody(BasicBlock caseBody, List<IStatement> caseStatements) {

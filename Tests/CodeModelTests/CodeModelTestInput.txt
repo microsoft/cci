@@ -2,6 +2,8 @@ namespace CodeModelTestInput
 {
     public class Class1
     {
+        private int c;
+
         public  Class1()
         {
             this.object();
@@ -48,6 +50,8 @@ namespace CodeModelTestInput
                 case 2:
                 case 3:
                     goto IL_0021;
+                default:
+                    goto IL_0025;
             }
         IL_001d:
             bool local_0 = 0;
@@ -55,10 +59,84 @@ namespace CodeModelTestInput
         IL_0021:
             local_0 = 1;
             goto IL_0029;
+        IL_0025:
             local_0 = 0;
         IL_0029:
             return local_0;
 
+        }
+
+        private string Method13()
+        {
+            string local_1;
+            int local_2;
+            try
+            {
+                local_2 = this.c;
+                switch(local_2){
+                    case 0:
+                        goto IL_0019;
+                    case 1:
+                        goto IL_0021;
+                    default:
+                        goto IL_0034;
+                }
+            IL_0019:
+                local_1 = "1";
+                goto IL_007c;
+            IL_0021:
+                try
+                {
+                    local_1 = "2";
+                    goto IL_007c;
+                }
+                catch(object )
+                {
+                    local_1 = "2";
+                    local_1 = "3";
+                    goto IL_007c;
+                }
+            IL_0034:
+                x = 0;
+                try
+                {
+                    local_2 = (x + this.c);
+                    switch(local_2){
+                        case 0:
+                            goto IL_0050;
+                        case 1:
+                            goto IL_0058;
+                        default:
+                            goto IL_0060;
+                    }
+                IL_0050:
+                    local_1 = "4";
+                    goto IL_007c;
+                IL_0058:
+                    local_1 = "5";
+                    goto IL_007c;
+                IL_0060:
+                    local_1 = "6";
+                    goto IL_007c;
+                }
+                catch(object )
+                {
+                    local_1 = "6";
+                    local_1 = "7";
+                    goto IL_007c;
+                }
+            }
+            catch(object )
+            {
+                local_1 = "7";
+                local_1 = "8";
+            }
+            {
+                int x;
+            IL_007c:
+                return local_1;
+
+            }
         }
 
         public void Method2()
