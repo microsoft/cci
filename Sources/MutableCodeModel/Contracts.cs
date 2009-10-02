@@ -516,7 +516,7 @@ namespace Microsoft.Cci.Contracts {
       this.exceptionType = Dummy.TypeReference;
       this.postcondition = ContractDummy.Postcondition;
     }
-    
+
     /// <summary>
     /// 
     /// </summary>

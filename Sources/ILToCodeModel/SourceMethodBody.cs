@@ -14,7 +14,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// A metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
   /// </summary>
-  public sealed class SourceMethodBody : ISourceMethodBody {
+  public class SourceMethodBody : ISourceMethodBody {
 
     internal readonly ContractProvider/*?*/ contractProvider;
     internal readonly IMetadataHost host;
@@ -27,7 +27,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     bool sawTailCall;
     bool sawVolatile;
     byte alignment;
-    bool contractsOnly;
+    /// <summary>
+    /// whether the decompilation only produces contracts.
+    /// </summary>
+    protected readonly bool contractsOnly;
     internal ContractExtractor/*?*/ contractExtractor; // invariant: !contractsOnly || contractExtractor != null
 
     /// <summary>
@@ -294,7 +297,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       return -1; // not found
     }
 
-    private IBlockStatement Transform(BasicBlock rootBlock) {
+    /// <summary>
+    /// Perform different phases approppriate for normal, movenext, or iterator source method bodies.
+    /// </summary>
+    /// <param name="rootBlock"></param>
+    /// <returns></returns>
+    protected virtual IBlockStatement Transform(BasicBlock rootBlock) {
       new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
@@ -304,7 +312,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new DeclarationAdder().Visit(rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
       IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(result);
       if (this.contractProvider != null) {
         if (this.contractExtractor == null) {
           this.contractExtractor = new ContractExtractor(this, this.contractProvider);
@@ -332,7 +340,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private BasicBlock GetOrCreateBlock(uint offset, bool addLabel) {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="offset"></param>
+    /// <param name="addLabel"></param>
+    /// <returns></returns>
+    protected BasicBlock GetOrCreateBlock(uint offset, bool addLabel) {
       BasicBlock result;
       if (!this.blockFor.TryGetValue(offset, out result)) {
         result = new BasicBlock(offset);
@@ -1415,9 +1429,198 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private Dictionary<uint, LabeledStatement> targetStatementFor = new Dictionary<uint, LabeledStatement>();
-    private Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors = new Dictionary<ILabeledStatement, List<IGotoStatement>>();
-
-
+    /// <summary>
+    /// 
+    /// </summary>
+    protected Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors = new Dictionary<ILabeledStatement, List<IGotoStatement>>();
   }
 
+  /// <summary>
+  /// A metadata (IL) representation along with a source level representation of the body of an iterator method/property.
+  /// </summary>
+  public class IteratorSourceMethodBody : SourceMethodBody {
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of an iterator method/property/event accessor.
+    /// </summary>
+    /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
+    public IteratorSourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader)
+      : base(ilMethodBody, host, contractProvider, pdbReader) {
+    }
+
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of an iterator method/property-event accessor.
+    /// </summary>
+    /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
+    /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
+    /// embedded in the given method body.</param>
+    public IteratorSourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly)
+      : base(ilMethodBody, host, contractProvider, pdbReader, contractsOnly) {
+    }
+
+    /// <summary>
+    /// Get the decompiled body from decompilation of the corresponding MoveNext method. 
+    /// </summary>
+    /// <param name="rootBlock"></param>
+    /// <returns></returns>
+    protected override IBlockStatement Transform(BasicBlock rootBlock) {
+      IBlockStatement/*!*/ iteratorBodyFromIL = base.Transform(rootBlock);
+      IMethodBody moveNextILBody = this.FindClosureMoveNext(iteratorBodyFromIL);
+      if (moveNextILBody.Equals(Dummy.MethodBody)) return iteratorBodyFromIL;
+      MoveNextSourceMethodBody moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader, this.contractsOnly);
+      return moveNextBody.TransformedBlock;
+    }
+
+    /// <summary>
+    /// For an iterator method, finds the closure class' MoveNext method and returns its body.
+    /// </summary>
+    /// <param name="iteratorIL">The body of the iterator method, decompiled from the ILs of the iterator body.</param>
+    /// <returns></returns>
+    IMethodBody FindClosureMoveNext(IBlockStatement/*!*/ iteratorIL) {
+      foreach (var statement in iteratorIL.Statements) {
+        IExpressionStatement expressionStatement = statement as IExpressionStatement;
+        if (expressionStatement == null) continue;
+        IAssignment assignment = expressionStatement.Expression as IAssignment;
+        if (assignment == null) continue;
+        ICreateObjectInstance createObjectInstance = assignment.Source as ICreateObjectInstance;
+        if (createObjectInstance == null) continue;
+        INestedTypeReference closureType/*?*/ = createObjectInstance.MethodToCall.ContainingType as INestedTypeReference;
+        if (closureType == null) {
+          IGenericTypeInstanceReference/*?*/ genericClosureType = createObjectInstance.MethodToCall.ContainingType as IGenericTypeInstanceReference;
+          if (genericClosureType != null) {
+            closureType = genericClosureType.GenericType as INestedTypeReference;
+          }
+        }
+        ITypeDefinition/*!*/ closureContainingTypeDefinition = closureType.ContainingType.ResolvedType;
+        IGenericTypeInstance/*?*/ closureContainingTypeAsGenericInstance = closureContainingTypeDefinition as IGenericTypeInstance;
+        if (closureContainingTypeAsGenericInstance != null) {
+          closureContainingTypeDefinition = closureContainingTypeAsGenericInstance.GenericType.ResolvedType;
+        }
+        ITypeDefinition unspecializedClosureType = GetUnspecializedTypeDefinition(closureType);
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, closureContainingTypeDefinition)
+          && AttributeHelper.Contains(unspecializedClosureType.Attributes, closureType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) {
+          IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
+          foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
+            IMethodDefinition moveNext = member as IMethodDefinition;
+            if (moveNext != null) {
+              ISpecializedMethodDefinition moveNextGeneric = moveNext as ISpecializedMethodDefinition;
+              if (moveNextGeneric != null)
+                moveNext = moveNextGeneric.UnspecializedVersion.ResolvedMethod;
+              return moveNext.Body;
+            }
+          }
+        }
+      }
+      return Dummy.MethodBody;
+    }
+
+    private ITypeDefinition GetUnspecializedTypeDefinition(ITypeReference typeReference) {
+      ISpecializedNestedTypeReference specializedNested = typeReference as ISpecializedNestedTypeReference;
+      if (specializedNested != null)
+        return specializedNested.UnspecializedVersion.ResolvedType;
+      IGenericTypeInstanceReference instanceTypeReference = typeReference as IGenericTypeInstanceReference;
+      if (instanceTypeReference != null)
+        return instanceTypeReference.GenericType.ResolvedType;
+      return typeReference.ResolvedType;
+    }
+  }
+
+  /// <summary>
+  /// A metadata (IL) representation along with a source level representation of the body of an iterator method/property.
+  /// </summary>
+  public class MoveNextSourceMethodBody : SourceMethodBody {
+
+    /// <summary>
+    /// The method body of the original iterator method. 
+    /// </summary>
+    internal IMethodBody iteratorMethodBody;
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of an iterator method/property/event accessor.
+    /// </summary>
+    /// <param name="iteratorMethodBody"> The method body of the iterator method, to which this MoveNextSourceMethodBody corresponds.</param>
+    /// <param name="ilMethodBody">The method body of MoveNext whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body. More importantly, the decompiled body for the original iterator method 
+    /// is accessed by the TransformedBlock property.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader)
+      : base(ilMethodBody, host, contractProvider, pdbReader) {
+      this.iteratorMethodBody = iteratorMethodBody;
+    }
+
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of an iterator method/property-event accessor.
+    /// </summary>
+    /// <param name="iteratorMethodBody"> The method body of the iterator method, to which this MoveNextSourceMethodBody corresponds.</param>
+    /// <param name="ilMethodBody">The method body of MoveNext whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body. More importantly, the decompiled body for the original iterator method 
+    /// is accessed by the TransformedBlock property.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
+    /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
+    /// embedded in the given method body.</param>
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly)
+      : base(ilMethodBody, host, contractProvider, pdbReader, contractsOnly) {
+      this.iteratorMethodBody = iteratorMethodBody;
+    }
+
+    /// <summary>
+    /// Decompile the method body of the MoveNext, the results of which may be decompiled to and duplicated as the iterator method body.
+    /// </summary>
+    /// <param name="rootBlock">The root block of </param>
+    /// <returns></returns>
+    protected override IBlockStatement Transform(BasicBlock rootBlock) {
+      new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
+      new RemoveBranchConditionLocals(this).Visit(rootBlock);
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
+      new Unstacker(this).Visit(rootBlock);
+      new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
+      new BlockRemover().Visit(rootBlock);
+      new DeclarationAdder().Visit(rootBlock);
+      new EmptyStatementRemover().Visit(rootBlock);
+      IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
+      result = new AssertAssumeExtractor(this).Visit(result);
+      return result;
+    }
+
+    /// <summary>
+    /// Computes the method body of the iterator method of which the defining class of this MoveNext method is a closure class.
+    /// </summary>
+    public IBlockStatement TransformedBlock {
+      // TODO: check for the conditions that we have assumed, such as there must be a switch statement, and return a dummy
+      // if such conditions are not satisfied. 
+      get {
+        IBlockStatement block = this.Block;
+        block = DecompileMoveNext(block);
+        BasicBlock rootBlock = GetOrCreateBlock(0, false);
+        block = DuplicateMoveNextForIteratorMethod(rootBlock);
+        new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
+        return block;
+      }
+    }
+
+    private IBlockStatement DecompileMoveNext(IBlockStatement block) {
+      return new MoveNextDecompiler(this).Decompile(block);
+    }
+    private IBlockStatement DuplicateMoveNextForIteratorMethod(BlockStatement rootBlock) {
+      return new DecompiledMoveNextBlock(iteratorMethodBody.MethodDefinition, this.ilMethodBody.MethodDefinition, rootBlock, this).TransformedBlock;
+    }
+  }
 }

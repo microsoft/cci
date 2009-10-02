@@ -7,7 +7,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
-  internal class AssertAssumeExtractor : CodeMutator {
+  internal class AssertAssumeExtractor : MethodBodyMutator {
 
     SourceMethodBody sourceMethodBody;
 

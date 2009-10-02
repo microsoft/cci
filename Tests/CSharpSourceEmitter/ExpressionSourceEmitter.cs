@@ -227,8 +227,16 @@ namespace CSharpSourceEmitter {
       }
     }
 
-    public override void Visit(ICreateDelegateInstance createDelegateInstance) {
-      base.Visit(createDelegateInstance);
+    public override void Visit(ICreateDelegateInstance/*!*/ createDelegateInstance) {
+      if (createDelegateInstance.Instance != null) {
+        ICompileTimeConstant constant = createDelegateInstance.Instance as ICompileTimeConstant;
+        if (constant == null || constant.Value != null) {
+          this.Visit(createDelegateInstance.Instance);
+          this.PrintToken(CSharpToken.Dot);
+        }
+      }
+      this.PrintMethodDefinitionName(createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod);
+      //base.Visit(createDelegateInstance);
     }
 
     public override void Visit(ICreateObjectInstance createObjectInstance) {

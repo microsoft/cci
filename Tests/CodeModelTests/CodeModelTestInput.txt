@@ -312,5 +312,397 @@ namespace CodeModelTestInput
 
     }
 
+    public class Class2
+    {
+        public  Class2()
+        {
+            this.object();
+            return;
+
+        }
+
+        public class A : CodeModelTestInput.Class2.IIncrementable<CodeModelTestInput.Class2.A>
+        {
+            private string s;
+
+            public  A(string s)
+            {
+                this.object();
+                this.s = s;
+                return;
+
+            }
+
+            public new sealed virtual CodeModelTestInput.Class2.A IncrementBy(int i)
+            {
+                return this;
+
+            }
+
+            public new sealed virtual int Value()
+            {
+                return this.s.Length.get();
+
+            }
+
+        }
+
+        public abstract interface IIncrementable<T>
+        {
+            public abstract new T IncrementBy(int i)
+            {
+            }
+
+            public abstract new int Value()
+            {
+            }
+
+        }
+
+        public class Test2
+        {
+            private static System.Predicate<string> CS$<>9__CachedAnonymousMethodDelegate1;
+            private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate1c;
+
+            public  Test2()
+            {
+                this.object();
+                return;
+
+            }
+
+            private static bool <Test1a>b__0(string s1)
+            {
+                return ((s1 == null) == 0);
+
+            }
+
+            private static bool <Test1d>b__b<T>(T s1)
+            {
+                return ((s1 == null) == 0);
+
+            }
+
+            private static bool <Test1d>b__c<T>(T s1)
+            {
+                return ((s1 == null) == 0);
+
+            }
+
+            private static bool <Test1e>b__13<T>(T s)
+            {
+                return ((s == null) == 0);
+
+            }
+
+            private static bool <Test1f>b__1b(int y)
+            {
+                return (y > 0);
+
+            }
+
+            private bool foo(object y, object x)
+            {
+                return (y == x);
+
+            }
+
+            public System.Collections.Generic.IEnumerable<string> Test1a(string s)
+            {
+                Microsoft.Contracts.Contract.Requires(((s == null) == 0));
+                Microsoft.Contracts.Contract.Ensures(((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>() == null) == 0));
+                __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>();
+                if (CS$<>9__CachedAnonymousMethodDelegate1)
+                    goto IL_0067;
+                CS$<>9__CachedAnonymousMethodDelegate1 = <Test1a>b__0;
+            IL_0067:
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<string>(__temp_2, CS$<>9__CachedAnonymousMethodDelegate1));
+"hello"                bool local_0 = 1;
+            IL_008d:
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1c<T>(T t, System.Collections.Generic.IEnumerable<T> ts)
+            {
+                CodeModelTestInput.Class2.Test2.<>c__DisplayClass6<T> CS$<>8__locals7;
+                T local_2;
+            IL_001c:
+                goto IL_0023;
+            IL_0023:
+                CS$<>8__locals7 = new CodeModelTestInput.Class2.Test2.<>c__DisplayClass6<T>();
+                CS$<>8__locals7.t = t;
+                __temp_4 = t;
+                local_2 = default(T);
+                if (__temp_4.Equals(local_2))
+                {
+                    throw new System.ArgumentException("");
+                }
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(ts, CS$<>8__locals7.<Test1c>b__5));
+CS$<>8__locals7.t                bool local_0 = 1;
+            IL_00bb:
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1d<T>(System.Collections.Generic.IEnumerable<T> input)
+            {
+                System.Collections.Generic.IEnumerator<T> <>7__wrapf;
+                T <t>5__e;
+                bool local_0;
+            IL_0020:
+                goto IL_0027;
+            IL_0027:
+                Microsoft.Contracts.Contract.Requires(((input == null) == 0));
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, <Test1d>b__b));
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), <Test1d>b__c));
+                <>7__wrapf = input.GetEnumerator();
+                goto IL_00c4;
+            IL_0095:
+                <t>5__e = <>7__wrapf.Current.get();
+<t>5__e            IL_00bd:
+            IL_00c4:
+                if (<>7__wrapf.MoveNext())
+                {
+                    goto IL_0095;
+                }
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1e<T>(System.Collections.Generic.IEnumerable<T> input)
+            {
+                System.Collections.Generic.IEnumerator<T> <>7__wrap16;
+                T <t>5__15;
+                bool local_0;
+            IL_001d:
+                goto IL_0024;
+            IL_0024:
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, <Test1e>b__13));
+                <>7__wrap16 = input.GetEnumerator();
+                goto IL_0095;
+            IL_0064:
+                <t>5__15 = <>7__wrap16.Current.get();
+<t>5__15            IL_008d:
+            IL_0095:
+                if (<>7__wrap16.MoveNext())
+                {
+                    goto IL_0064;
+                }
+            }
+
+            public System.Collections.Generic.IEnumerable<int> Test1f(System.Collections.Generic.IEnumerable<int> inputArray, int max)
+            {
+                System.Collections.Generic.IEnumerator<int> <>7__wrap21;
+                CodeModelTestInput.Class2.Test2.<>c__DisplayClass1d CS$<>8__locals1e;
+                int <i>5__20;
+                bool local_0;
+            IL_0020:
+                goto IL_0027;
+            IL_0027:
+                CS$<>8__locals1e = new CodeModelTestInput.Class2.Test2.<>c__DisplayClass1d();
+                CS$<>8__locals1e.max = max;
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<int>(inputArray, CS$<>8__locals1e.<Test1f>b__1a));
+                __temp_3 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<int>>();
+                if (CS$<>9__CachedAnonymousMethodDelegate1c)
+                    goto IL_008c;
+                CS$<>9__CachedAnonymousMethodDelegate1c = <Test1f>b__1b;
+            IL_008c:
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<int>(__temp_3, CS$<>9__CachedAnonymousMethodDelegate1c));
+                <>7__wrap21 = inputArray.GetEnumerator();
+                goto IL_00f6;
+            IL_00b7:
+                <i>5__20 = <>7__wrap21.Current.get();
+((CS$<>8__locals1e.max - <i>5__20) - 1)            IL_00ee:
+            IL_00f6:
+                if (<>7__wrap21.MoveNext())
+                {
+                    goto IL_00b7;
+                }
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1g<T>(System.Collections.Generic.IEnumerable<T> ts, T x)
+            {
+                CodeModelTestInput.Class2.Test2.<>c__DisplayClass26<T> CS$<>8__locals27;
+                CS$<>8__locals27 = new CodeModelTestInput.Class2.Test2.<>c__DisplayClass26<T>();
+                CS$<>8__locals27.x = x;
+                CS$<>8__locals27.<>4__this = this;
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(ts, CS$<>8__locals27.<Test1g>b__25));
+CS$<>8__locals27.x                bool local_0 = 1;
+            IL_0090:
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1h<T>(System.Collections.Generic.IEnumerable<T> input, int x, int y)
+            {
+                System.Collections.Generic.IEnumerator<T> <>7__wrap31;
+                CodeModelTestInput.Class2.Test2.<>c__DisplayClass2d<T> CS$<>8__locals2e;
+                T <t>5__30;
+                bool local_0;
+                T local_2;
+            IL_0020:
+                goto IL_0027;
+            IL_0027:
+                CS$<>8__locals2e = new CodeModelTestInput.Class2.Test2.<>c__DisplayClass2d<T>();
+                CS$<>8__locals2e.x = x;
+                CS$<>8__locals2e.y = y;
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, CS$<>8__locals2e.<Test1h>b__2b));
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), CS$<>8__locals2e.<Test1h>b__2c));
+                <>7__wrap31 = input.GetEnumerator();
+                goto IL_0104;
+            IL_00ba:
+                <t>5__30 = <>7__wrap31.Current.get();
+                __temp_4 = this;
+                local_2 = <t>5__30;
+local_2.IncrementBy(CS$<>8__locals2e.y)            IL_00fc:
+            IL_0104:
+                if (<>7__wrap31.MoveNext())
+                {
+                    goto IL_00ba;
+                }
+            }
+
+        }
+
+        public class Test3<T>
+        {
+            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate36;
+            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate3f;
+            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate40;
+            private T tfield;
+
+            public T TField
+            {
+                get;
+            }
+
+
+            public  Test3(T t)
+            {
+                this.object();
+                this.tfield = t;
+                return;
+
+            }
+
+            private static bool <Test1a>b__35(T s1)
+            {
+                return ((s1 == null) == 0);
+
+            }
+
+            private static bool <Test1d>b__3d(T s1)
+            {
+                return ((s1 == null) == 0);
+
+            }
+
+            private static bool <Test1d>b__3e(T s1)
+            {
+                return ((s1 == null) == 0);
+
+            }
+
+            private bool foo<S>(CodeModelTestInput.Class2.IIncrementable<S> y, T x)
+            {
+                return (y.Value() == x.Value());
+
+            }
+
+            public T get_TField()
+            {
+                return this.tfield;
+
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1a(T t)
+            {
+                Microsoft.Contracts.Contract.Requires(((t == null) == 0));
+                Microsoft.Contracts.Contract.Ensures(((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>() == null) == 0));
+                __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
+                if (CS$<>9__CachedAnonymousMethodDelegate36)
+                    goto IL_006c;
+                CS$<>9__CachedAnonymousMethodDelegate36 = <Test1a>b__35;
+            IL_006c:
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_2, CS$<>9__CachedAnonymousMethodDelegate36));
+t                bool local_0 = 1;
+            IL_0093:
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1b(T s)
+            {
+                if ((s == null))
+                {
+                    throw new System.ArgumentException("");
+                }
+s                bool local_0 = 1;
+            IL_005c:
+            }
+
+            public System.Collections.Generic.IEnumerable<T> Test1d(System.Collections.Generic.IEnumerable<T> input)
+            {
+                System.Collections.Generic.IEnumerator<T> <>7__wrap43;
+                T <t>5__42;
+                bool local_0;
+            IL_0020:
+                goto IL_0027;
+            IL_0027:
+                Microsoft.Contracts.Contract.Requires(((input == null) == 0));
+                __temp_3 = input;
+                if (CS$<>9__CachedAnonymousMethodDelegate3f)
+                    goto IL_0061;
+                CS$<>9__CachedAnonymousMethodDelegate3f = <Test1d>b__3d;
+            IL_0061:
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(__temp_3, CS$<>9__CachedAnonymousMethodDelegate3f));
+                __temp_4 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
+                if (CS$<>9__CachedAnonymousMethodDelegate40)
+                    goto IL_0090;
+                CS$<>9__CachedAnonymousMethodDelegate40 = <Test1d>b__3e;
+            IL_0090:
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_4, CS$<>9__CachedAnonymousMethodDelegate40));
+                <>7__wrap43 = input.GetEnumerator();
+                goto IL_00ea;
+            IL_00bb:
+                <t>5__42 = <>7__wrap43.Current.get();
+<t>5__42            IL_00e3:
+            IL_00ea:
+                if (<>7__wrap43.MoveNext())
+                {
+                    goto IL_00bb;
+                }
+            }
+
+            public System.Collections.Generic.IEnumerable<T1> Test1e<T1>(System.Collections.Generic.IEnumerable<T> input, T1 t)
+            {
+                CodeModelTestInput.Class2.Test3<T>.<>c__DisplayClass48<T1> CS$<>8__locals49;
+                CS$<>8__locals49 = new CodeModelTestInput.Class2.Test3<T>.<>c__DisplayClass48<T1>();
+                CS$<>8__locals49.t = t;
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, CS$<>8__locals49.<Test1e>b__47));
+CS$<>8__locals49.t                bool local_0 = 1;
+            IL_007f:
+            }
+
+            public System.Collections.Generic.IEnumerable<T1> Test1g<T1>(System.Collections.Generic.IEnumerable<T1> ts, T x)
+            {
+                System.Collections.Generic.IEnumerator<T1> <>7__wrap52;
+                CodeModelTestInput.Class2.Test3<T>.<>c__DisplayClass4e<T1> CS$<>8__locals4f;
+                T1 <t1>5__51;
+                bool local_0;
+            IL_0020:
+                goto IL_0027;
+            IL_0027:
+                CS$<>8__locals4f = new CodeModelTestInput.Class2.Test3<T>.<>c__DisplayClass4e<T1>();
+                CS$<>8__locals4f.x = x;
+                CS$<>8__locals4f.<>4__this = this;
+                Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T1>(ts, CS$<>8__locals4f.<Test1g>b__4d));
+                <>7__wrap52 = ts.GetEnumerator();
+                goto IL_00c8;
+            IL_0099:
+                <t1>5__51 = <>7__wrap52.Current.get();
+<t1>5__51            IL_00c1:
+            IL_00c8:
+                if (<>7__wrap52.MoveNext())
+                {
+                    goto IL_0099;
+                }
+            }
+
+        }
+
+    }
+
 }
 

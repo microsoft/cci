@@ -16,7 +16,7 @@ namespace PeToText {
   public class SourceEmitter : CSharpSourceEmitter.SourceEmitter {
 
     public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool noIL)
-      : base (sourceEmitterOutput){
+      : base(sourceEmitterOutput) {
       this.host = host;
       this.contractProvider = contractProvider;
       this.pdbReader = pdbReader;
@@ -47,8 +47,24 @@ namespace PeToText {
       PrintToken(CSharpToken.LeftCurly);
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody == null)
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.contractProvider, this.pdbReader);
+      if (sourceMethodBody == null) {
+        bool isIterator = false;
+        if (methodBody.MethodDefinition.Type.ResolvedType.IsInterface) {
+          string name = TypeHelper.GetTypeName(methodBody.MethodDefinition.Type.ResolvedType);
+          if (name.Contains("IEnumerable")) isIterator = true;
+        } else {
+          foreach (var interf in methodBody.MethodDefinition.Type.ResolvedType.InstanceType.ResolvedType.Interfaces) {
+            string name = TypeHelper.GetTypeName(interf);
+            if (name.Contains("IEnumerable")) {
+              isIterator = true; break;
+            }
+          }
+        }
+        if (isIterator)
+          sourceMethodBody = new IteratorSourceMethodBody(methodBody, host, contractProvider, pdbReader);
+        else
+          sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.contractProvider, this.pdbReader);
+      }
       if (this.noIL)
         this.Visit(sourceMethodBody.Block.Statements);
       else {

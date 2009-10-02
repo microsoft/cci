@@ -63,6 +63,8 @@ namespace CSharpSourceEmitter {
     ULong,
     UShort,
     Virtual,
+    YieldBreak,
+    YieldReturn,
   }
 
   public partial class SourceEmitter : ICSharpSourceEmitter {
@@ -288,7 +290,12 @@ namespace CSharpSourceEmitter {
         case CSharpToken.Try:
           sourceEmitterOutput.Write("try");
           break;
-
+        case CSharpToken.YieldReturn:
+          sourceEmitterOutput.Write("yield return");
+          break;
+        case CSharpToken.YieldBreak:
+          sourceEmitterOutput.Write("yield break");
+          break;
         default:
           sourceEmitterOutput.Write("Unknown-token");
           break;

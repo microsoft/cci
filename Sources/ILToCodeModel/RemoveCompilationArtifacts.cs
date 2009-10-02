@@ -8,11 +8,10 @@ using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class CompilationArtifactRemover : CodeMutator {
+  internal class CompilationArtifactRemover : MethodBodyMutator {
 
     internal CompilationArtifactRemover(SourceMethodBody sourceMethodBody)
-      : base(sourceMethodBody.host, true)
-    {
+      : base(sourceMethodBody.host, true) {
       this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
       this.sourceMethodBody = sourceMethodBody;
     }
@@ -120,7 +119,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
       if (parameter != null) {
         IParameterDefinition parToSubstitute;
-        if (this.parameterMap.TryGetValue(parameter, out parToSubstitute)){
+        if (this.parameterMap.TryGetValue(parameter, out parToSubstitute)) {
           boundExpression.Definition = parToSubstitute;
           return boundExpression;
         }
@@ -135,7 +134,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       CompileTimeConstant/*?*/ cc = createDelegateInstance.Instance as CompileTimeConstant;
       if (cc != null && cc.Value == null && 
         TypeHelper.TypesAreEquivalent(createDelegateInstance.MethodToCallViaDelegate.ContainingType, this.containingType) &&
-        AttributeHelper.Contains(createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod.Attributes, 
+        AttributeHelper.Contains(createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod.Attributes,
           this.containingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return ConvertToAnonymousDelegate(createDelegateInstance);
       return base.Visit(createDelegateInstance);
@@ -203,7 +202,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!this.sourceMethodBody.numberOfAssignments.TryGetValue(local, out numberOfAssignments) || numberOfAssignments > 1)
         return localDeclarationStatement;
       int numReferences = 0;
-      if (!this.sourceMethodBody.numberOfReferences.TryGetValue(local, out numReferences) || numReferences > 1) 
+      if (!this.sourceMethodBody.numberOfReferences.TryGetValue(local, out numReferences) || numReferences > 1)
         return localDeclarationStatement;
       if (this.sourceMethodBody.pdbReader != null) {
         bool isCompilerGenerated = false;
@@ -219,10 +218,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (logicalNot.Type == Dummy.TypeReference)
         return InvertCondition(this.Visit(logicalNot.Operand));
       else if (logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Int32)
-        return new Equality() { 
-          LeftOperand = logicalNot.Operand, 
-          RightOperand = new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 }, 
-          Type = this.host.PlatformType.SystemBoolean 
+        return new Equality() {
+          LeftOperand = logicalNot.Operand,
+          RightOperand = new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 },
+          Type = this.host.PlatformType.SystemBoolean
         };
       else
         return base.Visit(logicalNot);

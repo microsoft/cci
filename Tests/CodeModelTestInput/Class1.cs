@@ -147,4 +147,113 @@ namespace CodeModelTestInput {
       }
     }
   }
+
+  public class Class2 {
+    public interface IIncrementable<T> {
+      T IncrementBy(int i);
+      int Value();
+    }
+    public class A : IIncrementable<A> {
+      public A(string s) {
+        this.s = s;
+      }
+      string s;
+      public int Value() {
+        return s.Length;
+      }
+      public A IncrementBy(int i) {
+        return this;
+      }
+    }
+    public class Test2 {
+      public IEnumerable<string> Test1a(string s) {
+        Contract.Requires(s != null);
+        Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<string>>(), (string s1) => s1 != null));
+        yield return "hello";
+      }
+      public IEnumerable<T> Test1c<T>(T t, IEnumerable<T> ts) {
+        if (t.Equals(default(T))) throw new ArgumentException("");
+        Contract.Requires(Contract.ForAll(ts, (T t1) => t1.Equals(t)));
+        yield return t;
+      }
+      public IEnumerable<T> Test1d<T>(IEnumerable<T> input) {
+        Contract.Requires(input != null);
+        Contract.Requires(Contract.ForAll(input, (T s1) => s1 != null));
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), (T s1) => s1 != null));
+        foreach (T t in input)
+          yield return t;
+      }
+      public IEnumerable<T> Test1e<T>(IEnumerable<T> input) {
+        Contract.Requires(Contract.ForAll(input, (T s) => s != null));
+        foreach (T t in input) {
+          yield return t;
+        }
+      }
+      public IEnumerable<int> Test1f(IEnumerable<int> inputArray, int max) {
+        Contract.Requires(Contract.ForAll(inputArray, (int x) => x < max));
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<int>>(), (int y) => y > 0));
+        foreach (int i in inputArray) {
+          yield return (max - i - 1);
+        }
+      }
+      public IEnumerable<T> Test1g<T>(IEnumerable<T> ts, T x) {
+        Contract.Requires(Contract.ForAll(ts, (T y) => foo(y, x)));
+        yield return x;
+      }
+      bool foo(object y, object x) {
+        return y == x;
+      }
+      public IEnumerable<T> Test1h<T>(IEnumerable<T> input, int x, int y)
+        where T : IIncrementable<T> {
+        Contract.Requires(Contract.ForAll(input, (T t) => t.Value() > x));
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), (T t) => t.Value() > (x + y)));
+        foreach (T t in input) {
+          yield return t.IncrementBy(y);
+        }
+      }
+    }
+    public class Test3<T>
+      where T : class, IIncrementable<T> {
+      public Test3(T t) {
+        tfield = t;
+      }
+      public IEnumerable<T> Test1a(T t) {
+        Contract.Requires(t != null);
+        Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), (T s1) => s1 != null));
+        yield return t;
+      }
+      public IEnumerable<T> Test1b(T s) {
+        if (s == null) throw new ArgumentException("");
+        yield return s;
+      }
+      public IEnumerable<T> Test1d(IEnumerable<T> input) {
+        Contract.Requires(input != null);
+        Contract.Requires(Contract.ForAll(input, (T s1) => s1 != null));
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), (T s1) => s1 != null));
+        foreach (T t in input)
+          yield return t;
+      }
+      public IEnumerable<T1> Test1e<T1>(IEnumerable<T> input, T1 t)
+        where T1 : IIncrementable<T1> {
+        Contract.Requires(Contract.ForAll(input, (T s) => s.Value() == t.Value()));
+        yield return t;
+      }
+      public IEnumerable<T1> Test1g<T1>(IEnumerable<T1> ts, T x)
+        where T1 : IIncrementable<T1> {
+        Contract.Requires(Contract.ForAll(ts, (T1 y) => foo<T1>(y, x)));
+        foreach (T1 t1 in ts) yield return t1;
+      }
+      bool foo<S>(IIncrementable<S> y, T x) {
+        return y.Value() == x.Value();
+      }
+      T tfield;
+      public T TField {
+        get {
+          return tfield;
+        }
+      }
+    }
+  }
 }

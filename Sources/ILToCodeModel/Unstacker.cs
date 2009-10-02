@@ -11,7 +11,7 @@ using System.IO;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class Unstacker : CodeMutator {
+  internal class Unstacker : MethodBodyMutator {
     SourceMethodBody body;
     struct CodePoint { internal List<IStatement> statements; internal int index; internal StackOfLocals operandStack; }
     Queue<CodePoint> codePointsToAnalyze = new Queue<CodePoint>();

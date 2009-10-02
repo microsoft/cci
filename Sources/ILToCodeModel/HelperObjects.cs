@@ -85,5 +85,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
   }
 
-
+  internal struct Pair<T1, T2> {
+    public T1 One;
+    public T2 Two;
+    public Pair(T1 one, T2 two) {
+      One = one; Two = two;
+    }
+  }
 }
