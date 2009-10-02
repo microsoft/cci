@@ -125,7 +125,7 @@ namespace Microsoft.Cci {
       }
       IThisReference/*?*/ thisParameter = container as IThisReference;
       if (thisParameter != null) {
-        this.generator.Emit(OperationCode.Ldarg_S);
+        this.generator.Emit(OperationCode.Ldarg_0);
         return;
       }
       IAddressableExpression/*?*/ addressableExpression = container as IAddressableExpression;
