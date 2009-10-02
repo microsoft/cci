@@ -4573,15 +4573,22 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override IMethodDefinition ResolvedMethod {
       get {
-        IModuleTypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null)
-          return Dummy.Method;
-        IModuleTypeDefAndRef/*?*/ moduleType = this.OwningTypeReference.ResolvedModuleType;
-        if (moduleType == null)
-          return Dummy.Method;
-        return moduleType.ResolveMethodReference(this.unspecializedMethodReference);
+        if (this.resolvedMethod == null) {
+          IModuleTypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
+          if (moduleTypeRef == null)
+            this.resolvedMethod = Dummy.Method;
+          else {
+            IModuleTypeDefAndRef/*?*/ moduleType = this.OwningTypeReference.ResolvedModuleType;
+            if (moduleType == null)
+              this.resolvedMethod = Dummy.Method;
+            else
+              this.resolvedMethod = moduleType.ResolveMethodReference(this.unspecializedMethodReference);
+          }
+        }
+        return this.resolvedMethod;
       }
     }
+    IMethodDefinition/*?*/ resolvedMethod;
 
     #region ISpecializedMethodReference Members
 
