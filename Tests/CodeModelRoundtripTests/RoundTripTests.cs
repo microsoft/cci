@@ -48,11 +48,11 @@ public class CodeModelRoundTripTests {
     RoundTripWithCodeMutator("Repro5.dll", "Repro5.pdb");
   }
 
-  [Fact]
-  public void Repro6WithCode() {
-    ExtractAndCompile("Repro6.cs");
-    RoundTripWithCodeMutator("Repro6.dll", "Repro6.pdb");
-  }
+  //[Fact]
+  //public void Repro6WithCode() {
+  //  ExtractAndCompile("Repro6.cs");
+  //  RoundTripWithCodeMutator("Repro6.dll", "Repro6.pdb");
+  //}
 
   //[Fact]
   public void SystemCoreWithCode() {
