@@ -806,6 +806,7 @@ namespace Microsoft.Cci {
       this.CurrentTypeListInternValue = 0x00000001;
       this.CurrentCustomModifierInternValue = 0x00000001;
       this.CurrentCustomModifierListInternValue = 0x00000001;
+      this.CurrentMethodReferenceInternValue = 0x00000001;
       this.CurrentParameterTypeInternValue = 0x00000001;
       this.CurrentParameterTypeListInternValue = 0x00000001;
       this.CurrentSignatureInternValue = 0x00000001;
@@ -1059,7 +1060,8 @@ namespace Microsoft.Cci {
         //a reference to this generic method type parameter. In that case we break the cycle by just using the index of 
         //the generic parameter. Only method references that refer to their own type parameters will ever
         //get this version of the interned id.
-        return index+1;
+        return index+1000000; //provide a big offset to minimize the chances of a structural type in the 
+        //signature of the method interning onto some other type that is parameterized by a type whose intern key is index.
       }
       this.CurrentMethodReference = definingMethodReference; //short circuit recursive calls back to this method
       uint definingMethodReferenceInternId = this.GetMethodReferenceInternedId(definingMethodReference);
@@ -1166,7 +1168,6 @@ namespace Microsoft.Cci {
       methods.Add((uint)methodReference.Name.UniqueKey, signatureStore1);
       return signatureStore1.InternedId;
     }
-
 
     uint GetFunctionPointerTypeReferenceInternId(
       CallingConvention callingConvention,

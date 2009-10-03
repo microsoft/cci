@@ -201,8 +201,8 @@ namespace Microsoft.Cci {
 
   public class FunctionPointerType : SystemDefinedStructuralType, IFunctionPointer {
 
-    public FunctionPointerType(ISignature signature, IInternFactory internFactory) 
-      : base (internFactory) {
+    public FunctionPointerType(ISignature signature, IInternFactory internFactory)
+      : base(internFactory) {
       this.callingConvention = signature.CallingConvention;
       if (signature.ReturnValueIsModified)
         this.returnValueCustomModifiers = signature.ReturnValueCustomModifiers;
@@ -213,8 +213,8 @@ namespace Microsoft.Cci {
     }
 
     public FunctionPointerType(CallingConvention callingConvention, bool returnValueIsByRef, ITypeReference type,
-      IEnumerable<ICustomModifier>/*?*/ returnValueCustomModifiers, IEnumerable<IParameterTypeInformation> parameters, IEnumerable<IParameterTypeInformation>/*?*/ extraArgumentTypes, 
-      IInternFactory internFactory) 
+      IEnumerable<ICustomModifier>/*?*/ returnValueCustomModifiers, IEnumerable<IParameterTypeInformation> parameters, IEnumerable<IParameterTypeInformation>/*?*/ extraArgumentTypes,
+      IInternFactory internFactory)
       : base(internFactory) {
       this.callingConvention = callingConvention;
       this.returnValueCustomModifiers = returnValueCustomModifiers;
@@ -440,9 +440,9 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
-      get { 
+      get {
         //TODO: specialize and cache the private helper members of the generic type template.
-        return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); 
+        return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
       }
     }
 
@@ -481,6 +481,27 @@ namespace Microsoft.Cci {
       int i = 0;
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
         ITypeReference specializedArgType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(argType, containingTypeInstance, internFactory);
+        if (argType != specializedArgType) {
+          if (specializedArguments == null) specializedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
+          specializedArguments[i] = specializedArgType;
+        }
+        i++;
+      }
+      if (specializedArguments == null) return genericTypeInstance;
+      return GetGenericTypeInstance(genericTypeInstance.GenericType, specializedArguments, internFactory);
+    }
+
+    /// <summary>
+    /// Specialize the type arguments of genericTypeIntance and (if necessary) return a new instance of containingTypeInstance.GenericType using
+    /// the specialized type arguments. Specialization means replacing any references to the method type parameters of 
+    /// specializedMethodDefinition.UnspecializedVersion with the corresponding values of specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(IGenericTypeInstanceReference genericTypeInstance, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+      List<ITypeReference>/*?*/ specializedArguments = null;
+      int i = 0;
+      foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
+        ITypeReference specializedArgType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(argType, specializedMethodDefinition, internFactory);
         if (argType != specializedArgType) {
           if (specializedArguments == null) specializedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
@@ -542,8 +563,8 @@ namespace Microsoft.Cci {
     public LayoutKind Layout {
       get
         //^ ensures result == this.GenericType.ResolvedType.Layout;
-      { 
-        return this.GenericType.ResolvedType.Layout; 
+      {
+        return this.GenericType.ResolvedType.Layout;
       }
     }
 
@@ -670,6 +691,21 @@ namespace Microsoft.Cci {
       return genericTypeParameter;
     }
 
+    /// <summary>
+    /// If the given generic method parameter is a generic method parameter of the unspecialized version of specializedMethodDefinition,
+    /// then return the corresponding generic method parameter of specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(IGenericMethodParameterReference genericMethodParameter, SpecializedMethodDefinition specializedMethodDefinition) {
+      if (genericMethodParameter.DefiningMethod.InternedKey == specializedMethodDefinition.UnspecializedVersion.InternedKey) {
+        ushort i = 0;
+        ushort n = genericMethodParameter.Index;
+        IEnumerator<IGenericMethodParameter> genericParameters = specializedMethodDefinition.GenericParameters.GetEnumerator();
+        while (genericParameters.MoveNext()) {
+          if (i++ == n) return genericParameters.Current;
+        }
+      }
+      return genericMethodParameter;
+    }
   }
 
   public class ManagedPointerType : SystemDefinedStructuralType, IManagedPointerType {
@@ -710,6 +746,17 @@ namespace Microsoft.Cci {
     public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(IManagedPointerTypeReference pointer, IGenericTypeInstanceReference containingTypeInstance, IInternFactory internFactory) {
       ITypeReference targetType = pointer.TargetType;
       ITypeReference specializedtargetType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(targetType, containingTypeInstance, internFactory);
+      if (targetType == specializedtargetType) return pointer;
+      return GetManagedPointerType(specializedtargetType, internFactory);
+    }
+
+    /// <summary>
+    /// If the given managed pointer has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
+    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(IManagedPointerTypeReference pointer, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+      ITypeReference targetType = pointer.TargetType;
+      ITypeReference specializedtargetType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(targetType, specializedMethodDefinition, internFactory);
       if (targetType == specializedtargetType) return pointer;
       return GetManagedPointerType(specializedtargetType, internFactory);
     }
@@ -798,6 +845,18 @@ namespace Microsoft.Cci {
       return GetMatrix(specializedElementType, array.Rank, array.LowerBounds, array.Sizes, internFactory);
     }
 
+    /// <summary>
+    /// If the given matrix has an element type that involves a method type parameter from the unspecialized version of specializedMethodDefinition,
+    /// then return a new matrix using an element type that has been specialized with the corresponding method type parameter from specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(IArrayTypeReference array, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory)
+      //^ requires !array.IsVector;
+    {
+      ITypeReference elementType = array.ElementType;
+      ITypeReference specializedElementType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(elementType, specializedMethodDefinition, internFactory);
+      if (elementType == specializedElementType) return array;
+      return GetMatrix(specializedElementType, array.Rank, array.LowerBounds, array.Sizes, internFactory);
+    }
   }
 
   public class PointerType : SystemDefinedStructuralType, IPointerType {
@@ -841,6 +900,17 @@ namespace Microsoft.Cci {
       return GetPointerType(specializedtargetType, internFactory);
     }
 
+    /// <summary>
+    /// If the given pointer has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
+    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(IPointerTypeReference pointer, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+      ITypeReference targetType = pointer.TargetType;
+      ITypeReference specializedtargetType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(targetType, specializedMethodDefinition, internFactory);
+      if (targetType == specializedtargetType) return pointer;
+      return GetPointerType(specializedtargetType, internFactory);
+    }
+
     public ITypeReference TargetType {
       get { return this.targetType; }
     }
@@ -860,8 +930,7 @@ namespace Microsoft.Cci {
   public class ModifiedPointerType : PointerType, IModifiedTypeReference {
 
     private ModifiedPointerType(ITypeReference targetType, IEnumerable<ICustomModifier> customModifiers, IInternFactory internFactory)
-      : base(targetType, internFactory)
-    {
+      : base(targetType, internFactory) {
       this.customModifiers = customModifiers;
     }
 
@@ -881,7 +950,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given pointer has a target type that involves a type parameter from the generic type from which the given type was instantiated,
+    /// If the given modified pointer has a target type that involves a type parameter from the generic type from which the given type was instantiated,
     /// then return a new pointer using a target type that has been specialized with the type arguments of the given generic type instance.
     /// </summary>
     public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(ModifiedPointerType modifiedPointer, IGenericTypeInstanceReference containingTypeInstance, IInternFactory internFactory) {
@@ -891,6 +960,16 @@ namespace Microsoft.Cci {
       return GetPointerType(specializedtargetType, modifiedPointer.CustomModifiers, internFactory);
     }
 
+    /// <summary>
+    /// If the given modified pointer has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
+    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(ModifiedPointerType modifiedPointer, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+      ITypeReference targetType = modifiedPointer.TargetType;
+      ITypeReference specializedtargetType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(targetType, specializedMethodDefinition, internFactory);
+      if (targetType == specializedtargetType) return modifiedPointer;
+      return GetPointerType(specializedtargetType, modifiedPointer.CustomModifiers, internFactory);
+    }
 
     public static ModifiedPointerType GetPointerType(ITypeReference targetType, IEnumerable<ICustomModifier> customModifiers, IInternFactory internFactory) {
       return new ModifiedPointerType(targetType, customModifiers, internFactory);
@@ -1685,7 +1764,7 @@ namespace Microsoft.Cci {
     /// <value></value>
     public override IEnumerable<ITypeReference> Constraints {
       get {
-        foreach (ITypeReference unspecializedConstraint in this.Constraints)
+        foreach (ITypeReference unspecializedConstraint in this.UnspecializedParameter.Constraints)
           yield return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedConstraint.ResolvedType, this.DefiningType, this.InternFactory);
       }
     }
@@ -2031,7 +2110,7 @@ namespace Microsoft.Cci {
       get
         //^^ requires this.HasSecurityAttributes;
       {
-        return this.UnspecializedVersion.SecurityAttributes; 
+        return this.UnspecializedVersion.SecurityAttributes;
       }
     }
 
@@ -2075,8 +2154,8 @@ namespace Microsoft.Cci {
     public bool HasDeclarativeSecurity {
       get
         //^ ensures result == this.UnspecializedVersion.HasDeclarativeSecurity;
-      { 
-        return this.UnspecializedVersion.HasDeclarativeSecurity; 
+      {
+        return this.UnspecializedVersion.HasDeclarativeSecurity;
       }
     }
 
@@ -2492,7 +2571,7 @@ namespace Microsoft.Cci {
     /// If the given unspecialized type definition is a constructed type, such as an instance of IArrayType or IPointerType or IGenericTypeInstance, then return a new instance (if necessary)
     /// in which all refererences to the type parameters of containingTypeInstance.GenericType have been replaced with the corresponding values
     /// from containingTypeInstance.GenericArguments. If the type is not a constructed type the method just returns the type.
-    /// For the purpose of this method, an instance of IGenericParameter is regarded as a constructed type.
+    /// For the purpose of this method, an instance of IGenericTypeParameterReference is regarded as a constructed type.
     /// </summary>
     internal static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(ITypeReference unspecializedType, IGenericTypeInstanceReference containingTypeInstance, IInternFactory internFactory) {
       IArrayTypeReference/*?*/ arrayType = unspecializedType as IArrayTypeReference;
@@ -2513,6 +2592,31 @@ namespace Microsoft.Cci {
       return unspecializedType;
     }
 
+
+    /// <summary>
+    /// If the given unspecialized type definition is a constructed type, such as an instance of IArrayType or IPointerType or IGenericTypeInstance, then return a new instance (if necessary)
+    /// in which all refererences to the method type parameters of specializedMethodDefinition.UnspecializedVersion have been replaced with the corresponding values
+    /// from specializedMethodDefinition. If the type is not a constructed type the method just returns the type.
+    /// For the purpose of this method, an instance of IGenericMethodParameterReference is regarded as a constructed type.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(ITypeReference unspecializedType, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+      IArrayTypeReference/*?*/ arrayType = unspecializedType as IArrayTypeReference;
+      if (arrayType != null) {
+        if (arrayType.IsVector) return Vector.SpecializeIfConstructedFromApplicableMethodTypeParameter(arrayType, specializedMethodDefinition, internFactory);
+        return Matrix.SpecializeIfConstructedFromApplicableTypeParameter(arrayType, specializedMethodDefinition, internFactory);
+      }
+      IGenericMethodParameterReference/*?*/ genericMethodParameter = unspecializedType as IGenericMethodParameterReference;
+      if (genericMethodParameter != null) return GenericParameter.SpecializeIfConstructedFromApplicableMethodTypeParameter(genericMethodParameter, specializedMethodDefinition);
+      IGenericTypeInstanceReference/*?*/ genericTypeInstance = unspecializedType as IGenericTypeInstanceReference;
+      if (genericTypeInstance != null) return GenericTypeInstance.SpecializeIfConstructedFromApplicableMethodTypeParameter(genericTypeInstance, specializedMethodDefinition, internFactory);
+      IManagedPointerTypeReference/*?*/ managedPointerType = unspecializedType as IManagedPointerTypeReference;
+      if (managedPointerType != null) return ManagedPointerType.SpecializeIfConstructedFromApplicableMethodTypeParameter(managedPointerType, specializedMethodDefinition, internFactory);
+      ModifiedPointerType/*?*/ modifiedPointer = unspecializedType as ModifiedPointerType;
+      if (modifiedPointer != null) return ModifiedPointerType.SpecializeIfConstructedFromApplicableMethodTypeParameter(modifiedPointer, specializedMethodDefinition, internFactory);
+      IPointerTypeReference/*?*/ pointerType = unspecializedType as IPointerTypeReference;
+      if (pointerType != null) return PointerType.SpecializeIfConstructedFromApplicableMethodTypeParameter(pointerType, specializedMethodDefinition, internFactory);
+      return unspecializedType;
+    }
   }
 
   public class Vector : ArrayType {
@@ -2566,6 +2670,18 @@ namespace Microsoft.Cci {
       return GetVector(specializedElementType, internFactory);
     }
 
+    /// <summary>
+    /// If the given vector has an element type that involves a method type parameter from the unspecialized version of specializedMethodDefinition,
+    /// then return a new vector using an element type that is the corresponding method type paramter from specializedMethodDefinition.
+    /// </summary>
+    internal static ITypeReference SpecializeIfConstructedFromApplicableMethodTypeParameter(IArrayTypeReference array, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory)
+      //^ requires array.IsVector;
+    {
+      ITypeReference elementType = array.ElementType;
+      ITypeReference specializedElementType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(elementType, specializedMethodDefinition, internFactory);
+      if (elementType == specializedElementType) return array;
+      return GetVector(specializedElementType, internFactory);
+    }
   }
 
 }

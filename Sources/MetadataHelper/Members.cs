@@ -1375,7 +1375,7 @@ namespace Microsoft.Cci {
     /// <value></value>
     public override IEnumerable<ITypeReference> Constraints {
       get {
-        foreach (ITypeReference unspecializedConstraint in this.Constraints)
+        foreach (ITypeReference unspecializedConstraint in this.UnspecializedParameter.Constraints)
           yield return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedConstraint.ResolvedType, this.DefiningMethod.ContainingGenericTypeInstance, this.DefiningMethod.ContainingGenericTypeInstance.InternFactory);
       }
     }
@@ -1951,7 +1951,11 @@ namespace Microsoft.Cci {
       IGenericMethodInstanceReference/*?*/ genericMethodInstance = this.ContainingSignature as IGenericMethodInstanceReference;
       if (genericMethodInstance != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, genericMethodInstance, this.InternFactory);
       SpecializedMethodDefinition/*?*/ specializedMethodDefinition = this.ContainingSignature as SpecializedMethodDefinition;
-      if (specializedMethodDefinition != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedMethodDefinition.ContainingGenericTypeInstance, this.InternFactory);
+      if (specializedMethodDefinition != null) {
+        if (specializedMethodDefinition.IsGeneric)
+          unspecializedType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(unspecializedType, specializedMethodDefinition, this.internFactory);
+        return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedMethodDefinition.ContainingGenericTypeInstance, this.InternFactory);
+      }
       SpecializedPropertyDefinition specializedPropertyDefinition = (SpecializedPropertyDefinition)this.ContainingSignature;
       return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedPropertyDefinition.ContainingGenericTypeInstance, this.InternFactory);
     }
