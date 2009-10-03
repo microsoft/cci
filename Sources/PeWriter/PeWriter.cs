@@ -3476,7 +3476,8 @@ namespace Microsoft.Cci {
             if (marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
                  marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
                  marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_RECORD)
-              this.SerializeTypeName(marshallingInformation.SafeArrayElementUserDefinedSubtype, writer);
+              if (marshallingInformation.SafeArrayElementUserDefinedSubtype != Dummy.TypeReference)
+                this.SerializeTypeName(marshallingInformation.SafeArrayElementUserDefinedSubtype, writer);
           }
           break;
         case System.Runtime.InteropServices.UnmanagedType.ByValTStr:
