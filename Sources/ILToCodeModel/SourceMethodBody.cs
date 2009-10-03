@@ -375,13 +375,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       new EmptyStatementRemover().Visit(rootBlock);
       IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(result);
-      if (this.contractProvider != null) {
-        if (this.contractExtractor == null) {
-          this.contractExtractor = new ContractExtractor(this, this.contractProvider);
-        }
-        result = this.contractExtractor.Visit(result);
-      }
-      result = new AssertAssumeExtractor(this).Visit(result);
       if (IsIterator) {
         var iteratorBodyFromIL = result;
         IMethodBody moveNextILBody = this.FindClosureMoveNext(iteratorBodyFromIL);
@@ -391,8 +384,15 @@ namespace Microsoft.Cci.ILToCodeModel {
           moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader, this.contractsOnly);
         else
           moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader);
-        return moveNextBody.TransformedBlock;
+        result = moveNextBody.TransformedBlock;
       }
+      if (this.contractProvider != null) {
+        if (this.contractExtractor == null) {
+          this.contractExtractor = new ContractExtractor(this, this.contractProvider);
+        }
+        result = this.contractExtractor.Visit(result);
+      }
+      result = new AssertAssumeExtractor(this).Visit(result);
       return result;
     }
 
