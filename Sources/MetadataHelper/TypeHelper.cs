@@ -1547,7 +1547,7 @@ namespace Microsoft.Cci {
     /// </summary>
     protected virtual void AppendArrayDimensions(IArrayTypeReference arrayType, StringBuilder sb, NameFormattingOptions formattingOptions) {
       IArrayTypeReference/*?*/ elementArrayType = arrayType.ElementType as IArrayTypeReference;
-      bool outerToInner = (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0;
+      bool outerToInner = (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0;
       if (outerToInner && elementArrayType != null) { //Append the outer dimensions of the array first
         this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
       }
