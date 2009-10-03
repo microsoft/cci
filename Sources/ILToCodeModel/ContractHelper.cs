@@ -216,5 +216,195 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
   }
 
+  internal class SimpleHostEnvironment : MetadataReaderHost {
+    PeReader peReader;
+    public SimpleHostEnvironment(INameTable nameTable)
+      : base(nameTable, 4) {
+      this.peReader = new PeReader(this);
+    }
+
+    public override IUnit LoadUnitFrom(string location) {
+      IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(location, this));
+      this.RegisterAsLatest(result);
+      return result;
+    }
+
+  }
+
+  /// <summary>
+  /// An IMetadataHost which automatically loads reference assemblies and attaches
+  /// a (code-contract aware, aggregating) lazy contract provider to each unit it loads.
+  /// </summary>
+  public class CodeContractAwareHostEnvironment : MetadataReaderHost, IMetadataReaderHost {
+    PeReader peReader;
+    readonly List<string> libPaths = new List<string>();
+    internal Dictionary<UnitIdentity, IContractProvider> unit2ContractProvider = new Dictionary<UnitIdentity, IContractProvider>();
+
+    #region Constructors
+    /// <summary>
+    /// Allocates an object that can be used as an IMetadataHost which automatically loads reference assemblies and attaches
+    /// a (lazy) contract provider to each unit it loads.
+    /// </summary>
+    public CodeContractAwareHostEnvironment()
+      : this(new NameTable(), 0) {
+    }
+
+    /// <summary>
+    /// Allocates an object that can be used as an IMetadataHost which automatically loads reference assemblies and attaches
+    /// a (lazy) contract provider to each unit it loads.
+    /// </summary>
+    /// <param name="searchPaths">
+    /// Initial value for the set of search paths to use.
+    /// </param>
+    public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths)
+      : base(searchPaths) {
+      this.peReader = new PeReader(this);
+    }
+
+    /// <summary>
+    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// </summary>
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
+    public CodeContractAwareHostEnvironment(INameTable nameTable)
+      : this(nameTable, 0) {
+    }
+
+    /// <summary>
+    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// </summary>
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
+    /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
+    /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
+    /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
+    /// TypeHelper.TypeAlignment. If the host application does not care about the pointer size it can provide 0 as the value
+    /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
+    /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
+    /// </param>
+    public CodeContractAwareHostEnvironment(INameTable nameTable, byte pointerSize)
+      : base(nameTable, pointerSize)
+      //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
+    {
+      this.peReader = new PeReader(this);
+    }
+    #endregion Constructors
+
+    /// <summary>
+    /// If a unit has been loaded with this host, then it will have attached a (lazy) contract provider to that unit.
+    /// This method returns that contract provider. If the unit has not been loaded by this host, then null is returned.
+    /// </summary>
+    public IContractProvider/*?*/ GetContractProvider(UnitIdentity unitIdentity) {
+      IContractProvider cp;
+      if (this.unit2ContractProvider.TryGetValue(unitIdentity, out cp)) {
+        return cp;
+      } else {
+        return null;
+      }
+    }
+
+    /// <summary>
+    /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
+    /// </summary>
+    public override IUnit LoadUnitFrom(string location) {
+      string s = location;
+      if (location.StartsWith("file://")) { // then it is a uri
+        try {
+          Uri u = new Uri(location, UriKind.RelativeOrAbsolute); // construct a URI to normalize it
+          s = u.LocalPath;
+        } catch (UriFormatException) {
+        }
+      }
+      IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(s, this));
+      this.RegisterAsLatest(result);
+
+      AttachContractProviderAndLoadReferenceAssembliesFor(result);
+
+      return result;
+    }
+
+    private void AttachContractProviderAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
+
+      if (alreadyLoadedUnit != null) {
+
+        #region Create a contract provider for the loaded unit
+        var contractMethods = new ContractMethods(this);
+        IContractProvider contractProviderForLoadedUnit = new LazyContractProvider(this, alreadyLoadedUnit, contractMethods);
+        contractProviderForLoadedUnit = new CodeContractsContractProvider(this, contractProviderForLoadedUnit);
+        #endregion Create a contract provider for the loaded unit
+
+        if (IsContractReferenceAssembly(alreadyLoadedUnit)) {
+          // If we're asked to explicitly load a reference assembly, then go ahead and attach a contract provider to it,
+          // but *don't* look for reference assemblies for *it*.
+          this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, contractProviderForLoadedUnit);
+        } else {
+
+          #region Load any reference assemblies for the loaded unit
+          List<KeyValuePair<IContractProvider, IMetadataHost>> oobProvidersAndHosts = new List<KeyValuePair<IContractProvider, IMetadataHost>>();
+
+          IAssembly loadedAssembly = alreadyLoadedUnit as IAssembly; // REVIEW: Why do we need to know if it is an assembly?
+          if (loadedAssembly != null) {
+
+            AssemblyIdentity refAssemWithoutLocation = new AssemblyIdentity(this.NameTable.GetNameFor(alreadyLoadedUnit.Name.Value + ".Contracts"), loadedAssembly.AssemblyIdentity.Culture, loadedAssembly.AssemblyIdentity.Version, loadedAssembly.AssemblyIdentity.PublicKeyToken, "");
+            AssemblyIdentity referenceAssemblyIdentity = this.ProbeAssemblyReference(alreadyLoadedUnit, refAssemWithoutLocation);
+            if (!string.IsNullOrEmpty(referenceAssemblyIdentity.Location)) {
+
+              #region Load reference assembly and attach a contract provider to it
+              IMetadataHost hostForReferenceAssembly = this; // default
+              IUnit referenceUnit = null;
+              if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
+                // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
+                var separateHost = new SimpleHostEnvironment(this.NameTable);
+                referenceUnit = separateHost.LoadUnitFrom(referenceAssemblyIdentity.Location);
+                hostForReferenceAssembly = separateHost;
+              } else {
+                // Load reference assembly, but don't cause a recursive call!! So don't call LoadUnit or LoadUnitFrom
+                referenceUnit = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(referenceAssemblyIdentity.Location, this));
+                this.RegisterAsLatest(referenceUnit);
+              }
+              if (referenceUnit != null && referenceUnit != Dummy.Unit) {
+                IAssembly referenceAssembly = referenceUnit as IAssembly;
+                if (referenceAssembly != null) {
+                  IContractProvider referenceAssemblyContractProvider = new LazyContractProvider(hostForReferenceAssembly, referenceAssembly, contractMethods);
+                  referenceAssemblyContractProvider = new CodeContractsContractProvider(hostForReferenceAssembly, referenceAssemblyContractProvider);
+                  oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
+                }
+              }
+              #endregion Load reference assembly and attach a contract provider to it
+            }
+          }
+
+          IContractProvider aggregateContractProvider = new AggregatingContractProvider(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
+          this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
+          #endregion Load any reference assemblies for the loaded unit
+        }
+      }
+    }
+
+    /// <summary>
+    /// Indicates when the unit is marked with the assembly-level attribute [System.Diagnostics.Contracts.ContractReferenceAssembly]
+    /// where that attribute type is defined in the unit itself.
+    /// </summary>
+    /// <param name="unit"></param>
+    /// <returns></returns>
+    private bool IsContractReferenceAssembly(IUnit unit) {
+      IAssemblyReference ar = unit as IAssemblyReference;
+      if (ar == null) {
+        return false;
+      } else {
+        var declAttr = ContractHelper.CreateTypeReference(this, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
+        return (AttributeHelper.Contains(unit.Attributes, declAttr));
+      }
+    }
+
+
+  }
+
 
 }

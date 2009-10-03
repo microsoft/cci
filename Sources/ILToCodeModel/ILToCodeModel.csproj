@@ -72,6 +72,10 @@
       <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
       <Name>PdbReader</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\PeReader\PeReader.csproj">
+      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
+      <Name>PeReader</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
