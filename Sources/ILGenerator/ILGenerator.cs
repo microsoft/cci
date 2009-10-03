@@ -453,6 +453,10 @@ namespace Microsoft.Cci {
       this.location = location;
     }
 
+    /// <summary>
+    /// If the given operation code is a short branch, return the corresponding long branch. Otherwise return the given operation code.
+    /// </summary>
+    /// <param name="operationCode">An operation code.</param>
     public static OperationCode LongVersionOf(OperationCode operationCode) {
       switch (operationCode) {
         case OperationCode.Beq_S: return OperationCode.Beq;
@@ -473,6 +477,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// If the given operation code is a long branch, return the corresponding short branch. Otherwise return the given operation code.
+    /// </summary>
+    /// <param name="operationCode">An operation code.</param>
     public static OperationCode ShortVersionOf(OperationCode operationCode) {
       switch (operationCode) {
         case OperationCode.Beq: return OperationCode.Beq_S;
