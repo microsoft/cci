@@ -30,9 +30,9 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private void Visit(BasicBlock b) {
       for (int i = 0; i < b.Statements.Count; i++) {
-        if (DecompileIfThenElseStatement(b.Statements, i)) continue;
-        this.DecompileIfThenStatement(b.Statements, i);
-        this.DecompileIfThenStatement2(b.Statements, i);
+        if (DecompileIfThenElseStatement(b, i)) continue;
+        this.DecompileIfThenStatement(b, i);
+        this.DecompileIfThenStatement2(b, i);
         this.DecompileSwitch(b.Statements, i);
       }
       if (b.NumberOfTryBlocksStartingHere > 0) {
@@ -73,8 +73,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       BasicBlock result = new BasicBlock(b.StartOffset);
       result.EndOffset = endOffset;
       int n = b.Statements.Count;
-      for (int i = 0; i < n-1; i++)
+      for (int i = 0; i < n-1; i++) {
+        var s = b.Statements[i];
+        MoveTempIfNecessary(b, result, s);
         result.Statements.Add(b.Statements[i]);
+      }
       if (n > 0) {
         b.Statements.RemoveRange(0, n-1);
         BasicBlock bb = (BasicBlock)b.Statements[0];
@@ -143,7 +146,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       return bb;
     }
 
-    private bool DecompileIfThenElseStatement(List<IStatement> statements, int i) {
+    private bool DecompileIfThenElseStatement(BasicBlock b, int i) {
+      List<IStatement> statements = b.Statements;
       if (i >= statements.Count) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
       if (conditionalStatement == null) return false;
@@ -176,8 +180,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (blockAfterIf == null || k >= falseBlock.Statements.Count) return false;
       ILabeledStatement labelAfterIf = blockAfterIf.Statements[0] as ILabeledStatement;
       if (labelAfterIf == null) return false;
-      BasicBlock ifBlock = ExtractAsBasicBlock(statements, i, j-1);
-      BasicBlock elseBlock = ExtractAsBasicBlock(falseBlock.Statements, 1, k);
+      BasicBlock ifBlock = ExtractAsBasicBlock(b, i, j-1);
+      BasicBlock elseBlock = ExtractAsBasicBlock(falseBlock, 1, k);
       LogicalNot not = new LogicalNot();
       not.Operand = conditionalStatement.Condition;
       conditionalStatement.Condition = not;
@@ -192,7 +196,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       return true;
     }
 
-    private bool DecompileIfThenStatement(List<IStatement> statements, int i) {
+    private bool DecompileIfThenStatement(BasicBlock b, int i) {
+      List<IStatement> statements = b.Statements;
       if (i >= statements.Count) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
       if (conditionalStatement == null) return false;
@@ -207,7 +212,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (1 < branchesToThisLabel.Count) return false;
       }
       // TODO? Check the putative ifBlock to make sure it is self-contained: i.e., it has no branches outside of itself
-      BasicBlock ifBlock = this.ExtractBasicBlockUpto(statements, i, afterThenLabel);
+      BasicBlock ifBlock = this.ExtractBasicBlockUpto(b, i, afterThenLabel);
       this.Visit(ifBlock);
       LogicalNot not = new LogicalNot();
       not.Operand = conditionalStatement.Condition;
@@ -228,14 +233,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       return null;
     }
 
-    private bool DecompileIfThenStatement2(List<IStatement> statements, int i) {
+    private bool DecompileIfThenStatement2(BasicBlock b, int i) {
+      List<IStatement> statements = b.Statements;
       if (i >= statements.Count) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
       if (conditionalStatement == null) return false;
       if (!(conditionalStatement.TrueBranch is EmptyStatement)) return false;
       GotoStatement/*?*/ gotoAfterElse = conditionalStatement.FalseBranch as GotoStatement;
       if (gotoAfterElse == null) return false;
-      BasicBlock afterThen = this.ExtractBasicBlockUpto(statements, i, gotoAfterElse.TargetStatement);
+      BasicBlock afterThen = this.ExtractBasicBlockUpto(b, i, gotoAfterElse.TargetStatement);
       conditionalStatement.FalseBranch = conditionalStatement.TrueBranch; //empty statement
       conditionalStatement.TrueBranch = afterThen;
       return true;
@@ -248,7 +254,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       SwitchStatement result = new SwitchStatement();
       result.Expression = switchInstruction.switchExpression;
       statements[i] = result;
-      // statements.RemoveAt(i+1);
       for (int j = 0, n = switchInstruction.switchCases.Count; j < n; j++) {
         CompileTimeConstant caseLabel = new CompileTimeConstant() { Value = j, Type = this.platformType.SystemInt32 };
         BasicBlock currentCaseBody = switchInstruction.switchCases[j];
@@ -273,13 +278,34 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private static BasicBlock ExtractAsBasicBlock(List<IStatement> statements, int i, int j) {
+    private static BasicBlock ExtractAsBasicBlock(BasicBlock b, int i, int j) {
+      List<IStatement> statements = b.Statements;
       BasicBlock result = new BasicBlock(0);
-      while (i < j) result.Statements.Add(statements[i++]);
+      while (i < j) {
+        var s = statements[i++];
+        MoveTempIfNecessary(b, result, s);
+        result.Statements.Add(s);
+      }
       return result;
     }
 
-    private BasicBlock ExtractBasicBlockUpto(List<IStatement> statements, int i, ILabeledStatement label) {
+    private static void MoveTempIfNecessary(BasicBlock b, BasicBlock result, IStatement s) {
+      var exprS = s as IExpressionStatement;
+      if (exprS != null) {
+        var assignment = exprS.Expression as IAssignment;
+        if (assignment != null) {
+          var tempVar = assignment.Target.Definition as TempVariable;
+          if (tempVar != null && b.LocalVariables != null) {
+            b.LocalVariables.Remove(tempVar);
+            if (result.LocalVariables == null) result.LocalVariables = new List<ILocalDefinition>();
+            result.LocalVariables.Add(tempVar);
+          }
+        }
+      }
+    }
+
+    private BasicBlock ExtractBasicBlockUpto(BasicBlock b, int i, ILabeledStatement label) {
+      List<IStatement> statements = b.Statements;
       BasicBlock result = new BasicBlock(0);
       for (int j = i, n = statements.Count; j < n; j++) {
         IStatement s = statements[j];
@@ -289,10 +315,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         BasicBlock/*?*/ bb = s as BasicBlock;
         if (bb == null) {
+          MoveTempIfNecessary(b, result, s);
           result.Statements.Add(s);
           continue;
         }
-        BasicBlock bb2 = ExtractBasicBlockUpto(bb.Statements, 0, label);
+        BasicBlock bb2 = ExtractBasicBlockUpto(bb, 0, label);
         result.Statements.Add(bb2);
         statements.RemoveRange(i, j-i);
         return result;

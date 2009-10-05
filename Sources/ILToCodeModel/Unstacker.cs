@@ -158,7 +158,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Push/*?*/ push = statement as Push;
       if (push != null) {
         push.ValueToPush = this.Visit(push.ValueToPush);
-        LocalDefinition temp = new LocalDefinition() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.body.localVariables.Count) };
+        LocalDefinition temp = new TempVariable() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.body.localVariables.Count) };
         temp.Type = push.ValueToPush.Type;
         this.operandStack.Push(temp);
         this.body.localVariables.Add(temp);

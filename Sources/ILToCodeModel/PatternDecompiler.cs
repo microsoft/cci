@@ -77,7 +77,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (boundExpression2 == null || boundExpression2.Definition != local2) return;
       TargetExpression/*?*/ target = assignment4.Target as TargetExpression;
       if (!(target.Instance is Pop)) return;
-      ILocalDefinition temp = new LocalDefinition() { Name = this.nameTable.GetNameFor("__temp_"+this.sourceMethodBody.localVariables.Count) };
+      ILocalDefinition temp = new TempVariable() { Name = this.nameTable.GetNameFor("__temp_"+this.sourceMethodBody.localVariables.Count) };
       this.sourceMethodBody.localVariables.Add(temp);
       if (this.blockLocalVariables == null) this.blockLocalVariables = new List<ILocalDefinition>();
       this.blockLocalVariables.Add(temp);
@@ -114,7 +114,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       BoundExpression/*?*/ boundExpression2 = assignment2.Source as BoundExpression;
       if (boundExpression2 == null) return false;
       if (boundExpression2.Definition != local) return false;
-      ILocalDefinition temp = new LocalDefinition() { Name = this.nameTable.GetNameFor("__temp_"+this.sourceMethodBody.localVariables.Count) };
+      ILocalDefinition temp = new TempVariable() { Name = this.nameTable.GetNameFor("__temp_"+this.sourceMethodBody.localVariables.Count) };
       this.sourceMethodBody.localVariables.Add(temp);
       if (this.blockLocalVariables == null) this.blockLocalVariables = new List<ILocalDefinition>();
       this.blockLocalVariables.Add(temp);
@@ -628,6 +628,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         return push.ValueToPush;
       }
       return base.Visit(expression);
+    }
+
+  }
+
+  internal class TempVariable : LocalDefinition {
+    public TempVariable() {
     }
 
   }
