@@ -609,7 +609,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
       string result = new string((sbyte*)(this.CurrentPointer + offset + sizeof(UInt16)), 0, length * sizeof(Char), Encoding.Unicode);
 #endif
 #else
-      string result = MemoryReader.ScanUTF16WithSize(this.CurrentPointer + offset, length * sizeof(Char));
+      string result = MemoryReader.ScanUTF16WithSize(this.CurrentPointer + offset + sizeof(UInt16), length * sizeof(Char));
 #endif
       numberOfBytesRead = sizeof(UInt16) + result.Length * sizeof(Char);
       return result;
@@ -751,11 +751,11 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if LITTLEENDIAN
     internal Int64 ReadInt64() {
       Int32 lsi = this.ReadInt32();
-      return (this.ReadInt32() << 32) | lsi;
+      return ((long)this.ReadInt32() << 32) | (uint)lsi;
     }
 #elif BIGENDIAN
     internal Int64 ReadInt64() {
-      return (this.ReadInt32() << 32) | this.ReadInt32();
+      return ((long)this.ReadInt32() << 32) | (uint)this.ReadInt32();
     }
 #endif
 #else
@@ -808,11 +808,11 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if LITTLEENDIAN
     internal UInt64 ReadUInt64() {
       UInt32 lsi = this.ReadUInt32();
-      return (this.ReadUInt32() << 32) | lsi;
+      return ((ulong)this.ReadUInt32() << 32) | lsi;
     }
 #elif BIGENDIAN
     internal UInt64 ReadUInt64() {
-      return (this.ReadUInt32() << 32) | this.ReadUInt32();
+      return ((ulong)this.ReadUInt32() << 32) | this.ReadUInt32();
     }
 #endif
 #else
@@ -884,6 +884,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
           if (b == 0)
             break;
           *iterBuffer++ = (char)b;
+          j++;
         }
       }
       this.CurrentPointer += byteCount;

@@ -553,11 +553,13 @@ namespace Microsoft.Cci {
         probeDir = Path.GetDirectoryName(Path.GetFullPath(typeof(object).Assembly.Location));
         result = Probe(probeDir, referencedAssembly);
         if (result != null) return result;
+#if !COMPACTFX
         // Check GAC
         string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
         if (gacLocation != null) {
           return new AssemblyIdentity(referencedAssembly, gacLocation);
         }
+#endif
       }
       return base.ProbeAssemblyReference(referringUnit, referencedAssembly);
     }
