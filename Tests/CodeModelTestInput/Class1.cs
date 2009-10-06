@@ -146,6 +146,10 @@ namespace CodeModelTestInput {
         return;
       }
     }
+
+    Type Method15() {
+      return typeof(Class1);
+    }
   }
 
   public class Class2 {

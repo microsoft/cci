@@ -172,6 +172,12 @@ namespace CodeModelTestInput
 
         }
 
+        private System.Type Method15()
+        {
+            return typeof(CodeModelTestInput.Class1);
+
+        }
+
         public void Method2()
         {
             byte[] local_11 = new byte[1];

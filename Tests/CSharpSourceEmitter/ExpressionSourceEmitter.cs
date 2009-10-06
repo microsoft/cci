@@ -635,11 +635,13 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(ITypeOf typeOf) {
-      base.Visit(typeOf);
+      this.sourceEmitterOutput.Write("typeof(");
+      this.Visit(typeOf.TypeToGet);
+      this.sourceEmitterOutput.Write(")");
     }
 
     public override void Visit(ITypeReference typeReference) {
-      base.Visit(typeReference);
+      this.PrintTypeReference(typeReference);
     }
 
     public override void Visit(IUnaryNegation unaryNegation) {

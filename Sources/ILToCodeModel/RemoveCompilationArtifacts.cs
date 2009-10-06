@@ -241,6 +241,33 @@ namespace Microsoft.Cci.ILToCodeModel {
       return logicalNot;
     }
 
+    public override IExpression Visit(MethodCall methodCall) {
+      if (methodCall.Arguments.Count == 1) {
+        var tokenOf = methodCall.Arguments[0] as TokenOf;
+        if (tokenOf != null) {
+          var typeRef = tokenOf.Definition as ITypeReference;
+          if (typeRef != null && methodCall.MethodToCall.InternedKey == this.GetTypeFromHandle.InternedKey) {
+            return new TypeOf() { Locations = methodCall.Locations, Type = methodCall.Type, TypeToGet = typeRef };
+          }
+        }
+      }
+      return base.Visit(methodCall);
+    }
+
+    /// <summary>
+    /// A reference to System.Type.GetTypeFromHandle(System.Runtime.TypeHandle).
+    /// </summary>
+    IMethodReference GetTypeFromHandle {
+      get {
+        if (this.getTypeFromHandle == null) {
+          this.getTypeFromHandle = new MethodReference(this.host, this.host.PlatformType.SystemType, CallingConvention.Default, this.host.PlatformType.SystemType,
+          this.host.NameTable.GetNameFor("GetTypeFromHandle"), 0, this.host.PlatformType.SystemRuntimeTypeHandle);
+        }
+        return this.getTypeFromHandle;
+      }
+    }
+    IMethodReference/*?*/ getTypeFromHandle;
+
     public override IStatement Visit(ReturnStatement returnStatement) {
       if (returnStatement.Expression != null)
         returnStatement.Expression = this.Visit(returnStatement.Expression);

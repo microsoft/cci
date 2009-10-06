@@ -1804,7 +1804,7 @@ namespace Microsoft.Cci {
     /// <param name="typeOf">The type of.</param>
     public override void Visit(ITypeOf typeOf) {
       this.generator.Emit(OperationCode.Ldtoken, typeOf.TypeToGet);
-      //TODO: call helper method. Get it from the host.
+      this.generator.Emit(OperationCode.Call, this.GetTypeFromHandle);
       this.StackSize++;
     }
 
@@ -3782,6 +3782,20 @@ namespace Microsoft.Cci {
     public virtual IEnumerable<ITypeDefinition> GetPrivateHelperTypes() {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
     }
+
+    /// <summary>
+    /// A reference to System.Type.GetTypeFromHandle(System.Runtime.TypeHandle).
+    /// </summary>
+    IMethodReference GetTypeFromHandle {
+      get {
+        if (this.getTypeFromHandle == null) {
+          this.getTypeFromHandle = new MethodReference(this.host, this.host.PlatformType.SystemType, CallingConvention.Default, this.host.PlatformType.SystemType,
+          this.host.NameTable.GetNameFor("GetTypeFromHandle"), 0, this.host.PlatformType.SystemRuntimeTypeHandle);
+        }
+        return this.getTypeFromHandle;
+      }
+    }
+    IMethodReference/*?*/ getTypeFromHandle;
 
     /// <summary>
     /// Traverses the given block of statements in the context of the given method to produce a list of
