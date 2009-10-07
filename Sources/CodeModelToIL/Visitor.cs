@@ -738,16 +738,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="checkIfInstance">The check if instance.</param>
     public override void Visit(ICheckIfInstance checkIfInstance) {
-      ILGeneratorLabel falseCase = new ILGeneratorLabel();
-      ILGeneratorLabel endif = new ILGeneratorLabel();
       this.Visit(checkIfInstance.Operand);
       this.generator.Emit(OperationCode.Isinst, checkIfInstance.TypeToCheck);
-      this.generator.Emit(OperationCode.Brfalse_S, falseCase);
-      this.generator.Emit(OperationCode.Ldc_I4_1);
-      this.generator.Emit(OperationCode.Br_S, endif);
-      this.generator.MarkLabel(falseCase);
-      this.generator.Emit(OperationCode.Ldc_I4_0);
-      this.generator.MarkLabel(endif);
+      this.generator.Emit(OperationCode.Ldnull);
+      this.generator.Emit(OperationCode.Cgt_Un);
     }
 
     /// <summary>
@@ -1392,6 +1386,20 @@ namespace Microsoft.Cci {
     public override void Visit(INotEquality notEquality) {
       this.Visit(notEquality.LeftOperand);
       this.Visit(notEquality.RightOperand);
+      var compileTimeConstant = notEquality.LeftOperand as ICompileTimeConstant;
+      if (compileTimeConstant != null) {
+        if (compileTimeConstant.Value == null) {
+          this.generator.Emit(OperationCode.Clt_Un);
+          return;
+        }
+      }
+      compileTimeConstant = notEquality.RightOperand as ICompileTimeConstant;
+      if (compileTimeConstant != null) {
+        if (compileTimeConstant.Value == null) {
+          this.generator.Emit(OperationCode.Cgt_Un);
+          return;
+        }
+      }
       this.generator.Emit(OperationCode.Ceq);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.generator.Emit(OperationCode.Ceq);

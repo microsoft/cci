@@ -157,7 +157,11 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(ICastIfPossible castIfPossible) {
-      base.Visit(castIfPossible);
+      this.sourceEmitterOutput.Write("(");
+      this.Visit(castIfPossible.ValueToCast);
+      this.sourceEmitterOutput.Write(" as ");
+      this.Visit(castIfPossible.TargetType);
+      this.sourceEmitterOutput.Write(")");
     }
 
     public override void Visit(ICheckIfInstance checkIfInstance) {

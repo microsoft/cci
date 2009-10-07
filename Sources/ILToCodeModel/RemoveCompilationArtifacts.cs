@@ -177,6 +177,30 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(createObjectInstance);
     }
 
+    public override IExpression Visit(GreaterThan greaterThan) {
+      var castIfPossible = greaterThan.LeftOperand as ICastIfPossible;
+      if (castIfPossible != null) {
+        var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
+        if (compileTimeConstant != null && compileTimeConstant.Value == null) {
+          return this.Visit(new CheckIfInstance() {
+            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type, Locations = greaterThan.Locations
+          });
+        }
+      }
+      castIfPossible = greaterThan.RightOperand as ICastIfPossible;
+      if (castIfPossible != null) {
+        var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
+        if (compileTimeConstant != null && compileTimeConstant.Value == null) {
+          return this.Visit(new CheckIfInstance() {
+            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type, Locations = greaterThan.Locations
+          });
+        }
+      }
+      return base.Visit(greaterThan);
+    }
+
     public override IFieldReference Visit(IFieldReference fieldReference) {
       return fieldReference;
     }
