@@ -103,12 +103,7 @@ namespace Microsoft.Cci {
     /// </summary>
     protected virtual AssemblyIdentity GetCoreAssemblySymbolicIdentity() {
       var coreAssemblyName = typeof(object).Assembly.GetName();
-      string/*?*/ loc = coreAssemblyName.CodeBase;
-      if (loc == null) loc = ""; //TODO: is this really needed? I.e. can coreAssemblyName.CodeBase ever be null?
-      //If the code base represents a file (could it ever be different for mscorlib?), then
-      //CodeBase is the file path with \ flipped to / and file:/// or file:// prepended to it.
-      if (loc.StartsWith("file:///")) loc = loc.Substring(8);
-      else if (loc.StartsWith("file://")) loc = loc.Substring(7);
+      string loc = GetLocalPath(coreAssemblyName);
       if (this.unitCache.Count > 0) {
         AssemblyIdentity/*?*/ result = null;
         foreach (IUnit unit in this.unitCache.Values) {
@@ -180,6 +175,21 @@ namespace Microsoft.Cci {
       if (unit != null)
         return unit;
       return Dummy.Unit;
+    }
+
+    /// <summary>
+    /// Returns the CodeBase of the named assembly (which is a URL), except if the URL has the file scheme.
+    /// In that case the URL is converted to a local file path that can be used by System.IO.Path methods.
+    /// </summary>
+    /// <param name="assemblyName">The name of the assembly whose location is desired.</param>
+    public static string GetLocalPath(System.Reflection.AssemblyName assemblyName) {
+      var loc = assemblyName.CodeBase;
+      if (loc == null) loc = "";
+      if (loc.StartsWith("file://")) {
+        Uri u = new Uri(loc, UriKind.Absolute);
+        loc = u.LocalPath;
+      }
+      return loc;
     }
 
     /// <summary>
@@ -550,7 +560,7 @@ namespace Microsoft.Cci {
           if (result != null) return result;
         }
         // Check platform location
-        probeDir = Path.GetDirectoryName(Path.GetFullPath(typeof(object).Assembly.Location));
+        probeDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
         result = Probe(probeDir, referencedAssembly);
         if (result != null) return result;
 #if !COMPACTFX

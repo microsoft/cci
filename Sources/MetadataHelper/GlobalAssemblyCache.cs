@@ -86,8 +86,10 @@ namespace Microsoft.Cci {
           AssemblyName cn = new AssemblyName(currentName);
           if (assemblyIdentity.Equals(new AssemblyIdentity(metadataHost.NameTable.GetNameFor(cn.Name), cn.Culture, cn.Version, cn.PublicKeyToken, ""))) {
             string codeBase = cn.CodeBase;
-            if (codeBase != null && codeBase.StartsWith("file:///"))
-              return codeBase.Substring(8);
+            if (codeBase != null && codeBase.StartsWith("file://")) {
+              Uri u = new Uri(codeBase, UriKind.Absolute);
+              return u.LocalPath;
+            }
             return cn.GetLocation();
           }
         }
