@@ -2678,6 +2678,8 @@ namespace Microsoft.Cci.MetadataReader {
         case PrimitiveTypeCode.Pointer:
           return this.pointerSize;
       }
+      var modifiedTypeReference = typeReference as ModifiedTypeReference;
+      if (modifiedTypeReference != null) typeReference = modifiedTypeReference.UnmodifiedType;
       ITypeDefinition/*?*/ typeDefinition = typeReference as ITypeDefinition;
       if (typeDefinition != null) return TypeHelper.SizeOfType(typeDefinition);
       return 0;
