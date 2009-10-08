@@ -48,7 +48,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="statements"></param>
     void RemovePossibleTryCatchBlock(List<IStatement> statements) {
       bool FindTryBlock = false;
-      for (int/* modified in body.*/ i=0; i< statements.Count; i++) {
+      for (int/* modified in body.*/ i = 0; i < statements.Count; i++) {
         // Skip any local variable declarations
         ILocalDeclarationStatement localDeclaractionStatement = statements[i] as ILocalDeclarationStatement;
         if (localDeclaractionStatement != null) {
@@ -224,7 +224,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               if (returnLocals.Contains(assignment.Target.Definition as ILocalDefinition)) {
                 ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
                 System.Diagnostics.Debug.Assert(ctc != null);
-                if ((int)ctc.Value==1) {
+                if ((int)ctc.Value == 1) {
                   statements.RemoveAt(i); i--;
                 } else {
                   statements.RemoveAt(i);
@@ -321,7 +321,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             ILabeledStatement labeledStatement = statements[j] as ILabeledStatement;
             if (labeledStatement != null && labeledStatement.Label.Equals(label)) {
               bool hitGoto = false;
-              while (!hitGoto && j<statements.Count) {
+              while (!hitGoto && j < statements.Count) {
                 gotoStatement = statements[j] as IGotoStatement;
                 if (gotoStatement != null) {
                   if (continueingTargets.Contains(gotoStatement.TargetStatement.Label))
@@ -354,17 +354,17 @@ namespace Microsoft.Cci.ILToCodeModel {
       int state = 0;
       for (int/*modified in body*/ i = 0; i < statements.Count; i++) {
         ILabeledStatement labeledStatement = statements[i] as ILabeledStatement;
-        if (i == 0 && labeledStatement != null && state ==0) {
+        if (i == 0 && labeledStatement != null && state == 0) {
           statements.RemoveAt(0);
           i--;
           continue;
         }
-        if (i == 0 && gotoStatement == null && state ==0) {
+        if (i == 0 && gotoStatement == null && state == 0) {
           gotoStatement = statements[i] as IGotoStatement;
           state = 1;
           continue;
         }
-        if (i == 1 && gotoStatement != null && state ==1) {
+        if (i == 1 && gotoStatement != null && state == 1) {
           IGotoStatement deadGotoStatement = statements[i] as IGotoStatement;
           if (deadGotoStatement != null) {
             statements.RemoveAt(1); i--; continue;
@@ -372,7 +372,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         if (gotoStatement != null) {
           labeledStatement = statements[i] as ILabeledStatement;
-          if (labeledStatement != null && labeledStatement.Label == gotoStatement.TargetStatement.Label && state ==1) {
+          if (labeledStatement != null && labeledStatement.Label == gotoStatement.TargetStatement.Label && state == 1) {
             state = 2;
             if (i == 1) {
               // The target of the first goto is right after, remove both the first goto and its target. 
@@ -382,9 +382,9 @@ namespace Microsoft.Cci.ILToCodeModel {
             continue;
           }
           IGotoStatement nextGotoStatement = statements[i] as IGotoStatement;
-          if (nextGotoStatement != null && state ==2) {
+          if (nextGotoStatement != null && state == 2) {
             gotoStatement = nextGotoStatement;
-            statements.RemoveAt(i); i--; state =3;
+            statements.RemoveAt(i); i--; state = 3;
             continue;
           }
           if (nextGotoStatement != null && state == 3) {
@@ -445,14 +445,14 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IBlockStatement TransformedBlock {
       get {
-        return new ClosureBlockTransformer(typeParameterMapping, closureFieldMapping, sourceMethodBody).Visit(decompiledMoveNextBody);
+        IBlockStatement block = new ClosureBlockTransformer(typeParameterMapping, closureFieldMapping, sourceMethodBody).Visit(decompiledMoveNextBody);
+        return block;
       }
     }
 
     class ClosureBlockTransformer : MethodBodyMutator {
       Dictionary<IGenericParameter, IGenericParameter>/*!*/ typeParameterMapping;
       Dictionary<IFieldDefinition, object>/*!*/ fieldMapping;
-      bool toplevelList = true;
       internal ClosureBlockTransformer(Dictionary<IGenericParameter, IGenericParameter> typeParameterMapping, Dictionary<IFieldDefinition, object> fieldMapping, MoveNextSourceMethodBody sourceMethodBody)
         : base(sourceMethodBody.host, true) {
         this.typeParameterMapping = typeParameterMapping;
@@ -461,20 +461,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       public override IBlockStatement Visit(BlockStatement blockStatement) {
         return base.Visit(blockStatement);
-      }
-
-      public override List<IStatement> Visit(List<IStatement> statements) {
-        if (toplevelList) {
-          toplevelList = false;
-          foreach (IFieldDefinition field in fieldMapping.Keys) {
-            LocalDefinition/*?*/ localDefinition = fieldMapping[field] as LocalDefinition;
-            if (localDefinition != null) {
-              var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = localDefinition };
-              statements.Insert(0, newLocalDecl);
-            }
-          }
-        }
-        return base.Visit(statements);
       }
 
       public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
@@ -501,7 +487,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       /// <returns></returns>
       public override ITargetExpression Visit(TargetExpression targetExpression) {
         // ^Requires: targetExpression.Definition is not the field in the closure class that captures THIS of the original.
-        IFieldReference/*?*/ closureFieldRef= targetExpression.Definition as IFieldReference;
+        IFieldReference/*?*/ closureFieldRef = targetExpression.Definition as IFieldReference;
         if (closureFieldRef != null) {
           object localOrParameter = null;
           IFieldDefinition closureFieldDefinition = closureFieldRef.ResolvedField;
@@ -581,6 +567,67 @@ namespace Microsoft.Cci.ILToCodeModel {
             mapping[field] = newLocal;
           }
           return mapping;
+        }
+      }
+    }
+  }
+
+  /// <summary>
+  /// Turn an assignment to a local variable that is not yet declared into a local variable declaration statement.
+  /// 
+  /// It is probably sufficient to add the declarations at the top level (not for example, in a try block). 
+  /// </summary>
+  internal class ClosureLocalVariableDeclarationAdder : MethodBodyMutator {
+    bool IsTopLevel;
+    internal ClosureLocalVariableDeclarationAdder(MoveNextSourceMethodBody sourceMethodBody)
+      : base(sourceMethodBody.host, true) {
+    }
+
+    public IBlockStatement Transform(IBlockStatement block) {
+      IsTopLevel = true;
+      return this.Visit(block);
+    }
+
+    public override IBlockStatement Visit(BlockStatement blockStatement) {
+      if (IsTopLevel) {
+        IsTopLevel = false;
+        this.AddLocalDeclarationIfNecessary(blockStatement.Statements, new Dictionary<ILocalDefinition, bool>());
+      }
+      return base.Visit(blockStatement);
+    }
+
+    /// <summary>
+    /// Turn an assignment to a local variable that is not yet declared into a local variable declaration statement.
+    /// </summary>
+    /// <param name="statements"></param>
+    /// <param name="locals">locals[l] is true if l has been declared and initialized, false if declared but not initialized.
+    /// l is in locals only if it has been declared. 
+    /// </param>
+    void AddLocalDeclarationIfNecessary(List<IStatement> statements, Dictionary<ILocalDefinition, bool> locals) {
+      for (int i = 0; i < statements.Count; i++) {
+        ILocalDeclarationStatement localDeclaration = statements[i] as ILocalDeclarationStatement;
+        if (localDeclaration != null) {
+          if (!locals.ContainsKey(localDeclaration.LocalVariable))
+            locals.Add(localDeclaration.LocalVariable, localDeclaration.InitialValue != null);
+          continue;
+        }
+        IExpressionStatement expressionStatement = statements[i] as IExpressionStatement;
+        if (expressionStatement != null) {
+          IAssignment assignment = expressionStatement.Expression as IAssignment;
+          if (assignment != null) {
+            ILocalDefinition localDefinition = assignment.Target.Definition as ILocalDefinition;
+            if (localDefinition != null && assignment.Source is CreateObjectInstance && (!locals.ContainsKey(localDefinition) || !locals[localDefinition])) {
+              statements.RemoveAt(i);
+              LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() {
+                LocalVariable = localDefinition,
+                Locations = new List<ILocation>(expressionStatement.Locations),
+                InitialValue = assignment.Source
+              };
+              locals[localDefinition] = true;
+              statements.Insert(i, localDeclarationStatement);
+            }
+          }
+          continue;
         }
       }
     }

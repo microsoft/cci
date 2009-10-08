@@ -73,6 +73,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ast.All", "Build\Ast.All\Ast.All.csproj", "{00E3C2BD-5642-4AAC-B125-6B33BE8BB9A9}"
 EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Ast.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		NightlyDebug|Any CPU = NightlyDebug|Any CPU

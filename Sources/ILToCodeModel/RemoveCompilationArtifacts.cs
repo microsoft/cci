@@ -16,7 +16,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.sourceMethodBody = sourceMethodBody;
     }
 
-    internal Dictionary<IFieldReference, object> capturedLocalOrParameter = new Dictionary<IFieldReference, object>();
+    internal Dictionary<string, object> capturedLocalOrParameter = new Dictionary<string, object>();
     ITypeDefinition containingType;
     ILocalDefinition currentClosureLocal = Dummy.LocalVariable;
     SourceMethodBody sourceMethodBody;
@@ -28,7 +28,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var field = addressableExpression.Definition as IFieldReference;
       if (field != null) {
         object localOrParameter = null;
-        if (this.capturedLocalOrParameter.TryGetValue(field, out localOrParameter)) {
+        if (this.capturedLocalOrParameter.TryGetValue(field.ResolvedField.Name.Value, out localOrParameter)) {
           addressableExpression.Definition = localOrParameter;
           addressableExpression.Instance = null;
           return addressableExpression;
@@ -41,7 +41,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var field = targetExpression.Definition as IFieldReference;
       if (field != null) {
         object localOrParameter = null;
-        if (this.capturedLocalOrParameter.TryGetValue(field, out localOrParameter)) {
+        if (this.capturedLocalOrParameter.TryGetValue(field.ResolvedField.Name.Value, out localOrParameter)) {
           targetExpression.Definition = localOrParameter;
           targetExpression.Instance = null;
           return targetExpression;
@@ -59,6 +59,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ILocalDefinition savedClosureLocal = this.currentClosureLocal;
       this.FindCapturedLocals(blockStatement.Statements);
       IBlockStatement result = base.Visit(blockStatement);
+      new CachedDelegateRemover(this.sourceMethodBody).Visit(result);
       this.currentClosureLocal = savedClosureLocal;
       return result;
     }
@@ -68,34 +69,44 @@ namespace Microsoft.Cci.ILToCodeModel {
       INestedTypeReference/*?*/ closureType = null;
       int i = 0;
       while (i < statements.Count && closureType == null) {
-        locDecl = statements[i++] as LocalDeclarationStatement;
+        var statement = statements[i++];
+        locDecl = statement as LocalDeclarationStatement;
         if (locDecl == null || !(locDecl.InitialValue is ICreateObjectInstance)) continue;
-        closureType = locDecl.LocalVariable.Type as INestedTypeReference;
+        closureType = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(locDecl.LocalVariable.Type);
       }
       if (closureType == null) return;
-      if (closureType.ContainingType.ResolvedType != this.containingType) return;
-      if (!AttributeHelper.Contains(closureType.ResolvedType.Attributes, this.containingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-        return;
+      ITypeReference t1 = UnSpecializedMethods.AsUnSpecializedTypeReference(closureType.ContainingType.ResolvedType);
+      ITypeReference t2 = UnSpecializedMethods.AsUnSpecializedTypeReference(this.containingType);
+      if (t1 != t2) return;
+      if (!UnSpecializedMethods.IsCompilerGenerated(closureType.ResolvedType)) return;
       this.currentClosureLocal = locDecl.LocalVariable;
-      statements.RemoveAt(i-1);
-      for (int j = i-1; j < statements.Count; j++) {
+      statements.RemoveAt(i - 1);
+      for (int j = i - 1; j < statements.Count; j++) {
         IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
         if (es == null) break;
         IAssignment/*?*/ assignment = es.Expression as IAssignment;
         if (assignment == null) break;
         IFieldReference/*?*/ closureField = assignment.Target.Definition as IFieldReference;
-        if (closureField == null || !TypeHelper.TypesAreEquivalent(closureField.ContainingType, closureType)) break;
-        IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
-        if (binding == null || !(binding.Definition is ILocalDefinition || binding.Definition is IParameterDefinition)) break;
-        this.capturedLocalOrParameter.Add(closureField, binding.Definition);
+        if (closureField == null) break;
+        ITypeReference closureFieldContainingType = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(assignment.Target.Instance.Type);
+        if (closureFieldContainingType == null) break;
+        if (!TypeHelper.TypesAreEquivalent(closureFieldContainingType, closureType)) break;
+        IThisReference thisReference = assignment.Source as IThisReference;
+        if (thisReference == null) {
+          IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
+          if (binding == null || !(binding.Definition is ILocalDefinition || binding.Definition is IParameterDefinition)) break;
+          this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, binding.Definition);
+        } else {
+          this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, thisReference);
+        }
         statements.RemoveAt(j--);
       }
       foreach (var field in closureType.ResolvedType.Fields) {
-        if (this.capturedLocalOrParameter.ContainsKey(field)) continue;
+        if (this.capturedLocalOrParameter.ContainsKey(field.Name.Value)) continue;
         var newLocal = new LocalDefinition() { Name = field.Name, Type = field.Type };
         var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
         statements.Insert(i, newLocalDecl);
-        this.capturedLocalOrParameter.Add(field, newLocal);
+        this.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
       }
     }
 
@@ -109,8 +120,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       IFieldReference/*?*/ closureField = boundExpression.Definition as IFieldReference;
       if (closureField != null) {
         object/*?*/ localOrParameter = null;
-        this.capturedLocalOrParameter.TryGetValue(closureField.ResolvedField, out localOrParameter);
+        this.capturedLocalOrParameter.TryGetValue(closureField.ResolvedField.Name.Value, out localOrParameter);
         if (localOrParameter != null) {
+          IThisReference thisReference = localOrParameter as IThisReference;
+          if (thisReference != null) return thisReference;
           boundExpression.Definition = localOrParameter;
           boundExpression.Instance = null;
           return boundExpression;
@@ -132,16 +145,19 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (bexpr != null && bexpr.Definition == this.currentClosureLocal)
         return ConvertToAnonymousDelegate(createDelegateInstance);
       CompileTimeConstant/*?*/ cc = createDelegateInstance.Instance as CompileTimeConstant;
-      if (cc != null && cc.Value == null && 
-        TypeHelper.TypesAreEquivalent(createDelegateInstance.MethodToCallViaDelegate.ContainingType, this.containingType) &&
-        AttributeHelper.Contains(createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod.Attributes,
-          this.containingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+      IMethodDefinition delegateMethodDefinition = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
+      delegateMethodDefinition = UnSpecializedMethods.UnSpecializedMethodDefinition(delegateMethodDefinition);
+      ITypeReference delegateContainingType = createDelegateInstance.MethodToCallViaDelegate.ContainingType;
+      delegateContainingType = UnSpecializedMethods.AsUnSpecializedTypeReference(delegateContainingType);
+      if (cc != null && cc.Value == null && TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) &&
+        UnSpecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
         return ConvertToAnonymousDelegate(createDelegateInstance);
       return base.Visit(createDelegateInstance);
     }
 
     private IExpression ConvertToAnonymousDelegate(CreateDelegateInstance createDelegateInstance) {
       IMethodDefinition closureMethod = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
+      IMethodBody closureMethodBody = UnSpecializedMethods.GetMethodBodyFromUnspecializedVersion(closureMethod);
       AnonymousDelegate anonDel = new AnonymousDelegate();
       anonDel.CallingConvention = closureMethod.CallingConvention;
       anonDel.Parameters = new List<IParameterDefinition>(closureMethod.Parameters);
@@ -153,7 +169,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethod.Body, this.sourceMethodBody.host, this.sourceMethodBody.contractProvider, this.sourceMethodBody.pdbReader).Block;
+      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host, this.sourceMethodBody.contractProvider, this.sourceMethodBody.pdbReader).Block;
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -183,8 +199,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }
@@ -193,8 +211,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }
@@ -302,12 +322,95 @@ namespace Microsoft.Cci.ILToCodeModel {
             cc.Value = false;
           else
             cc.Value = true;
-          cc.Type =  this.containingType.PlatformType.SystemBoolean;
+          cc.Type = this.containingType.PlatformType.SystemBoolean;
         }
       }
       return returnStatement;
     }
 
+  }
+
+  internal class CachedDelegateRemover : MethodBodyMutator {
+    internal CachedDelegateRemover(SourceMethodBody sourceMethodBody)
+      : base(sourceMethodBody.host, true) {
+      this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
+      this.sourceMethodBody = sourceMethodBody;
+    }
+    ITypeDefinition containingType;
+    SourceMethodBody sourceMethodBody;
+    class CachedDelegateInfo {
+      public int State;
+      public IName Label;
+      public AnonymousDelegate theDelegate;
+      readonly public string Fname;
+      public CachedDelegateInfo(string fname) {
+        this.Fname = fname;
+      }
+    }
+    Dictionary<string, CachedDelegateInfo> cachedDelegateFields = new Dictionary<string, CachedDelegateInfo>();
+    static string CachedDelegateId = "CachedAnonymousMethodDelegate";
+
+    public override IBlockStatement Visit(BlockStatement blockStatement) {
+      FindAndRemoveAssignmentToCachedDelegate(blockStatement.Statements);
+      return base.Visit(blockStatement);
+    }
+
+    public override IExpression Visit(BoundExpression boundExpression) {
+      IFieldReference fieldReference = boundExpression.Definition as IFieldReference;
+      if (fieldReference != null && this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 3) {
+        return this.cachedDelegateFields[fieldReference.Name.Value].theDelegate;
+      }
+      return base.Visit(boundExpression);
+    }
+
+    void FindAndRemoveAssignmentToCachedDelegate(List<IStatement> statements) {
+      for (int/*change in the body*/ i = 0; i < statements.Count; i++) {
+        IConditionalStatement conditionalStatement = statements[i] as IConditionalStatement;
+        if (conditionalStatement != null) {
+          IBoundExpression boundExpression = conditionalStatement.Condition as IBoundExpression;
+          if (boundExpression != null) {
+            IFieldReference fieldReference = boundExpression.Definition as IFieldReference;
+            if (fieldReference != null && UnSpecializedMethods.IsCompilerGenerated(fieldReference) && fieldReference.Name.Value.Contains(CachedDelegateId)) {
+              CachedDelegateInfo info = new CachedDelegateInfo(fieldReference.Name.Value);
+              IGotoStatement gotoStatement = conditionalStatement.TrueBranch as IGotoStatement;
+              if (gotoStatement == null) gotoStatement = conditionalStatement.FalseBranch as IGotoStatement;
+              if (gotoStatement != null) {
+                info.Label = gotoStatement.TargetStatement.Label;
+                info.State = 1;
+              }
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
+                this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
+              statements.RemoveAt(i--);
+              continue;
+            }
+          }
+        }
+        IExpressionStatement expressionStatement = statements[i] as IExpressionStatement;
+        if (expressionStatement != null) {
+          IAssignment assignment = expressionStatement.Expression as IAssignment;
+          if (assignment != null && assignment.Source is AnonymousDelegate) {
+            IFieldReference fieldReference = assignment.Target.Definition as IFieldReference;
+            if (fieldReference != null) {
+              if (this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 1) {
+                this.cachedDelegateFields[fieldReference.Name.Value].State = 3;
+                this.cachedDelegateFields[fieldReference.Name.Value].theDelegate = assignment.Source as AnonymousDelegate;
+                statements.RemoveAt(i--);
+                continue;
+              }
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) {
+                CachedDelegateInfo info = new CachedDelegateInfo(fieldReference.Name.Value);
+                info.State = 3;
+                info.theDelegate = assignment.Source as AnonymousDelegate;
+                this.cachedDelegateFields[fieldReference.Name.Value] = info;
+                statements.RemoveAt(i--);
+                continue;
+              }
+            }
+          }
+          continue;
+        }
+      }
+    }
   }
 
   internal class LabelReferenceFinder : BaseCodeTraverser {

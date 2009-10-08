@@ -15,10 +15,10 @@ namespace PeToText {
       HostEnvironment host = new HostEnvironment();
       IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
       if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-        Console.WriteLine(args[0]+" is not a PE file containing a CLR module or assembly.");
+        Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
         return;
       }
-      ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), module);
+      ContractProvider contractProvider = null;// new ContractProvider(new ContractMethods(host), module);
 
       PdbReader/*?*/ pdbReader = null;
       string pdbFile = Path.ChangeExtension(module.Location, "pdb");

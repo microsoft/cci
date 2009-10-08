@@ -260,7 +260,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (ILocalScope localScope in this.pdbReader.GetLocalScopes(this.ilMethodBody)) {
         BasicBlock block = this.GetOrCreateBlock(localScope.Offset, false);
         block.LocalVariables = new List<ILocalDefinition>(this.pdbReader.GetVariablesInScope(localScope));
-        block.EndOffset = localScope.Offset+localScope.Length;
+        block.EndOffset = localScope.Offset + localScope.Length;
         this.GetOrCreateBlock(block.EndOffset, false);
       }
     }
@@ -373,10 +373,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
-      IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(result);
+      // new CompilationArtifactRemover(this).Visit(rootBlock);
+      IBlockStatement result = rootBlock;
       if (IsIterator) {
-        var iteratorBodyFromIL = result;
+        var iteratorBodyFromIL = rootBlock;
         IMethodBody moveNextILBody = this.FindClosureMoveNext(iteratorBodyFromIL);
         if (moveNextILBody.Equals(Dummy.MethodBody)) return iteratorBodyFromIL;
         MoveNextSourceMethodBody moveNextBody;
@@ -386,6 +386,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader);
         result = moveNextBody.TransformedBlock;
       }
+      result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       if (this.contractProvider != null) {
         if (this.contractExtractor == null) {
           this.contractExtractor = new ContractExtractor(this, this.contractProvider);
@@ -427,7 +429,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (addLabel && result.Statements.Count == 0) {
         LabeledStatement label = new LabeledStatement();
-        label.Label = this.nameTable.GetNameFor("IL_"+offset.ToString("x4"));
+        label.Label = this.nameTable.GetNameFor("IL_" + offset.ToString("x4"));
         label.Statement = new EmptyStatement();
         result.Statements.Add(label);
         this.targetStatementFor.Add(offset, label);
@@ -933,7 +935,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Expression ParseMakeTypedReference(IOperation currentOperation) {
       MakeTypedReference result = new MakeTypedReference();
-      Expression operand  = this.PopOperandStack();
+      Expression operand = this.PopOperandStack();
       operand.Type = ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory);
       result.Operand = operand;
       return result;
@@ -1583,9 +1585,15 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DecompileMoveNext(block);
         BasicBlock rootBlock = GetOrCreateBlock(0, false);
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
+
+        block = this.AddLocalDeclarationIfNecessary(block);
         new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
         return block;
       }
+    }
+
+    private IBlockStatement AddLocalDeclarationIfNecessary(IBlockStatement block) {
+      return new ClosureLocalVariableDeclarationAdder(this).Transform(block);
     }
 
     private IBlockStatement DecompileMoveNext(IBlockStatement block) {
