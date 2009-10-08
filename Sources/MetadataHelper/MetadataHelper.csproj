@@ -93,6 +93,7 @@
       <Link>Build\version.cs</Link>
     </Compile>
     <Compile Include="AttributeHelper.cs" />
+    <Compile Include="CommandLineOptions.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="GlobalAssemblyCache.cs" />
     <Compile Include="MemberHelper.cs" />

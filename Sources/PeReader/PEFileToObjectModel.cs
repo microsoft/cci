@@ -21,7 +21,7 @@ namespace Microsoft.Cci.MetadataReader {
   using Microsoft.Cci.MetadataReader.ObjectModelImplementation;
 
   internal enum LoadState : byte {
-    Uninitialized=0,
+    Uninitialized = 0,
     Loading,
     Loaded,
   }
@@ -719,7 +719,7 @@ namespace Microsoft.Cci.MetadataReader {
       lock (GlobalLock.LockingObject) {
         if (this.FileReferenceArray == null) {
           uint num = this.PEFileReader.FileTable.NumberOfRows;
-          FileReference[] fileReferenceArray = new FileReference[num+1];
+          FileReference[] fileReferenceArray = new FileReference[num + 1];
           for (uint i = 1; i <= num; ++i) {
             FileRow fileRow = this.PEFileReader.FileTable[i];
             IName name = this.GetNameFromOffset(fileRow.Name);
@@ -1087,7 +1087,7 @@ namespace Microsoft.Cci.MetadataReader {
       IName typeName = this.GetNameFromOffset(typeDefRow.Name);
       if (typeDefRow.Namespace != 0) {
         IName namespaceName = this.GetNameFromOffset(typeDefRow.Namespace);
-        typeName = this.NameTable.GetNameFor(namespaceName.Value+"."+typeName.Value);
+        typeName = this.NameTable.GetNameFor(namespaceName.Value + "." + typeName.Value);
       }
       uint genericParamRowIdStart;
       uint genericParamRowIdEnd;
@@ -1266,7 +1266,7 @@ namespace Microsoft.Cci.MetadataReader {
         Debug.Assert(this.ExportedTypeArray[exportedTypeRowId] == null);
         this.ExportedTypeLoadState[exportedTypeRowId] = LoadState.Loading;
         ExportedTypeRow exportedTypeRow = this.PEFileReader.ExportedTypeTable[exportedTypeRowId];
-        ExportedTypeAliasBase/*?*/ expType =  null;
+        ExportedTypeAliasBase/*?*/ expType = null;
         if (exportedTypeRow.IsNested) {
           if ((exportedTypeRow.Implementation & TokenTypeIds.TokenTypeMask) == TokenTypeIds.ExportedType) {
             uint parentExportedTypeRowId = exportedTypeRow.Implementation & TokenTypeIds.RIDMask;
@@ -1950,7 +1950,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (fileRef == null) {
               return null;
             }
-            Module/*?*/ module =thisAssembly.FindMemberModuleNamed(fileRef.Name);
+            Module/*?*/ module = thisAssembly.FindMemberModuleNamed(fileRef.Name);
             if (module == null) {
               return null;
             }
@@ -2008,7 +2008,7 @@ namespace Microsoft.Cci.MetadataReader {
             } else {
               string fullTypeName = typeName.Value;
               if (namespaceName.Value.Length > 0)
-                fullTypeName = namespaceName.Value+"."+typeName.Value;
+                fullTypeName = namespaceName.Value + "." + typeName.Value;
               var parser = new TypeNameParser(this.NameTable, fullTypeName);
               return parser.ParseTypeName().GetAsTypeReference(this, assemRef);
             }
@@ -3306,7 +3306,7 @@ namespace Microsoft.Cci.MetadataReader {
         lock (GlobalLock.LockingObject) {
           if (this.CustomAttributeArray[customAttributeRowId] == null) {
             CustomAttributeRow customAttribute = this.PEFileReader.CustomAttributeTable[customAttributeRowId];
-            if (customAttribute.Parent == owningObject.TokenValue || (customAttribute.Parent == 1 && owningObject.TokenValue == TokenTypeIds.Assembly+1)) {
+            if (customAttribute.Parent == owningObject.TokenValue || (customAttribute.Parent == 1 && owningObject.TokenValue == TokenTypeIds.Assembly + 1)) {
               uint ctorTokenType = customAttribute.Type & TokenTypeIds.TokenTypeMask;
               uint ctorRowId = customAttribute.Type & TokenTypeIds.RIDMask;
               IModuleMethodReference/*?*/ moduleMethodReference = null;
@@ -3321,7 +3321,7 @@ namespace Microsoft.Cci.MetadataReader {
                 return Dummy.CustomAttribute;
               }
               if (customAttribute.Value == 0) {
-                this.CustomAttributeArray[customAttributeRowId] = 
+                this.CustomAttributeArray[customAttributeRowId] =
                   new CustomAttribute(this, customAttributeRowId, moduleMethodReference, TypeCache.EmptyExpressionList, TypeCache.EmptyNamedArgumentList);
               } else {
                 //  TODO: Check is customAttribute.Value is within the range
