@@ -152,13 +152,13 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
       } else {
+        uint numberOfTypeRefs = peFileReader.TypeRefTable.NumberOfRows;
         AssemblyReference/*?*/ coreAssemblyRef = peFileToObjectModel.FindAssemblyReference(peReader.metadataReaderHost.CoreAssemblySymbolicIdentity);
         if (coreAssemblyRef == null) {
           //  Error...
-          return;
+          coreAssemblyRef = new AssemblyReference(peFileToObjectModel, 0, peReader.metadataReaderHost.CoreAssemblySymbolicIdentity);
         }
         uint coreAssemblyRefToken = coreAssemblyRef.TokenValue;
-        uint numberOfTypeRefs = peFileReader.TypeRefTable.NumberOfRows;
         for (uint i = 1; i <= numberOfTypeRefs; ++i) {
           TypeRefRow typeRefRow = peFileReader.TypeRefTable[i];
           if (typeRefRow.ResolutionScope != coreAssemblyRefToken)
