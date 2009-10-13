@@ -114,6 +114,42 @@ namespace Microsoft.Cci.ILToCodeModel {
       return methodDefinition.Body;
     }
 
+    public static bool IsCompilerGenerated(ITypeReference/*!*/ typeReference) {
+      if (AttributeHelper.Contains(typeReference.ResolvedType.Attributes, typeReference.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+        return true;
+      IGenericTypeInstanceReference genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstanceReference != null && IsCompilerGenerated(genericTypeInstanceReference.GenericType)) {
+        return true;
+      }
+      ISpecializedNestedTypeReference specializedNestedType = typeReference as ISpecializedNestedTypeReference;
+      if (specializedNestedType != null && IsCompilerGenerated(specializedNestedType.UnspecializedVersion)) {
+        return true;
+      }
+      ISpecializedNestedTypeDefinition specializedNestedTypeDefinition = typeReference as ISpecializedNestedTypeDefinition;
+      if (specializedNestedTypeDefinition != null && IsCompilerGenerated(specializedNestedTypeDefinition.UnspecializedVersion))
+        return true;
+      INestedTypeReference nestedTypeReference = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(typeReference);
+      if (nestedTypeReference != null) return IsCompilerGenerated(nestedTypeReference.ContainingType);
+      return false;
+    }
+
+    public static bool IsCompilerGenerated(IMethodDefinition/*!*/ methodDefinition) {
+      if (AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+        return true;
+      IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
+      if (genericMethodInstance != null) return IsCompilerGenerated(genericMethodInstance.GenericMethod.ResolvedMethod);
+      if (methodDefinition.ContainingType == null) return false;
+      return IsCompilerGenerated(methodDefinition.ContainingType);
+    }
+
+    public static bool IsCompilerGenerated(IFieldReference/*!*/ fieldReference) {
+      if (AttributeHelper.Contains(fieldReference.ResolvedField.Attributes, fieldReference.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+        return true;
+      ISpecializedFieldReference specializedFieldReference = fieldReference as ISpecializedFieldReference;
+      if (specializedFieldReference != null)
+        return IsCompilerGenerated(specializedFieldReference.UnspecializedVersion);
+      return IsCompilerGenerated(fieldReference.ContainingType);
+    }
     /// <summary>
     /// Given a type reference <paramref name="typeReference"/>, convert it to an INestedTypeReference object if
     /// it is one, or if its unspecialized version is a INestedTypeReference. Otherwise return null. 

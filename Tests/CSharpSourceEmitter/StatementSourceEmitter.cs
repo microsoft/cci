@@ -201,6 +201,7 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.IncreaseIndent();
       this.Visit(switchStatement.Cases);
       this.sourceEmitterOutput.DecreaseIndent();
+
       this.sourceEmitterOutput.WriteLine("}", true);
     }
 
@@ -246,11 +247,21 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IYieldBreakStatement yieldBreakStatement) {
-      base.Visit(yieldBreakStatement);
+      this.PrintToken(CSharpToken.Indent);
+      this.PrintToken(CSharpToken.YieldBreak);
+      this.PrintToken(CSharpToken.Semicolon);
+      this.PrintToken(CSharpToken.NewLine);
     }
 
     public override void Visit(IYieldReturnStatement yieldReturnStatement) {
-      base.Visit(yieldReturnStatement);
+      this.PrintToken(CSharpToken.Indent);
+      this.PrintToken(CSharpToken.YieldReturn);
+      if (yieldReturnStatement.Expression != null) {
+        this.PrintToken(CSharpToken.Space);
+        this.Visit(yieldReturnStatement.Expression);
+      }
+      this.PrintToken(CSharpToken.Semicolon);
+      this.PrintToken(CSharpToken.NewLine);
     }
 
     public override void VisitMethodReturnAttributes(IEnumerable<ICustomAttribute> customAttributes) {

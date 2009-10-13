@@ -59,36 +59,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       ILocalDefinition savedClosureLocal = this.currentClosureLocal;
       this.FindCapturedLocals(blockStatement.Statements);
       IBlockStatement result = base.Visit(blockStatement);
+      new CachedDelegateRemover(this.sourceMethodBody).Visit(result);
       this.currentClosureLocal = savedClosureLocal;
       return result;
-    }
-
-    bool IsCompilerGenerated(ITypeReference/*!*/ typeReference) {
-      if (AttributeHelper.Contains(typeReference.ResolvedType.Attributes, this.containingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-        return true;
-      IGenericTypeInstanceReference genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
-      if (genericTypeInstanceReference != null && IsCompilerGenerated(genericTypeInstanceReference.GenericType)) {
-        return true;
-      }
-      ISpecializedNestedTypeReference specializedNestedType = typeReference as ISpecializedNestedTypeReference;
-      if (specializedNestedType != null && IsCompilerGenerated(specializedNestedType.UnspecializedVersion)) {
-        return true;
-      }
-      ISpecializedNestedTypeDefinition specializedNestedTypeDefinition = typeReference as ISpecializedNestedTypeDefinition;
-      if (specializedNestedTypeDefinition != null && IsCompilerGenerated(specializedNestedTypeDefinition.UnspecializedVersion))
-        return true;
-      INestedTypeReference nestedTypeReference = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(typeReference);
-      if (nestedTypeReference != null) return IsCompilerGenerated(nestedTypeReference.ContainingType);
-      return false;
-    }
-
-    bool IsCompilerGenerated(IMethodDefinition methodDefinition) {
-      if (AttributeHelper.Contains(methodDefinition.Attributes, this.containingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-        return true;
-      IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
-      if (genericMethodInstance != null) return IsCompilerGenerated(genericMethodInstance.GenericMethod.ResolvedMethod);
-      if (methodDefinition.ContainingType == null) return false;
-      return IsCompilerGenerated(methodDefinition.ContainingType);
     }
 
     private void FindCapturedLocals(List<IStatement> statements) {
@@ -105,7 +78,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ITypeReference t1 = UnSpecializedMethods.AsUnSpecializedTypeReference(closureType.ContainingType.ResolvedType);
       ITypeReference t2 = UnSpecializedMethods.AsUnSpecializedTypeReference(this.containingType);
       if (t1 != t2) return;
-      if (!IsCompilerGenerated(closureType.ResolvedType)) return;
+      if (!UnSpecializedMethods.IsCompilerGenerated(closureType.ResolvedType)) return;
       this.currentClosureLocal = locDecl.LocalVariable;
       statements.RemoveAt(i-1);
       for (int j = i-1; j < statements.Count; j++) {
@@ -177,7 +150,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ITypeReference delegateContainingType = createDelegateInstance.MethodToCallViaDelegate.ContainingType;
       delegateContainingType = UnSpecializedMethods.AsUnSpecializedTypeReference(delegateContainingType);
       if (cc != null && cc.Value == null && TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) &&
-        IsCompilerGenerated(delegateMethodDefinition))
+        UnSpecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
         return ConvertToAnonymousDelegate(createDelegateInstance);
       return base.Visit(createDelegateInstance);
     }
@@ -351,6 +324,89 @@ namespace Microsoft.Cci.ILToCodeModel {
       return returnStatement;
     }
 
+  }
+
+  internal class CachedDelegateRemover : MethodBodyMutator {
+    internal CachedDelegateRemover(SourceMethodBody sourceMethodBody)
+      : base(sourceMethodBody.host, true) {
+      this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
+      this.sourceMethodBody = sourceMethodBody;
+    }
+    ITypeDefinition containingType;
+    SourceMethodBody sourceMethodBody;
+    class CachedDelegateInfo {
+      public int State;
+      public IName Label;
+      public AnonymousDelegate theDelegate;
+      readonly public string Fname;
+      public CachedDelegateInfo(string fname) {
+        this.Fname = fname;
+      }
+    }
+    Dictionary<string, CachedDelegateInfo> cachedDelegateFields = new Dictionary<string, CachedDelegateInfo>();
+    static string CachedDelegateId = "CachedAnonymousMethodDelegate";
+
+    public override IBlockStatement Visit(BlockStatement blockStatement) {
+      FindAndRemoveAssignmentToCachedDelegate(blockStatement.Statements);
+      return base.Visit(blockStatement);
+    }
+
+    public override IExpression Visit(BoundExpression boundExpression) {
+      IFieldReference fieldReference = boundExpression.Definition as IFieldReference;
+      if (fieldReference != null && this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 3) {
+        return this.cachedDelegateFields[fieldReference.Name.Value].theDelegate;
+      }
+      return base.Visit(boundExpression);
+    }
+
+    void FindAndRemoveAssignmentToCachedDelegate(List<IStatement> statements) {
+      for (int/*change in the body*/ i = 0; i < statements.Count; i++) {
+        IConditionalStatement conditionalStatement = statements[i] as IConditionalStatement;
+        if (conditionalStatement != null) {
+          IBoundExpression boundExpression = conditionalStatement.Condition as IBoundExpression;
+          if (boundExpression != null) {
+            IFieldReference fieldReference = boundExpression.Definition as IFieldReference;
+            if (fieldReference != null && UnSpecializedMethods.IsCompilerGenerated(fieldReference) && fieldReference.Name.Value.Contains(CachedDelegateId)) {
+              CachedDelegateInfo info = new CachedDelegateInfo(fieldReference.Name.Value);
+              IGotoStatement gotoStatement = conditionalStatement.TrueBranch as IGotoStatement;
+              if (gotoStatement == null) gotoStatement = conditionalStatement.FalseBranch as IGotoStatement;
+              if (gotoStatement != null) {
+                info.Label = gotoStatement.TargetStatement.Label;
+                info.State = 1;
+              }
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
+                this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
+              statements.RemoveAt(i--);
+              continue;
+            }
+          }
+        }
+        IExpressionStatement expressionStatement = statements[i] as IExpressionStatement;
+        if (expressionStatement != null) {
+          IAssignment assignment = expressionStatement.Expression as IAssignment;
+          if (assignment != null && assignment.Source is AnonymousDelegate) {
+            IFieldReference fieldReference = assignment.Target.Definition as IFieldReference;
+            if (fieldReference != null) {
+              if (this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 1) {
+                this.cachedDelegateFields[fieldReference.Name.Value].State = 3;
+                this.cachedDelegateFields[fieldReference.Name.Value].theDelegate = assignment.Source as AnonymousDelegate;
+                statements.RemoveAt(i--);
+                continue;
+              }
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) {
+                CachedDelegateInfo info = new CachedDelegateInfo(fieldReference.Name.Value);
+                info.State = 3;
+                info.theDelegate = assignment.Source as AnonymousDelegate;
+                this.cachedDelegateFields[fieldReference.Name.Value] = info;
+                statements.RemoveAt(i--);
+                continue;
+              }
+            }
+          }
+          continue;
+        }
+      }
+    }
   }
 
   internal class LabelReferenceFinder : BaseCodeTraverser {
