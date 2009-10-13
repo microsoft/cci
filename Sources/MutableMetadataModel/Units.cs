@@ -343,9 +343,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public string Culture {
       get { return this.culture; }
-      set { this.culture = value; }
+      set { this.culture = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
     }
     string culture;
+
+    /// <summary>
+    /// The name of the referenced assembly.
+    /// </summary>
+    /// <value></value>
+    public override IName Name {
+      get { return base.Name; }
+      set { base.Name = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+    }
 
     /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
@@ -353,7 +362,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<byte> PublicKeyToken {
       get { return this.publicKeyToken; }
-      set { this.publicKeyToken = value; }
+      set { this.publicKeyToken = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
     }
     List<byte> publicKeyToken;
 
@@ -363,18 +372,42 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public Version Version {
       get { return this.version; }
-      set { this.version = value; }
+      set { this.version = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
     }
     Version version;
 
     /// <summary>
-    /// The identity of the referenced assembly.
+    /// The location of the referenced assembly.
+    /// </summary>
+    public string Location {
+      get { return this.location; }
+      set { this.location = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+    }
+    string location;
+
+    /// <summary>
+    /// The identity of the referenced assembly. Has the same Culture, Name, PublicKeyToken and Version as the reference.
     /// </summary>
     /// <value></value>
-    /// <remarks>The location might be empty.</remarks>
+    /// <remarks>Also has a location, which may might be empty. Although mostly redundant, the object returned by this
+    /// property is useful because it derives from System.Object and therefore can be used as a hash table key. It may be more efficient
+    /// to use the properties defined directly on the reference, since the object returned by this property may be allocated lazily
+    /// and the allocation can thus be avoided by using the reference's properties.</remarks>
     public AssemblyIdentity AssemblyIdentity {
-      get { return this.assemblyIdentity; }
-      set { this.ModuleIdentity = this.assemblyIdentity = value; }
+      get {
+        if (this.assemblyIdentity == null)
+          this.assemblyIdentity = new AssemblyIdentity(this.Name, this.Culture, this.Version, this.PublicKeyToken, this.Location);
+        return this.assemblyIdentity;
+      }
+      set {
+        this.assemblyIdentity = this.unifiedAssemblyIdentity = value;
+        this.culture = value.Culture;
+        base.Name = value.Name;
+        this.publicKeyToken = new List<byte>(value.PublicKeyToken);
+        this.version = value.Version;
+        this.location = value.Location;
+        base.ModuleIdentity = assemblyIdentity;
+      }
     }
     AssemblyIdentity assemblyIdentity;
 
@@ -384,7 +417,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     /// <remarks>The location might not be set.</remarks>
     public AssemblyIdentity UnifiedAssemblyIdentity {
-      get { return this.unifiedAssemblyIdentity; }
+      get {
+        if (this.unifiedAssemblyIdentity == null)
+          return this.AssemblyIdentity;
+        return this.unifiedAssemblyIdentity;
+      }
       set { this.unifiedAssemblyIdentity = value; }
     }
     AssemblyIdentity unifiedAssemblyIdentity;
@@ -933,10 +970,26 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     /// <remarks>The location might not be set.</remarks>
     public ModuleIdentity ModuleIdentity {
-      get { return this.moduleIdentity; }
-      set { this.moduleIdentity = value; }
+      get {
+        if (this.moduleIdentity == null)
+          this.moduleIdentity = new ModuleIdentity(this.Name, "");
+        return this.moduleIdentity;
+      }
+      set {
+        this.moduleIdentity = value;
+        base.Name = value.Name;
+      }
     }
     ModuleIdentity moduleIdentity;
+
+    /// <summary>
+    /// The name of the referenced module.
+    /// </summary>
+    /// <value></value>
+    public override IName Name {
+      get { return base.Name; }
+      set { base.Name = value; this.moduleIdentity = null; }
+    }
 
     /// <summary>
     /// The referenced module, or Dummy.Module if the reference cannot be resolved.
@@ -1134,10 +1187,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<ILocation> locations;
 
     /// <summary>
-    /// The name of the entity.
+    /// The name of the referenced unit.
     /// </summary>
     /// <value></value>
-    public IName Name {
+    public virtual IName Name {
       get { return this.name; }
       set { this.name = value; }
     }
