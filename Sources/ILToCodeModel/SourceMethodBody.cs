@@ -371,9 +371,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       new Unstacker(this).Visit(rootBlock);
       new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
-      new DeclarationAdder().Visit(rootBlock);
+      new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
-      // new CompilationArtifactRemover(this).Visit(rootBlock);
       IBlockStatement result = rootBlock;
       if (IsIterator) {
         var iteratorBodyFromIL = rootBlock;
@@ -387,6 +386,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         result = moveNextBody.TransformedBlock;
       }
       result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);
+      var bb = result as BasicBlock;
+      if (bb != null) {
+        new UnreferencedLabelRemover().Visit(bb);
+      }
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       if (this.contractProvider != null) {
         if (this.contractExtractor == null) {
@@ -1573,7 +1576,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new Unstacker(this).Visit(rootBlock);
       new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
-      new DeclarationAdder().Visit(rootBlock);
+      new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
       IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
       result = new AssertAssumeExtractor(this).Visit(result);

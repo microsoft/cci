@@ -56,7 +56,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         tryStatement.TryBody = this.GetBasicBlockUpto(b, firstHandler.StartOffset);
         BasicBlock tryBody = tryStatement.TryBody as BasicBlock;
-        int startPoint =0;
+        int startPoint = 0;
         if (tryBody != null && tryBody.Statements.Count >0) {
           ILabeledStatement labeledStatement = tryBody.Statements[0] as ILabeledStatement;
           if (labeledStatement != null) {
@@ -295,7 +295,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var assignment = exprS.Expression as IAssignment;
         if (assignment != null) {
           var tempVar = assignment.Target.Definition as TempVariable;
-          if (tempVar != null && b.LocalVariables != null) {
+          if (tempVar != null && b.LocalVariables != null && b.LocalVariables.Contains(tempVar)) {
             b.LocalVariables.Remove(tempVar);
             if (result.LocalVariables == null) result.LocalVariables = new List<ILocalDefinition>();
             result.LocalVariables.Add(tempVar);

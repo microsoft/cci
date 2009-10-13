@@ -555,7 +555,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   internal class TempVariable : LocalDefinition {
-    public TempVariable() {
+    internal TempVariable() {
     }
 
   }

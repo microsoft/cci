@@ -55,7 +55,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     internal void Visit(BasicBlock block) {
       if (this.block == null) this.block = block;
-      this.operandStack = new StackOfLocals();
+      this.operandStack = new StackOfLocals(this.body);
       int numberOfCatchBlocks = block.NumberOfTryBlocksStartingHere;
       BasicBlock bbb = block;
       while (numberOfCatchBlocks-- > 0) {
@@ -71,7 +71,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           this.codePointsToAnalyze.Enqueue(codePoint);
           continue;
         }
-        this.operandStack = codePoint.operandStack.Clone();
+        this.operandStack = codePoint.operandStack.Clone(this.block);
         List<IStatement> statements = codePoint.statements;
         for (int i = codePoint.index; i < statements.Count; i++) {
           statements[i] = this.Visit(statements[i]);
@@ -86,6 +86,20 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
       }
+    }
+
+    /// <summary>
+    /// Visits the specified block statement.
+    /// </summary>
+    /// <param name="blockStatement">The block statement.</param>
+    /// <returns></returns>
+    public override IBlockStatement Visit(BlockStatement blockStatement) {
+      var savedBlock = this.block;
+      BasicBlock bb = blockStatement as BasicBlock;
+      if (bb != null) this.block = bb;
+      blockStatement.Statements = Visit(blockStatement.Statements);
+      this.block = savedBlock;
+      return blockStatement;
     }
 
     public override IExpression Visit(Conditional conditional) {
@@ -146,7 +160,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         StackOfLocals newStack = null;
         if (this.stackFor.TryGetValue(gotoStatement.TargetStatement, out newStack))
           return this.TransferStack(gotoStatement, newStack);
-        this.stackFor.Add(gotoStatement.TargetStatement, this.operandStack.Clone());
+        this.stackFor.Add(gotoStatement.TargetStatement, this.operandStack.Clone(this.block));
         return gotoStatement;
       }
       ILabeledStatement labeledStatement = statement as ILabeledStatement;
@@ -154,7 +168,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         StackOfLocals newStack = null;
         if (this.stackFor.TryGetValue(labeledStatement, out newStack))
           return this.TransferStack(labeledStatement, newStack);
-        this.stackFor.Add(labeledStatement, this.operandStack.Clone());
+        this.stackFor.Add(labeledStatement, this.operandStack.Clone(this.block));
         return labeledStatement;
       }
       Push/*?*/ push = statement as Push;
@@ -256,26 +270,35 @@ namespace Microsoft.Cci.ILToCodeModel {
       BasicBlock block = new BasicBlock(0);
       this.operandStack.TransferTo(targetStack, block.Statements);
       block.Statements.Add(statement);
-      this.operandStack = targetStack.Clone();
+      this.operandStack = targetStack.Clone(this.block);
       return block;
     }
 
   }
 
   internal class StackOfLocals {
+    private SourceMethodBody body;
     private LocalDefinition[]/*?*/ elements;
     private int top = -1;
 
-    internal StackOfLocals() {
+    internal StackOfLocals(SourceMethodBody body) {
+      this.body = body;
     }
 
     private StackOfLocals(StackOfLocals template) {
       if (template.elements != null)
         this.elements = (LocalDefinition[])template.elements.Clone();
       this.top = template.top;
+      this.body = template.body;
     }
 
-    internal StackOfLocals Clone() {
+    internal StackOfLocals Clone(BasicBlock block) {
+      if (block.LocalVariables != null) {
+        for (int i = 0; i <= this.top; i++) {
+          LocalDefinition local = this.elements[i];
+          block.LocalVariables.Remove(local);
+        }
+      }
       return new StackOfLocals(this);
     }
 
@@ -304,6 +327,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         LocalDefinition sourceLocal = this.elements[i];
         LocalDefinition targetLocal = targetStack.elements[i];
         if (sourceLocal == targetLocal) continue;
+        this.body.numberOfReferences[sourceLocal]++;
+        this.body.numberOfAssignments[targetLocal]++;
         var target = new TargetExpression() { Definition = targetLocal, Type = targetLocal.Type };
         var source = new BoundExpression() { Definition = sourceLocal, Type = sourceLocal.Type };
         var assigment = new Assignment() { Target = target, Source = source, Type = target.Type };

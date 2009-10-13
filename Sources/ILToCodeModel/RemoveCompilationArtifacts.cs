@@ -127,8 +127,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       ILocalDefinition/*?*/ local = boundExpression.Definition as ILocalDefinition;
       if (local != null) {
         IExpression substitute = boundExpression;
-        if (this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.TryGetValue(local, out substitute))
+        if (this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.TryGetValue(local, out substitute)) {
+          this.sourceMethodBody.numberOfReferences[local]--;
           return substitute;
+        }
       }
       IFieldReference/*?*/ closureField = boundExpression.Definition as IFieldReference;
       if (closureField != null) {
@@ -262,9 +264,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.sourceMethodBody.pdbReader.GetSourceNameFor(local, out isCompilerGenerated);
         if (!isCompilerGenerated) return localDeclarationStatement;
       }
-      if (localDeclarationStatement.InitialValue != null)
+      if (localDeclarationStatement.InitialValue != null && numReferences > 0) {
+        //REVIEW: this seems wrong when the expression can reference memory locations that are updated between the declaration
+        //statement and the reference.
         this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.Add(local, localDeclarationStatement.InitialValue);
-      return CodeDummy.Block; //Causes the caller to omit this statement from the containing statement list.
+        return CodeDummy.Block; //Causes the caller to omit this statement from the containing statement list.
+      }
+      if (numReferences == 0) return CodeDummy.Block; //unused declaration
+      return localDeclarationStatement;
     }
 
     public override IExpression Visit(LogicalNot logicalNot) {
