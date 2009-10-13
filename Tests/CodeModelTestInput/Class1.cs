@@ -160,6 +160,18 @@ namespace CodeModelTestInput {
       return A && B || C && D;
     }
 
+    int Method18(int x, int y, int z) {
+      int midVal;
+      midVal = z;
+      if (y < z) {
+        if (x < y)
+          midVal = y;
+        else if (x < z)
+          midVal = x;
+      }
+      return midVal;
+    }
+
   }
 
   public class Class2 {

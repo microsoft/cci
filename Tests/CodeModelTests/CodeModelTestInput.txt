@@ -625,6 +625,29 @@ namespace CodeModelTestInput
 
         }
 
+        private int Method18(int x, int y, int z)
+        {
+            int midVal = z;
+            if ((y < z))
+            {
+                if ((x < y))
+                {
+                    midVal = y;
+                }
+                else
+                {
+                    if ((x >= z))
+                    {
+                        goto IL_002b;
+                    }
+                    midVal = x;
+                }
+            IL_002b:
+            }
+            return midVal;
+
+        }
+
         public void Method2()
         {
             byte[] local_11 = new byte[1];
@@ -752,7 +775,7 @@ namespace CodeModelTestInput
 
         private void Method9(int[] xs, int x)
         {
-            if (!((0 >= xs.Length) || ((x < xs.Length) == 0)))
+            if (!((0 >= xs.Length) || (x >= xs.Length)))
             {
                 xs[x] = 3;
             }
@@ -1287,25 +1310,25 @@ namespace CodeModelTestInput
 
             private static bool <Test1a>b__0(string s1)
             {
-                return ((s1 == null) == 0);
+                return (s1 != null);
 
             }
 
             private static bool <Test1d>b__5<T>(T s1)
             {
-                return ((s1 == null) == 0);
+                return (s1 != null);
 
             }
 
             private static bool <Test1d>b__6<T>(T s1)
             {
-                return ((s1 == null) == 0);
+                return (s1 != null);
 
             }
 
             private static bool <Test1e>b__d<T>(T s)
             {
-                return ((s == null) == 0);
+                return (s != null);
 
             }
 
@@ -1324,11 +1347,11 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<string> Test1a(string s)
             {
                 System.Collections.Generic.IEnumerable<string> __temp_2;
-                Microsoft.Contracts.Contract.Requires(((s == null) == 0));
-                Microsoft.Contracts.Contract.Ensures(((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>() == null) == 0));
+                Microsoft.Contracts.Contract.Requires((s != null));
+                Microsoft.Contracts.Contract.Ensures((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>() != null));
                 __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<string>(__temp_2, delegate (string s1) {
-                    return ((s1 == null) == 0);
+                    return (s1 != null);
 
                 }));
                 yield return "hello";
@@ -1340,13 +1363,13 @@ namespace CodeModelTestInput
             {
                 bool local_0;
                 int local_1;
-                Microsoft.Contracts.Contract.Requires(((input == null) == 0));
+                Microsoft.Contracts.Contract.Requires((input != null));
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T s1) {
-                    return ((s1 == null) == 0);
+                    return (s1 != null);
 
                 }));
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), delegate (T s1) {
-                    return ((s1 == null) == 0);
+                    return (s1 != null);
 
                 }));
                 <>7__wrap9 = input.GetEnumerator();
@@ -1367,7 +1390,7 @@ namespace CodeModelTestInput
                 bool local_0;
                 int local_1;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T s) {
-                    return ((s == null) == 0);
+                    return (s != null);
 
                 }));
                 <>7__wrap10 = input.GetEnumerator();
@@ -1446,19 +1469,19 @@ namespace CodeModelTestInput
 
             private static bool <Test1a>b__25(T s1)
             {
-                return ((s1 == null) == 0);
+                return (s1 != null);
 
             }
 
             private static bool <Test1d>b__2d(T s1)
             {
-                return ((s1 == null) == 0);
+                return (s1 != null);
 
             }
 
             private static bool <Test1d>b__2e(T s1)
             {
-                return ((s1 == null) == 0);
+                return (s1 != null);
 
             }
 
@@ -1477,11 +1500,11 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T> Test1a(T t)
             {
                 System.Collections.Generic.IEnumerable<T> __temp_2;
-                Microsoft.Contracts.Contract.Requires(((t == null) == 0));
-                Microsoft.Contracts.Contract.Ensures(((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>() == null) == 0));
+                Microsoft.Contracts.Contract.Requires((t != null));
+                Microsoft.Contracts.Contract.Ensures((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>() != null));
                 __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_2, delegate (T s1) {
-                    return ((s1 == null) == 0);
+                    return (s1 != null);
 
                 }));
                 yield return t;
@@ -1506,15 +1529,15 @@ namespace CodeModelTestInput
                 System.Collections.Generic.IEnumerable<T> __temp_4;
                 bool local_0;
                 int local_1;
-                Microsoft.Contracts.Contract.Requires(((input == null) == 0));
+                Microsoft.Contracts.Contract.Requires((input != null));
                 __temp_3 = input;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(__temp_3, delegate (T s1) {
-                    return ((s1 == null) == 0);
+                    return (s1 != null);
 
                 }));
                 __temp_4 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_4, delegate (T s1) {
-                    return ((s1 == null) == 0);
+                    return (s1 != null);
 
                 }));
                 <>7__wrap33 = input.GetEnumerator();
