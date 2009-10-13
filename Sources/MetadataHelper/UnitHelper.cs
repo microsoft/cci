@@ -176,7 +176,7 @@ namespace Microsoft.Cci {
       foreach (var member in typeDefinition.GetMembersNamed(tName, false)) {
         var nestedType = member as INestedTypeDefinition;
         if (nestedType == null) continue;
-        if (dotPos < 0) return nestedType;
+        if (dotPos == len) return nestedType;
         offset = dotPos+1;
         return GetNestedType(nameTable, nestedType, typeName, ref offset);
       }
