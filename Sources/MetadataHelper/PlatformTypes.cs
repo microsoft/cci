@@ -1361,7 +1361,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (this.systemString == null) {
-          this.systemString = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.String, "System", "String");
+          this.systemString = this.CreateReference(this.CoreAssemblyRef, false, 0, PrimitiveTypeCode.String, "System", "String");
         }
         return this.systemString;
       }
