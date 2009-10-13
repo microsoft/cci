@@ -127,16 +127,19 @@ namespace Microsoft.Cci {
     Version Version { get; }
 
     /// <summary>
-    /// The identity of the referenced assembly.
+    /// The identity of the referenced assembly. Has the same Culture, Name, PublicKeyToken and Version as the reference.
     /// </summary>
-    /// <remarks>The location might be empty.</remarks>
-    AssemblyIdentity AssemblyIdentity { get;}
+    /// <remarks>Also has a location, which may might be empty. Although mostly redundant, the object returned by this
+    /// property is useful because it derives from System.Object and therefore can be used as a hash table key. It may be more efficient
+    /// to use the properties defined directly on the reference, since the object returned by this property may be allocated lazily
+    /// and the allocation can thus be avoided by using the reference's properties.</remarks>
+    AssemblyIdentity AssemblyIdentity { get; }
 
     /// <summary>
     /// Returns the identity of the assembly reference to which this assembly reference has been unified.
     /// </summary>
     /// <remarks>The location might not be set.</remarks>
-    AssemblyIdentity UnifiedAssemblyIdentity { get;}
+    AssemblyIdentity UnifiedAssemblyIdentity { get; }
   }
 
   /// <summary>
@@ -152,7 +155,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The preferred memory address at which the module is to be loaded at runtime.
     /// </summary>
-    ulong BaseAddress { 
+    ulong BaseAddress {
       get;
       //^ ensures result > uint.MaxValue ==> this.Requires64bits;
     }
@@ -232,7 +235,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The name of the module.
     /// </summary>
-    IName ModuleName { get;}
+    IName ModuleName { get; }
 
     /// <summary>
     /// A list of the modules that are referenced by this module.
@@ -265,7 +268,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The size of the virtual memory initially committed for the initial process heap.
     /// </summary>
-    ulong SizeOfHeapCommit { 
+    ulong SizeOfHeapCommit {
       get;
       //^ ensures result > uint.MaxValue ==> this.Requires64bits;
     }
@@ -273,7 +276,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The size of the virtual memory to reserve for the initial process heap.
     /// </summary>
-    ulong SizeOfHeapReserve { 
+    ulong SizeOfHeapReserve {
       get;
       //^ ensures result > uint.MaxValue ==> this.Requires64bits;
     }
@@ -281,7 +284,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The size of the virtual memory initially committed for the initial thread's stack.
     /// </summary>
-    ulong SizeOfStackCommit { 
+    ulong SizeOfStackCommit {
       get;
       //^ ensures result > uint.MaxValue ==> this.Requires64bits;
     }
@@ -289,7 +292,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The size of the virtual memory to reserve for the initial thread's stack.
     /// </summary>
-    ulong SizeOfStackReserve { 
+    ulong SizeOfStackReserve {
       get;
       //^ ensures result > uint.MaxValue ==> this.Requires64bits;
     }
@@ -330,7 +333,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The Assembly that contains this module. May be null if the module is not part of an assembly.
     /// </summary>
-    IAssemblyReference/*?*/ ContainingAssembly { get;}
+    IAssemblyReference/*?*/ ContainingAssembly { get; }
 
     /// <summary>
     /// The referenced module, or Dummy.Module if the reference cannot be resolved.
@@ -341,7 +344,7 @@ namespace Microsoft.Cci {
     /// The identity of the referenced module.
     /// </summary>
     /// <remarks>The location might not be set.</remarks>
-    ModuleIdentity ModuleIdentity { get;}
+    ModuleIdentity ModuleIdentity { get; }
 
   }
 
@@ -369,7 +372,7 @@ namespace Microsoft.Cci {
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
-    IPlatformType PlatformType { get;}
+    IPlatformType PlatformType { get; }
 
     /// <summary>
     /// An indication of the location where the unit is or will be stored. This need not be a file system path and may be empty. 
@@ -407,7 +410,7 @@ namespace Microsoft.Cci {
     /// The identity of the unit reference.
     /// </summary>
     /// <remarks>The location might not be set.</remarks>
-    UnitIdentity UnitIdentity { get;}
+    UnitIdentity UnitIdentity { get; }
   }
 
   /// <summary>
@@ -554,8 +557,10 @@ namespace Microsoft.Cci {
       if (IteratorHelper.EnumerableIsNotEmpty(this.PublicKeyToken))
         return IteratorHelper.EnumerablesAreEqual(this.PublicKeyToken, otherAssembly.PublicKeyToken);
       else {
-        if (this.Location.Length == 0 || otherAssembly.Location.Length == 0) return true;
-        return string.Compare(this.Location, otherAssembly.Location, StringComparison.OrdinalIgnoreCase) == 0;
+        // This can be dangerous! Returning true here means that weakly named assemblies are assumed to be the
+        // same just because their name is the same. So two assemblies from different locations but the same name
+        // should *NOT* be allowed.
+        return true;
       }
     }
 
