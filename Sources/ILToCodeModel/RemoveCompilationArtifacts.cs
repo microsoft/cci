@@ -37,6 +37,16 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(addressableExpression);
     }
 
+    public override IExpression Visit(AddressDereference addressDereference) {
+      var addressOf = addressDereference.Address as IAddressOf;
+      if (addressOf != null) {
+        var arrayIndexer = addressOf.Expression.Definition as IArrayIndexer;
+        if (arrayIndexer != null)
+          return arrayIndexer;
+      }
+      return base.Visit(addressDereference);
+    }
+
     public override ITargetExpression Visit(TargetExpression targetExpression) {
       var field = targetExpression.Definition as IFieldReference;
       if (field != null) {
@@ -111,6 +121,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(BoundExpression boundExpression) {
+      var addressOf = boundExpression.Instance as IAddressOf;
+      if (addressOf != null && addressOf.Expression.Type.IsValueType)
+        boundExpression.Instance = addressOf.Expression;
       ILocalDefinition/*?*/ local = boundExpression.Definition as ILocalDefinition;
       if (local != null) {
         IExpression substitute = boundExpression;
@@ -290,6 +303,11 @@ namespace Microsoft.Cci.ILToCodeModel {
             return new TypeOf() { Locations = methodCall.Locations, Type = methodCall.Type, TypeToGet = typeRef };
           }
         }
+      }
+      if (!methodCall.IsStaticCall) {
+        var addressOf = methodCall.ThisArgument as IAddressOf;
+        if (addressOf != null)
+          methodCall.ThisArgument = addressOf.Expression;
       }
       return base.Visit(methodCall);
     }

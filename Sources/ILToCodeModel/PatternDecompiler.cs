@@ -35,119 +35,36 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.ReplaceShortCircuitPattern(b.Statements, i);
         this.ReplaceShortCircuitPattern2(b.Statements, i);
         this.ReplacePushPopPattern(b.Statements, i);
-        if (this.ReplacedPushDupLocPopPattern(b.Statements, i) && i > 0) {
-          i--;
-          if (this.ReplacedOpAssignPattern(b.Statements, i) && i > 0) {
-            i--;
-            this.ReplaceOpAssignExpressionPattern(b.Statements, i);
-          }
-        }
+        this.ReplacedPushDupLocPopPattern(b.Statements, i);
       }
       if (this.blockLocalVariables != b.LocalVariables)
         b.LocalVariables = this.blockLocalVariables;
     }
 
-    private void ReplaceOpAssignExpressionPattern(List<IStatement> statements, int i) {
-      if (i > statements.Count - 5) return;
+    private void ReplacedPushDupLocPopPattern(List<IStatement> statements, int i) {
+      if (i > statements.Count - 4) return;
       Push/*?*/ push = statements[i] as Push;
       if (push == null) return;
-      ExpressionStatement/*?*/ expressionStatement = statements[i + 1] as ExpressionStatement;
+      Push/*?*/ pushDup = statements[i+1] as Push;
+      if (pushDup == null || !(pushDup.ValueToPush is Dup)) return;
+      ExpressionStatement/*?*/ expressionStatement = statements[i+2] as ExpressionStatement;
       if (expressionStatement == null) return;
       Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
       if (assignment == null) return;
+      Pop/*?*/ pop = assignment.Source as Pop;
+      if (pop == null) return;
       ILocalDefinition/*?*/ local = assignment.Target.Definition as ILocalDefinition;
       if (local == null) return;
-      ExpressionStatement/*?*/ expressionStatement2 = statements[i + 2] as ExpressionStatement;
+      ExpressionStatement/*?*/ expressionStatement2 = statements[i+3] as ExpressionStatement;
       if (expressionStatement2 == null) return;
       Assignment/*?*/ assignment2 = expressionStatement2.Expression as Assignment;
       if (assignment2 == null) return;
-      ILocalDefinition/*?*/ local2 = assignment2.Target.Definition as ILocalDefinition;
-      if (local2 == null) return;
-      ExpressionStatement/*?*/ expressionStatement3 = statements[i + 3] as ExpressionStatement;
-      if (expressionStatement3 == null) return;
-      Assignment/*?*/ assignment3 = expressionStatement3.Expression as Assignment;
-      if (assignment3 == null) return;
-      BoundExpression/*?*/ boundExpression = assignment3.Source as BoundExpression;
-      if (boundExpression == null || boundExpression.Definition != local2) return;
-      ExpressionStatement/*?*/ expressionStatement4 = statements[i + 4] as ExpressionStatement;
-      if (expressionStatement4 == null) return;
-      Assignment/*?*/ assignment4 = expressionStatement4.Expression as Assignment;
-      if (assignment4 == null) return;
-      BoundExpression/*?*/ boundExpression2 = assignment4.Source as BoundExpression;
-      if (boundExpression2 == null || boundExpression2.Definition != local2) return;
-      TargetExpression/*?*/ target = assignment4.Target as TargetExpression;
-      if (!(target.Instance is Pop)) return;
-      ILocalDefinition temp = new TempVariable() { Name = this.nameTable.GetNameFor("__temp_"+this.sourceMethodBody.localVariables.Count) };
-      this.sourceMethodBody.localVariables.Add(temp);
-      if (this.blockLocalVariables == null) this.blockLocalVariables = new List<ILocalDefinition>();
-      this.blockLocalVariables.Add(temp);
-      this.sourceMethodBody.numberOfReferences.Add(temp, 1);
-      statements[i] = new ExpressionStatement() { Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush } };
-      target.Instance = new BoundExpression() { Definition = temp };
-    }
-
-    private bool ReplacedOpAssignPattern(List<IStatement> statements, int i) {
-      if (i > statements.Count - 3) return false;
-      Push/*?*/ push = statements[i] as Push;
-      if (push == null) return false;
-      ExpressionStatement/*?*/ expressionStatement = statements[i + 1] as ExpressionStatement;
-      if (expressionStatement == null) return false;
-      Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
-      if (assignment == null) return false;
-      ILocalDefinition/*?*/ local = assignment.Target.Definition as ILocalDefinition;
-      if (local == null) return false;
-      BinaryOperation/*?*/ binop = assignment.Source as BinaryOperation;
-      if (binop == null) return false;
-      BoundExpression/*?*/ boundExpression = binop.LeftOperand as BoundExpression;
-      if (boundExpression == null) return false;
-      if (!(boundExpression.Instance is Dup)) return false;
-      CompileTimeConstant/*?*/ cconst = binop.RightOperand as CompileTimeConstant;
-      if (cconst == null || !(cconst.Value is int) || ((int)cconst.Value) != 1) return false;
-      ExpressionStatement/*?*/ expressionStatement2 = statements[i + 2] as ExpressionStatement;
-      if (expressionStatement == null) return false;
-      Assignment/*?*/ assignment2 = expressionStatement2.Expression as Assignment;
-      if (assignment2 == null) return false;
-      TargetExpression/*?*/ target2 = assignment2.Target as TargetExpression;
-      if (target2 == null) return false;
-      if (!(target2.Instance is Pop)) return false;
-      if (target2.Definition != boundExpression.Definition) return false;
-      BoundExpression/*?*/ boundExpression2 = assignment2.Source as BoundExpression;
-      if (boundExpression2 == null) return false;
-      if (boundExpression2.Definition != local) return false;
-      ILocalDefinition temp = new TempVariable() { Name = this.nameTable.GetNameFor("__temp_"+this.sourceMethodBody.localVariables.Count) };
-      this.sourceMethodBody.localVariables.Add(temp);
-      if (this.blockLocalVariables == null) this.blockLocalVariables = new List<ILocalDefinition>();
-      this.blockLocalVariables.Add(temp);
-      this.sourceMethodBody.numberOfReferences.Add(temp, 2);
-      statements[i] = new ExpressionStatement() { Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush } };
-      boundExpression.Instance = new BoundExpression() { Definition = temp };
-      target2.Instance = boundExpression.Instance;
-      return true;
-    }
-
-    private bool ReplacedPushDupLocPopPattern(List<IStatement> statements, int i) {
-      if (i > statements.Count - 3) return false;
-      Push/*?*/ push = statements[i] as Push;
-      if (push == null) return false;
-      ExpressionStatement/*?*/ expressionStatement = statements[i + 1] as ExpressionStatement;
-      if (expressionStatement == null) return false;
-      Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
-      if (assignment == null) return false;
-      Dup/*?*/ dup = assignment.Source as Dup;
-      if (dup == null) return false;
-      ILocalDefinition/*?*/ local = assignment.Target.Definition as ILocalDefinition;
-      if (local == null) return false;
-      ExpressionStatement/*?*/ expressionStatement2 = statements[i + 2] as ExpressionStatement;
-      if (expressionStatement2 == null) return false;
-      Assignment/*?*/ assignment2 = expressionStatement2.Expression as Assignment;
-      if (assignment2 == null) return false;
-      Pop/*?*/ pop = assignment2.Source as Pop;
-      if (pop == null) return false;
+      Pop/*?*/ pop2 = assignment2.Source as Pop;
+      if (pop2 == null) return;
       statements.RemoveAt(i);
       assignment.Source = push.ValueToPush;
       assignment2.Source = new BoundExpression() { Definition = local };
       this.sourceMethodBody.numberOfReferences[local]++;
-      return true;
     }
 
     private void ReplacePushPopPattern(List<IStatement> statements, int i) {
@@ -156,6 +73,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       while (i+count < statements.Count-1 && statements[i+count] is Push) count++;
       while (i > 1 && statements[i-1] is Push) { i--; count++; }
       if (count == 0) return;
+      for (int j = 0; j < count; j++) {
+        if (((Push)statements[j+i]).ValueToPush is Dup) return;
+      }
       ExpressionStatement/*?*/ expressionStatement = statements[i + count] as ExpressionStatement;
       if (expressionStatement == null) return;
       PopCounter pc = new PopCounter();
@@ -504,28 +424,30 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void ReplaceLocalArrayInitializerPattern(List<IStatement> statements, int i) {
-      if (i > statements.Count - 3) return;
+      if (i > statements.Count - 4) return;
       Push/*?*/ push = statements[i] as Push;
       if (push == null) return;
+      var pushDup = statements[i+1] as Push;
+      if (pushDup == null || !(pushDup.ValueToPush is Dup)) return;
       CreateArray/*?*/ createArray = push.ValueToPush as CreateArray;
       if (createArray == null) return;
-      ExpressionStatement/*?*/ expressionStatement = statements[i+1] as ExpressionStatement;
+      ExpressionStatement/*?*/ expressionStatement = statements[i+2] as ExpressionStatement;
       if (expressionStatement == null) return;
       MethodCall/*?*/ methodCall = expressionStatement.Expression as MethodCall;
       if (methodCall == null || !methodCall.IsStaticCall || methodCall.Arguments.Count != 2) return;
-      Dup/*?*/ dup = methodCall.Arguments[0] as Dup;
-      if (dup == null) return;
+      var pop = methodCall.Arguments[0] as Pop;
+      if (pop == null) return;
       TokenOf/*?*/ tokenOf = methodCall.Arguments[1] as TokenOf;
       if (tokenOf == null) return;
       IFieldDefinition/*?*/ initialValueField = tokenOf.Definition as IFieldDefinition;
       if (initialValueField == null || !initialValueField.IsMapped) return;
       if (methodCall.MethodToCall.Name.UniqueKey != this.InitializeArray.UniqueKey) return;
-      expressionStatement = statements[i+2] as ExpressionStatement;
+      expressionStatement = statements[i+3] as ExpressionStatement;
       if (expressionStatement == null) return;
       Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
       if (assignment == null) return;
-      Pop/*?*/ pop = assignment.Source as Pop;
-      if (pop == null) return;
+      var pop2 = assignment.Source as Pop;
+      if (pop2 == null) return;
       List<ulong> sizes = new List<ulong>();
       foreach (IExpression expr in createArray.Sizes) {
         IMetadataConstant mdc = expr as IMetadataConstant;
@@ -535,7 +457,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       AddArrayInitializers(createArray, initialValueField, sizes.ToArray());
       assignment.Source = createArray;
       statements[i] = expressionStatement;
-      statements.RemoveRange(i+1, 2);
+      statements.RemoveRange(i+1, 3);
     }
 
     private static void AddArrayInitializers(CreateArray createArray, IFieldDefinition initialValueField, ulong[] sizes) {

@@ -90,9 +90,8 @@ namespace CodeModelTestInput
 
         public bool Method3_19(int p1)
         {
-            __temp_1 = this.list;
         IL_0021:
-            return __temp_1.TrueForAll(delegate (int t) {
+            return this.list.TrueForAll(delegate (int t) {
                 return (t == 10);
 
             });
@@ -592,6 +591,14 @@ namespace CodeModelTestInput
 
         }
 
+        private int[] Method16(int[] xs)
+        {
+            int* __temp_1 = &xs[0];
+            *__temp_1 = (*__temp_1 + 1);
+            return xs;
+
+        }
+
         public void Method2()
         {
             byte[] local_11 = new byte[1];
@@ -827,9 +834,8 @@ namespace CodeModelTestInput
 
         public static bool Method4_15(int p1)
         {
-            __temp_1 = list;
         IL_0020:
-            return __temp_1.TrueForAll(delegate (T t) {
+            return list.TrueForAll(delegate (T t) {
                 return (t == null);
 
             });
@@ -869,9 +875,8 @@ namespace CodeModelTestInput
 
         public bool Method4_19(int p1)
         {
-            __temp_1 = list;
         IL_0020:
-            return __temp_1.TrueForAll(delegate (T t) {
+            return list.TrueForAll(delegate (T t) {
                 return (t == null);
 
             });
@@ -1282,8 +1287,7 @@ namespace CodeModelTestInput
             {
                 Microsoft.Contracts.Contract.Requires(((s == null) == 0));
                 Microsoft.Contracts.Contract.Ensures(((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>() == null) == 0));
-                __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>();
-                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<string>(__temp_2, delegate (string s1) {
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<string>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>(), delegate (string s1) {
                     return ((s1 == null) == 0);
 
                 }));
@@ -1297,9 +1301,8 @@ namespace CodeModelTestInput
                 T local_2;
                 goto IL_0023;
             IL_0023:
-                __temp_4 = t;
                 local_2 = default(T);
-                if (__temp_4.Equals(local_2))
+                if (t.Equals(local_2))
                 {
                     throw new System.ArgumentException("");
                 }
@@ -1485,8 +1488,7 @@ namespace CodeModelTestInput
             {
                 Microsoft.Contracts.Contract.Requires(((t == null) == 0));
                 Microsoft.Contracts.Contract.Ensures(((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>() == null) == 0));
-                __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
-                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_2, delegate (T s1) {
+                Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), delegate (T s1) {
                     return ((s1 == null) == 0);
 
                 }));

@@ -12,6 +12,7 @@ using System.IO;
 namespace Microsoft.Cci.ILToCodeModel {
 
   internal class Unstacker : MethodBodyMutator {
+    BasicBlock block;
     SourceMethodBody body;
     struct CodePoint { internal List<IStatement> statements; internal int index; internal StackOfLocals operandStack; }
     Queue<CodePoint> codePointsToAnalyze = new Queue<CodePoint>();
@@ -53,6 +54,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     internal void Visit(BasicBlock block) {
+      if (this.block == null) this.block = block;
       this.operandStack = new StackOfLocals();
       int numberOfCatchBlocks = block.NumberOfTryBlocksStartingHere;
       BasicBlock bbb = block;
@@ -162,6 +164,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         temp.Type = push.ValueToPush.Type;
         this.operandStack.Push(temp);
         this.body.localVariables.Add(temp);
+        if (this.block.LocalVariables == null) this.block.LocalVariables = new List<ILocalDefinition>();
+        this.block.LocalVariables.Add(temp);
         this.body.numberOfReferences.Add(temp, 0);
         this.body.numberOfAssignments.Add(temp, 1);
         return new ExpressionStatement() { Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush } };

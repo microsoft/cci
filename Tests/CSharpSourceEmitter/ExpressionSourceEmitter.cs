@@ -68,12 +68,13 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IAddressDereference addressDereference) {
-      this.Visit(addressDereference.Address);
       this.sourceEmitterOutput.Write("*");
+      this.Visit(addressDereference.Address);
     }
 
     public override void Visit(IAddressOf addressOf) {
-      base.Visit(addressOf);
+      this.sourceEmitterOutput.Write("&");
+      this.Visit(addressOf.Expression);
     }
 
     public override void Visit(IAliasForType aliasForType) {

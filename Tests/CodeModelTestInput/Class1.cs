@@ -38,7 +38,7 @@ namespace CodeModelTestInput {
         j = 2;
       else
         j = 3;
-      int k = i + j;
+      int k = i+j;
     }
 
     bool Method4(int[] xs, int x) {
@@ -101,7 +101,7 @@ namespace CodeModelTestInput {
       return false;
     }
 
-    int c = 0;
+    int c=0;
     string Method13() {
       try {
         switch (c) {
@@ -149,6 +149,11 @@ namespace CodeModelTestInput {
 
     Type Method15() {
       return typeof(Class1);
+    }
+
+    int[] Method16(int[] xs) {
+      xs[0]++;
+      return xs;
     }
   }
 
@@ -636,7 +641,7 @@ namespace CodeModelTestInput {
     public static bool Method4_4<T1>(T1 p1)
       where T1 : class {
       int j = 1;
-      return list.TrueForAll((T t) => t.GetHashCode() == p1.GetHashCode() + j);
+      return list.TrueForAll((T t) => t.GetHashCode() == p1.GetHashCode() +j);
     }
 
     /// <summary>
@@ -797,7 +802,7 @@ namespace CodeModelTestInput {
     /// </summary>
     /// <returns></returns>
     public static bool Method4_13() {
-      int local = 3;
+      int local=3;
       return list.TrueForAll((T t) => t.GetHashCode() == local);
     }
 
@@ -823,7 +828,7 @@ namespace CodeModelTestInput {
     /// <returns></returns>
     public static bool Method4_16(int p1) {
       int j = 1;
-      return list.TrueForAll((T t) => t.GetHashCode() == p1 + j);
+      return list.TrueForAll((T t) => t.GetHashCode() == p1 +j);
     }
 
     /// <summary>
@@ -831,7 +836,7 @@ namespace CodeModelTestInput {
     /// </summary>
     /// <returns></returns>
     public bool Method4_17(int p1) {
-      int local = 3;
+      int local =3;
       return list.TrueForAll((T t) => t.GetHashCode() == local);
     }
 

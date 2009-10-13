@@ -260,7 +260,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (ILocalScope localScope in this.pdbReader.GetLocalScopes(this.ilMethodBody)) {
         BasicBlock block = this.GetOrCreateBlock(localScope.Offset, false);
         block.LocalVariables = new List<ILocalDefinition>(this.pdbReader.GetVariablesInScope(localScope));
-        block.EndOffset = localScope.Offset + localScope.Length;
+        block.EndOffset = localScope.Offset+localScope.Length;
         this.GetOrCreateBlock(block.EndOffset, false);
       }
     }
@@ -429,7 +429,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (addLabel && result.Statements.Count == 0) {
         LabeledStatement label = new LabeledStatement();
-        label.Label = this.nameTable.GetNameFor("IL_" + offset.ToString("x4"));
+        label.Label = this.nameTable.GetNameFor("IL_"+offset.ToString("x4"));
         label.Statement = new EmptyStatement();
         result.Statements.Add(label);
         this.targetStatementFor.Add(offset, label);
@@ -907,6 +907,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
+    private Statement ParseDup() {
+      Push result = new Push();
+      result.ValueToPush = new Dup();
+      return result;
+    }
+
     private Statement ParseEndfilter() {
       EndFilter result = new EndFilter();
       result.FilterResult = this.PopOperandStack();
@@ -935,7 +941,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Expression ParseMakeTypedReference(IOperation currentOperation) {
       MakeTypedReference result = new MakeTypedReference();
-      Expression operand = this.PopOperandStack();
+      Expression operand  = this.PopOperandStack();
       operand.Type = ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory);
       result.Operand = operand;
       return result;
@@ -1166,7 +1172,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Dup:
-          expression = new Dup();
+          statement = this.ParseDup();
           break;
 
         case OperationCode.Endfilter:
