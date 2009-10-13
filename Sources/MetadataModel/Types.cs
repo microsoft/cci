@@ -25,7 +25,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Type reference of the type for which this is the alias
     /// </summary>
-    ITypeReference AliasedType { get;}
+    ITypeReference AliasedType { get; }
 
     /// <summary>
     /// The collection of member objects comprising the type.
@@ -54,17 +54,17 @@ namespace Microsoft.Cci {
     /// <summary>
     /// This type of array is a single dimensional array with zero lower bound for index values.
     /// </summary>
-    bool IsVector { 
-      get; 
+    bool IsVector {
+      get;
       //^ ensures result ==> Rank == 1;
     }
 
     /// <summary>
-    /// A possible empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
+    /// A possibly empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
     /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
     /// </summary>
-    IEnumerable<int> LowerBounds { 
-      get; 
+    IEnumerable<int> LowerBounds {
+      get;
       // ^ ensures count(result) <= Rank;
     }
 
@@ -81,7 +81,7 @@ namespace Microsoft.Cci {
     /// The first upper bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
     /// An unspecified upper bound means that instances of this type can have an arbitrary upper bound for that dimension.
     /// </summary>
-    IEnumerable<ulong> Sizes { 
+    IEnumerable<ulong> Sizes {
       get;
       // ^ ensures count(result) <= Rank;
     }
@@ -93,7 +93,7 @@ namespace Microsoft.Cci {
   /// Custom modifiers are not associated directly with types, but rather with typed storage locations for values.
   /// </summary>
   public interface ICustomModifier {
-    
+
     /// <summary>
     /// If true, a language may use the modified storage location without being aware of the meaning of the modification.
     /// </summary>
@@ -177,15 +177,15 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if all type arguments matching this parameter are constrained to be reference types.
     /// </summary>
-    bool MustBeReferenceType { 
-      get; 
+    bool MustBeReferenceType {
+      get;
       //^ ensures result ==> !this.MustBeValueType;
     }
 
     /// <summary>
     /// True if all type arguments matching this parameter are constrained to be value types.
     /// </summary>
-    bool MustBeValueType { 
+    bool MustBeValueType {
       get;
       //^ ensures result ==> !this.MustBeReferenceType;
     }
@@ -235,7 +235,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The generic method parameter this reference resolves to.
     /// </summary>
-    new IGenericMethodParameter ResolvedType { get;}
+    new IGenericMethodParameter ResolvedType { get; }
   }
 
   /// <summary>
@@ -292,7 +292,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The generic type parameter this reference resolves to.
     /// </summary>
-    new IGenericTypeParameter ResolvedType { get;}
+    new IGenericTypeParameter ResolvedType { get; }
 
   }
 
@@ -375,7 +375,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The namespace type this reference resolves to.
     /// </summary>
-    new INamespaceTypeDefinition ResolvedType { get;}
+    new INamespaceTypeDefinition ResolvedType { get; }
 
   }
 
@@ -413,7 +413,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The nested type this reference resolves to.
     /// </summary>
-    new INestedTypeDefinition ResolvedType { get;}
+    new INestedTypeDefinition ResolvedType { get; }
 
   }
 
@@ -475,12 +475,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A reference to the method whose implementation is being provided or overridden.
     /// </summary>
-    IMethodReference ImplementedMethod { get;}
+    IMethodReference ImplementedMethod { get; }
 
     /// <summary>
     /// A reference to the method that provides the implementation.
     /// </summary>
-    IMethodReference ImplementingMethod { get;}
+    IMethodReference ImplementingMethod { get; }
   }
 
   /// <summary>
@@ -514,7 +514,7 @@ namespace Microsoft.Cci {
     /// The size (in bytes) of a pointer on the platform on which these types are implemented.
     /// The value of this property is either 4 (32-bits) or 8 (64-bit).
     /// </summary>
-    byte PointerSize { 
+    byte PointerSize {
       get;
       //^ ensures result == 4 || result == 8;
     }
@@ -866,8 +866,8 @@ namespace Microsoft.Cci {
     /// Zero or more classes from which this type is derived.
     /// For CLR types this collection is empty for interfaces and System.Object and populated with exactly one base type for all other types.
     /// </summary>
-    IEnumerable<ITypeReference> BaseClasses { 
-        get; 
+    IEnumerable<ITypeReference> BaseClasses {
+      get;
       // ^ ensures forall{ITypeReference baseClassReference in result; baseClassReference.ResolvedType.IsClass};
     }
 
@@ -875,7 +875,7 @@ namespace Microsoft.Cci {
     /// Zero or more events defined by this type.
     /// </summary>
     IEnumerable<IEventDefinition> Events { get; }
-    
+
     /// <summary>
     /// Zero or more implementation overrides provided by the class.
     /// </summary>
@@ -889,8 +889,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Zero or more parameters that can be used as type annotations.
     /// </summary>
-    IEnumerable<IGenericTypeParameter> GenericParameters { 
-      get; 
+    IEnumerable<IGenericTypeParameter> GenericParameters {
+      get;
       //^ requires this.IsGeneric;
     }
 
@@ -917,7 +917,7 @@ namespace Microsoft.Cci {
     /// An instance of this generic type that has been obtained by using the generic parameters as the arguments. 
     /// Use this instance to look up members
     /// </summary>
-    IGenericTypeInstanceReference InstanceType { 
+    IGenericTypeInstanceReference InstanceType {
       get;
       //^ requires this.IsGeneric;
       //^ ensures !result.IsGeneric;
@@ -1004,7 +1004,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The collection of member instances that are members of this scope.
     /// </summary>
-    new IEnumerable<ITypeDefinitionMember> Members { 
+    new IEnumerable<ITypeDefinitionMember> Members {
       get;
       // ^ ensures forall{ITypeDefinitionMember member in result; member.ContainingTypeDefinition == this && 
       // ^ (member is IEventDefinition || member is IFieldDefinition || member is IMethodDefinition || member is INestedTypeDefinition || member is IPropertyDefinition)};
@@ -1064,12 +1064,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Gives the alias for the type
     /// </summary>
-    IAliasForType AliasForType { get;}
+    IAliasForType AliasForType { get; }
 
     /// <summary>
     /// Returns the unique interned key associated with the type. This takes unification/aliases/custom modifiers into account.
     /// </summary>
-    uint InternedKey { get;}
+    uint InternedKey { get; }
 
     /// <summary>
     /// Indicates if this type reference resolved to an alias rather than a type

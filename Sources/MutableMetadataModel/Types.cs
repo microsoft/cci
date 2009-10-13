@@ -2859,7 +2859,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// A possible empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
+    /// A possibly empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
     /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
     /// </summary>
     /// <value></value>

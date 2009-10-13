@@ -4059,7 +4059,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<int> IArrayTypeReference.LowerBounds {
-      get { return IteratorHelper.GetSingletonEnumerable<int>(0); }
+      get { return IteratorHelper.GetEmptyEnumerable<int>(); }
     }
 
     uint IArrayTypeReference.Rank {
