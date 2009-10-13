@@ -1187,8 +1187,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
               this.ParentModuleNamespaceReference.ResolvedUnitNamespace.GetMembersNamed(this.NamespaceName, false)
             )
           ) {
-            this.resolvedNamespace = nestedUnitNamespace;
-            break;
+            return this.resolvedNamespace = nestedUnitNamespace;
           }
           this.resolvedNamespace = Dummy.NestedUnitNamespace;
         }
