@@ -863,12 +863,13 @@ namespace Microsoft.Cci {
       ushort result = GetTypeMemberVisibilityFlags(fieldDef);
       if (fieldDef.IsStatic) result |= 0x0010;
       if (fieldDef.IsReadOnly) result |= 0x0020;
-      if (fieldDef.IsCompileTimeConstant) result |= 0x8040;
+      if (fieldDef.IsCompileTimeConstant) result |= 0x0040;
       if (fieldDef.IsNotSerialized) result |= 0x0080;
       if (fieldDef.IsMapped) result |= 0x0100;
       if (fieldDef.IsSpecialName) result |= 0x0200;
       if (fieldDef.IsRuntimeSpecial) result |= 0x0400;
       if (fieldDef.IsMarshalledExplicitly) result |= 0x1000;
+      if (fieldDef.CompileTimeValue != Dummy.Constant) result |= 0x8000;
       return result;
     }
 
@@ -1801,7 +1802,7 @@ namespace Microsoft.Cci {
       uint fieldDefIndex = 0;
       foreach (IFieldDefinition fieldDef in this.fieldDefList) {
         fieldDefIndex++;
-        if (!fieldDef.IsCompileTimeConstant) continue;
+        if (fieldDef.CompileTimeValue == Dummy.Constant) continue;
         ConstantRow r = new ConstantRow();
         r.Type = GetTypeCodeByteFor(fieldDef.CompileTimeValue.Value);
         r.Parent = fieldDefIndex<<2;
