@@ -1288,11 +1288,12 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="logicalNot">The logical not.</param>
     public override void Visit(ILogicalNot logicalNot) {
-      if (TypeHelper.IsPrimitiveInteger(logicalNot.Operand.Type)) {
+      if (TypeHelper.IsPrimitiveInteger(logicalNot.Operand.Type) || logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         this.Visit(logicalNot.Operand);
         this.generator.Emit(OperationCode.Ldc_I4_0);
         this.generator.Emit(OperationCode.Ceq);
       } else {
+        Debug.Assert(!logicalNot.Operand.Type.IsValueType);
         //pointer non null test
         this.Visit(logicalNot.Operand);
         this.generator.Emit(OperationCode.Ldnull);
