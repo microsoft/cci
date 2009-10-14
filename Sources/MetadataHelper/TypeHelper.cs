@@ -589,7 +589,6 @@ namespace Microsoft.Cci {
     /// </summary>
     public static bool IsPrimitiveInteger(ITypeReference type) {
       switch (type.TypeCode) {
-        //case PrimitiveTypeCode.Boolean:
         case PrimitiveTypeCode.Char:
         case PrimitiveTypeCode.Int16:
         case PrimitiveTypeCode.Int32:
@@ -625,7 +624,6 @@ namespace Microsoft.Cci {
     /// </summary>
     public static bool IsUnsignedPrimitiveInteger(ITypeReference type) {
       switch (type.TypeCode) {
-        //case PrimitiveTypeCode.Boolean:
         case PrimitiveTypeCode.Char:
         case PrimitiveTypeCode.UInt16:
         case PrimitiveTypeCode.UInt32:
