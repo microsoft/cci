@@ -214,8 +214,12 @@ namespace Microsoft.Cci {
         if (assemblyIdentity.Location == "" || assemblyIdentity.Location == "unknown://location") {
           unit = Dummy.Assembly;
           this.unitCache.Add(assemblyIdentity, unit);
-        } else
+        } else {
           unit = this.LoadUnitFrom(assemblyIdentity.Location);
+          var assembly = unit as IAssembly;
+          if (assembly != null && this.UnifyAssembly(assembly.AssemblyIdentity).Equals(assemblyIdentity))
+            this.unitCache[assemblyIdentity] = unit;
+        }
       }
       IAssembly/*?*/ result = unit as IAssembly;
       if (result == null) result = Dummy.Assembly;
