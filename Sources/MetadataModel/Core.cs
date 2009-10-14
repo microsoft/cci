@@ -229,34 +229,40 @@ namespace Microsoft.Cci {
     void ReportError(IErrorMessage error);
 
     /// <summary>
-    /// Resolves the referencedAssembly refered by the given referringUnit. This takes care of applying host specific policies for probing.
-    /// The returned Assembly Identifier should have enough information for doing equality comparision. For example if the assembly is not strongly named
-    /// it should have the location information.
-    /// The types in referencedAssembly refered by unit will be searched against the returned AssemblyIdentifier.
-    /// Returned AssemblyIdentifier and passed referencedAssembly are treated essentially same for all purposes.
+    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
+    /// of the referenced assembly.
     /// </summary>
-    /// <param name="referringUnit">The unit that is referning the assembly.</param>
-    /// <param name="referencedAssembly">Assembly being refered.</param>
-    /// <returns>Assembly identifier for the unified assembly.</returns>
+    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced assembly.</param>
+    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
+    /// for the location of an assembly when you already know its location.</param>
+    /// <returns>An assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".</returns>
     //^ [Pure]
     AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly);
 
     /// <summary>
-    /// Resolves the referencedModule refered by the given referringUnit. This takes care of putting the proper information
-    /// in module identifier for the purposes of identifying ModuleIdentifier uniquely. Proper information could be the path in case this is an independent module.
+    /// Given the identity of a referenced module (but not its location), apply host specific policies for finding the location
+    /// of the referenced module.
     /// </summary>
-    /// <param name="referringUnit">The unit that is referning the assembly.</param>
-    /// <param name="referencedModule">Module being refered.</param>
-    /// <returns>Assembly identifier for the unified assembly.</returns>
+    /// <param name="referringUnit">The unit that is referencing the module. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced module.</param>
+    /// <param name="referencedModule">Module being referenced.</param>
+    /// <returns>A module identity that matches the given referenced module identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".</returns>
     //^ [Pure]
     ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule);
 
     /// <summary>
-    /// Returns the Assembly Identifier of the unified assembly corresponding to the given assembly identifier. This might depend on .NET Framework unfication and
-    /// also on the application configuration.
+    /// Returns an assembly identifier of an assembly that is the same, or a later (compatible) version of the given assembly identity.
     /// </summary>
-    /// <param name="assemblyIdentity">Assembly that needs to be unified.</param>
-    /// <returns>Assembly identity of the unified assembly.</returns>
+    /// <param name="assemblyIdentity">The identity of the assembly that needs to be unified.</param>
+    /// <returns>The identity of the unified assembly.</returns>
+    /// <remarks>If an assembly A references assembly B as well as version 2 of assembly C, and assembly B references version 1 of assembly C then any
+    /// reference to type C.T that is obtained from assembly A will resolve to a different type definition from a reference to type C.T that is obtained
+    /// from assembly B, unless the host declares that any reference to version 1 of assembly should be treated as if it were a reference to 
+    /// version 2 of assembly C. This call is how the host gets to make this declaration.
+    /// </remarks>
     //^ [Pure]
     AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity);
   }

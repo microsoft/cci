@@ -800,9 +800,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal uint InternedId {
       get {
         if (this.internedId == 0) {
-          AssemblyIdentity unifiedProbedAssemblyIdentity = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.ProbeAssemblyReference(
-            this.PEFileToObjectModel.Module, this.UnifiedAssemblyIdentity);
-          this.internedId = (uint)this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(unifiedProbedAssemblyIdentity);
+          this.internedId = (uint)this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(this.UnifiedAssemblyIdentity);
         }
         return this.internedId;
       }

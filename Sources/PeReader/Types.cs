@@ -717,7 +717,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       if (this.Module != this.PEFileToObjectModel.Module) {
         AssemblyReference assemRef = this.Module as AssemblyReference;
         if (assemRef == null) return Dummy.Type;
-        Assembly/*?*/ internalAssembly = this.PEFileToObjectModel.ResolveAssemblyRefReference(assemRef);
+        var internalAssembly = assemRef.ResolvedAssembly as Assembly;
         if (internalAssembly == null) return Dummy.Type;
         PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
         ITypeDefinition/*?*/ retModuleType = 

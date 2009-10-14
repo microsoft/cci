@@ -818,7 +818,7 @@ namespace Microsoft.Cci.MetadataReader {
           //  MDError
           return Dummy.Resource;
         }
-        Assembly/*?*/ assembly = this.ResolveAssemblyRefReference(assemblyReference);
+        var assembly = assemblyReference.ResolvedAssembly as Assembly;
         if (assembly == null) {
           //  MDError
           return Dummy.Resource;
@@ -1861,7 +1861,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (assemRef == null) {
               return null;
             }
-            Assembly/*?*/ internalAssembly = this.ResolveAssemblyRefReference(assemRef);
+            var internalAssembly = assemRef.ResolvedAssembly as Assembly;
             if (internalAssembly != null) {
               PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
               retModuleType = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, typeName);
@@ -1916,7 +1916,7 @@ namespace Microsoft.Cci.MetadataReader {
         if (assemRef == null) {
           return null;
         }
-        Assembly/*?*/ internalAssembly = this.ResolveAssemblyRefReference(assemRef);
+        var internalAssembly = assemRef.ResolvedAssembly as Assembly;
         if (internalAssembly != null) {
           PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
           return assemblyPEFileToObjectModel.ResolveExportedNamespaceType(namespaceName, typeName);
@@ -1995,7 +1995,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (assemRef == null) {
               return null;
             }
-            Assembly/*?*/ internalAssembly = this.ResolveAssemblyRefReference(assemRef);
+            var internalAssembly = assemRef.ResolvedAssembly as Assembly;
             if (internalAssembly != null) {
               PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
               TypeBase/*?*/ type = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, typeName);

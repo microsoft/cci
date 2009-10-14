@@ -206,18 +206,20 @@ namespace Microsoft.Cci {
     /// The assembly that matches the given reference, or a dummy assembly if no matching assembly can be found.
     /// </summary>
     public virtual IAssembly LoadAssembly(AssemblyIdentity assemblyIdentity) {
-      if (assemblyIdentity.Location == null) return Dummy.Assembly;
       IUnit/*?*/ unit;
       lock (GlobalLock.LockingObject) {
         this.unitCache.TryGetValue(assemblyIdentity, out unit);
       }
       if (unit == null) {
-        unit = this.LoadUnitFrom(assemblyIdentity.Location);
+        if (assemblyIdentity.Location == "" || assemblyIdentity.Location == "unknown://location") {
+          unit = Dummy.Assembly;
+          this.unitCache.Add(assemblyIdentity, unit);
+        } else
+          unit = this.LoadUnitFrom(assemblyIdentity.Location);
       }
       IAssembly/*?*/ result = unit as IAssembly;
-      if (result != null && assemblyIdentity.Equals(UnitHelper.GetAssemblyIdentity(result)))
-        return result;
-      return Dummy.Assembly;
+      if (result == null) result = Dummy.Assembly;
+      return result;
     }
 
     /// <summary>
@@ -230,12 +232,15 @@ namespace Microsoft.Cci {
         this.unitCache.TryGetValue(moduleIdentity, out unit);
       }
       if (unit == null) {
-        unit = this.LoadUnitFrom(moduleIdentity.Location);
+        if (moduleIdentity.Location == "" || moduleIdentity.Location == "unknown://location") {
+          unit = Dummy.Module;
+          this.unitCache.Add(moduleIdentity, unit);
+        } else
+          unit = this.LoadUnitFrom(moduleIdentity.Location);
       }
       IModule/*?*/ result = unit as IModule;
-      if (result != null && moduleIdentity.Equals(UnitHelper.GetModuleIdentity(result)))
-        return result;
-      return Dummy.Module;
+      if (result == null) result = Dummy.Module;
+      return result;
     }
 
     /// <summary>
@@ -376,25 +381,42 @@ namespace Microsoft.Cci {
     readonly Dictionary<UnitIdentity, IUnit> unitCache = new Dictionary<UnitIdentity, IUnit>();
 
     /// <summary>
-    /// Default implementation of ProbeAssemblyReference. Override this method to change the behaviour.
+    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
+    /// of the referenced assembly.
     /// </summary>
-    /// <param name="referringUnit"></param>
-    /// <param name="referencedAssembly"></param>
-    /// <returns></returns>
+    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced assembly.</param>
+    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
+    /// for the location of an assembly when you already know its location.</param>
+    /// <returns>
+    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
+    /// <remarks>
+    /// Default implementation of ProbeAssemblyReference. Override this method to change its behavior.
+    /// </remarks>
     //^ [Pure]
     public virtual AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
-      return referencedAssembly;
+      return new AssemblyIdentity(referencedAssembly, "unknown://location");
     }
 
     /// <summary>
-    /// Default implementation of UnifyModuleReference. Override this method to change the behaviour.
+    /// Given the identity of a referenced module (but not its location), apply host specific policies for finding the location
+    /// of the referenced module.
     /// </summary>
-    /// <param name="referringUnit"></param>
-    /// <param name="referencedModule"></param>
-    /// <returns></returns>
+    /// <param name="referringUnit">The unit that is referencing the module. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced module.</param>
+    /// <param name="referencedModule">Module being referenced.</param>
+    /// <returns>
+    /// A module identity that matches the given referenced module identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
+    /// <remarks>
+    /// Default implementation of ProbeModuleReference. Override this method to change the behavior.
+    /// </remarks>
     //^ [Pure]
     public virtual ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
-      return referencedModule;
+      return new ModuleIdentity(referencedModule.Name, "unknown://location", referencedModule.ContainingAssembly);
     }
 
     /// <summary>
@@ -446,7 +468,7 @@ namespace Microsoft.Cci {
     IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName);
 
     /// <summary>
-    /// This method is called when the assebly reference is being resolved and its not already loaded by the host.
+    /// This method is called when the assembly reference is being resolved and its not already loaded by the host.
     /// </summary>
     /// <param name="referringUnit">The unit that is referencing the assembly.</param>
     /// <param name="referencedAssembly">Assembly identifier for the assembly being referenced.</param>
@@ -465,8 +487,6 @@ namespace Microsoft.Cci {
   /// </summary>
   public abstract class MetadataReaderHost : MetadataHostEnvironment, IMetadataReaderHost {
 
-    readonly List<string> libPaths = new List<string>();
-
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
@@ -482,9 +502,7 @@ namespace Microsoft.Cci {
     /// </param>
     protected MetadataReaderHost(IEnumerable<string> searchPaths)
       : this() {
-      foreach (var s in searchPaths) {
-        this.libPaths.Add(s);
-      }
+      this.libPaths = new List<string>(searchPaths);
     }
 
     /// <summary>
@@ -525,7 +543,21 @@ namespace Microsoft.Cci {
     /// to look in when searching for a unit to load.
     /// </summary>
     /// <param name="path"></param>
-    public virtual void AddLibPath(string path) { this.libPaths.Add(path); }
+    public virtual void AddLibPath(string path) {
+      this.LibPaths.Add(path);
+    }
+
+    /// <summary>
+    /// A potentially empty list of directory paths that will be searched when probing for an assembly reference.
+    /// </summary>
+    protected List<string> LibPaths {
+      get {
+        if (this.libPaths == null)
+          this.libPaths = new List<string>();
+        return this.libPaths;
+      }
+    }
+    List<string> libPaths;
 
     /// <summary>
     /// Looks in the specified <paramref name="probeDir"/> to see if a file
@@ -541,37 +573,49 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
+    /// of the referenced assembly.
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced assembly.</param>
+    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
+    /// for the location of an assembly when you already know its location.</param>
+    /// <returns>
+    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
+    /// <remarks>
     /// Looks for the referenced assembly first in the same directory as the referring unit, then
     /// in any search paths provided to the constructor, then finally the GAC.
-    /// </summary>
-    /// <param name="referringUnit"></param>
-    /// <param name="referencedAssembly"></param>
-    /// <returns></returns>
+    /// </remarks>
     //^ [Pure]
     public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
-      if (string.IsNullOrEmpty(referencedAssembly.Location)) {
-        // probe for in the same directory as the referring unit
-        string probeDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
-        AssemblyIdentity result = Probe(probeDir, referencedAssembly);
+      // probe for in the same directory as the referring unit
+      var referringDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
+      AssemblyIdentity result = this.Probe(referringDir, referencedAssembly);
+      if (result != null) return result;
+
+      // Probe in the libPaths directories
+      foreach (string libPath in this.LibPaths) {
+        result = this.Probe(libPath, referencedAssembly);
         if (result != null) return result;
-        // Probe in the libPaths directories
-        foreach (string prefix in this.libPaths) {
-          result = Probe(prefix, referencedAssembly);
-          if (result != null) return result;
-        }
-        // Check platform location
-        probeDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
-        result = Probe(probeDir, referencedAssembly);
-        if (result != null) return result;
-#if !COMPACTFX
-        // Check GAC
-        string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
-        if (gacLocation != null) {
-          return new AssemblyIdentity(referencedAssembly, gacLocation);
-        }
-#endif
       }
-      return base.ProbeAssemblyReference(referringUnit, referencedAssembly);
+
+      // Check platform location
+      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
+      result = this.Probe(platformDir, referencedAssembly);
+      if (result != null) return result;
+
+      // Check GAC
+#if !COMPACTFX
+      string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
+      if (gacLocation != null) {
+        return new AssemblyIdentity(referencedAssembly, gacLocation);
+      }
+#endif
+
+      // Give up
+      return new AssemblyIdentity(referencedAssembly, "unknown://location");
     }
 
     #region IMetadataReaderHost Members
