@@ -172,6 +172,25 @@ namespace CodeModelTestInput {
       return midVal;
     }
 
+    public IEnumerable<int> Method19(int x) {
+      for (int i = 0; i < 10; i++) {
+        if (i == 8) {
+          if (x == i)
+            yield return x;
+          else
+            yield return 8;
+        } else {
+          if (x > 0) {
+            yield break;
+          } else {
+            if (x < -2) {
+              yield break;
+            } else yield return i;
+          }
+        }
+      }
+    }
+
   }
 
   public class Class2 {
@@ -192,17 +211,18 @@ namespace CodeModelTestInput {
       }
     }
     public class Test2 {
+
       public IEnumerable<string> Test1a(string s) {
         Contract.Requires(s != null);
         Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<string>>(), (string s1) => s1 != null));
         yield return "hello";
       }
-      //public IEnumerable<T> Test1c<T>(T t, IEnumerable<T> ts) {
-      //  if (t.Equals(default(T))) throw new ArgumentException("");
-      //  Contract.Requires(Contract.ForAll(ts, (T t1) => t1.Equals(t)));
-      //  yield return t;
-      //}
+      public IEnumerable<T> Test1c<T>(T t, IEnumerable<T> ts) {
+        if (t.Equals(default(T))) throw new ArgumentException("");
+        Contract.Requires(Contract.ForAll(ts, (T t1) => t1.Equals(t)));
+        yield return t;
+      }
       public IEnumerable<T> Test1d<T>(IEnumerable<T> input) {
         Contract.Requires(input != null);
         Contract.Requires(Contract.ForAll(input, (T s1) => s1 != null));
@@ -230,14 +250,14 @@ namespace CodeModelTestInput {
       bool foo(object y, object x) {
         return y == x;
       }
-      //public IEnumerable<T> Test1h<T>(IEnumerable<T> input, int x, int y)
-      //  where T : IIncrementable<T> {
-      //  Contract.Requires(Contract.ForAll(input, (T t) => t.Value() > x));
-      //  Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), (T t) => t.Value() > (x + y)));
-      //  foreach (T t in input) {
-      //    yield return t.IncrementBy(y);
-      //  }
-      //}
+      public IEnumerable<T> Test1h<T>(IEnumerable<T> input, int x, int y)
+        where T : IIncrementable<T> {
+        Contract.Requires(Contract.ForAll(input, (T t) => t.Value() > x));
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), (T t) => t.Value() > (x + y)));
+        foreach (T t in input) {
+          yield return t.IncrementBy(y);
+        }
+      }
     }
     public class Test3<T>
       where T : class, IIncrementable<T> {

@@ -32,27 +32,49 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (IsTopLevel) {
         IsTopLevel = false;
         List<ILocalDefinition> localsForThisDotState;
-        this.RemovePossibleTryCatchBlock(blockStatement.Statements);
-        this.RemoveAssignmentsByOrToThisDotState(blockStatement.Statements, out localsForThisDotState);
-        this.ReplaceReturnWithYieldReturn(blockStatement.Statements);
-        this.RemoveToplevelSwitch(blockStatement.Statements, localsForThisDotState);
-        this.RemoveUnnecessaryGotosAndLabels(blockStatement.Statements);
+        this.RemovePossibleTryCatchBlock(blockStatement);
+        this.RemoveAssignmentsByOrToThisDotState(blockStatement, out localsForThisDotState);
+        this.ReplaceReturnWithYieldReturn(blockStatement);
+        this.RemoveToplevelSwitch(blockStatement, localsForThisDotState);
+        this.RemoveUnnecessaryGotosAndLabels(blockStatement);
+        this.RemoveUnreferencedTempVariables(blockStatement);
       }
       return base.Visit(blockStatement);
     }
 
-    /// <summary>
-    /// If the body of MoveNext has a try... catch block at the beginning inserted by compiler and the catch block contains
-    /// only a call to call this (the closure class).dispose, remove the try block. 
-    /// </summary>
-    /// <param name="statements"></param>
-    void RemovePossibleTryCatchBlock(List<IStatement> statements) {
-      bool FindTryBlock = false;
-      for (int/* modified in body.*/ i = 0; i < statements.Count; i++) {
-        // Skip any local variable declarations
+    delegate bool ProcessList<T>(List<T> list, ref int index);
+    delegate int IntDependingOnList<T>(List<T> list);
+
+    int Count<T>(List<T> list) { return list.Count; }
+
+    class LinearCodeTraverser : BaseCodeTraverser {
+      ProcessList<IStatement> process;
+      public LinearCodeTraverser(ProcessList<IStatement> process) {
+        this.process = process;
+      }
+      public override void Visit(IBlockStatement block) {
+        BasicBlock blockStatement = block as BasicBlock;
+        if (blockStatement != null) {
+          for (int i = 0; i < blockStatement.Statements.Count; i++) {
+            base.Visit(blockStatement.Statements[i]);
+            if (process(blockStatement.Statements, ref i)) continue;
+            else break;
+          }
+        }
+      }
+    }
+
+    void OverLinearViewOfStatements(BlockStatement blockStatement, ProcessList<IStatement> process) {
+      LinearCodeTraverser linearCodeTraverser = new LinearCodeTraverser(process);
+      linearCodeTraverser.Visit(blockStatement);
+    }
+
+    class RemovePossibleTryCatchBlockHelper {
+      public bool FindTryBlock = false;
+      public bool process(List<IStatement> statements, ref int i) {
         ILocalDeclarationStatement localDeclaractionStatement = statements[i] as ILocalDeclarationStatement;
         if (localDeclaractionStatement != null) {
-          continue;
+          return true;
         }
         ITryCatchFinallyStatement tryCatchFinallyStatement = statements[i] as ITryCatchFinallyStatement;
         if (tryCatchFinallyStatement != null) {
@@ -93,38 +115,48 @@ namespace Microsoft.Cci.ILToCodeModel {
               statements.Insert(i, statement); i++;
             }
             statements.RemoveAt(i); i--; FindTryBlock = true;
-            break;
+            return false;
           }
         }
-        break;
+        return false;
       }
-      // Remove th call to m_Finally. Note that now m_Finally must be in the toplevel. 
-      if (FindTryBlock) {
-        for (int/*modified in body*/ i = 0; i < statements.Count; i++) {
-          IExpressionStatement expressionStatement = statements[i] as IExpressionStatement;
+    }
+
+    /// <summary>
+    /// If the body of MoveNext has a try/catch block at the beginning inserted by compiler and the catch block contains
+    /// only a call to call this (the closure class).dispose, remove the try block. 
+    /// </summary>
+    /// <param name="blockStatement"></param>
+    void RemovePossibleTryCatchBlock(BlockStatement blockStatement) {
+      // Remove the try catch block
+      RemovePossibleTryCatchBlockHelper tryCatchRemover = new RemovePossibleTryCatchBlockHelper();
+      tryCatchRemover.FindTryBlock = false;
+      OverLinearViewOfStatements(blockStatement, tryCatchRemover.process);
+      // Remove th call to m_Finally, which is considered the only statement in the finally body.
+      if (tryCatchRemover.FindTryBlock) {
+        OverLinearViewOfStatements(blockStatement, delegate(List<IStatement> stmts, ref int i) {
+          IExpressionStatement expressionStatement = stmts[i] as IExpressionStatement;
           if (expressionStatement != null) {
             IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
             if (methodCall != null) {
               if (methodCall.MethodToCall.Name.Value.Contains("m__Finally") && methodCall.ThisArgument is IThisReference) {
-                statements.RemoveAt(i);
-                break;
+                stmts.RemoveAt(i); // no need to decrement i. 
+                return false;
               }
             }
           }
-        }
+          return true;
+        });
       }
       return;
     }
 
-    /// <summary>
-    /// Remove any assignment to <code>this.&lt;&gt;?_state</code>. Remember the locals used to hold values of this.&lt;&gt;?state.
-    /// Assumption: .net compilers never assign this.&lt;&gt;?state to anything other than a local variable. 
-    /// </summary>
-    /// <param name="statements"></param>
-    /// <param name="thisDotStateLocals"></param>
-    void RemoveAssignmentsByOrToThisDotState(List<IStatement> statements, out List<ILocalDefinition> thisDotStateLocals) {
-      thisDotStateLocals = new List<ILocalDefinition>();
-      for (int i = 0; i < statements.Count; i++) {
+    class RemoveAssignmentsOneThisDotStateHelper {
+      public List<ILocalDefinition> thisDotStateLocals;
+      public RemoveAssignmentsOneThisDotStateHelper() {
+        this.thisDotStateLocals = new List<ILocalDefinition>();
+      }
+      public bool process(List<IStatement> statements, ref int i) {
         IExpressionStatement/*?*/ expressionStatement = statements[i] as IExpressionStatement;
         if (expressionStatement != null) {
           IAssignment/*?*/ assignment = expressionStatement.Expression as IAssignment;
@@ -133,7 +165,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             if (closureField != null && closureField.Name.Value.StartsWith(ClosureFieldPrefix) && closureField.Name.Value.EndsWith(StateFieldPostfix)) {
               statements.RemoveAt(i);
               i--;
-              continue;
+              return true;
             }
             IBoundExpression boundExpression = assignment.Source as IBoundExpression;
             if (boundExpression != null) {
@@ -144,41 +176,45 @@ namespace Microsoft.Cci.ILToCodeModel {
                   if (!thisDotStateLocals.Contains(thisDotStateLocal)) thisDotStateLocals.Add(thisDotStateLocal);
                   statements.RemoveAt(i);
                   i--;
-                  continue;
+                  return true;
                 } else throw new System.ApplicationException("Unexpected: assign this.<>?__state to something other than a local.");
               }
             }
           }
         }
+        return true;
       }
     }
 
-    bool IsAssignmentToThisDotField(IStatement/*?*/ statement, string fieldPostfix, out IExpression/*?*/ expression) {
-      expression = null;
-      IExpressionStatement/*?*/ expressionStatement = statement as IExpressionStatement;
-      if (expressionStatement == null) return false;
-      IAssignment/*?*/ assignment = expressionStatement.Expression as IAssignment;
-      if (assignment == null) return false;
-      IFieldReference/*?*/ closureField = assignment.Target.Definition as IFieldReference;
-      //if (!(assignment.Target.Instance is IThisReference)) return false;
-      if (closureField == null || !closureField.Name.Value.StartsWith(ClosureFieldPrefix) || !closureField.Name.Value.EndsWith(fieldPostfix)) return false;
-      expression = assignment.Source;
-      return true;
+    /// <summary>
+    /// Remove any assignment to <code>this.&lt;&gt;?_state</code>. Remember the locals used to hold values of this.&lt;&gt;?state.
+    /// Assumption: .net compilers never assign this.&lt;&gt;?state to anything other than a local variable. 
+    /// </summary>
+    /// <param name="blockStatement">A BlockStatement representing the body of MoveNext.</param>
+    /// <param name="thisDotStateLocals">Locals that hold the value of thisDotState</param>
+    void RemoveAssignmentsByOrToThisDotState(BlockStatement blockStatement, out List<ILocalDefinition> thisDotStateLocals) {
+      RemoveAssignmentsOneThisDotStateHelper helper = new RemoveAssignmentsOneThisDotStateHelper();
+      OverLinearViewOfStatements(blockStatement, helper.process);
+      thisDotStateLocals = helper.thisDotStateLocals;
     }
 
-    /// <summary>
-    /// Replace every return true with yield return, and every return false with yield break. 
-    /// </summary>
-    /// <param name="statements"></param>
-    void ReplaceReturnWithYieldReturn(List<IStatement> statements) {
-      IExpression exp = null;
-      // First pass, replace this.<>?__current = exp with "yield return exp";
-      //             remove return exp, remember its location and the local variable corresponding to exp
-      List<ILocalDefinition> returnLocals = new List<ILocalDefinition>();
-      List<IName> labelBeforeReturn = new List<IName>();
-      ILabeledStatement currentLabeledStatement = null;
+    class YieldReturnYieldBreakHelper {
+      bool IsAssignmentToThisDotField(IStatement/*?*/ statement, string fieldPostfix, out IExpression/*?*/ expression) {
+        expression = null;
+        IExpressionStatement/*?*/ expressionStatement = statement as IExpressionStatement;
+        if (expressionStatement == null) return false;
+        IAssignment/*?*/ assignment = expressionStatement.Expression as IAssignment;
+        if (assignment == null) return false;
+        IFieldReference/*?*/ closureField = assignment.Target.Definition as IFieldReference;
+        //if (!(assignment.Target.Instance is IThisReference)) return false;
+        if (closureField == null || !closureField.Name.Value.StartsWith(ClosureFieldPrefix) || !closureField.Name.Value.EndsWith(fieldPostfix)) return false;
+        expression = assignment.Source;
+        return true;
+      }
 
-      for (int/* modified in body*/ i = 0; i < statements.Count; i++) {
+      ILabeledStatement currentLabeledStatement = null;
+      public bool ReplaceAndRememberYieldReturn(List<IStatement> statements, ref int i) {
+        IExpression exp;
         IStatement statement = statements[i];
         if (IsAssignmentToThisDotField(statement, CurrentFieldPostfix, out exp)) {
           statements.RemoveAt(i);
@@ -187,7 +223,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           yieldReturnStatement.Locations = new List<ILocation>();
           foreach (ILocation loc in statement.Locations) yieldReturnStatement.Locations.Add(loc);
           statements.Insert(i, yieldReturnStatement);
-          continue;
+          return true;
         }
         IReturnStatement returnStatement = statement as IReturnStatement;
         if (returnStatement != null) {
@@ -198,23 +234,24 @@ namespace Microsoft.Cci.ILToCodeModel {
             ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
             returnLocals.Add(localDefinition);
           } else {
-            throw new System.ApplicationException("return in move next does not return a local variable.");
+            return false;
           }
         }
         ILabeledStatement labeledStatement = statement as ILabeledStatement;
         if (labeledStatement != null) {
           currentLabeledStatement = labeledStatement;
         }
+        return true;
       }
 
-      // Second pass: remove goto statement to the label before return statement
-      //              remove assignment to locals that holds the return value if the source is true
-      //              replace it with yield break if the source is false;
-      for (int/*modified in body.*/ i = 0; i < statements.Count; i++) {
+      public List<ILocalDefinition> returnLocals = new List<ILocalDefinition>();
+      public List<IName> labelBeforeReturn = new List<IName>();
+
+      public bool RemoveGotosAndCreateYieldBreak(List<IStatement> statements, ref int i) {
         IStatement statement = statements[i];
         IGotoStatement gotoStatement = statement as IGotoStatement;
         if (gotoStatement != null) {
-          if (labelBeforeReturn.Contains(gotoStatement.TargetStatement.Label)) { statements.RemoveAt(i); i--; } else continue;
+          if (labelBeforeReturn.Contains(gotoStatement.TargetStatement.Label)) { statements.RemoveAt(i); i--; } else return true;
         }
         IExpressionStatement expressionStatement = statement as IExpressionStatement;
         if (expressionStatement != null) {
@@ -240,19 +277,40 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (labeledStatement != null) {
           if (labelBeforeReturn.Contains(labeledStatement.Label)) { statements.RemoveAt(i); i--; }
         }
+        return true;
       }
     }
 
     /// <summary>
-    /// Remove the switch statement, if any, on <code>this.&lt;&gt;?_state</code>
+    /// Replace every return true with yield return, and every return false with yield break. 
     /// </summary>
-    /// <param name="statements"></param>
-    /// <param name="localForThisDotStates"></param>
-    void RemoveToplevelSwitch(List<IStatement> statements, List<ILocalDefinition> localForThisDotStates) {
+    /// <param name="blockStatement"></param>
+    void ReplaceReturnWithYieldReturn(BlockStatement blockStatement) {
+      // First pass, replace this.<>?__current = exp with "yield return exp";
+      //             remove return exp, remember its location and the local variable corresponding to exp
+      YieldReturnYieldBreakHelper yieldInserter = new YieldReturnYieldBreakHelper();
+      OverLinearViewOfStatements(blockStatement, yieldInserter.ReplaceAndRememberYieldReturn);
+
+      // Second pass: remove goto statement to the label before return statement
+      //              remove assignment to locals that holds the return value if the source is true
+      //              replace it with yield break if the source is false;
+      OverLinearViewOfStatements(blockStatement, yieldInserter.RemoveGotosAndCreateYieldBreak);
+    }
+
+    class RemoveTopLevelSwitchHelper {
       List<IStatement> toBeRemoved = new List<IStatement>(); // holds all the statements to be removed.
-      // First: collect the statements in the switch case bodies for continuing/end states
-      // These are bound to be removed. 
-      for (int/*modified in body*/ i = 0; i < statements.Count; i++) {
+      IList<ILocalDefinition> localsForThisDotState;
+      int initialStateValue;
+      public List<IStatement> ToBeRemoved {
+        get {
+          return toBeRemoved;
+        }
+      }
+      public RemoveTopLevelSwitchHelper(List<ILocalDefinition> localsForThisDotState, int initialStateValue) {
+        this.localsForThisDotState = localsForThisDotState;
+        this.initialStateValue = initialStateValue;
+      }
+      public bool CollectGotosInSwitchBody(List<IStatement> statements, ref int i) {
         IStatement statement = statements[i];
         ISwitchStatement switchStatement = statement as ISwitchStatement;
         if (switchStatement != null) {
@@ -270,7 +328,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               }
             }
             ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
-            if (boundExpression.Instance == null && localDefinition != null && localForThisDotStates.Contains(localDefinition)) {
+            if (boundExpression.Instance == null && localDefinition != null && localsForThisDotState.Contains(localDefinition)) {
               switchOnThisDotState = true;
             }
             if (switchOnThisDotState) {
@@ -290,17 +348,16 @@ namespace Microsoft.Cci.ILToCodeModel {
                 }
               }
               // remove the switch itself
-              statements.RemoveAt(i); break;
+              statements.RemoveAt(i); return false;
             }
           }
         }
+        return true;
       }
-
       List<IName> continueingTargets = new List<IName>();
-      // Second: Find Labels that follow a yield return. The goto chain from the entrance point of a continueing state
-      // will end at these labels. 
-      int state = 0;
-      for (int i = 0; i < statements.Count; i++) {
+      public int state = 0;
+
+      public bool FindLabelsFollowingYieldReturn(List<IStatement> statements, ref int i) {
         IStatement statement = statements[i];
         if (state == 0 && statement is IYieldReturnStatement)
           state = 1;
@@ -309,91 +366,219 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (!continueingTargets.Contains(labeledStatement.Label)) continueingTargets.Add(labeledStatement.Label);
           state = 0;
         }
+        return true;
       }
 
-      // Now, follow the link from tobeRemoved until labels in continueingTargets is hit
-      int count = toBeRemoved.Count;
-      for (int i = 0; i < count; i++) {
-        IGotoStatement gotoStatement = toBeRemoved[i] as IGotoStatement;
-        while (gotoStatement != null) {
-          IName label = gotoStatement.TargetStatement.Label;
-          for (int j = 0; j < statements.Count; j++) {
-            ILabeledStatement labeledStatement = statements[j] as ILabeledStatement;
-            if (labeledStatement != null && labeledStatement.Label.Equals(label)) {
-              bool hitGoto = false;
-              while (!hitGoto && j < statements.Count) {
-                gotoStatement = statements[j] as IGotoStatement;
-                if (gotoStatement != null) {
-                  if (continueingTargets.Contains(gotoStatement.TargetStatement.Label))
-                    gotoStatement = null;
-                  hitGoto = true;
-                }
-                if (!toBeRemoved.Contains(statements[j])) toBeRemoved.Add(statements[j]);
-                j++;
-              }
-              break;
-            }
+      public bool foundGotoTarget;
+      public bool hitNextGoto;
+      public bool hitContinueTargetOrDefault;
+      public IGotoStatement gotoStatement;
+      IStatement previousLabelStatement = null;
+      public bool FollowGotosInContinuingState(List<IStatement> statements, ref int j) {
+        ILabeledStatement labeledStatement = statements[j] as ILabeledStatement;
+        if (labeledStatement != null) {
+          if (labeledStatement.Label.Equals(gotoStatement.TargetStatement.Label)) {
+            foundGotoTarget = true;
+            hitNextGoto = false;
+            previousLabelStatement = labeledStatement;
+            return true;
+            //while (!hitNextGoto && j < statements.Count && !hitContinueTargetOrDefault) {
+            //  IGotoStatement gotoStmt = statements[j] as IGotoStatement;
+            //  if (gotoStmt != null) {
+            //    if (continueingTargets.Contains(gotoStatement.TargetStatement.Label)) {
+            //      gotoStatement = null;
+            //      hitContinueTargetOrDefault = true;
+            //    } else
+            //      gotoStatement = gotoStmt;
+            //      hitNextGoto = true;
+            //  }
+            //  if (!toBeRemoved.Contains(statements[j])) toBeRemoved.Add(statements[j]);
+            //  j++;
+            //}
+            //return false;
+          }
+          if (continueingTargets.Contains(labeledStatement.Label)) {
+            hitContinueTargetOrDefault = true;
+            return false;
           }
         }
-      }
-
-      // Remove all those in toBeReomoved
-      for (int i = 0; i < statements.Count; i++) {
-        if (toBeRemoved.Contains(statements[i])) {
-          statements.RemoveAt(i); i--;
+        IGotoStatement goStmt = statements[j] as IGotoStatement;
+        if (goStmt != null && !hitNextGoto && previousLabelStatement != null) {
+          hitNextGoto = true;
+          gotoStatement = goStmt;
+          previousLabelStatement = null;
+          if (!toBeRemoved.Contains(previousLabelStatement)) toBeRemoved.Add(previousLabelStatement);
+          if (!toBeRemoved.Contains(goStmt)) toBeRemoved.Add(goStmt);
+          return false;
         }
+        if (foundGotoTarget) {
+          previousLabelStatement = null;
+          hitContinueTargetOrDefault = true;
+          return false;
+        }
+        return true;
       }
     }
 
     /// <summary>
-    /// Remove the unnecessary gotos and labels at the beginning of the method body.
+    /// Remove the switch statement, if any, on <code>this.&lt;&gt;?_state</code>
     /// </summary>
-    /// <param name="statements"></param>
-    void RemoveUnnecessaryGotosAndLabels(List<IStatement> statements) {
-      IGotoStatement/*?*/ gotoStatement = null;
-      int state = 0;
-      for (int/*modified in body*/ i = 0; i < statements.Count; i++) {
+    /// <param name="blockStatement"></param>
+    /// <param name="localForThisDotStates"></param>
+    void RemoveToplevelSwitch(BlockStatement blockStatement, List<ILocalDefinition> localForThisDotStates) {
+
+      // First: collect the statements in the switch case bodies for continuing/end states
+      RemoveTopLevelSwitchHelper helper = new RemoveTopLevelSwitchHelper(localForThisDotStates, this.initialStateValue);
+      OverLinearViewOfStatements(blockStatement, helper.CollectGotosInSwitchBody);
+
+      // Second: Find Labels that follow a yield return. The goto chain from the entrance point of a continueing state
+      // will end at these labels. 
+      helper.state = 0;
+      OverLinearViewOfStatements(blockStatement, helper.FindLabelsFollowingYieldReturn);
+
+      // Now, follow the link from tobeRemoved until labels in continueingTargets is hit
+      for (int i = 0; i < helper.ToBeRemoved.Count; i++) {
+        IGotoStatement gotoStatement = helper.ToBeRemoved[i] as IGotoStatement;
+        if (gotoStatement == null) continue;
+        helper.gotoStatement = gotoStatement;
+        bool finished = false;
+        while (!finished) {
+          helper.foundGotoTarget = false;
+          helper.hitNextGoto = false;
+          helper.hitContinueTargetOrDefault = false;
+          OverLinearViewOfStatements(blockStatement, helper.FollowGotosInContinuingState);
+          finished = !helper.foundGotoTarget || !helper.hitNextGoto || helper.hitContinueTargetOrDefault;
+        }
+      }
+      // Remove all those in toBeReomoved
+      OverLinearViewOfStatements(blockStatement, delegate(List<IStatement> stmts, ref int i) {
+        if (helper.ToBeRemoved.Contains(stmts[i])) {
+          stmts.RemoveAt(i); i--;
+        }
+        return true;
+      });
+    }
+
+    class RemoveGotosLabelsHelper {
+      public int state = 0;
+      IGotoStatement gotoStatement = null;
+      int preludeSize =0;
+      bool preludeFinished = false;
+      int depth = -1;
+      public bool RemoveGotosLabels(List<IStatement> statements, ref int i) {
+        if (i == 0) {
+          preludeSize = 0;
+          preludeFinished = false;
+          depth++;
+        }
+        ILocalDeclarationStatement localDeclarationStatement = statements[i] as ILocalDeclarationStatement;
+        if (localDeclarationStatement != null) {
+          if (!preludeFinished) preludeSize++;
+          return true;
+        } else {
+          preludeFinished = true;
+        }
         ILabeledStatement labeledStatement = statements[i] as ILabeledStatement;
-        if (i == 0 && labeledStatement != null && state == 0) {
-          statements.RemoveAt(0);
+        if (preludeFinished && i == preludeSize && labeledStatement != null && state == 0 && depth ==0) {
+          statements.RemoveAt(i);
           i--;
-          continue;
+          return true;
         }
-        if (i == 0 && gotoStatement == null && state == 0) {
+        if (preludeFinished && i == preludeSize  && gotoStatement == null && state == 0) {
           gotoStatement = statements[i] as IGotoStatement;
-          state = 1;
-          continue;
+          if (gotoStatement != null) {
+            statements.RemoveAt(i); i--;
+            state = 1;
+            return true;
+          } else {
+            return false;
+          }
         }
-        if (i == 1 && gotoStatement != null && state == 1) {
+        if (preludeFinished && i == preludeSize && gotoStatement != null && state == 1) {
           IGotoStatement deadGotoStatement = statements[i] as IGotoStatement;
           if (deadGotoStatement != null) {
-            statements.RemoveAt(1); i--; continue;
+            statements.RemoveAt(i); i--; return true;
           }
         }
         if (gotoStatement != null) {
           labeledStatement = statements[i] as ILabeledStatement;
           if (labeledStatement != null && labeledStatement.Label == gotoStatement.TargetStatement.Label && state == 1) {
             state = 2;
-            if (i == 1) {
-              // The target of the first goto is right after, remove both the first goto and its target. 
+            if (i == preludeSize) {
               statements.RemoveAt(i); i--;
-              statements.RemoveAt(0); i--;
             }
-            continue;
+            return true;
           }
           IGotoStatement nextGotoStatement = statements[i] as IGotoStatement;
           if (nextGotoStatement != null && state == 2) {
             gotoStatement = nextGotoStatement;
             statements.RemoveAt(i); i--; state = 3;
-            continue;
+            return true;
           }
           if (nextGotoStatement != null && state == 3) {
             statements.RemoveAt(i); i--; state = 4;
-            continue;
+            return true;
           }
         }
-        if (state != 0 && state != 1) break;
+        if (state != 0 && state != 1) return false;
+        return true;
       }
+    }
+
+    /// <summary>
+    /// Remove the some of the unnecessary gotos.
+    /// </summary>
+    /// <param name="blockStatement">BlockStatement representing the MoveNext body.</param>
+    void RemoveUnnecessaryGotosAndLabels(BlockStatement blockStatement) {
+      RemoveGotosLabelsHelper helper = new RemoveGotosLabelsHelper();
+      OverLinearViewOfStatements(blockStatement, helper.RemoveGotosLabels);
+    }
+
+    class RemoveUnreferencedLocalHelper {
+      List<ILocalDefinition> referencedLocals;
+      public RemoveUnreferencedLocalHelper(List<ILocalDefinition>/*!*/ referencedLocals) {
+        this.referencedLocals = referencedLocals;
+      }
+      public bool RemoveUnreferencedLocal(List<IStatement> statements, ref int i) {
+        ILocalDeclarationStatement localDeclarationStatement = statements[i] as ILocalDeclarationStatement;
+        if (localDeclarationStatement != null && !this.referencedLocals.Contains(localDeclarationStatement.LocalVariable)) {
+          statements.RemoveAt(i); i--; return true;
+        }
+        return true;
+      }
+    }
+
+    class LocalReferencer : BaseCodeTraverser {
+      List<ILocalDefinition> referencedLocals = new List<ILocalDefinition>();
+
+      public List<ILocalDefinition> ReferencedLocals {
+        get { return referencedLocals; }
+      }
+      public override void Visit(IAddressableExpression addressableExpression) {
+        ILocalDefinition localdef = addressableExpression.Instance as ILocalDefinition;
+        if (localdef != null && !this.referencedLocals.Contains(localdef)) this.referencedLocals.Add(localdef);
+        base.Visit(addressableExpression);
+      }
+
+      public override void Visit(IBoundExpression boundExpression) {
+        ILocalDefinition localdef = boundExpression.Instance as ILocalDefinition;
+        if (localdef != null && !this.referencedLocals.Contains(localdef)) this.referencedLocals.Add(localdef);
+        base.Visit(boundExpression);
+      }
+
+      public override void Visit(ITargetExpression targetExpression) {
+        ILocalDefinition localdef = targetExpression.Instance as ILocalDefinition;
+        if (localdef != null && !this.referencedLocals.Contains(localdef))
+          this.referencedLocals.Add(localdef);
+        base.Visit(targetExpression);
+      }
+    }
+
+    void RemoveUnreferencedTempVariables(BlockStatement blockStatement) {
+      LocalReferencer localReferencer = new LocalReferencer();
+      localReferencer.Visit(blockStatement);
+      RemoveUnreferencedLocalHelper helper = new RemoveUnreferencedLocalHelper(localReferencer.ReferencedLocals);
+      OverLinearViewOfStatements(blockStatement, helper.RemoveUnreferencedLocal);
     }
   }
 
@@ -487,7 +672,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       /// <returns></returns>
       public override ITargetExpression Visit(TargetExpression targetExpression) {
         // ^Requires: targetExpression.Definition is not the field in the closure class that captures THIS of the original.
-        IFieldReference/*?*/ closureFieldRef = targetExpression.Definition as IFieldReference;
+        IFieldReference/*?*/ closureFieldRef= targetExpression.Definition as IFieldReference;
         if (closureFieldRef != null) {
           object localOrParameter = null;
           IFieldDefinition closureFieldDefinition = closureFieldRef.ResolvedField;
@@ -575,24 +760,19 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// Turn an assignment to a local variable that is not yet declared into a local variable declaration statement.
   /// 
-  /// It is probably sufficient to add the declarations at the top level (not for example, in a try block). 
   /// </summary>
   internal class ClosureLocalVariableDeclarationAdder : MethodBodyMutator {
-    bool IsTopLevel;
+    Dictionary<ILocalDefinition, bool> locals = new Dictionary<ILocalDefinition, bool>();
     internal ClosureLocalVariableDeclarationAdder(MoveNextSourceMethodBody sourceMethodBody)
       : base(sourceMethodBody.host, true) {
     }
 
     public IBlockStatement Transform(IBlockStatement block) {
-      IsTopLevel = true;
       return this.Visit(block);
     }
 
     public override IBlockStatement Visit(BlockStatement blockStatement) {
-      if (IsTopLevel) {
-        IsTopLevel = false;
-        this.AddLocalDeclarationIfNecessary(blockStatement.Statements, new Dictionary<ILocalDefinition, bool>());
-      }
+      this.AddLocalDeclarationIfNecessary(blockStatement.Statements);
       return base.Visit(blockStatement);
     }
 
@@ -600,10 +780,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Turn an assignment to a local variable that is not yet declared into a local variable declaration statement.
     /// </summary>
     /// <param name="statements"></param>
-    /// <param name="locals">locals[l] is true if l has been declared and initialized, false if declared but not initialized.
-    /// l is in locals only if it has been declared. 
-    /// </param>
-    void AddLocalDeclarationIfNecessary(List<IStatement> statements, Dictionary<ILocalDefinition, bool> locals) {
+    void AddLocalDeclarationIfNecessary(List<IStatement> statements) {
       for (int i = 0; i < statements.Count; i++) {
         ILocalDeclarationStatement localDeclaration = statements[i] as ILocalDeclarationStatement;
         if (localDeclaration != null) {
