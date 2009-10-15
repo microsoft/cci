@@ -52,10 +52,15 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="location">A location in a document that have been derived from one or more source documents.</param>
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsFor(ILocation location) {
-      MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
-      if (mbLocation != null) {
-        IPrimarySourceLocation/*?*/ psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation);
-        if (psloc != null) yield return psloc;
+      var psloc = location as IPrimarySourceLocation;
+      if (psloc != null)
+        yield return psloc;
+      else {
+        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        if (mbLocation != null) {
+          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation);
+          if (psloc != null) yield return psloc;
+        }
       }
     }
 
@@ -266,6 +271,21 @@ namespace Microsoft.Cci {
       return pdbFunction != null && pdbFunction.iteratorClass != null;
     }
 
+    /// <summary>
+    /// Returns the location that has the smaller IL offset. If only one of the two locations
+    /// is a PdbReader supplied location that one is returned. If neither is a PdbReader supplied location, the first
+    /// location is returned.
+    /// </summary>
+    /// <param name="location1">A document location. Typically one obtained from the PdbReader.</param>
+    /// <param name="location2">A document location. Typically one obtained from the PdbReader.</param>
+    public ILocation LocationWithSmallerOffset(ILocation location1, ILocation location2) {
+      var smbl = location2 as MethodBodyLocation;
+      if (smbl == null) return location1;
+      var tmbl = location1 as MethodBodyLocation;
+      if (tmbl == null || tmbl.Offset > smbl.Offset) return location2;
+      return location1;
+    }
+
     private IPrimarySourceLocation/*?*/ MapMethodBodyLocationToSourceLocation(MethodBodyLocation mbLocation) {
       PdbFunction/*?*/ pdbFunction;
       if (!this.pdbFunctionMap.TryGetValue(mbLocation.Document.MethodToken, out pdbFunction)) return null;
@@ -295,7 +315,6 @@ namespace Microsoft.Cci {
     }
 
     Dictionary<PdbSource, PdbSourceDocument> documentCache = new Dictionary<PdbSource, PdbSourceDocument>();
-
 
   }
 
