@@ -10105,6 +10105,25 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns a string representation of the expression for debugging and logging uses.
+    /// </summary>
+    public override string ToString() {
+      System.Text.StringBuilder result = new System.Text.StringBuilder(this.IndexedObject.ToString());
+      result.Append('[');
+      bool first = true;
+      foreach (var index in this.OriginalArguments) {
+        if (first) {
+          first = false;
+        } else {
+          result.Append(", ");
+        }
+        result.Append(index.ToString());
+      }
+      result.Append(']');
+      return result.ToString();
+    }
+
+    /// <summary>
     /// Makes a copy of this expression, changing the ContainingBlock to the given block.
     /// </summary>
     //^ [MustOverride]
