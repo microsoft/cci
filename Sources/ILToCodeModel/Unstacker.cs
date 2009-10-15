@@ -182,7 +182,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.block.LocalVariables.Add(temp);
         this.body.numberOfReferences.Add(temp, 0);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() { Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush } };
+        return new ExpressionStatement() {
+          Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
+          Locations = push.Locations
+        };
       }
       if (statement is EndFilter || statement is EndFinally) {
         this.visitedUnconditionalBranch = true;

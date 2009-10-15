@@ -162,6 +162,15 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Dictionary<uint, BasicBlock> blockFor = new Dictionary<uint, BasicBlock>();
 
+    internal void CombineLocations(List<ILocation> target, IEnumerable<ILocation> source) {
+      foreach (var sourceLoc in source) {
+        if (target.Count == 0)
+          target.Add(sourceLoc);
+        else
+          target[0] = this.pdbReader.LocationWithSmallerOffset(target[0], sourceLoc);
+      }
+    }
+
     private static int ConvertToInt(Expression expression) {
       CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
       if (cc == null) return 0; //TODO: error

@@ -220,8 +220,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           statements.RemoveAt(i);
           YieldReturnStatement yieldReturnStatement = new YieldReturnStatement();
           yieldReturnStatement.Expression = exp;
-          yieldReturnStatement.Locations = new List<ILocation>();
-          foreach (ILocation loc in statement.Locations) yieldReturnStatement.Locations.Add(loc);
+          yieldReturnStatement.Locations.AddRange(statement.Locations);
           statements.Insert(i, yieldReturnStatement);
           return true;
         }
@@ -266,7 +265,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                 } else {
                   statements.RemoveAt(i);
                   YieldBreakStatement yieldBreakStatement = new YieldBreakStatement();
-                  foreach (ILocation loc in assignment.Locations) yieldBreakStatement.Locations.Add(loc);
+                  yieldBreakStatement.Locations.AddRange(expressionStatement.Locations);
                   statements.Insert(i, yieldBreakStatement);
                 }
               }
@@ -797,9 +796,9 @@ namespace Microsoft.Cci.ILToCodeModel {
               statements.RemoveAt(i);
               LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() {
                 LocalVariable = localDefinition,
-                Locations = new List<ILocation>(expressionStatement.Locations),
                 InitialValue = assignment.Source
               };
+              localDeclarationStatement.Locations.AddRange(expressionStatement.Locations);
               locals[localDefinition] = true;
               statements.Insert(i, localDeclarationStatement);
             }

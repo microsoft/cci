@@ -42,12 +42,13 @@ namespace Microsoft.Cci.ILToCodeModel {
             LocalDeclarationStatement localDecl = new LocalDeclarationStatement();
             localDecl.LocalVariable = localDef;
             localDecl.InitialValue = assignment.Source;
+            localDecl.Locations = expressionStatement.Locations;
             if (localDef.Type == Dummy.TypeReference && localDef is LocalDefinition) {
               ((LocalDefinition)localDef).Type = assignment.Source.Type;
             }
             basicBlock.Statements[i] = localDecl;
             localsInCurrentScope.Remove(localDef);
-            this.declaredLocals.Add(localDef, true);
+            this.declaredLocals[localDef] = true;
           }
         }
         if (localsInCurrentScope.Count > 0) {

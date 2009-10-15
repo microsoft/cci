@@ -35,36 +35,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.ReplaceShortCircuitPattern(b.Statements, i);
         this.ReplaceShortCircuitPattern2(b.Statements, i);
         this.ReplacePushPopPattern(b.Statements, i);
-        this.ReplacedPushDupLocPopPattern(b.Statements, i);
       }
       if (this.blockLocalVariables != b.LocalVariables)
         b.LocalVariables = this.blockLocalVariables;
-    }
-
-    private void ReplacedPushDupLocPopPattern(List<IStatement> statements, int i) {
-      if (i > statements.Count - 4) return;
-      Push/*?*/ push = statements[i] as Push;
-      if (push == null) return;
-      Push/*?*/ pushDup = statements[i+1] as Push;
-      if (pushDup == null || !(pushDup.ValueToPush is Dup)) return;
-      ExpressionStatement/*?*/ expressionStatement = statements[i+2] as ExpressionStatement;
-      if (expressionStatement == null) return;
-      Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
-      if (assignment == null) return;
-      Pop/*?*/ pop = assignment.Source as Pop;
-      if (pop == null) return;
-      ILocalDefinition/*?*/ local = assignment.Target.Definition as ILocalDefinition;
-      if (local == null) return;
-      ExpressionStatement/*?*/ expressionStatement2 = statements[i+3] as ExpressionStatement;
-      if (expressionStatement2 == null) return;
-      Assignment/*?*/ assignment2 = expressionStatement2.Expression as Assignment;
-      if (assignment2 == null) return;
-      Pop/*?*/ pop2 = assignment2.Source as Pop;
-      if (pop2 == null) return;
-      statements.RemoveAt(i);
-      assignment.Source = push.ValueToPush;
-      assignment2.Source = new BoundExpression() { Definition = local };
-      this.sourceMethodBody.numberOfReferences[local]++;
     }
 
     private void ReplacePushPopPattern(List<IStatement> statements, int i) {
@@ -149,7 +122,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.Condition = conditionalStatement.Condition;
         conditional.ResultIfTrue = push.ValueToPush;
         conditional.ResultIfFalse = push2.ValueToPush;
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
         push.ValueToPush = conditional;
+        push.Locations = conditional.Locations;
         statements[i] = push;
         statements.RemoveRange(i+1, 3);
         block2.Statements.RemoveAt(0);
@@ -168,7 +145,11 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfTrue = push2.ValueToPush;
           conditional.ResultIfFalse = push.ValueToPush;
         }
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
         push.ValueToPush = conditional;
+        push.Locations = conditional.Locations;
         statements[i] = push;
         statements.RemoveRange(i+1, 3);
         block2.Statements.RemoveAt(0);
@@ -217,6 +198,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       conditional.ResultIfTrue = new CompileTimeConstant() { Value = 1, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
       conditional.ResultIfFalse = conditionalStatement2.Condition;
       conditionalStatement2.Condition = conditional;
+      conditionalStatement2.Locations = new List<ILocation>(conditionalStatement.Condition.Locations);
       statements.RemoveAt(i);
       return true;
     }
@@ -253,6 +235,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
+        conditionalStatement2.Locations = conditionalStatement.Locations;
         statements.RemoveAt(i);
         return this.ReplaceShortCircuitPattern2(statements, i);
       }
@@ -263,6 +246,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
+        conditionalStatement2.Locations = conditionalStatement.Locations;
         statements.RemoveAt(i);
         return true;
       }
@@ -274,6 +258,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (binOp != null) return InvertBinaryOperation(binOp);
       LogicalNot logicalNot = new LogicalNot();
       logicalNot.Operand = expression;
+      logicalNot.Locations.AddRange(expression.Locations);
       return logicalNot;
     }
 
@@ -294,10 +279,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (result != null) {
         result.LeftOperand = binOp.LeftOperand;
         result.RightOperand = binOp.RightOperand;
+        result.Locations.AddRange(binOp.Locations);
         return result;
       }
       LogicalNot logicalNot = new LogicalNot();
       logicalNot.Operand = binOp;
+      logicalNot.Locations.AddRange(binOp.Locations);
       return logicalNot;
     }
 
@@ -313,29 +300,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (chainedConditional == null) return false;
 
       return this.ReplaceShortCircuitPattern(statements, i);
-      // The code below seems wrong to me, but I don't have the repro anymore.
-
-      //if (conditionalStatement.TrueBranch is EmptyStatement) {
-      //  Conditional conditional = new Conditional();
-      //  conditional.Condition = conditionalStatement.Condition;
-      //  conditional.ResultIfTrue = chainedConditional;
-      //  conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
-      //  push.ValueToPush = conditional;
-      //  statements[i] = push;
-      //  statements.RemoveRange(i+1, 1);
-      //  return true;
-      //}
-      //if (conditionalStatement.FalseBranch is EmptyStatement) {
-      //  Conditional conditional = new Conditional();
-      //  conditional.Condition = conditionalStatement.Condition;
-      //  conditional.ResultIfTrue = chainedConditional.ResultIfTrue;
-      //  conditional.ResultIfFalse = chainedConditional;
-      //  push.ValueToPush = conditional;
-      //  statements[i] = push;
-      //  statements.RemoveRange(i+1, 1);
-      //  return true;
-      //}
-      //return false;
     }
 
     /// <summary>
@@ -378,7 +342,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (label == null) return false;
       List<IGotoStatement> branchesToThisLabel;
       if (this.predecessors.TryGetValue(label, out branchesToThisLabel)) {
-        //Console.WriteLine("there are " + branchesToThisLabel.Count + " branches to " + label.Label.Value);
         if (1 < branchesToThisLabel.Count) return false;
       }
       // TODO? Should we make sure that one of the branches in the conditionalStatement is
@@ -396,6 +359,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = push1.ValueToPush;
         conditional.ResultIfFalse = push2.ValueToPush;
         push1.ValueToPush = conditional;
+        push1.Locations = conditionalStatement.Locations;
         statements[i] = push1;
         statements[i + 1] = statements[i + 2]; // move the goto up
         statements[i + 2] = block2;
@@ -414,6 +378,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfFalse = push1.ValueToPush;
         }
         push1.ValueToPush = conditional;
+        push1.Locations = conditionalStatement.Locations;
         statements[i] = push1;
         statements[i + 1] = statements[i + 2]; // move the goto up
         statements[i + 2] = block2;

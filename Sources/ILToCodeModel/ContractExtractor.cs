@@ -1,4 +1,5 @@
-﻿//
+﻿//-----------------------------------------------------------------------------
+//
 // Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //-----------------------------------------------------------------------------
@@ -25,8 +26,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       get {
         if (this.currentTypeContract == null) {
           this.currentTypeContract = new TypeContract();
-          // REVIEW: Is this the right way to refer to the containing type?
-          this.contractProvider.AssociateTypeWithContract(this.sourceMethodBody.MethodDefinition.ContainingType, this.currentTypeContract);
+          this.contractProvider.AssociateTypeWithContract(this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition, this.currentTypeContract);
         }
         return this.currentTypeContract;
       }

@@ -289,7 +289,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         return new Equality() {
           LeftOperand = logicalNot.Operand,
           RightOperand = new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 },
-          Type = this.host.PlatformType.SystemBoolean
+          Type = this.host.PlatformType.SystemBoolean,
+          Locations = logicalNot.Locations
         };
       else
         return base.Visit(logicalNot);
@@ -372,8 +373,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     IMethodReference/*?*/ getTypeFromHandle;
 
     public override IStatement Visit(ReturnStatement returnStatement) {
-      if (returnStatement.Expression != null)
+      if (returnStatement.Expression != null) {
         returnStatement.Expression = this.Visit(returnStatement.Expression);
+        this.sourceMethodBody.CombineLocations(returnStatement.Locations, returnStatement.Expression.Locations);
+      }
       if (this.sourceMethodBody.MethodDefinition.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         CompileTimeConstant/*?*/ cc = returnStatement.Expression as CompileTimeConstant;
         if (cc != null) {
