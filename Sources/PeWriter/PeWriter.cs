@@ -179,7 +179,7 @@ namespace Microsoft.Cci {
       foreach (KeyValuePair<string, uint> cur in sorted) {
         if (prev.EndsWith(cur.Key)) {
           // Map over the tail of prev string. Watch for null-terminator of prev string.
-          this.stringIndexMap.Add(cur.Value, this.stringWriter.BaseStream.Position - (uint)(cur.Key.Length + 1));
+          this.stringIndexMap.Add(cur.Value, this.stringWriter.BaseStream.Position - (uint)(Encoding.UTF8.GetBytes(cur.Key).Length + 1));
         } else {
           this.stringIndexMap.Add(cur.Value, this.stringWriter.BaseStream.Position);
           this.stringWriter.WriteBytes(Encoding.UTF8.GetBytes(cur.Key));
