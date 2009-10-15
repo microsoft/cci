@@ -132,7 +132,7 @@ namespace Microsoft.Cci {
 
     internal Assembly/*?*/ CoreAssembly {
       get {
-        if (this.coreAssembly == null) 
+        if (this.coreAssembly == null)
           this.coreAssembly = this.metadataReaderHost.FindAssembly(this.metadataReaderHost.CoreAssemblySymbolicIdentity) as Assembly;
         if (this.coreAssembly == Dummy.Assembly)
           return null;
@@ -467,5 +467,39 @@ namespace Microsoft.Cci {
       }
       return moduleTypeRef.ResolvedType;
     }
+
+    /// <summary>
+    /// A simple host environment using default settings inherited from MetadataReaderHost and that
+    /// uses PeReader as its metadata reader.
+    /// </summary>
+    public class DefaultHost : MetadataReaderHost {
+      PeReader peReader;
+
+      /// <summary>
+      /// Allocates a simple host environment using default settings inherited from MetadataReaderHost and that
+      /// uses PeReader as its metadata reader.
+      /// </summary>
+      /// <param name="nameTable">
+      /// A collection of IName instances that represent names that are commonly used during compilation.
+      /// This is a provided as a parameter to the host environment in order to allow more than one host
+      /// environment to co-exist while agreeing on how to map strings to IName instances.
+      /// </param>
+      public DefaultHost(INameTable nameTable)
+        : base(nameTable) {
+        this.peReader = new PeReader(this);
+      }
+
+      /// <summary>
+      /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
+      /// </summary>
+      /// <param name="location">A path to the file that contains the unit of metdata to load.</param>
+      public override IUnit LoadUnitFrom(string location) {
+        IUnit result = this.peReader.OpenModule(
+          BinaryDocument.GetBinaryDocumentForFile(location, this));
+        this.RegisterAsLatest(result);
+        return result;
+      }
+    }
   }
+
 }
