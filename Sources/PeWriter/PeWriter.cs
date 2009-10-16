@@ -167,7 +167,7 @@ namespace Microsoft.Cci {
     /// </summary>
     void FoldStrings() {
       // Sort by suffix and remove stringIndex
-      SortedDictionary<string, uint> sorted = new SortedDictionary<string, uint>(this.stringIndex, new SuffixSort());
+      SortedList<string, uint> sorted = new SortedList<string, uint>(this.stringIndex, new SuffixSort());
       this.stringIndex = null;
 
       // Create VirtIdx to Idx map and add entry for empty string
@@ -213,9 +213,11 @@ namespace Microsoft.Cci {
     public static void WritePeToStream(IModule module, IMetadataHost host, System.IO.Stream stream,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, IPdbWriter/*?*/ pdbWriter) {
       PeWriter writer = new PeWriter(module, host, stream, sourceLocationProvider, localScopeProvider, pdbWriter);
+#if !COMPACTFX
       IUnmanagedPdbWriter/*?*/ unmangedPdbWriter = pdbWriter as IUnmanagedPdbWriter;
       if (unmangedPdbWriter != null)
         unmangedPdbWriter.SetMetadataEmitter(new MetadataWrapper(writer));
+#endif
 
       //Extract information from object model into tables, indices and streams
       writer.CreateIndices();
@@ -4301,6 +4303,23 @@ namespace Microsoft.Cci {
   }
 
   internal class ByteArrayComparer : IEqualityComparer<byte[]> {
+#if COMPACTFX
+    public bool Equals(byte[] x, byte[] y) {
+      var n = x.Length;
+      if (n != y.Length) return false;
+      for (int i = 0; i < n; i++) {
+        if (x[i] != y[i]) return false;
+      }
+      return true;
+    }
+
+    public int GetHashCode(byte[] x) {
+      int hcode = 1;
+      for (int i = 0, n = x.Length; i < n; i++)
+        hcode = hcode * 17 + x[i];
+      return hcode;
+    }
+#else
     public bool Equals(byte[] x, byte[] y) {
       long n = x.LongLength;
       if (n != y.LongLength) return false;
@@ -4316,6 +4335,7 @@ namespace Microsoft.Cci {
         hcode = hcode * 17 + x[i];
       return hcode;
     }
+#endif
   }
 
   internal class ClrHeader {

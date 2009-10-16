@@ -30,7 +30,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.publicKey = new byte[0];
       this.resources = new List<IResourceReference>();
       this.securityAttributes = new List<ISecurityAttribute>();
-      this.version = new Version();
+      this.version = new Version(0, 0);
     }
 
     /// <summary>
@@ -295,7 +295,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.ResolvedModule = this.resolvedAssembly = Dummy.Assembly;
       this.culture = string.Empty;
       this.publicKeyToken = new List<byte>();
-      this.version = new Version();
+      this.version = new Version(0, 0);
       this.ModuleIdentity = this.assemblyIdentity = Dummy.Assembly.AssemblyIdentity;
       this.unifiedAssemblyIdentity = this.assemblyIdentity;
     }

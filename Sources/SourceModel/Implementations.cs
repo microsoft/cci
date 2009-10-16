@@ -278,7 +278,9 @@ namespace Microsoft.Cci {
       try {
         localizedString = rm.GetString(this.messageKey);
       } catch (System.Resources.MissingManifestResourceException) {
+#if !COMPACTFX
       } catch (System.Resources.MissingSatelliteAssemblyException) {
+#endif
       }
       try {
         if (localizedString == null)

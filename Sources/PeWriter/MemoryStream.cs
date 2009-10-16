@@ -42,7 +42,11 @@ namespace Microsoft.Cci {
       }
       set {
         byte[] myBuffer = this.Buffer;
+#if COMPACTFX
+        uint n = (uint)myBuffer.Length;
+#else
         uint n = (uint)myBuffer.LongLength;
+#endif
         if (value >= n) this.Grow(myBuffer, n, value);
         if (value > this.Length) this.Length = value;
         this.position = value;
