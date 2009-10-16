@@ -604,8 +604,8 @@ namespace CodeModelTestInput
 
         private int[] Method16(int[] xs)
         {
-            int* __temp_1 = &xs[0];
-            *__temp_1 = (*__temp_1 + 1);
+            int& __temp_1 = &xs[0];
+            __temp_1 = (__temp_1 + 1);
             return xs;
 
         }

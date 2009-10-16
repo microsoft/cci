@@ -272,7 +272,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           return;
         }
       }
-      ((AddressOf)addressOf).Type = PointerType.GetPointerType(targetType, this.host.InternFactory);
+      ((AddressOf)addressOf).Type = ManagedPointerType.GetManagedPointerType(targetType, this.host.InternFactory);
     }
 
     public override void Visit(IAddressDereference addressDereference) {
@@ -283,7 +283,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         return;
       }
       IManagedPointerTypeReference/*?*/ managedPointerTypeReference = addressDereference.Address.Type as IManagedPointerTypeReference;
-      if (managedPointerTypeReference != null){
+      if (managedPointerTypeReference != null) {
         ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
         return;
       }

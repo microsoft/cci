@@ -68,7 +68,8 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IAddressDereference addressDereference) {
-      this.sourceEmitterOutput.Write("*");
+      if (addressDereference.Address.Type is IPointerTypeReference)
+        this.sourceEmitterOutput.Write("*");
       this.Visit(addressDereference.Address);
     }
 
