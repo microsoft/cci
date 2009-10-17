@@ -49,8 +49,9 @@ namespace Microsoft.Cci.SmallBasic {
       var exeFile = File.Create(Path.ChangeExtension(fileName, "exe"));
       var sourceLocationProvider = assem.Compilation.SourceLocationProvider;
       //var localScopeProvider = assem.Compilation.LocalScopeProvider;
-      var pdbWriter = new PdbWriter(Path.ChangeExtension(fileName, "pdb"), sourceLocationProvider);
-      PeWriter.WritePeToStream(assem, hostEnvironment, exeFile, sourceLocationProvider, null, pdbWriter);
+      using (var pdbWriter = new PdbWriter(Path.ChangeExtension(fileName, "pdb"), sourceLocationProvider)) {
+        PeWriter.WritePeToStream(assem, hostEnvironment, exeFile, sourceLocationProvider, null, pdbWriter);
+      }
     }
 
     private static void RunSuite(string suiteName) {
