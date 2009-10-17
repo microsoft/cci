@@ -211,7 +211,9 @@ namespace Microsoft.Cci {
     /// Otherwise returns the value of the Name property and sets isCompilerGenerated to true.
     /// </summary>
     public virtual string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {
-      isCompilerGenerated = true;
+      isCompilerGenerated = false;
+      var generatorLocal = localDefinition as GeneratorLocal;
+      if (generatorLocal != null) isCompilerGenerated = generatorLocal.IsCompilerGenerated;
       return localDefinition.Name.Value;
     }
 
