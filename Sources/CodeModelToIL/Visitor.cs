@@ -935,7 +935,6 @@ namespace Microsoft.Cci {
     /// <param name="defaultValue">The default value.</param>
     public override void Visit(IDefaultValue defaultValue) {
       ILocalDefinition temp = new TemporaryVariable(defaultValue.Type);
-      this.generator.AddLocalToCurrentScope(temp);
       this.LoadAddressOf(temp, null);
       this.generator.Emit(OperationCode.Initobj, defaultValue.Type);
       this.StackSize--;
