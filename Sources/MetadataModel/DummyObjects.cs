@@ -5469,6 +5469,14 @@ namespace Microsoft.Cci {
 
     #endregion
 
+    #region ISpecializedNestedTypeReference Members
+
+    INestedTypeReference ISpecializedNestedTypeReference.UnspecializedVersion {
+      get { return Dummy.NestedType; }
+    }
+
+    #endregion
+
     #region ITypeDefinition Members
 
     public ushort Alignment {

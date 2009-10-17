@@ -5952,6 +5952,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #endregion
 
+    #region ISpecializedNestedTypeReference Members
+
+    INestedTypeReference ISpecializedNestedTypeReference.UnspecializedVersion {
+      get { return this.RawNestedGenericTypeTemplate; }
+    }
+
+    #endregion
+
     #region INestedTypeReference Members
 
     INestedTypeDefinition INestedTypeReference.ResolvedType {

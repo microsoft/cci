@@ -426,14 +426,14 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A type definition that is a specialized nested type.
   /// </summary>
-  public interface ISpecializedNestedTypeDefinition : INestedTypeDefinition {
+  public interface ISpecializedNestedTypeDefinition : INestedTypeDefinition, ISpecializedNestedTypeReference {
 
     /// <summary>
     /// The nested type that has been specialized to obtain this nested type. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
     /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
     /// corresponds to a definition that is not obtained via specialization.)
     /// </summary>
-    INestedTypeDefinition/*!*/ UnspecializedVersion {
+    new INestedTypeDefinition/*!*/ UnspecializedVersion {
       get;
     }
 
