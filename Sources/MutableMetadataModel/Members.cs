@@ -773,12 +773,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A mutable object that represents a local variable or constant.
   /// </summary>
   public class LocalDefinition : ILocalDefinition, ICopyFrom<ILocalDefinition> {
 
     /// <summary>
-    /// 
+    /// Allocates a mutable object that represents a local variable or constant.
     /// </summary>
     public LocalDefinition() {
       this.compileTimeValue = Dummy.Constant;
@@ -792,10 +792,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this mutable local definition a copy of the given immutable local definition.
     /// </summary>
-    /// <param name="localVariableDefinition"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="localVariableDefinition">An immutable local definition.</param>
+    /// <param name="internFactory">The intern factory to use for computing the interned identity (if applicable) of this mutable object.</param>
     public void Copy(ILocalDefinition localVariableDefinition, IInternFactory internFactory) {
       if (localVariableDefinition.IsConstant)
         this.compileTimeValue = localVariableDefinition.CompileTimeValue;

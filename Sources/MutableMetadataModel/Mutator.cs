@@ -14,15 +14,14 @@ using System.Runtime.InteropServices;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// 
+  /// Implemented by mutable objects that provide a method that makes the mutable object a copy of a given immutable object.
   /// </summary>
-  /// <typeparam name="ImmutableObject"></typeparam>
   public interface ICopyFrom<ImmutableObject> {
     /// <summary>
-    /// 
+    /// Makes this mutable object a copy of the given immutable object.
     /// </summary>
-    /// <param name="objectToCopy"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="objectToCopy">An immutable object that implements the same object model interface as this mutable object.</param>
+    /// <param name="internFactory">The intern factory to use for computing the interned identity (if applicable) of this mutable object.</param>
     void Copy(ImmutableObject objectToCopy, IInternFactory internFactory);
   }
 
