@@ -342,7 +342,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (loadedAssembly != null) {
           var refAssemWithoutLocation = new AssemblyIdentity(this.NameTable.GetNameFor(alreadyLoadedUnit.Name.Value + ".Contracts"), loadedAssembly.AssemblyIdentity.Culture, loadedAssembly.AssemblyIdentity.Version, loadedAssembly.AssemblyIdentity.PublicKeyToken, "");
           var referenceAssemblyIdentity = this.ProbeAssemblyReference(alreadyLoadedUnit, refAssemWithoutLocation);
-          if (!string.IsNullOrEmpty(referenceAssemblyIdentity.Location)) {
+          if (referenceAssemblyIdentity.Location != "unknown://location") {
             #region Load reference assembly and attach a contract provider to it
             IMetadataHost hostForReferenceAssembly = this; // default
             IUnit referenceUnit = null;
