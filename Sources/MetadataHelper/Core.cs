@@ -357,13 +357,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// 
+    /// Raises the CompilationErrors event with the given error event arguments.
     /// </summary>
-    /// <param name="state"></param>
+    /// <param name="state">The error event arguments.</param>
     protected void SynchronousReportErrors(object/*?*/ state)
       //^ requires state is Microsoft.Cci.ErrorEventArgs;
     {
-      Microsoft.Cci.ErrorEventArgs errorEventArguments = (Microsoft.Cci.ErrorEventArgs)state;
+      var errorEventArguments = (ErrorEventArgs)state;
       if (this.Errors != null)
         this.Errors(this, errorEventArguments);
     }
@@ -579,6 +579,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
     /// of the referenced assembly.
+    /// Returns an assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
     /// </summary>
     /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
     /// has a known location, which will typically be probed for the referenced assembly.</param>

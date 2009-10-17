@@ -31,6 +31,9 @@ namespace Microsoft.Cci {
       return false;
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IArrayTypeReference)
+    /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -232,6 +235,9 @@ namespace Microsoft.Cci {
     }
     readonly CallingConvention callingConvention;
 
+    /// <summary>
+    /// Calls visitor.Visit(IFunctionPointerTypeReference)
+    /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -715,6 +721,9 @@ namespace Microsoft.Cci {
       this.targetType = targetType;
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IManagedPointerTypeReference)
+    /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -866,6 +875,9 @@ namespace Microsoft.Cci {
       this.targetType = targetType;
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IPointerTypeReference)
+    /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
