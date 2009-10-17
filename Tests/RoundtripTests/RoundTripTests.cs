@@ -12,13 +12,11 @@ using Microsoft.Cci.MutableCodeModel;
 public class RoundTripTests {
 
     PdbReader pdbReader;
-    PdbWriter pdbWriter;
     HostEnvironment host;
 
     public RoundTripTests() {
         // we assume peverify.exe is in the path
         pdbReader = null;
-        pdbWriter = null;
         host = new HostEnvironment();
 
        // Debug.Listeners.Clear();
@@ -107,12 +105,13 @@ public class RoundTripTests {
         using (var f = File.OpenRead(pdbPath)) {
             pdbReader = new PdbReader(f, host);
         }
-        pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader);
     }
 
     void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly) {
-        using (FileStream rewrittenFile = File.Create(assembly.Location)) {
+        using (var rewrittenFile = File.Create(assembly.Location)){
+          using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
             PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+          }
         }
 
         Assert.True(File.Exists(assembly.Location));

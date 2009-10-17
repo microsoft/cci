@@ -22,7 +22,16 @@ namespace Microsoft.Cci {
       this.sourceLocationProvider = sourceLocationProvider;
     }
 
-    public void Close() {
+    public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    ~PdbWriter() {
+      this.Close();
+    }
+
+    private void Close() {
       this.SymWriter.Close();
     }
 

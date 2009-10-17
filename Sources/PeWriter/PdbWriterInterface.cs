@@ -15,7 +15,6 @@ using System.Diagnostics;
 namespace Microsoft.Cci {
 
   public interface IPdbWriter {
-    void Close();
     void CloseMethod(uint offset);
     void CloseScope(uint offset);
     void DefineCustomMetadata(string name, byte[] metadata);
@@ -29,7 +28,7 @@ namespace Microsoft.Cci {
     void UsingNamespace(string fullName);
   }
 
-  public interface IUnmanagedPdbWriter : IPdbWriter {
+  public interface IUnmanagedPdbWriter : IPdbWriter, IDisposable {
     void SetMetadataEmitter(object metadataEmitter);
   }
 

@@ -244,7 +244,6 @@ namespace Microsoft.Cci {
       if (pdbWriter != null) {
         if (module.EntryPoint.ResolvedMethod != Dummy.Method)
           pdbWriter.SetEntryPoint(writer.GetMethodToken(module.EntryPoint));
-        pdbWriter.Close();
       }
     }
 
