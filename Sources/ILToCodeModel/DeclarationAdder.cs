@@ -17,7 +17,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       List<IStatement> prelude = new List<IStatement>();
       foreach (var localDef in body.LocalVariables) {
         if (this.declaredLocals.ContainsKey(localDef)) continue;
-        if (body.numberOfReferences[localDef] == 0) continue;
+        int numRefs;
+        if (!body.numberOfReferences.TryGetValue(localDef, out numRefs) || numRefs == 0) continue;
         LocalDeclarationStatement localDecl = new LocalDeclarationStatement();
         localDecl.LocalVariable = localDef;
         prelude.Add(localDecl);
