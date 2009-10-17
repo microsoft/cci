@@ -6296,13 +6296,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal sealed class CustomModifier : ICustomModifier {
     internal readonly bool IsOptional;
-    internal readonly IModuleNominalType ModuleNominalType;
+    internal readonly ITypeReference Modifier;
     internal CustomModifier(
       bool isOptional,
-      IModuleNominalType moduleNominalType
+      ITypeReference modifier
     ) {
       this.IsOptional = isOptional;
-      this.ModuleNominalType = moduleNominalType;
+      this.Modifier = modifier;
     }
 
     #region ICustomModifier Members
@@ -6313,9 +6313,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public ITypeReference Modifier {
+    ITypeReference ICustomModifier.Modifier {
       get {
-        return this.ModuleNominalType;
+        return this.Modifier;
       }
     }
 
@@ -7118,7 +7118,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         CustomModifier mcm2 = moduleCustomModifiersArr2[i];
         if (mcm1.IsOptional != mcm2.IsOptional)
           return false;
-        if (mcm1.ModuleNominalType.InternedKey != mcm2.ModuleNominalType.InternedKey) {
+        if (mcm1.Modifier.InternedKey != mcm2.Modifier.InternedKey) {
           return false;
         }
       }

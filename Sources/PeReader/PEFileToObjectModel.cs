@@ -3484,20 +3484,19 @@ namespace Microsoft.Cci.MetadataReader {
         uint typeToken = TypeDefOrRefTag.ConvertToToken(typeDefOrRefEncoded);
         uint tokenType = typeToken & TokenTypeIds.TokenTypeMask;
         uint typeRID = typeToken & TokenTypeIds.RIDMask;
-        IModuleNominalType/*?*/ typeDefOrRef = null;
+        ITypeReference/*?*/ typeRef = null;
         if (tokenType == TokenTypeIds.TypeDef) {
-          typeDefOrRef = this.PEFileToObjectModel.GetTypeDefinitionAtRow(typeRID);
+          typeRef = this.PEFileToObjectModel.GetTypeDefinitionAtRow(typeRID);
         } else if (tokenType == TokenTypeIds.TypeRef) {
-          typeDefOrRef = this.PEFileToObjectModel.GetTypeRefReferenceAtRow(typeRID);
+          typeRef = this.PEFileToObjectModel.GetTypeRefReferenceAtRow(typeRID);
         } else {
-          //  TODO: Error...
-          return TypeCache.EmptyCustomModifierArray;
+          typeRef = this.PEFileToObjectModel.GetTypeSpecReferenceAtRow(this.MetadataOwnerObject, typeRID);
         }
-        if (typeDefOrRef == null) {
+        if (typeRef == null) {
           //  Error...
           continue;
         }
-        customModifier = new CustomModifier(header == ElementType.OptionalModifier, typeDefOrRef);
+        customModifier = new CustomModifier(header == ElementType.OptionalModifier, typeRef);
         customModifierList.Add(customModifier);
       }
       if (this.SignatureMemoryReader.RemainingBytes <= 0) {
