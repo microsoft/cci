@@ -37,9 +37,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool CheckOverflow { get; set; }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAddition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -69,7 +68,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAddressableExpression).
     /// </summary>
     /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
@@ -127,9 +126,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAddressOf).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -212,9 +210,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     ushort alignment;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAddressDereference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -292,9 +289,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     CallingConvention callingConvention;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAnonymousDelegate).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -412,9 +408,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<IExpression> indices;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IArrayIndexer).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -452,7 +447,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAssignment).
     /// </summary>
     /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
@@ -501,9 +496,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBaseClassReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -573,9 +567,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBitwiseAnd).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -602,9 +595,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBitwiseOr).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -647,9 +639,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     IBlockStatement blockStatement;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBlockExpression).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -732,9 +723,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     object definition;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBoundExpression).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -797,9 +787,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(ICastIfPossible).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -850,9 +839,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(ICheckIfInstance).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -915,10 +903,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool checkNumericRange;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IConversion).
     /// </summary>
-    /// <param name="visitor"></param>
-    //^ [MustOverride]
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -968,9 +954,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IExpression. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ICompileTimeConstant).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
@@ -1027,9 +1011,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IConditional).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1151,11 +1134,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ICreateArray).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1299,11 +1279,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ICreateDelegateInstance).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1311,7 +1288,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// An expression that evaluates to the instance (if any) on which this.MethodToCallViaDelegate must be called (via the delegate).
     /// </summary>
-    /// <value></value>
     public IExpression/*?*/ Instance {
       get { return this.instance; }
       set
@@ -1354,11 +1330,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ICreateObjectInstance).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1404,11 +1377,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     ITypeReference defaultValueType;
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IDefaultValue).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1442,11 +1412,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool CheckOverflow { get; set; }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IDivision).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1472,11 +1439,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IEquality).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1503,11 +1467,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IExclusiveOr).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1609,11 +1570,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IGetTypeOfTypedReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1654,11 +1612,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IGetValueOfTypedReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1705,11 +1660,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IGreaterThan).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1736,11 +1688,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IGreaterThanOrEqual).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1767,11 +1716,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ILeftShift).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1798,11 +1744,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ILessThan).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1829,11 +1772,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ILessThanOrEqual).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1860,11 +1800,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ILogicalNot).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1893,11 +1830,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IMakeTypedReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1945,11 +1879,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IMethodCall).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2044,11 +1975,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IModulus).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2082,11 +2010,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool CheckOverflow { get; set; }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IMultiplication).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2118,11 +2043,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(INamedArgument).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2211,11 +2133,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(INotEquality).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2244,11 +2163,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IOldValue).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2287,11 +2203,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IOutArgument).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2328,11 +2241,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IOnesComplement).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2363,11 +2273,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IPointerCall).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2435,11 +2342,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IRefArgument).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2476,11 +2380,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IReturnValue).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2507,11 +2408,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IRightShift).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2538,11 +2436,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IRuntimeArgumentHandleExpression).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2571,11 +2466,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ISizeOf).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2616,11 +2508,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IStackArrayCreate).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2674,11 +2563,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool CheckOverflow { get; set; }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ISubtraction).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2732,11 +2618,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     //^ invariant alignment == 0 || alignment == 1 || alignment == 2 || alignment == 4;
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ITargetExpression).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2805,11 +2688,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IThisReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2838,11 +2718,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ITokenOf).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2881,11 +2758,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(ITypeOf).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2940,11 +2814,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool CheckOverflow { get; set; }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IUnaryNegation).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -3004,11 +2875,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IUnaryPlus).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -3037,11 +2905,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IVectorLength).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }

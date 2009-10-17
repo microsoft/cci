@@ -626,7 +626,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls visitor.Visit(AttributeTypeExpression).
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
-      visitor.Visit(this); //TODO: add an overload in the source visitor
+      visitor.Visit(this);
     }
 
     /// <summary>
@@ -1611,7 +1611,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(AdhocProperty) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       //visitor.Visit(this);
@@ -1734,9 +1734,8 @@ namespace Microsoft.Cci.Ast {
     //^ invariant delegateType.IsDelegate;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAnonymousDelegateExpression).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -8589,7 +8588,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(Exponentiation) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -9789,7 +9788,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ImplicitQualifier) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -10105,25 +10104,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Returns a string representation of the expression for debugging and logging uses.
-    /// </summary>
-    public override string ToString() {
-      System.Text.StringBuilder result = new System.Text.StringBuilder(this.IndexedObject.ToString());
-      result.Append('[');
-      bool first = true;
-      foreach (var index in this.OriginalArguments) {
-        if (first) {
-          first = false;
-        } else {
-          result.Append(", ");
-        }
-        result.Append(index.ToString());
-      }
-      result.Append(']');
-      return result.ToString();
-    }
-
-    /// <summary>
     /// Makes a copy of this expression, changing the ContainingBlock to the given block.
     /// </summary>
     //^ [MustOverride]
@@ -10359,7 +10339,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(IntegerDivision) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -11968,14 +11948,14 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(IMakeTypedReference) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this); //TODO:
+      visitor.Visit(this);
     }
 
     /// <summary>
     /// Calls the visitor.Visit(MakeTypedReference) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
-      visitor.Visit(this); //TODO:
+      visitor.Visit(this);
     }
 
     /// <summary>
@@ -12065,7 +12045,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ManagedPointerTypeExpression) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -12179,7 +12159,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(IMethodCall) method.
+    /// Calls this.ProjectAsIExpression(visitor) unless the project is this expression, in which case it call visitor.Visit(IMethodCall).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
       IExpression expr = this.ProjectAsIExpression();
@@ -12719,7 +12699,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(MethodGroup) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -13571,7 +13551,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NamespaceReferenceExpression) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -13875,7 +13855,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NonNullTypeExpression) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -16849,7 +16829,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ReferenceEquality) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -16941,7 +16921,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ReferenceInequality) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -18181,7 +18161,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(Slice) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -18285,7 +18265,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(StringConcatenation) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -19954,7 +19934,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(UnsignedRightShift) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -20067,9 +20047,8 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// 
+    /// Calls the visitor.Visit(IVectorLength) method.
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }

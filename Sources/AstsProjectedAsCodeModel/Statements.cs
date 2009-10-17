@@ -254,7 +254,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(AttachEventHandlerStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -989,7 +989,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ClearLastErrorStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1240,7 +1240,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(DisableOnErrorHandler) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1582,7 +1582,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(EndStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1621,7 +1621,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(EraseStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1671,7 +1671,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ErrorStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -2283,7 +2283,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Projects the statement onto a ForStatement and calls visitor.Visit(IForStatement).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
       List<Statement> initStatements = new List<Statement>(1);
@@ -2296,7 +2296,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ForRangeStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -3032,7 +3032,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(LocalDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
-      visitor.Visit(this); //TODO: provide an overload in the source visitor
+      visitor.Visit(this);
     }
 
 
@@ -3804,7 +3804,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(OnErrorGotoStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -3850,7 +3850,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(OnErrorResumeNextStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -3900,7 +3900,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(RaiseEventStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -3953,7 +3953,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(RedimensionClause) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -4013,7 +4013,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(RedimensionStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -4072,7 +4072,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(RemoveEventHandlerStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -4273,7 +4273,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ResumeLabledStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -4320,7 +4320,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ResumeNextStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -4358,7 +4358,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ResumeStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -4693,7 +4693,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(StopStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -5331,7 +5331,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(UntilDoStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -5542,7 +5542,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(WithStatement) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);

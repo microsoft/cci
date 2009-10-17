@@ -2364,7 +2364,7 @@ namespace Microsoft.Cci.Ast {
     //^ invariant definingMethod.IsGeneric;
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(IGenericMethodParameter) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -3911,7 +3911,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(IPropertyDefinition) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);

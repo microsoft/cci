@@ -298,7 +298,7 @@ namespace Microsoft.Cci.Ast {
     // ^ invariant this.definingType.IsGeneric; //TODO Boogie: It should be possible to use non owned objects in invariants, provided that they are immutable.
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(IGenericTypeParameter) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -698,7 +698,7 @@ namespace Microsoft.Cci.Ast {
     #region IDoubleDispatcher Members
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(INamespaceTypeDefinition) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -859,7 +859,7 @@ namespace Microsoft.Cci.Ast {
     #region IDoubleDispatcher Members
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(INestedTypeDefinition) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);

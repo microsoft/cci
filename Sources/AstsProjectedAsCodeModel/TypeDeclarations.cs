@@ -445,7 +445,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(GenericTypeParameterDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -535,7 +535,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NamespaceClassDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -624,7 +624,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NamespaceDelegateDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -854,7 +854,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NamespaceInterfaceDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1285,7 +1285,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NestedClassDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1350,7 +1350,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NestedDelegateDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1578,7 +1578,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NestedInterfaceDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1655,7 +1655,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NestedStructDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);

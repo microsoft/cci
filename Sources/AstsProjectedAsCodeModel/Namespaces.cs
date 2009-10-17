@@ -285,9 +285,8 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IRootUnitNamespace).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }

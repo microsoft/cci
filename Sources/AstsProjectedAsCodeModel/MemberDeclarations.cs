@@ -2447,7 +2447,7 @@ namespace Microsoft.Cci.Ast {
     readonly Expression/*?*/ defaultValue;
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(ParameterDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);

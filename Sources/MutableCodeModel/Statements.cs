@@ -16,14 +16,14 @@ namespace Microsoft.Cci.MutableCodeModel {
   public sealed class AssertStatement : Statement, IAssertStatement {
 
     /// <summary>
-    /// 
+    /// Allocates a statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#.
     /// </summary>
     public AssertStatement() {
       this.condition = CodeDummy.Expression;
     }
 
     /// <summary>
-    /// 
+    /// Allocates a copy of a statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#.
     /// </summary>
     /// <param name="assertStatement"></param>
     public AssertStatement(IAssertStatement assertStatement)
@@ -42,9 +42,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     IExpression condition;
 
     /// <summary>
-    /// 
+    /// Calls the visitor.Visit(IAssertStatement) method.
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -91,9 +90,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     IExpression condition;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAssumeStatement).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -124,9 +122,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBlockStatement).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -182,9 +179,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IBreakStatement).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
@@ -832,12 +828,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// An object that represents the declaration of a local variable, with optional initializer.
   /// </summary>
   public sealed class LocalDeclarationStatement : Statement, ILocalDeclarationStatement {
 
     /// <summary>
-    /// 
+    /// Initializes an object that represents the declaration of a local variable, with optional initializer.
     /// </summary>
     public LocalDeclarationStatement() {
       this.initialValue = null;
@@ -845,9 +841,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Initializes an object that represents the declaration of a local variable, with optional initializer.
     /// </summary>
-    /// <param name="localDeclarationStatement"></param>
+    /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public LocalDeclarationStatement(ILocalDeclarationStatement localDeclarationStatement)
       : base(localDeclarationStatement) {
       this.initialValue = localDeclarationStatement.InitialValue;
@@ -855,9 +851,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(ILocalDeclarationsStatement).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }

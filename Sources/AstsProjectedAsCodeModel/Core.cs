@@ -3359,6 +3359,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public abstract void Visit(AttachEventHandlerStatement attachEventHandlerStatement);
     /// <summary>
+    /// Performs some computation with the given attribute type expression.
+    /// </summary>
+    public abstract void Visit(AttributeTypeExpression attributeTypeExpression);
+    /// <summary>
     /// Performs some computation with the given array type expression.
     /// </summary>
     public abstract void Visit(ArrayTypeExpression arrayTypeExpression);
@@ -4333,6 +4337,21 @@ namespace Microsoft.Cci.Ast {
       //^ int oldCount = this.path.Count;
       this.path.Push(assumeStatement);
       this.VisitExpression(assumeStatement.Condition);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
+    /// Performs some computation with the given attribute type expression.
+    /// </summary>
+    /// <param name="attributeTypeExpression"></param>
+    public override void Visit(AttributeTypeExpression attributeTypeExpression)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(attributeTypeExpression);
+      this.VisitExpression(attributeTypeExpression.Expression);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
     }

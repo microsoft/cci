@@ -183,8 +183,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="template"></param>
     protected NamespaceDeclaration(NamespaceDeclaration template)
-      : base(template.SourceLocation) 
-    {
+      : base(template.SourceLocation) {
       this.members = new List<INamespaceDeclarationMember>(template.Members);
       this.sourceAttributes = new List<SourceCustomAttribute>(template.SourceAttributes);
     }
@@ -459,7 +458,7 @@ namespace Microsoft.Cci.Ast {
           continue;
         }
       }
-      if (this.sourceAttributes != null){
+      if (this.sourceAttributes != null) {
         DummyExpression containingExpression = new DummyExpression(this.DummyBlock, SourceDummy.SourceLocation);
         foreach (SourceCustomAttribute attribute in this.sourceAttributes)
           attribute.SetContainingExpression(containingExpression);
@@ -517,7 +516,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The corresponding symbol table object. Effectively a namespace that unifies all of the namespace declarations with the same name for a particular unit.
     /// </summary>
-    public abstract IUnitNamespace UnitNamespace { 
+    public abstract IUnitNamespace UnitNamespace {
       get;
       //^ ensures result is RootUnitNamespace || result is NestedUnitNamespace;
     }
@@ -673,7 +672,7 @@ namespace Microsoft.Cci.Ast {
         //^ ensures result == this.containingNamespaceDeclaration;
       {
         //^ assume this.containingNamespaceDeclaration != null;
-        return this.containingNamespaceDeclaration; 
+        return this.containingNamespaceDeclaration;
       }
     }
 
@@ -765,7 +764,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(NamespaceImportDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1250,7 +1249,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(OptionDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
@@ -1505,8 +1504,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="name"></param>
     /// <param name="sourceLocation"></param>
     public UnitSetAliasDeclaration(NameDeclaration name, ISourceLocation sourceLocation)
-      : base(name, sourceLocation)
-    {
+      : base(name, sourceLocation) {
     }
 
     /// <summary>
@@ -1524,7 +1522,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(xxxxx) method.
+    /// Calls the visitor.Visit(UnitSetAliasDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
