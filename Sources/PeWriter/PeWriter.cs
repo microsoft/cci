@@ -1719,7 +1719,6 @@ namespace Microsoft.Cci {
       this.PopulateAssemblyTableRows();
       this.PopulateClassLayoutTableRows();
       this.PopulateConstantTableRows();
-      this.PopulateCustomAttributeTableRows();
       this.PopulateDeclSecurityTableRows();
       this.PopulateEventMapTableRows();
       this.PopulateEventTableRows();
@@ -1749,6 +1748,8 @@ namespace Microsoft.Cci {
       this.PopulateTypeDefTableRows();
       this.PopulateTypeRefTableRows();
       this.PopulateTypeSpecTableRows();
+      //This table is populated after the others because it depends on the order of the entries of the generic parameter table.
+      this.PopulateCustomAttributeTableRows();
     }
 
     private void PopulateAssemblyRefTableRows() {
@@ -1866,7 +1867,16 @@ namespace Microsoft.Cci {
       //TODO: this.AddCustomAttributesToTable(new List<IFileReference>(assembly.Files), 16);
       //TODO: exported types 17
       //TODO: this.AddCustomAttributesToTable(new List<IResourceReference>(assembly.Resources), 18);
-      this.AddCustomAttributesToTable(this.genericParameterList, 19);
+
+      //The indices of this.genericParameterList do not correspond to the table indices because the
+      //the table may be sorted after the list has been constructed.
+      //Note that in all other cases, tables that are sorted are sorted in an order that depends
+      //only on list indices. The generic parameter table is the sole exception.
+      List<IGenericParameter> sortedGenericParameterList = new List<IGenericParameter>();
+      foreach (GenericParamRow genericParamRow in this.genericParamTable)
+        sortedGenericParameterList.Add(genericParamRow.genericParameter);
+      this.AddCustomAttributesToTable(sortedGenericParameterList, 19);
+
       this.customAttributeTable.Sort(new CustomAttributeRowComparer());
       this.tableSizes[(uint)TableIndices.CustomAttribute] = (uint)this.customAttributeTable.Count;
     }
