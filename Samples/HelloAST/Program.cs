@@ -137,7 +137,6 @@ namespace HelloAST {
           return this.rootNamespace;
         }
       }
-      RootNamespaceDeclaration rootNamespace;
 
       public override CompilationPart UpdateRootNamespace(RootNamespaceDeclaration rootNamespace) {
         throw new NotImplementedException();
