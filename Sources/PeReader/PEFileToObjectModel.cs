@@ -2632,6 +2632,11 @@ namespace Microsoft.Cci.MetadataReader {
           int nextNearestMethodRVA = this.PEFileReader.MethodTable.GetNextRVA(rva);
           if (nextNearestMethodRVA != -1 && nextNearestMethodRVA < nextNearestRVA)
             nextNearestRVA = nextNearestMethodRVA;
+          else {
+            var metadataRVA = this.PEFileReader.COR20Header.MetaDataDirectory.RelativeVirtualAddress;
+            if (rva < metadataRVA && metadataRVA < nextNearestRVA)
+              nextNearestRVA = metadataRVA;
+          }
         }
         if (nextNearestRVA == -1 || !this.PEFileReader.RVAsInSameSection(rva, nextNearestRVA)) {
           sizeOfField = this.PEFileReader.GetSizeOfRemainderOfSectionContaining(rva);
