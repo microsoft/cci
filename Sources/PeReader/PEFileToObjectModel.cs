@@ -2776,7 +2776,7 @@ namespace Microsoft.Cci.MetadataReader {
       switch (constRow.Type) {
         case ElementType.Boolean: {
             byte val = memoryReader.ReadByte();
-            return new ConstantExpression(this.SystemBoolean, val == 1);
+            return new ConstantExpression(this.SystemBoolean, val != 0);
           }
         case ElementType.Char:
           return new ConstantExpression(this.SystemChar, memoryReader.ReadChar());
