@@ -1033,9 +1033,10 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedEventDefinition(IEventDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
-      : base(unspecializedVersion, containingGenericTypeInstance) {
+    public SpecializedEventDefinition(IEventDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
     }
 
     /// <summary>
@@ -1137,9 +1138,10 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedFieldDefinition(IFieldDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
-      : base(unspecializedVersion, containingGenericTypeInstance) {
+    public SpecializedFieldDefinition(IFieldDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
     }
 
     /// <summary>
@@ -1426,9 +1428,10 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedMethodDefinition(IMethodDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
-      : base(unspecializedVersion, containingGenericTypeInstance) {
+    public SpecializedMethodDefinition(IMethodDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
     }
 
     /// <summary>
@@ -2250,9 +2253,10 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedPropertyDefinition(IPropertyDefinition unspecializedVersion, GenericTypeInstance containingGenericTypeInstance)
-      : base(unspecializedVersion, containingGenericTypeInstance) {
+    public SpecializedPropertyDefinition(IPropertyDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+      : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
     }
 
     /// <summary>
@@ -2446,10 +2450,12 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    protected SpecializedTypeDefinitionMember(MemberType/*!*/ unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) {
+    protected SpecializedTypeDefinitionMember(MemberType/*!*/ unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance) {
       this.unspecializedVersion = unspecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
+      this.containingTypeDefinition = containingTypeDefinition;
     }
 
     /// <summary>
@@ -2497,12 +2503,9 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
-      get
-        //^ ensures result == this.ContainingGenericTypeInstance;
-      {
-        return this.ContainingGenericTypeInstance;
-      }
+      get { return this.containingTypeDefinition; }
     }
+    ITypeDefinition containingTypeDefinition;
 
     #endregion
 

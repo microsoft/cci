@@ -529,16 +529,16 @@ namespace Microsoft.Cci {
       //^ ensures unspecializedMember is INestedTypeDefinition ==> result is INestedTypeDefinition;
     {
       IEventDefinition/*?*/ eventDef = unspecializedMember as IEventDefinition;
-      if (eventDef != null) return new SpecializedEventDefinition(eventDef, this);
+      if (eventDef != null) return new SpecializedEventDefinition(eventDef, this, this);
       IFieldDefinition/*?*/ fieldDef = unspecializedMember as IFieldDefinition;
-      if (fieldDef != null) return new SpecializedFieldDefinition(fieldDef, this);
+      if (fieldDef != null) return new SpecializedFieldDefinition(fieldDef, this, this);
       IMethodDefinition/*?*/ methodDef = unspecializedMember as IMethodDefinition;
-      if (methodDef != null) return new SpecializedMethodDefinition(methodDef, this);
+      if (methodDef != null) return new SpecializedMethodDefinition(methodDef, this, this);
       IPropertyDefinition/*?*/ propertyDef = unspecializedMember as IPropertyDefinition;
-      if (propertyDef != null) return new SpecializedPropertyDefinition(propertyDef, this);
+      if (propertyDef != null) return new SpecializedPropertyDefinition(propertyDef, this, this);
       //^ assert unspecializedMember is INestedTypeDefinition;
       INestedTypeDefinition nestedTypeDef = (INestedTypeDefinition)unspecializedMember;
-      return new SpecializedNestedTypeDefinition(nestedTypeDef, this, internFactory);
+      return new SpecializedNestedTypeDefinition(nestedTypeDef, this, this, internFactory);
     }
 
     public uint SizeOf {
@@ -1828,10 +1828,12 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unspecializedVersion"></param>
     /// <param name="containingGenericTypeInstance"></param>
+    /// <param name="containingTypeDefinition"></param>
     /// <param name="internFactory"></param>
-    public SpecializedNestedTypeDefinition(INestedTypeDefinition unspecializedVersion, IGenericTypeInstanceReference containingGenericTypeInstance, IInternFactory internFactory) {
+    public SpecializedNestedTypeDefinition(INestedTypeDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance, IInternFactory internFactory) {
       this.unspecializedVersion = unspecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
+      this.containingTypeDefinition = containingTypeDefinition;
       this.internFactory = internFactory;
     }
 
@@ -1859,10 +1861,24 @@ namespace Microsoft.Cci {
       //TODO: cache this
     }
 
-    public IGenericTypeInstanceReference ContainingGenericTypeInstance {
+    protected override void InitializeIfNecessary() {
+      if (this.initialized) return;
+      lock (GlobalLock.LockingObject) {
+        if (this.initialized) return;
+        foreach (ITypeDefinitionMember unspecializedMember in this.UnspecializedVersion.Members) {
+          //^ assume unspecializedMember is IEventDefinition || unspecializedMember is IFieldDefinition || unspecializedMember is IMethodDefinition ||
+          //^   unspecializedMember is IPropertyDefinition || unspecializedMember is INestedTypeDefinition; //follows from informal post condition on Members property.
+          this.AddMemberToCache(this.SpecializeMember(unspecializedMember, this.InternFactory));
+        }
+        this.initialized = true;
+      }
+    }
+    private bool initialized;
+
+    public GenericTypeInstance ContainingGenericTypeInstance {
       get { return this.containingGenericTypeInstance; }
     }
-    readonly IGenericTypeInstanceReference containingGenericTypeInstance;
+    readonly GenericTypeInstance containingGenericTypeInstance;
 
     /// <summary>
     /// Zero or more implementation overrides provided by the class.
@@ -1960,7 +1976,7 @@ namespace Microsoft.Cci {
       get {
         if (this.visibility == TypeMemberVisibility.Default) {
           this.visibility = TypeHelper.VisibilityIntersection(this.UnspecializedVersion.Visibility,
-            TypeHelper.TypeVisibilityAsTypeMemberVisibility(this.ContainingGenericTypeInstance.ResolvedType));
+            TypeHelper.TypeVisibilityAsTypeMemberVisibility(this.ContainingGenericTypeInstance));
         }
         return this.visibility;
       }
@@ -1974,8 +1990,9 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ITypeDefinition ContainingTypeDefinition {
-      get { return this.ContainingGenericTypeInstance.ResolvedType; }
+      get { return this.containingTypeDefinition; }
     }
+    ITypeDefinition containingTypeDefinition;
 
     #endregion
 
@@ -2124,6 +2141,28 @@ namespace Microsoft.Cci {
       {
         return this.UnspecializedVersion.SecurityAttributes;
       }
+    }
+
+    public ITypeDefinitionMember SpecializeMember(ITypeDefinitionMember unspecializedMember, IInternFactory internFactory)
+      //^ requires unspecializedMember is IEventDefinition || unspecializedMember is IFieldDefinition || unspecializedMember is IMethodDefinition ||
+      //^   unspecializedMember is IPropertyDefinition || unspecializedMember is INestedTypeDefinition;
+      //^ ensures unspecializedMember is IEventDefinition ==> result is IEventDefinition;
+      //^ ensures unspecializedMember is IFieldDefinition ==> result is IFieldDefinition;
+      //^ ensures unspecializedMember is IMethodDefinition ==> result is IMethodDefinition;
+      //^ ensures unspecializedMember is IPropertyDefinition ==> result is IPropertyDefinition;
+      //^ ensures unspecializedMember is INestedTypeDefinition ==> result is INestedTypeDefinition;
+    {
+      IEventDefinition/*?*/ eventDef = unspecializedMember as IEventDefinition;
+      if (eventDef != null) return new SpecializedEventDefinition(eventDef, this, this.ContainingGenericTypeInstance);
+      IFieldDefinition/*?*/ fieldDef = unspecializedMember as IFieldDefinition;
+      if (fieldDef != null) return new SpecializedFieldDefinition(fieldDef, this, this.ContainingGenericTypeInstance);
+      IMethodDefinition/*?*/ methodDef = unspecializedMember as IMethodDefinition;
+      if (methodDef != null) return new SpecializedMethodDefinition(methodDef, this, this.ContainingGenericTypeInstance);
+      IPropertyDefinition/*?*/ propertyDef = unspecializedMember as IPropertyDefinition;
+      if (propertyDef != null) return new SpecializedPropertyDefinition(propertyDef, this, this.ContainingGenericTypeInstance);
+      //^ assert unspecializedMember is INestedTypeDefinition;
+      INestedTypeDefinition nestedTypeDef = (INestedTypeDefinition)unspecializedMember;
+      return new SpecializedNestedTypeDefinition(nestedTypeDef, this, this.ContainingGenericTypeInstance, internFactory);
     }
 
     /// <summary>
