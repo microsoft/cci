@@ -1485,7 +1485,7 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// Reusable implementation of name table.
+  /// A collection of IName instances that represent names that are commonly used during compilation.
   /// </summary>
   public sealed class NameTable : INameTable {
     //TODO: replace BCL Dictionary with a private implementation that is thread safe and does not need a new list to be allocated for each name
@@ -1498,7 +1498,7 @@ namespace Microsoft.Cci {
     int caseSensitiveCounter = 3; //^ invariant caseSensitiveCounter >= 0;
 
     /// <summary>
-    /// Constructor for the name table.
+    /// Allocates a collection of IName instances that represent names that are commonly used during compilation.
     /// </summary>
     //^ [NotDelayed]
     public NameTable() {

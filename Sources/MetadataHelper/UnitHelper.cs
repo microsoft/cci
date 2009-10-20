@@ -349,26 +349,33 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// 
+  /// A namespace definition whose members are aggregations of the members of a collection of containers of the given container type.
   /// </summary>
-  /// <typeparam name="ContainerType"></typeparam>
-  /// <typeparam name="ContainerMemberType"></typeparam>
+  /// <typeparam name="ContainerType">The type of container that provides the members (or parts of members) for this namespace. For example NamespaceDeclaration.</typeparam>
+  /// <typeparam name="ContainerMemberType">The base type for members supplied by the container. For example IAggregatableNamespaceDeclarationMember.</typeparam>
   public abstract class AggregatedNamespace<ContainerType, ContainerMemberType> : AggregatedScope<INamespaceMember, ContainerType, ContainerMemberType>, INamespaceDefinition
     where ContainerType : class, IContainer<ContainerMemberType>
     where ContainerMemberType : class, IContainerMember<ContainerType> {
 
     /// <summary>
-    /// 
+    /// Allocates a namespace definition whose members are aggregations of the members of a collection of containers of the given container type.
     /// </summary>
-    /// <param name="name"></param>
+    /// <param name="name">The name of this namespace definition.</param>
     protected AggregatedNamespace(IName name) {
       this.name = name;
     }
 
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
+    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// </summary>
+    public abstract void Dispatch(IMetadataVisitor visitor);
+
     #region INamespace Members
 
     /// <summary>
-    /// 
+    /// The name of this namespace definition.
     /// </summary>
     public IName Name {
       get {
@@ -378,7 +385,8 @@ namespace Microsoft.Cci {
     private IName name;
 
     /// <summary>
-    /// 
+    /// The object associated with the namespace. For example an IUnit or IUnitSet instance. This namespace is either the root namespace of that object
+    /// or it is a nested namespace that is directly of indirectly nested in the root namespace.
     /// </summary>
     public abstract INamespaceRootOwner RootOwner {
       get;
@@ -389,22 +397,11 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     /// <summary>
-    /// 
+    /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     public abstract IEnumerable<ILocation> Locations {
       get;
     }
-
-    #endregion
-
-    #region IDoubleDispatcher Members
-
-    /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
-    /// </summary>
-    public abstract void Dispatch(IMetadataVisitor visitor);
 
     #endregion
 
@@ -458,7 +455,6 @@ namespace Microsoft.Cci {
     /// collection of the aggregated member.
     /// </summary>
     /// <param name="member">The member to aggregate.</param>
-    /// <returns></returns>
     protected abstract ScopeMemberType/*!*/ GetAggregatedMember(ContainerMemberType/*!*/ member);
 
   }

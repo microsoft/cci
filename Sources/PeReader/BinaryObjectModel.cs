@@ -982,6 +982,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region INamespaceDefinition Members
 
+    /// <summary>
+    /// The object associated with the namespace. For example an IUnit or IUnitSet instance. This namespace is either the root namespace of that object
+    /// or it is a nested namespace that is directly of indirectly nested in the root namespace.
+    /// </summary>
     public INamespaceRootOwner RootOwner {
       get { return this.PEFileToObjectModel.Module; }
     }
