@@ -38,13 +38,18 @@ namespace Microsoft.Cci.Ast {
 
   /// <summary>
   /// The root node and global context for a compilation. Every node in the AST has a path back to this node. 
-  /// Compilation nodes and all of their descendants are immutable. 
+  /// Compilation nodes and all of their descendants are immutable once initialized. Initialization happens in two phases.
+  /// Calling the constructor is phase one. Setting the parent node is phase two (and is delayed in order to allow for bottom up AST construction).
+  /// A compilation does not have a second phase initialization method since it has no parent.
   /// </summary>
   public abstract class Compilation : ICompilation {
 
     /// <summary>
     /// Use this constructor to construct an entirely new Compilation. A compilation is a list of source files, compiler options and references to other compilations.
-    /// In command line terms, it corresponds to a single invocation of the command line compiler. In IDE terms it corresponds to what VS2005 calls a project.
+    /// In command line terms, it corresponds to a single invocation of the command line compiler. In IDE terms it corresponds to what Visual Studio calls a project.
+    /// Compilation nodes and all of their descendants are immutable once initialized. Initialization happens in two phases.
+    /// Calling the constructor is phase one. Setting the parent node is phase two (and is delayed in order to allow for bottom up AST construction).
+    /// A compilation does not have a second phase initialization method since it has no parent.
     /// </summary>
     /// <param name="hostEnvironment">An object that represents the application that hosts the compilation and that provides things such as a shared name table.</param>
     /// <param name="result">A "unit of compilation" that holds the result of this compilation. Once the Compilation has been constructed, result can be navigated causing
@@ -276,6 +281,17 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns a new Compilation instance that is the same as this instance except that the given collection of compilation parts replaces the collection from this instance.
     /// </summary>
+    /// <param name="parts">A list of compilation parts that may either belong to this compilation or may be phase one
+    /// initialized compilation parts that were derived from compilation parts belonging to this compilation.</param>
+    /// <remarks>
+    /// After a source edit, typical behavior is to construct a sub tree corresponding to the smallest enclosing syntactic declaration construct
+    /// that encloses the edited source region. Then the parent of the corresponding construct in the old AST is updated with
+    /// the newly constructed sub tree. The update method of the parent will in turn call the update method of its parent and so on
+    /// until this method is reached. The buck stops here. The resulting compilation node is a mixture of old compilation parts and new compilation parts
+    /// kept in the this this.parts field. If a compilation part is actually visited (by means of a traversal of the enumeration returned by this.Parts,
+    /// then each returned compilation part will be a shallow (reparented) copy of the old part, so that the mixture is never observable,
+    /// but deep copies are only made when absolutely necessary.
+    /// </remarks>
     public abstract Compilation UpdateCompilationParts(IEnumerable<CompilationPart> parts);
 
     /// <summary>
@@ -410,6 +426,9 @@ namespace Microsoft.Cci.Ast {
     /// wrappers (or shallow copies made on demand). If this instance is already a part of the target compilation it
     /// returns itself.
     /// </summary>
+    /// <remarks>Do not call this method on compilation parts that already return the target compilation as the value of their
+    /// compilation property. (Compilers that do not support incremental compilation might throw an exception if this method is called.)</remarks>
+    /// <param name="targetCompilation">The compilation is to be the parent compilation of the new compilation part.</param>
     //^ [MustOverride]
     public abstract CompilationPart MakeShallowCopyFor(Compilation targetCompilation);
     //^ ensures result.GetType() == this.GetType();

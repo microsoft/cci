@@ -373,9 +373,13 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns a root namepace object that is language specific.
     /// </summary>
-    /// <returns></returns>
-    protected abstract RootUnitNamespace CreateRootNamespace();
-    //^ ensures result.RootOwner == this;
+    /// <remarks>Most languages will probably just use the base method, but some languages may want to
+    /// allocate a root namespace that has added behavior that, for example, helps with language specific name lookup rules.</remarks>
+    protected virtual RootUnitNamespace CreateRootNamespace()
+      //^ ensures result.RootOwner == this;
+    {
+      return new RootUnitNamespace(this.Compilation.NameTable.EmptyName, this);
+    }
 
     /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.

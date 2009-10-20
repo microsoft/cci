@@ -123,24 +123,27 @@ namespace Microsoft.Cci.Ast {
   }
 
   /// <summary>
-  /// 
+  /// A named collection of namespace members, with routines to search and maintain the collection. All the members belong to an associated
+  /// IUnit instance.
   /// </summary>
   public abstract class UnitNamespace : AggregatedNamespace<NamespaceDeclaration, IAggregatableNamespaceDeclarationMember>, IUnitNamespace {
 
     /// <summary>
-    /// 
+    /// Allocates a named collection of namespace members, with routines to search and maintain the collection. All the members belong to an associated
+    /// IUnit instance.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="unit"></param>
+    /// <param name="name">The name of the namespace.</param>
+    /// <param name="unit">The IUnit instance associated with this namespace.</param>
     protected UnitNamespace(IName name, IUnit unit)
       : base(name) {
       this.unit = unit;
     }
 
     /// <summary>
-    /// 
+    /// The members of this namespace definition are the aggregation of the members of zero or more namespace declarations. This
+    /// method adds another namespace declaration of the list of declarations that supply the members of this namespace definition.
     /// </summary>
-    /// <param name="declaration"></param>
+    /// <param name="declaration">The namespace declaration to add to the list of declarations that together define this namespace definition.</param>
     protected internal void AddNamespaceDeclaration(NamespaceDeclaration declaration) {
       this.namespaceDeclarations.Add(declaration);
       this.AddContainer(declaration);
@@ -160,7 +163,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// 
+    /// The list of namespace declarations that together define this namespace definition.
     /// </summary>
     public IEnumerable<NamespaceDeclaration> NamespaceDeclarations {
       [DebuggerNonUserCode]
@@ -170,6 +173,12 @@ namespace Microsoft.Cci.Ast {
     }
     List<NamespaceDeclaration> namespaceDeclarations = new List<NamespaceDeclaration>();
 
+    /// <summary>
+    /// Appends all of the type members of the given namespace (as well as those of its nested namespaces and types) to
+    /// the given list of types.
+    /// </summary>
+    /// <param name="nameSpace">The namespace to (recursively) traverse to find nested types.</param>
+    /// <param name="typeList">A mutable list of types to which any types found inside the given namespace will be appended.</param>
     internal static void FillInWithTypes(INamespaceDefinition nameSpace, List<INamedTypeDefinition> typeList) {
       foreach (INamespaceMember member in nameSpace.Members) {
         INamedTypeDefinition/*?*/ type = member as INamedTypeDefinition;
@@ -183,6 +192,11 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Appends all of the type members of the given type definition (as well as those of its nested types) to the given list of types.
+    /// </summary>
+    /// <param name="typeDefinition">The type definition to (recursively) traverse to find nested types.</param>
+    /// <param name="typeList">A mutable list of types to which any types found inside the given namespace will be appended.</param>
     private static void FillInWithNestedTypes(INamedTypeDefinition typeDefinition, List<INamedTypeDefinition> typeList) {
       typeList.Add(typeDefinition);
       foreach (ITypeDefinitionMember member in typeDefinition.Members) {
@@ -197,7 +211,6 @@ namespace Microsoft.Cci.Ast {
     /// collection of the aggregated member.
     /// </summary>
     /// <param name="member">The member to aggregate.</param>
-    /// <returns></returns>
     protected override INamespaceMember GetAggregatedMember(IAggregatableNamespaceDeclarationMember member) {
       return member.AggregatedMember;
     }
@@ -207,7 +220,6 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The IUnit instance associated with this namespace.
     /// </summary>
-    /// <value></value>
     public IUnit Unit {
       [DebuggerNonUserCode]
       get { return this.unit; }
@@ -219,7 +231,8 @@ namespace Microsoft.Cci.Ast {
     #region INamespace Members
 
     /// <summary>
-    /// 
+    /// The object associated with the namespace. For example an IUnit or IUnitSet instance. This namespace is either the root namespace of that object
+    /// or it is a nested namespace that is directly of indirectly nested in the root namespace.
     /// </summary>
     public sealed override INamespaceRootOwner RootOwner {
       [DebuggerNonUserCode]
@@ -231,7 +244,7 @@ namespace Microsoft.Cci.Ast {
     #region IDefinition Members
 
     /// <summary>
-    /// 
+    /// The source locations of the zero or more namespace declarations that together define this namespace definition.
     /// </summary>
     public sealed override IEnumerable<ILocation> Locations {
       [DebuggerNonUserCode]
@@ -263,12 +276,12 @@ namespace Microsoft.Cci.Ast {
   }
 
   /// <summary>
-  /// 
+  /// A unit namespace that is not nested inside another namespace.
   /// </summary>
   public class RootUnitNamespace : UnitNamespace, IRootUnitNamespace {
 
     /// <summary>
-    /// 
+    /// Allocates a unit namespace that is not nested inside another namespace.
     /// </summary>
     /// <param name="name"></param>
     /// <param name="unit"></param>

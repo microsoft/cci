@@ -1999,37 +1999,42 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   public abstract class TypeDeclaration : SourceItem, IContainer<IAggregatableTypeDeclarationMember>, IContainer<ITypeDeclarationMember>, IDeclaration, INamedEntity {
     /// <summary>
-    /// 
+    /// A collection of flags that correspond to modifiers such as public and abstract.
     /// </summary>
     [Flags]
     public enum Flags {
       /// <summary>
-      /// 
+      /// No source code construct was found that specifies one of the other flag values. Use defaults.
       /// </summary>
       None=0x00000000,
 
       /// <summary>
-      /// 
+      /// The declared type is abstract.
       /// </summary>
       Abstract=0x40000000,
+
       /// <summary>
-      /// 
+      /// The declared type is a nested type that hides a nested type declared a base class.
       /// </summary>
       New=0x20000000,
+
       /// <summary>
-      /// 
+      /// The declared type may be specified by more than one syntatic construct.
       /// </summary>
       Partial=0x10000000,
+
       /// <summary>
-      /// 
+      /// The declared type may not be used as a base class.
       /// </summary>
       Sealed=0x08000000,
+
       /// <summary>
-      /// 
+      /// The declared type has a private constructor and no instance state or instance methods.
       /// </summary>
       Static=0x04000000,
+
       /// <summary>
-      /// 
+      /// The declared type may contain constructs that are not verifiably type safe.
       /// </summary>
       Unsafe=0x02000000,
     }

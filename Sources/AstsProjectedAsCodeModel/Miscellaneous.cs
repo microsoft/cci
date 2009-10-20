@@ -499,29 +499,29 @@ namespace Microsoft.Cci.Ast {
   public class NameDeclaration : IName, ISourceItem {
 
     /// <summary>
-    /// 
+    /// Allocates a source code item corresponding to a name.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="sourceLocation"></param>
+    /// <param name="name">The name.</param>
+    /// <param name="sourceLocation">The location of the corresponding source code item.</param>
     public NameDeclaration(IName name, ISourceLocation sourceLocation) {
       this.sourceLocation = sourceLocation;
       this.name = name;
     }
 
     /// <summary>
-    /// 
+    /// Allocates a copy of the given name declaration, but using the name table of the given
+    /// target compilation to obtain the corresponding IName value.
     /// </summary>
-    /// <param name="targetCompilation"></param>
-    /// <param name="template"></param>
+    /// <param name="targetCompilation">The compilation that is the root node of the AST of which the new name declaration will be a part.</param>
+    /// <param name="template">A name declaration from another declaration, whose source location and value is to be copied by the new name declaration.</param>
     protected NameDeclaration(Compilation targetCompilation, NameDeclaration template) {
       this.sourceLocation = template.SourceLocation;
       this.name = targetCompilation.NameTable.GetNameFor(template.Value);
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit((SourceDeclaration)this).
     /// </summary>
-    /// <param name="visitor"></param>
     public virtual void Dispatch(SourceVisitor visitor) {
       visitor.Visit(this);
     }
@@ -554,9 +554,8 @@ namespace Microsoft.Cci.Ast {
 
     //^ [Confined]
     /// <summary>
-    /// 
+    /// Returns a string that represents this instance.
     /// </summary>
-    /// <returns></returns>
     public override string ToString() {
       return "NameDeclaration{Name="+this.name.Value+"}";
     }
