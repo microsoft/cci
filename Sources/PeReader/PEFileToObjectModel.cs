@@ -3495,7 +3495,7 @@ namespace Microsoft.Cci.MetadataReader {
         } else if (tokenType == TokenTypeIds.TypeRef) {
           typeRef = this.PEFileToObjectModel.GetTypeRefReferenceAtRow(typeRID);
         } else {
-          typeRef = this.PEFileToObjectModel.GetTypeSpecReferenceAtRow(this.MetadataOwnerObject, typeRID);
+          typeRef = this.PEFileToObjectModel.GetTypeSpecReferenceAtRow(this.MetadataOwnerObject, typeRID).UnderlyingModuleTypeReference;
         }
         if (typeRef == null) {
           //  Error...
