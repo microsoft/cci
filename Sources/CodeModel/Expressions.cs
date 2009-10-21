@@ -31,9 +31,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The local variable, parameter, field, array element, pointer target or method that this expression denotes.
     /// </summary>
-    object/*?*/ Definition {
+    object Definition {
       get;
-      //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
+      //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
       //^   || result is IAddressDereference || result is IMethodReference || result is IThisReference;
     }
 
@@ -467,7 +467,7 @@ namespace Microsoft.Cci {
     ITypeReference Type { get; }
 
     /// <summary>
-    /// True if the expression has no observable side effects.
+    /// if <c>true</c>, then the expression is side
     /// </summary>
     bool IsPure { get; }
   }
@@ -787,9 +787,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The local variable, parameter, field, property, array element or pointer target that this expression denotes.
     /// </summary>
-    object/*?*/ Definition {
+    object Definition {
       get;
-      //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
+      //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
       //^   || result is IAddressDereference || result is IPropertyDefinition;
       //^ ensures result is IPropertyDefinition ==> ((IPropertyDefinition)result).Setter != null;
     }

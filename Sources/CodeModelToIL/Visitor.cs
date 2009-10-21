@@ -276,7 +276,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="addressOf">The address of.</param>
     public override void Visit(IAddressOf addressOf) {
-      object/*?*/ container = addressOf.Expression.Definition;
+      object container = addressOf.Expression.Definition;
       IExpression/*?*/ instance = addressOf.Expression.Instance;
       this.LoadAddressOf(container, instance, addressOf.ObjectControlsMutability);
       this.StackSize++;
@@ -390,7 +390,7 @@ namespace Microsoft.Cci {
     /// <param name="assignment">The assignment.</param>
     /// <param name="treatAsStatement">if set to <c>true</c> [treat as statement].</param>
     public virtual void VisitAssignment(IAssignment assignment, bool treatAsStatement) {
-      object/*?*/ container = assignment.Target.Definition;
+      object container = assignment.Target.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
       if (local != null) {
         if (assignment.Source is IDefaultValue && !local.Type.ResolvedType.IsReferenceType) {
@@ -1742,6 +1742,14 @@ namespace Microsoft.Cci {
     //  );
     //  return caseList;
     //}
+
+    /// <summary>
+    /// Performs some computation with the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
+    public override void Visit(ITargetExpression targetExpression) {
+      Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
+    }
 
     /// <summary>
     /// Visits the specified this reference.

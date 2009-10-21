@@ -506,10 +506,10 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The local variable, parameter, field, array element, pointer target or method that this expression denotes.
     /// </summary>
-    public new object/*?*/ Definition {
+    public new object Definition {
       [DebuggerNonUserCode]
       get
-        //^^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
+        //^^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
         //^^   || result is IAddressDereference || result is IMethodReference || result is IThisReference;
       {
         return base.Definition;
@@ -796,10 +796,10 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The local variable, parameter, field, property, array element or pointer target that this expression denotes.
     /// </summary>
-    public new object/*?*/ Definition {
+    public new object Definition {
       [DebuggerNonUserCode]
       get
-        //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldDefinition || result is IArrayIndexer 
+        //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldDefinition || result is IArrayIndexer 
         //^   || result is IAddressDereference || result is IPropertyDefinition;
         //^ ensures result is IPropertyDefinition ==> ((IPropertyDefinition)result).Setter != null;
       {
@@ -870,7 +870,7 @@ namespace Microsoft.Cci.Ast {
     public bool IsVolatile {
       [DebuggerNonUserCode]
       get {
-        IFieldDefinition field = this.Definition as IFieldDefinition;
+        IFieldDefinition/*?*/ field = this.Definition as IFieldDefinition;
         return field != null && MemberHelper.IsVolatile(field);
       }
     }
@@ -1065,10 +1065,10 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The local variable, parameter, field, array element, pointer target or method that this expression denotes.
     /// </summary>
-    public object/*?*/ Definition {
+    public object Definition {
       [DebuggerNonUserCode]
       get
-        //^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is IEventDefinition || 
+        //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IEventDefinition || 
         //^   result is IFieldDefinition || result is IArrayIndexer || result is IAddressDereference || result is IMethodDefinition || 
         //^   result is IThisReference || result is IPropertyDefinition; 
         //^ ensures result is IPropertyDefinition ==> ((IPropertyDefinition)result).Setter != null;
@@ -1079,12 +1079,11 @@ namespace Microsoft.Cci.Ast {
           if (definition == null) definition = Dummy.Field;
           this.definition = definition;
         }
-        if (definition == Dummy.Field) return null;
         return definition;
       }
     }
-    object/*?*/ definition;
-    //^ invariant definition == null || definition is ILocalDefinition || definition is IParameterDefinition || definition is IEventDefinition ||
+    object definition;
+    //^ invariant definition is ILocalDefinition || definition is IParameterDefinition || definition is IEventDefinition ||
     //^   definition is IFieldDefinition || definition is IArrayIndexer || definition is IAddressDereference || definition is IMethodDefinition ||
     //^   definition is IThisReference || definition is IPropertyDefinition;
     //^ invariant definition is IPropertyDefinition ==> ((IPropertyDefinition)definition).Setter != null;
@@ -2534,7 +2533,7 @@ namespace Microsoft.Cci.Ast {
       if (this.cachedProjection != null) return this.cachedProjection;
       if (this.HasErrors())
         return this.cachedProjection = new DummyExpression(this.SourceLocation);
-      object/*?*/ resolvedTarget = this.Target.Definition;
+      object resolvedTarget = this.Target.Definition;
       IPropertyDefinition/*?*/ property = resolvedTarget as IPropertyDefinition;
       if (property != null) {
         IMethodReference/*?*/ setter = property.Setter;

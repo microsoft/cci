@@ -479,11 +479,12 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private Expression ParseAddressOf(IOperation currentOperation) {
-      AddressableExpression addressableExpression = new AddressableExpression() { Definition = currentOperation.Value };
-      if (addressableExpression.Definition == null) {
+      AddressableExpression addressableExpression = new AddressableExpression();
+      if (currentOperation.Value == null) {
         Debug.Assert(currentOperation.OperationCode == OperationCode.Ldarg || currentOperation.OperationCode == OperationCode.Ldarga_S);
         addressableExpression.Definition = new ThisReference();
-      }
+      } else
+        addressableExpression.Definition = currentOperation.Value;
       if (currentOperation.OperationCode == OperationCode.Ldflda || currentOperation.OperationCode == OperationCode.Ldvirtftn)
         addressableExpression.Instance = this.PopOperandStack();
       return new AddressOf() { Expression = addressableExpression };

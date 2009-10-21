@@ -113,7 +113,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="addressableExpression">The addressable expression.</param>
     /// <returns></returns>
     public virtual IAddressableExpression Visit(AddressableExpression addressableExpression) {
-      object/*?*/ def = addressableExpression.Definition;
+      object def = addressableExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
         addressableExpression.Definition = this.GetMutableCopyIfItExists(loc);
@@ -138,9 +138,8 @@ namespace Microsoft.Cci.MutableCodeModel {
                 if (meth != null)
                   addressableExpression.Definition = this.Visit(meth);
                 else {
-                  IThisReference/*?*/ thisRef = def as IThisReference;
-                  if (thisRef != null)
-                    addressableExpression.Definition = this.Visit(thisRef);
+                  IThisReference thisRef = (IThisReference)def;
+                  addressableExpression.Definition = this.Visit(thisRef);
                 }
               }
             }
@@ -990,7 +989,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="targetExpression">The target expression.</param>
     /// <returns></returns>
     public virtual ITargetExpression Visit(TargetExpression targetExpression) {
-      object/*?*/ def = targetExpression.Definition;
+      object def = targetExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
         targetExpression.Definition = this.GetMutableCopyIfItExists(loc);
@@ -2204,7 +2203,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="addressableExpression">The addressable expression.</param>
     /// <returns></returns>
     public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
-      object/*?*/ def = addressableExpression.Definition;
+      object def = addressableExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
         addressableExpression.Definition = this.GetMutableCopyIfItExists(loc);
@@ -2229,9 +2228,8 @@ namespace Microsoft.Cci.MutableCodeModel {
                 if (meth != null)
                   addressableExpression.Definition = this.Visit(meth);
                 else {
-                  IThisReference/*?*/ thisRef = def as IThisReference;
-                  if (thisRef != null)
-                    addressableExpression.Definition = this.Visit(thisRef);
+                  IThisReference/*?*/ thisRef = (IThisReference)def;
+                  addressableExpression.Definition = this.Visit(thisRef);
                 }
               }
             }
@@ -2250,7 +2248,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="targetExpression">The target expression.</param>
     /// <returns></returns>
     public override ITargetExpression Visit(TargetExpression targetExpression) {
-      object/*?*/ def = targetExpression.Definition;
+      object def = targetExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
         targetExpression.Definition = this.GetMutableCopyIfItExists(loc);

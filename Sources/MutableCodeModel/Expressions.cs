@@ -53,7 +53,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public AddressableExpression() {
-      this.definition = null;
+      this.definition = Dummy.LocalVariable;
       this.instance = null;
     }
 
@@ -79,17 +79,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The local variable, parameter, field, array element, pointer target or method that this expression denotes.
     /// </summary>
     /// <value></value>
-    public object/*?*/ Definition {
+    public object Definition {
       get { return this.definition; }
       set
-        //^ requires result == null || result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
-        //^   || result is IAddressDereference || result is IMethodReference || result is IThisReference;
+        //^ requires value is ILocalDefinition || value is IParameterDefinition || value is IFieldReference || value is IArrayIndexer 
+        //^   || value is IAddressDereference || value is IMethodReference || value is IThisReference;
       {
         this.definition = value;
       }
     }
-    object/*?*/ definition;
-    //^ invariant definition == null || definition is ILocalDefinition || definition is IParameterDefinition || definition is IFieldReference || definition is IArrayIndexer
+    object definition;
+    //^ invariant definition is ILocalDefinition || definition is IParameterDefinition || definition is IFieldReference || definition is IArrayIndexer
     //^   || definition is IAddressDereference || definition is IMethodReference || definition is IThisReference;
 
     /// <summary>
@@ -2579,7 +2579,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public TargetExpression() {
-      this.definition = null;
+      this.definition = Dummy.LocalVariable;
       this.instance = null;
     }
 
@@ -2628,16 +2628,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The local variable, parameter, field, property, array element or pointer target that this expression denotes.
     /// </summary>
     /// <value></value>
-    public object/*?*/ Definition {
+    public object Definition {
       get { return this.definition; }
       set
-        //^ requires value == null || value is ILocalDefinition || value is IParameterDefinition || value is IFieldDefinition || value is IArrayIndexer || value is IAddressDereference;
+        //^ requires value is ILocalDefinition || value is IParameterDefinition || value is IFieldDefinition || value is IArrayIndexer || value is IAddressDereference;
       {
         this.definition = value;
       }
     }
-    object/*?*/ definition;
-    //^ invariant definition == null || definition is ILocalDefinition || definition is IParameterDefinition || definition is IFieldDefinition || definition is IArrayIndexer || definition is IAddressDereference;
+    object definition;
+    //^ invariant definition is ILocalDefinition || definition is IParameterDefinition || definition is IFieldDefinition || definition is IArrayIndexer || definition is IAddressDereference;
 
     /// <summary>
     /// The instance to be used if this.Definition is an instance field/property or array indexer.

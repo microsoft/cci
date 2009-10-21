@@ -122,8 +122,11 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(BoundExpression boundExpression) {
       var addressOf = boundExpression.Instance as IAddressOf;
-      if (addressOf != null && addressOf.Expression.Type.IsValueType)
-        boundExpression.Instance = addressOf.Expression;
+      if (addressOf != null && addressOf.Expression.Type.IsValueType) {
+        var be = new BoundExpression() { Definition = addressOf.Expression.Definition, Instance = addressOf.Expression.Instance };
+        be.Locations.AddRange(addressOf.Locations);
+        boundExpression.Instance = be;
+      }
       ILocalDefinition/*?*/ local = boundExpression.Definition as ILocalDefinition;
       if (local != null) {
         IExpression substitute = boundExpression;
@@ -352,8 +355,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (!methodCall.IsStaticCall) {
         var addressOf = methodCall.ThisArgument as IAddressOf;
-        if (addressOf != null)
-          methodCall.ThisArgument = addressOf.Expression;
+        if (addressOf != null) {
+          var be = new BoundExpression() { Definition = addressOf.Expression.Definition, Instance = addressOf.Expression.Instance };
+          be.Locations.AddRange(addressOf.Locations);
+          methodCall.ThisArgument = be;
+        }
       }
       return base.Visit(methodCall);
     }
@@ -451,7 +457,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (expressionStatement != null) {
           IAssignment assignment = expressionStatement.Expression as IAssignment;
           if (assignment != null && assignment.Source is AnonymousDelegate) {
-            IFieldReference fieldReference = assignment.Target.Definition as IFieldReference;
+            IFieldReference/*?*/ fieldReference = assignment.Target.Definition as IFieldReference;
             if (fieldReference != null) {
               if (this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 1) {
                 this.cachedDelegateFields[fieldReference.Name.Value].State = 3;

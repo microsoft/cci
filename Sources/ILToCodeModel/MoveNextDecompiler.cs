@@ -791,7 +791,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (expressionStatement != null) {
           IAssignment assignment = expressionStatement.Expression as IAssignment;
           if (assignment != null) {
-            ILocalDefinition localDefinition = assignment.Target.Definition as ILocalDefinition;
+            ILocalDefinition/*?*/ localDefinition = assignment.Target.Definition as ILocalDefinition;
             if (localDefinition != null && assignment.Source is CreateObjectInstance && (!locals.ContainsKey(localDefinition) || !locals[localDefinition])) {
               statements.RemoveAt(i);
               LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() {

@@ -411,7 +411,7 @@ namespace Microsoft.Cci {
     {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
-      object/*?*/ def = addressableExpression.Definition;
+      object def = addressableExpression.Definition;
       var loc = def as ILocalDefinition;
       if (loc != null)
         this.VisitReference(loc);
@@ -1721,7 +1721,7 @@ namespace Microsoft.Cci {
     {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
-      object/*?*/ def = targetExpression.Definition;
+      object def = targetExpression.Definition;
       var loc = def as ILocalDefinition;
       if (loc != null)
         this.VisitReference(loc);

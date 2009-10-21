@@ -140,7 +140,7 @@ namespace Microsoft.Cci {
 
     #region IAddressableExpression Members
 
-    public object/*?*/ Definition {
+    public object Definition {
       get { return Dummy.Field; }
     }
 
@@ -254,8 +254,7 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return false; }
     }
 
@@ -329,8 +328,7 @@ namespace Microsoft.Cci {
       get { return Dummy.TypeReference; }
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return false; }
     }
 
@@ -353,8 +351,7 @@ namespace Microsoft.Cci {
       get { return Dummy.TypeReference; }
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return false; }
     }
 
@@ -439,8 +436,7 @@ namespace Microsoft.Cci {
       get { return Dummy.TypeReference; }
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return false; }
     }
 
@@ -535,7 +531,7 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
-    public object/*?*/ Definition {
+    public object Definition {
       get { return Dummy.Field; }
     }
 
@@ -570,8 +566,7 @@ namespace Microsoft.Cci {
       get { return Dummy.TypeReference; }
     }
 
-    public bool IsPure
-    {
+    public bool IsPure {
       get { return false; }
     }
 
