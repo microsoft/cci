@@ -3430,8 +3430,15 @@ namespace Microsoft.Cci {
           this.SerializeTypeReference(a.ElementType, writer, true);
         }
         writer.WriteUint(IteratorHelper.EnumerableCount(a.Initializers));
-        foreach (IMetadataExpression elemValue in a.Initializers)
-          this.SerializeMetadataExpression(writer, elemValue);
+        if (TypeHelper.TypesAreEquivalent(a.ElementType, this.host.PlatformType.SystemObject)) {
+          foreach (IMetadataExpression elemValue in a.Initializers) {
+            this.SerializeTypeReference(elemValue.Type, writer, true);
+            this.SerializeMetadataExpression(writer, elemValue);
+          }
+        } else {
+          foreach (IMetadataExpression elemValue in a.Initializers)
+            this.SerializeMetadataExpression(writer, elemValue);
+        }
       } else {
         IMetadataTypeOf/*?*/ t = expression as IMetadataTypeOf;
         if (t != null) {
