@@ -3754,7 +3754,7 @@ namespace Microsoft.Cci {
       } else if (typeKey == platformType.SystemObject.InternedKey) {
         writer.WriteByte(0x1c); return;
       } else if (arrayTypeReference != null && arrayTypeReference.IsVector) {
-        writer.WriteByte(0x1d); this.SerializeTypeReference(arrayTypeReference.ElementType, writer); return;
+        writer.WriteByte(0x1d); this.SerializeTypeReference(arrayTypeReference.ElementType, writer, noTokens); return;
       } else if ((genericMethodParameterReference = typeReference as IGenericMethodParameterReference) != null) {
         writer.WriteByte(0x1e); writer.WriteCompressedUInt(genericMethodParameterReference.Index); return;
       } else if (IsTypeSpecification(typeReference)) {
