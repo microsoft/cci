@@ -166,7 +166,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (var sourceLoc in source) {
         if (target.Count == 0)
           target.Add(sourceLoc);
-        else
+        else if (this.pdbReader != null)
           target[0] = this.pdbReader.LocationWithSmallerOffset(target[0], sourceLoc);
       }
     }
