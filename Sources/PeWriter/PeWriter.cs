@@ -3569,9 +3569,9 @@ namespace Microsoft.Cci {
         sb.Append('[');
         bool first = true;
         foreach (ITypeReference argument in instance.GenericArguments) {
+          if (first) first = false; else sb.Append(',');
           bool isAssemQual = true;
           this.AppendSerializedTypeName(sb, argument, ref isAssemQual);
-          if (first) first = false; else sb.Append(',');
         }
         sb.Append(']');
         goto done;
