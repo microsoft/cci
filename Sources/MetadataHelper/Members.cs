@@ -1034,23 +1034,46 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unspecializedVersion"></param>
     /// <param name="containingTypeDefinition"></param>
+    /// <param name="partiallySpecializedVersion"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedEventDefinition(IEventDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+    public SpecializedEventDefinition(IEventDefinition unspecializedVersion, IEventDefinition partiallySpecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
       : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
+      this.partiallySpecializedVersion = partiallySpecializedVersion;
     }
 
     /// <summary>
     /// A list of methods that are associated with the event.
     /// </summary>
-    /// <value></value>
     public IEnumerable<IMethodReference> Accessors {
       get {
-        foreach (IMethodReference accessor in this.UnspecializedVersion.Accessors) {
-          ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(accessor.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-          yield return (IMethodReference)result;
+        if (this.accessors == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.accessors == null) {
+              var acc = new List<IMethodReference>();
+              uint akey = 0;
+              var adder = this.Adder;
+              acc.Add(adder); akey = this.partiallySpecializedVersion.Adder.InternedKey;
+              uint ckey = 0;
+              var caller = this.Caller;
+              if (caller != null) { acc.Add(caller); ckey = this.partiallySpecializedVersion.Caller.InternedKey; }
+              uint rkey = 0;
+              var remover = this.Remover;
+              acc.Add(remover); rkey = this.partiallySpecializedVersion.Remover.InternedKey;
+              foreach (IMethodReference accessor in this.partiallySpecializedVersion.Accessors) {
+                var key = accessor.InternedKey;
+                if (key == akey || key == ckey || key == rkey) continue;
+                acc.Add((IMethodReference)this.ContainingGenericTypeInstance.SpecializeMember(accessor.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory));
+              }
+              acc.TrimExcess();
+              this.accessors = acc.AsReadOnly();
+            }
+          }
         }
+        return this.accessors;
       }
     }
+    IEnumerable<IMethodReference>/*?*/ accessors;
+
 
     /// <summary>
     /// The method used to add a handler to the event.
@@ -1058,10 +1081,18 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IMethodReference Adder {
       get {
-        ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(this.UnspecializedVersion.Adder.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-        return (IMethodReference)result;
+        if (this.adder == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.adder == null) {
+              var specialized = this.ContainingGenericTypeInstance.SpecializeMember(this.partiallySpecializedVersion.Adder.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
+              this.adder = (IMethodReference)specialized;
+            }
+          }
+        }
+        return this.adder;
       }
     }
+    IMethodReference/*?*/ adder;
 
     /// <summary>
     /// The method used to call the event handlers when the event occurs. May be null.
@@ -1069,12 +1100,20 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IMethodReference/*?*/ Caller {
       get {
-        IMethodReference/*?*/ caller = this.UnspecializedVersion.Caller;
-        if (caller == null) return null;
-        ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(caller.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-        return (IMethodReference)result;
+        if (this.caller == null) {
+          IMethodReference/*?*/ caller = this.partiallySpecializedVersion.Caller;
+          if (caller == null) return null;
+          lock (GlobalLock.LockingObject) {
+            if (this.caller == null) {
+              ITypeDefinitionMember specialized = this.ContainingGenericTypeInstance.SpecializeMember(caller.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
+              this.caller = (IMethodReference)specialized;
+            }
+          }
+        }
+        return this.caller;
       }
     }
+    IMethodReference/*?*/ caller;
 
     /// <summary>
     /// Calls the visitor.Visit(IEventDefinition) method.
@@ -1083,16 +1122,26 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    readonly IEventDefinition partiallySpecializedVersion;
+
     /// <summary>
     /// The method used to add a handler to the event.
     /// </summary>
     /// <value></value>
     public IMethodReference Remover {
       get {
-        ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(this.UnspecializedVersion.Remover.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-        return (IMethodReference)result;
+        if (this.remover == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.remover == null) {
+              var specialized = this.ContainingGenericTypeInstance.SpecializeMember(this.partiallySpecializedVersion.Remover.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
+              this.remover = (IMethodReference)specialized;
+            }
+          }
+        }
+        return this.remover;
       }
     }
+    IMethodReference/*?*/ remover;
 
     /// <summary>
     /// The (delegate) type of the handlers that will handle the event.
@@ -1100,14 +1149,14 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        ITypeReference unspecializedType = this.UnspecializedVersion.Type.ResolvedType;
-        ITypeReference specializedType =  TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        if (unspecializedType == specializedType)
-          return this.UnspecializedVersion.Type;
-        else
-          return specializedType;
+        if (this.type == null) {
+          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
+          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+        }
+        return this.type;
       }
     }
+    ITypeReference/*?*/ type;
 
     #region IEventDefinition Members
 
@@ -1138,10 +1187,12 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="partiallySpecializedVersion"></param>
     /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedFieldDefinition(IFieldDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+    public SpecializedFieldDefinition(IFieldDefinition unspecializedVersion, IFieldDefinition partiallySpecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
       : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
+      this.partiallySpecializedVersion = partiallySpecializedVersion;
     }
 
     /// <summary>
@@ -1151,6 +1202,8 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    readonly IFieldDefinition partiallySpecializedVersion;
+
     /// <summary>
     /// The type of value that is stored in this field.
     /// </summary>
@@ -1158,16 +1211,8 @@ namespace Microsoft.Cci {
     public ITypeReference Type {
       get {
         if (this.type == null) {
-          lock (GlobalLock.LockingObject) {
-            if (this.type == null) {
-              ITypeReference unspecializedType = this.UnspecializedVersion.Type;
-              ITypeReference specializedType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-              if (unspecializedType == specializedType)
-                this.type = this.UnspecializedVersion.Type;
-              else
-                this.type = specializedType;
-            }
-          }
+          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
+          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
         }
         return this.type;
       }
@@ -1364,10 +1409,10 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="definingMethod"></param>
-    public SpecializedGenericMethodParameter(IGenericMethodParameter unspecializedParameter, SpecializedMethodDefinition definingMethod)
-      : base(unspecializedParameter, definingMethod.ContainingGenericTypeInstance.InternFactory) {
+    public SpecializedGenericMethodParameter(IGenericMethodParameter partiallySpecializedParameter, SpecializedMethodDefinition definingMethod)
+      : base(partiallySpecializedParameter, definingMethod.ContainingGenericTypeInstance.InternFactory) {
       this.definingMethod = definingMethod;
     }
 
@@ -1377,10 +1422,17 @@ namespace Microsoft.Cci {
     /// <value></value>
     public override IEnumerable<ITypeReference> Constraints {
       get {
-        foreach (ITypeReference unspecializedConstraint in this.UnspecializedParameter.Constraints)
-          yield return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedConstraint.ResolvedType, this.DefiningMethod.ContainingGenericTypeInstance, this.DefiningMethod.ContainingGenericTypeInstance.InternFactory);
+        if (this.constraints == null) {
+          var constrs = new List<ITypeReference>();
+          foreach (ITypeReference unspecializedConstraint in this.PartiallySpecializedParameter.Constraints)
+            constrs.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedConstraint, this.DefiningMethod.ContainingGenericTypeInstance, this.DefiningMethod.ContainingGenericTypeInstance.InternFactory));
+          constrs.TrimExcess();
+          this.constraints = constrs.AsReadOnly();
+        }
+        return this.constraints;
       }
     }
+    IEnumerable<ITypeReference>/*?*/ constraints;
 
     /// <summary>
     /// Calls the visitor.Visit(IGenericMethodParameter) method.
@@ -1401,7 +1453,7 @@ namespace Microsoft.Cci {
     #region IGenericMethodParameter Members
 
     IMethodDefinition IGenericMethodParameter.DefiningMethod {
-      get { return this.UnspecializedParameter.DefiningMethod; }
+      get { return this.PartiallySpecializedParameter.DefiningMethod; }
     }
 
     #endregion
@@ -1428,10 +1480,12 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="partiallySpecializedVersion"></param>
     /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedMethodDefinition(IMethodDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+    public SpecializedMethodDefinition(IMethodDefinition unspecializedVersion, IMethodDefinition partiallySpecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
       : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
+      this.partiallySpecializedVersion = partiallySpecializedVersion;
     }
 
     /// <summary>
@@ -1463,10 +1517,20 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IEnumerable<IGenericMethodParameter> GenericParameters {
       get {
-        foreach (IGenericMethodParameter parameter in this.UnspecializedVersion.GenericParameters)
-          yield return new SpecializedGenericMethodParameter(parameter, this);
+        if (this.genericParameters == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.genericParameters == null) {
+              var gpars = new List<IGenericMethodParameter>(this.GenericParameterCount);
+              foreach (IGenericMethodParameter parameter in this.partiallySpecializedVersion.GenericParameters)
+                gpars.Add(new SpecializedGenericMethodParameter(parameter, this));
+              this.genericParameters = gpars.AsReadOnly();
+            }
+          }
+        }
+        return this.genericParameters;
       }
     }
+    IEnumerable<IGenericMethodParameter>/*?*/ genericParameters;
 
     //^ [Pure] 
     /// <summary>
@@ -1499,10 +1563,20 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IEnumerable<IParameterDefinition> Parameters {
       get {
-        foreach (IParameterDefinition parameter in this.UnspecializedVersion.Parameters)
-          yield return new SpecializedParameterDefinition(parameter, this, this.ContainingGenericTypeInstance.InternFactory);
+        if (this.parameters == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.parameters == null) {
+              var pars = new List<IParameterDefinition>(this.ParameterCount);
+              foreach (IParameterDefinition parameter in this.partiallySpecializedVersion.Parameters)
+                pars.Add(new SpecializedParameterDefinition(parameter, this, this.ContainingGenericTypeInstance.InternFactory));
+              this.parameters = pars.AsReadOnly();
+            }
+          }
+        }
+        return this.parameters;
       }
     }
+    IEnumerable<IParameterDefinition>/*?*/ parameters;
 
     /// <summary>
     /// The number of required parameters of the method.
@@ -1511,6 +1585,8 @@ namespace Microsoft.Cci {
     public ushort ParameterCount {
       get { return this.UnspecializedVersion.ParameterCount; }
     }
+
+    readonly IMethodDefinition partiallySpecializedVersion;
 
     /// <summary>
     /// Detailed information about the PInvoke stub. Identifies which method to call, which module has the method and the calling convention among other things.
@@ -1529,19 +1605,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// The return type of the method or type of the property.
+    /// The return type of the method.
     /// </summary>
     /// <value></value>
     public ITypeReference Type {
       get {
-        ITypeReference unspecializedType = this.UnspecializedVersion.Type;
-        ITypeReference specializedType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        if (unspecializedType == specializedType)
-          return this.UnspecializedVersion.Type;
-        else
-          return specializedType;
+        if (this.type == null) {
+          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
+          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+        }
+        return this.type;
       }
     }
+    ITypeReference/*?*/ type;
 
     #region IMethodDefinition Members
 
@@ -1779,9 +1855,8 @@ namespace Microsoft.Cci {
     /// <value></value>
     public uint InternedKey {
       get {
-        if (this.internedKey == 0) {
+        if (this.internedKey == 0)
           this.internedKey = this.ContainingGenericTypeInstance.InternFactory.GetMethodInternedKey(this);
-        }
         return this.internedKey;
       }
     }
@@ -1878,11 +1953,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="containingSignature"></param>
     /// <param name="internFactory"></param>
-    protected internal SpecializedParameterDefinition(IParameterDefinition unspecializedParameter, IGenericMethodInstanceReference containingSignature, IInternFactory internFactory) {
-      this.unspecializedParameter = unspecializedParameter;
+    protected internal SpecializedParameterDefinition(IParameterDefinition partiallySpecializedParameter, IGenericMethodInstanceReference containingSignature, IInternFactory internFactory) {
+      this.partiallySpecializedParameter = partiallySpecializedParameter;
       this.containingSignature = containingSignature;
       this.internFactory = internFactory;
     }
@@ -1890,11 +1965,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="containingSignature"></param>
     /// <param name="internFactory"></param>
-    protected internal SpecializedParameterDefinition(IParameterDefinition unspecializedParameter, SpecializedMethodDefinition containingSignature, IInternFactory internFactory) {
-      this.unspecializedParameter = unspecializedParameter;
+    protected internal SpecializedParameterDefinition(IParameterDefinition partiallySpecializedParameter, SpecializedMethodDefinition containingSignature, IInternFactory internFactory) {
+      this.partiallySpecializedParameter = partiallySpecializedParameter;
       this.containingSignature = containingSignature;
       this.internFactory = internFactory;
     }
@@ -1902,11 +1977,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="containingSignature"></param>
     /// <param name="internFactory"></param>
-    protected internal SpecializedParameterDefinition(IParameterDefinition unspecializedParameter, SpecializedPropertyDefinition containingSignature, IInternFactory internFactory) {
-      this.unspecializedParameter = unspecializedParameter;
+    protected internal SpecializedParameterDefinition(IParameterDefinition partiallySpecializedParameter, SpecializedPropertyDefinition containingSignature, IInternFactory internFactory) {
+      this.partiallySpecializedParameter = partiallySpecializedParameter;
       this.containingSignature = containingSignature;
       this.internFactory = internFactory;
     }
@@ -1925,7 +2000,7 @@ namespace Microsoft.Cci {
     readonly ISignature containingSignature;
     //^ invariant containingSignature is IGenericMethodInstance || containingSignature is SpecializedMethodDefinition || containingSignature is SpecializedPropertyDefinition;
 
-    private IParameterDefinition unspecializedParameter;
+    private IParameterDefinition partiallySpecializedParameter;
 
     /// <summary>
     /// 
@@ -1944,23 +2019,27 @@ namespace Microsoft.Cci {
         //^^ requires this.IsParameterArray;
       {
         //^ assume this.unspecializedParameter.IsParameterArray; //postcondition of this.IsParameterArray
-        ITypeReference unspecializedType = this.unspecializedParameter.ParamArrayElementType;
-        return this.SpecializeIfConstructed(unspecializedType);
+        if (this.paramArrayElementType == null) {
+          ITypeReference partiallySpecializedType = this.partiallySpecializedParameter.ParamArrayElementType;
+          this.paramArrayElementType = this.SpecializeIfConstructed(partiallySpecializedType);
+        }
+        return this.paramArrayElementType;
       }
     }
+    ITypeReference/*?*/ paramArrayElementType;
 
     //^ [Confined]
-    private ITypeReference SpecializeIfConstructed(ITypeReference unspecializedType) {
+    private ITypeReference SpecializeIfConstructed(ITypeReference partiallySpecializedType) {
       IGenericMethodInstanceReference/*?*/ genericMethodInstance = this.ContainingSignature as IGenericMethodInstanceReference;
-      if (genericMethodInstance != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, genericMethodInstance, this.InternFactory);
+      if (genericMethodInstance != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, genericMethodInstance, this.InternFactory);
       SpecializedMethodDefinition/*?*/ specializedMethodDefinition = this.ContainingSignature as SpecializedMethodDefinition;
       if (specializedMethodDefinition != null) {
         if (specializedMethodDefinition.IsGeneric)
-          unspecializedType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(unspecializedType, specializedMethodDefinition, this.internFactory);
-        return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedMethodDefinition.ContainingGenericTypeInstance, this.InternFactory);
+          partiallySpecializedType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(partiallySpecializedType, specializedMethodDefinition, this.internFactory);
+        return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, specializedMethodDefinition.ContainingGenericTypeInstance, this.InternFactory);
       }
       SpecializedPropertyDefinition specializedPropertyDefinition = (SpecializedPropertyDefinition)this.ContainingSignature;
-      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, specializedPropertyDefinition.ContainingGenericTypeInstance, this.InternFactory);
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, specializedPropertyDefinition.ContainingGenericTypeInstance, this.InternFactory);
     }
 
     /// <summary>
@@ -1969,21 +2048,21 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        ITypeReference unspecializedType = this.unspecializedParameter.Type;
-        ITypeReference specializedType = this.SpecializeIfConstructed(unspecializedType);
-        if (unspecializedType == specializedType)
-          return this.unspecializedParameter.Type;
-        else
-          return specializedType;
+        if (this.type == null) {
+          ITypeReference partiallySpecializedType = this.partiallySpecializedParameter.Type;
+          this.type = this.SpecializeIfConstructed(partiallySpecializedType);
+        }
+        return this.type;
       }
     }
+    ITypeReference/*?*/ type;
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return this.unspecializedParameter.CustomModifiers; }
+      get { return this.partiallySpecializedParameter.CustomModifiers; }
     }
 
     /// <summary>
@@ -1994,7 +2073,7 @@ namespace Microsoft.Cci {
       get
         //^^ requires this.HasDefaultValue;
       {
-        return this.unspecializedParameter.DefaultValue;
+        return this.partiallySpecializedParameter.DefaultValue;
       }
     }
 
@@ -2003,7 +2082,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool HasDefaultValue {
-      get { return this.unspecializedParameter.HasDefaultValue; }
+      get { return this.partiallySpecializedParameter.HasDefaultValue; }
     }
 
     /// <summary>
@@ -2011,7 +2090,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ushort Index {
-      get { return this.unspecializedParameter.Index; }
+      get { return this.partiallySpecializedParameter.Index; }
     }
 
     /// <summary>
@@ -2029,7 +2108,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsByReference {
-      get { return this.unspecializedParameter.IsByReference; }
+      get { return this.partiallySpecializedParameter.IsByReference; }
     }
 
     /// <summary>
@@ -2037,7 +2116,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsIn {
-      get { return this.unspecializedParameter.IsIn; }
+      get { return this.partiallySpecializedParameter.IsIn; }
     }
 
     /// <summary>
@@ -2045,7 +2124,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsMarshalledExplicitly {
-      get { return this.unspecializedParameter.IsMarshalledExplicitly; }
+      get { return this.partiallySpecializedParameter.IsMarshalledExplicitly; }
     }
 
     /// <summary>
@@ -2053,7 +2132,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsModified {
-      get { return this.unspecializedParameter.IsModified; }
+      get { return this.partiallySpecializedParameter.IsModified; }
     }
 
     /// <summary>
@@ -2061,7 +2140,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsOptional {
-      get { return this.unspecializedParameter.IsOptional; }
+      get { return this.partiallySpecializedParameter.IsOptional; }
     }
 
     /// <summary>
@@ -2069,7 +2148,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsOut {
-      get { return this.unspecializedParameter.IsOut; }
+      get { return this.partiallySpecializedParameter.IsOut; }
     }
 
     /// <summary>
@@ -2077,7 +2156,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IMarshallingInformation MarshallingInformation {
-      get { return this.unspecializedParameter.MarshallingInformation; }
+      get { return this.partiallySpecializedParameter.MarshallingInformation; }
     }
 
     /// <summary>
@@ -2088,7 +2167,7 @@ namespace Microsoft.Cci {
       get
         //^ ensures result == this.unspecializedParameter.IsParameterArray;
       {
-        return this.unspecializedParameter.IsParameterArray;
+        return this.partiallySpecializedParameter.IsParameterArray;
       }
     }
 
@@ -2107,7 +2186,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IName Name {
-      get { return this.unspecializedParameter.Name; }
+      get { return this.partiallySpecializedParameter.Name; }
     }
 
     #endregion
@@ -2119,7 +2198,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return this.unspecializedParameter.Attributes; }
+      get { return this.partiallySpecializedParameter.Attributes; }
     }
 
     /// <summary>
@@ -2127,7 +2206,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
-      get { return this.unspecializedParameter.Locations; }
+      get { return this.partiallySpecializedParameter.Locations; }
     }
 
     #endregion
@@ -2150,11 +2229,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="containingSignature"></param>
     /// <param name="internFactory"></param>
-    internal SpecializedParameterTypeInformation(IParameterTypeInformation unspecializedParameter, IGenericMethodInstanceReference containingSignature, IInternFactory internFactory) {
-      this.unspecializedParameter = unspecializedParameter;
+    internal SpecializedParameterTypeInformation(IParameterTypeInformation partiallySpecializedParameter, IGenericMethodInstanceReference containingSignature, IInternFactory internFactory) {
+      this.partiallySpecializedParameter = partiallySpecializedParameter;
       this.containingSignature = containingSignature;
       this.internFactory = internFactory;
     }
@@ -2170,7 +2249,7 @@ namespace Microsoft.Cci {
     }
     readonly IGenericMethodInstanceReference containingSignature;
 
-    private IParameterTypeInformation unspecializedParameter;
+    private IParameterTypeInformation partiallySpecializedParameter;
 
     /// <summary>
     /// 
@@ -2180,8 +2259,8 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
-    private ITypeReference SpecializeIfConstructed(ITypeReference unspecializedType) {
-      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, this.containingSignature, this.InternFactory);
+    private ITypeReference SpecializeIfConstructed(ITypeReference partiallySpecializedType) {
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.containingSignature, this.InternFactory);
     }
 
     /// <summary>
@@ -2190,21 +2269,21 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        ITypeReference unspecializedType = this.unspecializedParameter.Type;
-        ITypeReference specializedType = this.SpecializeIfConstructed(unspecializedType);
-        if (unspecializedType == specializedType)
-          return this.unspecializedParameter.Type;
-        else
-          return specializedType;
+        if (this.type == null) {
+          ITypeReference partiallySpecializedType = this.partiallySpecializedParameter.Type;
+          this.type = this.SpecializeIfConstructed(partiallySpecializedType);
+        }
+        return this.type;
       }
     }
+    ITypeReference/*?*/ type;
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return this.unspecializedParameter.CustomModifiers; }
+      get { return this.partiallySpecializedParameter.CustomModifiers; }
     }
 
     /// <summary>
@@ -2212,7 +2291,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ushort Index {
-      get { return this.unspecializedParameter.Index; }
+      get { return this.partiallySpecializedParameter.Index; }
     }
 
     /// <summary>
@@ -2230,7 +2309,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsByReference {
-      get { return this.unspecializedParameter.IsByReference; }
+      get { return this.partiallySpecializedParameter.IsByReference; }
     }
 
     /// <summary>
@@ -2238,7 +2317,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsModified {
-      get { return this.unspecializedParameter.IsModified; }
+      get { return this.partiallySpecializedParameter.IsModified; }
     }
 
 
@@ -2253,10 +2332,12 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="partiallySpecializedVersion"></param>
     /// <param name="containingTypeDefinition"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    public SpecializedPropertyDefinition(IPropertyDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
+    public SpecializedPropertyDefinition(IPropertyDefinition unspecializedVersion, IPropertyDefinition partiallySpecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance)
       : base(unspecializedVersion, containingTypeDefinition, containingGenericTypeInstance) {
+      this.partiallySpecializedVersion = partiallySpecializedVersion;
     }
 
     /// <summary>
@@ -2265,12 +2346,29 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IEnumerable<IMethodReference> Accessors {
       get {
-        foreach (IMethodReference accessor in this.UnspecializedVersion.Accessors) {
-          ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(accessor.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-          yield return (IMethodReference)result;
+        if (this.accessors == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.accessors == null) {
+              uint gkey = 0;
+              var acc = new List<IMethodReference>();
+              var getter = this.Getter;
+              if (getter != null) { acc.Add(getter); gkey = this.partiallySpecializedVersion.Getter.InternedKey; }
+              uint skey = 0;
+              var setter = this.Setter;
+              if (setter != null) { acc.Add(setter); skey = this.partiallySpecializedVersion.Setter.InternedKey; }
+              foreach (IMethodReference accessor in this.partiallySpecializedVersion.Accessors) {
+                var akey = accessor.InternedKey;
+                if (akey == gkey || akey == skey) continue;
+                acc.Add((IMethodReference)this.ContainingGenericTypeInstance.SpecializeMember(accessor.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory));
+              }
+              this.accessors = acc.AsReadOnly();
+            }
+          }
         }
+        return this.accessors;
       }
     }
+    IEnumerable<IMethodReference>/*?*/ accessors;
 
     /// <summary>
     /// Calls the visitor.Visit(IPropertyDefinition) method.
@@ -2285,11 +2383,16 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IMethodReference/*?*/ Getter {
       get {
-        if (this.getter != null) return this.getter;
-        IMethodReference/*?*/ getter = this.UnspecializedVersion.Getter;
-        if (getter == null) return null;
-        ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(getter.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-        this.getter = (IMethodReference)result;
+        if (this.getter == null) {
+          IMethodReference/*?*/ getter = this.partiallySpecializedVersion.Getter;
+          if (getter == null) return null;
+          lock (GlobalLock.LockingObject) {
+            if (this.getter == null) {
+              ITypeDefinitionMember specialized = this.ContainingGenericTypeInstance.SpecializeMember(getter.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
+              this.getter = (IMethodReference)specialized;
+            }
+          }
+        }
         return this.getter;
       }
     }
@@ -2301,10 +2404,22 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IEnumerable<IParameterDefinition> Parameters {
       get {
-        foreach (IParameterDefinition parameter in this.UnspecializedVersion.Parameters)
-          yield return new SpecializedParameterDefinition(parameter, this, this.ContainingGenericTypeInstance.InternFactory);
+        if (this.parameters == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.parameters == null) {
+              var pars = new List<IParameterDefinition>();
+              foreach (IParameterDefinition parameter in this.UnspecializedVersion.Parameters)
+                pars.Add(new SpecializedParameterDefinition(parameter, this, this.ContainingGenericTypeInstance.InternFactory));
+              this.parameters = pars.AsReadOnly();
+            }
+          }
+        }
+        return this.parameters;
       }
     }
+    IEnumerable<IParameterDefinition>/*?*/ parameters;
+
+    IPropertyDefinition partiallySpecializedVersion;
 
     /// <summary>
     /// The method used to set the value of this property. May be absent (null).
@@ -2312,11 +2427,16 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IMethodReference/*?*/ Setter {
       get {
-        if (this.setter != null) return this.setter;
-        IMethodReference/*?*/ setter = this.UnspecializedVersion.Setter;
-        if (setter == null) return null;
-        ITypeDefinitionMember result = this.ContainingGenericTypeInstance.SpecializeMember(setter.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-        this.setter = (IMethodReference)result;
+        if (this.setter == null) {
+          IMethodReference/*?*/ setter = this.partiallySpecializedVersion.Setter;
+          if (setter == null) return null;
+          lock (GlobalLock.LockingObject) {
+            if (this.setter == null) {
+              var specialized = this.ContainingGenericTypeInstance.SpecializeMember(setter.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
+              this.setter = (IMethodReference)specialized;
+            }
+          }
+        }
         return this.setter;
       }
     }
@@ -2328,14 +2448,14 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        ITypeReference unspecializedType = this.UnspecializedVersion.Type;
-        ITypeReference specializedType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        if (unspecializedType == specializedType)
-          return this.UnspecializedVersion.Type;
-        else
-          return specializedType;
+        if (this.type == null) {
+          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
+          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+        }
+        return this.type;
       }
     }
+    ITypeReference/*?*/ type;
 
     /// <summary>
     /// A compile time constant value that provides the default value for the property. (Who uses this and why?)

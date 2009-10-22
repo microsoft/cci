@@ -529,16 +529,39 @@ namespace Microsoft.Cci {
       //^ ensures unspecializedMember is INestedTypeDefinition ==> result is INestedTypeDefinition;
     {
       IEventDefinition/*?*/ eventDef = unspecializedMember as IEventDefinition;
-      if (eventDef != null) return new SpecializedEventDefinition(eventDef, this, this);
+      if (eventDef != null) {
+        var unspecializedEventDef = eventDef;
+        var specializedEventDef = eventDef as ISpecializedEventDefinition;
+        if (specializedEventDef != null) unspecializedEventDef = specializedEventDef.UnspecializedVersion;
+        return new SpecializedEventDefinition(unspecializedEventDef, eventDef, this, this);
+      }
       IFieldDefinition/*?*/ fieldDef = unspecializedMember as IFieldDefinition;
-      if (fieldDef != null) return new SpecializedFieldDefinition(fieldDef, this, this);
+      if (fieldDef != null) {
+        var unspecializedFieldDef = fieldDef;
+        var specializedFieldDef = fieldDef as ISpecializedFieldDefinition;
+        if (specializedFieldDef != null) unspecializedFieldDef = specializedFieldDef.UnspecializedVersion;
+        return new SpecializedFieldDefinition(unspecializedFieldDef, fieldDef, this, this);
+      }
       IMethodDefinition/*?*/ methodDef = unspecializedMember as IMethodDefinition;
-      if (methodDef != null) return new SpecializedMethodDefinition(methodDef, this, this);
+      if (methodDef != null) {
+        var unspecializedMethodDef = methodDef;
+        var specializedMethodDef = methodDef as ISpecializedMethodDefinition;
+        if (specializedMethodDef != null) unspecializedMethodDef = specializedMethodDef.UnspecializedVersion;
+        return new SpecializedMethodDefinition(unspecializedMethodDef, methodDef, this, this);
+      }
       IPropertyDefinition/*?*/ propertyDef = unspecializedMember as IPropertyDefinition;
-      if (propertyDef != null) return new SpecializedPropertyDefinition(propertyDef, this, this);
+      if (propertyDef != null) {
+        var unspecializedPropertyDef = propertyDef;
+        var specializedPropertyDef = propertyDef as ISpecializedPropertyDefinition;
+        if (specializedPropertyDef != null) unspecializedPropertyDef = specializedPropertyDef.UnspecializedVersion;
+        return new SpecializedPropertyDefinition(unspecializedPropertyDef, propertyDef, this, this);
+      }
       //^ assert unspecializedMember is INestedTypeDefinition;
       INestedTypeDefinition nestedTypeDef = (INestedTypeDefinition)unspecializedMember;
-      return new SpecializedNestedTypeDefinition(nestedTypeDef, this, this, internFactory);
+      var unspecializedTypeDef = nestedTypeDef;
+      var specializedTypeDef = nestedTypeDef as ISpecializedNestedTypeDefinition;
+      if (specializedTypeDef != null) unspecializedTypeDef = specializedTypeDef.UnspecializedVersion;
+      return new SpecializedNestedTypeDefinition(unspecializedTypeDef, nestedTypeDef, this, this, internFactory);
     }
 
     public uint SizeOf {
@@ -1196,10 +1219,10 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="internFactory"></param>
-    protected SpecializedGenericParameter(ParameterType/*!*/ unspecializedParameter, IInternFactory internFactory) {
-      this.unspecializedParameter = unspecializedParameter;
+    protected SpecializedGenericParameter(ParameterType/*!*/ partiallySpecializedParameter, IInternFactory internFactory) {
+      this.unspecializedParameter = partiallySpecializedParameter;
       this.internFactory = internFactory;
     }
 
@@ -1248,10 +1271,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IPlatformType PlatformType {
-      get { return this.UnspecializedParameter.PlatformType; }
+      get { return this.PartiallySpecializedParameter.PlatformType; }
     }
 
-    public ParameterType/*!*/ UnspecializedParameter {
+    public ParameterType/*!*/ PartiallySpecializedParameter {
       get {
         return this.unspecializedParameter;
       }
@@ -1273,7 +1296,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool MustBeReferenceType {
-      get { return this.UnspecializedParameter.MustBeReferenceType; }
+      get { return this.PartiallySpecializedParameter.MustBeReferenceType; }
     }
 
     /// <summary>
@@ -1281,7 +1304,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool MustBeValueType {
-      get { return this.UnspecializedParameter.MustBeValueType; }
+      get { return this.PartiallySpecializedParameter.MustBeValueType; }
     }
 
     /// <summary>
@@ -1289,7 +1312,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool MustHaveDefaultConstructor {
-      get { return this.UnspecializedParameter.MustHaveDefaultConstructor; }
+      get { return this.PartiallySpecializedParameter.MustHaveDefaultConstructor; }
     }
 
     /// <summary>
@@ -1297,7 +1320,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public TypeParameterVariance Variance {
-      get { return this.UnspecializedParameter.Variance; }
+      get { return this.PartiallySpecializedParameter.Variance; }
     }
 
     #endregion
@@ -1309,7 +1332,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ushort Alignment {
-      get { return this.UnspecializedParameter.Alignment; }
+      get { return this.PartiallySpecializedParameter.Alignment; }
     }
 
     /// <summary>
@@ -1333,7 +1356,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ushort GenericParameterCount {
-      get { return this.UnspecializedParameter.GenericParameterCount; }
+      get { return this.PartiallySpecializedParameter.GenericParameterCount; }
     }
 
     /// <summary>
@@ -1341,7 +1364,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsAbstract {
-      get { return this.UnspecializedParameter.IsAbstract; }
+      get { return this.PartiallySpecializedParameter.IsAbstract; }
     }
 
     /// <summary>
@@ -1350,7 +1373,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsClass {
-      get { return this.UnspecializedParameter.IsClass; }
+      get { return this.PartiallySpecializedParameter.IsClass; }
     }
 
     /// <summary>
@@ -1358,7 +1381,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsDelegate {
-      get { return this.UnspecializedParameter.IsDelegate; }
+      get { return this.PartiallySpecializedParameter.IsDelegate; }
     }
 
     /// <summary>
@@ -1366,7 +1389,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsEnum {
-      get { return this.UnspecializedParameter.IsEnum; }
+      get { return this.PartiallySpecializedParameter.IsEnum; }
     }
 
     /// <summary>
@@ -1374,7 +1397,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
-      get { return this.UnspecializedParameter.IsGeneric; }
+      get { return this.PartiallySpecializedParameter.IsGeneric; }
     }
 
     /// <summary>
@@ -1382,7 +1405,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsInterface {
-      get { return this.UnspecializedParameter.IsInterface; }
+      get { return this.PartiallySpecializedParameter.IsInterface; }
     }
 
     /// <summary>
@@ -1392,7 +1415,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsReferenceType {
-      get { return this.UnspecializedParameter.IsReferenceType; }
+      get { return this.PartiallySpecializedParameter.IsReferenceType; }
     }
 
     /// <summary>
@@ -1400,7 +1423,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsSealed {
-      get { return this.UnspecializedParameter.IsSealed; }
+      get { return this.PartiallySpecializedParameter.IsSealed; }
     }
 
     /// <summary>
@@ -1408,7 +1431,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsStatic {
-      get { return this.UnspecializedParameter.IsStatic; }
+      get { return this.PartiallySpecializedParameter.IsStatic; }
     }
 
     /// <summary>
@@ -1418,7 +1441,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsValueType {
-      get { return this.UnspecializedParameter.IsValueType; }
+      get { return this.PartiallySpecializedParameter.IsValueType; }
     }
 
     /// <summary>
@@ -1426,7 +1449,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsStruct {
-      get { return this.UnspecializedParameter.IsStruct; }
+      get { return this.PartiallySpecializedParameter.IsStruct; }
     }
 
     /// <summary>
@@ -1466,7 +1489,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public uint SizeOf {
-      get { return this.UnspecializedParameter.SizeOf; }
+      get { return this.PartiallySpecializedParameter.SizeOf; }
     }
 
     /// <summary>
@@ -1474,7 +1497,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return this.UnspecializedParameter.SecurityAttributes; }
+      get { return this.PartiallySpecializedParameter.SecurityAttributes; }
     }
 
     /// <summary>
@@ -1482,7 +1505,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ITypeReference UnderlyingType {
-      get { return this.UnspecializedParameter.UnderlyingType; }
+      get { return this.PartiallySpecializedParameter.UnderlyingType; }
     }
 
     /// <summary>
@@ -1491,7 +1514,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public PrimitiveTypeCode TypeCode {
-      get { return this.UnspecializedParameter.TypeCode; }
+      get { return this.PartiallySpecializedParameter.TypeCode; }
     }
 
     /// <summary>
@@ -1499,7 +1522,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
-      get { return this.UnspecializedParameter.Locations; }
+      get { return this.PartiallySpecializedParameter.Locations; }
     }
 
     /// <summary>
@@ -1507,7 +1530,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public LayoutKind Layout {
-      get { return this.UnspecializedParameter.Layout; }
+      get { return this.PartiallySpecializedParameter.Layout; }
     }
 
     /// <summary>
@@ -1515,7 +1538,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsSpecialName {
-      get { return this.UnspecializedParameter.IsSpecialName; }
+      get { return this.PartiallySpecializedParameter.IsSpecialName; }
     }
 
     /// <summary>
@@ -1523,7 +1546,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsComObject {
-      get { return this.UnspecializedParameter.IsComObject; }
+      get { return this.PartiallySpecializedParameter.IsComObject; }
     }
 
     /// <summary>
@@ -1531,7 +1554,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsSerializable {
-      get { return this.UnspecializedParameter.IsSerializable; }
+      get { return this.PartiallySpecializedParameter.IsSerializable; }
     }
 
     /// <summary>
@@ -1539,7 +1562,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsBeforeFieldInit {
-      get { return this.UnspecializedParameter.IsBeforeFieldInit; }
+      get { return this.PartiallySpecializedParameter.IsBeforeFieldInit; }
     }
 
     /// <summary>
@@ -1547,7 +1570,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public StringFormatKind StringFormat {
-      get { return this.UnspecializedParameter.StringFormat; }
+      get { return this.PartiallySpecializedParameter.StringFormat; }
     }
 
     /// <summary>
@@ -1555,7 +1578,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool IsRuntimeSpecial {
-      get { return this.UnspecializedParameter.IsRuntimeSpecial; }
+      get { return this.PartiallySpecializedParameter.IsRuntimeSpecial; }
     }
 
     /// <summary>
@@ -1563,7 +1586,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public bool HasDeclarativeSecurity {
-      get { return this.UnspecializedParameter.HasDeclarativeSecurity; }
+      get { return this.PartiallySpecializedParameter.HasDeclarativeSecurity; }
     }
 
     /// <summary>
@@ -1572,7 +1595,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
-      get { return this.UnspecializedParameter.PrivateHelperMembers; }
+      get { return this.PartiallySpecializedParameter.PrivateHelperMembers; }
     }
 
     #endregion
@@ -1584,7 +1607,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return this.UnspecializedParameter.Attributes; }
+      get { return this.PartiallySpecializedParameter.Attributes; }
     }
 
     #endregion
@@ -1607,7 +1630,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ushort Index {
-      get { return this.UnspecializedParameter.Index; }
+      get { return this.PartiallySpecializedParameter.Index; }
     }
 
     #endregion
@@ -1619,7 +1642,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IName Name {
-      get { return this.UnspecializedParameter.Name; }
+      get { return this.PartiallySpecializedParameter.Name; }
     }
 
     #endregion
@@ -1762,11 +1785,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="unspecializedGenericParameter"></param>
+    /// <param name="partiallySpecializedParameter"></param>
     /// <param name="definingTypeInstance"></param>
     /// <param name="internFactory"></param>
-    public SpecializedGenericTypeParameter(IGenericTypeParameter unspecializedGenericParameter, IGenericTypeInstanceReference definingTypeInstance, IInternFactory internFactory)
-      : base(unspecializedGenericParameter, internFactory) {
+    public SpecializedGenericTypeParameter(IGenericTypeParameter partiallySpecializedParameter, IGenericTypeInstanceReference definingTypeInstance, IInternFactory internFactory)
+      : base(partiallySpecializedParameter, internFactory) {
       this.definingType = definingTypeInstance;
     }
 
@@ -1776,10 +1799,17 @@ namespace Microsoft.Cci {
     /// <value></value>
     public override IEnumerable<ITypeReference> Constraints {
       get {
-        foreach (ITypeReference unspecializedConstraint in this.UnspecializedParameter.Constraints)
-          yield return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedConstraint.ResolvedType, this.DefiningType, this.InternFactory);
+        if (this.constraints == null) {
+          var constrs = new List<ITypeReference>();
+          foreach (ITypeReference partiallySpecializedConstraint in this.PartiallySpecializedParameter.Constraints)
+            constrs.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedConstraint, this.DefiningType, this.InternFactory));
+          constrs.TrimExcess();
+          this.constraints = constrs.AsReadOnly();
+        }
+        return this.constraints;
       }
     }
+    IEnumerable<ITypeReference>/*?*/ constraints;
 
     /// <summary>
     /// Calls the visitor.Visit(IGenericTypeParameter) method.
@@ -1827,11 +1857,13 @@ namespace Microsoft.Cci {
     /// 
     /// </summary>
     /// <param name="unspecializedVersion"></param>
+    /// <param name="partiallySpecializedVersion"></param>
     /// <param name="containingGenericTypeInstance"></param>
     /// <param name="containingTypeDefinition"></param>
     /// <param name="internFactory"></param>
-    public SpecializedNestedTypeDefinition(INestedTypeDefinition unspecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance, IInternFactory internFactory) {
+    public SpecializedNestedTypeDefinition(INestedTypeDefinition unspecializedVersion, INestedTypeDefinition partiallySpecializedVersion, ITypeDefinition containingTypeDefinition, GenericTypeInstance containingGenericTypeInstance, IInternFactory internFactory) {
       this.unspecializedVersion = unspecializedVersion;
+      this.partiallySpecializedVersion = partiallySpecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
       this.containingTypeDefinition = containingTypeDefinition;
       this.internFactory = internFactory;
@@ -1844,31 +1876,46 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IEnumerable<ITypeReference> BaseClasses {
       get {
-        foreach (ITypeReference unspecializedBaseClassRef in this.unspecializedVersion.BaseClasses)
-          yield return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedBaseClassRef.ResolvedType, this.containingGenericTypeInstance, this.InternFactory);
+        if (this.baseClasses == null) {
+          var bclasses = new List<ITypeReference>(1);
+          foreach (ITypeReference partiallySpecializedBaseClassRef in this.partiallySpecializedVersion.BaseClasses)
+            bclasses.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedBaseClassRef.ResolvedType, this.containingGenericTypeInstance, this.InternFactory));
+          bclasses.TrimExcess();
+          this.baseClasses = bclasses.AsReadOnly();
+        }
+        return this.baseClasses;
       }
     }
+    IEnumerable<ITypeReference>/*?*/ baseClasses;
 
     /// <summary>
     /// Zero or more parameters that can be used as type annotations.
     /// </summary>
-    /// <value></value>
     public IEnumerable<IGenericTypeParameter> GenericParameters {
       get {
-        foreach (IGenericTypeParameter unspecializedTypeParameter in this.unspecializedVersion.GenericParameters)
-          yield return new SpecializedGenericTypeParameter(unspecializedTypeParameter, this.containingGenericTypeInstance, this.InternFactory);
+        if (this.genericParameters == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.genericParameters == null) {
+              var gpars = new List<IGenericTypeParameter>(this.GenericParameterCount);
+              foreach (IGenericTypeParameter parameter in this.partiallySpecializedVersion.GenericParameters)
+                gpars.Add(new SpecializedGenericTypeParameter(parameter, this.containingGenericTypeInstance, this.InternFactory));
+              this.genericParameters = gpars.AsReadOnly();
+            }
+          }
+        }
+        return this.genericParameters;
       }
-      //TODO: cache this
     }
+    IEnumerable<IGenericTypeParameter>/*?*/ genericParameters;
 
     protected override void InitializeIfNecessary() {
       if (this.initialized) return;
       lock (GlobalLock.LockingObject) {
         if (this.initialized) return;
-        foreach (ITypeDefinitionMember unspecializedMember in this.UnspecializedVersion.Members) {
+        foreach (ITypeDefinitionMember partiallySpecializedMember in this.partiallySpecializedVersion.Members) {
           //^ assume unspecializedMember is IEventDefinition || unspecializedMember is IFieldDefinition || unspecializedMember is IMethodDefinition ||
           //^   unspecializedMember is IPropertyDefinition || unspecializedMember is INestedTypeDefinition; //follows from informal post condition on Members property.
-          this.AddMemberToCache(this.SpecializeMember(unspecializedMember, this.InternFactory));
+          this.AddMemberToCache(this.SpecializeMember(partiallySpecializedMember, this.InternFactory));
         }
         this.initialized = true;
       }
@@ -1894,10 +1941,17 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IEnumerable<ITypeReference> Interfaces {
       get {
-        foreach (ITypeReference unspecializedInterfaceRef in this.unspecializedVersion.Interfaces)
-          yield return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedInterfaceRef.ResolvedType, this.containingGenericTypeInstance, this.InternFactory);
+        if (this.interfaces == null) {
+          var ifaces = new List<ITypeReference>();
+          foreach (ITypeReference partiallySpecializedInterfaceRef in this.partiallySpecializedVersion.Interfaces)
+            ifaces.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedInterfaceRef.ResolvedType, this.containingGenericTypeInstance, this.InternFactory));
+          ifaces.TrimExcess();
+          this.interfaces = ifaces.AsReadOnly();
+        }
+        return this.interfaces;
       }
     }
+    IEnumerable<ITypeReference>/*?*/ interfaces;
 
     /// <summary>
     /// An instance of this generic type that has been obtained by using the generic parameters as the arguments.
@@ -1916,12 +1970,14 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IMethodDefinition>(this.Members); }
     }
 
+    readonly INestedTypeDefinition partiallySpecializedVersion;
+
     /// <summary>
     /// A way to get to platform types such as System.Object.
     /// </summary>
     /// <value></value>
     public IPlatformType PlatformType {
-      get { return this.UnspecializedVersion.PlatformType; }
+      get { return this.partiallySpecializedVersion.PlatformType; }
     }
 
     /// <summary>
@@ -1975,7 +2031,7 @@ namespace Microsoft.Cci {
     public TypeMemberVisibility Visibility {
       get {
         if (this.visibility == TypeMemberVisibility.Default) {
-          this.visibility = TypeHelper.VisibilityIntersection(this.UnspecializedVersion.Visibility,
+          this.visibility = TypeHelper.VisibilityIntersection(this.partiallySpecializedVersion.Visibility,
             TypeHelper.TypeVisibilityAsTypeMemberVisibility(this.ContainingGenericTypeInstance));
         }
         return this.visibility;
@@ -2153,16 +2209,39 @@ namespace Microsoft.Cci {
       //^ ensures unspecializedMember is INestedTypeDefinition ==> result is INestedTypeDefinition;
     {
       IEventDefinition/*?*/ eventDef = unspecializedMember as IEventDefinition;
-      if (eventDef != null) return new SpecializedEventDefinition(eventDef, this, this.ContainingGenericTypeInstance);
+      if (eventDef != null) {
+        var unspecializedEventDef = eventDef;
+        var specializedEventDef = eventDef as ISpecializedEventDefinition;
+        if (specializedEventDef != null) unspecializedEventDef = specializedEventDef.UnspecializedVersion;
+        return new SpecializedEventDefinition(unspecializedEventDef, eventDef, this, this.ContainingGenericTypeInstance);
+      }
       IFieldDefinition/*?*/ fieldDef = unspecializedMember as IFieldDefinition;
-      if (fieldDef != null) return new SpecializedFieldDefinition(fieldDef, this, this.ContainingGenericTypeInstance);
+      if (fieldDef != null) {
+        var unspecializedFieldDef = fieldDef;
+        var specializedFieldDef = fieldDef as ISpecializedFieldDefinition;
+        if (specializedFieldDef != null) unspecializedFieldDef = specializedFieldDef.UnspecializedVersion;
+        return new SpecializedFieldDefinition(unspecializedFieldDef, fieldDef, this, this.ContainingGenericTypeInstance);
+      }
       IMethodDefinition/*?*/ methodDef = unspecializedMember as IMethodDefinition;
-      if (methodDef != null) return new SpecializedMethodDefinition(methodDef, this, this.ContainingGenericTypeInstance);
+      if (methodDef != null) {
+        var unspecializedMethodDef = methodDef;
+        var specializedMethodDef = methodDef as ISpecializedMethodDefinition;
+        if (specializedMethodDef != null) unspecializedMethodDef = specializedMethodDef.UnspecializedVersion;
+        return new SpecializedMethodDefinition(unspecializedMethodDef, methodDef, this, this.ContainingGenericTypeInstance);
+      }
       IPropertyDefinition/*?*/ propertyDef = unspecializedMember as IPropertyDefinition;
-      if (propertyDef != null) return new SpecializedPropertyDefinition(propertyDef, this, this.ContainingGenericTypeInstance);
+      if (propertyDef != null) {
+        var unspecializedPropertyDef = propertyDef;
+        var specializedPropertyDef = propertyDef as ISpecializedPropertyDefinition;
+        if (specializedPropertyDef != null) unspecializedPropertyDef = specializedPropertyDef.UnspecializedVersion;
+        return new SpecializedPropertyDefinition(unspecializedPropertyDef, propertyDef, this, this.ContainingGenericTypeInstance);
+      }
       //^ assert unspecializedMember is INestedTypeDefinition;
       INestedTypeDefinition nestedTypeDef = (INestedTypeDefinition)unspecializedMember;
-      return new SpecializedNestedTypeDefinition(nestedTypeDef, this, this.ContainingGenericTypeInstance, internFactory);
+      var unspecializedTypeDef = nestedTypeDef;
+      var specializedTypeDef = nestedTypeDef as ISpecializedNestedTypeDefinition;
+      if (specializedTypeDef != null) unspecializedTypeDef = specializedTypeDef.UnspecializedVersion;
+      return new SpecializedNestedTypeDefinition(unspecializedTypeDef, nestedTypeDef, this, this.ContainingGenericTypeInstance, internFactory);
     }
 
     /// <summary>
@@ -2321,7 +2400,7 @@ namespace Microsoft.Cci {
     #region INamedTypeReference Members
 
     public bool MangleName {
-      get { return this.unspecializedVersion.MangleName; }
+      get { return this.UnspecializedVersion.MangleName; }
     }
 
     public INamedTypeDefinition ResolvedType {
