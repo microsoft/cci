@@ -22,6 +22,11 @@ namespace Microsoft.Cci.Pdb {
         this.value = tag1;
       } else if (tag2 == 0x80) {
         switch (tag1) {
+          case 0x00: //sbyte
+            sbyte sb;
+            bits.ReadInt8(out sb);
+            this.value = sb;
+            break;
           case 0x01: //short
             short s;
             bits.ReadInt16(out s);
@@ -68,7 +73,7 @@ namespace Microsoft.Cci.Pdb {
             break;
           default:
             //TODO: error
-            break; 
+            break;
         }
       } else {
         //TODO: error

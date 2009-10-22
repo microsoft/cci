@@ -85,6 +85,11 @@ namespace Microsoft.Cci.Pdb {
       offset += 2;
     }
 
+    internal void ReadInt8(out sbyte value) {
+      value = (sbyte)buffer[offset];
+      offset += 1;
+    }
+
     internal void ReadInt32(out int value) {
       value = (int)((buffer[offset + 0] & 0xFF) |
                           (buffer[offset + 1] << 8) |
