@@ -3762,7 +3762,11 @@ namespace Microsoft.Cci {
         this.SerializeSignature(functionPointerTypeReference, 0, functionPointerTypeReference.ExtraArgumentTypes, writer);
         return;
       } else if (typeKey == platformType.SystemObject.InternedKey) {
-        writer.WriteByte(0x1c); return;
+        if (noTokens)
+          writer.WriteByte(0x51);
+        else
+          writer.WriteByte(0x1c);
+        return;
       } else if (arrayTypeReference != null && arrayTypeReference.IsVector) {
         writer.WriteByte(0x1d); this.SerializeTypeReference(arrayTypeReference.ElementType, writer, noTokens); return;
       } else if ((genericMethodParameterReference = typeReference as IGenericMethodParameterReference) != null) {
