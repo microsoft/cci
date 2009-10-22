@@ -4591,7 +4591,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsOut {
-      get { return false; }
+      get { return true; }
     }
 
     public bool IsParameterArray {
