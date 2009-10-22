@@ -145,7 +145,12 @@ namespace CSharpSourceEmitter {
 
     public override void Visit(IBoundExpression boundExpression) {
       if (boundExpression.Instance != null) {
-        this.Visit(boundExpression.Instance);
+        IAddressOf/*?*/ addressOf = boundExpression.Instance as IAddressOf;
+        if (addressOf != null && addressOf.Expression.Type.IsValueType) {
+          this.Visit(addressOf.Expression);
+        } else {
+          this.Visit(boundExpression.Instance);
+        }
         this.PrintToken(CSharpToken.Dot);
       }
       ILocalDefinition/*?*/ local = boundExpression.Definition as ILocalDefinition;
@@ -413,7 +418,12 @@ namespace CSharpSourceEmitter {
     public override void Visit(IMethodCall methodCall) {
       NameFormattingOptions options = NameFormattingOptions.None;
       if (!methodCall.IsStaticCall) {
-        this.Visit(methodCall.ThisArgument);
+        IAddressOf/*?*/ addressOf = methodCall.ThisArgument as IAddressOf;
+        if (addressOf != null) {
+          this.Visit(addressOf.Expression);
+        } else {
+          this.Visit(methodCall.ThisArgument);
+        }
         this.PrintToken(CSharpToken.Dot);
         options |= NameFormattingOptions.OmitContainingNamespace|NameFormattingOptions.OmitContainingType;
       }
