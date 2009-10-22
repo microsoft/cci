@@ -147,7 +147,7 @@ using System.Reflection;
     </ItemGroup>
     <Exec
       WorkingDirectory="$(BinReleaseDirectory)"
-      Command="%(TestReleaseAssembly.FileName).%(TestReleaseAssembly.FileExtension)') /xml ..\%(TestReleaseAssembly.FileName).dbg.results.xml" />
+      Command="%(TestReleaseAssembly.FileName).%(TestReleaseAssembly.FileExtension) /xml ..\%(TestReleaseAssembly.FileName).dbg.results.xml" />
   </Target>
 
   <Target Name="CreateReleaseZips">
