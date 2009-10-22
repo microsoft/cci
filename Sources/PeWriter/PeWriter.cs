@@ -3452,7 +3452,10 @@ namespace Microsoft.Cci {
               writer.WriteInt(-1); //null array
             else if (c.Type.TypeCode == PrimitiveTypeCode.String)
               writer.WriteString((string)c.Value);
-            else
+            else if (TypeHelper.TypesAreEquivalent(c.Type, this.host.PlatformType.SystemType)) {
+              Debug.Assert(c.Value == null);
+              writer.WriteByte(0xFF); //null string
+            } else
               SerializeMetadataConstantValue(c.Value, writer);
           } else {
             //TODO: error
