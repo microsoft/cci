@@ -404,7 +404,8 @@ namespace ModuleReaderTests {
 
     private static void LogAssemblyFile(string name, string path)
     {
-        Console.WriteLine("{0}: {1} - {2}", name, path, File.Exists(path) ? "exists" : "not found!");
+        if (!File.Exists(path))
+          Console.WriteLine("{0}: {1} - not found", name, path);
     }
 
     public void MRW_AssemblyTests() {
@@ -429,6 +430,7 @@ namespace ModuleReaderTests {
 
     [Fact]
     public void MetadataReaderTests() {
+      System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
       this.MRW_AssemblyTests();
       this.MRW_TypeTests();
       this.MRW_TypeMemberTests();
