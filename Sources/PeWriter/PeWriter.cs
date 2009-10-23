@@ -951,10 +951,18 @@ namespace Microsoft.Cci {
     }
 
     private static string GetMangledName(INamedTypeReference namedType) {
-      string unmangledName = namedType.Name.Value;
-      if (!namedType.MangleName) return unmangledName;
-      if (namedType.GenericParameterCount == 0) return unmangledName;
-      return unmangledName+'`'+namedType.GenericParameterCount;
+      string needsEscaping = "\\[]*.+,&=";
+      StringBuilder mangledName = new StringBuilder();
+      foreach (var ch in namedType.Name.Value) {
+        if (needsEscaping.IndexOf(ch) >= 0)
+          mangledName.Append('\\');
+        mangledName.Append(ch);
+      }
+      if (namedType.MangleName && namedType.GenericParameterCount > 0) {
+        mangledName.Append('`');
+        mangledName.Append(namedType.GenericParameterCount);
+      }
+      return mangledName.ToString();
     }
 
     private static ushort GetMappingFlags(IPlatformInvokeInformation platformInvokeInformation) {
