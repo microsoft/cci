@@ -253,7 +253,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsCompileTimeConstant {
-      get { return this.compileTimeValue != Dummy.Constant; }
+      get { return (this.flags & 0x40000000) != 0; }
+      set {
+        if (value)
+          this.flags |= 0x40000000;
+        else
+          this.flags &= ~0x40000000;
+      }
     }
 
     /// <summary>
@@ -277,20 +283,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsNotSerialized {
-      get { return (this.flags & 0x40000000) != 0; }
-      set {
-        if (value)
-          this.flags |= 0x40000000;
-        else
-          this.flags &= ~0x40000000;
-      }
-    }
-
-    /// <summary>
-    /// This field can only be read. Initialization takes place in a constructor.
-    /// </summary>
-    /// <value></value>
-    public bool IsReadOnly {
       get { return (this.flags & 0x20000000) != 0; }
       set {
         if (value)
@@ -301,14 +293,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// True if the field gets special treatment from the runtime.
+    /// This field can only be read. Initialization takes place in a constructor.
     /// </summary>
     /// <value></value>
-    public bool IsRuntimeSpecial {
+    public bool IsReadOnly {
       get { return (this.flags & 0x10000000) != 0; }
-      set
-        //^ requires !value || this.IsSpecialName;
-      {
+      set {
         if (value)
           this.flags |= 0x10000000;
         else
@@ -317,12 +307,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// This field is special in some way, as specified by the name.
+    /// True if the field gets special treatment from the runtime.
     /// </summary>
     /// <value></value>
-    public bool IsSpecialName {
+    public bool IsRuntimeSpecial {
       get { return (this.flags & 0x08000000) != 0; }
-      set {
+      set
+        //^ requires !value || this.IsSpecialName;
+      {
         if (value)
           this.flags |= 0x08000000;
         else
@@ -331,16 +323,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// This field is static (shared by all instances of its declaring type).
+    /// This field is special in some way, as specified by the name.
     /// </summary>
     /// <value></value>
-    public bool IsStatic {
+    public bool IsSpecialName {
       get { return (this.flags & 0x04000000) != 0; }
       set {
         if (value)
           this.flags |= 0x04000000;
         else
           this.flags &= ~0x04000000;
+      }
+    }
+
+    /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    /// <value></value>
+    public bool IsStatic {
+      get { return (this.flags & 0x02000000) != 0; }
+      set {
+        if (value)
+          this.flags |= 0x02000000;
+        else
+          this.flags &= ~0x02000000;
       }
     }
 
