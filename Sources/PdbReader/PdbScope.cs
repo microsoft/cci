@@ -94,8 +94,9 @@ namespace Microsoft.Cci.Pdb {
             break;
 
           default:
-            throw new PdbException("Unknown SYM in scope {0}", (SYM)rec);
-          // bits.Position = stop;
+            //throw new PdbException("Unknown SYM in scope {0}", (SYM)rec);
+            bits.Position = stop;
+            break;
         }
       }
 
