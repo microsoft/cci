@@ -951,7 +951,14 @@ namespace Microsoft.Cci {
     }
 
     private static string GetMangledName(INamedTypeReference namedType) {
-      string needsEscaping = "\\[]*.+,&=";
+      string unmangledName = namedType.Name.Value;
+      if (!namedType.MangleName) return unmangledName;
+      if (namedType.GenericParameterCount == 0) return unmangledName;
+      return unmangledName+'`'+namedType.GenericParameterCount;
+    }
+
+    private static string GetMangledAndEscapedName(INamedTypeReference namedType) {
+      string needsEscaping = "\\[]*.+,& ";
       StringBuilder mangledName = new StringBuilder();
       foreach (var ch in namedType.Name.Value) {
         if (needsEscaping.IndexOf(ch) >= 0)
@@ -3571,14 +3578,14 @@ namespace Microsoft.Cci {
           sb.Append(TypeHelper.GetNamespaceName(nsType.ContainingUnitNamespace, NameFormattingOptions.None));
           sb.Append('.');
         }
-        sb.Append(GetMangledName(nsType));
+        sb.Append(GetMangledAndEscapedName(nsType));
         goto done;
       }
       INestedTypeReference/*?*/ neType = typeReference as INestedTypeReference;
       if (neType != null) {
         sb.Append(this.GetSerializedTypeName(neType.ContainingType));
         sb.Append('+');
-        sb.Append(GetMangledName(neType));
+        sb.Append(GetMangledAndEscapedName(neType));
         goto done;
       }
       IGenericTypeInstanceReference/*?*/ instance = typeReference as IGenericTypeInstanceReference;
