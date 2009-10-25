@@ -336,10 +336,10 @@ namespace Microsoft.Cci {
     internal void WriteCompressedUInt(uint val) {
       if (val <= 0x7f)
         this.WriteByte((byte)val);
-      else if (val < 0x3fff) {
+      else if (val <= 0x3fff) {
         this.WriteByte((byte)((val >> 8)|0x80));
         this.WriteByte((byte)(val & 0xff));
-      } else if (val < 0x1fffffff) {
+      } else if (val <= 0x1fffffff) {
         this.WriteByte((byte)((val >> 24)|0xc0));
         this.WriteByte((byte)((val & 0xff0000)>>16));
         this.WriteByte((byte)((val & 0xff00)>>8));
