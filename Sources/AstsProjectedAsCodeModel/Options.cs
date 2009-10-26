@@ -95,22 +95,40 @@ namespace Microsoft.Cci.Ast {
           // allow URL syntax
           string s = arg.Replace('/', '\\');
           // allow wildcards
-          string path = (s.IndexOf('\\')<0) ? ".\\" : Path.GetDirectoryName(s);
-          string pattern = Path.GetFileName(s);
-          string extension = Path.HasExtension(pattern) ? Path.GetExtension(pattern) : "";
-          bool notAFile = true;
-          if (path != null && Directory.Exists(path)) {
-            foreach (string file in Directory.GetFiles(path, pattern)) {
-              string ext = Path.HasExtension(file) ? Path.GetExtension(file) : "";
-              if (string.Compare(extension, ext, true, System.Globalization.CultureInfo.InvariantCulture) != 0) continue;
-              this.options.FileNames.Add(Path.GetFullPath(file));
-              notAFile = false;
+          try {
+            string path = (s.IndexOf('\\') < 0) ? ".\\" : Path.GetDirectoryName(s);
+            string pattern = Path.GetFileName(s);
+            string extension = Path.HasExtension(pattern) ? Path.GetExtension(pattern) : "";
+            bool notAFile = true;
+            if (path != null && Directory.Exists(path)) {
+              foreach (string file in Directory.GetFiles(path, pattern)) {
+                string ext = Path.HasExtension(file) ? Path.GetExtension(file) : "";
+                if (string.Compare(extension, ext, true, System.Globalization.CultureInfo.InvariantCulture) != 0) continue;
+                this.options.FileNames.Add(Path.GetFullPath(file));
+                notAFile = false;
+              }
             }
-          }
-          if (notAFile && this.DirectoryIsOk(path, pattern, extension))
-            continue;
-          if (notAFile && oneOrMoreSourceFilesExpected) {
-            this.ReportError(Error.SourceFileNotRead, arg, this.LocalizedNoSuchFile(arg));
+
+            if (notAFile && this.DirectoryIsOk(path, pattern, extension))
+              continue;
+            if (notAFile && oneOrMoreSourceFilesExpected) {
+              this.ReportError(Error.SourceFileNotRead, arg, this.LocalizedNoSuchFile(arg));
+              gaveFileNotFoundError = true;
+            }
+          } catch (ArgumentException exc) {
+            this.ReportError(Error.InvalidFileOrPath, s, exc.Message);
+            gaveFileNotFoundError = true;
+          } catch (System.IO.IOException exc) {
+            this.ReportError(Error.InvalidFileOrPath, s, exc.Message);
+            gaveFileNotFoundError = true;
+          } catch (NotSupportedException exc) {
+            this.ReportError(Error.InvalidFileOrPath, s, exc.Message);
+            gaveFileNotFoundError = true;
+          } catch (System.Security.SecurityException exc) {
+            this.ReportError(Error.InvalidFileOrPath, s, exc.Message);
+            gaveFileNotFoundError = true;
+          } catch (UnauthorizedAccessException exc) {
+            this.ReportError(Error.InvalidFileOrPath, s, exc.Message);
             gaveFileNotFoundError = true;
           }
         }

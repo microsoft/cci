@@ -221,6 +221,11 @@ namespace Microsoft.Cci.Ast {
     InvalidCompilerOption,
 
     /// <summary>
+    /// Error while accessing file or path '{0}' - {1}
+    /// </summary>
+    InvalidFileOrPath,
+
+    /// <summary>
     /// '{0}' is a binary file instead of a source code file.
     /// </summary>
     IsBinaryFile,

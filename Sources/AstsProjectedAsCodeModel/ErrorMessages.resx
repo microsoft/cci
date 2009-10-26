@@ -249,4 +249,8 @@
   <data name="UndefinedOperationOnVoidPointers" xml:space="preserve">
     <value>The operation in question is undefined on void pointers.</value>
   </data>
+  <data name="InvalidFileOrPath" xml:space="preserve">
+    <value>Error while accessing file or path '{0}' -  {1}</value>
+    <comment>The trailing '.' comes from the exception's message</comment>
+  </data>
 </root>
