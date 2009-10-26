@@ -116,6 +116,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
+    /// </summary>
+    public virtual bool IsRetargetable {
+      [DebuggerNonUserCode]
+      get { return false; } //TODO: get from options or an attribute
+    }
+
+    /// <summary>
     /// The kind of metadata stored in the module. For example whether the module is an executable or a manifest resource file.
     /// </summary>
     public override ModuleKind Kind {
@@ -262,6 +270,14 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
+    /// </summary>
+    public virtual bool IsRetargetable {
+      [DebuggerNonUserCode]
+      get { return this.ResolvedAssembly.IsRetargetable; }
     }
 
     /// <summary>
