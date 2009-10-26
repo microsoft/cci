@@ -693,6 +693,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
 
   internal enum AssemblyFlags : uint {
     PublicKey = 0x00000001,
+    Retargetable = 0x00000100
   }
 
   internal enum ManifestResourceFlags : uint {

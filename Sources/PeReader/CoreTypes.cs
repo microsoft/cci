@@ -9,6 +9,7 @@ using Microsoft.Cci.MetadataReader.PEFile;
 
 namespace Microsoft.Cci.MetadataReader {
   using Microsoft.Cci.MetadataReader.ObjectModelImplementation;
+  using Microsoft.Cci.MetadataReader.PEFileFlags;
 
   /// <summary>
   /// These types can all be implicitly referenced in IL and metadata and hence need special treatment.
@@ -156,7 +157,7 @@ namespace Microsoft.Cci.MetadataReader {
         AssemblyReference/*?*/ coreAssemblyRef = peFileToObjectModel.FindAssemblyReference(peReader.metadataReaderHost.CoreAssemblySymbolicIdentity);
         if (coreAssemblyRef == null) {
           //  Error...
-          coreAssemblyRef = new AssemblyReference(peFileToObjectModel, 0, peReader.metadataReaderHost.CoreAssemblySymbolicIdentity);
+          coreAssemblyRef = new AssemblyReference(peFileToObjectModel, 0, peReader.metadataReaderHost.CoreAssemblySymbolicIdentity, AssemblyFlags.Retargetable);
         }
         uint coreAssemblyRefToken = coreAssemblyRef.TokenValue;
         for (uint i = 1; i <= numberOfTypeRefs; ++i) {

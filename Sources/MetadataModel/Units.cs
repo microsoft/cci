@@ -117,6 +117,11 @@ namespace Microsoft.Cci {
     string Culture { get; }
 
     /// <summary>
+    /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
+    /// </summary>
+    bool IsRetargetable { get; }
+
+    /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
     /// </summary>
     IEnumerable<byte> PublicKeyToken { get; }
@@ -569,8 +574,15 @@ namespace Microsoft.Cci {
     /// </summary>
     //^ [Confined]
     public sealed override int GetHashCode() {
-      if (this.hashCode == null)
-        this.hashCode = ObjectModelHelper.CaseInsensitiveStringHash(this.ToString());
+      if (this.hashCode == null) {
+        int hash = this.Name.UniqueKeyIgnoringCase;
+        hash = (hash << 8) ^ (this.version.Major << 6) ^ (this.version.Minor << 4) ^ (this.version.MajorRevision << 2) ^ this.version.MinorRevision;
+        if (this.Culture.Length > 0)
+          hash = (hash << 4) ^ ObjectModelHelper.CaseInsensitiveStringHash(this.Culture);
+        foreach (byte b in this.PublicKeyToken)
+          hash = (hash << 1) ^ b;
+        this.hashCode = hash;
+      }
       return (int)this.hashCode;
     }
     int? hashCode = null;

@@ -104,6 +104,8 @@ namespace Microsoft.Cci {
       } else {
         sb.Append("null");
       }
+      if (assemblyReference.IsRetargetable)
+        sb.Append(", Retargetable=Yes");
       return sb.ToString();
     }
 

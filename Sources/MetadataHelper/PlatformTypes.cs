@@ -29,6 +29,18 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Allocates a reference to a .NET assembly.
+    /// </summary>
+    /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
+    /// <param name="assemblyIdentity">The identity of the referenced assembly.</param>
+    /// <param name="isRetargetable">True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.</param>
+    public AssemblyReference(IMetadataHost host, AssemblyIdentity assemblyIdentity, bool isRetargetable) {
+      this.host = host;
+      this.assemblyIdentity = assemblyIdentity;
+      this.isRetargetable = isRetargetable;
+    }
+
+    /// <summary>
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
     public IEnumerable<IName> Aliases {
@@ -76,6 +88,16 @@ namespace Microsoft.Cci {
     /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
     /// </summary>
     readonly IMetadataHost host;
+
+    /// <summary>
+    /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
+    /// </summary>
+    /// <value></value>
+    public bool IsRetargetable {
+      get { return this.isRetargetable; }
+      set { this.isRetargetable = value; }
+    }
+    bool isRetargetable;
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this AssemblyReference instance.

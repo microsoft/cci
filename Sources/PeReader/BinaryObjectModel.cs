@@ -551,6 +551,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public bool IsRetargetable {
+      get { return (this.AssemblyFlags & AssemblyFlags.Retargetable) != 0; }
+    }
+
     internal override uint TokenValue {
       get { return TokenTypeIds.Assembly | (uint)0x00000001; }
     }
@@ -782,15 +786,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class AssemblyReference : MetadataObject, IAssemblyReference, IModuleModuleReference {
     readonly uint AssemblyRefRowId;
     internal readonly AssemblyIdentity AssemblyIdentity;
+    AssemblyFlags AssemblyFlags;
 
     internal AssemblyReference(
       PEFileToObjectModel peFileToObjectModel,
       uint assemblyRefRowId,
-      AssemblyIdentity assemblyIdentity
+      AssemblyIdentity assemblyIdentity,
+      AssemblyFlags assemblyFlags
     )
       : base(peFileToObjectModel) {
       this.AssemblyRefRowId = assemblyRefRowId;
       this.AssemblyIdentity = assemblyIdentity;
+      this.AssemblyFlags = assemblyFlags;
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -806,6 +813,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
     private uint internedId;
+
+    public bool IsRetargetable {
+      get { return (this.AssemblyFlags & AssemblyFlags.Retargetable) != 0; }
+    }
 
     internal IAssembly ResolvedAssembly {
       get {

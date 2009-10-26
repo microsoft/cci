@@ -672,14 +672,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class AssemblyQualifiedTypeName : TypeName {
-    internal TypeName TypeName;
-    internal readonly AssemblyIdentity AssemblyIdentity;
+    private TypeName TypeName;
+    private readonly AssemblyIdentity AssemblyIdentity;
+    private readonly bool Retargetable;
+
     internal AssemblyQualifiedTypeName(
       TypeName typeName,
-      AssemblyIdentity assemblyIdentity
+      AssemblyIdentity assemblyIdentity,
+      bool retargetable
     ) {
       this.TypeName = typeName;
       this.AssemblyIdentity = assemblyIdentity;
+      this.Retargetable = retargetable;
     }
 
     internal override IModuleTypeReference/*?*/ GetAsTypeReference(
@@ -692,8 +696,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
       if (module.ContainingAssembly.AssemblyIdentity.Equals(this.AssemblyIdentity))
         return this.TypeName.GetAsTypeReference(peFileToObjectModel, module);
-
-      return this.TypeName.GetAsTypeReference(peFileToObjectModel, new AssemblyReference(peFileToObjectModel, 0, this.AssemblyIdentity));
+      AssemblyFlags flags = this.Retargetable ? AssemblyFlags.Retargetable : (AssemblyFlags)0;
+      return this.TypeName.GetAsTypeReference(peFileToObjectModel, new AssemblyReference(peFileToObjectModel, 0, this.AssemblyIdentity, flags));
     }
 
   }
@@ -732,6 +736,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly string TypeName;
     readonly int Length;
     readonly IName Version;
+    readonly IName Retargetable;
     readonly IName PublicKeyToken;
     readonly IName Culture;
     readonly IName neutral;
@@ -802,6 +807,19 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
       this.CurrentIndex = endMark;
       return vers;
+    }
+    bool ScanBoolean() {
+      this.SkipSpaces();
+      int currPtr = this.CurrentIndex;
+      string name = this.TypeName;
+      if (currPtr + 4 <= this.Length && string.Compare(name.Substring(currPtr, 4), "true", StringComparison.OrdinalIgnoreCase) == 0) {
+        this.CurrentIndex += 4;
+        return true;
+      }
+      if (currPtr + 5 <= this.Length && string.Compare(name.Substring(currPtr, 5), "false", StringComparison.OrdinalIgnoreCase) == 0) {
+        this.CurrentIndex += 5;
+      }
+      return false;
     }
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
     byte[] ScanPublicKeyToken() {
@@ -915,6 +933,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.TypeName = typeName;
       this.Length = typeName.Length;
       this.Version = nameTable.GetNameFor("Version");
+      this.Retargetable = nameTable.GetNameFor("Retargetable");
       this.PublicKeyToken = nameTable.GetNameFor("PublicKeyToken");
       this.Culture = nameTable.GetNameFor("Culture");
       this.neutral = nameTable.GetNameFor("neutral");
@@ -1039,7 +1058,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
       return typeName;
     }
-    AssemblyIdentity/*?*/ ParseAssemblyName() {
+    AssemblyIdentity/*?*/ ParseAssemblyName(out bool retargetable) {
+      retargetable = false;
       if (this.CurrentTypeNameTokenKind != TypeNameTokenKind.Identifier) {
         return null;
       }
@@ -1050,6 +1070,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       bool pkTokenRead = false;
       byte[] publicKeyToken = TypeCache.EmptyByteArray;
       bool cultureRead = false;
+      bool retargetableRead = false;
       IName culture = this.NameTable.EmptyName;
       while (this.CurrentTypeNameTokenKind == TypeNameTokenKind.Comma) {
         this.NextToken(true);
@@ -1081,6 +1102,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           //if (IteratorHelper.EnumerableIsEmpty(publicKeyToken))
           //  return null;
           pkTokenRead = true;
+        } else if (infoIdent.UniqueKeyIgnoringCase == this.Retargetable.UniqueKeyIgnoringCase) {
+          if (retargetableRead)
+            return null;
+          retargetable = this.ScanBoolean();
         } else {
           //  TODO: Error: Identifier in assembly name.
           while (this.CurrentTypeNameTokenKind != TypeNameTokenKind.Comma && this.CurrentTypeNameTokenKind != TypeNameTokenKind.CloseBracket && this.CurrentTypeNameTokenKind != TypeNameTokenKind.EOS) {
@@ -1098,10 +1123,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return null;
       if (this.CurrentTypeNameTokenKind == TypeNameTokenKind.Comma) {
         this.NextToken(true);
-        AssemblyIdentity/*?*/ assemIdentity = this.ParseAssemblyName();
+        bool retargetable = false;
+        AssemblyIdentity/*?*/ assemIdentity = this.ParseAssemblyName(out retargetable);
         if (assemIdentity == null)
           return null;
-        tn = new AssemblyQualifiedTypeName(tn, assemIdentity);
+        tn = new AssemblyQualifiedTypeName(tn, assemIdentity, retargetable);
       }
       return tn;
     }

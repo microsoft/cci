@@ -37,7 +37,7 @@ namespace Microsoft.Cci {
     }
 
     Dictionary<AssemblyIdentity, uint> assemblyRefIndex = new Dictionary<AssemblyIdentity, uint>();
-    List<AssemblyIdentity> assemblyRefList = new List<AssemblyIdentity>();
+    List<IAssemblyReference> assemblyRefList = new List<IAssemblyReference>();
     Dictionary<byte[], uint> blobIndex = new Dictionary<byte[], uint>(new ByteArrayComparer());
     BinaryWriter blobWriter = new BinaryWriter(new MemoryStream(1024), true);
     ClrHeader clrHeader = new ClrHeader();
@@ -542,7 +542,7 @@ namespace Microsoft.Cci {
       foreach (IAssemblyReference assemblyRef in this.module.AssemblyReferences) {
         AssemblyIdentity unifiedAssembly = assemblyRef.UnifiedAssemblyIdentity;
         if (!this.assemblyRefIndex.ContainsKey(unifiedAssembly)) {
-          this.assemblyRefList.Add(unifiedAssembly);
+          this.assemblyRefList.Add(assemblyRef);
           this.assemblyRefIndex.Add(unifiedAssembly, (uint)this.assemblyRefList.Count);
         }
       }
@@ -744,7 +744,7 @@ namespace Microsoft.Cci {
       uint result;
       if (this.assemblyRefIndex.TryGetValue(unifiedAssembly, out result)) return result;
       Debug.Assert(!this.tableIndicesAreComplete);
-      this.assemblyRefList.Add(unifiedAssembly);
+      this.assemblyRefList.Add(assemblyReference);
       this.assemblyRefIndex.Add(unifiedAssembly, (uint)this.assemblyRefList.Count);
       return result;
     }
@@ -1768,7 +1768,7 @@ namespace Microsoft.Cci {
     }
 
     private void PopulateAssemblyRefTableRows() {
-      foreach (AssemblyIdentity assemblyRef in this.assemblyRefList) {
+      foreach (var assemblyRef in this.assemblyRefList) {
         AssemblyRefTableRow r = new AssemblyRefTableRow();
         r.Version = assemblyRef.Version;
         if (IteratorHelper.EnumerableIsNotEmpty(assemblyRef.PublicKeyToken))
@@ -1777,12 +1777,13 @@ namespace Microsoft.Cci {
           r.PublicKeyToken = 0;
         r.Name = this.GetStringIndex(assemblyRef.Name.Value);
         r.Culture = this.GetStringIndex(assemblyRef.Culture);
+        r.IsRetargetable = assemblyRef.IsRetargetable;
         this.assemblyRefTable.Add(r);
       }
       this.tableSizes[(uint)TableIndices.AssemblyRef] = (uint)this.assemblyRefTable.Count;
     }
 
-    struct AssemblyRefTableRow { public Version Version; public uint PublicKeyToken; public StringIdx Name; public StringIdx Culture;}
+    struct AssemblyRefTableRow { public Version Version; public uint PublicKeyToken; public StringIdx Name; public StringIdx Culture; public bool IsRetargetable;}
     List<AssemblyRefTableRow> assemblyRefTable = new List<AssemblyRefTableRow>();
 
     private void PopulateAssemblyTableRows() {
@@ -2829,7 +2830,11 @@ namespace Microsoft.Cci {
         writer.WriteUshort((ushort)assemblyRef.Version.Minor);
         writer.WriteUshort((ushort)assemblyRef.Version.Build);
         writer.WriteUshort((ushort)assemblyRef.Version.Revision);
-        writer.WriteUint(0); //flags: reference has token, not full public key
+        //flags: reference has token, not full public key
+        if (assemblyRef.IsRetargetable)
+          writer.WriteUint(0x100);
+        else
+          writer.WriteUint(0);
         SerializeIndex(writer, assemblyRef.PublicKeyToken, this.blobIndexSize);
         this.SerializeIndex(writer, assemblyRef.Name, this.stringIndexSize);
         this.SerializeIndex(writer, assemblyRef.Culture, this.stringIndexSize);

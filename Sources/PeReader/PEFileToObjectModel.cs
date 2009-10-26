@@ -508,7 +508,7 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
         AssemblyIdentity assemblyIdentity = new AssemblyIdentity(assemblyRefName, cultureName.Value, version, publicKeyTokenArray, string.Empty);
-        AssemblyReference assemblyReference = new AssemblyReference(this, i, assemblyIdentity);
+        AssemblyReference assemblyReference = new AssemblyReference(this, i, assemblyIdentity, assemblyRefRow.Flags);
         assemblyRefList[i] = assemblyReference;
       }
       //^ NonNullType.AssertInitialized(assemblyRefList);

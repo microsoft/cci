@@ -25,6 +25,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.exportedTypes = new List<IAliasForType>();
       this.flags = 0;
       this.files = new List<IFileReference>();
+      this.isRetargetable = false;
       this.memberModules = new List<IModule>();
       this.moduleName = Dummy.Name;
       this.publicKey = new byte[0];
@@ -45,6 +46,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.exportedTypes = new List<IAliasForType>(assembly.ExportedTypes);
       this.flags = assembly.Flags;
       this.files = new List<IFileReference>(assembly.Files);
+      this.isRetargetable = assembly.IsRetargetable;
       this.memberModules = new List<IModule>(assembly.MemberModules);
       this.moduleName = assembly.ModuleName;
       this.publicKey = assembly.PublicKey;
@@ -120,6 +122,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.files = value; }
     }
     List<IFileReference> files;
+
+    /// <summary>
+    /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
+    /// </summary>
+    public bool IsRetargetable {
+      get { return this.isRetargetable; }
+      set { this.isRetargetable = value; }
+    }
+    bool isRetargetable;
 
     /// <summary>
     /// A list of the modules that constitute the assembly.
@@ -294,6 +305,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.aliases = new List<IName>();
       this.ResolvedModule = this.resolvedAssembly = Dummy.Assembly;
       this.culture = string.Empty;
+      this.isRetargetable = false;
       this.publicKeyToken = new List<byte>();
       this.version = new Version(0, 0);
       this.ModuleIdentity = this.assemblyIdentity = Dummy.Assembly.AssemblyIdentity;
@@ -310,6 +322,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.aliases = new List<IName>(assemblyReference.Aliases);
       this.ResolvedModule = this.resolvedAssembly = assemblyReference.ResolvedAssembly;
       this.culture = assemblyReference.Culture;
+      this.isRetargetable = assemblyReference.IsRetargetable;
       this.publicKeyToken = new List<byte>(assemblyReference.PublicKeyToken);
       this.version = assemblyReference.Version;
       this.ModuleIdentity = this.assemblyIdentity = assemblyReference.AssemblyIdentity;
@@ -346,6 +359,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.culture = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
     }
     string culture;
+
+    /// <summary>
+    /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
+    /// </summary>
+    public bool IsRetargetable {
+      get { return this.isRetargetable; }
+      set { this.isRetargetable = value; }
+    }
+    bool isRetargetable;
 
     /// <summary>
     /// The name of the referenced assembly.

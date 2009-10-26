@@ -922,6 +922,10 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
     }
 
+    public bool IsRetargetable {
+      get { return false; }
+    }
+
     public IAssembly ResolvedAssembly {
       get { return this; }
     }
@@ -5301,7 +5305,6 @@ namespace Microsoft.Cci {
 
     #endregion
 
-
     #region IAssemblyReference Members
 
     public IAssembly ResolvedAssembly {
@@ -5310,6 +5313,10 @@ namespace Microsoft.Cci {
 
     public AssemblyIdentity AssemblyIdentity {
       get { return Dummy.Assembly.AssemblyIdentity; }
+    }
+
+    public bool IsRetargetable {
+      get { return false; }
     }
 
     public AssemblyIdentity UnifiedAssemblyIdentity {
