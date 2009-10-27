@@ -188,9 +188,14 @@ namespace Microsoft.Cci {
         if (MemberHelper.SignaturesAreEqual(derivedClassMethod, baseMethod)) {
           if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.Method;
           return baseMethod;
-        } else {
-          if (!derivedClassMethod.IsHiddenBySignature) return Dummy.Method;
         }
+        if (derivedClassMethod.GenericParameterCount == baseMethod.GenericParameterCount && derivedClassMethod.IsGeneric) {
+          if (MemberHelper.GenericMethodSignaturesAreEqual(derivedClassMethod, baseMethod)) {
+            if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.Method;
+            return baseMethod;
+          }
+        }
+        if (!derivedClassMethod.IsHiddenBySignature) return Dummy.Method;
       }
       foreach (ITypeReference baseClassReference in baseClass.BaseClasses) {
         IMethodDefinition overriddenMethod = GetImplicitlyOverriddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
@@ -258,6 +263,22 @@ namespace Microsoft.Cci {
       if (!TypeHelper.TypesAreEquivalent(signature1.Type, signature2.Type)) return false;
       return IteratorHelper.EnumerablesAreEqual(signature1.Parameters, signature2.Parameters, ParameterInformationComparer);
     }
+
+    /// <summary>
+    /// Returns true if the two generic method signatures match according to the criteria of the CLR loader.
+    /// </summary>
+    public static bool GenericMethodSignaturesAreEqual(IMethodDefinition method1, IMethodDefinition method2) {
+      if (method1.CallingConvention != method2.CallingConvention) return false;
+      if (method1.ReturnValueIsByRef != method2.ReturnValueIsByRef) return false;
+      if (method1.ReturnValueIsModified != method2.ReturnValueIsModified) return false;
+      if (!TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(method1.Type, method2.Type)) return false;
+      return IteratorHelper.EnumerablesAreEqual(method1.Parameters, method2.Parameters, GenericMethodParameterEqualityComparer);
+    }
+
+    /// <summary>
+    /// A static instance of type GenericMethodParameterInformationComparer.
+    /// </summary>
+    public readonly static GenericMethodParameterInformationComparer GenericMethodParameterEqualityComparer = new GenericMethodParameterInformationComparer();
 
     /// <summary>
     /// A static instance of type ParameterInformationComparer.
@@ -552,6 +573,32 @@ namespace Microsoft.Cci {
 
     bool IParameterTypeInformation.IsModified {
       get { return false; }
+    }
+
+  }
+
+  /// <summary>
+  /// An object that compares to instances of IParameterTypeInformation for equality using the assumption
+  /// that two generic method type parameters are equivalent if their parameter list indices are the same.
+  /// </summary>
+  public class GenericMethodParameterInformationComparer : IEqualityComparer<IParameterDefinition> {
+
+    /// <summary>
+    /// Returns true if the given two instances if IParameterTypeInformation are equivalent.
+    /// </summary>
+    public bool Equals(IParameterDefinition x, IParameterDefinition y) {
+      if (x.Index != y.Index) return false;
+      if (x.IsByReference != y.IsByReference) return false;
+      if (x.IsModified != y.IsModified) return false;
+      //TODO: compare modifiers
+      return TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(x.Type, y.Type);
+    }
+
+    /// <summary>
+    /// Returns a hash code that is the same for any two equivalent instances of IParameterTypeInformation.
+    /// </summary>
+    public int GetHashCode(IParameterDefinition parameterTypeInformation) {
+      return (int)parameterTypeInformation.Type.InternedKey;
     }
 
   }

@@ -1422,6 +1422,62 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true if the given two types are to be considered equivalent for the purpose of generic method signature matching. This differs from
+    /// TypeHelper.TypesAreEquivalent in that two generic method type parameters are considered equivalent if their parameter list indices are the same.
+    /// </summary>
+    //^ [Pure]
+    //^ [Confined]
+    public static bool TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2) {
+      if (type1 == null || type2 == null) return false;
+      if (type1 == type2) return true;
+      if (type1.InternedKey == type2.InternedKey) return true;
+      var genMethPar1 = type1 as IGenericMethodParameter;
+      var genMethPar2 = type2 as IGenericMethodParameter;
+      if (genMethPar1 != null && genMethPar2 != null) return genMethPar1.Index == genMethPar2.Index;
+      var inst1 = type1 as IGenericTypeInstanceReference;
+      if (inst1 == null) return false;
+      var inst2 = type2 as IGenericTypeInstanceReference;
+      if (inst2 == null) return false;
+      if (inst1.GenericType.InternedKey != inst2.GenericType.InternedKey) return false;
+      return IteratorHelper.EnumerablesAreEqual<ITypeReference>(inst1.GenericArguments, inst2.GenericArguments, RelaxedTypeEquivalenceComparer.instance);
+    }
+
+    /// <summary>
+    /// Considers two types to be equivalent even if TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch returns
+    /// true, as opposed to the stricter rules applied by TypeHelper.TypesAreEquivalent.
+    /// </summary>
+    private class RelaxedTypeEquivalenceComparer : IEqualityComparer<ITypeReference> {
+      /// <summary>
+      /// A singleton instance of RelaxedTypeEquivalenceComparer that is safe to use in all contexts.
+      /// </summary>
+      internal static RelaxedTypeEquivalenceComparer instance = new RelaxedTypeEquivalenceComparer();
+
+      /// <summary>
+      /// Determines whether the specified objects are equal.
+      /// </summary>
+      /// <param name="x">The first object of type <paramref name="T"/> to compare.</param>
+      /// <param name="y">The second object of type <paramref name="T"/> to compare.</param>
+      /// <returns>
+      /// true if the specified objects are equal; otherwise, false.
+      /// </returns>
+      public bool Equals(ITypeReference x, ITypeReference y) {
+        return TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(x, y);
+      }
+
+      /// <summary>
+      /// Returns a hash code for this instance.
+      /// </summary>
+      /// <param name="r">The r.</param>
+      /// <returns>
+      /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+      /// </returns>
+      public int GetHashCode(ITypeReference r) {
+        return (int)r.InternedKey;
+      }
+
+    }
+
+    /// <summary>
     /// Returns true if type1 is the same as type2 or if it is derives from type2.
     /// Type1 derives from type2 if the latter is a direct or indirect base class.
     /// </summary>
