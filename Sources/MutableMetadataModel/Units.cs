@@ -25,7 +25,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.exportedTypes = new List<IAliasForType>();
       this.flags = 0;
       this.files = new List<IFileReference>();
-      this.isRetargetable = false;
       this.memberModules = new List<IModule>();
       this.moduleName = Dummy.Name;
       this.publicKey = new byte[0];
@@ -46,7 +45,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.exportedTypes = new List<IAliasForType>(assembly.ExportedTypes);
       this.flags = assembly.Flags;
       this.files = new List<IFileReference>(assembly.Files);
-      this.isRetargetable = assembly.IsRetargetable;
       this.memberModules = new List<IModule>(assembly.MemberModules);
       this.moduleName = assembly.ModuleName;
       this.publicKey = assembly.PublicKey;
@@ -127,10 +125,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public bool IsRetargetable {
-      get { return this.isRetargetable; }
-      set { this.isRetargetable = value; }
+      get { return (this.Flags & 0x100) != 1; }
+      set {
+        if (value)
+          this.Flags |= 0x100u;
+        else
+          this.Flags &= ~0x100u;
+      }
     }
-    bool isRetargetable;
 
     /// <summary>
     /// A list of the modules that constitute the assembly.
