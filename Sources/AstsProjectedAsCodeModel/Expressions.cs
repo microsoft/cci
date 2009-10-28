@@ -14314,6 +14314,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return this.Expression.HasErrors();
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(IOutArgument) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
