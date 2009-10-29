@@ -169,6 +169,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       else
         this.bitLength = -1;
       this.compileTimeValue = fieldDefinition.CompileTimeValue;
+      this.IsCompileTimeConstant = fieldDefinition.IsCompileTimeConstant;
       if (fieldDefinition.IsMapped)
         this.fieldMapping = fieldDefinition.FieldMapping;
       else
