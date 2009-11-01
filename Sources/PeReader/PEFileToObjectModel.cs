@@ -3333,10 +3333,14 @@ namespace Microsoft.Cci.MetadataReader {
                 MemoryBlock signatureMemoryBlock = this.PEFileReader.BlobStream.GetMemoryBlockAt(customAttribute.Value);
                 //  TODO: Error checking enough space in signature memoryBlock.
                 MemoryReader memoryReader = new MemoryReader(signatureMemoryBlock);
-                CustomAttributeDecoder customAttrDecoder = new CustomAttributeDecoder(this, memoryReader, customAttributeRowId, moduleMethodReference, false);
-                if (customAttrDecoder.decodeFailed)
-                  customAttrDecoder = new CustomAttributeDecoder(this, memoryReader, customAttributeRowId, moduleMethodReference, true);
-                //TODO: check for decode failure and report error
+                this.ModuleReader.metadataReaderHost.StartGuessingGame();
+                CustomAttributeDecoder customAttrDecoder = new CustomAttributeDecoder(this, memoryReader, customAttributeRowId, moduleMethodReference);
+                while (customAttrDecoder.decodeFailed && this.ModuleReader.metadataReaderHost.TryNextPermutation())
+                  customAttrDecoder = new CustomAttributeDecoder(this, memoryReader, customAttributeRowId, moduleMethodReference);
+                if (!customAttrDecoder.decodeFailed)
+                  this.ModuleReader.metadataReaderHost.WinGuessingGame();
+                //else
+                //TODO: error
                 this.CustomAttributeArray[customAttributeRowId] = customAttrDecoder.CustomAttribute;
               }
             } else {
@@ -3413,10 +3417,16 @@ namespace Microsoft.Cci.MetadataReader {
       //  TODO: Error checking enough space in signature memoryBlock.
       MemoryReader memoryReader = new MemoryReader(signatureMemoryBlock);
       //  TODO: 1.0 etc later on...
-      SecurityAttributeDecoder20 securityAttrDecoder = new SecurityAttributeDecoder20(this, memoryReader, securityAttribute, false);
-      if (securityAttrDecoder.decodeFailed)
-        securityAttrDecoder = new SecurityAttributeDecoder20(this, memoryReader, securityAttribute, true);
-      //TODO: if decode failed again report an error
+
+      this.ModuleReader.metadataReaderHost.StartGuessingGame();
+      SecurityAttributeDecoder20 securityAttrDecoder = new SecurityAttributeDecoder20(this, memoryReader, securityAttribute);
+      while (securityAttrDecoder.decodeFailed && this.ModuleReader.metadataReaderHost.TryNextPermutation())
+        securityAttrDecoder = new SecurityAttributeDecoder20(this, memoryReader, securityAttribute);
+      if (!securityAttrDecoder.decodeFailed)
+        this.ModuleReader.metadataReaderHost.WinGuessingGame();
+      //else
+      //TODO: error
+
       return securityAttrDecoder.SecurityAttributes;
     }
     #endregion Attribute Information

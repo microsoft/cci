@@ -484,6 +484,32 @@ namespace Microsoft.Cci {
     /// <param name="referringUnit">The unit that is referencing the module.</param>
     /// <param name="referencedModule">Module identifier for the assembly being referenced.</param>
     void ResolvingModuleReference(IUnit referringUnit, ModuleIdentity referencedModule);
+
+    /// <summary>
+    /// Called by the metadata reader when it is about to start parsing a custom attribute blob.
+    /// </summary>
+    void StartGuessingGame();
+
+    /// <summary>
+    /// Called by the metadata reader when it has unsucessfully tried to parse a custom attribute blob and it now needs to try a new permutation.
+    /// Returns false if no more perumations are possible.
+    /// </summary>
+    bool TryNextPermutation();
+
+    /// <summary>
+    /// Called by the metadata reader when it has successfully parsed a custom attribute blob.
+    /// </summary>
+    void WinGuessingGame();
+
+    /// <summary>
+    /// Returns a guess of the size of the underlying type of the given type reference to an enum type, which is assumed to be unresolvable
+    /// because it is defined an assembly that is not loaded into this host. Successive calls to the method will cycle through these values
+    /// with a periodicity determined by the number of types in the game and the successful guesses made in earlier games.
+    /// </summary>
+    /// <param name="reference">A type reference that cannot be resolved.</param>
+    /// <returns>1, 2, 4 or 8.</returns>
+    byte GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(ITypeReference reference);
+
   }
   /// <summary>
   /// A base class for an object provided by the application hosting the metadata reader. The object allows the host application
@@ -624,8 +650,6 @@ namespace Microsoft.Cci {
       return new AssemblyIdentity(referencedAssembly, "unknown://location");
     }
 
-    #region IMetadataReaderHost Members
-
     /// <summary>
     /// Open the binary document as a memory block in host dependent fashion.
     /// </summary>
@@ -692,7 +716,90 @@ namespace Microsoft.Cci {
     public virtual void ResolvingModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
     }
 
-    #endregion
+    /// <summary>
+    /// Called by the metadata reader when it is about to start parsing a custom attribute blob.
+    /// </summary>
+    public void StartGuessingGame() {
+      this.currentWildGuesses = null;
+      this.currentGoodGuesses = null;
+    }
+
+    /// <summary>
+    /// Called by the metadata reader when it has unsucessfully tried to parse a custom attribute blob and it now needs to try a new permutation.
+    /// Returns false if no more perumations are possible.
+    /// </summary>
+    public bool TryNextPermutation() {
+      bool allPermutationsHaveBeenTried = true;
+      if (this.currentWildGuesses != null) {
+        foreach (var key in this.currentWildGuesses.Keys) {
+          var oldValue = this.currentWildGuesses[key];
+          if (oldValue == 4)
+            this.currentWildGuesses[key] = 1;
+          else if (oldValue == 1)
+            this.currentWildGuesses[key] = 2;
+          else if (oldValue == 2)
+            this.currentWildGuesses[key] = 8;
+          else {
+            this.currentWildGuesses[key] = 4;
+            continue;
+          }
+          allPermutationsHaveBeenTried = false;
+          break;
+        }
+      }
+      if (allPermutationsHaveBeenTried && this.currentGoodGuesses != null) {
+        if (this.currentWildGuesses == null) this.currentWildGuesses = new Dictionary<uint, byte>();
+        foreach (var key in this.currentGoodGuesses.Keys) {
+          allPermutationsHaveBeenTried = false;
+          this.currentWildGuesses[key] = 4;
+        }
+        this.currentGoodGuesses = null;
+      }
+      return !allPermutationsHaveBeenTried;
+    }
+
+    /// <summary>
+    /// Called by the metadata reader when it has successfully parsed a custom attribute blob.
+    /// </summary>
+    public void WinGuessingGame() {
+      if (this.currentWildGuesses == null) return;
+      if (this.successfulGuesses == null) this.successfulGuesses = new Dictionary<uint, byte>();
+      foreach (var pair in this.currentWildGuesses)
+        this.successfulGuesses[pair.Key] = pair.Value;
+      this.currentWildGuesses = null;
+      if (this.currentGoodGuesses == null) return;
+      foreach (var pair in this.currentGoodGuesses)
+        this.successfulGuesses[pair.Key] = pair.Value;
+      this.currentGoodGuesses = null;
+    }
+
+    /// <summary>
+    /// Returns a guess of the size of the underlying type of the given type reference to an enum type, which is assumed to be unresolvable
+    /// because it is defined an assembly that is not loaded into this host. Successive calls to the method will cycle through these values
+    /// with a periodicity determined by the number of types in the game and the successful guesses made in earlier games.
+    /// </summary>
+    /// <param name="reference">A type reference that cannot be resolved.</param>
+    /// <returns>1, 2, 4 or 8.</returns>
+    public byte GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(ITypeReference reference) {
+      uint rkey = reference.InternedKey;
+      byte guess;
+      if (this.currentGoodGuesses != null && this.currentGoodGuesses.TryGetValue(rkey, out guess))
+        return guess;
+      if (this.currentWildGuesses != null && this.currentWildGuesses.TryGetValue(rkey, out guess))
+        return guess;
+      if (this.successfulGuesses != null && this.successfulGuesses.TryGetValue(rkey, out guess)) {
+        if (this.currentGoodGuesses == null) this.currentGoodGuesses = new Dictionary<uint, byte>();
+        this.currentGoodGuesses[rkey] = guess;
+        return guess;
+      }
+      if (this.currentWildGuesses == null) this.currentWildGuesses = new Dictionary<uint, byte>();
+      this.currentWildGuesses[rkey] = 4;
+      return 4;
+    }
+
+    Dictionary<uint, byte> successfulGuesses;
+    Dictionary<uint, byte> currentWildGuesses;
+    Dictionary<uint, byte> currentGoodGuesses;
   }
 
   internal sealed class InternFactory : IInternFactory {

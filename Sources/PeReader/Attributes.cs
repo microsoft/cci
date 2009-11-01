@@ -1143,7 +1143,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 namespace Microsoft.Cci.MetadataReader {
   internal abstract class AttributeDecoder {
     internal bool decodeFailed;
-    bool useByteForUnderlyingTypeOfUnresolvedEnum;
+    internal bool morePermutationsArePossible;
     readonly protected PEFileToObjectModel PEFileToObjectModel;
     protected MemoryReader SignatureMemoryReader;
     protected object/*?*/ GetPrimitiveValue(
@@ -1363,20 +1363,28 @@ namespace Microsoft.Cci.MetadataReader {
           } else {
             // If the metadata is correct, type must be a reference to an enum type.
             // Problem is, that without resolving this reference, it is not possible to know how many bytes to consume for the enum value
-            if (this.useByteForUnderlyingTypeOfUnresolvedEnum) //have tried int32 and failed, now try byte
-              return new ConstantExpression(type, this.GetPrimitiveValue(this.PEFileToObjectModel.SystemByte));
-            return new ConstantExpression(type, this.GetPrimitiveValue(this.PEFileToObjectModel.SystemInt32));
+            // We'll let the host deal with this by guessing
+            IModuleNominalType underlyingType;
+            switch (this.PEFileToObjectModel.ModuleReader.metadataReaderHost.GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(type)) {
+              case 1: underlyingType = this.PEFileToObjectModel.SystemByte; break;
+              case 2: underlyingType = this.PEFileToObjectModel.SystemInt16; break;
+              case 4: underlyingType = this.PEFileToObjectModel.SystemInt32; break;
+              case 8: underlyingType = this.PEFileToObjectModel.SystemInt64; break;
+              default:
+                this.decodeFailed = true; this.morePermutationsArePossible = false;
+                return new ConstantExpression(type, 0);
+            }
+            return new ConstantExpression(type, this.GetPrimitiveValue(underlyingType));
           }
       }
     }
     protected AttributeDecoder(
       PEFileToObjectModel peFileToObjectModel,
-      MemoryReader signatureMemoryReader,
-      bool useByteForUnderlyingTypeOfUnresolvedEnum
+      MemoryReader signatureMemoryReader
     ) {
       this.PEFileToObjectModel = peFileToObjectModel;
       this.SignatureMemoryReader = signatureMemoryReader;
-      this.useByteForUnderlyingTypeOfUnresolvedEnum = useByteForUnderlyingTypeOfUnresolvedEnum;
+      this.morePermutationsArePossible = true;
     }
   }
 
@@ -1387,10 +1395,9 @@ namespace Microsoft.Cci.MetadataReader {
       PEFileToObjectModel peFileToObjectModel,
       MemoryReader signatureMemoryReader,
       uint customAttributeRowId,
-      IModuleMethodReference attributeConstructor,
-      bool useByteForUnderlyingTypeOfUnresolvedEnum
+      IModuleMethodReference attributeConstructor
     )
-      : base(peFileToObjectModel, signatureMemoryReader, useByteForUnderlyingTypeOfUnresolvedEnum) {
+      : base(peFileToObjectModel, signatureMemoryReader) {
       //^ this.SignatureMemoryReader = signatureMemoryReader; //TODO: Spec# bug. This assignment should not be necessary.
       this.CustomAttribute = Dummy.CustomAttribute;
       //^ base;
@@ -1522,10 +1529,9 @@ namespace Microsoft.Cci.MetadataReader {
     internal SecurityAttributeDecoder20(
       PEFileToObjectModel peFileToObjectModel,
       MemoryReader signatureMemoryReader,
-      SecurityAttribute securityAttribute,
-      bool useByteForUnderlyingTypeOfUnresolvedEnum
+      SecurityAttribute securityAttribute
     )
-      : base(peFileToObjectModel, signatureMemoryReader, useByteForUnderlyingTypeOfUnresolvedEnum) {
+      : base(peFileToObjectModel, signatureMemoryReader) {
       //^ this.SignatureMemoryReader = signatureMemoryReader; //TODO: Spec# bug. This assignment should not be necessary.
       this.SecurityAttributes = TypeCache.EmptySecurityAttributes;
       //^ base;
