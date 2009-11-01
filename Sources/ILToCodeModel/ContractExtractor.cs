@@ -1,5 +1,4 @@
-﻿//-----------------------------------------------------------------------------
-//
+﻿//
 // Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //-----------------------------------------------------------------------------
@@ -70,12 +69,21 @@ namespace Microsoft.Cci.ILToCodeModel {
       IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
       IAssemblyReference ar = ur as IAssemblyReference;
       if (ar != null) {
+        // Check for the attribute which is defined in the assembly that defines the contract class.
         var refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
         if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
           // then we're extracting contracts from a reference assembly
           var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
           this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
         }
+        // If that fails, check for the attribute which is defined in the assembly itself
+        refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
+        if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
+          // then we're extracting contracts from a reference assembly
+          var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
+          this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
+        }
+
       }
 
       this.oldAndResultExtractor = new OldAndResultExtractor(sourceMethodBody, this.cache, this.referenceCache, contractTypeAsSeenByThisUnit);
