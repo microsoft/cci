@@ -1788,10 +1788,34 @@ namespace Microsoft.Cci {
     /// <param name="partiallySpecializedParameter"></param>
     /// <param name="definingTypeInstance"></param>
     /// <param name="internFactory"></param>
-    public SpecializedGenericTypeParameter(IGenericTypeParameter partiallySpecializedParameter, IGenericTypeInstanceReference definingTypeInstance, IInternFactory internFactory)
+    public SpecializedGenericTypeParameter(IGenericTypeParameter partiallySpecializedParameter, ISpecializedNestedTypeReference definingTypeInstance, IInternFactory internFactory)
       : base(partiallySpecializedParameter, internFactory) {
       this.definingType = definingTypeInstance;
     }
+
+    /// <summary>
+    /// Return the innermost containing generic type instance.
+    /// </summary>
+    public IGenericTypeInstanceReference ContainingGenericTypeInstance {
+      get {
+        if (this.containingGenericTypeInstance == null) {
+          ITypeReference typeReference = this.DefiningType.ContainingType;
+          var containingGenericTypeInstance = typeReference as IGenericTypeInstanceReference;
+          if (containingGenericTypeInstance == null) {
+            ISpecializedNestedTypeReference nested = typeReference as ISpecializedNestedTypeReference;
+            while (containingGenericTypeInstance == null && nested != null) {
+              containingGenericTypeInstance = nested.ContainingType as IGenericTypeInstanceReference;
+              nested = nested.ContainingType as ISpecializedNestedTypeReference;
+            }
+            Debug.Assert(containingGenericTypeInstance != null);
+          }
+          this.containingGenericTypeInstance = containingGenericTypeInstance;
+        }
+        return this.containingGenericTypeInstance;
+      }
+    }
+
+    private IGenericTypeInstanceReference containingGenericTypeInstance;
 
     /// <summary>
     /// A list of classes or interfaces. All type arguments matching this parameter must be derived from all of the classes and implement all of the interfaces.
@@ -1802,7 +1826,7 @@ namespace Microsoft.Cci {
         if (this.constraints == null) {
           var constrs = new List<ITypeReference>();
           foreach (ITypeReference partiallySpecializedConstraint in this.PartiallySpecializedParameter.Constraints)
-            constrs.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedConstraint, this.DefiningType, this.InternFactory));
+            constrs.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedConstraint, this.ContainingGenericTypeInstance, this.InternFactory));
           constrs.TrimExcess();
           this.constraints = constrs.AsReadOnly();
         }
@@ -1822,10 +1846,10 @@ namespace Microsoft.Cci {
     /// The generic type that defines this type parameter.
     /// </summary>
     /// <value></value>
-    public IGenericTypeInstanceReference DefiningType {
+    public ISpecializedNestedTypeReference DefiningType {
       get { return this.definingType; }
     }
-    readonly IGenericTypeInstanceReference definingType;
+    readonly ISpecializedNestedTypeReference definingType;
 
     #region IGenericTypeParameter Members
 
@@ -1898,7 +1922,7 @@ namespace Microsoft.Cci {
             if (this.genericParameters == null) {
               var gpars = new List<IGenericTypeParameter>(this.GenericParameterCount);
               foreach (IGenericTypeParameter parameter in this.partiallySpecializedVersion.GenericParameters)
-                gpars.Add(new SpecializedGenericTypeParameter(parameter, this.containingGenericTypeInstance, this.InternFactory));
+                gpars.Add(new SpecializedGenericTypeParameter(parameter, this, this.InternFactory));
               this.genericParameters = gpars.AsReadOnly();
             }
           }
@@ -1959,8 +1983,21 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IGenericTypeInstanceReference InstanceType {
-      get { return Dummy.GenericTypeInstance; }
+      get {
+        //^ requires this.IsGeneric;
+        if (instanceType == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.instanceType == null) {
+              List<ITypeReference> arguments = new List<ITypeReference>();
+              foreach (IGenericTypeParameter gpar in this.GenericParameters) arguments.Add(gpar);
+              this.instanceType = GenericTypeInstance.GetGenericTypeInstance(this, arguments, this.InternFactory);
+            }
+          }
+        }
+        return instanceType;
+      }
     }
+    IGenericTypeInstanceReference/*?*/ instanceType= null;
 
     /// <summary>
     /// Zero or more methods defined by this type.
