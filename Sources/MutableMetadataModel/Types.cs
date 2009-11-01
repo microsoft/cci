@@ -2015,7 +2015,7 @@ namespace Microsoft.Cci.MutableCodeModel {
             if (this.instanceType == null) {
               List<ITypeReference> arguments = new List<ITypeReference>();
               foreach (IGenericTypeParameter gpar in this.GenericParameters) arguments.Add(gpar);
-              this.instanceType = GenericTypeInstance.GetGenericTypeInstance(this, arguments, this.InternFactory);
+              this.instanceType = GenericTypeInstance.GetGenericTypeInstance(this.GetSpecializedType(this), arguments, this.InternFactory);
             }
           }
         }
@@ -2024,6 +2024,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     IGenericTypeInstanceReference/*?*/ instanceType;
     //^ invariant instanceType == null || !instanceType.IsGeneric;
+
+    /// <summary>
+    /// Return a specialized nested type obtained from the specialized instance of its containing type if this type is a nested type, or this otherwise.
+    /// </summary>
+    /// <returns></returns>
+    protected ITypeReference GetSpecializedType(ITypeDefinition typeDef) {
+      var nestedType = typeDef as INestedTypeDefinition;
+      if (nestedType != null) {
+        ITypeReference containingTypeReference = null;
+        if (nestedType.ContainingTypeDefinition.IsGeneric)
+          containingTypeReference = nestedType.ContainingTypeDefinition.InstanceType;
+        else
+          containingTypeReference = this.GetSpecializedType(nestedType.ContainingTypeDefinition);        
+        foreach (var nested in containingTypeReference.ResolvedType.NestedTypes) {
+          if (nested.Name == nestedType.Name && nested.GenericParameterCount == nested.GenericParameterCount) return nested;
+        }
+      }
+      return typeDef;
+    }
 
     /// <summary>
     /// Zero or more interfaces implemented by this type.
