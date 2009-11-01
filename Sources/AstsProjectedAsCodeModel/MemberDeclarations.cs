@@ -1539,16 +1539,16 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="sourceAttributes"></param>
+    /// <param name="sourceAttributes">May be null.</param>
     /// <param name="flags"></param>
     /// <param name="visibility"></param>
     /// <param name="type"></param>
-    /// <param name="implementedInterfaces"></param>
+    /// <param name="implementedInterfaces">May be null.</param>
     /// <param name="name"></param>
-    /// <param name="genericParameters"></param>
-    /// <param name="parameters"></param>
-    /// <param name="handledEvents"></param>
-    /// <param name="body"></param>
+    /// <param name="genericParameters">May be null.</param>
+    /// <param name="parameters">May be null.</param>
+    /// <param name="handledEvents">May be null.</param>
+    /// <param name="body">May be null.</param>
     /// <param name="sourceLocation"></param>
     public MethodDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
       Flags flags, TypeMemberVisibility visibility, TypeExpression type, List<TypeExpression>/*?*/ implementedInterfaces, NameDeclaration name,
@@ -1720,9 +1720,10 @@ namespace Microsoft.Cci.Ast {
     public virtual CallingConvention CallingConvention {
       [DebuggerNonUserCode]
       get {
-        if (this.IsGeneric) return CallingConvention.Generic;
-        if (this.IsStatic) return CallingConvention.Default;
-        return CallingConvention.HasThis;
+        CallingConvention result = CallingConvention.Default;
+        if (this.IsGeneric) result |= CallingConvention.Generic;
+        if (!this.IsStatic) result |= CallingConvention.HasThis;
+        return result;
       } //TODO: extract from custom attributes
     }
 
