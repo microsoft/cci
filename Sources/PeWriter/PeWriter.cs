@@ -5073,8 +5073,11 @@ namespace Microsoft.Cci {
     }
 
     public override void Visit(IAliasForType aliasForType) {
-      //do not visit the aliased type, it does not get into the type ref table based only on its membership of the exported types collection.
       this.Visit(aliasForType.Attributes);
+      //do not visit the reference to aliased type, it does not get into the type ref table based only on its membership of the exported types collection.
+      //but DO visit the reference to assembly (if any) that defines the aliased type. That assembly might not already be in the assembly reference list.
+      var definingAssembly = TypeHelper.GetDefiningUnitReference(aliasForType.AliasedType) as IAssemblyReference;
+      if (definingAssembly != null) this.Visit(definingAssembly);
     }
 
     public override void Visit(ICustomModifier customModifier) {
@@ -5190,6 +5193,8 @@ namespace Microsoft.Cci {
       if (!this.typeReferenceNeedsToken && namespaceTypeReference.TypeCode != PrimitiveTypeCode.NotPrimitive)
         return;
       this.peWriter.RecordTypeReference(namespaceTypeReference);
+      var assemblyReference = namespaceTypeReference.ContainingUnitNamespace.Unit as IAssemblyReference;
+      if (assemblyReference != null) this.Visit(assemblyReference);
     }
 
     public override void Visit(INestedTypeReference nestedTypeReference) {
