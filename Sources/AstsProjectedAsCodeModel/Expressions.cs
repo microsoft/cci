@@ -14855,7 +14855,8 @@ namespace Microsoft.Cci.Ast {
             this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this.Qualifier, Error.PointerExpected, RhsToStringForError()));
           }
         } else {
-          if (this.Qualifier.HasErrors()) return true;
+          if (!this.Qualifier.HasErrors()) // qualifier is ok, but not of pointer type
+            this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this.Qualifier, Error.PointerExpected, RhsToStringForError()));
         }
         return true;
       } else
