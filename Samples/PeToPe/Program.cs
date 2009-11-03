@@ -17,7 +17,7 @@ namespace PeToPe {
     {
       #region replace
       if (args == null || args.Length == 0) {
-        Console.WriteLine("usage: PeToPe [path]fileName.ext [decompile]");
+        Console.WriteLine("usage: PeToPe [path]fileName.ext");
         return;
       }
       #endregion
@@ -48,6 +48,7 @@ namespace PeToPe {
             methodBody, host, null, pdbReader);
         };
       #endregion
+
       #region snippet PeToPeProgramMainSourceToILProvider
       SourceToILConverterProvider sourceToILProvider =
         delegate(IMetadataHost host2, 
@@ -58,16 +59,9 @@ namespace PeToPe {
         };
       #endregion
 
-      MetadataMutator mutator;
-      bool decompile = args.Length == 2;
-      if (decompile) {
-        #region snippet PeToPeProgramMainCodeMutator
-        mutator = new CodeMutator(
-          host, ilToSourceProvider, sourceToILProvider, pdbReader);
-        #endregion
-      } else {
-        mutator = new MetadataMutator(host);
-      }
+      #region snippet PeToPeProgramMainCodeMutator
+      MetadataMutator mutator = new CodeMutator(host, ilToSourceProvider, sourceToILProvider, pdbReader);
+      #endregion
 
       #region snippet PeToPeProgramMainVisit
       IAssembly/*?*/ assembly = module as IAssembly;
@@ -77,17 +71,15 @@ namespace PeToPe {
         module = mutator.Visit(mutator.GetMutableCopy(module));
       #endregion
 
-      if (decompile) {
-        #region snippet PeToPeProgramMainNormalize
-        CodeModelNormalizer cmn = new CodeModelNormalizer(
-          host, ilToSourceProvider, sourceToILProvider, pdbReader, null);
-        assembly = module as IAssembly;
-        if (assembly != null)
-          module = cmn.Visit(cmn.GetMutableCopy(assembly));
-        else
-          module = cmn.Visit(cmn.GetMutableCopy(module));
-        #endregion
-      }
+      #region snippet PeToPeProgramMainNormalize
+      CodeModelNormalizer cmn = new CodeModelNormalizer(
+        host, ilToSourceProvider, sourceToILProvider, pdbReader, null);
+      assembly = module as IAssembly;
+      if (assembly != null)
+        module = cmn.Visit(cmn.GetMutableCopy(assembly));
+      else
+        module = cmn.Visit(cmn.GetMutableCopy(module));
+      #endregion
 
       #region snippet PeToPeProgramMainWritePe
       Stream peStream = File.Create(module.Location + ".pe");
