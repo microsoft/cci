@@ -1199,6 +1199,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Makes a (shallow) mutable copy of the given assembly and then visits the copy, which generally
+    /// results in a deep mutable copy, depending on how subclasses override the behavior of the methods
+    /// of this base class.
+    /// </summary>
+    /// <param name="assembly">The assembly to copy.</param>
+    public virtual Assembly Visit(IAssembly assembly) {
+      return this.Visit(this.GetMutableCopy(assembly));
+    }
+
+    /// <summary>
     /// Visits the specified assembly.
     /// </summary>
     /// <param name="assembly">The assembly.</param>
@@ -2092,6 +2102,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       modifiedTypeReference.UnmodifiedType = this.Visit(modifiedTypeReference.UnmodifiedType);
       this.path.Pop();
       return modifiedTypeReference;
+    }
+
+    /// <summary>
+    /// Makes a (shallow) mutable copy of the given module and then visits the copy, which generally
+    /// results in a deep mutable copy, depending on how subclasses override the behavior of the methods
+    /// of this base class.
+    /// </summary>
+    /// <param name="module">The module to copy.</param>
+    public virtual Module Visit(IModule module) {
+      var assembly = module as IAssembly;
+      if (assembly != null) return this.Visit(assembly);
+      return this.Visit(this.GetMutableCopy(module));
     }
 
     /// <summary>

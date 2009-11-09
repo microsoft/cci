@@ -132,7 +132,7 @@ namespace Microsoft.Cci {
 
     internal Assembly/*?*/ CoreAssembly {
       get {
-        if (this.coreAssembly == null)
+        if (this.coreAssembly == null) 
           this.coreAssembly = this.metadataReaderHost.FindAssembly(this.metadataReaderHost.CoreAssemblySymbolicIdentity) as Assembly;
         if (this.coreAssembly == Dummy.Assembly)
           return null;
@@ -474,6 +474,15 @@ namespace Microsoft.Cci {
     /// </summary>
     public class DefaultHost : MetadataReaderHost {
       PeReader peReader;
+
+      /// <summary>
+      /// Allocates a simple host environment using default settings inherited from MetadataReaderHost and that
+      /// uses PeReader as its metadata reader.
+      /// </summary>
+      public DefaultHost()
+        : base(new NameTable()) {
+        this.peReader = new PeReader(this);
+      }
 
       /// <summary>
       /// Allocates a simple host environment using default settings inherited from MetadataReaderHost and that
