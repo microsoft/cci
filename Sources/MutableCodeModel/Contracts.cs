@@ -275,6 +275,7 @@ namespace Microsoft.Cci.Contracts {
       this.reads = new List<IExpression>();
       this.thrownExceptions = new List<IThrownException>();
       this.writes = new List<IExpression>();
+      this.isPure = false;
     }
 
     /// <summary>
@@ -292,6 +293,7 @@ namespace Microsoft.Cci.Contracts {
       this.reads = new List<IExpression>(methodContract.Reads);
       this.thrownExceptions = new List<IThrownException>(methodContract.ThrownExceptions);
       this.writes = new List<IExpression>(methodContract.Writes);
+      this.isPure = methodContract.IsPure;
     }
 
     /// <summary>
@@ -383,6 +385,16 @@ namespace Microsoft.Cci.Contracts {
       set { this.writes = value; }
     }
     List<IExpression> writes;
+
+    /// <summary>
+    /// True if the method has no observable side-effect on program state and hence this method is safe to use in a contract,
+    /// which may or may not be executed, depending on how the program has been compiled.
+    /// </summary>
+    public bool IsPure {
+      get { return this.isPure; }
+      set { this.isPure = value; }
+    }
+    bool isPure;
 
     #region IMethodContract Members
 

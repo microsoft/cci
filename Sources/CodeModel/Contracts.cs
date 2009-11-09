@@ -424,6 +424,12 @@ namespace Microsoft.Cci.Contracts {
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
     IEnumerable<IExpression> Writes { get; }
+
+    /// <summary>
+    /// True if the method has no observable side-effect on program state and hence this method is safe to use in a contract,
+    /// which may or may not be executed, depending on how the program has been compiled.
+    /// </summary>
+    bool IsPure { get; }
   }
 
   /// <summary>
@@ -577,6 +583,10 @@ namespace Microsoft.Cci.Contracts {
 
     public IEnumerable<IExpression> Writes {
       get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+    }
+
+    public bool IsPure {
+      get { return false; }
     }
 
     #endregion

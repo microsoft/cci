@@ -78,13 +78,21 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         // If that fails, check for the attribute which is defined in the assembly itself
         refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
-        if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
+        if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute))
+        {
           // then we're extracting contracts from a reference assembly
           var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
           this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
         }
 
       }
+
+      #region Set contract purity based on whether the method definition has the pure attribute
+      var pureAttribute = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute");
+      if (AttributeHelper.Contains(sourceMethodBody.MethodDefinition.Attributes, pureAttribute)) {
+        this.CurrentMethodContract.IsPure = true;
+      }
+      #endregion Set contract purity based on whether the method definition has the pure attribute
 
       this.oldAndResultExtractor = new OldAndResultExtractor(sourceMethodBody, this.cache, this.referenceCache, contractTypeAsSeenByThisUnit);
 
@@ -220,7 +228,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (methodCall == null) return false;
       IMethodReference methodToCall = methodCall.MethodToCall;
       if (!IsContractMethod(methodToCall))
-        return false;
+          return false;
       string mname = methodToCall.Name.Value;
       if (mname == "EnsuresOnThrow") {
         IGenericMethodInstanceReference/*?*/ genericMethodToCall = methodToCall as IGenericMethodInstanceReference;
@@ -472,7 +480,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       public override IExpression Visit(MethodCall methodCall) {
         IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
         if (methodToCall != null) {
-          if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey) {
+          if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey){
             //TODO: exists, forall
             if (methodToCall.GenericMethod.Name.Value == "Result") {
               ReturnValue returnValue = new ReturnValue() {

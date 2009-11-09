@@ -376,9 +376,10 @@ namespace Microsoft.Cci.Ast {
     /// <param name="reads">A possibly empty list of expressions that each represents a set of memory locations that may be read by the called method.</param>
     /// <param name="thrownExceptions">A possibly empty or null list of exceptions that may be thrown (or passed on) by the called method.</param>
     /// <param name="writes">A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.</param>
+    /// <param name="isPure">True if the method has no observable side-effect on program state and hence this method is safe to use in a contract, which may or may not be executed, depending on how the program has been compiled.</param>
     public MethodContract(IEnumerable<Expression>/*?*/ allocates, IEnumerable<Expression>/*?*/ frees, IEnumerable<AddressableExpression>/*?*/ modifiedVariables,
       IEnumerable<Postcondition>/*?*/ postconditions, IEnumerable<Precondition>/*?*/ preconditions, IEnumerable<Expression>/*?*/ reads,
-      IEnumerable<ThrownException>/*?*/ thrownExceptions, IEnumerable<Expression>/*?*/ writes) {
+      IEnumerable<ThrownException>/*?*/ thrownExceptions, IEnumerable<Expression>/*?*/ writes, bool isPure) {
       this.allocates = allocates==null? EmptyListOfExpressions:allocates;
       this.frees = frees==null? EmptyListOfExpressions:frees;
       this.modifiedVariables = modifiedVariables==null ? EmptyListOfTargetExpressions:modifiedVariables;
@@ -388,6 +389,7 @@ namespace Microsoft.Cci.Ast {
       this.reads = reads==null ? EmptyListOfExpressions:reads;
       this.thrownExceptions = thrownExceptions==null ? EmptyListOfThrownExceptions:thrownExceptions;
       this.writes = writes==null ? EmptyListOfExpressions:writes;
+      this.isPure = isPure;
     }
 
     /// <summary>
@@ -403,6 +405,7 @@ namespace Microsoft.Cci.Ast {
       this.reads = EmptyListOfExpressions;
       this.thrownExceptions = EmptyListOfThrownExceptions;
       this.writes = EmptyListOfExpressions;
+      this.isPure = false;
     }
 
     /// <summary>
@@ -422,6 +425,7 @@ namespace Microsoft.Cci.Ast {
         this.modifiedVariables = new List<AddressableExpression>(template.modifiedVariables);
       else
         this.modifiedVariables = template.modifiedVariables;
+      this.mustInline = template.mustInline;
       if (template.postconditions != EmptyListOfPostconditions)
         this.postconditions = new List<Postcondition>(template.postconditions);
       else
@@ -442,6 +446,7 @@ namespace Microsoft.Cci.Ast {
         this.writes = new List<Expression>(template.writes);
       else
         this.writes = template.writes;
+      this.isPure = template.isPure;
     }
 
     /// <summary>
@@ -570,6 +575,17 @@ namespace Microsoft.Cci.Ast {
       }
     }
     readonly IEnumerable<Expression> writes;
+
+    /// <summary>
+    /// True if the method has no observable side-effect on program state and hence this method is safe to use in a contract,
+    /// which may or may not be executed, depending on how the program has been compiled.
+    /// </summary>
+    public bool IsPure {
+      [DebuggerNonUserCode]
+      get { return IsPure; }
+    }
+
+    readonly bool isPure;
 
     /// <summary>
     /// Checks for errors and return true if any are found.

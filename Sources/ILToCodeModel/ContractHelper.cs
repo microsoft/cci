@@ -25,6 +25,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       targetContract.Preconditions.AddRange(sourceContract.Preconditions);
       targetContract.Postconditions.AddRange(sourceContract.Postconditions);
       targetContract.ThrownExceptions.AddRange(sourceContract.ThrownExceptions);
+      targetContract.IsPure |= sourceContract.IsPure; // need the disjunction
       return;
     }
     /// <summary>
