@@ -95,9 +95,41 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <returns></returns>
     public override IBlockStatement Visit(BlockStatement blockStatement) {
       var savedBlock = this.block;
-      BasicBlock bb = blockStatement as BasicBlock;
-      if (bb != null) this.block = bb;
-      blockStatement.Statements = Visit(blockStatement.Statements);
+      BasicBlock/*?*/ b = blockStatement as BasicBlock;
+      for (; ; ) {
+        if (b != null) {
+          this.block = b;
+          int statementCount = b.Statements.Count;
+          BasicBlock/*?*/ bnext = null;
+          if (statementCount > 1 && b.Statements[statementCount-2] is IGotoStatement) {
+            bnext = b.Statements[--statementCount] as BasicBlock;
+            if (bnext != null) b.Statements.RemoveAt(statementCount);
+          }
+          b.Statements = this.Visit(b.Statements);
+          if (bnext == null || bnext.Statements.Count == 0) break;
+          ILabeledStatement labeledStatement = bnext.Statements[0] as ILabeledStatement;
+          if (labeledStatement != null) {
+            StackOfLocals newStack = null;
+            if (this.stackFor.TryGetValue(labeledStatement, out newStack)) {
+              this.operandStack.TransferTo(newStack, b.Statements);
+              this.operandStack = newStack;
+              this.stackFor.Remove(labeledStatement);
+            }
+          }
+          if (this.catchBlocks.Contains(bnext)) this.IsVisitingCatchBlock = true;
+          int numberOfCatchBlocks = bnext.NumberOfTryBlocksStartingHere;
+          var bb = bnext;
+          while (numberOfCatchBlocks-- > 0) {
+            bb = bb.Statements[bb.Statements.Count - 1] as BasicBlock;
+            if (!this.catchBlocks.Contains(bb)) this.catchBlocks.Add(bb);
+          }
+          b.Statements.Add(bnext);
+          b = bnext;
+        } else {
+          blockStatement.Statements = Visit(blockStatement.Statements);
+          break;
+        }
+      }
       this.block = savedBlock;
       return blockStatement;
     }
@@ -232,7 +264,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           }
         }
-        if (IsVisitingCatchBlock && IsFirst)
+        if (this.IsVisitingCatchBlock && IsFirst)
           this.IsFirstInCatchBlock = true;
         IStatement newStatement;
         try {

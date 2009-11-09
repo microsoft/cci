@@ -26,8 +26,20 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override void Visit(IBlockStatement block) {
-      this.Visit(block.Statements);
-      BasicBlock b = (BasicBlock)block;
+      BasicBlock/*?*/ b = (BasicBlock)block;
+      var blockTreeAsList = new List<BasicBlock>();
+      for (; ; ) {
+        blockTreeAsList.Add(b);
+        var i = b.Statements.Count-1;
+        if (i <= 0) break;
+        b = b.Statements[i] as BasicBlock;
+        if (b == null) break;
+      }
+      for (int i = blockTreeAsList.Count-1; i >= 0; i--)
+        this.Visit(blockTreeAsList[i]);
+    }
+
+    private void Visit(BasicBlock b) {
       this.blockLocalVariables = b.LocalVariables;
       for (int i = 0; i < b.Statements.Count; i++) {
         DeleteGotoNextStatement(b.Statements, i);
