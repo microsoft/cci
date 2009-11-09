@@ -841,14 +841,14 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents the specialized field definition.
   /// </summary>
-  public interface ISpecializedFieldDefinition : IFieldDefinition {
+  public interface ISpecializedFieldDefinition : IFieldDefinition, ISpecializedFieldReference {
 
     /// <summary>
     /// The field that has been specialized to obtain this field. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
     /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
     /// corresponds to a definition that is not obtained via specialization.)
     /// </summary>
-    IFieldDefinition/*!*/ UnspecializedVersion {
+    new IFieldDefinition/*!*/ UnspecializedVersion {
       get;
     }
 
@@ -871,14 +871,14 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents the specialized method definition.
   /// </summary>
-  public interface ISpecializedMethodDefinition : IMethodDefinition {
+  public interface ISpecializedMethodDefinition : IMethodDefinition, ISpecializedMethodReference {
 
     /// <summary>
     /// The method that has been specialized to obtain this method. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
     /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
     /// corresponds to a definition that is not obtained via specialization.)
     /// </summary>
-    IMethodDefinition/*!*/ UnspecializedVersion {
+    new IMethodDefinition/*!*/ UnspecializedVersion {
       get;
     }
 

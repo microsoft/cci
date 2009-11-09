@@ -2888,6 +2888,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #endregion
+
+    #region ISpecializedFieldReference Members
+
+    IFieldReference ISpecializedFieldReference.UnspecializedVersion {
+      get { return this.RawTemplateModuleField; }
+    }
+
+    #endregion
   }
 
   internal abstract class GenericTypeInstanceMethod : GenericTypeInstanceMember, ISpecializedMethodDefinition, IModuleMethodReference {
@@ -3142,9 +3150,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #endregion
 
-    #region ISpecializedMethodDefinition Members
+    #region ISpecializedMethodReference Members
+
+    IMethodReference ISpecializedMethodReference.UnspecializedVersion {
+      get { return this.RawTemplateModuleMethod; }
+    }
 
     #endregion
+
 
     #region IMethodReference Members
 

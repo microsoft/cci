@@ -5902,6 +5902,14 @@ namespace Microsoft.Cci {
 
     #endregion
 
+    #region ISpecializedFieldReference Members
+
+    IFieldReference ISpecializedFieldReference.UnspecializedVersion {
+      get { return Dummy.Field; }
+    }
+
+    #endregion
+
     #region IFieldReference Members
 
     public IFieldDefinition ResolvedField {
@@ -5936,6 +5944,14 @@ namespace Microsoft.Cci {
     #region ISpecializedMethodDefinition Members
 
     public IMethodDefinition UnspecializedVersion {
+      get { return Dummy.Method; }
+    }
+
+    #endregion
+
+    #region ISpecializedMethodReference Members
+
+    IMethodReference ISpecializedMethodReference.UnspecializedVersion {
       get { return Dummy.Method; }
     }
 
@@ -6216,6 +6232,7 @@ namespace Microsoft.Cci {
     }
 
     #endregion
+
   }
 
   internal sealed class DummySpecializedPropertyDefinition : ISpecializedPropertyDefinition {

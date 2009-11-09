@@ -1474,7 +1474,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// 
   /// </summary>
-  public class SpecializedMethodDefinition : SpecializedTypeDefinitionMember<IMethodDefinition>, ISpecializedMethodDefinition, ISpecializedMethodReference {
+  public class SpecializedMethodDefinition : SpecializedTypeDefinitionMember<IMethodDefinition>, ISpecializedMethodDefinition {
 
     /// <summary>
     /// 
