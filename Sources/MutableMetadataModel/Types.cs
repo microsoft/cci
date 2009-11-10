@@ -877,6 +877,70 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
+  public sealed class ManagedPointerTypeReference : TypeReference, IManagedPointerTypeReference, ICopyFrom<IManagedPointerTypeReference> {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public ManagedPointerTypeReference() {
+      this.targetType = Dummy.TypeReference;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="managedPointerTypeReference"></param>
+    /// <param name="internFactory"></param>
+    public void Copy(IManagedPointerTypeReference managedPointerTypeReference, IInternFactory internFactory) {
+      ((ICopyFrom<ITypeReference>)this).Copy(managedPointerTypeReference, internFactory);
+      this.targetType = managedPointerTypeReference.TargetType;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Gets the type of the resolved pointer.
+    /// </summary>
+    /// <value>The type of the resolved pointer.</value>
+    IManagedPointerType ResolvedManagedPointerType {
+      get {
+        if (this.resolvedType == null)
+          this.resolvedType = ManagedPointerType.GetManagedPointerType(this.targetType, this.InternFactory);
+        return this.resolvedType;
+      }
+    }
+    IManagedPointerType/*?*/ resolvedType;
+
+    /// <summary>
+    /// The type definition being referred to.
+    /// In case this type was alias, this is also the type of the aliased type
+    /// </summary>
+    /// <value></value>
+    public override ITypeDefinition ResolvedType {
+      get { return this.ResolvedManagedPointerType; }
+    }
+
+    /// <summary>
+    /// The type of value stored at the target memory location.
+    /// </summary>
+    /// <value></value>
+    public ITypeReference TargetType {
+      get { return this.targetType; }
+      set { this.targetType = value; this.resolvedType = null; }
+    }
+    ITypeReference targetType;
+
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
   public sealed class MatrixTypeReference : TypeReference, IArrayTypeReference, ICopyFrom<IArrayTypeReference> {
 
     /// <summary>
@@ -2036,7 +2100,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (nestedType.ContainingTypeDefinition.IsGeneric)
           containingTypeReference = nestedType.ContainingTypeDefinition.InstanceType;
         else
-          containingTypeReference = this.GetSpecializedType(nestedType.ContainingTypeDefinition);        
+          containingTypeReference = this.GetSpecializedType(nestedType.ContainingTypeDefinition);
         foreach (var nested in containingTypeReference.ResolvedType.NestedTypes) {
           if (nested.Name == nestedType.Name && nested.GenericParameterCount == nested.GenericParameterCount) return nested;
         }

@@ -522,6 +522,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="managedPointerTypeReference"></param>
+    /// <returns></returns>
+    public virtual ManagedPointerTypeReference GetMutableCopy(IManagedPointerTypeReference managedPointerTypeReference) {
+      ManagedPointerTypeReference/*?*/ result;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = managedPointerTypeReference as ManagedPointerTypeReference;
+        if (result != null) return result;
+      }
+      object/*?*/ cachedValue = null;
+      this.referenceCache.TryGetValue(managedPointerTypeReference, out cachedValue);
+      result = cachedValue as ManagedPointerTypeReference;
+      if (result != null) return result;
+      result = new ManagedPointerTypeReference();
+      this.referenceCache.Add(managedPointerTypeReference, result);
+      this.referenceCache.Add(result, result);
+      result.Copy(managedPointerTypeReference, this.host.InternFactory);
+      return result;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="marshallingInformation"></param>
     /// <returns></returns>
     public virtual MarshallingInformation GetMutableCopy(IMarshallingInformation marshallingInformation) {
@@ -1659,6 +1681,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified managed pointer type reference.
+    /// </summary>
+    /// <param name="managedPointerTypeReference">The pointer type reference.</param>
+    /// <returns></returns>
+    public virtual ManagedPointerTypeReference Visit(ManagedPointerTypeReference managedPointerTypeReference) {
+      if (this.stopTraversal) return managedPointerTypeReference;
+      this.Visit((TypeReference)managedPointerTypeReference);
+      this.path.Push(managedPointerTypeReference);
+      managedPointerTypeReference.TargetType = this.Visit(managedPointerTypeReference.TargetType);
+      this.path.Pop();
+      return managedPointerTypeReference;
+    }
+
+    /// <summary>
     /// Visits the specified marshalling information.
     /// </summary>
     /// <param name="marshallingInformation">The marshalling information.</param>
@@ -2554,6 +2590,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified managed pointer type reference.
+    /// </summary>
+    /// <param name="managedPointerTypeReference">The managed pointer type reference.</param>
+    /// <returns></returns>
+    /// <remarks>
+    /// Managed pointer types are not nominal types, so always visit the reference, even if
+    /// it is a definition.
+    /// </remarks>
+    public virtual IManagedPointerTypeReference Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+      return this.Visit(this.GetMutableCopy(managedPointerTypeReference));
+    }
+
+    /// <summary>
     /// Visits the specified modified type reference.
     /// </summary>
     /// <param name="modifiedTypeReference">The modified type reference.</param>
@@ -2622,6 +2671,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       IModifiedTypeReference/*?*/ modifiedTypeReference = typeReference as IModifiedTypeReference;
       if (modifiedTypeReference != null)
         return this.Visit(modifiedTypeReference);
+      IManagedPointerTypeReference/*?*/ managedPointerTypeReference = typeReference as IManagedPointerType;
+      if (managedPointerTypeReference != null)
+        return this.Visit(managedPointerTypeReference);
       //TODO: error
       return typeReference;
     }
