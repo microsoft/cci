@@ -1387,7 +1387,7 @@ namespace Microsoft.Cci {
       this.Visit(notEquality.LeftOperand);
       this.Visit(notEquality.RightOperand);
       var compileTimeConstant = notEquality.LeftOperand as ICompileTimeConstant;
-      if (compileTimeConstant != null) {
+      if (compileTimeConstant != null){
         if (compileTimeConstant.Value == null) {
           this.generator.Emit(OperationCode.Clt_Un);
           return;
@@ -3489,6 +3489,9 @@ namespace Microsoft.Cci {
           if (sourceType.IsValueType) {
             this.generator.Emit(OperationCode.Box, sourceType);
             break;
+          }
+          if (sourceType is IGenericParameter && !sourceType.ResolvedType.IsReferenceType) {
+            this.generator.Emit(OperationCode.Box, sourceType);
           }
           //TODO: conversion from method to (function) pointer
           if (!sourceType.IsValueType && targetType.TypeCode == PrimitiveTypeCode.IntPtr)

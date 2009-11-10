@@ -17,13 +17,13 @@ namespace PeToPe {
     {
       #region replace
       if (args == null || args.Length == 0) {
-        Console.WriteLine("usage: PeToPe [path]fileName.ext");
+        Console.WriteLine("usage: PeToPe [path]fileName.ext [decompile]");
         return;
       }
       #endregion
       #region snippet PeToPeProgramMainModuleLoad
-      HostEnvironment host = new HostEnvironment();
-      IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
+      var host = new PeReader.DefaultHost();
+      var module = host.LoadUnitFrom(args[0]) as IModule;
       #endregion
       #region replace
       if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
@@ -48,7 +48,6 @@ namespace PeToPe {
             methodBody, host, null, pdbReader);
         };
       #endregion
-
       #region snippet PeToPeProgramMainSourceToILProvider
       SourceToILConverterProvider sourceToILProvider =
         delegate(IMetadataHost host2, 
@@ -59,27 +58,37 @@ namespace PeToPe {
         };
       #endregion
 
-      #region snippet PeToPeProgramMainCodeMutator
-      MetadataMutator mutator = new CodeMutator(host, ilToSourceProvider, sourceToILProvider, pdbReader);
-      #endregion
+      MetadataMutator mutator;
+      bool decompile = args.Length == 2;
+      if (decompile) {
+        #region snippet PeToPeProgramMainCodeMutator
+        mutator = new CodeMutator(
+          host, ilToSourceProvider, sourceToILProvider, pdbReader);
+        #endregion
+      } else {
+        mutator = new MetadataMutator(host);
+      }
 
       #region snippet PeToPeProgramMainVisit
       IAssembly/*?*/ assembly = module as IAssembly;
       if (assembly != null)
-        module = mutator.Visit(mutator.GetMutableCopy(assembly));
+        module = mutator.Visit(assembly);
       else
-        module = mutator.Visit(mutator.GetMutableCopy(module));
+        module = mutator.Visit(module);
       #endregion
 
-      #region snippet PeToPeProgramMainNormalize
-      CodeModelNormalizer cmn = new CodeModelNormalizer(
-        host, ilToSourceProvider, sourceToILProvider, pdbReader, null);
-      assembly = module as IAssembly;
-      if (assembly != null)
-        module = cmn.Visit(cmn.GetMutableCopy(assembly));
-      else
-        module = cmn.Visit(cmn.GetMutableCopy(module));
-      #endregion
+      if (decompile) {
+        #region snippet PeToPeProgramMainNormalize
+        CodeModelNormalizer cmn = new CodeModelNormalizer(
+          host, true, ilToSourceProvider, sourceToILProvider, pdbReader, null);
+        assembly = module as IAssembly;
+        if (assembly != null) {
+          module = cmn.Visit(cmn.GetMutableCopy(assembly));
+        } else {
+          module = cmn.Visit(cmn.GetMutableCopy(module));
+        }
+        #endregion
+      }
 
       #region snippet PeToPeProgramMainWritePe
       Stream peStream = File.Create(module.Location + ".pe");
@@ -95,18 +104,4 @@ namespace PeToPe {
     #endregion
   }
 
-  #region snippet PeToPeHostEnvironment
-  internal class HostEnvironment : MetadataReaderHost {
-    PeReader peReader;
-    internal HostEnvironment() {
-      this.peReader = new PeReader(this);
-    }
-    public override IUnit LoadUnitFrom(string location) {
-      IUnit result = this.peReader.OpenModule(
-        BinaryDocument.GetBinaryDocumentForFile(location, this));
-      this.RegisterAsLatest(result);
-      return result;
-    }
-  }
-  #endregion
 }

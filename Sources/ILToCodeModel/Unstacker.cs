@@ -19,13 +19,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<ILabeledStatement, StackOfLocals> stackFor = new Dictionary<ILabeledStatement, StackOfLocals>();
     bool visitedUnconditionalBranch;
     StackOfLocals operandStack;
-    // Handling of the catch clause in a try-catch statement. Currently, we identify the first statement in
-    // a catch clause, if there is a pop, we do not try to unstack it. Later, the control flow decompiler
-    // will turn that pop into an approppriate local definition. 
-    // This, however, breaks an invariant that the unstacker will remove all the pushes and pops. A fix is planned. 
-    List<BasicBlock>/*!*/ catchBlocks = new List<BasicBlock>();
-    bool IsVisitingCatchBlock = false;
-    bool IsFirstInCatchBlock = false;
 
     internal Unstacker(SourceMethodBody body)
       : base(body.host, true) {
@@ -56,12 +49,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal void Visit(BasicBlock block) {
       if (this.block == null) this.block = block;
       this.operandStack = new StackOfLocals(this.body);
-      int numberOfCatchBlocks = block.NumberOfTryBlocksStartingHere;
-      BasicBlock bbb = block;
-      while (numberOfCatchBlocks-- > 0) {
-        bbb = bbb.Statements[bbb.Statements.Count - 1] as BasicBlock;
-        if (!this.catchBlocks.Contains(bbb)) this.catchBlocks.Add(bbb);
-      }
       this.codePointsToAnalyze.Enqueue(new CodePoint() { statements = block.Statements, index = 0, operandStack = this.operandStack });
       while (this.codePointsToAnalyze.Count > 0) {
         CodePoint codePoint = this.codePointsToAnalyze.Dequeue();
@@ -116,13 +103,6 @@ namespace Microsoft.Cci.ILToCodeModel {
               this.stackFor.Remove(labeledStatement);
             }
           }
-          if (this.catchBlocks.Contains(bnext)) this.IsVisitingCatchBlock = true;
-          int numberOfCatchBlocks = bnext.NumberOfTryBlocksStartingHere;
-          var bb = bnext;
-          while (numberOfCatchBlocks-- > 0) {
-            bb = bb.Statements[bb.Statements.Count - 1] as BasicBlock;
-            if (!this.catchBlocks.Contains(bb)) this.catchBlocks.Add(bb);
-          }
           b.Statements.Add(bnext);
           b = bnext;
         } else {
@@ -163,9 +143,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           //  result = new Conversion(){ ValueToConvert = result, TypeAfterConversion = TypeHelper.UnsignedEquivalent(local.Type) }
           return result;
         } else {
-          if (this.IsFirstInCatchBlock) return pop;
+          // popping the unnamed exception in a catch block.
+          return pop;
         }
-        return CodeDummy.Expression;
       }
       Dup/*?*/ dup = expression as Dup;
       if (dup != null) {
@@ -214,7 +194,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.block.LocalVariables.Add(temp);
         this.body.numberOfReferences.Add(temp, 0);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() {
+        return new ExpressionStatement() { 
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -225,15 +205,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (statement is SwitchInstruction) {
         return statement;
-      }
-      BasicBlock bbb = statement as BasicBlock;
-      if (bbb != null) {
-        if (this.catchBlocks.Contains(bbb)) this.IsVisitingCatchBlock = true;
-        int numberOfCatchBlocks = bbb.NumberOfTryBlocksStartingHere;
-        while (numberOfCatchBlocks-- > 0) {
-          bbb = bbb.Statements[bbb.Statements.Count - 1] as BasicBlock;
-          if (!this.catchBlocks.Contains(bbb)) this.catchBlocks.Add(bbb);
-        }
       }
       return base.Visit(statement);
     }
@@ -250,7 +221,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override List<IStatement> Visit(List<IStatement> statements) {
       List<IStatement> newList = new List<IStatement>();
-      bool IsFirst = true;
       foreach (var statement in statements) {
         BasicBlock bb = statement as BasicBlock;
         if (bb != null && bb.Statements.Count > 0) {
@@ -264,19 +234,14 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           }
         }
-        if (this.IsVisitingCatchBlock && IsFirst)
-          this.IsFirstInCatchBlock = true;
         IStatement newStatement;
-        try {
-          newStatement = this.Visit(statement);
-        } finally {
-          this.IsFirstInCatchBlock = false;
-        }
+        
+        newStatement = this.Visit(statement);
+        
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else
           newList.Add(newStatement);
-        if (IsFirst) IsFirst = false;
       }
       return newList;
     }

@@ -315,6 +315,22 @@ namespace Microsoft.Cci.ILToCodeModel {
       return -1; // not found
     }
 
+    ICreateObjectInstance/*?*/ GetICreateObjectInstance(IStatement statement) {
+      IExpressionStatement expressionStatement = statement as IExpressionStatement;
+      if (expressionStatement != null) {
+        IAssignment assignment = expressionStatement.Expression as IAssignment;
+        if (assignment == null) return null;
+        ICreateObjectInstance createObjectInstance = assignment.Source as ICreateObjectInstance;
+        return createObjectInstance;
+      }
+      ILocalDeclarationStatement localDeclaration = statement as ILocalDeclarationStatement;
+      if (localDeclaration != null) {
+        ICreateObjectInstance createObjectInstance = localDeclaration.InitialValue as ICreateObjectInstance;
+        return createObjectInstance;
+      }
+      return null;
+    }
+
     /// <summary>
     /// For an iterator method, finds the closure class' MoveNext method and returns its body.
     /// </summary>
@@ -322,11 +338,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <returns></returns>
     IMethodBody FindClosureMoveNext(IBlockStatement/*!*/ iteratorIL) {
       foreach (var statement in iteratorIL.Statements) {
-        IExpressionStatement expressionStatement = statement as IExpressionStatement;
-        if (expressionStatement == null) continue;
-        IAssignment assignment = expressionStatement.Expression as IAssignment;
-        if (assignment == null) continue;
-        ICreateObjectInstance createObjectInstance = assignment.Source as ICreateObjectInstance;
+        ICreateObjectInstance createObjectInstance = GetICreateObjectInstance(statement);
         if (createObjectInstance == null) continue;
         INestedTypeReference closureType/*?*/ = createObjectInstance.MethodToCall.ContainingType as INestedTypeReference;
         if (closureType == null) {
@@ -341,7 +353,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           closureContainingTypeDefinition = closureContainingTypeAsGenericInstance.GenericType.ResolvedType;
         }
         ITypeDefinition unspecializedClosureType = GetUnspecializedTypeDefinition(closureType);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, closureContainingTypeDefinition)
+        ITypeDefinition unspecializedClosureContainingType = GetUnspecializedTypeDefinition(closureContainingTypeDefinition);
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)
           && AttributeHelper.Contains(unspecializedClosureType.Attributes, closureType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) {
           IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
           foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
@@ -378,7 +391,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new Unstacker(this).Visit(rootBlock);
-      new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
+      new ControlFlowDecompiler(this.host.PlatformType,this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
@@ -1604,7 +1617,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DecompileMoveNext(block);
         BasicBlock rootBlock = GetOrCreateBlock(0, false);
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
-
+        
         block = this.AddLocalDeclarationIfNecessary(block);
         new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
         return block;
