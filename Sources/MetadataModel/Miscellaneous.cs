@@ -92,6 +92,22 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Given an enumerable <paramref name="sourceEnumeration"/> the elements of which is of type <typeparamref name="SourceType"/> and a convertion 
+    /// method <paramref name="convert"/> that computes a value of type <typeparamref name="TargetType"/> from a value of type <typeparamref name="SourceType"/>,
+    /// return an enumerable of <typeparamref name="TargetType"/> elements. Basically, map over enuemrables. 
+    /// </summary>
+    /// <typeparam name="SourceType"></typeparam>
+    /// <typeparam name="TargetType"></typeparam>
+    /// <param name="sourceEnumeration"></param>
+    /// <param name="convert"></param>
+    /// <returns></returns>
+    public static IEnumerable<TargetType> GetConversionEnumerable<SourceType, TargetType>(IEnumerable<SourceType> sourceEnumeration, Converter<SourceType, TargetType> convert) {
+      foreach (SourceType s in sourceEnumeration) {
+        yield return convert(s);
+      }
+    }
+
+    /// <summary>
     /// Returns an enumerable that acts like cast on enumeration.
     /// </summary>
     /// <returns></returns>
