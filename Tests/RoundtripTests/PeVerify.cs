@@ -32,28 +32,36 @@ public class PeVerify {
     static string _peVerify;
     public static string PeVerifyPath
     {
-        get
-        {
-            if (_peVerify == null)
-            {
-                var sdk = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles%\Microsoft SDKs\Windows"));
-                if (sdk.Exists)
-                    foreach(var sdkVersion in sdk.GetDirectories())
-                    {
-                        var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin"), "peverify.exe");
-                        if (File.Exists(peverify))
-                        {
-                            _peVerify = peverify;
-                            break;
-                        }
-                    }
-
-                if (_peVerify == null)                
-                    throw new FileNotFoundException(@"could not find peverify.exe under %programfiles%\Microsoft SDKs\Windows\...");
+      get {
+        if (_peVerify == null) {
+          var sdk = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles%\Microsoft SDKs\Windows"));
+          if (sdk.Exists) {
+            foreach (var sdkVersion in sdk.GetDirectories()) {
+              var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin"), "peverify.exe");
+              if (File.Exists(peverify)) {
+                _peVerify = peverify;
+                break;
+              }
             }
-
-            return _peVerify;
+          }
+          if (_peVerify == null) {
+            sdk = new DirectoryInfo(sdk.FullName.Replace(" (x86)", ""));
+            if (sdk.Exists) {
+              foreach (var sdkVersion in sdk.GetDirectories()) {
+                var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin"), "peverify.exe");
+                if (File.Exists(peverify)) {
+                  _peVerify = peverify;
+                  break;
+                }
+              }
+            }
+          }
+          if (_peVerify == null)
+            throw new FileNotFoundException(@"could not find peverify.exe under %programfiles%\Microsoft SDKs\Windows\...");
         }
+
+        return _peVerify;
+      }
     }
 
     public static PeVerifyResult VerifyAssembly(string assemblyName) {
