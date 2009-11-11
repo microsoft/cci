@@ -538,6 +538,22 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
+    /// <param name="searchPaths">
+    /// A collection of strings that are interpreted as valid paths which are used to search for units.
+    /// </param>
+    /// <param name="searchInGAC">
+    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
+    /// </param>
+    protected MetadataReaderHost(IEnumerable<string> searchPaths, bool searchInGAC)
+      : this() {
+      this.libPaths = new List<string>(searchPaths);
+      this.searchInGAC = false;
+    }
+    bool searchInGAC = true;
+
+    /// <summary>
+    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// </summary>
     /// <param name="nameTable">
     /// A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
@@ -640,9 +656,11 @@ namespace Microsoft.Cci {
 
       // Check GAC
 #if !COMPACTFX
-      string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
-      if (gacLocation != null) {
-        return new AssemblyIdentity(referencedAssembly, gacLocation);
+      if (this.searchInGAC) {
+        string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
+        if (gacLocation != null) {
+          return new AssemblyIdentity(referencedAssembly, gacLocation);
+        }
       }
 #endif
 
