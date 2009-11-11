@@ -547,9 +547,13 @@ namespace Microsoft.Cci {
     protected MetadataReaderHost(IEnumerable<string> searchPaths, bool searchInGAC)
       : this() {
       this.libPaths = new List<string>(searchPaths);
-      this.searchInGAC = false;
+      this.SearchInGAC = searchInGAC;
     }
-    bool searchInGAC = true;
+
+    /// <summary>
+    /// Sets or gets the boolean that determines if lookups of assemblies searches the GAC by default.
+    /// </summary>
+    public bool SearchInGAC { get; protected set; }
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
@@ -656,7 +660,7 @@ namespace Microsoft.Cci {
 
       // Check GAC
 #if !COMPACTFX
-      if (this.searchInGAC) {
+      if (this.SearchInGAC) {
         string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
         if (gacLocation != null) {
           return new AssemblyIdentity(referencedAssembly, gacLocation);
