@@ -14,7 +14,7 @@ namespace Microsoft.Cci {
   /// This class takes a code model and rewrites it so that high level constructs such as anonymous delegates and yield statements
   /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
   /// </summary>
-  public class CodeModelNormalizer: CodeAndContractMutator  {
+  public class CodeModelNormalizer : CodeAndContractMutator {
 
     /// <summary>
     /// Initializes a visitor that takes a code model and rewrites it so that high level constructs such as anonymous delegates and yield statements
@@ -65,7 +65,7 @@ namespace Microsoft.Cci {
     Dictionary<IMethodDefinition, bool> isAlreadyNormalized = new Dictionary<IMethodDefinition, bool>();
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
     NestedTypeDefinition currentClosureClass = new NestedTypeDefinition();
-    
+
     //List<ILocalDefinition> allLocals = new List<ILocalDefinition>();
     IMethodDefinition method= Dummy.Method;
     List<ILocalDefinition> closureLocals = new List<ILocalDefinition>();
@@ -121,7 +121,7 @@ namespace Microsoft.Cci {
       body = this.Visit(body, method, methodContract);
       if (finder.foundYield) {
         this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-        body = GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes); 
+        body = GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes);
       }
       SourceMethodBody result = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
       result.Block = body;
@@ -162,7 +162,7 @@ namespace Microsoft.Cci {
     /// <param name="body"></param>
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
-      
+
       IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this, this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.ilToSourceProvider, this.sourceToILProvider, this.sourceLocationProvider, this.contractProvider);
       return iteratorClosureGenerator.CompileIterator(body, method, methodContract);
     }
@@ -679,11 +679,10 @@ namespace Microsoft.Cci {
     CodeModelNormalizer codeModelNormalizer;
     List<ILocalDefinition> allLocals;
     Dictionary<ITypeReference, ITypeReference> genericTypeParameterMapping = new Dictionary<ITypeReference, ITypeReference>();
-    Dictionary<object, BoundField>/*passed in from constructor*/ fieldForCapturedLocalOrParameter; 
+    Dictionary<object, BoundField>/*passed in from constructor*/ fieldForCapturedLocalOrParameter;
     public IteratorClosureGenerator(CodeModelNormalizer codeModelNormalizer, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider) 
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider)
-    {
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
       this.codeModelNormalizer = codeModelNormalizer;
@@ -745,8 +744,9 @@ namespace Microsoft.Cci {
         Type = GetClosureTypeReferenceFromIterator(iteratorClosure),
         Locations = block.Locations
       };
-      CreateObjectInstance createObjectInstance = new CreateObjectInstance() { 
-        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor), Locations = block.Locations, Type = localDefinition.Type };
+      CreateObjectInstance createObjectInstance = new CreateObjectInstance() {
+        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor), Locations = block.Locations, Type = localDefinition.Type
+      };
       createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = -2, Type = this.host.PlatformType.SystemInt32 });
 
       LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { InitialValue = createObjectInstance, LocalVariable = localDefinition, Locations = block.Locations };
@@ -759,10 +759,11 @@ namespace Microsoft.Cci {
           assignment = new Assignment {
             Source = new ThisReference(),
             Type = boundField.Type,
-            Target = new TargetExpression() { 
-              Definition = GetFieldReference(iteratorClosure, boundField.Field), 
-              Type = boundField.Type, 
-              Instance = new BoundExpression() { Type = localDefinition.Type, Instance = null, Definition = localDefinition, Locations = block.Locations, IsVolatile = false } },
+            Target = new TargetExpression() {
+              Definition = GetFieldReference(iteratorClosure, boundField.Field),
+              Type = boundField.Type,
+              Instance = new BoundExpression() { Type = localDefinition.Type, Instance = null, Definition = localDefinition, Locations = block.Locations, IsVolatile = false }
+            },
             Locations = block.Locations
           };
         } else {
@@ -787,8 +788,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    ITypeReference GetLocalOrParameterType(object obj) 
-    {
+    ITypeReference GetLocalOrParameterType(object obj) {
       IParameterDefinition parameterDefinition = obj as IParameterDefinition;
       if (parameterDefinition != null) {
         return parameterDefinition.Type;
@@ -830,7 +830,7 @@ namespace Microsoft.Cci {
           List<ITypeReference> args = new List<ITypeReference>();
           foreach (var t in method.GenericParameters) args.Add(t);
           return GenericTypeInstance.GetGenericTypeInstance(genericTypeInstanceRef.GenericType.ResolvedType, args, this.host.InternFactory);
-        } 
+        }
       }
       return closureReference;
     }
@@ -893,7 +893,7 @@ namespace Microsoft.Cci {
         typeParameters.Add(typeParameter);
         GenericTypeParameter newTypeParam = new GenericTypeParameter() {
           Name = this.host.NameTable.GetNameFor(typeParameter.Name.Value + "_"),
-          Index = (count ++)
+          Index = (count++)
         };
         this.genericTypeParameterMapping[typeParameter] = newTypeParam;
         this.cache.Add(typeParameter, newTypeParam);
@@ -1050,15 +1050,15 @@ namespace Microsoft.Cci {
 
       SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
       IBlockStatement block = TranslateIteratorMethodBodyToMoveNextBody(iteratorClosure, blockStatement);
-      moveNext.Body = body; 
+      moveNext.Body = body;
       body.Block = block;
       body.MethodDefinition = moveNext;
     }
 
     private IBlockStatement TranslateIteratorMethodBodyToMoveNextBody(IteratorClosure iteratorClosure, BlockStatement blockStatement) {
-      
+
       FixIteratorBodyToUseClosure copier = new FixIteratorBodyToUseClosure(this.FieldForCapturedLocalOrParameter,
-        this.cache,  iteratorClosure, this.host, this.ilToSourceProvider, this.sourceToILProvider, this.sourceLocationProvider);
+        this.cache, iteratorClosure, this.host, this.ilToSourceProvider, this.sourceToILProvider, this.sourceLocationProvider);
       IBlockStatement result = copier.Visit(blockStatement);
       Dictionary<int, ILabeledStatement> StateEntries = new YieldReturnYieldBreakReplacer(iteratorClosure, this.host).GetStateEntries(blockStatement);
       result = BuildStateMachine(iteratorClosure, (BlockStatement)result, StateEntries);
@@ -1277,15 +1277,17 @@ namespace Microsoft.Cci {
       BlockStatement returnNew = new BlockStatement();
       List<IExpression> args = new List<IExpression>(); args.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
       LocalDeclarationStatement closureInstanceLocalDecl = new LocalDeclarationStatement() {
-        LocalVariable = new LocalDefinition() { Name = this.host.NameTable.GetNameFor("local0"), 
-          Type = iteratorClosure.ClosureDefinitionReference },
+        LocalVariable = new LocalDefinition() {
+          Name = this.host.NameTable.GetNameFor("local0"),
+          Type = iteratorClosure.ClosureDefinitionReference
+        },
         InitialValue = new CreateObjectInstance() {
           MethodToCall = iteratorClosure.ConstructorReference,
           Arguments = args,
           Type = iteratorClosure.ClosureDefinitionReference
         }
       };
-      
+
       ReturnStatement returnNewClosureInstance = new ReturnStatement() {
         Expression = new BoundExpression() {
           Instance = null,
@@ -1490,7 +1492,7 @@ namespace Microsoft.Cci {
 
       statements = new List<IStatement>();
       currentField = iteratorClosure.CurrentFieldReference;
-      BoundExpression thisDotCurrent = new BoundExpression() { 
+      BoundExpression thisDotCurrent = new BoundExpression() {
         Definition = currentField, Instance = new ThisReference(), Locations = iteratorClosure.ClosureDefinition.Locations, Type = currentField.Type
       };
       returnCurrent = new ReturnStatement() {
@@ -1526,7 +1528,7 @@ namespace Microsoft.Cci {
         //this.CapturedParameters.Add(parameter, true);
         FieldDefinition field = new FieldDefinition();
         field.Name = parameter.Name;
-        field.Type = this.Visit(parameter.Type); 
+        field.Type = this.Visit(parameter.Type);
         field.ContainingType = iteratorClosure.ClosureDefinition;
         field.Visibility = TypeMemberVisibility.Public;
         iteratorClosure.AddField(field);
@@ -1665,11 +1667,10 @@ namespace Microsoft.Cci {
 
   }
 
-  internal class YieldReturnYieldBreakReplacer : MethodBodyMutator {
+  internal class YieldReturnYieldBreakReplacer : MethodBodyCodeMutator {
     IteratorClosure iteratorClosure;
     internal YieldReturnYieldBreakReplacer(IteratorClosure iteratorClosure, IMetadataHost host) :
-      base(host)
-    {
+      base(host) {
       this.iteratorClosure = iteratorClosure;
     }
 
@@ -1685,7 +1686,7 @@ namespace Microsoft.Cci {
       BlockStatement blockStatement = body;
       stateEntries = new Dictionary<int, ILabeledStatement>();
       LabeledStatement initialLabel = new LabeledStatement() {
-         Label = this.host.NameTable.GetNameFor("Label"+ Count), Statement = new EmptyStatement()
+        Label = this.host.NameTable.GetNameFor("Label"+ Count), Statement = new EmptyStatement()
       };
       blockStatement.Statements.Insert(0, initialLabel);
       stateEntries.Add(0, initialLabel);
@@ -1699,10 +1700,11 @@ namespace Microsoft.Cci {
       BlockStatement blockStatement = new BlockStatement();
       int state = Count;
       ExpressionStatement thisDotStateEqState = new ExpressionStatement() {
-        Expression = new Assignment() { 
-          Source = new CompileTimeConstant() { Value = state, Type = this.host.PlatformType.SystemInt32 }, 
-          Target = new TargetExpression() { Definition = this.iteratorClosure.StateFieldReference, Instance = new ThisReference(), Type = this.host.PlatformType.SystemInt32 }, 
-          Type = this.host.PlatformType.SystemInt32 },
+        Expression = new Assignment() {
+          Source = new CompileTimeConstant() { Value = state, Type = this.host.PlatformType.SystemInt32 },
+          Target = new TargetExpression() { Definition = this.iteratorClosure.StateFieldReference, Instance = new ThisReference(), Type = this.host.PlatformType.SystemInt32 },
+          Type = this.host.PlatformType.SystemInt32
+        },
       };
       blockStatement.Statements.Add(thisDotStateEqState);
       ExpressionStatement thisDotCurrentEqReturnExp = new ExpressionStatement() {
@@ -1720,7 +1722,7 @@ namespace Microsoft.Cci {
       };
       blockStatement.Statements.Add(returnTrue);
       LabeledStatement labeledStatement = new LabeledStatement() {
-         Label = this.host.NameTable.GetNameFor("Label"+state), Statement = new EmptyStatement()
+        Label = this.host.NameTable.GetNameFor("Label"+state), Statement = new EmptyStatement()
       };
       blockStatement.Statements.Add(labeledStatement);
       this.stateEntries.Add(state, labeledStatement);
@@ -1732,7 +1734,7 @@ namespace Microsoft.Cci {
       ExpressionStatement thisDotStateEqMinus1 = new ExpressionStatement() {
         Expression = new Assignment() {
           Source = new CompileTimeConstant() { Value = -1, Type = this.host.PlatformType.SystemInt32 },
-          Target = new TargetExpression() {  Definition = iteratorClosure.StateFieldReference, Type = this.host.PlatformType.SystemInt32, Instance = new ThisReference()}
+          Target = new TargetExpression() { Definition = iteratorClosure.StateFieldReference, Type = this.host.PlatformType.SystemInt32, Instance = new ThisReference() }
         }
       };
       blockStatement.Statements.Add(thisDotStateEqMinus1);

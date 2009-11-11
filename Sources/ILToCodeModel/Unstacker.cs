@@ -11,7 +11,7 @@ using System.IO;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class Unstacker : MethodBodyMutator {
+  internal class Unstacker : MethodBodyCodeMutator {
     BasicBlock block;
     SourceMethodBody body;
     struct CodePoint { internal List<IStatement> statements; internal int index; internal StackOfLocals operandStack; }
@@ -160,10 +160,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(expression);
     }
 
-    public override IFieldReference Visit(IFieldReference fieldReference) {
-      return fieldReference;
-    }
-
     public override IStatement Visit(IStatement statement) {
       IGotoStatement gotoStatement = statement as IGotoStatement;
       if (gotoStatement != null) {
@@ -194,7 +190,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.block.LocalVariables.Add(temp);
         this.body.numberOfReferences.Add(temp, 0);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() { 
+        return new ExpressionStatement() {
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -207,10 +203,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         return statement;
       }
       return base.Visit(statement);
-    }
-
-    public override ITypeReference Visit(ITypeReference typeReference) {
-      return typeReference;
     }
 
     public override List<IExpression> Visit(List<IExpression> expressions) {
@@ -235,9 +227,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         IStatement newStatement;
-        
+
         newStatement = this.Visit(statement);
-        
+
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else
@@ -253,10 +245,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       methodCall.MethodToCall = this.Visit(methodCall.MethodToCall);
       methodCall.Type = this.Visit(methodCall.Type);
       return methodCall;
-    }
-
-    public override IMethodReference Visit(IMethodReference methodReference) {
-      return methodReference;
     }
 
     public override IExpression Visit(PointerCall pointerCall) {

@@ -915,7 +915,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference TypeAfterConversion {
       get { return this.typeAfterConversion; }
-      set { this.typeAfterConversion = value; }
+      set { this.typeAfterConversion = value; this.Type = value; }
     }
     ITypeReference typeAfterConversion;
 

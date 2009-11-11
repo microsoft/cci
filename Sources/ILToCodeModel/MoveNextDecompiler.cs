@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
-  internal class MoveNextDecompiler : MethodBodyMutator {
+  internal class MoveNextDecompiler : MethodBodyCodeMutator {
     public const string StateFieldPostfix = "__state";
     public const string ClosureFieldPrefix = "<>";
     public const string CurrentFieldPostfix = "__current";
@@ -425,7 +425,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="blockStatement"></param>
     /// <param name="localForThisDotStates"></param>
     void RemoveToplevelSwitch(BlockStatement blockStatement, List<ILocalDefinition> localForThisDotStates) {
-       
+
       // First: collect the statements in the switch case bodies for continuing/end states
       RemoveTopLevelSwitchHelper helper = new RemoveTopLevelSwitchHelper(localForThisDotStates, this.initialStateValue);
       OverLinearViewOfStatements(blockStatement, helper.CollectGotosInSwitchBody);
@@ -547,7 +547,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    class LocalReferencer: BaseCodeTraverser {
+    class LocalReferencer : BaseCodeTraverser {
       List<ILocalDefinition> referencedLocals = new List<ILocalDefinition>();
 
       public List<ILocalDefinition> ReferencedLocals {
@@ -567,7 +567,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       public override void Visit(ITargetExpression targetExpression) {
         ILocalDefinition localdef = targetExpression.Instance as ILocalDefinition;
-        if (localdef != null && !this.referencedLocals.Contains(localdef)) 
+        if (localdef != null && !this.referencedLocals.Contains(localdef))
           this.referencedLocals.Add(localdef);
         base.Visit(targetExpression);
       }
@@ -586,15 +586,14 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// statements in the MoveNext method, often the body of the MoveNext. Its TransformedBlock Property is the result of transforming
   /// the MoveNext block back to the block meaningful in the original method. 
   /// </summary>
-  internal class DecompiledMoveNextBlock  {
+  internal class DecompiledMoveNextBlock {
     BlockStatement/*!*/ decompiledMoveNextBody;
     IMethodDefinition/*!*/ originalMethodDefinition;
     IMethodDefinition/*!*/ moveNextMethodDefinition;
     Dictionary<IFieldDefinition, object> closureFieldMapping;
     Dictionary<IGenericParameter, IGenericParameter> typeParameterMapping;
     MoveNextSourceMethodBody/*!*/ sourceMethodBody;
-    internal DecompiledMoveNextBlock(IMethodDefinition originalMethodDefinition, IMethodDefinition moveNextMethod, BlockStatement decompiledMoveNextBody, MoveNextSourceMethodBody sourceMethodBody) 
-    {
+    internal DecompiledMoveNextBlock(IMethodDefinition originalMethodDefinition, IMethodDefinition moveNextMethod, BlockStatement decompiledMoveNextBody, MoveNextSourceMethodBody sourceMethodBody) {
       this.decompiledMoveNextBody = decompiledMoveNextBody;
       this.originalMethodDefinition = originalMethodDefinition;
       this.moveNextMethodDefinition = moveNextMethod;
@@ -605,7 +604,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     Dictionary<IFieldDefinition, object> ComputeFieldParameterMapping(IMethodDefinition/*!*/ originalMethodDefinition,
       IBlockStatement/*!*/ decompiledMoveNextBody) {
-      return new ClosureFieldOpenner(originalMethodDefinition, moveNextMethodDefinition, decompiledMoveNextBody).Mapping; 
+      return new ClosureFieldOpenner(originalMethodDefinition, moveNextMethodDefinition, decompiledMoveNextBody).Mapping;
     }
 
     Dictionary<IGenericParameter, IGenericParameter> ComputeTypeParameterMapping(IMethodDefinition original, IMethodDefinition moveNext) {
@@ -630,17 +629,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IBlockStatement TransformedBlock {
       get {
-        IBlockStatement block = new  ClosureBlockTransformer(typeParameterMapping, closureFieldMapping, sourceMethodBody).Visit(decompiledMoveNextBody);
+        IBlockStatement block = new ClosureBlockTransformer(typeParameterMapping, closureFieldMapping, sourceMethodBody).Visit(decompiledMoveNextBody);
         return block;
       }
     }
 
-    class ClosureBlockTransformer : MethodBodyMutator {
+    class ClosureBlockTransformer : MethodBodyCodeMutator {
       Dictionary<IGenericParameter, IGenericParameter>/*!*/ typeParameterMapping;
       Dictionary<IFieldDefinition, object>/*!*/ fieldMapping;
       internal ClosureBlockTransformer(Dictionary<IGenericParameter, IGenericParameter> typeParameterMapping, Dictionary<IFieldDefinition, object> fieldMapping, MoveNextSourceMethodBody sourceMethodBody)
-        : base(sourceMethodBody.host, true) 
-      {
+        : base(sourceMethodBody.host, true) {
         this.typeParameterMapping = typeParameterMapping;
         this.fieldMapping = fieldMapping;
       }
@@ -704,7 +702,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           ISpecializedFieldDefinition specialedClosureFieldDef = closureFieldDefinition as ISpecializedFieldDefinition;
           if (specialedClosureFieldDef != null)
             closureFieldDefinition = specialedClosureFieldDef.UnspecializedVersion;
-          if (this.fieldMapping.TryGetValue(closureFieldDefinition, out localOrParameter)){
+          if (this.fieldMapping.TryGetValue(closureFieldDefinition, out localOrParameter)) {
             if (localOrParameter is ThisReference)
               return (ThisReference)localOrParameter;
             boundExpression.Definition = localOrParameter;
@@ -720,8 +718,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       IBlockStatement/*!*/ decompiledMoveNextBlock;
       IMethodDefinition/*!*/ originalMethodDefinition;
       IMethodDefinition/*!*/ moveNextMethod;
-      public ClosureFieldOpenner(IMethodDefinition/*!*/ originalMethodDefinition, IMethodDefinition/*!*/moveNextMethod, IBlockStatement/*!*/ decompiledMoveNextBlock)
-      {
+      public ClosureFieldOpenner(IMethodDefinition/*!*/ originalMethodDefinition, IMethodDefinition/*!*/moveNextMethod, IBlockStatement/*!*/ decompiledMoveNextBlock) {
         this.decompiledMoveNextBlock = decompiledMoveNextBlock;
         this.originalMethodDefinition = originalMethodDefinition;
         this.moveNextMethod = moveNextMethod;
@@ -763,8 +760,8 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// Turn an assignment to a local variable that is not yet declared into a local variable declaration statement.
   /// 
   /// </summary>
-  internal class ClosureLocalVariableDeclarationAdder : MethodBodyMutator {
-    Dictionary<ILocalDefinition, bool> locals = new Dictionary<ILocalDefinition,bool>();
+  internal class ClosureLocalVariableDeclarationAdder : MethodBodyCodeMutator {
+    Dictionary<ILocalDefinition, bool> locals = new Dictionary<ILocalDefinition, bool>();
     internal ClosureLocalVariableDeclarationAdder(MoveNextSourceMethodBody sourceMethodBody)
       : base(sourceMethodBody.host, true) {
     }

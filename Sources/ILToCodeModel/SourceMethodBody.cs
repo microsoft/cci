@@ -391,7 +391,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new Unstacker(this).Visit(rootBlock);
-      new ControlFlowDecompiler(this.host.PlatformType,this.predecessors).Visit(rootBlock);
+      new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
@@ -467,6 +467,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (label is uint && this.targetStatementFor.TryGetValue((uint)label, out result)) return result;
       return CodeDummy.LabeledStatement;
     }
+
     private GotoStatement MakeGoto(IOperation currentOperation) {
       GotoStatement gotoStatement = new GotoStatement();
       gotoStatement.TargetStatement = this.GetTargetStatement(currentOperation.Value);
@@ -1617,7 +1618,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DecompileMoveNext(block);
         BasicBlock rootBlock = GetOrCreateBlock(0, false);
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
-        
+
         block = this.AddLocalDeclarationIfNecessary(block);
         new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
         return block;

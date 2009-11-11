@@ -7,7 +7,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
-  internal class AssertAssumeExtractor : MethodBodyMutator {
+  internal class AssertAssumeExtractor : MethodBodyCodeMutator {
 
     SourceMethodBody sourceMethodBody;
 
@@ -41,18 +41,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     JustVisit:
       return base.Visit(expressionStatement);
-    }
-
-    public override IFieldReference Visit(IFieldReference fieldReference) {
-      return fieldReference;
-    }
-
-    public override IMethodReference Visit(IMethodReference methodReference) {
-      return methodReference;
-    }
-
-    public override ITypeReference Visit(ITypeReference typeReference) {
-      return typeReference;
     }
 
   }
