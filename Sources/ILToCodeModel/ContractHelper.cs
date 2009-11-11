@@ -263,6 +263,21 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
+    /// Allocates an object that can be used as an IMetadataHost which automatically loads reference assemblies and attaches
+    /// a (lazy) contract provider to each unit it loads.
+    /// </summary>
+    /// <param name="searchPaths">
+    /// Initial value for the set of search paths to use.
+    /// </param>
+    /// <param name="searchInGAC">
+    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
+    /// </param>
+    public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths, bool searchInGAC)
+      : base(searchPaths, searchInGAC) {
+      this.peReader = new PeReader(this);
+    }
+
+    /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
     /// <param name="nameTable">
