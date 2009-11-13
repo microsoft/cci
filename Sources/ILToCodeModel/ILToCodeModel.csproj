@@ -44,6 +44,7 @@
     <Compile Include="ContractProviders.cs" />
     <Compile Include="ControlFlowDecompiler.cs" />
     <Compile Include="DeclarationAdder.cs" />
+    <Compile Include="Decompiler.cs" />
     <Compile Include="EmptyStatementRemover.cs" />
     <Compile Include="HelperObjects.cs" />
     <Compile Include="MoveNextDecompiler.cs" />

@@ -23,13 +23,13 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
+    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance. May be null.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public CodeModelNormalizer(IMetadataHost host, SourceMethodBodyProvider/*?*/ ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
@@ -41,13 +41,13 @@ namespace Microsoft.Cci {
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
+    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance. May be null.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider/*?*/ ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, copyOnlyIfNotAlreadyMutable, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }

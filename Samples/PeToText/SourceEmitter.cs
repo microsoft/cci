@@ -48,7 +48,7 @@ namespace PeToText {
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null)
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.contractProvider, this.pdbReader);
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, this.contractProvider);
       if (this.noIL)
         this.Visit(sourceMethodBody.Block.Statements);
       else {

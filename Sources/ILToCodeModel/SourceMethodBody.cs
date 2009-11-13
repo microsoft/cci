@@ -20,9 +20,12 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal readonly IMetadataHost host;
     internal readonly IMethodBody ilMethodBody;
     internal readonly INameTable nameTable;
-    internal readonly PdbReader/*?*/ pdbReader;
+    internal readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
+    internal readonly ILocalScopeProvider/*?*/ localScopeProvider;
+    private readonly PdbReader/*?*/ pdbReader;
     internal readonly IPlatformType platformType;
     internal List<ILocalDefinition> localVariables;
+    internal List<ITypeDefinition> privateHelperTypesToRemove;
     bool sawReadonly;
     bool sawTailCall;
     bool sawVolatile;
@@ -37,15 +40,19 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// result of the Block property of the resulting source method body.</param>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader) {
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
       this.contractProvider = contractProvider;
       this.nameTable = host.NameTable;
-      this.pdbReader = pdbReader;
+      this.sourceLocationProvider = sourceLocationProvider;
+      this.pdbReader = sourceLocationProvider as PdbReader;
+      this.localScopeProvider = localScopeProvider;
       this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
       this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
       this.localVariables = new List<ILocalDefinition>(ilMethodBody.LocalVariables);
@@ -58,13 +65,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// result of the Block property of the resulting source method body.</param>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
     /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
     /// embedded in the given method body.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly)
-      : this(ilMethodBody, host, contractProvider, pdbReader) {
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
+      : this(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
       this.contractsOnly = contractsOnly;
       this.contractExtractor = new ContractExtractor(this, this.contractProvider);
     }
@@ -143,7 +152,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// which are local to method.
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
-      get { return this.ilMethodBody.PrivateHelperTypes; }
+      get {
+        return this.ilMethodBody.PrivateHelperTypes;
+      }
     }
 
     #endregion
@@ -341,8 +352,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
         if (closureTypeAsNestedTypeReference == null) return Dummy.MethodBody;
         ITypeReference unspecializedClosureContainingType = GetUnspecializedType(closureTypeAsNestedTypeReference.ContainingType);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType))
-        {
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)) {
           IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
           foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
             IMethodDefinition moveNext = member as IMethodDefinition;
@@ -370,7 +380,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Perform different phases approppriate for normal, movenext, or iterator source method bodies.
+    /// Perform different phases approppriate for normal, MoveNext, or iterator source method bodies.
     /// </summary>
     /// <param name="rootBlock"></param>
     /// <returns></returns>
@@ -389,7 +399,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (moveNextILBody == Dummy.MethodBody) {
         result = iteratorBodyFromIL;
       } else {
-        var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader);
+        if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
+        this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
+        var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider, this.contractProvider);
         result = moveNextBody.TransformedBlock;
       }
       result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);
@@ -1546,11 +1558,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// is accessed by the TransformedBlock property.</param>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader)
-      : base(ilMethodBody, host, contractProvider, pdbReader) {
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider)
+      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
       this.iteratorMethodBody = iteratorMethodBody;
     }
 
@@ -1563,13 +1577,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// is accessed by the TransformedBlock property.</param>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    /// <param name="pdbReader">An object that maps offsets in an IL stream to source locations.</param>
     /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
     /// embedded in the given method body.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool contractsOnly)
-      : base(ilMethodBody, host, contractProvider, pdbReader, contractsOnly) {
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
+      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider, contractsOnly) {
       this.iteratorMethodBody = iteratorMethodBody;
     }
 

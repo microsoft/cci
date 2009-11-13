@@ -73,7 +73,7 @@ public class CodeModelRoundTripTests {
     LoadPdbReaderWriter(pdbName, assembly);
 
     SourceMethodBodyProvider ilToSourceProvider = delegate(IMethodBody methodBody) {
-      return new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, null, pdbReader);
+      return new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, pdbReader, null);
     };
 
     SourceToILConverterProvider sourceToILProvider =

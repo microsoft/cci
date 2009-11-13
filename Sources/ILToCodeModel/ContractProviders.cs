@@ -238,7 +238,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       IMethodBody methodBody = methodDefinition.Body;
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null) {
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.underlyingContractProvider, this.pdbReader, true);
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, this.underlyingContractProvider, true);
       }
       var dummyJustToGetDecompilationAndContractExtraction = sourceMethodBody.Block;
 
@@ -289,7 +289,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       IMethodBody methodBody = invariantMethod.Body;
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null) {
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.underlyingContractProvider, this.pdbReader, true);
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, this.underlyingContractProvider, true);
       }
       var dummyJustToGetDecompilationAndContractExtraction = sourceMethodBody.Block;
 

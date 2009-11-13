@@ -75,10 +75,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         closureType = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(locDecl.LocalVariable.Type);
       }
       if (closureType == null) return;
+      //REVIEW: need to avoid resolving types that are not defined in the module we are analyzing.
       ITypeReference t1 = UnSpecializedMethods.AsUnSpecializedTypeReference(closureType.ContainingType.ResolvedType);
       ITypeReference t2 = UnSpecializedMethods.AsUnSpecializedTypeReference(this.containingType);
       if (t1 != t2) return;
       if (!UnSpecializedMethods.IsCompilerGenerated(closureType.ResolvedType)) return;
+      if (this.sourceMethodBody.privateHelperTypesToRemove == null) this.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
+      this.sourceMethodBody.privateHelperTypesToRemove.Add(closureType.ResolvedType);
       this.currentClosureLocal = locDecl.LocalVariable;
       statements.RemoveAt(i-1);
       for (int j = i-1; j < statements.Count; j++) {
@@ -102,15 +105,15 @@ namespace Microsoft.Cci.ILToCodeModel {
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                 Name = closureField.ResolvedField.Name, Type = closureField.Type
+                Name = closureField.ResolvedField.Name, Type = closureField.Type
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
                 LocalVariable = localDefinition, InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
-            }
-            else continue;
+            } else 
+              continue;
           }
         } else {
           this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, thisReference);
@@ -188,7 +191,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host, this.sourceMethodBody.contractProvider, this.sourceMethodBody.pdbReader).Block;
+      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
+        this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.contractProvider).Block;
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -259,9 +263,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       int numReferences = 0;
       if (!this.sourceMethodBody.numberOfReferences.TryGetValue(local, out numReferences) || numReferences > 1)
         return localDeclarationStatement;
-      if (this.sourceMethodBody.pdbReader != null) {
+      if (this.sourceMethodBody.sourceLocationProvider != null) {
         bool isCompilerGenerated = false;
-        this.sourceMethodBody.pdbReader.GetSourceNameFor(local, out isCompilerGenerated);
+        this.sourceMethodBody.sourceLocationProvider.GetSourceNameFor(local, out isCompilerGenerated);
         if (!isCompilerGenerated) return localDeclarationStatement;
       }
       if (localDeclarationStatement.InitialValue != null && numReferences > 0) {
