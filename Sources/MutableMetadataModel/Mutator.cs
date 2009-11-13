@@ -51,7 +51,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    /// <param name="copyOnlyIfNotAlreadyMutable">True if the mutator should try and perform mutations in place, rather than mutating new copies.</param>
     public MetadataMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable) {
       this.host = host;
       this.copyOnlyIfNotAlreadyMutable = copyOnlyIfNotAlreadyMutable;
@@ -63,7 +63,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected Dictionary<object, object> cache = new Dictionary<object, object>();
 
     /// <summary>
-    /// 
+    /// True if the mutator should try and perform mutations in place, rather than mutating new copies.
     /// </summary>
     protected readonly bool copyOnlyIfNotAlreadyMutable;
 
