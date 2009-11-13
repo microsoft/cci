@@ -15,8 +15,7 @@ using System.Diagnostics.SymbolStore;
 namespace Microsoft.Cci {
 
   /// <summary>
-  /// An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
-  /// For example, a PDB reader that maps offsets in an IL stream to source locations.
+  /// An object that can map offsets in an IL stream to source locations and block scopes.
   /// </summary>
   public sealed class PdbReader : ISourceLocationProvider, ILocalScopeProvider {
 
