@@ -23,14 +23,11 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
-    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) {
+    public CodeModelNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider, contractProvider) {
     }
 
     /// <summary>
@@ -40,14 +37,11 @@ namespace Microsoft.Cci {
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
-    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceToILConverterProvider sourceToILProvider,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, sourceToILProvider, sourceLocationProvider, contractProvider) {
+    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider, contractProvider) {
     }
 
     /// <summary>
@@ -120,7 +114,7 @@ namespace Microsoft.Cci {
         this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
         body = GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes);
       }
-      SourceMethodBody result = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       result.Block = body;
       result.MethodDefinition = method;
       result.LocalsAreZeroed = true;
@@ -163,7 +157,7 @@ namespace Microsoft.Cci {
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
 
-      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this, this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.sourceToILProvider, this.sourceLocationProvider, this.contractProvider);
+      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this, this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.sourceLocationProvider, this.contractProvider);
       return iteratorClosureGenerator.CompileIterator(body, method, methodContract);
     }
 
@@ -308,7 +302,7 @@ namespace Microsoft.Cci {
       List<IStatement> statements = new List<IStatement>();
       statements.Add(baseConstructorCallStatement);
       BlockStatement block = new BlockStatement() { Statements = statements };
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
 
@@ -654,9 +648,9 @@ namespace Microsoft.Cci {
 
     private IMethodBody GetMethodBodyFrom(IBlockStatement block, IMethodDefinition method) {
       var bodyFixer = new FixAnonymousDelegateBodyToUseClosure(this.FieldForCapturedLocalOrParameter, this.cache, this.CurrentClosureClass, this.outerClosures,
-        this.host, this.sourceToILProvider, this.sourceLocationProvider);
+        this.host, this.sourceLocationProvider);
       block = bodyFixer.Visit(block);
-      var result = new SourceMethodBody(ProvideSourceToILConverter, this.host, this.sourceLocationProvider, this.contractProvider);
+      var result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       result.Block = block;
       result.LocalsAreZeroed = true;
       result.MethodDefinition = method;
@@ -680,9 +674,9 @@ namespace Microsoft.Cci {
     List<ILocalDefinition> allLocals;
     Dictionary<ITypeReference, ITypeReference> genericTypeParameterMapping = new Dictionary<ITypeReference, ITypeReference>();
     Dictionary<object, BoundField>/*passed in from constructor*/ fieldForCapturedLocalOrParameter;
-    public IteratorClosureGenerator(CodeModelNormalizer codeModelNormalizer, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
+    public IteratorClosureGenerator(CodeModelNormalizer codeModelNormalizer, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) {
+      : base(host, sourceLocationProvider, contractProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
       this.codeModelNormalizer = codeModelNormalizer;
@@ -991,7 +985,7 @@ namespace Microsoft.Cci {
       statements.Add(thisDotStateEqState);
       statements.Add(thisThreadIdEqCurrentThreadId);
       BlockStatement block = new BlockStatement() { Statements = statements };
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
       constructor.Body = body;
@@ -1047,7 +1041,7 @@ namespace Microsoft.Cci {
       };
       iteratorClosure.ClosureDefinition.ExplicitImplementationOverrides.Add(moveNextImp);
 
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       IBlockStatement block = TranslateIteratorMethodBodyToMoveNextBody(iteratorClosure, blockStatement);
       moveNext.Body = body;
       body.Block = block;
@@ -1057,7 +1051,7 @@ namespace Microsoft.Cci {
     private IBlockStatement TranslateIteratorMethodBodyToMoveNextBody(IteratorClosure iteratorClosure, BlockStatement blockStatement) {
 
       FixIteratorBodyToUseClosure copier = new FixIteratorBodyToUseClosure(this.FieldForCapturedLocalOrParameter,
-        this.cache, iteratorClosure, this.host, this.sourceToILProvider, this.sourceLocationProvider);
+        this.cache, iteratorClosure, this.host, this.sourceLocationProvider);
       IBlockStatement result = copier.Visit(blockStatement);
       Dictionary<int, ILabeledStatement> StateEntries = new YieldReturnYieldBreakReplacer(iteratorClosure, this.host).GetStateEntries(blockStatement);
       result = BuildStateMachine(iteratorClosure, (BlockStatement)result, StateEntries);
@@ -1123,7 +1117,7 @@ namespace Microsoft.Cci {
       };
       statements.Add(returnCurrent);
       BlockStatement block = new BlockStatement() { Statements = statements };
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
       body.MethodDefinition = reset;
@@ -1158,7 +1152,7 @@ namespace Microsoft.Cci {
         Expression = null,
         Locations = iteratorClosure.ClosureDefinition.Locations
       });
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
       body.MethodDefinition = disposeMethod;
@@ -1337,7 +1331,7 @@ namespace Microsoft.Cci {
         //  Expression = new CompileTimeConstant() { Value= null, Type = genericGetEnumerator.Type}
         //}
         );
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
       body.MethodDefinition = genericGetEnumerator;
@@ -1382,7 +1376,7 @@ namespace Microsoft.Cci {
            Type = iteratorClosure.NonGenericIEnumeratorInterface
          }
       });
-      SourceMethodBody body1 = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body1 = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body1.LocalsAreZeroed = true;
       body1.Block = block1;
       body1.MethodDefinition = nongenericGetEnumerator;
@@ -1454,7 +1448,7 @@ namespace Microsoft.Cci {
       };
       statements.Add(returnCurrent);
       BlockStatement block = new BlockStatement() { Statements = statements };
-      SourceMethodBody body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
       body.MethodDefinition = getterNonGenericCurrent;
@@ -1499,7 +1493,7 @@ namespace Microsoft.Cci {
       };
       statements.Add(returnCurrent);
       block = new BlockStatement() { Statements = statements };
-      body = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
+      body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body.LocalsAreZeroed = true;
       body.Block = block;
       body.MethodDefinition = getterGenericCurrent;
@@ -1618,14 +1612,11 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
-    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MethodBodyNormalizer(IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) {
+    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider, contractProvider) {
     }
 
     /// <summary>

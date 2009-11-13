@@ -508,8 +508,7 @@ namespace Microsoft.Cci {
     /// <param name="method">A method that provides the context for a block of statments that are to be converted to IL.</param>
     /// <param name="body">A block of statements that are to be converted to IL.</param>
     public override void ConvertToIL(IMethodDefinition method, IBlockStatement body) {
-      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.host, ProvideSourceToILConverter,
-        this.sourceLocationProvider, (ContractProvider)this.contractProvider);
+      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider, (ContractProvider)this.contractProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(method, body);
       this.privateHelperTypes = normalizedBody.PrivateHelperTypes;
       base.Visit(normalizedBody);
@@ -523,12 +522,7 @@ namespace Microsoft.Cci {
     public override IEnumerable<ITypeDefinition> GetPrivateHelperTypes() {
       return this.privateHelperTypes;
     }
-
     IEnumerable<ITypeDefinition> privateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
-
-    static ISourceToILConverter ProvideSourceToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) {
-      return new CodeModelToILConverter(host, sourceLocationProvider, contractProvider);
-    }
 
   }
 }

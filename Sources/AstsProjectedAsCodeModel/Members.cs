@@ -2910,7 +2910,7 @@ namespace Microsoft.Cci.Ast {
         return;
       }
 
-      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment, ProvideSourceToILConverter,
+      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
 
@@ -2923,10 +2923,6 @@ namespace Microsoft.Cci.Ast {
       this.operations = converter.GetOperations();
       this.operationExceptionInformation = converter.GetOperationExceptionInformation();
       this.privateHelperTypes = normalizedBody.PrivateHelperTypes;
-    }
-
-    static ISourceToILConverter ProvideSourceToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) {
-      return new CodeModelToILConverter(host, sourceLocationProvider, contractProvider);
     }
 
     bool ilWasGenerated;

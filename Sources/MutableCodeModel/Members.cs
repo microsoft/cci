@@ -20,18 +20,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Allocates an object that provides a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
     /// </summary>
-    /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
-    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="host">An object representing the application that is hosting this source method body. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public SourceMethodBody(SourceToILConverterProvider/*?*/ sourceToILProvider, IMetadataHost host, 
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider) {
+    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider) {
       this.Block = CodeDummy.Block;
       this.contractProvider = contractProvider;
-      this.sourceToILProvider = sourceToILProvider;
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
     }
@@ -49,11 +45,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     ContractProvider/*?*/ contractProvider;
     IMetadataHost host;
-    /// <summary>
-    /// A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
-    /// The returned object is in turn used to convert blocks of statements into lists of IL operations.
-    /// </summary>
-    SourceToILConverterProvider/*?*/ sourceToILProvider;
     ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     /// <summary>
@@ -72,23 +63,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       IEnumerable<IOperation> operations;
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
       IEnumerable<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
-      if (this.sourceToILProvider == null) {
-        localVariables = IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
-        maxStack = 0;
-        operations = IteratorHelper.GetEmptyEnumerable<IOperation>();
-        operationExceptionInformation = IteratorHelper.GetEmptyEnumerable<IOperationExceptionInformation>();
-        if (privateHelperTypes == null)
-          privateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
-      } else {
-        ISourceToILConverter converter = this.sourceToILProvider(this.host, this.sourceLocationProvider, this.contractProvider);
-        converter.ConvertToIL(this.MethodDefinition, this.Block);
-        localVariables = converter.GetLocalVariables();
-        maxStack = converter.MaximumStackSizeNeeded;
-        operations = converter.GetOperations();
-        operationExceptionInformation = converter.GetOperationExceptionInformation();
-        if (privateHelperTypes == null)
-          privateHelperTypes = converter.GetPrivateHelperTypes();
-      }
+
+      var converter = new CodeModelToILConverter(this.host, this.sourceLocationProvider, this.contractProvider);
+      converter.ConvertToIL(this.MethodDefinition, this.Block);
+      localVariables = converter.GetLocalVariables();
+      maxStack = converter.MaximumStackSizeNeeded;
+      operations = converter.GetOperations();
+      operationExceptionInformation = converter.GetOperationExceptionInformation();
+      if (privateHelperTypes == null)
+        privateHelperTypes = converter.GetPrivateHelperTypes();
 
       lock (this) {
         if (this.ilWasGenerated) return;
@@ -180,7 +163,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
-        return this.privateHelperTypes; 
+        return this.privateHelperTypes;
       }
       set { this.privateHelperTypes = value; }
     }

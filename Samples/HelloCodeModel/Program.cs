@@ -15,7 +15,7 @@ namespace HelloCodeModel {
         Name = nameTable.GetNameFor("hello"),
         ModuleName = nameTable.GetNameFor("hello.exe"),
         Kind = ModuleKind.ConsoleApplication,
-        TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion,          
+        TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion,
       };
       assembly.AssemblyReferences.Add(coreAssembly);
 
@@ -34,8 +34,8 @@ namespace HelloCodeModel {
       var testClass = new NamespaceTypeDefinition() {
         ContainingUnitNamespace = rootUnitNamespace,
         InternFactory = host.InternFactory,
-        IsClass = true, 
-        IsPublic = true,  
+        IsClass = true,
+        IsPublic = true,
         Name = nameTable.GetNameFor("Test"),
       };
       rootUnitNamespace.Members.Add(testClass);
@@ -54,13 +54,9 @@ namespace HelloCodeModel {
       assembly.EntryPoint = mainMethod;
       testClass.Methods.Add(mainMethod);
 
-      SourceToILConverterProvider converterProvider = delegate(IMetadataHost mhost, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) {
-        return new CodeModelToILConverter(host, sourceLocationProvider, contractProvider);
-      };
-
-      var body = new SourceMethodBody(converterProvider, host, null, null) { 
+      var body = new SourceMethodBody(host, null, null) {
         MethodDefinition = mainMethod,
-        LocalsAreZeroed = true 
+        LocalsAreZeroed = true
       };
       mainMethod.Body = body;
 
@@ -76,7 +72,7 @@ namespace HelloCodeModel {
       block.Statements.Add(new ReturnStatement());
 
       Stream peStream = File.Create("hello.exe");
-      PeWriter.WritePeToStream(assembly, host, peStream);      
+      PeWriter.WritePeToStream(assembly, host, peStream);
 
     }
 

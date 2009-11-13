@@ -106,6 +106,10 @@
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CodeModelToIL\CodeModelToIL.csproj">
+      <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
+      <Name>CodeModelToIL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
       <Name>CodeModel</Name>

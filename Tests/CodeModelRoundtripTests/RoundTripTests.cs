@@ -70,13 +70,7 @@ public class CodeModelRoundTripTests {
   }
 
   CodeAndContractMutator CreateCodeMutator(IAssembly assembly, string pdbName) {
-
-    SourceToILConverterProvider sourceToILProvider =
-            delegate(IMetadataHost host2, ISourceLocationProvider sourceLocationProvider, IContractProvider contractProvider2) {
-          return new CodeModelToILConverter(host2, sourceLocationProvider, contractProvider2);
-        };
-
-    return new CodeAndContractMutator(host, sourceToILProvider, pdbReader, null);
+    return new CodeAndContractMutator(host, pdbReader, null);
   }
 
   void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator) {
