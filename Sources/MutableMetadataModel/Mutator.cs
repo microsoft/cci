@@ -26,14 +26,22 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A visitor that produces a mutable copy a given metadata model. Derived classes can override the visit methods
+  /// to intervene in the copying process, usually resulting in a copy that is not equivalent to the original model.
+  /// For instance, the new copy might have additional types and methods, or additional calls to instrumentation routines.
   /// </summary>
+  /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
+  /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
+  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.</remarks>
   public class MetadataMutator {
+
+    //TODO: perhaps have three classes: MetadataCopier, MetadataMutator and MetadataCopyingMutator?
 
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="host"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
     public MetadataMutator(IMetadataHost host) {
       this.host = host;
     }
@@ -41,7 +49,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="host"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
     public MetadataMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable) {
       this.host = host;
@@ -195,7 +204,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="customAttribute"></param>
     /// <returns></returns>
     public virtual CustomAttribute GetMutableCopy(ICustomAttribute customAttribute) {
-      CustomAttribute result = new CustomAttribute();
+      CustomAttribute result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = customAttribute as CustomAttribute;
+        if (result != null) return result;
+      }
+      result = new CustomAttribute();
       result.Copy(customAttribute, this.host.InternFactory);
       return result;
     }
@@ -206,7 +220,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="customModifier"></param>
     /// <returns></returns>
     public virtual CustomModifier GetMutableCopy(ICustomModifier customModifier) {
-      CustomModifier result = new CustomModifier();
+      CustomModifier result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = customModifier as CustomModifier;
+        if (result != null) return result;
+      }
+      result = new CustomModifier();
       result.Copy(customModifier, this.host.InternFactory);
       return result;
     }
@@ -217,7 +236,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="eventDefinition"></param>
     /// <returns></returns>
     public virtual EventDefinition GetMutableCopy(IEventDefinition eventDefinition) {
-      EventDefinition result = new EventDefinition();
+      EventDefinition result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = eventDefinition as EventDefinition;
+        if (result != null) return result;
+      }
+      result = new EventDefinition();
       result.Copy(eventDefinition, this.host.InternFactory);
       return result;
     }
@@ -294,7 +318,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="fileReference"></param>
     /// <returns></returns>
     public virtual FileReference GetMutableCopy(IFileReference fileReference) {
-      FileReference result = new FileReference();
+      FileReference result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = fileReference as FileReference;
+        if (result != null) return result;
+      }
+      result = new FileReference();
       result.Copy(fileReference, this.host.InternFactory);
       return result;
     }
@@ -547,7 +576,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="marshallingInformation"></param>
     /// <returns></returns>
     public virtual MarshallingInformation GetMutableCopy(IMarshallingInformation marshallingInformation) {
-      MarshallingInformation result = new MarshallingInformation();
+      MarshallingInformation result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = marshallingInformation as MarshallingInformation;
+        if (result != null) return result;
+      }
+      result = new MarshallingInformation();
       result.Copy(marshallingInformation, this.host.InternFactory);
       return result;
     }
@@ -558,7 +592,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="metadataConstant"></param>
     /// <returns></returns>
     public virtual MetadataConstant GetMutableCopy(IMetadataConstant metadataConstant) {
-      MetadataConstant result = new MetadataConstant();
+      MetadataConstant result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = metadataConstant as MetadataConstant;
+        if (result != null) return result;
+      }
+      result = new MetadataConstant();
       result.Copy(metadataConstant, this.host.InternFactory);
       return result;
     }
@@ -569,7 +608,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="metadataCreateArray"></param>
     /// <returns></returns>
     public virtual MetadataCreateArray GetMutableCopy(IMetadataCreateArray metadataCreateArray) {
-      MetadataCreateArray result = new MetadataCreateArray();
+      MetadataCreateArray result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = metadataCreateArray as MetadataCreateArray;
+        if (result != null) return result;
+      }
+      result = new MetadataCreateArray();
       result.Copy(metadataCreateArray, this.host.InternFactory);
       return result;
     }
@@ -580,7 +624,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="metadataNamedArgument"></param>
     /// <returns></returns>
     public virtual MetadataNamedArgument GetMutableCopy(IMetadataNamedArgument metadataNamedArgument) {
-      MetadataNamedArgument result = new MetadataNamedArgument();
+      MetadataNamedArgument result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = metadataNamedArgument as MetadataNamedArgument;
+        if (result != null) return result;
+      }
+      result = new MetadataNamedArgument();
       result.Copy(metadataNamedArgument, this.host.InternFactory);
       return result;
     }
@@ -591,7 +640,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="metadataTypeOf"></param>
     /// <returns></returns>
     public virtual MetadataTypeOf GetMutableCopy(IMetadataTypeOf metadataTypeOf) {
-      MetadataTypeOf result = new MetadataTypeOf();
+      MetadataTypeOf result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = metadataTypeOf as MetadataTypeOf;
+        if (result != null) return result;
+      }
+      result = new MetadataTypeOf();
       result.Copy(metadataTypeOf, this.host.InternFactory);
       return result;
     }
@@ -624,7 +678,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodBody"></param>
     /// <returns></returns>
     public virtual MethodBody GetMutableCopy(IMethodBody methodBody) {
-      MethodBody result = new MethodBody();
+      MethodBody result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = methodBody as MethodBody;
+        if (result != null) return result;
+      }
+      result = new MethodBody();
       result.Copy(methodBody, this.host.InternFactory);
       return result;
     }
@@ -635,7 +694,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodImplementation"></param>
     /// <returns></returns>
     public virtual MethodImplementation GetMutableCopy(IMethodImplementation methodImplementation) {
-      MethodImplementation result = new MethodImplementation();
+      MethodImplementation result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = methodImplementation as MethodImplementation;
+        if (result != null) return result;
+      }
+      result = new MethodImplementation();
       result.Copy(methodImplementation, this.host.InternFactory);
       return result;
     }
@@ -734,7 +798,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="namespaceAliasForType"></param>
     /// <returns></returns>
     public virtual NamespaceAliasForType GetMutableCopy(INamespaceAliasForType namespaceAliasForType) {
-      NamespaceAliasForType result = new NamespaceAliasForType();
+      NamespaceAliasForType result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = namespaceAliasForType as NamespaceAliasForType;
+        if (result != null) return result;
+      }
+      result = new NamespaceAliasForType();
       result.Copy(namespaceAliasForType, this.host.InternFactory);
       return result;
     }
@@ -789,7 +858,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="nestedAliasForType"></param>
     /// <returns></returns>
     public virtual NestedAliasForType GetMutableCopy(INestedAliasForType nestedAliasForType) {
-      NestedAliasForType result = new NestedAliasForType();
+      NestedAliasForType result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = nestedAliasForType as NestedAliasForType;
+        if (result != null) return result;
+      }
+      result = new NestedAliasForType();
       result.Copy(nestedAliasForType, this.host.InternFactory);
       return result;
     }
@@ -888,7 +962,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="operation"></param>
     /// <returns></returns>
     public virtual Operation GetMutableCopy(IOperation operation) {
-      var result = new Operation();
+      Operation result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = operation as Operation;
+        if (result != null) return result;
+      }
+      result = new Operation();
       result.Copy(operation, this.host.InternFactory);
       return result;
     }
@@ -899,7 +978,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="operationExceptionInformation"></param>
     /// <returns></returns>
     public virtual OperationExceptionInformation GetMutableCopy(IOperationExceptionInformation operationExceptionInformation) {
-      var result = new OperationExceptionInformation();
+      OperationExceptionInformation result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = operationExceptionInformation as OperationExceptionInformation;
+        if (result != null) return result;
+      }
+      result = new OperationExceptionInformation();
       result.Copy(operationExceptionInformation, this.host.InternFactory);
       return result;
     }
@@ -932,7 +1016,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="parameterTypeInformation"></param>
     /// <returns></returns>
     public virtual ParameterTypeInformation GetMutableCopy(IParameterTypeInformation parameterTypeInformation) {
-      var result = new ParameterTypeInformation();
+      ParameterTypeInformation result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = parameterTypeInformation as ParameterTypeInformation;
+        if (result != null) return result;
+      }
+      result = new ParameterTypeInformation();
       result.Copy(parameterTypeInformation, this.host.InternFactory);
       return result;
     }
@@ -943,7 +1032,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="platformInvokeInformation"></param>
     /// <returns></returns>
     public virtual PlatformInvokeInformation GetMutableCopy(IPlatformInvokeInformation platformInvokeInformation) {
-      var result = new PlatformInvokeInformation();
+      PlatformInvokeInformation result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = platformInvokeInformation as PlatformInvokeInformation;
+        if (result != null) return result;
+      }
+      result = new PlatformInvokeInformation();
       result.Copy(platformInvokeInformation, this.host.InternFactory);
       return result;
     }
@@ -976,7 +1070,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="propertyDefinition"></param>
     /// <returns></returns>
     public virtual PropertyDefinition GetMutableCopy(IPropertyDefinition propertyDefinition) {
-      var result = new PropertyDefinition();
+      PropertyDefinition result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = propertyDefinition as PropertyDefinition;
+        if (result != null) return result;
+      }
+      result = new PropertyDefinition();
       result.Copy(propertyDefinition, this.host.InternFactory);
       return result;
     }
@@ -1053,7 +1152,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="securityAttribute"></param>
     /// <returns></returns>
     public virtual SecurityAttribute GetMutableCopy(ISecurityAttribute securityAttribute) {
-      var result = new SecurityAttribute();
+      SecurityAttribute result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = securityAttribute as SecurityAttribute;
+        if (result != null) return result;
+      }
+      result = new SecurityAttribute();
       result.Copy(securityAttribute, this.host.InternFactory);
       return result;
     }
