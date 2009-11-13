@@ -31,14 +31,13 @@ namespace Microsoft.Cci {
     /// traversed by this mutator.</param>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     internal FixAnonymousDelegateBodyToUseClosure(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<object, object> cache,
       TypeDefinition closure, List<IFieldDefinition> outerClosures,
-      IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider) {
+      IMetadataHost host, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host, sourceToILProvider, sourceLocationProvider) {
       this.cache = cache;
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.closure = closure;
@@ -116,7 +115,7 @@ namespace Microsoft.Cci {
 
     Dictionary<object, BoundField>/*!*/ fieldForCapturedLocalOrParameter;
     IteratorClosure iteratorClosure;
-    Dictionary<ITypeReference, ITypeReference>/*!*/ typeParameterMapping = new Dictionary<ITypeReference,ITypeReference>();
+    Dictionary<ITypeReference, ITypeReference>/*!*/ typeParameterMapping = new Dictionary<ITypeReference, ITypeReference>();
 
     /// <summary>
     /// Allocates a mutator that visits an anonymous delegate body and produces a copy that has been changed to
@@ -128,14 +127,13 @@ namespace Microsoft.Cci {
     /// <param name="closure">Information regarding the closure created for the iterator.</param>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     internal FixIteratorBodyToUseClosure(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<object, object> cache,
-      IteratorClosure closure, 
-      IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider) {
+      IteratorClosure closure,
+      IMetadataHost host, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host, sourceToILProvider, sourceLocationProvider) {
       this.cache = cache;
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.iteratorClosure = closure;

@@ -2910,7 +2910,7 @@ namespace Microsoft.Cci.Ast {
         return;
       }
 
-      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment, null, ProvideSourceToILConverter,
+      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment, ProvideSourceToILConverter,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
 

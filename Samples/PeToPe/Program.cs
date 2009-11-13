@@ -43,11 +43,11 @@ namespace PeToPe {
         delegate(IMetadataHost host2, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider2) {
           return new CodeModelToILConverter(host2, sourceLocationProvider, contractProvider2);
         };
-      var mutator = new CodeMutator(host, null, sourceToILProvider, pdbReader);
+      var mutator = new CodeMutator(host, sourceToILProvider, pdbReader);
       module = mutator.Visit(module);
 
       //Replace anonymous delegates and iterators with code that uses helper classes.
-      CodeModelNormalizer cmn = new CodeModelNormalizer(host, true, null, sourceToILProvider, pdbReader, null);
+      CodeModelNormalizer cmn = new CodeModelNormalizer(host, true, sourceToILProvider, pdbReader, null);
       module = cmn.Visit(module);
 
       //Write out the normalized Code Model, traversing it as the Metadata Model it also is.

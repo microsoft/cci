@@ -370,20 +370,6 @@ namespace Microsoft.Cci {
     public BaseCodeTraverser() {
     }
 
-    /// <summary>
-    /// Allocates a visitor instance that traverses a metadata model as a code model (via decompilation), in depth first, left to right order.
-    /// </summary>
-    public BaseCodeTraverser(SourceMethodBodyProvider/*?*/ ilToSourceProvider) {
-      this.ilToSourceProvider = ilToSourceProvider;
-    }
-
-    /// <summary>
-    /// A delegate that provides an ISourceMethodBody instance that corresponds to a given IMethodBody.
-    /// Typically this will be done by decompiling the operations of the given method body into a block of instructions.
-    /// It is assumed that the caller will already have tried to just cast the IMethodBody instance into an ISourceMethodBody instance.
-    /// </summary>
-    protected readonly SourceMethodBodyProvider/*?*/ ilToSourceProvider;
-
     #region ICodeVisitor Members
 
     /// <summary>
@@ -1327,8 +1313,6 @@ namespace Microsoft.Cci {
     {
       if (this.stopTraversal) return;
       var sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody == null && this.ilToSourceProvider != null)
-        sourceMethodBody = this.ilToSourceProvider(methodBody);
       if (sourceMethodBody != null) {
         this.Visit(sourceMethodBody);
         return;

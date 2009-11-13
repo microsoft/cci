@@ -27,11 +27,6 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// A way to have a dynamically registered component (e.g., the decompiler) be able to provide a source-level method body
-  /// </summary>
-  public delegate ISourceMethodBody SourceMethodBodyProvider(IMethodBody methodBody);
-
-  /// <summary>
   /// An object that can visit a source method body Block and produce the corresponding IL.
   /// </summary>
   public interface ISourceToILConverter {

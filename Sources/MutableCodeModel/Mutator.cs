@@ -16,20 +16,12 @@ using Microsoft.Cci.Contracts;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// Use the inherited methods from MetadataMutator to walk everything down to the method body level,
-  /// then take over and define Visit methods for all of the structures in the
-  /// code model that pertain to method bodies.
+  /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+  /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
   /// </summary>
   public class CodeMutator : MetadataMutator {
 
     private CreateMutableType createMutableType;
-
-    /// <summary>
-    /// A delegate that provides an ISourceMethodBody instance that corresponds to a given IMethodBody.
-    /// Typically this will be done by decompiling the operations of the given method body into a block of instructions.
-    /// It is assumed that the caller will already have tried to just cast the IMethodBody instance into an ISourceMethodBody instance.
-    /// </summary>
-    protected readonly SourceMethodBodyProvider/*?*/ ilToSourceProvider;
 
     /// <summary>
     /// A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
@@ -43,54 +35,56 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     /// <summary>
-    /// 
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
     /// </summary>
-    /// <param name="host"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
     public CodeMutator(IMetadataHost host)
       : base(host) {
       createMutableType = new CreateMutableType(this, true);
     }
 
     /// <summary>
-    /// 
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
     /// </summary>
-    /// <param name="host"></param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="copyOnlyIfNotAlreadyMutable">True if the mutator should try and perform mutations in place, rather than mutating new copies.</param>
     public CodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
       : base(host, copyOnlyIfNotAlreadyMutable) {
       createMutableType = new CreateMutableType(this, !copyOnlyIfNotAlreadyMutable);
     }
 
     /// <summary>
-    /// 
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    public CodeMutator(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+    public CodeMutator(IMetadataHost host, SourceToILConverterProvider/*?*/ sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
       : base(host) {
-      this.ilToSourceProvider = ilToSourceProvider;
       this.sourceToILProvider = sourceToILProvider;
       this.sourceLocationProvider = sourceLocationProvider;
       createMutableType = new CreateMutableType(this, true);
     }
 
     /// <summary>
-    /// 
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    public CodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+    public CodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
       : base(host, copyOnlyIfNotAlreadyMutable) {
-      this.ilToSourceProvider = ilToSourceProvider;
       this.sourceToILProvider = sourceToILProvider;
       this.sourceLocationProvider = sourceLocationProvider;
       createMutableType = new CreateMutableType(this, !copyOnlyIfNotAlreadyMutable);
@@ -727,8 +721,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody == null && this.ilToSourceProvider != null)
-        sourceMethodBody = this.ilToSourceProvider(methodBody);
       if (sourceMethodBody != null) {
         SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, null);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
@@ -2148,27 +2140,36 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+  /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+  /// Also visits and mutates the associated code contracts and establishes associations with new copies.
   /// </summary>
   public class CodeAndContractMutator : CodeMutator {
 
     /// <summary>
-    /// 
+    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
     /// </summary>
     protected readonly ContractProvider/*?*/ contractProvider;
 
     /// <summary>
-    /// 
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
     /// </summary>
-    /// <param name="host"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
     public CodeAndContractMutator(IMetadataHost host)
       : base(host) { }
 
     /// <summary>
-    /// 
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
     /// </summary>
-    /// <param name="host"></param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="copyOnlyIfNotAlreadyMutable">True if the mutator should try and perform mutations in place, rather than mutating new copies.</param>
     public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
       : base(host, copyOnlyIfNotAlreadyMutable) {
     }
@@ -2178,15 +2179,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeAndContractMutator(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public CodeAndContractMutator(IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider) {
+      : base(host, sourceToILProvider, sourceLocationProvider) {
       this.contractProvider = contractProvider;
     }
 
@@ -2196,14 +2196,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, ilToSourceProvider, sourceToILProvider, sourceLocationProvider) {
+    public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, copyOnlyIfNotAlreadyMutable, sourceToILProvider, sourceLocationProvider) {
       this.contractProvider = contractProvider;
     }
 
@@ -2212,7 +2211,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="template">The template.</param>
     protected CodeAndContractMutator(CodeAndContractMutator template)
-      : base(template.host, template.ilToSourceProvider, template.sourceToILProvider, template.sourceLocationProvider) {
+      : base(template.host, template.sourceToILProvider, template.sourceLocationProvider) {
       this.contractProvider = template.contractProvider;
     }
 
@@ -2361,8 +2360,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody == null && this.ilToSourceProvider != null)
-        sourceMethodBody = this.ilToSourceProvider(methodBody);
       if (sourceMethodBody != null) {
         SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.sourceToILProvider, this.host, this.sourceLocationProvider, this.contractProvider);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
@@ -2553,14 +2550,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="host"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
     public MethodBodyCodeMutator(IMetadataHost host)
       : base(host) { }
 
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="host"></param>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
     public MethodBodyCodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
       : base(host, copyOnlyIfNotAlreadyMutable) { }
@@ -2570,12 +2569,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    public MethodBodyCodeMutator(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider) { }
+    public MethodBodyCodeMutator(IMetadataHost host, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host, sourceToILProvider, sourceLocationProvider) { }
 
     /// <summary>
     /// 
@@ -2583,12 +2581,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    public MethodBodyCodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, ilToSourceProvider, sourceToILProvider, sourceLocationProvider) { }
+    public MethodBodyCodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host, copyOnlyIfNotAlreadyMutable, sourceToILProvider, sourceLocationProvider) { }
 
     #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
     /// <summary>
@@ -2647,27 +2644,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MethodBodyCodeAndContractMutator(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public MethodBodyCodeAndContractMutator(IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) { }
+      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) { }
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="host"></param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="ilToSourceProvider"></param>
     /// <param name="sourceToILProvider"></param>
     /// <param name="sourceLocationProvider"></param>
     /// <param name="contractProvider"></param>
-    public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) { }
+    public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceToILConverterProvider sourceToILProvider, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, copyOnlyIfNotAlreadyMutable, sourceToILProvider, sourceLocationProvider, contractProvider) { }
 
     #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
     /// <summary>

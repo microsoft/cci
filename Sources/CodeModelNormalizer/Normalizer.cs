@@ -23,15 +23,14 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance. May be null.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, SourceMethodBodyProvider/*?*/ ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public CodeModelNormalizer(IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
+      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
 
     /// <summary>
@@ -41,15 +40,14 @@ namespace Microsoft.Cci {
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance. May be null.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceMethodBodyProvider/*?*/ ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
+      : base(host, copyOnlyIfNotAlreadyMutable, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
 
     /// <summary>
@@ -165,7 +163,7 @@ namespace Microsoft.Cci {
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
 
-      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this, this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.ilToSourceProvider, this.sourceToILProvider, this.sourceLocationProvider, this.contractProvider);
+      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this, this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.sourceToILProvider, this.sourceLocationProvider, this.contractProvider);
       return iteratorClosureGenerator.CompileIterator(body, method, methodContract);
     }
 
@@ -656,7 +654,7 @@ namespace Microsoft.Cci {
 
     private IMethodBody GetMethodBodyFrom(IBlockStatement block, IMethodDefinition method) {
       var bodyFixer = new FixAnonymousDelegateBodyToUseClosure(this.FieldForCapturedLocalOrParameter, this.cache, this.CurrentClosureClass, this.outerClosures,
-        this.host, this.ilToSourceProvider, this.sourceToILProvider, this.sourceLocationProvider);
+        this.host, this.sourceToILProvider, this.sourceLocationProvider);
       block = bodyFixer.Visit(block);
       var result = new SourceMethodBody(ProvideSourceToILConverter, this.host, this.sourceLocationProvider, this.contractProvider);
       result.Block = block;
@@ -682,9 +680,9 @@ namespace Microsoft.Cci {
     List<ILocalDefinition> allLocals;
     Dictionary<ITypeReference, ITypeReference> genericTypeParameterMapping = new Dictionary<ITypeReference, ITypeReference>();
     Dictionary<object, BoundField>/*passed in from constructor*/ fieldForCapturedLocalOrParameter;
-    public IteratorClosureGenerator(CodeModelNormalizer codeModelNormalizer, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public IteratorClosureGenerator(CodeModelNormalizer codeModelNormalizer, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
+      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
       this.codeModelNormalizer = codeModelNormalizer;
@@ -1059,7 +1057,7 @@ namespace Microsoft.Cci {
     private IBlockStatement TranslateIteratorMethodBodyToMoveNextBody(IteratorClosure iteratorClosure, BlockStatement blockStatement) {
 
       FixIteratorBodyToUseClosure copier = new FixIteratorBodyToUseClosure(this.FieldForCapturedLocalOrParameter,
-        this.cache, iteratorClosure, this.host, this.ilToSourceProvider, this.sourceToILProvider, this.sourceLocationProvider);
+        this.cache, iteratorClosure, this.host, this.sourceToILProvider, this.sourceLocationProvider);
       IBlockStatement result = copier.Visit(blockStatement);
       Dictionary<int, ILabeledStatement> StateEntries = new YieldReturnYieldBreakReplacer(iteratorClosure, this.host).GetStateEntries(blockStatement);
       result = BuildStateMachine(iteratorClosure, (BlockStatement)result, StateEntries);
@@ -1620,15 +1618,14 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
     /// <param name="sourceToILProvider">A delegate that returns an ISourceToILConverter object initialized with the given host, source location provider and contract provider.
     /// The returned object is in turn used to convert blocks of statements into lists of IL operations.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MethodBodyNormalizer(IMetadataHost host, SourceMethodBodyProvider ilToSourceProvider, SourceToILConverterProvider sourceToILProvider,
+    public MethodBodyNormalizer(IMetadataHost host, SourceToILConverterProvider sourceToILProvider,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, ilToSourceProvider, sourceToILProvider, sourceLocationProvider, contractProvider) {
+      : base(host, sourceToILProvider, sourceLocationProvider, contractProvider) {
     }
 
     /// <summary>

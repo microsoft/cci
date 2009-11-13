@@ -8,6 +8,7 @@ using Microsoft.Cci;
 using Microsoft.CSharp;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.ILToCodeModel;
 using Xunit;
 
 public class CodeModelRoundTripTests {
@@ -70,18 +71,12 @@ public class CodeModelRoundTripTests {
 
   CodeAndContractMutator CreateCodeMutator(IAssembly assembly, string pdbName) {
 
-    LoadPdbReaderWriter(pdbName, assembly);
-
-    SourceMethodBodyProvider ilToSourceProvider = delegate(IMethodBody methodBody) {
-      return new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, pdbReader, null);
-    };
-
     SourceToILConverterProvider sourceToILProvider =
             delegate(IMetadataHost host2, ISourceLocationProvider sourceLocationProvider, IContractProvider contractProvider2) {
           return new CodeModelToILConverter(host2, sourceLocationProvider, contractProvider2);
         };
 
-    return new CodeAndContractMutator(host, ilToSourceProvider, sourceToILProvider, pdbReader, null);
+    return new CodeAndContractMutator(host, sourceToILProvider, pdbReader, null);
   }
 
   void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator) {
@@ -101,7 +96,9 @@ public class CodeModelRoundTripTests {
 
   void RoundTripWithCodeMutator(PeVerifyResult expectedResult, string assemblyName, string pdbName) {
     IAssembly assembly = LoadAssembly(assemblyName);
-    RoundTripWithMutator(expectedResult, assembly, CreateCodeMutator(assembly, pdbName));
+    LoadPdbReaderWriter(pdbName, assembly);
+    var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+    RoundTripWithMutator(expectedResult, codeAssembly, CreateCodeMutator(codeAssembly, pdbName));
   }
 
   void LoadPdbReaderWriter(string pdbPath, IAssembly assembly) {

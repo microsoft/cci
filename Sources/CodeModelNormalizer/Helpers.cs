@@ -117,9 +117,10 @@ namespace Microsoft.Cci {
     private IFieldDefinition currentField;
     public IFieldDefinition CurrentField {
       get { return currentField; }
-      set { currentField = value;
-      this.ClosureDefinition.Fields.Add(value);
-      currentFieldReference = GetFieldReference(value);
+      set {
+        currentField = value;
+        this.ClosureDefinition.Fields.Add(value);
+        currentFieldReference = GetFieldReference(value);
       }
     }
     public IFieldReference CurrentFieldReference {
@@ -146,8 +147,9 @@ namespace Microsoft.Cci {
 
     public IFieldDefinition StateField {
       get { return stateField; }
-      set { stateField = value;
-      this.ClosureDefinition.Fields.Add(value);
+      set {
+        stateField = value;
+        this.ClosureDefinition.Fields.Add(value);
       }
     }
     private IFieldDefinition thisField = null;
@@ -188,8 +190,9 @@ namespace Microsoft.Cci {
 
     public IMethodDefinition Constructor {
       get { return constructor; }
-      set { constructor = value;
-      this.ClosureDefinition.Methods.Add(value);
+      set {
+        constructor = value;
+        this.ClosureDefinition.Methods.Add(value);
       }
     }
 
@@ -214,9 +217,9 @@ namespace Microsoft.Cci {
     public IMethodReference MoveNextReference {
       get {
         if (moveNextReference == null) {
-          
-            moveNextReference = GetSpecializedMethodReference(moveNext);
-          
+
+          moveNextReference = GetSpecializedMethodReference(moveNext);
+
         }
         return moveNextReference;
       }
@@ -239,10 +242,10 @@ namespace Microsoft.Cci {
             methodReference = (IMethodReference)specializedNestedType.SpecializeMember(method, this.ClosureDefinition.InternFactory);
         }
       }
-       // methodReference = new SpecializedMethodDefinition(method, method, ClosureDefinitionReference.ResolvedType, (GenericTypeInstance)closureDefinitionReference);
+      // methodReference = new SpecializedMethodDefinition(method, method, ClosureDefinitionReference.ResolvedType, (GenericTypeInstance)closureDefinitionReference);
       return methodReference;
     }
-   
+
 
     public IMethodDefinition GenericGetEnumerator {
       get { return genericGetEnumerator; }
@@ -253,7 +256,7 @@ namespace Microsoft.Cci {
     public IMethodReference GenericGetEnumeratorReference {
       get {
         if (genericGetEnumeratorReference == null) {
-            genericGetEnumeratorReference = GetSpecializedMethodReference(genericGetEnumerator);
+          genericGetEnumeratorReference = GetSpecializedMethodReference(genericGetEnumerator);
         }
         return genericGetEnumeratorReference;
       }
@@ -268,7 +271,7 @@ namespace Microsoft.Cci {
     public IMethodReference GenericGetCurrentReference {
       get {
         if (genericGetCurrentReference == null) {
-            genericGetCurrentReference = GetSpecializedMethodReference(genericGetCurrent);
+          genericGetCurrentReference = GetSpecializedMethodReference(genericGetCurrent);
         }
         return genericGetCurrentReference;
       }
@@ -285,7 +288,7 @@ namespace Microsoft.Cci {
     public IMethodReference DisposeReference {
       get {
         if (disposeReference == null) {
-            disposeReference = GetSpecializedMethodReference(Dispose);
+          disposeReference = GetSpecializedMethodReference(Dispose);
         }
         return disposeReference;
       }
@@ -302,7 +305,7 @@ namespace Microsoft.Cci {
     public IMethodReference ResetReference {
       get {
         if (resetReference == null) {
-            resetReference = GetSpecializedMethodReference(Reset);
+          resetReference = GetSpecializedMethodReference(Reset);
         }
         return resetReference;
       }
@@ -335,10 +338,11 @@ namespace Microsoft.Cci {
 
     public ITypeReference NonGenericIEnumeratorInterface {
       get { return nonGenericIEnumeratorInterface; }
-      set { nonGenericIEnumeratorInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value)) {
-        this.ClosureDefinition.Interfaces.Add(value);
-      }
+      set {
+        nonGenericIEnumeratorInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value)) {
+          this.ClosureDefinition.Interfaces.Add(value);
+        }
       }
     }
 
@@ -346,36 +350,40 @@ namespace Microsoft.Cci {
 
     public ITypeReference GenericIEnumeratorInterface {
       get { return genericIEnumeratorInterface; }
-      set { genericIEnumeratorInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        genericIEnumeratorInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference nonGenericIEnumerableInterface;
 
     public ITypeReference NonGenericIEnumerableInterface {
       get { return nonGenericIEnumerableInterface; }
-      set { nonGenericIEnumerableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        nonGenericIEnumerableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference genericIEnumerableInterface;
 
     public ITypeReference GenericIEnumerableInterface {
       get { return genericIEnumerableInterface; }
-      set { genericIEnumerableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        genericIEnumerableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference disposableInterface;
 
     public ITypeReference DisposableInterface {
       get { return disposableInterface; }
-      set { disposableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        disposableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
 
@@ -500,7 +508,7 @@ namespace Microsoft.Cci {
     /// <param name="method">A method that provides the context for a block of statments that are to be converted to IL.</param>
     /// <param name="body">A block of statements that are to be converted to IL.</param>
     public override void ConvertToIL(IMethodDefinition method, IBlockStatement body) {
-      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.host, null, ProvideSourceToILConverter,
+      MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.host, ProvideSourceToILConverter,
         this.sourceLocationProvider, (ContractProvider)this.contractProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(method, body);
       this.privateHelperTypes = normalizedBody.PrivateHelperTypes;
