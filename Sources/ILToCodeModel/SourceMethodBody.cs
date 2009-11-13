@@ -23,7 +23,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal readonly PdbReader/*?*/ pdbReader;
     internal readonly IPlatformType platformType;
     internal List<ILocalDefinition> localVariables;
-    bool IsIterator;
     bool sawReadonly;
     bool sawTailCall;
     bool sawVolatile;
@@ -50,17 +49,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
       this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
       this.localVariables = new List<ILocalDefinition>(ilMethodBody.LocalVariables);
-      if (ilMethodBody.MethodDefinition.Type.ResolvedType.IsInterface) {
-        string name = TypeHelper.GetTypeName(ilMethodBody.MethodDefinition.Type.ResolvedType);
-        if (name.Contains("IEnumerable")) IsIterator = true;
-      } else {
-        foreach (var interf in ilMethodBody.MethodDefinition.Type.ResolvedType.InstanceType.ResolvedType.Interfaces) {
-          string name = TypeHelper.GetTypeName(interf);
-          if (name.Contains("IEnumerable")) {
-            IsIterator = true; break;
-          }
-        }
-      }
     }
 
     /// <summary>
@@ -332,30 +320,29 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// For an iterator method, finds the closure class' MoveNext method and returns its body.
+    /// For an iterator method, find the closure class' MoveNext method and return its body.
     /// </summary>
     /// <param name="iteratorIL">The body of the iterator method, decompiled from the ILs of the iterator body.</param>
-    /// <returns></returns>
+    /// <returns>Dummy.MethodBody if <paramref name="iteratorIL"/> does not fit into the code pattern of an iterator method, 
+    /// or the body of the MoveNext method of the corresponding closure class if it does.
+    /// </returns>
     IMethodBody FindClosureMoveNext(IBlockStatement/*!*/ iteratorIL) {
       foreach (var statement in iteratorIL.Statements) {
         ICreateObjectInstance createObjectInstance = GetICreateObjectInstance(statement);
-        if (createObjectInstance == null) continue;
-        INestedTypeReference closureType/*?*/ = createObjectInstance.MethodToCall.ContainingType as INestedTypeReference;
-        if (closureType == null) {
-          IGenericTypeInstanceReference/*?*/ genericClosureType = createObjectInstance.MethodToCall.ContainingType as IGenericTypeInstanceReference;
-          if (genericClosureType != null) {
-            closureType = genericClosureType.GenericType as INestedTypeReference;
-          }
+        if (createObjectInstance == null) {
+          // If the first statement in the method body is not the creation of iterator closure, return a dummy.
+          // Possible corner case not handled: a local is used to hold the constant value for the initial state of the closure.
+          return Dummy.MethodBody;
         }
-        ITypeDefinition/*!*/ closureContainingTypeDefinition = closureType.ContainingType.ResolvedType;
-        IGenericTypeInstance/*?*/ closureContainingTypeAsGenericInstance = closureContainingTypeDefinition as IGenericTypeInstance;
-        if (closureContainingTypeAsGenericInstance != null) {
-          closureContainingTypeDefinition = closureContainingTypeAsGenericInstance.GenericType.ResolvedType;
-        }
-        ITypeDefinition unspecializedClosureType = GetUnspecializedTypeDefinition(closureType);
-        ITypeDefinition unspecializedClosureContainingType = GetUnspecializedTypeDefinition(closureContainingTypeDefinition);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)
-          && AttributeHelper.Contains(unspecializedClosureType.Attributes, closureType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) {
+        ITypeReference closureType/*?*/ = createObjectInstance.MethodToCall.ContainingType;
+        ITypeReference unspecializedClosureType = GetUnspecializedType(closureType);
+        if (!AttributeHelper.Contains(unspecializedClosureType.Attributes, closureType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+          return Dummy.MethodBody;
+        INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
+        if (closureTypeAsNestedTypeReference == null) return Dummy.MethodBody;
+        ITypeReference unspecializedClosureContainingType = GetUnspecializedType(closureTypeAsNestedTypeReference.ContainingType);
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType))
+        {
           IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
           foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
             IMethodDefinition moveNext = member as IMethodDefinition;
@@ -367,18 +354,19 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           }
         }
+        return Dummy.MethodBody;
       }
       return Dummy.MethodBody;
     }
 
-    private ITypeDefinition GetUnspecializedTypeDefinition(ITypeReference typeReference) {
+    private ITypeReference GetUnspecializedType(ITypeReference typeReference) {
       ISpecializedNestedTypeReference specializedNested = typeReference as ISpecializedNestedTypeReference;
       if (specializedNested != null)
-        return specializedNested.UnspecializedVersion.ResolvedType;
+        return specializedNested.UnspecializedVersion;
       IGenericTypeInstanceReference instanceTypeReference = typeReference as IGenericTypeInstanceReference;
       if (instanceTypeReference != null)
-        return instanceTypeReference.GenericType.ResolvedType;
-      return typeReference.ResolvedType;
+        return GetUnspecializedType(instanceTypeReference.GenericType);
+      return typeReference;
     }
 
     /// <summary>
@@ -395,16 +383,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
-      IBlockStatement result = rootBlock;
-      if (IsIterator) {
-        var iteratorBodyFromIL = rootBlock;
-        IMethodBody moveNextILBody = this.FindClosureMoveNext(iteratorBodyFromIL);
-        if (moveNextILBody.Equals(Dummy.MethodBody)) return iteratorBodyFromIL;
-        MoveNextSourceMethodBody moveNextBody;
-        if (this.contractProvider != null)
-          moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader, this.contractsOnly);
-        else
-          moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader);
+      IBlockStatement result;
+      var iteratorBodyFromIL = rootBlock;
+      IMethodBody moveNextILBody = this.FindClosureMoveNext(iteratorBodyFromIL);
+      if (moveNextILBody == Dummy.MethodBody) {
+        result = iteratorBodyFromIL;
+      } else {
+        var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.contractProvider, this.pdbReader);
         result = moveNextBody.TransformedBlock;
       }
       result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);

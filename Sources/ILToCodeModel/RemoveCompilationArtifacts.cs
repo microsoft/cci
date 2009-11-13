@@ -94,8 +94,24 @@ namespace Microsoft.Cci.ILToCodeModel {
         IThisReference thisReference = assignment.Source as IThisReference;
         if (thisReference == null) {
           IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
-          if (binding == null || !(binding.Definition is ILocalDefinition || binding.Definition is IParameterDefinition)) break;
-          this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, binding.Definition);
+          if (binding != null && (binding.Definition is IParameterDefinition || binding.Definition is ILocalDefinition)) {
+            this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, binding.Definition);
+          } else {
+            // Corner case: csc generated closure class captures a local that does not appear in the original method.
+            // Assume this local is always holding a constant;
+            ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
+            if (ctc != null) {
+              LocalDefinition localDefinition = new LocalDefinition() {
+                 Name = closureField.ResolvedField.Name, Type = closureField.Type
+              };
+              LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
+                LocalVariable = localDefinition, InitialValue = ctc
+              };
+              statements.Insert(j, localDeclStatement); j++;
+              this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
+            }
+            else continue;
+          }
         } else {
           this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, thisReference);
         }

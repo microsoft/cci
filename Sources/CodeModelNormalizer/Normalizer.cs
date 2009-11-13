@@ -72,22 +72,21 @@ namespace Microsoft.Cci {
     List<IFieldDefinition> outerClosures = new List<IFieldDefinition>();
     List<ITypeDefinition> privateHelperTypes = new List<ITypeDefinition>();
 
-    public Dictionary<IParameterDefinition, bool> CapturedParameters {
+    private Dictionary<IParameterDefinition, bool> CapturedParameters {
       get { return capturedParameters; }
       set { capturedParameters = value; }
     }
 
-    public Dictionary<IMethodDefinition, bool> IsAlreadyNormalized {
+    private Dictionary<IMethodDefinition, bool> IsAlreadyNormalized {
       get { return isAlreadyNormalized; }
-      set { isAlreadyNormalized = value; }
     }
 
-    internal Dictionary<object, BoundField> FieldForCapturedLocalOrParameter {
+    private Dictionary<object, BoundField> FieldForCapturedLocalOrParameter {
       get { return fieldForCapturedLocalOrParameter; }
       set { fieldForCapturedLocalOrParameter = value; }
     }
 
-    public NestedTypeDefinition CurrentClosureClass {
+    private NestedTypeDefinition CurrentClosureClass {
       get { return currentClosureClass; }
       set { currentClosureClass = value; }
     }
@@ -159,7 +158,10 @@ namespace Microsoft.Cci {
     /// 4) If the iterator method has a type parameter, so will the closure class. Make sure in the closure class only
     /// the right type parameter is referenced. 
     /// </summary>
-    /// <param name="body"></param>
+    /// <param name="body">The method body to be normalized</param>
+    /// <param name="method">Method definition that owns the body</param>
+    /// <param name="methodContract">The contract of this method</param>
+    /// <param name="privateHelperTypes">List of helper types generated when compiling <paramref name="method">method</paramref>/></param>
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
 
@@ -958,7 +960,6 @@ namespace Microsoft.Cci {
     private void CreateIteratorClosureConstructor(IteratorClosure iteratorClosure) {
       MethodDefinition constructor = new MethodDefinition();
       this.cache.Add(constructor, constructor);
-      this.codeModelNormalizer.IsAlreadyNormalized.Add(constructor, true);
       ParameterDefinition stateParameter = new ParameterDefinition() {
         ContainingSignature = constructor,
         Index = 0,
@@ -1396,8 +1397,7 @@ namespace Microsoft.Cci {
     /// 
     /// Current Implementation generates getters, but not the property.
     /// </summary>
-    /// <param name="iteratorClosure"></param>
-    /// <param name="elementType"></param>
+    /// <param name="iteratorClosure">Information about the closure created when compiling the current iterator method</param>
     private void CreateIteratorClosureProperties(IteratorClosure iteratorClosure) {
       // PropertyDefinition nongenericCurrent = new PropertyDefinition();
       MethodDefinition getterNonGenericCurrent = new MethodDefinition() {

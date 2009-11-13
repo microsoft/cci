@@ -125,7 +125,7 @@ namespace Microsoft.Cci {
     /// <param name="fieldForCapturedLocalOrParameter">A map from captured locals and parameters to the closure class fields that hold their state for the method
     /// corresponding to the anonymous delegate.</param>
     /// <param name="cache">A cache for any duplicates created by this mutator. The cache is used both to save space and to detect when the traversal of a cycle should stop.</param>
-    /// <param name="iteratorClosoure">The definition of the class that contains the fields that hold the values of captured locals and parameters.</param>
+    /// <param name="closure">Information regarding the closure created for the iterator.</param>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="ilToSourceProvider">A method that will return an ISourceMethodBody object corresponding to an IMethodBody instance.</param>
