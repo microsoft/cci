@@ -603,15 +603,12 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     /// <summary>
-    /// Finds the assembly ref token corresponding to the passed assembly identifier. Note that unification policy is applied in doing this
-    /// through the call to GetAssemblyInternId.
+    /// Finds the assembly ref token corresponding to the given assembly identifier.
     /// </summary>
     /// <param name="assemblyIdentity"></param>
     /// <returns></returns>
     internal AssemblyReference/*?*/ FindAssemblyReference(AssemblyIdentity assemblyIdentity) {
-      AssemblyIdentity unifiedAssemblyIdentity = this.ModuleReader.metadataReaderHost.UnifyAssembly(assemblyIdentity);
-      AssemblyIdentity unifiedProbedAssemblyIdentity = this.ModuleReader.metadataReaderHost.ProbeAssemblyReference(this.Module, unifiedAssemblyIdentity);
-      uint assemblyInteredId = (uint)this.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(unifiedProbedAssemblyIdentity);
+      uint assemblyInteredId = (uint)this.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(assemblyIdentity);
       AssemblyReference[] assemblyRefList = this.AssemblyReferenceArray;
       int numberOfAssemblyReferences = assemblyRefList.Length;
       for (int i = 1; i < numberOfAssemblyReferences; ++i) {
