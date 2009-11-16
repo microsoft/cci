@@ -291,11 +291,26 @@ namespace Microsoft.Cci {
       if (pdbFunction.lines == null) return null;
       foreach (PdbLines pdbLines in pdbFunction.lines) {
         PdbSource pdbSourceFile = pdbLines.file;
-        for (int i = 0, n = pdbLines.lines.Length; i < n; i++) {
-          PdbLine line = pdbLines.lines[i];
-          if (line.offset != mbLocation.Offset) continue;
-          PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(pdbSourceFile);
-          return new PdbSourceLineLocation(psDoc, (int)line.lineBegin, line.colBegin, (int)line.lineEnd, line.colEnd);
+
+        PdbLine[] array = pdbLines.lines;
+        int minIndex = 0;
+        int maxIndex = array.Length - 1;
+
+        uint desiredOffset = mbLocation.Offset;
+
+        while (minIndex <= maxIndex) {
+          int midPointIndex = (minIndex + maxIndex) >> 1;
+          PdbLine mid = array[midPointIndex];
+          if (midPointIndex == maxIndex ||
+            (mid.offset <= desiredOffset && desiredOffset < array[midPointIndex + 1].offset)) {
+            PdbLine line = mid;
+            PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(pdbSourceFile);
+            return new PdbSourceLineLocation(psDoc, (int)line.lineBegin, line.colBegin, (int)line.lineEnd, line.colEnd);
+          }
+          if (mid.offset < desiredOffset)
+            minIndex = midPointIndex + 1;
+          else
+            maxIndex = midPointIndex - 1;
         }
       }
       return null;
