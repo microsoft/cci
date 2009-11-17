@@ -113,11 +113,6 @@ public class CodeModelRoundTripTests {
 
   void VisitAndMutate(MetadataMutator mutator, ref IAssembly assembly) {
     assembly = mutator.Visit(mutator.GetMutableCopy(assembly));
-    var ccMutator = mutator as CodeAndContractMutator;
-    if (ccMutator != null) {
-      var normalizer = new CodeModelNormalizer(ccMutator);
-      assembly = normalizer.Visit((Assembly)assembly);
-    }
     Assert.NotNull(assembly);
   }
 

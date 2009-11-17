@@ -112,10 +112,6 @@
       <Project>{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}</Project>
       <Name>AstsProjectedAsCodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Sources\CodeModelNormalizer\CodeModelNormalizer.csproj">
-      <Project>{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}</Project>
-      <Name>CodeModelNormalizer</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Sources\CodeModelToIL\CodeModelToIL.csproj">
       <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
       <Name>CodeModelToIL</Name>

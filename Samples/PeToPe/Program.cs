@@ -42,10 +42,6 @@ namespace PeToPe {
       var mutator = new CodeMutator(host, pdbReader);
       module = mutator.Visit(module);
 
-      //Replace anonymous delegates and iterators with code that uses helper classes.
-      CodeModelNormalizer cmn = new CodeModelNormalizer(host, true, pdbReader, null);
-      module = cmn.Visit(module);
-
       //Write out the normalized Code Model, traversing it as the Metadata Model it also is.
       //This lazily uses CodeModelToILConverter, via the delegate that the mutator stored in the method bodies, to compile method bodies to IL.
       Stream peStream = File.Create(module.Location + ".pe");

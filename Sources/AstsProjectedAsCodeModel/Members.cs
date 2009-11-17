@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableCodeModel;
 
 //^ using Microsoft.Contracts;
 

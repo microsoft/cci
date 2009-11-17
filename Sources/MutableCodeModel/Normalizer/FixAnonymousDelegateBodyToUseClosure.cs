@@ -7,7 +7,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
   /// A mutator that visits an anonymous delegate body and produces a copy that has been changed to

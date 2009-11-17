@@ -7,7 +7,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.MutableCodeModel {
 
   internal class ClosureFinder : BaseCodeAndContractTraverser {
 
@@ -18,7 +18,7 @@ namespace Microsoft.Cci {
     internal bool foundAnonymousDelegate;
     internal bool foundYield;
 
-    internal ClosureFinder(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, INameTable nameTable, IContractProvider/*?*/ contractProvider) 
+    internal ClosureFinder(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, INameTable nameTable, IContractProvider/*?*/ contractProvider)
       : base(contractProvider) {
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.nameTable = nameTable;
@@ -67,7 +67,7 @@ namespace Microsoft.Cci {
 
     public override void Visit(IAddressableExpression addressableExpression) {
       base.Visit(addressableExpression);
-      if (this.currentAnonymousDelegate != null) 
+      if (this.currentAnonymousDelegate != null)
         this.CaptureDefinition(addressableExpression.Definition);
     }
 
@@ -98,7 +98,7 @@ namespace Microsoft.Cci {
 
     public override void Visit(IThisReference thisReference) {
       base.Visit(thisReference);
-      if (this.currentAnonymousDelegate != null) 
+      if (this.currentAnonymousDelegate != null)
         this.CaptureDefinition(thisReference);
     }
 

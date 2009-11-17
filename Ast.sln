@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssertionAdder", "Sources\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AstsProjectedAsCodeModel", "Sources\AstsProjectedAsCodeModel\AstsProjectedAsCodeModel.csproj", "{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelNormalizer", "Sources\CodeModelNormalizer\CodeModelNormalizer.csproj", "{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelToIL", "Sources\CodeModelToIL\CodeModelToIL.csproj", "{CEB76EA1-A168-49B0-A410-2C4195FEE86F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILToCodeModel", "Sources\ILToCodeModel\ILToCodeModel.csproj", "{27F2A417-B6ED-43AD-A38E-A0B6142216F6}"
@@ -108,14 +106,6 @@ Global
 		{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}.NightlyRelease|Any CPU.Build.0 = NightlyRelease|Any CPU
 		{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B98C89CF-BF3E-405C-88DE-D60AE4AADA15}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CEB76EA1-A168-49B0-A410-2C4195FEE86F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CEB76EA1-A168-49B0-A410-2C4195FEE86F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEB76EA1-A168-49B0-A410-2C4195FEE86F}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU

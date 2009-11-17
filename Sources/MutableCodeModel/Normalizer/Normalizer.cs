@@ -8,49 +8,25 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// This class takes a code model and rewrites it so that high level constructs such as anonymous delegates and yield statements
+  /// This visitor takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
   /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
   /// </summary>
-  public class CodeModelNormalizer : CodeAndContractMutator {
+  public class MethodBodyNormalizer : MethodBodyCodeAndContractMutator {
 
     /// <summary>
-    /// Initializes a visitor that takes a code model and rewrites it so that high level constructs such as anonymous delegates and yield statements
-    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel. This constructor is used when
-    /// the code model was obtained by reading in a compiled unit of metadata via something like the PE reader. 
+    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
+    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, sourceLocationProvider, contractProvider) {
-    }
-
-    /// <summary>
-    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
-    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelNormalizer(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider, contractProvider) {
-    }
-
-    /// <summary>
-    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
-    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
-    /// </summary>
-    /// <param name="mutator"></param>
-    public CodeModelNormalizer(CodeAndContractMutator mutator)
-      : base(mutator) {
     }
 
     Dictionary<IParameterDefinition, bool> capturedParameters = new Dictionary<IParameterDefinition, bool>();
@@ -157,29 +133,29 @@ namespace Microsoft.Cci {
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
 
-      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this, this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.sourceLocationProvider, this.contractProvider);
+      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.sourceLocationProvider, this.contractProvider);
       return iteratorClosureGenerator.CompileIterator(body, method, methodContract);
     }
 
-    private MethodReference CompilerGeneratedCtor {
+    private IMethodReference CompilerGeneratedCtor {
       get {
         if (this.compilerGeneratedCtor == null)
-          this.compilerGeneratedCtor = new MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
+          this.compilerGeneratedCtor = new Microsoft.Cci.MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
              CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
         return this.compilerGeneratedCtor;
       }
     }
-    private MethodReference/*?*/ compilerGeneratedCtor;
+    private IMethodReference/*?*/ compilerGeneratedCtor;
 
-    private MethodReference ObjectCtor {
+    private IMethodReference ObjectCtor {
       get {
         if (this.objectCtor == null)
-          this.objectCtor = new MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis,
+          this.objectCtor = new Microsoft.Cci.MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis,
              this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
         return this.objectCtor;
       }
     }
-    private MethodReference/*?*/ objectCtor;
+    private IMethodReference/*?*/ objectCtor;
 
 
     static ISourceToILConverter ProvideSourceToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) {
@@ -452,7 +428,6 @@ namespace Microsoft.Cci {
       return result;
     }
 
-
     /// <summary>
     /// Visits the specified method body.
     /// </summary>
@@ -667,19 +642,17 @@ namespace Microsoft.Cci {
     Dictionary<ITypeDefinition, IExpression> closureInstanceFor = new Dictionary<ITypeDefinition, IExpression>();
   }
 
-  class IteratorClosureGenerator : MethodBodyCodeAndContractMutator {
+  internal class IteratorClosureGenerator : MethodBodyCodeAndContractMutator {
     IMethodDefinition method = Dummy.Method;
     List<ITypeDefinition> privateHelperTypes;
-    CodeModelNormalizer codeModelNormalizer;
     List<ILocalDefinition> allLocals;
     Dictionary<ITypeReference, ITypeReference> genericTypeParameterMapping = new Dictionary<ITypeReference, ITypeReference>();
     Dictionary<object, BoundField>/*passed in from constructor*/ fieldForCapturedLocalOrParameter;
-    public IteratorClosureGenerator(CodeModelNormalizer codeModelNormalizer, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
+    public IteratorClosureGenerator(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
       : base(host, sourceLocationProvider, contractProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
-      this.codeModelNormalizer = codeModelNormalizer;
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
     }
 
@@ -697,35 +670,35 @@ namespace Microsoft.Cci {
       set { fieldForCapturedLocalOrParameter = value; }
     }
 
-    private MethodReference CompilerGeneratedCtor {
+    private IMethodReference CompilerGeneratedCtor {
       get {
         if (this.compilerGeneratedCtor == null)
-          this.compilerGeneratedCtor = new MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
+          this.compilerGeneratedCtor = new Microsoft.Cci.MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
              CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
         return this.compilerGeneratedCtor;
       }
     }
-    private MethodReference/*?*/ compilerGeneratedCtor;
+    private IMethodReference/*?*/ compilerGeneratedCtor;
 
-    private MethodReference ObjectCtor {
+    private IMethodReference ObjectCtor {
       get {
         if (this.objectCtor == null)
-          this.objectCtor = new MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis,
+          this.objectCtor = new Microsoft.Cci.MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis,
              this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
         return this.objectCtor;
       }
     }
-    private MethodReference/*?*/ objectCtor;
+    private IMethodReference/*?*/ objectCtor;
 
-    private MethodReference/*?*/ debuggerHiddenCtor;
+    private IMethodReference/*?*/ debuggerHiddenCtor;
 
-    private MethodReference DebuggerHiddenCtor {
+    private IMethodReference DebuggerHiddenCtor {
       get {
         IUnitNamespaceReference ns = this.host.PlatformType.SystemObject.ContainingUnitNamespace;
-        ns = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Diagnostics"));
-        var debuggerHiddenClass = new NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor("DebuggerHiddenAttribute"), 0, false, false, PrimitiveTypeCode.Reference);
+        ns = new Microsoft.Cci.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Diagnostics"));
+        var debuggerHiddenClass = new Microsoft.Cci.NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor("DebuggerHiddenAttribute"), 0, false, false, PrimitiveTypeCode.Reference);
         if (this.debuggerHiddenCtor == null) {
-          this.debuggerHiddenCtor = new MethodReference(this.host, debuggerHiddenClass, CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
+          this.debuggerHiddenCtor = new Microsoft.Cci.MethodReference(this.host, debuggerHiddenClass, CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
         }
         return this.debuggerHiddenCtor;
       }
@@ -866,7 +839,7 @@ namespace Microsoft.Cci {
     ITypeReference PlatformIDisposable {
       get {
         if (this.platformIDisposable == null) {
-          this.platformIDisposable = new NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
+          this.platformIDisposable = new Microsoft.Cci.NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
             this.host.NameTable.GetNameFor("IDisposable"), 0, false, false, PrimitiveTypeCode.Reference);
         }
         return this.platformIDisposable;
@@ -1161,11 +1134,11 @@ namespace Microsoft.Cci {
 
     IPropertyDefinition/*?*/ ThreadDotManagedThreadId {
       get {
-        AssemblyReference assemblyReference = new AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
-        IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
-        ns = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("System"));
-        NestedUnitNamespaceReference SystemDotThreading = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Threading"));
-        ITypeReference ThreadingDotThread = new NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, PrimitiveTypeCode.Reference);
+        var assemblyReference = new Microsoft.Cci.AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
+        IUnitNamespaceReference ns = new Microsoft.Cci.RootUnitNamespaceReference(assemblyReference);
+        ns = new Microsoft.Cci.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("System"));
+        var SystemDotThreading = new Microsoft.Cci.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Threading"));
+        ITypeReference ThreadingDotThread = new Microsoft.Cci.NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, PrimitiveTypeCode.Reference);
         foreach (ITypeMemberReference memref in ThreadingDotThread.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("ManagedThreadId"), false)) {
           IPropertyDefinition propertyDef = memref as IPropertyDefinition;
           if (propertyDef != null) {
@@ -1178,11 +1151,11 @@ namespace Microsoft.Cci {
 
     MethodCall ThreadDotCurrentThread {
       get {
-        AssemblyReference assemblyReference = new AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
-        IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
-        ns = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("System"));
-        NestedUnitNamespaceReference SystemDotThreading = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Threading"));
-        ITypeReference ThreadingDotThread = new NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, PrimitiveTypeCode.Reference);
+        var assemblyReference = new Microsoft.Cci.AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
+        IUnitNamespaceReference ns = new Microsoft.Cci.RootUnitNamespaceReference(assemblyReference);
+        ns = new Microsoft.Cci.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("System"));
+        var SystemDotThreading = new Microsoft.Cci.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Threading"));
+        var ThreadingDotThread = new Microsoft.Cci.NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, PrimitiveTypeCode.Reference);
         IMethodReference/*? !after search*/ CurrentThreadPropertyGetter = null;
         foreach (ITypeMemberReference memref in ThreadingDotThread.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("CurrentThread"), false)) {
           IPropertyDefinition property = memref as IPropertyDefinition;
@@ -1599,60 +1572,6 @@ namespace Microsoft.Cci {
         return this.Visit(genericTypeReference);
       return base.Visit(typeReference);
     }
-  }
-
-  /// <summary>
-  /// This visitor takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
-  /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
-  /// </summary>
-  public class MethodBodyNormalizer : CodeModelNormalizer {
-    /// <summary>
-    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
-    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider, contractProvider) {
-    }
-
-    /// <summary>
-    /// Visits the specified field reference.
-    /// </summary>
-    /// <param name="fieldReference">The field reference.</param>
-    public override IFieldReference Visit(IFieldReference fieldReference) {
-      //Just return the reference as is. The base visitor will make a copy of the reference, which
-      //is inappropriate here because only the body of a method is being mutated (and hence all
-      //fields definitions will remain unchanged).
-      return fieldReference;
-    }
-
-    /// <summary>
-    /// Visits the specified method reference.
-    /// </summary>
-    /// <param name="methodReference">The method reference.</param>
-    public override IMethodReference Visit(IMethodReference methodReference) {
-      //Just return the reference as is. The base visitor will make a copy of the reference, which
-      //is inappropriate here because only the body of a method is being mutated (and hence all
-      //method definitions will remain unchanged).
-      return methodReference;
-    }
-
-    /// <summary>
-    /// Visits the specified type reference.
-    /// </summary>
-    /// <param name="typeReference">The type reference.</param>
-    public override ITypeReference Visit(ITypeReference typeReference) {
-      //Just return the reference as is. The base visitor will make a copy of the reference, which
-      //is inappropriate here because only the body of a method is being mutated (and hence all
-      //type definitions will remain unchanged).
-      return typeReference;
-    }
-
-
   }
 
   internal class YieldReturnYieldBreakReplacer : MethodBodyCodeMutator {

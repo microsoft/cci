@@ -62,16 +62,30 @@ namespace Microsoft.Cci.MutableCodeModel {
       ushort maxStack;
       IEnumerable<IOperation> operations;
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
-      IEnumerable<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
+      List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
 
-      var converter = new CodeModelToILConverter(this.host, this.sourceLocationProvider, this.contractProvider);
-      converter.ConvertToIL(this.MethodDefinition, this.Block);
-      localVariables = converter.GetLocalVariables();
-      maxStack = converter.MaximumStackSizeNeeded;
-      operations = converter.GetOperations();
-      operationExceptionInformation = converter.GetOperationExceptionInformation();
-      if (privateHelperTypes == null)
-        privateHelperTypes = converter.GetPrivateHelperTypes();
+      if (this.isNormalized) {
+        var converter = new CodeModelToILConverter(this.host, this.sourceLocationProvider, this.contractProvider);
+        converter.ConvertToIL(this.MethodDefinition, this.Block);
+        localVariables = converter.GetLocalVariables();
+        maxStack = converter.MaximumStackSizeNeeded;
+        operations = converter.GetOperations();
+        operationExceptionInformation = converter.GetOperationExceptionInformation();
+        if (privateHelperTypes == null)
+          privateHelperTypes = new List<ITypeDefinition>(0);
+      } else {
+        var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider, this.contractProvider);
+        var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
+        normalizedBody.isNormalized = true;
+        localVariables = normalizedBody.LocalVariables;
+        maxStack = normalizedBody.MaxStack;
+        operations = normalizedBody.Operations;
+        operationExceptionInformation = normalizedBody.OperationExceptionInformation;
+        if (privateHelperTypes == null)
+          privateHelperTypes = normalizedBody.PrivateHelperTypes;
+        else
+          privateHelperTypes.AddRange(normalizedBody.PrivateHelperTypes);
+      }
 
       lock (this) {
         if (this.ilWasGenerated) return;
@@ -85,6 +99,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     bool ilWasGenerated;
+    bool isNormalized;
 
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.
@@ -160,15 +175,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// which are local to method.
     /// </summary>
     /// <value></value>
-    public IEnumerable<ITypeDefinition> PrivateHelperTypes {
+    public List<ITypeDefinition> PrivateHelperTypes {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
         return this.privateHelperTypes;
       }
       set { this.privateHelperTypes = value; }
     }
-    IEnumerable<ITypeDefinition>/*?*/ privateHelperTypes;
+    List<ITypeDefinition>/*?*/ privateHelperTypes;
 
+
+    #region IMethodBody Members
+
+    IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes {
+      get { return this.PrivateHelperTypes.AsReadOnly(); }
+    }
+
+    #endregion
   }
 
 }

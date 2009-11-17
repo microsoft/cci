@@ -9,7 +9,7 @@ using System.Diagnostics;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
   /// A closure created by the compiler  for an iterator
@@ -427,69 +427,73 @@ namespace Microsoft.Cci {
     public bool IsVolatile {
       get { return false; }
     }
+
+    public override void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
-  /// <summary>
-  /// An expression results in a value of some type.
-  /// </summary>
-  internal abstract class Expression : IExpression {
+  ///// <summary>
+  ///// An expression results in a value of some type.
+  ///// </summary>
+  //internal abstract class Expression : IExpression {
 
-    protected Expression() {
-      this.locations = new List<ILocation>();
-      this.type = Dummy.TypeReference;
-    }
+  //  protected Expression() {
+  //    this.locations = new List<ILocation>();
+  //    this.type = Dummy.TypeReference;
+  //  }
 
-    //protected Expression(IExpression expression) {
-    //  this.locations = new List<ILocation>(expression.Locations);
-    //  this.type = expression.Type;
-    //}
+  //  //protected Expression(IExpression expression) {
+  //  //  this.locations = new List<ILocation>(expression.Locations);
+  //  //  this.type = expression.Type;
+  //  //}
 
-    /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
-    /// </summary>
-    public void Dispatch(ICodeVisitor visitor) {
-    }
+  //  /// <summary>
+  //  /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+  //  /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
+  //  /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+  //  /// </summary>
+  //  public void Dispatch(ICodeVisitor visitor) {
+  //  }
 
-    /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors() {
-      return false;
-    }
+  //  /// <summary>
+  //  /// Checks the expression for errors and returns true if any were found.
+  //  /// </summary>
+  //  public bool HasErrors() {
+  //    return false;
+  //  }
 
-    /// <summary>
-    /// True if the expression has no observable side effects.
-    /// </summary>
-    /// <value></value>
-    public bool IsPure {
-      get { return false; }
-    }
+  //  /// <summary>
+  //  /// True if the expression has no observable side effects.
+  //  /// </summary>
+  //  /// <value></value>
+  //  public bool IsPure {
+  //    get { return false; }
+  //  }
 
-    //public List<ILocation> Locations {
-    //  get { return this.locations; }
-    //  set { this.locations = value; }
-    //}
-    List<ILocation> locations;
+  //  //public List<ILocation> Locations {
+  //  //  get { return this.locations; }
+  //  //  set { this.locations = value; }
+  //  //}
+  //  List<ILocation> locations;
 
-    /// <summary>
-    /// The type of value the expression will evaluate to, as determined at compile time.
-    /// </summary>
-    public ITypeReference Type {
-      get { return this.type; }
-      set { this.type = value; }
-    }
-    ITypeReference type;
+  //  /// <summary>
+  //  /// The type of value the expression will evaluate to, as determined at compile time.
+  //  /// </summary>
+  //  public ITypeReference Type {
+  //    get { return this.type; }
+  //    set { this.type = value; }
+  //  }
+  //  ITypeReference type;
 
-    #region IExpression Members
+  //  #region IExpression Members
 
-    IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
-    }
+  //  IEnumerable<ILocation> IObjectWithLocations.Locations {
+  //    get { return this.locations.AsReadOnly(); }
+  //  }
 
-    #endregion
-  }
+  //  #endregion
+  //}
 
   internal class PreNormalizedCodeModelToILConverter : CodeModelToILConverter {
 
