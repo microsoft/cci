@@ -1752,7 +1752,7 @@ namespace Microsoft.Cci.Ast {
       [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
-          BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
+          BlockStatement dummyBlock = BlockStatement.CreateDummyFor(this.SourceLocation);
           dummyBlock.SetContainers(this.ContainingTypeDeclaration.DummyBlock, this);
           lock (this) {
             if (this.dummyBlock == null) {

@@ -687,6 +687,22 @@ namespace Microsoft.Cci.Ast {
       get { return this.statements.Count == 0; }
     }
 
+    private static readonly List<Statement> NoStatements = new List<Statement>(0);
+
+    /// <summary>
+    /// Creates an empty BlockStatement for the given source location with default options.
+    /// </summary>
+    public static BlockStatement CreateDummyFor(ISourceLocation sourceLocation) {
+      return BlockStatement.CreateDummyFor(Options.Default, sourceLocation);
+    }
+
+    /// <summary>
+    /// Creates an empty BlockStatement for the given options and source location.
+    /// </summary>
+    public static BlockStatement CreateDummyFor(Options options, ISourceLocation sourceLocation) {
+      return new BlockStatement(NoStatements, options, sourceLocation);
+    }
+
     #region IBlock Members
 
     IEnumerable<IStatement> IBlockStatement.Statements {

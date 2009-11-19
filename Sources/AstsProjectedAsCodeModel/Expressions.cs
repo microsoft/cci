@@ -1744,7 +1744,7 @@ namespace Microsoft.Cci.Ast {
       get {
         BlockStatement/*?*/ result = this.dummyBlock;
         if (result == null) {
-          result = new BlockStatement(new List<Statement>(0), SourceDummy.SourceLocation);
+          result = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
           result.SetContainers(this.ContainingBlock, this);
           this.dummyBlock = result;
         }
@@ -1957,7 +1957,7 @@ namespace Microsoft.Cci.Ast {
       get {
         BlockStatement/*?*/ result = this.dummyBlock;
         if (result == null) {
-          result = new BlockStatement(new List<Statement>(0), SourceDummy.SourceLocation);
+          result = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
           result.SetContainers(this.ContainingBlock, this);
           this.dummyBlock = result;
         }
@@ -4519,6 +4519,11 @@ namespace Microsoft.Cci.Ast {
       //^^ ensures result.ContainingBlock == containingBlock;
     {
       if (containingBlock == this.ContainingBlock) return this;
+      if (!containingBlock.UseCheckedArithmetic) {
+        var dummyBlockStatement = BlockStatement.CreateDummyFor(BlockStatement.Options.UseCheckedArithmetic, this.SourceLocation);
+        dummyBlockStatement.SetContainingBlock(containingBlock);
+        containingBlock = dummyBlockStatement;
+      }
       return new CheckedExpression(containingBlock, this);
     }
 
@@ -4547,7 +4552,7 @@ namespace Microsoft.Cci.Ast {
     /// care not to call any other methods or property/event accessors on the object until after this method has been called.
     /// </summary>
     public override void SetContainingExpression(Expression containingExpression) {
-      BlockStatement dummyContainingBlock = new BlockStatement(new List<Statement>(0), BlockStatement.Options.UseCheckedArithmetic, this.SourceLocation);
+      BlockStatement dummyContainingBlock = BlockStatement.CreateDummyFor(BlockStatement.Options.UseCheckedArithmetic, this.SourceLocation);
       dummyContainingBlock.SetContainingBlock(containingExpression.ContainingBlock);
       base.SetContainingBlock(dummyContainingBlock);
       this.Operand.SetContainingExpression(this);
@@ -19853,7 +19858,7 @@ namespace Microsoft.Cci.Ast {
     {
       if (containingBlock == this.ContainingBlock) return this;
       if (containingBlock.UseCheckedArithmetic) {
-        BlockStatement dummyContainingBlock = new BlockStatement(new List<Statement>(0), BlockStatement.Options.UseUncheckedArithmetic, this.SourceLocation);
+        BlockStatement dummyContainingBlock =  BlockStatement.CreateDummyFor(BlockStatement.Options.UseUncheckedArithmetic, this.SourceLocation);
         dummyContainingBlock.SetContainingBlock(containingBlock);
         containingBlock = dummyContainingBlock;
       }
@@ -19885,7 +19890,7 @@ namespace Microsoft.Cci.Ast {
     /// care not to call any other methods or property/event accessors on the object until after this method has been called.
     /// </summary>
     public override void SetContainingExpression(Expression containingExpression) {
-      BlockStatement dummyContainingBlock = new BlockStatement(new List<Statement>(0), BlockStatement.Options.UseUncheckedArithmetic, this.SourceLocation);
+      BlockStatement dummyContainingBlock = BlockStatement.CreateDummyFor(BlockStatement.Options.UseUncheckedArithmetic, this.SourceLocation);
       dummyContainingBlock.SetContainingBlock(containingExpression.ContainingBlock);
       base.SetContainingBlock(dummyContainingBlock);
       this.Operand.SetContainingExpression(this);

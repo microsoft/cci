@@ -1048,7 +1048,7 @@ namespace Microsoft.Cci.Ast {
       [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
-          BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
+          BlockStatement dummyBlock = BlockStatement.CreateDummyFor(this.SourceLocation);
           dummyBlock.SetContainers(this.ContainingNamespaceDeclaration.DummyBlock, this);
           lock (this) {
             if (this.dummyBlock == null) {
@@ -1139,7 +1139,7 @@ namespace Microsoft.Cci.Ast {
         if (outerDummyBlock == null) {
           lock (GlobalLock.LockingObject) {
             if (this.outerDummyBlock == null) {
-              this.outerDummyBlock = outerDummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
+              this.outerDummyBlock = outerDummyBlock = BlockStatement.CreateDummyFor(this.SourceLocation);
               outerDummyBlock.SetContainers(this.ContainingNamespaceDeclaration.DummyBlock, this);
             }
           }
@@ -1776,7 +1776,7 @@ namespace Microsoft.Cci.Ast {
       [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
-          BlockStatement dummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
+          BlockStatement dummyBlock = BlockStatement.CreateDummyFor(this.SourceLocation);
           dummyBlock.SetContainers(this.ContainingTypeDeclaration.DummyBlock, this);
           lock (this) {
             if (this.dummyBlock == null) {
@@ -1876,7 +1876,7 @@ namespace Microsoft.Cci.Ast {
         if (this.outerDummyBlock == null) {
           lock (GlobalLock.LockingObject) {
             if (this.outerDummyBlock == null) {
-              this.outerDummyBlock = new BlockStatement(new List<Statement>(0), this.SourceLocation);
+              this.outerDummyBlock = BlockStatement.CreateDummyFor(this.SourceLocation);
               this.outerDummyBlock.SetContainers(this.ContainingTypeDeclaration.DummyBlock, this);
             }
           }

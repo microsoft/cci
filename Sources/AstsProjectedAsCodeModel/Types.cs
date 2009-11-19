@@ -1280,7 +1280,7 @@ namespace Microsoft.Cci.Ast {
       NameDeclaration ctor = new NameDeclaration(nametable.Ctor, SourceDummy.SourceLocation);
       List<ParameterDeclaration> ctorParameters = new List<ParameterDeclaration>();
       TypeExpression voidType = TypeExpression.For(this.PlatformType.SystemVoid);
-      BlockStatement emptyBody = new BlockStatement(new List<Statement>(0), SourceDummy.SourceLocation);
+      BlockStatement emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration ctorDeclaration =
         new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName,
           TypeMemberVisibility.Public, voidType, null, ctor, null, ctorParameters, null, emptyBody, SourceDummy.SourceLocation);
@@ -1294,7 +1294,7 @@ namespace Microsoft.Cci.Ast {
 
       NameDeclaration invoke = new NameDeclaration(nametable.Invoke, SourceDummy.SourceLocation);
       List<ParameterDeclaration> invokeParameters = new List<ParameterDeclaration>();
-      emptyBody = new BlockStatement(new List<Statement>(0), SourceDummy.SourceLocation);
+      emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration invokeDeclaration =
         new MethodDeclaration(null, MethodDeclaration.Flags.Virtual,
           TypeMemberVisibility.Public, delegateSignature.Type, null, invoke, null, invokeParameters, null, emptyBody, SourceDummy.SourceLocation);
@@ -1305,7 +1305,7 @@ namespace Microsoft.Cci.Ast {
       NameDeclaration beginInvoke = new NameDeclaration(nametable.GetNameFor("BeginInvoke"), SourceDummy.SourceLocation);
       List<ParameterDeclaration> beginInvokeParameters = new List<ParameterDeclaration>();
       TypeExpression iasyncResultType = TypeExpression.For(this.PlatformType.SystemIAsyncResult);
-      emptyBody = new BlockStatement(new List<Statement>(0), SourceDummy.SourceLocation);
+      emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration beginInvokeDeclaration =
         new MethodDeclaration(null, MethodDeclaration.Flags.Virtual,
           TypeMemberVisibility.Public, iasyncResultType, null, beginInvoke, null, beginInvokeParameters, null, emptyBody, SourceDummy.SourceLocation);
@@ -1319,7 +1319,7 @@ namespace Microsoft.Cci.Ast {
 
       NameDeclaration endInvoke = new NameDeclaration(nametable.GetNameFor("EndInvoke"), SourceDummy.SourceLocation);
       List<ParameterDeclaration> endInvokeParameters = new List<ParameterDeclaration>();
-      emptyBody = new BlockStatement(new List<Statement>(0), SourceDummy.SourceLocation);
+      emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration endInvokeDeclaration =
         new MethodDeclaration(null, MethodDeclaration.Flags.Virtual,
           TypeMemberVisibility.Public, voidType, null, endInvoke, null, endInvokeParameters, null, emptyBody, SourceDummy.SourceLocation);
