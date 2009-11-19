@@ -1387,7 +1387,7 @@ namespace Microsoft.Cci {
       this.Visit(notEquality.LeftOperand);
       this.Visit(notEquality.RightOperand);
       var compileTimeConstant = notEquality.LeftOperand as ICompileTimeConstant;
-      if (compileTimeConstant != null){
+      if (compileTimeConstant != null) {
         if (compileTimeConstant.Value == null) {
           this.generator.Emit(OperationCode.Clt_Un);
           return;
@@ -1788,6 +1788,11 @@ namespace Microsoft.Cci {
       if (tryCatchFilterFinallyStatement.FinallyBody != null) {
         this.generator.BeginFinallyBlock();
         this.Visit(tryCatchFilterFinallyStatement.FinallyBody);
+        this.generator.Emit(OperationCode.Endfinally);
+      }
+      if (tryCatchFilterFinallyStatement.FaultBody != null) {
+        this.generator.BeginFaultBlock();
+        this.Visit(tryCatchFilterFinallyStatement.FaultBody);
         this.generator.Emit(OperationCode.Endfinally);
       }
       this.generator.EndTryBody();

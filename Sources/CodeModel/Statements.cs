@@ -334,7 +334,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// True if this case will be branched to for all values where no other case is applicable. Only one of of these is legal per switch statement.
+    /// True if this case will be branched to for all values where no other case is applicable. Only one of these is legal per switch statement.
     /// </summary>
     bool IsDefault {
       get;
@@ -368,7 +368,7 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// Represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally block.
+  /// Represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally or fault block.
   /// </summary>
   public interface ITryCatchFinallyStatement : IStatement {
     /// <summary>
@@ -380,6 +380,12 @@ namespace Microsoft.Cci {
     /// The body of the finally clause, if any. May be null.
     /// </summary>
     IBlockStatement/*?*/ FinallyBody { get; }
+
+    /// <summary>
+    /// The body of the fault clause, if any. May be null.
+    /// There is no C# equivalent of a fault clause. It is just like a finally clause, but is only invoked if an exception occurred.
+    /// </summary>
+    IBlockStatement/*?*/ FaultBody { get; }
 
     /// <summary>
     /// The body of the try clause.

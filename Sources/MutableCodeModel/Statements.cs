@@ -1294,16 +1294,17 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// Represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally or fault block.
   /// </summary>
   public sealed class TryCatchFinallyStatement : Statement, ITryCatchFinallyStatement {
 
     /// <summary>
-    /// 
+    /// Allocates and object that represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally or fault block.
     /// </summary>
     public TryCatchFinallyStatement() {
       this.catchClauses = new List<ICatchClause>();
       this.finallyBody = null;
+      this.faultBody = null;
       this.tryBody = CodeDummy.Block;
     }
 
@@ -1315,6 +1316,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       : base(tryCatchFinallyStatement) {
       this.catchClauses = new List<ICatchClause>(tryCatchFinallyStatement.CatchClauses);
       this.finallyBody = tryCatchFinallyStatement.FinallyBody;
+      this.faultBody = tryCatchFinallyStatement.FaultBody;
       this.tryBody = tryCatchFinallyStatement.TryBody;
     }
 
@@ -1345,6 +1347,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.finallyBody = value; }
     }
     IBlockStatement/*?*/ finallyBody;
+
+    /// <summary>
+    /// The body of the fault clause, if any. May be null.
+    /// There is no C# equivalent of a fault clause. It is just like a finally clause, but is only invoked if an exception occurred.
+    /// </summary>
+    public IBlockStatement/*?*/ FaultBody {
+      get { return this.faultBody; }
+      set { this.faultBody = value; }
+    }
+    IBlockStatement/*?*/ faultBody;
 
     /// <summary>
     /// The body of the try clause.

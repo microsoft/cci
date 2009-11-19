@@ -5206,6 +5206,22 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally block and or a fault block.
+    /// </summary>
+    /// <param name="tryBody">The body of the try clause.</param>
+    /// <param name="catchClauses">The catch clauses.</param>
+    /// <param name="finallyBody">The body of the finally clause, if any. May be null.</param>
+    /// <param name="faultBody">The body of the fault clause, if any. May be null.</param>
+    /// <param name="sourceLocation">The source location corresponding to the newly allocated statement.</param>
+    public TryCatchFinallyStatement(BlockStatement tryBody, List<CatchClause> catchClauses, BlockStatement/*?*/ finallyBody, BlockStatement/*?*/ faultBody, ISourceLocation sourceLocation)
+      : base(sourceLocation) {
+      this.tryBody = tryBody;
+      this.catchClauses = catchClauses;
+      this.finallyBody = finallyBody;
+      this.faultBody = faultBody;
+    }
+
+    /// <summary>
     /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
     /// </summary>
     /// <param name="containingBlock">The containing block of the copied statement. This should be different from the containing block of the template statement.</param>
@@ -5217,6 +5233,9 @@ namespace Microsoft.Cci.Ast {
       BlockStatement/*?*/ finallyBody = template.FinallyBody;
       if (finallyBody != null)
         this.finallyBody = (BlockStatement)finallyBody.MakeCopyFor(containingBlock);
+      BlockStatement/*?*/ faultBody = template.FaultBody;
+      if (faultBody != null)
+        this.faultBody = (BlockStatement)faultBody.MakeCopyFor(containingBlock);
     }
 
     /// <summary>
@@ -5263,6 +5282,16 @@ namespace Microsoft.Cci.Ast {
     readonly BlockStatement/*?*/ finallyBody;
 
     /// <summary>
+    /// The body of the fault clause, if any. May be null.
+    /// There is no C# equivalent of a fault clause. It is just like a finally clause, but is only invoked if an exception occurred.
+    /// </summary>
+    public BlockStatement/*?*/ FaultBody {
+      [DebuggerNonUserCode]
+      get { return this.faultBody; }
+    }
+    readonly BlockStatement/*?*/ faultBody;
+
+    /// <summary>
     /// The body of the try clause.
     /// </summary>
     public BlockStatement TryBody {
@@ -5293,6 +5322,11 @@ namespace Microsoft.Cci.Ast {
     IBlockStatement/*?*/ ITryCatchFinallyStatement.FinallyBody {
       [DebuggerNonUserCode]
       get { return this.FinallyBody; }
+    }
+
+    IBlockStatement/*?*/ ITryCatchFinallyStatement.FaultBody {
+      [DebuggerNonUserCode]
+      get { return this.FaultBody; }
     }
 
     IBlockStatement ITryCatchFinallyStatement.TryBody {
