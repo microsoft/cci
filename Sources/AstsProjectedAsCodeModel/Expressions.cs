@@ -4242,6 +4242,12 @@ namespace Microsoft.Cci.Ast {
     }
     readonly Expression valueToCast;
 
+    /// <summary>
+    /// Returns a string representation of the expression for debugging and logging uses.
+    /// </summary>
+    public override string ToString() {
+      return "(" + this.Type.ToString() + ")" + this.ValueToCast.ToString();
+    }
   }
 
   /// <summary>
@@ -5140,6 +5146,12 @@ namespace Microsoft.Cci.Ast {
 
     #endregion
 
+    /// <summary>
+    /// Returns a string representation of the expression for debugging and logging uses.
+    /// </summary>
+    public override string ToString() {
+      return this.Type.ToString() + "(" + this.ValueToConvert.ToString() + ")";
+    }
 
     #region IExpression Members
 
@@ -19840,6 +19852,11 @@ namespace Microsoft.Cci.Ast {
       //^^ ensures result.ContainingBlock == containingBlock;
     {
       if (containingBlock == this.ContainingBlock) return this;
+      if (containingBlock.UseCheckedArithmetic) {
+        BlockStatement dummyContainingBlock = new BlockStatement(new List<Statement>(0), BlockStatement.Options.UseUncheckedArithmetic, this.SourceLocation);
+        dummyContainingBlock.SetContainingBlock(containingBlock);
+        containingBlock = dummyContainingBlock;
+      }
       return new UncheckedExpression(containingBlock, this);
     }
 
