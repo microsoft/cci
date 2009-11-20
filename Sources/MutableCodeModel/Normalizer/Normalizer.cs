@@ -550,11 +550,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(localDeclarationStatement.LocalVariable));
+      var originalLocalVariable = localDeclarationStatement.LocalVariable;
+      localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(originalLocalVariable));
       if (localDeclarationStatement.InitialValue != null) {
         var source = this.Visit(localDeclarationStatement.InitialValue);
         BoundField/*?*/ boundField;
-        if (this.FieldForCapturedLocalOrParameter.TryGetValue(localDeclarationStatement.LocalVariable, out boundField)) {
+        if (this.FieldForCapturedLocalOrParameter.TryGetValue(originalLocalVariable, out boundField)) {
           var currentClosureLocal = this.closureLocals[0];
           var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
           var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = boundField.Field, Type = boundField.Type };
