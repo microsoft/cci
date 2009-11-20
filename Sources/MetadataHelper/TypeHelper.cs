@@ -1565,10 +1565,14 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0 && genericParameterCount > 0 && type.ResolvedType != Dummy.Type) {
         StringBuilder sb = new StringBuilder(typeName);
         sb.Append("<");
-        bool first = true;
-        foreach (ITypeReference parameter in type.ResolvedType.GenericParameters) {
-          if (!first) sb.Append(","); first = false;
-          sb.Append(this.GetTypeName(parameter, formattingOptions));
+        if ((formattingOptions & NameFormattingOptions.EmptyTypeParameterList) == 0) {
+          bool first = true;
+          foreach (ITypeReference parameter in type.ResolvedType.GenericParameters) {
+            if (!first) sb.Append(","); first = false;
+            sb.Append(this.GetTypeName(parameter, formattingOptions));
+          }
+        } else {
+          sb.Append(',', genericParameterCount - 1);
         }
         sb.Append(">");
         typeName = sb.ToString();
@@ -1601,28 +1605,32 @@ namespace Microsoft.Cci {
     /// </summary>
     protected virtual void AppendArrayDimensions(IArrayTypeReference arrayType, StringBuilder sb, NameFormattingOptions formattingOptions) {
       IArrayTypeReference/*?*/ elementArrayType = arrayType.ElementType as IArrayTypeReference;
-      bool outerToInner = (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0;
-      if (outerToInner && elementArrayType != null) { //Append the outer dimensions of the array first
+      bool formattingForDocumentationId = (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0;
+      if (formattingForDocumentationId && elementArrayType != null) { //Append the outer dimensions of the array first
         this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
       }
-      bool first = true;
-      IEnumerator<int> lowerBounds = arrayType.LowerBounds.GetEnumerator();
-      IEnumerator<ulong> sizes = arrayType.Sizes.GetEnumerator();
       sb.Append("[");
       if (!arrayType.IsVector) {
-        for (int i = 0; i < arrayType.Rank; i++) {
-          if (!first) sb.Append(","); first = false;
-          if (lowerBounds.MoveNext()) {
-            sb.Append(lowerBounds.Current);
-            sb.Append(":");
-            if (sizes.MoveNext()) sb.Append(sizes.Current);
-          } else {
-            if (sizes.MoveNext()) sb.Append("0:" + sizes.Current);
+        if (formattingForDocumentationId) {
+          bool first = true;
+          IEnumerator<int> lowerBounds = arrayType.LowerBounds.GetEnumerator();
+          IEnumerator<ulong> sizes = arrayType.Sizes.GetEnumerator();
+          for (int i = 0; i < arrayType.Rank; i++) {
+            if (!first) sb.Append(","); first = false;
+            if (lowerBounds.MoveNext()) {
+              sb.Append(lowerBounds.Current);
+              sb.Append(":");
+              if (sizes.MoveNext()) sb.Append(sizes.Current);
+            } else {
+              if (sizes.MoveNext()) sb.Append("0:" + sizes.Current);
+            }
           }
+        } else {
+          sb.Append(',', (int)arrayType.Rank-1);
         }
       }
       sb.Append("]");
-      if (!outerToInner && elementArrayType != null) { //Append the inner dimensions of the array first
+      if (!formattingForDocumentationId && elementArrayType != null) { //Append the inner dimensions of the array first
         this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
       }
     }
