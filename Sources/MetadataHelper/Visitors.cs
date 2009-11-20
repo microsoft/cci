@@ -709,7 +709,7 @@ namespace Microsoft.Cci {
       //^ ensures this.path.Count == old(this.path.Count);
     {
       IGenericMethodInstanceReference/*?*/ genericMethodInstanceReference = methodReference as IGenericMethodInstanceReference;
-      if (genericMethodInstanceReference != null) 
+      if (genericMethodInstanceReference != null)
         this.Visit(genericMethodInstanceReference);
       else
         this.Visit((ITypeMemberReference)methodReference);
@@ -1303,7 +1303,8 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       this.path.Push(typeMemberReference);
-      this.Visit(typeMemberReference.Attributes);
+      if (!(typeMemberReference is IDefinition))
+        this.Visit(typeMemberReference.Attributes); //In principle, refererences can have attributes that are distinct from the definitions they refer to.
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -1889,7 +1890,7 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given parameter type information.
     /// </summary>
     /// <param name="parameterTypeInformation"></param>
-    public virtual void Visit(IParameterTypeInformation parameterTypeInformation){
+    public virtual void Visit(IParameterTypeInformation parameterTypeInformation) {
     }
 
     /// <summary>
