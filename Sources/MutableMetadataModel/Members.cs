@@ -1304,7 +1304,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsConstructor {
-      get { return this.IsSpecialName && this.Name.Value.Equals(".ctor"); }
+      get { return this.IsRuntimeSpecial && this.Name.Value.Equals(".ctor"); }
     }
 
     /// <summary>
