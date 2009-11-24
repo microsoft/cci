@@ -160,6 +160,7 @@ namespace Microsoft.Cci {
       } else {
         if (instance == this.expressionOnTopOfStack) {
           this.generator.Emit(OperationCode.Dup);
+          this.StackSize++;
           this.expressionOnTopOfStack = null;
         } else
           this.Visit(instance);
