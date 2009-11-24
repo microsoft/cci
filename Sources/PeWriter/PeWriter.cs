@@ -442,6 +442,7 @@ namespace Microsoft.Cci {
         this.propertyDefList.Add(propertyDef);
       foreach (IMethodDefinition methodDef in typeDef.Methods) {
         if (!methodDef.IsAbstract && !methodDef.IsExternal) {
+          //Evaluate the PrivateHelperTypes property for its side effect. See comment on typeDef.PrivateHelperMembers.
           foreach (ITypeDefinition helper in methodDef.Body.PrivateHelperTypes) {
           }
         }
