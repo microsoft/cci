@@ -75,20 +75,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(method.ContainingTypeDefinition);
       this.path.Push(method);
 
-      ClosureFinder finder = new ClosureFinder(FieldForCapturedLocalOrParameter, this.host.NameTable, this.contractProvider);
+      ClosureFinder finder = new ClosureFinder(this.FieldForCapturedLocalOrParameter, this.host.NameTable, this.contractProvider);
       finder.Visit(body);
       IMethodContract/*?*/ methodContract = null;
       if (this.contractProvider != null)
         methodContract = this.contractProvider.GetMethodContractFor(method);
       if (methodContract != null)
         finder.Visit(methodContract);
-      if (finder.foundAnonymousDelegate && this.FieldForCapturedLocalOrParameter.Count ==0) {
+      if (finder.foundAnonymousDelegate && this.FieldForCapturedLocalOrParameter.Count == 0) {
         body = this.CreateAndInitializeClosureTemp(body);
       }
       body = this.Visit(body, method, methodContract);
       if (finder.foundYield) {
         this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-        body = GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes);
+        body = this.GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes);
       }
       SourceMethodBody result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       result.Block = body;
@@ -362,7 +362,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       //^ requires methodContract != null ==> this.contractProvider != null;
     {
       BlockStatement mutableBlockStatement = new BlockStatement(blockStatement);
-      return Visit(mutableBlockStatement, method, methodContract);
+      return this.Visit(mutableBlockStatement, method, methodContract);
     }
 
     private IBlockStatement Visit(BlockStatement blockStatement, IMethodDefinition/*?*/ method, IMethodContract/*?*/ methodContract)
