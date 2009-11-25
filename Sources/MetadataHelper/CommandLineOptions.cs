@@ -139,8 +139,6 @@ public abstract class OptionParsing {
           index++;
           continue;
         }
-        requiredOptions.Remove(arg.ToLowerInvariant()); // seens this option
-
         string equalArgument = null;
         int equalIndex = arg.IndexOf(':');
         if (equalIndex <= 0) {
@@ -153,7 +151,7 @@ public abstract class OptionParsing {
           arg = arg.Substring(0, equalIndex);
         }
 
-        bool optionOK = this.FindOptionByReflection(arg, args, ref index, equalArgument);
+        bool optionOK = this.FindOptionByReflection(arg, args, ref index, equalArgument, ref requiredOptions);
         if (!optionOK) {
           optionOK = this.ParseUnknown(arg, args, ref index, equalArgument);
           if (!optionOK) {
@@ -274,9 +272,10 @@ public abstract class OptionParsing {
     return null;
   }
 
-  private bool FindOptionByReflection(string arg, string[] args, ref int index, string explicitArgument) {
+  private bool FindOptionByReflection(string arg, string[] args, ref int index, string explicitArgument, ref IList<string> requiredOptions) {
     System.Reflection.FieldInfo fi = this.GetType().GetField(arg, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
     if (fi != null) {
+      requiredOptions.Remove(arg.ToLowerInvariant());
       return ProcessOptionWithMatchingField(arg, args, ref index, explicitArgument, ref fi);
     } else {
       // derived options
@@ -286,7 +285,7 @@ public abstract class OptionParsing {
 
         if (derived is string) {
           this.Parse(((string)derived).Split(' '));
-
+          requiredOptions.Remove(arg.ToLowerInvariant());
           return true;
         }
       }
@@ -302,6 +301,7 @@ public abstract class OptionParsing {
             var lower1 = attr.ShortForm.ToLowerInvariant();
             var lower2 = arg.ToLowerInvariant();
             if (lower1.Equals(lower2)) {
+              requiredOptions.Remove(matchingField.Name.ToLowerInvariant());
               return ProcessOptionWithMatchingField(arg, args, ref index, explicitArgument, ref matchingField);
             }
           }
