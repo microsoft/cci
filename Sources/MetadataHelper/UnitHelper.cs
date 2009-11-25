@@ -110,7 +110,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Finds a type in the given module using the given type name, expressed in C# notion with dots separating both namespaces and types.
+    /// Finds a type in the given module using the given type name, expressed in C# notation with dots separating both namespaces and types.
     /// If no such type can be found Dummy.NamespaceTypeDefinition is returned.
     /// </summary>
     /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
@@ -120,23 +120,40 @@ namespace Microsoft.Cci {
     /// <param name="typeName">A string containing the fully qualified type name, using C# formatting conventions.</param>
     public static INamedTypeDefinition FindType(INameTable nameTable, IUnit unit, string typeName) {
       int offset = 0;
-      INamedTypeDefinition/*?*/ result = GetType(nameTable, unit.UnitNamespaceRoot, typeName, ref offset);
+      INamedTypeDefinition/*?*/ result = GetType(nameTable, unit.UnitNamespaceRoot, typeName, 0, ref offset);
       if (result != null) return result;
       return Dummy.NamespaceTypeDefinition;
     }
 
-    private static INamedTypeDefinition/*?*/ GetType(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, ref int offset) {
+    /// <summary>
+    /// Finds a type in the given module using the given type name, expressed in C# notation with dots separating both namespaces and types.
+    /// If no such type can be found Dummy.NamespaceTypeDefinition is returned.
+    /// </summary>
+    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
+    /// <param name="unit">The unit of metadata to search for the type.</param>
+    /// <param name="typeName">A string containing the fully qualified type name, using C# formatting conventions.</param>
+    /// <param name="genericParameterCount">The number of generic parameters the returned type should have.</param>
+    public static INamedTypeDefinition FindType(INameTable nameTable, IUnit unit, string typeName, int genericParameterCount) {
+      int offset = 0;
+      INamedTypeDefinition/*?*/ result = GetType(nameTable, unit.UnitNamespaceRoot, typeName, genericParameterCount, ref offset);
+      if (result != null) return result;
+      return Dummy.NamespaceTypeDefinition;
+    }
+
+    private static INamedTypeDefinition/*?*/ GetType(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, int genericParameterCount, ref int offset) {
       int savedOffset = offset;
       var nestedNamespaceDefinition = GetNamespace(nameTable, namespaceDefinition, typeName, ref offset);
       if (nestedNamespaceDefinition != null) {
-        var naType = GetType(nameTable, nestedNamespaceDefinition, typeName, ref offset);
+        var naType = GetType(nameTable, nestedNamespaceDefinition, typeName, genericParameterCount, ref offset);
         if (naType != null) return naType;
       }
       offset = savedOffset;
-      var nsType = GetNamespaceType(nameTable, namespaceDefinition, typeName, ref offset);
+      var nsType = GetNamespaceType(nameTable, namespaceDefinition, typeName, genericParameterCount, ref offset);
       if (nsType == null) return null;
       if (offset >= typeName.Length) return nsType;
-      return GetNestedType(nameTable, nsType, typeName, ref offset);
+      return GetNestedType(nameTable, nsType, typeName, genericParameterCount, ref offset);
     }
 
     private static INestedUnitNamespace/*?*/ GetNamespace(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, ref int offset) {
@@ -154,7 +171,7 @@ namespace Microsoft.Cci {
       return null;
     }
 
-    private static INamespaceTypeDefinition/*?*/ GetNamespaceType(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, ref int offset) {
+    private static INamespaceTypeDefinition/*?*/ GetNamespaceType(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, int genericParameterCount, ref int offset) {
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
@@ -163,13 +180,14 @@ namespace Microsoft.Cci {
       foreach (var member in namespaceDefinition.GetMembersNamed(tName, false)) {
         var namespaceType = member as INamespaceTypeDefinition;
         if (namespaceType == null) continue;
+        if (namespaceType.GenericParameterCount != genericParameterCount) continue;
         offset = dotPos+1;
         return namespaceType;
       }
       return null;
     }
 
-    private static INestedTypeDefinition/*?*/ GetNestedType(INameTable nameTable, ITypeDefinition typeDefinition, string typeName, ref int offset) {
+    private static INestedTypeDefinition/*?*/ GetNestedType(INameTable nameTable, ITypeDefinition typeDefinition, string typeName, int genericParameterCount, ref int offset) {
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
@@ -178,9 +196,10 @@ namespace Microsoft.Cci {
       foreach (var member in typeDefinition.GetMembersNamed(tName, false)) {
         var nestedType = member as INestedTypeDefinition;
         if (nestedType == null) continue;
+        if (nestedType.GenericParameterCount != genericParameterCount) continue;
         if (dotPos == len) return nestedType;
         offset = dotPos+1;
-        return GetNestedType(nameTable, nestedType, typeName, ref offset);
+        return GetNestedType(nameTable, nestedType, typeName, genericParameterCount, ref offset);
       }
       return null;
     }
