@@ -636,6 +636,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Decides if the given type definition is visible to assemblies other than the assembly it is defined in (and other than its friends).
+    /// </summary>
+    public static bool IsVisibleOutsideAssembly(ITypeDefinition typeDefinition) {
+      switch (TypeHelper.TypeVisibilityAsTypeMemberVisibility(typeDefinition)) {
+        case TypeMemberVisibility.Public:
+        case TypeMemberVisibility.Family:
+        case TypeMemberVisibility.FamilyOrAssembly:
+          return true;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Returns the merged type of two types as per the verification algorithm in CLR.
     /// </summary>
     //^ [Pure]

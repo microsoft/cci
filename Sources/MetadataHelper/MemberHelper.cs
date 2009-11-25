@@ -239,6 +239,40 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Decides if the given type definition member is visible outside of the assembly it
+    /// is defined in.
+    /// It does not take into account friend assemblies: the meaning of this method
+    /// is that it returns true for those members that are visible outside of their
+    /// defining assembly to *all* assemblies.
+    /// </summary>
+    public static bool IsVisibleOutsideAssembly(ITypeDefinitionMember typeDefinitionMember) {
+      if (!TypeHelper.IsVisibleOutsideAssembly(typeDefinitionMember.ContainingTypeDefinition)) return false;
+      switch (typeDefinitionMember.Visibility) {
+        case TypeMemberVisibility.Public:
+          return true;
+        case TypeMemberVisibility.Family:
+        case TypeMemberVisibility.FamilyOrAssembly:
+          return !typeDefinitionMember.ContainingTypeDefinition.IsSealed;
+        default:
+          break; // still have to check in case it is a method
+      }
+      // methods have special needs beyond other type definition members
+      IMethodDefinition methodDefinition = typeDefinitionMember as IMethodDefinition;
+      if (methodDefinition != null) {
+        ITypeDefinition typeDefinition = methodDefinition.ContainingTypeDefinition;
+        foreach (IMethodImplementation methodImpl in typeDefinition.ExplicitImplementationOverrides) {
+          if (methodImpl.ImplementingMethod == methodDefinition) {
+            // if it is defined in another assembly, then it must be visible, so check that first
+            IMethodDefinition resolvedMethod = methodImpl.ImplementedMethod.ResolvedMethod;
+            if (resolvedMethod == Dummy.Method) return true;
+            if (IsVisibleOutsideAssembly(resolvedMethod)) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Returns true if the field signature has the System.Runtime.CompilerServices.IsVolatile modifier.
     /// Such fields should only be accessed with volatile reads and writes.
     /// </summary>
