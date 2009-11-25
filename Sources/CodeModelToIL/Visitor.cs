@@ -158,17 +158,10 @@ namespace Microsoft.Cci {
         this.generator.Emit(OperationCode.Ldsfld, field);
         this.StackSize++;
       } else {
-        if (instance == this.expressionOnTopOfStack) {
-          this.generator.Emit(OperationCode.Dup);
-          this.StackSize++;
-          this.expressionOnTopOfStack = null;
-        } else
-          this.Visit(instance);
+        this.Visit(instance);
         this.generator.Emit(OperationCode.Ldfld, field);
       }
     }
-
-    IExpression/*?*/ expressionOnTopOfStack;
 
     private void LoadLocal(ILocalDefinition local) {
       ushort localIndex = this.GetLocalIndex(local);
@@ -438,12 +431,6 @@ namespace Microsoft.Cci {
             if (!treatAsStatement) {
               this.generator.Emit(OperationCode.Dup);
               this.StackSize++;
-            }
-            IBinaryOperation binop = assignment.Source as IBinaryOperation;
-            if (binop != null) {
-              IBoundExpression boundExpr = binop.LeftOperand as IBoundExpression;
-              if (boundExpr != null && boundExpr.Instance == assignment.Target.Instance)
-                this.expressionOnTopOfStack = boundExpr.Instance;
             }
           }
           this.Visit(assignment.Source);
