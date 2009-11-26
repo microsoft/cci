@@ -36,7 +36,7 @@ namespace Microsoft.Cci {
     /// Adds the given local variable to the current lexical scope.
     /// </summary>
     /// <param name="local">The local to add to the current scope.</param>
-    public void AddLocalToCurrentScope(GeneratorLocal local) {
+    public void AddLocalToCurrentScope(ILocalDefinition local) {
       if (this.scopeStack.Count == 0) this.BeginScope();
       this.scopeStack.Peek().locals.Add(local);
     }
@@ -797,7 +797,7 @@ namespace Microsoft.Cci {
     }
 
     internal void CloseScope(uint offset) {
-      this.length = this.offset - offset;
+      this.length = offset - this.offset;
     }
 
     /// <summary>
@@ -814,9 +814,9 @@ namespace Microsoft.Cci {
     /// point that falls inside this scope.)
     /// </summary>
     public IEnumerable<ILocalDefinition> Locals {
-      get { return IteratorHelper.GetConversionEnumerable<GeneratorLocal, ILocalDefinition>(this.locals); }
+      get { return this.locals.AsReadOnly(); }
     }
-    internal readonly List<GeneratorLocal> locals = new List<GeneratorLocal>();
+    internal readonly List<ILocalDefinition> locals = new List<ILocalDefinition>();
 
     readonly INameTable nameTable;
 

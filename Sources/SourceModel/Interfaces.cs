@@ -671,8 +671,7 @@ namespace Microsoft.Cci {
     IEnumerable<ILocalDefinition> GetVariablesInScope(ILocalScope scope);
 
     /// <summary>
-    /// Returns true if the method body is an iterator, in which case the scope information should be retrieved from the MoveNext method of the object
-    /// returned by the iterator method.
+    /// Returns true if the method body is an iterator.
     /// </summary>
     bool IsIterator(IMethodBody methodBody);
 

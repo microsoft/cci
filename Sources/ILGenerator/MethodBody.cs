@@ -39,7 +39,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns zero or more local (block) scopes into which the CLR IL operations of this method body is organized.
     /// </summary>
-    internal IEnumerable<ILocalScope> GetLocalScopes() {
+    public IEnumerable<ILocalScope> GetLocalScopes() {
       return this.localScopes;
     }
     readonly IEnumerable<ILocalScope> localScopes;
@@ -50,7 +50,7 @@ namespace Microsoft.Cci {
     /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
     /// is for the y.
     /// </summary>
-    internal IEnumerable<INamespaceScope> GetNamespaceScopes() {
+    public IEnumerable<INamespaceScope> GetNamespaceScopes() {
       return this.namespaceScopes;
     }
     readonly IEnumerable<INamespaceScope> namespaceScopes;
@@ -174,8 +174,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns true if the method body is an iterator, in which case the scope information should be retrieved from the MoveNext method of the object
-    /// returned by the iterator method.
+    /// Returns true if the method body is an iterator.
     /// </summary>
     public virtual bool IsIterator(IMethodBody methodBody) {
       return false;
