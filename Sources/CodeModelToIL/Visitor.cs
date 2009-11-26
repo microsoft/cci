@@ -38,7 +38,6 @@ namespace Microsoft.Cci {
     ILGeneratorLabel currentContinueTarget = new ILGeneratorLabel();
     ILGeneratorLabel/*?*/ currentTryCatchFinallyEnd;
     ITryCatchFinallyStatement/*?*/ currentTryCatch;
-    bool minizeCodeSize;
     ILGeneratorLabel endOfMethod = new ILGeneratorLabel();
     ILGenerator generator;
     /// <summary>
@@ -50,6 +49,7 @@ namespace Microsoft.Cci {
     bool lastStatementWasUnconditionalTransfer;
     Dictionary<ILocalDefinition, ushort> localIndex = new Dictionary<ILocalDefinition, ushort>();
     IMethodDefinition method = Dummy.Method;
+    bool minizeCodeSize;
     Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor = new Dictionary<object, ITryCatchFinallyStatement>();
     ILocalDefinition/*?*/ returnLocal;
     /// <summary>
@@ -1256,6 +1256,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      this.generator.AddLocalToCurrentScope(localDeclarationStatement.LocalVariable);
       if (localDeclarationStatement.InitialValue != null) {
         this.Visit(localDeclarationStatement.InitialValue);
         this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
@@ -3764,11 +3765,28 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns zero or more local (block) scopes into which the CLR IL operations of this converted Code Model block is organized.
+    /// </summary>
+    public IEnumerable<ILocalScope> GetLocalScopes() {
+      return IteratorHelper.GetConversionEnumerable<ILGeneratorScope, ILocalScope>(this.generator.GetLocalScopes());
+    }
+
+    /// <summary>
     /// Returns all of the local variables (including compiler generated temporary variables) that are local to the block
     /// of statements translated by this converter.
     /// </summary>
     public IEnumerable<ILocalDefinition> GetLocalVariables() {
       return this.temporaries.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+    /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+    /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+    /// is for the y.
+    /// </summary>
+    public IEnumerable<INamespaceScope> GetNamespaceScopes() {
+      return IteratorHelper.GetConversionEnumerable<ILGeneratorScope, INamespaceScope>(this.generator.GetLocalScopes());
     }
 
     /// <summary>

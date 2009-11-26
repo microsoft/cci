@@ -1612,7 +1612,11 @@ namespace Microsoft.Cci.Ast {
       /// <summary>
       /// 
       /// </summary>
-      ExtensionMethod=AcceptsExtraArguments>>1,
+      IsCompilerGenerated=AcceptsExtraArguments>>1,
+      /// <summary>
+      /// 
+      /// </summary>
+      ExtensionMethod=IsCompilerGenerated>>1,
       /// <summary>
       /// 
       /// </summary>
@@ -1799,6 +1803,16 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    protected override List<ICustomAttribute> GetAttributes() {
+      var result = base.GetAttributes();
+      if ((this.flags & (int)MethodDeclaration.Flags.IsCompilerGenerated) != 0) {
+        var cgattr = new Microsoft.Cci.MutableCodeModel.CustomAttribute();
+        cgattr.Constructor = this.Helper.CompilerGeneratedCtor;
+        result.Add(cgattr);
+      }
+      return result;
+    }
+
     /// <summary>
     /// A list of events that are declaratively handled by this method. Whenever an object is assigned to an event source in the list,
     /// the method is unhooked from the event of the previous value and hooked up to the event of the new value. In VB this corresponds
@@ -1887,7 +1901,7 @@ namespace Microsoft.Cci.Ast {
 
     /// <summary>
     /// True if this method is a static method that can be called as an instance method on another class because it has an explicit this parameter.
-    /// In other words, the class defining this static method is effectively extended another class, but doing so without subclassing it and
+    /// In other words, the class defining this static method is effectively extending another class, but doing so without subclassing it and
     /// without requiring client code to instantiate the subclass.
     /// </summary>
     public bool IsExtensionMethod {

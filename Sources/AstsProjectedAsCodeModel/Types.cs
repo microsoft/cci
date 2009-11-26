@@ -1246,8 +1246,9 @@ namespace Microsoft.Cci.Ast {
       ResolvedMethodCall baseCtorCall = new ResolvedMethodCall(baseCtor, thisArg, new List<Expression>(0), SourceDummy.SourceLocation);
       ExpressionStatement callBaseCtor = new ExpressionStatement(baseCtorCall);
       statements.Add(callBaseCtor);
+      List<SourceCustomAttribute> attrs = new List<SourceCustomAttribute>(1);
       MethodDeclaration ctorDeclaration =
-        new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName,
+        new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName|MethodDeclaration.Flags.IsCompilerGenerated,
           TypeMemberVisibility.Public, voidType, null, ctor, null, ctorParameters, null, body, SourceDummy.SourceLocation);
       ctorDeclaration.SetContainingTypeDeclaration(tDecl, true);
       this.AddMemberToCache(new MethodDefinition(ctorDeclaration));
@@ -1282,7 +1283,7 @@ namespace Microsoft.Cci.Ast {
       TypeExpression voidType = TypeExpression.For(this.PlatformType.SystemVoid);
       BlockStatement emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration ctorDeclaration =
-        new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName,
+        new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName|MethodDeclaration.Flags.IsCompilerGenerated,
           TypeMemberVisibility.Public, voidType, null, ctor, null, ctorParameters, null, emptyBody, SourceDummy.SourceLocation);
       TypeExpression objectType = TypeExpression.For(this.PlatformType.SystemObject);
       NameDeclaration objectName = new NameDeclaration(nametable.GetNameFor("object"), SourceDummy.SourceLocation);
@@ -1296,7 +1297,7 @@ namespace Microsoft.Cci.Ast {
       List<ParameterDeclaration> invokeParameters = new List<ParameterDeclaration>();
       emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration invokeDeclaration =
-        new MethodDeclaration(null, MethodDeclaration.Flags.Virtual,
+        new MethodDeclaration(null, MethodDeclaration.Flags.Virtual|MethodDeclaration.Flags.IsCompilerGenerated,
           TypeMemberVisibility.Public, delegateSignature.Type, null, invoke, null, invokeParameters, null, emptyBody, SourceDummy.SourceLocation);
       foreach (ParameterDeclaration delPar in delegateSignature.Parameters)
         invokeParameters.Add(delPar.MakeShallowCopyFor(invokeDeclaration, delegateDeclaration.OuterDummyBlock));
@@ -1307,7 +1308,7 @@ namespace Microsoft.Cci.Ast {
       TypeExpression iasyncResultType = TypeExpression.For(this.PlatformType.SystemIAsyncResult);
       emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration beginInvokeDeclaration =
-        new MethodDeclaration(null, MethodDeclaration.Flags.Virtual,
+        new MethodDeclaration(null, MethodDeclaration.Flags.Virtual|MethodDeclaration.Flags.IsCompilerGenerated,
           TypeMemberVisibility.Public, iasyncResultType, null, beginInvoke, null, beginInvokeParameters, null, emptyBody, SourceDummy.SourceLocation);
       foreach (ParameterDeclaration delPar in delegateSignature.Parameters)
         beginInvokeParameters.Add(delPar.MakeShallowCopyFor(beginInvokeDeclaration, delegateDeclaration.OuterDummyBlock));
@@ -1321,7 +1322,7 @@ namespace Microsoft.Cci.Ast {
       List<ParameterDeclaration> endInvokeParameters = new List<ParameterDeclaration>();
       emptyBody = BlockStatement.CreateDummyFor(SourceDummy.SourceLocation);
       MethodDeclaration endInvokeDeclaration =
-        new MethodDeclaration(null, MethodDeclaration.Flags.Virtual,
+        new MethodDeclaration(null, MethodDeclaration.Flags.Virtual|MethodDeclaration.Flags.IsCompilerGenerated,
           TypeMemberVisibility.Public, voidType, null, endInvoke, null, endInvokeParameters, null, emptyBody, SourceDummy.SourceLocation);
       NameDeclaration resultName = new NameDeclaration(nametable.GetNameFor("result"), SourceDummy.SourceLocation);
       endInvokeParameters.Add(new ParameterDeclaration(null, iasyncResultType, resultName, null, 0, false, false, false, false, SourceDummy.SourceLocation));
@@ -1361,7 +1362,7 @@ namespace Microsoft.Cci.Ast {
         field.AddInitializingAssignmentsTo(statements);
       BlockStatement body = new BlockStatement(statements, SourceDummy.SourceLocation);
       MethodDeclaration cctorDeclaration =
-        new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName|MethodDeclaration.Flags.Static,
+        new MethodDeclaration(null, MethodDeclaration.Flags.SpecialName|MethodDeclaration.Flags.Static|MethodDeclaration.Flags.IsCompilerGenerated,
           TypeMemberVisibility.Public, voidType, null, cctor, null, cctorParameters, null, body, SourceDummy.SourceLocation);
       cctorDeclaration.SetContainingTypeDeclaration(tDecl, true);
       this.AddMemberToCache(new MethodDefinition(cctorDeclaration));

@@ -107,6 +107,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns an object that can provide information about the local scopes of a method.
+    /// </summary>
+    protected virtual ILocalScopeProvider GetLocalScopeProvider() {
+      return new LocalScopeProvider();
+    }
+
+    /// <summary>
     /// Constructs a compilation parts list for the first time.
     /// This method is combined with the constructor that does not take a parts list as parameter and requires the parts list to be null.
     /// It is implemented by derived types and is expected to create compilation parts that know how to construct themselves by parsing their corresponding source files.
@@ -176,6 +183,19 @@ namespace Microsoft.Cci.Ast {
     }
     //^ [Once]
     SourceContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// An object that can provide information about the local scopes of a method.
+    /// </summary>
+    public ILocalScopeProvider LocalScopeProvider {
+      [DebuggerNonUserCode]
+      get {
+        if (this.localScopeProvider == null)
+          this.localScopeProvider = this.GetLocalScopeProvider();
+        return this.localScopeProvider;
+      }
+    }
+    ILocalScopeProvider/*?*/ localScopeProvider;
 
     /// <summary>
     /// 
@@ -266,7 +286,8 @@ namespace Microsoft.Cci.Ast {
     readonly Unit result;
 
     /// <summary>
-    /// 
+    /// An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects.
+    /// In this case, it is primarily needed to map IDerivedSourceLocations and IIncludedSourceLocations to IPrimarySourceLocations.
     /// </summary>
     public ISourceLocationProvider SourceLocationProvider {
       [DebuggerNonUserCode]
@@ -1016,6 +1037,20 @@ namespace Microsoft.Cci.Ast {
       get { return this.compilation; }
     }
     readonly Compilation compilation;
+
+    /// <summary>
+    /// A reference to the default constructor of the System.Runtime.CompilerServices.CompilerGenerated attribute.
+    /// </summary>
+    public IMethodReference CompilerGeneratedCtor {
+      get {
+        if (this.compilerGeneratedCtor == null)
+          this.compilerGeneratedCtor = new MethodReference(this.Compilation.HostEnvironment,
+            this.Compilation.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
+             CallingConvention.HasThis, this.Compilation.PlatformType.SystemVoid, this.Compilation.NameTable.Ctor, 0);
+        return this.compilerGeneratedCtor;
+      }
+    }
+    private IMethodReference/*?*/ compilerGeneratedCtor;
 
     /// <summary>
     /// Returns an expression that will convert the value of the given expression to a value of the given type.
@@ -3156,6 +3191,79 @@ namespace Microsoft.Cci.Ast {
   }
 
   /// <summary>
+  /// An object that can provide information about the local scopes of a method.
+  /// </summary>
+  internal sealed class LocalScopeProvider : ILocalScopeProvider {
+
+    internal static IEnumerable<ILocalScope> emptyLocalScopes = IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+    internal static IEnumerable<INamespaceScope> emptyNamespaceScopes = IteratorHelper.GetEmptyEnumerable<INamespaceScope>();
+    internal static IEnumerable<ILocalDefinition> emptyLocals = IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+
+    /// <summary>
+    /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
+    /// The scopes are returned by the MoveNext method of the object returned by the iterator method.
+    /// The index of the scope corresponds to the index of the local. Specifically local scope i corresponds
+    /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
+    /// calls to MoveNext.
+    /// </summary>
+    public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
+      var mbody = methodBody as MethodBody;
+      if (mbody == null) return emptyLocalScopes;
+      return mbody.GetIteratorScopes();
+    }
+
+    /// <summary>
+    /// Returns zero or more local (block) scopes into which the CLR IL operations in the given method body is organized.
+    /// </summary>
+    public IEnumerable<ILocalScope> GetLocalScopes(IMethodBody methodBody) {
+      var mbody = methodBody as MethodBody;
+      if (mbody == null) return emptyLocalScopes;
+      return mbody.GetLocalScopes();
+    }
+
+    /// <summary>
+    /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+    /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+    /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+    /// is for the y.
+    /// </summary>
+    public IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
+      var mbody = methodBody as MethodBody;
+      if (mbody == null) return emptyNamespaceScopes;
+      return mbody.GetNamespaceScopes();
+    }
+
+    /// <summary>
+    /// Returns zero or more local constant definitions that are local to the given scope.
+    /// </summary>
+    public IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
+      var genScope = scope as ILGeneratorScope;
+      if (genScope == null) return emptyLocals;
+      //return genScope.GetConstantsInScope(); //TODO: support for constants
+      return emptyLocals;
+    }
+
+    /// <summary>
+    /// Returns zero or more local variable definitions that are local to the given scope.
+    /// </summary>
+    public IEnumerable<ILocalDefinition> GetVariablesInScope(ILocalScope scope) {
+      var genScope = scope as ILGeneratorScope;
+      if (genScope == null) return emptyLocals;
+      return genScope.Locals;
+    }
+
+    /// <summary>
+    /// Returns true if the method body is an iterator.
+    /// </summary>
+    public bool IsIterator(IMethodBody methodBody) {
+      var mbody = methodBody as MethodBody;
+      if (mbody == null) return false;
+      return mbody.IsIteratorBody;
+    }
+
+  }
+
+  /// <summary>
   /// A collection of named members, with routines to search and maintain the collection. The search routines have linear complexity.
   /// Use this class when memory is at a premium and the expectation is that the scope will have a small number of members. 
   /// For example, a statement block scope should use this base class.
@@ -3330,7 +3438,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {
-      isCompilerGenerated = !(localDefinition is LocalDefinition);
+      isCompilerGenerated = localDefinition.Name != Dummy.Name;
       return localDefinition.Name.Value;
     }
 

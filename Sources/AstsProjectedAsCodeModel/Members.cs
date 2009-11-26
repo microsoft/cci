@@ -2914,19 +2914,62 @@ namespace Microsoft.Cci.Ast {
       MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
+      this.isIteratorBody = normalizer.IsIteratorBody;
 
       CodeModelToILConverter converter = new CodeModelToILConverter(this.Block.Compilation.HostEnvironment,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
       converter.ConvertToIL(this.MethodDefinition, normalizedBody.Block);
 
+      this.localScopes = converter.GetLocalScopes();
       this.localVariables = converter.GetLocalVariables();
       this.maxStack = converter.MaximumStackSizeNeeded;
+      this.namespaceScopes = converter.GetNamespaceScopes();
       this.operations = converter.GetOperations();
       this.operationExceptionInformation = converter.GetOperationExceptionInformation();
       this.privateHelperTypes = normalizedBody.PrivateHelperTypes;
     }
 
     bool ilWasGenerated;
+
+    /// <summary>
+    /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
+    /// The scopes are returned by the MoveNext method of the object returned by the iterator method.
+    /// The index of the scope corresponds to the index of the local. Specifically local scope i corresponds
+    /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
+    /// calls to MoveNext.
+    /// </summary>
+    public IEnumerable<ILocalScope> GetIteratorScopes() {
+      return LocalScopeProvider.emptyLocalScopes;
+    }
+
+    /// <summary>
+    /// Returns zero or more local (block) scopes into which the CLR IL operations in the given method body is organized.
+    /// </summary>
+    public IEnumerable<ILocalScope> GetLocalScopes() {
+      if (!this.ilWasGenerated) this.GenerateIL();
+      return this.localScopes;
+    }
+    IEnumerable<ILocalScope>/*?*/ localScopes;
+
+    /// <summary>
+    /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+    /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+    /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+    /// is for the y.
+    /// </summary>
+    public IEnumerable<INamespaceScope> GetNamespaceScopes() {
+      if (!this.ilWasGenerated) this.GenerateIL();
+      return this.namespaceScopes;
+    }
+    IEnumerable<INamespaceScope>/*?*/ namespaceScopes;
+
+    public bool IsIteratorBody {
+      get {
+        if (!this.ilWasGenerated) this.GenerateIL();
+        return this.isIteratorBody;
+      }
+    }
+    bool isIteratorBody;
 
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.

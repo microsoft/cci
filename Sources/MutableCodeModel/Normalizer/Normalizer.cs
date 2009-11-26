@@ -31,33 +31,12 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     Dictionary<IParameterDefinition, bool> capturedParameters = new Dictionary<IParameterDefinition, bool>();
     Dictionary<IMethodDefinition, bool> isAlreadyNormalized = new Dictionary<IMethodDefinition, bool>();
-    Dictionary<object, BoundField> fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-    NestedTypeDefinition currentClosureClass = new NestedTypeDefinition();
-
-    //List<ILocalDefinition> allLocals = new List<ILocalDefinition>();
-    IMethodDefinition method= Dummy.Method;
+    Dictionary<object, BoundField> FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
+    NestedTypeDefinition CurrentClosureClass = new NestedTypeDefinition();
+    IMethodDefinition method = Dummy.Method;
     List<ILocalDefinition> closureLocals = new List<ILocalDefinition>();
     List<IFieldDefinition> outerClosures = new List<IFieldDefinition>();
     List<ITypeDefinition> privateHelperTypes = new List<ITypeDefinition>();
-
-    private Dictionary<IParameterDefinition, bool> CapturedParameters {
-      get { return capturedParameters; }
-      set { capturedParameters = value; }
-    }
-
-    private Dictionary<IMethodDefinition, bool> IsAlreadyNormalized {
-      get { return isAlreadyNormalized; }
-    }
-
-    private Dictionary<object, BoundField> FieldForCapturedLocalOrParameter {
-      get { return fieldForCapturedLocalOrParameter; }
-      set { fieldForCapturedLocalOrParameter = value; }
-    }
-
-    private NestedTypeDefinition CurrentClosureClass {
-      get { return currentClosureClass; }
-      set { currentClosureClass = value; }
-    }
 
     /// <summary>
     /// 
@@ -87,7 +66,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       body = this.Visit(body, method, methodContract);
       if (finder.foundYield) {
-        this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
+        this.isIteratorBody = true;
+        this.FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
         body = this.GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes);
       }
       SourceMethodBody result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
@@ -132,10 +112,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="privateHelperTypes">List of helper types generated when compiling <paramref name="method">method</paramref>/></param>
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
-
       IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this.FieldForCapturedLocalOrParameter, method, privateHelperTypes, this.host, this.sourceLocationProvider, this.contractProvider);
       return iteratorClosureGenerator.CompileIterator(body, method, methodContract);
     }
+
+    /// <summary>
+    /// Returns true if the last call to GetNormalizedSourceMethodBodyFor visited a body that contains a yield statement.
+    /// </summary>
+    public bool IsIteratorBody {
+      get { return this.isIteratorBody; }
+    }
+    bool isIteratorBody;
 
     private IMethodReference CompilerGeneratedCtor {
       get {
@@ -157,10 +144,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     private IMethodReference/*?*/ objectCtor;
 
-
-    static ISourceToILConverter ProvideSourceToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider) {
-      return new PreNormalizedCodeModelToILConverter(host, sourceLocationProvider, contractProvider);
-    }
 
     private IBlockStatement CreateAndInitializeClosureTemp(IBlockStatement body) {
       BlockStatement mutableBlockStatement = new BlockStatement(body);
@@ -285,7 +268,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       MethodDefinition result = new MethodDefinition();
       closureClass.Methods.Add(result);
       this.cache.Add(result, result);
-      this.IsAlreadyNormalized.Add(result, true);
+      this.isAlreadyNormalized.Add(result, true);
       result.Body = body;
       body.MethodDefinition = result;
       result.CallingConvention = CallingConvention.HasThis;
@@ -389,7 +372,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="globalMethodDefinition">The global method definition.</param>
     public override IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
       var result = base.Visit(globalMethodDefinition);
-      this.IsAlreadyNormalized.Add(globalMethodDefinition, true);
+      this.isAlreadyNormalized.Add(globalMethodDefinition, true);
       return result;
     }
 
@@ -453,7 +436,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodDefinition">The method definition.</param>
     /// <returns></returns>
     public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
-      if (this.IsAlreadyNormalized.ContainsKey(methodDefinition)) {
+      if (this.isAlreadyNormalized.ContainsKey(methodDefinition)) {
         object result = methodDefinition;
         this.cache.TryGetValue(methodDefinition, out result);
         return (IMethodDefinition)result;
@@ -562,9 +545,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           var assignment = new Assignment() { Target = target, Source = source, Type = boundField.Type };
           return new ExpressionStatement() { Expression = assignment, Locations = localDeclarationStatement.Locations };
         } else {
-          var target = new TargetExpression() { Definition = localDeclarationStatement.LocalVariable, Type = localDeclarationStatement.LocalVariable.Type };
-          var assignment = new Assignment() { Target = target, Source = source, Type = target.Type };
-          return new ExpressionStatement() { Expression = assignment, Locations = localDeclarationStatement.Locations };
+          return base.Visit(localDeclarationStatement);
         }
       }
       return localDeclarationStatement;
@@ -609,8 +590,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       BoundField/*?*/ boundField;
       if (this.FieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
         IParameterDefinition/*?*/ boundParameter = boundExpression.Definition as IParameterDefinition;
-        if (boundParameter != null && !this.CapturedParameters.ContainsKey(boundParameter)) {
-          this.CapturedParameters.Add(boundParameter, true);
+        if (boundParameter != null && !this.capturedParameters.ContainsKey(boundParameter)) {
+          this.capturedParameters.Add(boundParameter, true);
         } else {
           boundExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
           boundExpression.Definition = boundField.Field;
