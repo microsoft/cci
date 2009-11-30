@@ -639,6 +639,8 @@ namespace Microsoft.Cci {
     /// Decides if the given type definition is visible to assemblies other than the assembly it is defined in (and other than its friends).
     /// </summary>
     public static bool IsVisibleOutsideAssembly(ITypeDefinition typeDefinition) {
+      var nestedType = typeDefinition as INestedTypeDefinition;
+      if (nestedType != null && !TypeHelper.IsVisibleOutsideAssembly(nestedType.ContainingTypeDefinition)) return false;
       switch (TypeHelper.TypeVisibilityAsTypeMemberVisibility(typeDefinition)) {
         case TypeMemberVisibility.Public:
         case TypeMemberVisibility.Family:
