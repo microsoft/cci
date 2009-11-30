@@ -1256,10 +1256,15 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
-      this.generator.AddLocalToCurrentScope(localDeclarationStatement.LocalVariable);
-      if (localDeclarationStatement.InitialValue != null) {
-        this.Visit(localDeclarationStatement.InitialValue);
-        this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
+      if (localDeclarationStatement.LocalVariable.IsConstant) {
+        this.generator.AddConstantToCurrentScope(localDeclarationStatement.LocalVariable);
+        this.generator.Emit(OperationCode.Nop); //Make sure the constant always has a scope
+      } else {
+        this.generator.AddVariableToCurrentScope(localDeclarationStatement.LocalVariable);
+        if (localDeclarationStatement.InitialValue != null) {
+          this.Visit(localDeclarationStatement.InitialValue);
+          this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
+        }
       }
     }
 

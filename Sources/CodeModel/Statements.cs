@@ -235,7 +235,7 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// An object that represents the declaration of a local variable, with optional initializer.
+  /// An object that represents the declaration of a local variable or constant, with optional initializer.
   /// </summary>
   public interface ILocalDeclarationStatement : IStatement {
 
@@ -245,7 +245,7 @@ namespace Microsoft.Cci {
     IExpression/*?*/ InitialValue { get; }
 
     /// <summary>
-    /// The local variable declared by this statement.
+    /// The local variable or constant declared by this statement.
     /// </summary>
     ILocalDefinition LocalVariable { get; }
 

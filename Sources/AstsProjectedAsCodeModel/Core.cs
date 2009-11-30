@@ -3253,8 +3253,7 @@ namespace Microsoft.Cci.Ast {
     public IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
       var genScope = scope as ILGeneratorScope;
       if (genScope == null) return emptyLocals;
-      //return genScope.GetConstantsInScope(); //TODO: support for constants
-      return emptyLocals;
+      return genScope.Constants;
     }
 
     /// <summary>
@@ -3452,7 +3451,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {
-      isCompilerGenerated = localDefinition.Name != Dummy.Name;
+      isCompilerGenerated = localDefinition.Name == Dummy.Name;
       return localDefinition.Name.Value;
     }
 

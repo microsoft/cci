@@ -3181,11 +3181,9 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(IExpressionStatement) method on an assignment statement that initializes the local. 
-    /// Does nothing for constants and uninitialized locals.
+    /// Calls the visitor.Visit((ILocalDeclarationStatement)this).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      if (this.IsConstant) return; //TODO: need to expose something to the code model so that PDB info can get generated.
       visitor.Visit(this);
     }
 
