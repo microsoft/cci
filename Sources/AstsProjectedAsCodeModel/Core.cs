@@ -1256,22 +1256,26 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns a list of expressions that convert the given argument expressions to match the types of the given list of parameters.
     /// </summary>
+    /// <param name="containingExpression">The expression that contains the argument list to be converted. Used when calling SetContainingExpression
+    /// on expressions that are created for the purpose of the conversion.</param>
     /// <param name="arguments">A list of expressions that match parameters.</param>
     /// <param name="parameters">A list of parameters.</param>
     //^ [Pure]
-    public List<Expression> ConvertArguments(IEnumerable<Expression> arguments, IEnumerable<IParameterDefinition> parameters) {
-      return this.ConvertArguments(arguments, parameters, false);
+    public List<Expression> ConvertArguments(Expression containingExpression, IEnumerable<Expression> arguments, IEnumerable<IParameterDefinition> parameters) {
+      return this.ConvertArguments(containingExpression, arguments, parameters, false);
     }
 
     /// <summary>
     /// Returns a list of expressions that convert the given argument expressions to match the types of the given list of parameters.
     /// </summary>
+    /// <param name="containingExpression">The expression that contains the argument list to be converted. Used when calling SetContainingExpression
+    /// on expressions that are created for the purpose of the conversion.</param>
     /// <param name="arguments">A list of expressions that match parameters.</param>
     /// <param name="parameters">A list of parameters.</param>
     /// <param name="allowExtraArguments">If this is true, any extra arguments that do not match parameters are appended to the result without conversion.
     /// This is needed when the parameters belong to a method that accepts extra arguments.</param>
     //^ [Pure]
-    public virtual List<Expression> ConvertArguments(IEnumerable<Expression> arguments, IEnumerable<IParameterDefinition> parameters, bool allowExtraArguments) {
+    public virtual List<Expression> ConvertArguments(Expression containingExpression, IEnumerable<Expression> arguments, IEnumerable<IParameterDefinition> parameters, bool allowExtraArguments) {
       List<Expression> convertedArgs = new List<Expression>();
       IEnumerator<Expression> args = arguments.GetEnumerator();
       IEnumerator<IParameterDefinition> pars = parameters.GetEnumerator();
@@ -1285,8 +1289,7 @@ namespace Microsoft.Cci.Ast {
             Expression arg = args.Current;
             if (lastParameter && par.IsParameterArray) {
               if (!this.ImplicitConversionExists(arg, parType)) {
-                convertedArg = this.GetParamArray(par, args); //an expression that collects the remaining arguments into a parameter array.
-                convertedArg.SetContainingExpression(arg);
+                convertedArg = this.GetParamArray(containingExpression, par, args); //an expression that collects the remaining arguments into a parameter array.
                 convertedArgs.Add(convertedArg);
                 break;
               }
@@ -1296,10 +1299,10 @@ namespace Microsoft.Cci.Ast {
               this.ReportFailedImplicitConversion(arg, parType);
           } else {
             //Still have parameters, but no more arguments have been specified.
-            if (lastParameter && par.IsParameterArray)
-              convertedArg = this.GetParamArray(par, null); //an expression that results in an empty parameter array.
-            else
-              convertedArg = this.GetDefaultValueFor(par);
+            if (lastParameter && par.IsParameterArray) {
+              convertedArg = this.GetParamArray(containingExpression, par, null); //an expression that results in an empty parameter array.
+            } else
+              convertedArg = this.GetDefaultValueFor(containingExpression, par);
           }
           convertedArgs.Add(convertedArg);
           if (lastParameter) {
@@ -1395,11 +1398,18 @@ namespace Microsoft.Cci.Ast {
     /// Returns a default value to match with the given parameter. If the parameter specifies a default value, use that.
     /// If not, return the default value for the type of the parameter.
     /// </summary>
+    /// <param name="containingExpression">The expression that contains the argument list to be converted. Used when calling SetContainingExpression
+    /// on expressions that are created for the purpose of the conversion.</param>
     /// <param name="par">The parameter for which a matching default value is desired.</param>
     //^ [Pure]
-    public virtual Expression GetDefaultValueFor(IParameterDefinition par) {
-      if (par.HasDefaultValue) return new CompileTimeConstant(par.DefaultValue.Value, SourceDummy.SourceLocation);
-      return new DefaultValue(TypeExpression.For(par.Type), SourceDummy.SourceLocation);
+    public virtual Expression GetDefaultValueFor(Expression containingExpression, IParameterDefinition par) {
+      Expression result;
+      if (par.HasDefaultValue)
+        result = new CompileTimeConstant(par.DefaultValue.Value, SourceDummy.SourceLocation);
+      else
+        result = new DefaultValue(TypeExpression.For(par.Type), SourceDummy.SourceLocation);
+      result.SetContainingExpression(containingExpression);
+      return result;
     }
 
     /// <summary>
@@ -1516,10 +1526,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns an expression that allocates a parameter array instance to match given parameter and that contains the given arguments as elements.
     /// </summary>
+    /// <param name="containingExpression">The expression that contains the argument list to be converted. Used when calling SetContainingExpression
+    /// on expressions that are created for the purpose of the conversion.</param>
     /// <param name="par">The parameter for which a matching parameter array instance is desired. parameter.IsParameterArray must be true.</param>
     /// <param name="args">The argument values, if any, that are to be the elements of the paraemter array instance. May be null.</param>
     //^ [Pure]
-    public virtual Expression GetParamArray(IParameterDefinition par, IEnumerator<Expression>/*?*/ args)
+    public virtual Expression GetParamArray(Expression containingExpression, IParameterDefinition par, IEnumerator<Expression>/*?*/ args)
       //^ requires par.IsParameterArray;
     {
       SourceLocationBuilder slb;
@@ -1531,7 +1543,9 @@ namespace Microsoft.Cci.Ast {
         slb = new SourceLocationBuilder(SourceDummy.SourceLocation);
       }
       //^ assume par.IsParameterArray; //see precondition
-      return new CreateArray(par.ParamArrayElementType, initializers, slb);
+      var result = new CreateArray(par.ParamArrayElementType, initializers, slb);
+      result.SetContainingExpression(containingExpression);
+      return result;
     }
 
     /// <summary>

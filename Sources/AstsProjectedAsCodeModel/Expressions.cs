@@ -211,7 +211,7 @@ namespace Microsoft.Cci.Ast {
           List<Expression> args = new List<Expression>(2);
           args.Add(this.LeftOperand);
           args.Add(this.RightOperand);
-          args = this.Helper.ConvertArguments(args, overloadMethod.Parameters);
+          args = this.Helper.ConvertArguments(this, args, overloadMethod.Parameters);
           if (overloadMethod.Name.UniqueKey == this.NameTable.DelegateOpDelegate.UniqueKey) {
             foreach (ITypeDefinitionMember member in this.PlatformType.SystemDelegate.ResolvedType.GetMembersNamed(this.NameTable.Combine, false)) {
               IMethodDefinition/*?*/ combine = member as IMethodDefinition;
@@ -3132,7 +3132,7 @@ namespace Microsoft.Cci.Ast {
         List<Expression> args = new List<Expression>(2);
         args.Add(this.LeftOperand);
         args.Add(this.RightOperand);
-        args = this.Helper.ConvertArguments(args, overloadMethod.Parameters);
+        args = this.Helper.ConvertArguments(this, args, overloadMethod.Parameters);
         ResolvedMethodCall overloadMethodCall = new ResolvedMethodCall(overloadMethod, args, this.SourceLocation);
         overloadMethodCall.SetContainingExpression(this);
         return overloadMethodCall;
@@ -4760,7 +4760,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns a list of the arguments to pass to the constructor, indexer or method, after they have been converted to match the parameters of the resolved method.
     /// </summary>
     protected virtual List<Expression> ConvertArguments() {
-      return this.Helper.ConvertArguments(this.OriginalArguments, this.ResolvedMethod.Parameters, false);
+      return this.Helper.ConvertArguments(this, this.OriginalArguments, this.ResolvedMethod.Parameters, false);
     }
 
     /// <summary>
@@ -18499,7 +18499,7 @@ namespace Microsoft.Cci.Ast {
           List<Expression> args = new List<Expression>(2);
           args.Add(this.LeftOperand);
           args.Add(this.RightOperand);
-          args = this.Helper.ConvertArguments(args, overloadMethod.Parameters);
+          args = this.Helper.ConvertArguments(this, args, overloadMethod.Parameters);
           if (overloadMethod.Name.UniqueKey == this.NameTable.DelegateOpDelegate.UniqueKey) {
             foreach (ITypeDefinitionMember member in this.PlatformType.SystemDelegate.ResolvedType.GetMembersNamed(this.NameTable.Remove, false)) {
               IMethodDefinition/*?*/ combine = member as IMethodDefinition;
@@ -19341,7 +19341,7 @@ namespace Microsoft.Cci.Ast {
       else {
         List<Expression> args = new List<Expression>(1);
         args.Add(this.Operand);
-        args = this.Helper.ConvertArguments(args, overloadMethod.Parameters);
+        args = this.Helper.ConvertArguments(this, args, overloadMethod.Parameters);
         ResolvedMethodCall overloadMethodCall = new ResolvedMethodCall(overloadMethod, args, this.SourceLocation);
         overloadMethodCall.SetContainingExpression(this);
         return overloadMethodCall;
@@ -19601,7 +19601,7 @@ namespace Microsoft.Cci.Ast {
     protected ResolvedMethodCall FactoredOverloadCall(Expression operand, IMethodDefinition overloadMethod) {
       List<Expression> args = new List<Expression>(1);
       args.Add(operand);
-      args = this.Helper.ConvertArguments(args, overloadMethod.Parameters);
+      args = this.Helper.ConvertArguments(this, args, overloadMethod.Parameters);
       return new ResolvedMethodCall(overloadMethod, args, this.SourceLocation);
     }
 
