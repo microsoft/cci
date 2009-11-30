@@ -11,6 +11,9 @@ using Microsoft.Cci;
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
     public override void Visit(IMethodDefinition methodDefinition) {
+      if (methodDefinition.IsConstructor && methodDefinition.ParameterCount == 0 && 
+        AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+        return;
 
       // Skip if this is a method generated for use by a property or event
       foreach (var p in methodDefinition.ContainingTypeDefinition.Properties)
