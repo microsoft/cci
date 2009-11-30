@@ -1515,7 +1515,7 @@ namespace CodeModelTestInput
 
         }
 
-        private class Class4Inner2<>
+        private class Class4Inner2
         {
             private System.Collections.Generic.List<T> list_inner;
 
