@@ -2646,7 +2646,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override bool IsGeneric {
       get {
-        return true;
+        return this.GenericParameterCount > 0;
       }
     }
 
