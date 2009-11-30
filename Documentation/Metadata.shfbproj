@@ -1,0 +1,75 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <!-- The configuration and platform will be used to determine which
+         assemblies to include from solution and project documentation
+         sources -->
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{40065f55-35e0-4d46-860b-dda883d826c8}</ProjectGuid>
+    <SHFBSchemaVersion>1.8.0.0</SHFBSchemaVersion>
+    <!-- AssemblyName, Name, and RootNamespace are not used by SHFB but Visual
+         Studio adds them anyway -->
+    <AssemblyName>Documentation</AssemblyName>
+    <RootNamespace>Documentation</RootNamespace>
+    <Name>Documentation</Name>
+    <!-- SHFB properties -->
+    <OutputPath>.\</OutputPath>
+    <HtmlHelpName>CCI Metadata components API documentation</HtmlHelpName>
+    <ProjectSummary>The Microsoft Research Common Compiler Infrastructure %28CCI%29 is a set of components %28libraries%29 that provide some of the functionality that compilers and related programming tools tend to have in common.
+
+The metadata components provide functionality for reading, writing and manipulating Microsoft Common Language Runtime %28CLR%29 assemblies and debug files. The functionality provided by these components subsumes the functionality provided by System.Reflection and System.Reflection.Emit.
+</ProjectSummary>
+    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter</MissingTags>
+    <VisibleItems>InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
+    <HtmlHelp1xCompilerPath>
+    </HtmlHelp1xCompilerPath>
+    <HtmlHelp2xCompilerPath>
+    </HtmlHelp2xCompilerPath>
+    <SandcastlePath>
+    </SandcastlePath>
+    <WorkingPath>
+    </WorkingPath>
+    <FrameworkVersion>2.0.50727</FrameworkVersion>
+    <HelpTitle>CCI Metadata components</HelpTitle>
+    <PresentationStyle>Prototype</PresentationStyle>
+    <DocumentationSources>
+      <DocumentationSource sourceFile="..\Sources\ILGenerator\bin\Debug\Microsoft.Cci.ILGenerator.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\ILGenerator\bin\Debug\Microsoft.Cci.ILGenerator.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\MetadataHelper\bin\Debug\Microsoft.Cci.MetadataHelper.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\MetadataHelper\bin\Debug\Microsoft.Cci.MetadataHelper.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\MetadataModel\bin\Debug\Microsoft.Cci.MetadataModel.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\MutableMetadataModel\bin\Debug\Microsoft.Cci.MutableMetadataModel.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\MutableMetadataModel\bin\Debug\Microsoft.Cci.MutableMetadataModel.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PdbReader\bin\Debug\Microsoft.Cci.PdbReader.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PdbReader\bin\Debug\Microsoft.Cci.PdbReader.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PdbWriter\bin\Debug\Microsoft.Cci.PdbWriter.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PdbWriter\bin\Debug\Microsoft.Cci.PdbWriter.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PeReader\bin\Debug\Microsoft.Cci.PeReader.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PeReader\bin\Debug\Microsoft.Cci.PeReader.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\PeWriter\bin\Debug\Microsoft.Cci.PeWriter.xml" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.dll" xmlns="" />
+<DocumentationSource sourceFile="..\Sources\SourceModel\bin\Debug\Microsoft.Cci.SourceModel.xml" xmlns="" /></DocumentationSources>
+    <NamespaceSummaries>
+      <NamespaceSummaryItem name="(global)" isDocumented="False" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.MetadataReader" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.MetadataReader.MethodBody" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.MetadataReader.ObjectModelImplementation" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.MetadataReader.PEFile" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.MetadataReader.PEFileFlags" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.MutableCodeModel" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.Pdb" isDocumented="True" xmlns="" />
+<NamespaceSummaryItem name="Microsoft.Cci.UtilityDataStructures" isDocumented="True" xmlns="" /></NamespaceSummaries>
+  </PropertyGroup>
+  <!-- There are no properties for these two groups but they need to appear in
+       order for Visual Studio to perform the build. -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+  <!-- Import the SHFB build targets -->
+  <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />
+</Project>
