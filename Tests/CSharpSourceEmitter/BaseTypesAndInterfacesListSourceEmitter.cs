@@ -15,8 +15,20 @@ namespace CSharpSourceEmitter {
       IEnumerable<ITypeReference> interfacesList = typeDefinition.Interfaces;
 
       bool fFirstBase = true;
+      if (typeDefinition.IsEnum && typeDefinition.UnderlyingType.TypeCode != PrimitiveTypeCode.Int32) {
+        PrintBaseTypesAndInterfacesColon();
+        PrintBaseTypeOrInterface(typeDefinition.UnderlyingType);
+        fFirstBase = false;
+      }
+
       foreach (ITypeReference baseTypeReference in basesList) {
         if (fFirstBase && TypeHelper.TypesAreEquivalent(baseTypeReference, typeDefinition.PlatformType.SystemObject))
+          continue;
+
+        if (fFirstBase && TypeHelper.TypesAreEquivalent(baseTypeReference, typeDefinition.PlatformType.SystemValueType))
+          continue;
+
+        if (TypeHelper.TypesAreEquivalent(baseTypeReference, typeDefinition.PlatformType.SystemEnum))
           continue;
 
         if (fFirstBase)

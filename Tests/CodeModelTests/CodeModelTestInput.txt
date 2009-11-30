@@ -11,8 +11,6 @@ namespace CodeModelTestInput
 
         public class A : CodeModelTestInput.Class2.IIncrementable<CodeModelTestInput.Class2.A>
         {
-            private string s;
-
             public  A(string s)
             {
                 this.object();
@@ -21,27 +19,29 @@ namespace CodeModelTestInput
 
             }
 
-            public new sealed virtual CodeModelTestInput.Class2.A IncrementBy(int i)
+            public CodeModelTestInput.Class2.A IncrementBy(int i)
             {
                 return this;
 
             }
 
-            public new sealed virtual int Value()
+            public int Value()
             {
                 return this.s.Length.get();
 
             }
 
+
+            private string s;
         }
 
-        public abstract interface IIncrementable<T>
+        public interface IIncrementable<T>
         {
-            public abstract new T IncrementBy(int i)
+            T IncrementBy(int i)
             {
             }
 
-            public abstract new int Value()
+            int Value()
             {
             }
 
@@ -49,9 +49,6 @@ namespace CodeModelTestInput
 
         public class Test2
         {
-            private static System.Predicate<string> CS$<>9__CachedAnonymousMethodDelegate1;
-            private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate1c;
-
             public  Test2()
             {
                 this.object();
@@ -242,21 +239,15 @@ namespace CodeModelTestInput
                 }
             }
 
+
+            [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+            private static System.Predicate<string> CS$<>9__CachedAnonymousMethodDelegate1;
+            [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+            private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate1c;
         }
 
         public class Test3<T>
         {
-            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate36;
-            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate3f;
-            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate40;
-            private T tfield;
-
-            public T TField
-            {
-                get;
-            }
-
-
             public  Test3(T t)
             {
                 this.object();
@@ -383,15 +374,31 @@ namespace CodeModelTestInput
 
             }
 
+
+            public T TField
+            {
+                get
+                {
+                    return this.tfield;
+
+                }
+
+            }
+
+
+            private T tfield;
+            [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate36;
+            [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate3f;
+            [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+            private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate40;
         }
 
     }
 
     public class Class3
     {
-        private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate28;
-        private System.Collections.Generic.List<int> list;
-
         public  Class3()
         {
             this.list = new System.Collections.Generic.List<int>();
@@ -636,10 +643,12 @@ namespace CodeModelTestInput
         }
 
 
+        private System.Collections.Generic.List<int> list;
+        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+        private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate28;
+
         private class Class3Inner1
         {
-            private System.Collections.Generic.List<int> list_inner;
-
             public  Class3Inner1()
             {
                 this.list_inner = new System.Collections.Generic.List<int>();
@@ -685,12 +694,12 @@ namespace CodeModelTestInput
 
             }
 
+
+            private System.Collections.Generic.List<int> list_inner;
         }
 
         private class Class3Inner1<T2>
         {
-            private System.Collections.Generic.List<T2> list_inner;
-
             public  Class3Inner1()
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
@@ -736,12 +745,12 @@ namespace CodeModelTestInput
 
             }
 
+
+            private System.Collections.Generic.List<T2> list_inner;
         }
 
         private class Class3Inner2<T2>
         {
-            private System.Collections.Generic.List<T2> list_inner;
-
             public  Class3Inner2()
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
@@ -787,14 +796,14 @@ namespace CodeModelTestInput
 
             }
 
+
+            private System.Collections.Generic.List<T2> list_inner;
         }
 
     }
 
     public class Class1
     {
-        private int c;
-
         public  Class1()
         {
             this.c = 0;
@@ -1193,14 +1202,12 @@ namespace CodeModelTestInput
 
         }
 
+
+        private int c;
     }
 
     public class Class4<T>
     {
-        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate28;
-        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate33;
-        private static System.Collections.Generic.List<T> list;
-
         private static void .cctor()
         {
             list = new System.Collections.Generic.List<T>();
@@ -1464,10 +1471,14 @@ namespace CodeModelTestInput
         }
 
 
+        private static System.Collections.Generic.List<T> list;
+        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate28;
+        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate33;
+
         private class Class4Inner1<T2>
         {
-            private System.Collections.Generic.List<T2> list_inner;
-
             public  Class4Inner1()
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
@@ -1513,12 +1524,12 @@ namespace CodeModelTestInput
 
             }
 
+
+            private System.Collections.Generic.List<T2> list_inner;
         }
 
         private class Class4Inner2
         {
-            private System.Collections.Generic.List<T> list_inner;
-
             public  Class4Inner2()
             {
                 this.list_inner = new System.Collections.Generic.List<T>();
@@ -1564,12 +1575,12 @@ namespace CodeModelTestInput
 
             }
 
+
+            private System.Collections.Generic.List<T> list_inner;
         }
 
         private class Class4Inner3<T2>
         {
-            private System.Collections.Generic.List<T2> list_inner;
-
             public  Class4Inner3()
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
@@ -1615,6 +1626,8 @@ namespace CodeModelTestInput
 
             }
 
+
+            private System.Collections.Generic.List<T2> list_inner;
         }
 
     }

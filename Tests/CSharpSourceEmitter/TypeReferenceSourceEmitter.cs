@@ -15,7 +15,10 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeReferenceName(ITypeReference typeReference) {
-      sourceEmitterOutput.Write(TypeHelper.GetTypeName(typeReference, NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords));
+      var typeName = TypeHelper.GetTypeName(typeReference,
+        NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords|
+        NameFormattingOptions.TypeParameters|NameFormattingOptions.EmptyTypeParameterList);
+      sourceEmitterOutput.Write(typeName);
     }
   }
 }

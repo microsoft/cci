@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A9103DDA-3A93-441A-8326-6EB20518C251}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -47,6 +47,7 @@
     <Compile Include="BaseTypeOrInterfaceSourceEmitter.cs" />
     <Compile Include="BaseTypesAndInterfacesListSourceEmitter.cs" />
     <Compile Include="BaseSourceEmitter.cs" />
+    <Compile Include="EventSourceEmitter.cs" />
     <Compile Include="ExpressionSourceEmitter.cs" />
     <Compile Include="FieldSourceEmitter.cs" />
     <Compile Include="GenericTypeParametersListSourceEmitter.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="SourceEmitterOutputString.cs" />
     <Compile Include="TypeReferenceSourceEmitter.cs" />
     <Compile Include="TypeSourceEmitter.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CSharp3.0.Felt.Annotated.language" />

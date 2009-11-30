@@ -21,6 +21,7 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.Indent);
       PrintKeywordNamespace();
       PrintNamespaceDefinitionName(namespaceDefinition);
+      PrintToken(CSharpToken.NewLine);
       PrintNamespaceDefinitionLeftCurly(namespaceDefinition);
       this.Visit(nestedUnitNamespace.Members);
       PrintNamespaceDefinitionRightCurly(namespaceDefinition);
@@ -78,7 +79,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintNamespaceDefinitionName(INamespaceDefinition namespaceDefinition) {
-      sourceEmitterOutput.WriteLine(namespaceDefinition.Name.Value);
+      PrintIdentifier(namespaceDefinition.Name);
     }
 
     public virtual void PrintNamespaceDefinitionLeftCurly(INamespaceDefinition namespaceDefinition) {

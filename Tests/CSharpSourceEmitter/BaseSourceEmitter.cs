@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Globalization;
 
 namespace CSharpSourceEmitter {
   public enum CSharpToken {
@@ -19,8 +20,14 @@ namespace CSharpSourceEmitter {
     Class,
     Colon,
     Comma,
+    Delegate,
     Dot,
     Double,
+    Enum,
+    Extern,
+    Event,
+    False,
+    Fixed,
     Get,
     In,
     Indent,
@@ -38,6 +45,7 @@ namespace CSharpSourceEmitter {
     Null,
     Object,
     Out,
+    Override,
     Private,
     Protected,
     Public,
@@ -56,11 +64,16 @@ namespace CSharpSourceEmitter {
     Space,
     Static,
     String,
+    Struct,
+    Tilde,
     This,
     Throw,
+    True,
     Try,
+    TypeOf,
     UInt,
     ULong,
+    Unsafe,
     UShort,
     Virtual,
     YieldBreak,
@@ -80,7 +93,8 @@ namespace CSharpSourceEmitter {
 
     public virtual void PrintAttributes(IEnumerable<ICustomAttribute> attributes) {
       foreach (var attribute in attributes) {
-        this.PrintAttribute(attribute, true, null);
+        if (Utils.GetAttributeType(attribute) != SpecialAttribute.Extension)
+          this.PrintAttribute(attribute, true, null);
       }
     }
 
@@ -125,6 +139,99 @@ namespace CSharpSourceEmitter {
           this.sourceEmitterOutput.Write(ch.ToString());
       }
       this.sourceEmitterOutput.Write("\"");
+    }
+
+    public virtual void PrintIdentifier(IName name) {
+      sourceEmitterOutput.Write(EscapeIdentifier(name.Value));
+    }
+
+    public static string EscapeIdentifier(string identifier) {
+      // Check to see if this is a keyword, and if so escape it with '@' prefix
+      switch (identifier) {
+        case "abstract":
+        case "as":
+        case "base":
+        case "bool":
+        case "break":
+        case "byte":
+        case "case":
+        case "catch":
+        case "char":
+        case "checked":
+        case "class":
+        case "const":
+        case "continue":
+        case "decimal":
+        case "default":
+        case "delegate":
+        case "do":
+        case "double":
+        case "else":
+        case "enum":
+        case "event":
+        case "explicit":
+        case "extern":
+        case "false":
+        case "finally":
+        case "fixed":
+        case "float":
+        case "for":
+        case "foreach":
+        case "goto":
+        case "if":
+        case "implicit":
+        case "in":
+        case "int":
+        case "interface":
+        case "internal":
+        case "is":
+        case "lock":
+        case "long":
+        case "namespace":
+        case "new":
+        case "null":
+        case "object":
+        case "operator":
+        case "out":
+        case "override":
+        case "params":
+        case "private":
+        case "protected":
+        case "public":
+        case "readonly":
+        case "ref":
+        case "return":
+        case "sbyte":
+        case "sealed":
+        case "short":
+        case "sizeof":
+        case "stackalloc":
+        case "static":
+        case "string":
+        case "struct":
+        case "switch":
+        case "this":
+        case "throw":
+        case "true":
+        case "try":
+        case "typeof":
+        case "uint":
+        case "ulong":
+        case "unchecked":
+        case "unsafe":
+        case "ushort":
+        case "using":
+        case "virtual":
+        case "void":
+        case "volatile":
+        case "while":
+          return "@" + identifier;
+      }
+
+      // Not a keyword, just return it
+      // It may still have characters that are invalid for an identifier, but C# doesn't provide any way to
+      // escape those (even unicode escapes must conform to the required character classes)
+      return identifier;
     }
 
     public virtual bool PrintToken(CSharpToken token) {
@@ -179,6 +286,9 @@ namespace CSharpSourceEmitter {
         case CSharpToken.Comma:
           sourceEmitterOutput.Write(",");
           break;
+        case CSharpToken.Tilde:
+          sourceEmitterOutput.Write("~");
+          break;
         case CSharpToken.Public:
           sourceEmitterOutput.Write("public ");
           break;
@@ -197,8 +307,17 @@ namespace CSharpSourceEmitter {
         case CSharpToken.Abstract:
           sourceEmitterOutput.Write("abstract ");
           break;
+        case CSharpToken.Extern:
+          sourceEmitterOutput.Write("extern ");
+          break;
+        case CSharpToken.Unsafe:
+          sourceEmitterOutput.Write("unsafe ");
+          break;
         case CSharpToken.ReadOnly:
           sourceEmitterOutput.Write("readonly ");
+          break;
+        case CSharpToken.Fixed:
+          sourceEmitterOutput.Write("fixed ");
           break;
         case CSharpToken.New:
           sourceEmitterOutput.Write("new ");
@@ -209,11 +328,26 @@ namespace CSharpSourceEmitter {
         case CSharpToken.Virtual:
           sourceEmitterOutput.Write("virtual ");
           break;
+        case CSharpToken.Override:
+          sourceEmitterOutput.Write("override ");
+          break;
         case CSharpToken.Class:
           sourceEmitterOutput.Write("class ");
           break;
         case CSharpToken.Interface:
           sourceEmitterOutput.Write("interface ");
+          break;
+        case CSharpToken.Struct:
+          sourceEmitterOutput.Write("struct ");
+          break;
+        case CSharpToken.Enum:
+          sourceEmitterOutput.Write("enum ");
+          break;
+        case CSharpToken.Delegate:
+          sourceEmitterOutput.Write("delegate ");
+          break;
+        case CSharpToken.Event:
+          sourceEmitterOutput.Write("event ");
           break;
         case CSharpToken.Namespace:
           sourceEmitterOutput.Write("namespace ");
@@ -296,6 +430,15 @@ namespace CSharpSourceEmitter {
         case CSharpToken.YieldBreak:
           sourceEmitterOutput.Write("yield break");
           break;
+        case CSharpToken.True:
+          sourceEmitterOutput.Write("true");
+          break;
+        case CSharpToken.False:
+          sourceEmitterOutput.Write("false");
+          break;
+        case CSharpToken.TypeOf:
+          sourceEmitterOutput.Write("typeof");
+          break;
         default:
           sourceEmitterOutput.Write("Unknown-token");
           break;
@@ -313,6 +456,11 @@ namespace CSharpSourceEmitter {
       return true;
     }
 
+    public virtual bool PrintKeywordExtern() {
+      PrintToken(CSharpToken.Extern);
+      return true;
+    }
+
     public virtual bool PrintKeywordSealed() {
       PrintToken(CSharpToken.Sealed);
       return true;
@@ -320,6 +468,16 @@ namespace CSharpSourceEmitter {
 
     public virtual bool PrintKeywordStatic() {
       PrintToken(CSharpToken.Static);
+      return true;
+    }
+
+    public virtual bool PrintKeywordFixed() {
+      PrintToken(CSharpToken.Fixed);
+      return true;
+    }
+
+    public virtual bool PrintKeywordUnsafe() {
+      PrintToken(CSharpToken.Unsafe);
       return true;
     }
 
@@ -361,6 +519,11 @@ namespace CSharpSourceEmitter {
 
     public virtual bool PrintKeywordVirtual() {
       PrintToken(CSharpToken.Virtual);
+      return true;
+    }
+
+    public virtual bool PrintKeywordOverride() {
+      PrintToken(CSharpToken.Override);
       return true;
     }
 

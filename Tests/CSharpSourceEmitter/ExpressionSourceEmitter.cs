@@ -79,7 +79,7 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IAliasForType aliasForType) {
-      base.Visit(aliasForType);
+      // Already outputted these at the top for IAssembly
     }
 
     public override void Visit(IAnonymousDelegate anonymousDelegate) {
@@ -104,6 +104,25 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IAssembly assembly) {
+      foreach (var attr in assembly.Attributes) {
+        var at = Utils.GetAttributeType(attr);
+        if (at == SpecialAttribute.Extension ||
+          at == SpecialAttribute.AssemblyDelaySign ||
+          at == SpecialAttribute.AssemblyKeyFile)
+          continue;
+        PrintAttribute(attr, true, "assembly");
+      }
+
+      // Assembly-level pseudo-custom attributes
+      foreach (var alias in assembly.ExportedTypes) {
+        // Nested type are automatically included
+        if (!(alias.AliasedType is INestedTypeReference)) {
+          sourceEmitterOutput.Write("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(");
+          Visit(alias.AliasedType);
+          sourceEmitterOutput.WriteLine("))]");
+        }
+      }
+      PrintToken(CSharpToken.NewLine);
       base.Visit(assembly);
     }
 
@@ -257,7 +276,8 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(ICustomAttribute customAttribute) {
-      base.Visit(customAttribute);
+      // Different uses of custom attributes must print them directly based on context
+      //base.Visit(customAttribute);
     }
 
     public override void Visit(ICustomModifier customModifier) {
@@ -284,10 +304,6 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.Write(" == ");
       this.Visit(equality.RightOperand);
       this.sourceEmitterOutput.Write(")");
-    }
-
-    public override void Visit(IEventDefinition eventDefinition) {
-      base.Visit(eventDefinition);
     }
 
     public override void Visit(IExclusiveOr exclusiveOr) {
@@ -391,11 +407,54 @@ namespace CSharpSourceEmitter {
     public override void Visit(IMetadataConstant constant) {
       if (constant.Value == null)
         this.PrintToken(CSharpToken.Null);
-      else if (constant.Value is string) {
-        string escapedString = ((string)constant.Value).Replace("\"", "\"\"");
-        this.sourceEmitterOutput.Write("@\""+escapedString+"\"");
-      } else
+      else if (constant.Value is string)
+        PrintString((string)constant.Value);
+      else if (constant.Value is bool)
+        PrintToken((bool)constant.Value ? CSharpToken.True : CSharpToken.False);
+      else if (constant.Type.ResolvedType.IsEnum)
+        PrintEnumValue(constant.Type.ResolvedType, constant.Value);
+      else
         this.sourceEmitterOutput.Write(constant.Value.ToString());
+    }
+
+    public virtual void PrintEnumValue(ITypeDefinition enumType, object valObj) {
+      bool flags = (Utils.FindAttribute(enumType.Attributes, SpecialAttribute.Flags) != null);
+
+      // Loop through all the enum constants looking for a match
+      ulong value = Convert.ToUInt64(valObj);
+      ulong valLeft = value;
+      bool success = false;
+      List<IFieldDefinition> constants = new List<IFieldDefinition>();
+      foreach (var f in enumType.Fields) {
+        if (f.IsCompileTimeConstant && TypeHelper.TypesAreEquivalent(f.Type, enumType))
+          constants.Add(f);
+      }
+      // Do largest first to ensure we get the minimum set of flags
+      constants.Sort((f1, f2) =>
+        Convert.ToUInt64(f2.CompileTimeValue.Value).CompareTo(Convert.ToUInt64(f1.CompileTimeValue.Value)));
+      foreach (var c in constants) {
+        ulong fv = Convert.ToUInt64(c.CompileTimeValue.Value);
+        if (valLeft == fv || (flags && (fv != 0) && ((valLeft & fv) == fv))) {
+          if (valLeft != value)
+            sourceEmitterOutput.Write("|");
+          Visit((IFieldReference)c);
+          valLeft -= fv;
+          if (valLeft == 0) {
+            success = true;
+            break;
+          }
+        }
+      }
+
+      // No match, output cast
+      if (!success) {
+        if (valLeft != value)
+          sourceEmitterOutput.Write("|");
+        PrintToken(CSharpToken.LeftParenthesis);
+        Visit((ITypeReference)enumType);
+        PrintToken(CSharpToken.RightParenthesis);
+        sourceEmitterOutput.Write(valLeft.ToString());
+      }
     }
 
     public override void Visit(IMetadataCreateArray createArray) {
@@ -412,7 +471,10 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IMetadataTypeOf typeOf) {
+      PrintToken(CSharpToken.TypeOf);
+      PrintToken(CSharpToken.LeftParenthesis);
       base.Visit(typeOf);
+      PrintToken(CSharpToken.RightParenthesis);
     }
 
     public override void Visit(IMethodCall methodCall) {
@@ -450,6 +512,12 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IModule module) {
+      if (!(module is IAssembly)) {
+        foreach (var attr in module.Attributes) {
+          PrintAttribute(attr, true, "module");
+        }
+      }
+
       base.Visit(module);
     }
 

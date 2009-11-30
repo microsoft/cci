@@ -18,16 +18,28 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintParameterDefinitionModifiers(IParameterDefinition parameterDefinition) {
-      bool first = true;
+
+      if (parameterDefinition.Index == 0) {
+        var meth = parameterDefinition.ContainingSignature as IMethodDefinition;
+        if (meth != null) {
+          if (Utils.FindAttribute(meth.Attributes, SpecialAttribute.Extension) != null) {
+            PrintToken(CSharpToken.This);
+            PrintToken(CSharpToken.Space);
+          }
+        }
+      }
+
       foreach (var attribute in parameterDefinition.Attributes) {
-        if (first)
-          first = false;
+        if (Utils.GetAttributeType(attribute) == SpecialAttribute.ParamArray)
+          sourceEmitterOutput.Write("params");
         else
-          sourceEmitterOutput.Write(" ");
-        this.PrintAttribute(attribute, false, null);
+          this.PrintAttribute(attribute, false, null);
+
+        PrintToken(CSharpToken.Space);
       }
       if (parameterDefinition.IsIn) {
-        PrintKeywordIn();
+        // Note that this is not what the keyword 'in' is for (it's used only in foreach)
+        sourceEmitterOutput.Write("[System.Runtime.InteropServices.In] ");
       } else if (parameterDefinition.IsOut) {
         PrintKeywordOut();
       } else if (parameterDefinition.IsByReference) {
@@ -40,7 +52,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintParameterDefinitionName(IParameterDefinition parameterDefinition) {
-      sourceEmitterOutput.Write(parameterDefinition.Name.Value);
+      PrintIdentifier(parameterDefinition.Name);
     }
 
   }

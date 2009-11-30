@@ -11,6 +11,11 @@ using Microsoft.Cci;
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
     public virtual void PrintTypeDefinition(ITypeDefinition typeDefinition) {
+      if (typeDefinition.IsDelegate) {
+        PrintDelegateDefinition(typeDefinition);
+        return;
+      }
+
       if (((INamedEntity)typeDefinition).Name.Value.Contains("PrivateImplementationDetails")) return;
 
       PrintTypeDefinitionAttributes(typeDefinition);
@@ -27,16 +32,17 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.NewLine);
       PrintTypeDefinitionLeftCurly(typeDefinition);
 
-      var fields = new List<IFieldDefinition>(typeDefinition.Fields);
-      var properties = new List<IPropertyDefinition>(typeDefinition.Properties);
       var methods = new List<IMethodDefinition>(typeDefinition.Methods);
       var events = new List<IEventDefinition>(typeDefinition.Events);
+      var properties = new List<IPropertyDefinition>(typeDefinition.Properties);
+      var fields = new List<IFieldDefinition>(typeDefinition.Fields);
       var nestedTypes = new List<INestedTypeDefinition>(typeDefinition.NestedTypes);
 
       int methodsCount = 0;
       foreach (var method in methods) {
         if (method.IsConstructor && method.ParameterCount == 0) continue;
         if (method.IsStaticConstructor) continue;
+        if (method.IsSpecialName && !method.IsConstructor) continue;
         methodsCount++;
       }
 
@@ -46,29 +52,28 @@ namespace CSharpSourceEmitter {
         nestedTypesCount++;
       }
 
-      Comparison<IFieldDefinition> fcomparison = (x, y) => 
-        x.IsCompileTimeConstant == y.IsCompileTimeConstant ? string.Compare(x.Name.Value, y.Name.Value) :
-        (x.IsCompileTimeConstant?0:1) - (y.IsCompileTimeConstant?0:1);
-      fields.Sort(fcomparison);
-      Visit(fields);
-      if (fields.Count > 0 && (properties.Count+methodsCount+events.Count+nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
-
-      Comparison<IPropertyDefinition> pcomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
-      properties.Sort(pcomparison);
-      Visit(properties);
-      if (properties.Count > 0 && (methodsCount+events.Count+nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
-
+      // TODO: Method order can be important too - eg. for COMImport types
       Comparison<IMethodDefinition> mcomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
       methods.Sort(mcomparison);
       Visit(methods);
-      if (methodsCount > 0 && (events.Count+nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
+      if (methodsCount > 0 && (events.Count + properties.Count + fields.Count + nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
 
       Comparison<IEventDefinition> ecomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
       events.Sort(ecomparison);
       Visit(events);
-      if (events.Count > 0 && nestedTypesCount > 0) sourceEmitterOutput.WriteLine("");
+      if (events.Count > 0 && (properties.Count + fields.Count + nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
 
-      Comparison<INestedTypeDefinition> tcomparison = (x, y) => 
+      Comparison<IPropertyDefinition> pcomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
+      properties.Sort(pcomparison);
+      Visit(properties);
+      if (properties.Count > 0 && (fields.Count+nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
+
+      // Order of fields can be important (eg. in sequential layout structs, and nice even just for enums, etc.)
+      // So use existing order
+      Visit(fields);
+      if (fields.Count > 0 && nestedTypesCount > 0) sourceEmitterOutput.WriteLine("");
+
+      Comparison<INestedTypeDefinition> tcomparison = (x, y) =>
         x.Name.UniqueKey == y.Name.UniqueKey ? x.GenericParameterCount - y.GenericParameterCount : string.Compare(x.Name.Value, y.Name.Value);
       nestedTypes.Sort(tcomparison);
       Visit(nestedTypes);
@@ -76,8 +81,53 @@ namespace CSharpSourceEmitter {
       PrintTypeDefinitionRightCurly(typeDefinition);
     }
 
+    public virtual void PrintDelegateDefinition(ITypeDefinition delegateDefinition) {
+      PrintTypeDefinitionAttributes(delegateDefinition);
+      PrintToken(CSharpToken.Indent);
+
+      IMethodDefinition invokeMethod = null;
+      foreach (var invokeMember in delegateDefinition.GetMatchingMembers(m => m.Name.Value == "Invoke")) {
+        IMethodDefinition idef = invokeMember as IMethodDefinition;
+        if (idef != null) { invokeMethod = idef; break; }
+      }
+
+      PrintTypeDefinitionVisibility(delegateDefinition);
+      if (IsMethodUnsafe(invokeMethod))
+        PrintKeywordUnsafe();
+
+      PrintKeywordDelegate();
+      PrintMethodDefinitionReturnType(invokeMethod);
+      PrintToken(CSharpToken.Space);
+      PrintTypeDefinitionName(delegateDefinition);
+      if (delegateDefinition.GenericParameterCount > 0) {
+        this.Visit(delegateDefinition.GenericParameters);
+      }
+      Visit(invokeMethod.Parameters);
+
+      PrintToken(CSharpToken.Semicolon);
+      PrintToken(CSharpToken.NewLine);
+    }
+
     public virtual void PrintTypeDefinitionAttributes(ITypeDefinition typeDefinition) {
-      PrintAttributes(typeDefinition.Attributes);
+
+      foreach (var attribute in typeDefinition.Attributes) {
+        // Skip DefaultMemeberAttribute on a class that has an indexer
+        var at = Utils.GetAttributeType(attribute);
+        if (at == SpecialAttribute.DefaultMemberAttribute &&
+          IteratorHelper.Any(typeDefinition.Properties, p => IteratorHelper.EnumerableIsNotEmpty(p.Parameters)))
+          continue;
+        // Skip ExtensionAttribute
+        if (at == SpecialAttribute.Extension)
+          continue;
+
+        PrintAttribute(attribute, true, null);
+      }
+
+      if (typeDefinition.Layout != LayoutKind.Auto) {
+        sourceEmitterOutput.WriteLine(String.Format("[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.{0})]",
+          typeDefinition.Layout.ToString()),
+          true);
+      }
     }
 
     public virtual void PrintTypeDefinitionVisibility(ITypeDefinition typeDefinition) {
@@ -92,19 +142,26 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeDefinitionModifiers(ITypeDefinition typeDefinition) {
-      if (typeDefinition.IsAbstract)
-        PrintKeywordAbstract();
-
-      if (typeDefinition.IsSealed)
-        PrintKeywordSealed();
-
-      if (typeDefinition.IsStatic)
+      // If it's abstract and sealed and has no ctors, then consider it to be a static class
+      // Perhaps we should check for the presense of CompilerServices.ExtensionAttribute instead
+      if (typeDefinition.IsStatic) {
         PrintKeywordStatic();
+      } else {
+        if (typeDefinition.IsAbstract && !typeDefinition.IsInterface)
+          PrintKeywordAbstract();
+
+        if (typeDefinition.IsSealed && !typeDefinition.IsValueType)
+          PrintKeywordSealed();
+      }
     }
 
     public virtual void PrintTypeDefinitionKeywordType(ITypeDefinition typeDefinition) {
       if (typeDefinition.IsInterface)
         PrintKeywordInterface();
+      else if (typeDefinition.IsEnum)
+        PrintKeywordEnum();
+      else if (typeDefinition.IsValueType)
+        PrintKeywordStruct();
       else
         PrintKeywordClass();
     }
@@ -117,22 +174,34 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.Interface);
     }
 
+    public virtual void PrintKeywordStruct() {
+      PrintToken(CSharpToken.Struct);
+    }
+
+    public virtual void PrintKeywordEnum() {
+      PrintToken(CSharpToken.Enum);
+    }
+
+    public virtual void PrintKeywordDelegate() {
+      PrintToken(CSharpToken.Delegate);
+    }
+
     public virtual void PrintTypeDefinitionName(ITypeDefinition typeDefinition) {
       INamespaceTypeDefinition namespaceTypeDefinition = typeDefinition as INamespaceTypeDefinition;
       if (namespaceTypeDefinition != null) {
-        sourceEmitterOutput.Write(namespaceTypeDefinition.Name.Value);
+        PrintIdentifier(namespaceTypeDefinition.Name);
         return;
       }
 
       INestedTypeDefinition nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
       if (nestedTypeDefinition != null) {
-        sourceEmitterOutput.Write(nestedTypeDefinition.Name.Value);
+        PrintIdentifier(nestedTypeDefinition.Name);
         return;
       }
 
       INamedEntity namedEntity = typeDefinition as INamedEntity;
       if (namedEntity != null) {
-        sourceEmitterOutput.Write(namedEntity.Name.Value);
+        PrintIdentifier(namedEntity.Name);
       } else {
         sourceEmitterOutput.Write(typeDefinition.ToString());
       }
