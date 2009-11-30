@@ -33,10 +33,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Adds the given local constant to the current lexical scope.
+    /// </summary>
+    /// <param name="local">The local constant to add to the current scope.</param>
+    public void AddConstantToCurrentScope(ILocalDefinition local) {
+      if (this.scopeStack.Count == 0) this.BeginScope();
+      this.scopeStack.Peek().constants.Add(local);
+    }
+
+    /// <summary>
     /// Adds the given local variable to the current lexical scope.
     /// </summary>
-    /// <param name="local">The local to add to the current scope.</param>
-    public void AddLocalToCurrentScope(ILocalDefinition local) {
+    /// <param name="local">The local variable to add to the current scope.</param>
+    public void AddVariableToCurrentScope(ILocalDefinition local) {
       if (this.scopeStack.Count == 0) this.BeginScope();
       this.scopeStack.Peek().locals.Add(local);
     }
@@ -799,6 +808,16 @@ namespace Microsoft.Cci {
     internal void CloseScope(uint offset) {
       this.length = offset - this.offset;
     }
+
+
+    /// <summary>
+    /// The local definitions (constants) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
+    /// point that falls inside this scope.)
+    /// </summary>
+    public IEnumerable<ILocalDefinition> Constants {
+      get { return this.constants.AsReadOnly(); }
+    }
+    internal readonly List<ILocalDefinition> constants = new List<ILocalDefinition>();
 
     /// <summary>
     /// The length of the scope. Offset+Length equals the offset of the first operation outside the scope, or equals the method body length.
