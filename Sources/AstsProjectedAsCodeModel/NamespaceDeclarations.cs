@@ -168,7 +168,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Represents a namespace construct as found in the source code.
   /// </summary>
-  public abstract class NamespaceDeclaration : SourceItem, IContainer<IAggregatableNamespaceDeclarationMember> {
+  public abstract class NamespaceDeclaration : SourceItem, IContainer<IAggregatableNamespaceDeclarationMember>, INamespaceScope {
 
     /// <summary>
     /// 
@@ -435,6 +435,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Only one method body per namespace declaration needs to write out PDB information about the used namespaces.
+    /// This field tracks which body takes on that role. Initially, it is null.
+    /// </summary>
+    internal MethodBody/*?*/ methodBodyThatWillProvideNonEmptyNamespaceScopes;
+
+    /// <summary>
     /// Completes the two part construction of the namespace declaration by setting the containing nodes
     /// of all of the nodes contained directly or indirectly inside this namespace declaration.
     /// </summary>
@@ -569,6 +575,24 @@ namespace Microsoft.Cci.Ast {
     //^ requires edit.SourceDocumentAfterEdit.IsUpdatedVersionOf(this.SourceLocation.SourceDocument);
     //^ ensures result.GetType() == this.GetType();
 
+    /// <summary>
+    /// Zero or more used namespaces. These correspond to using clauses in C#.
+    /// </summary>
+    public IEnumerable<IUsedNamespace> UsedNamespaces {
+      get {
+        foreach (var alias in this.Aliases) {
+          var ns = alias.ResolvedNamespaceOrType as INamespaceDefinition;
+          if (ns == null) continue;
+          yield return new UsedNamespace(alias.Name.Name, ns.Name);
+        }
+        foreach (var import in this.Imports) {
+          var ns = import.ImportedNamespace.Resolve();
+          if (ns == Dummy.RootUnitNamespace) continue;
+          yield return new UsedNamespace(ns.Name);
+        }
+      }
+    }
+
     #region IContainer<IAggregatableNamespaceDeclarationMember> Members
 
     IEnumerable<IAggregatableNamespaceDeclarationMember> IContainer<IAggregatableNamespaceDeclarationMember>.Members {
@@ -581,6 +605,51 @@ namespace Microsoft.Cci.Ast {
     #endregion
 
   }
+
+  /// <summary>
+  ///  A namespace that is used (imported) inside a namespace scope.
+  /// </summary>
+  internal class UsedNamespace : IUsedNamespace {
+
+    /// <summary>
+    /// Allocates a namespace that is used (imported) inside a namespace scope.
+    /// </summary>
+    /// <param name="alias">The name of a namespace that has been aliased. For example the "y.z" of "using x = y.z;" or "using y.z" in C#. </param>
+    /// <param name="namespaceName">The name of a namepace that has been aliased.  For example the "y.z" of "using x = y.z;" or "using y.z" in C#.</param>
+    internal UsedNamespace(IName alias, IName namespaceName) {
+      this.alias = alias;
+      this.namespaceName = namespaceName;
+    }
+
+    /// <summary>
+    /// Allocates a namespace that is used (imported) inside a namespace scope.
+    /// </summary>
+    /// <param name="namespaceName">The name of a namepace that has been aliased.  For example the "y.z" of "using x = y.z;" or "using y.z" in C#.</param>
+    internal UsedNamespace(IName namespaceName) {
+      this.alias = Dummy.Name;
+      this.namespaceName = namespaceName;
+    }
+
+    /// <summary>
+    /// An alias for a namespace. For example the "x" of "using x = y.z;" in C#. Empty if no alias is present.
+    /// </summary>
+    /// <value></value>
+    public IName Alias {
+      get { return this.alias; }
+    }
+    readonly IName alias;
+
+    /// <summary>
+    /// The name of a namepace that has been aliased.  For example the "y.z" of "using x = y.z;" or "using y.z" in C#.
+    /// </summary>
+    /// <value></value>
+    public IName NamespaceName {
+      get { return this.namespaceName; }
+    }
+    readonly IName namespaceName;
+
+  }
+
 
   /// <summary>
   /// 

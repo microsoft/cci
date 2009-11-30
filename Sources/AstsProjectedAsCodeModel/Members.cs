@@ -2923,7 +2923,6 @@ namespace Microsoft.Cci.Ast {
       this.localScopes = converter.GetLocalScopes();
       this.localVariables = converter.GetLocalVariables();
       this.maxStack = converter.MaximumStackSizeNeeded;
-      this.namespaceScopes = converter.GetNamespaceScopes();
       this.operations = converter.GetOperations();
       this.operationExceptionInformation = converter.GetOperationExceptionInformation();
       this.privateHelperTypes = normalizedBody.PrivateHelperTypes;
@@ -2958,10 +2957,18 @@ namespace Microsoft.Cci.Ast {
     /// is for the y.
     /// </summary>
     public IEnumerable<INamespaceScope> GetNamespaceScopes() {
-      if (!this.ilWasGenerated) this.GenerateIL();
-      return this.namespaceScopes;
+      var containingNamespace = this.Block.ContainingNamespaceDeclaration;
+      var bodyThatProvides = containingNamespace.methodBodyThatWillProvideNonEmptyNamespaceScopes;
+      if (bodyThatProvides != null && bodyThatProvides != this) yield break;
+      containingNamespace.methodBodyThatWillProvideNonEmptyNamespaceScopes = this;
+      var nestedContainingNamespace = containingNamespace as NestedNamespaceDeclaration;
+      while (nestedContainingNamespace != null) {
+        yield return nestedContainingNamespace;
+        containingNamespace = nestedContainingNamespace.ContainingNamespaceDeclaration;
+        nestedContainingNamespace = containingNamespace as NestedNamespaceDeclaration;
+      }
+      yield return containingNamespace;
     }
-    IEnumerable<INamespaceScope>/*?*/ namespaceScopes;
 
     public bool IsIteratorBody {
       get {
