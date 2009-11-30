@@ -182,6 +182,33 @@ namespace Microsoft.Cci {
       return (!enumerator.MoveNext());
     }
 
+    /// <summary>
+    /// Returns the single element from the given single element collection.
+    /// </summary>
+    /// <typeparam name="T">The element type of the collection</typeparam>
+    /// <param name="enumerable">An enumeration of elements.</param>
+    /// <returns>The single element from the enumerable</returns>
+    public static T Single<T>(IEnumerable<T> enumerable)
+      //^ requires IteratorHelper.EnumerableHasLength(enumerable, 1);
+    {
+      var e = enumerable.GetEnumerator();
+      e.MoveNext();
+      return e.Current;
+    }
+
+    /// <summary>
+    /// Returns true if any element of the sequence satisfies the predicate
+    /// </summary>
+    /// <typeparam name="T">The element type of the collection</typeparam>
+    /// <param name="enumerable">An enumeration of elements.</param>
+    /// <param name="pred">The predicate to apply.</param>
+    /// <returns>true if and only if pred was true for at least one element</returns>
+    public static bool Any<T>(IEnumerable<T> enumerable, Predicate<T> pred) {
+      foreach (var t in enumerable)
+        if (pred(t))
+          return true;
+      return false;
+    }
 
     /// <summary>
     /// Returns enumeration being a concatenation of parameters.
