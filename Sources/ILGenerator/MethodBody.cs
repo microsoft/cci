@@ -19,11 +19,9 @@ namespace Microsoft.Cci {
       this.operationExceptionInformation = generator.GetOperationExceptionInformation();
       this.operations = generator.GetOperations();
       this.privateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
-      var localScopes = generator.GetLocalScopes();
-      this.localScopes = IteratorHelper.GetConversionEnumerable<ILGeneratorScope, ILocalScope>(localScopes);
-      this.namespaceScopes = IteratorHelper.GetConversionEnumerable<ILGeneratorScope, INamespaceScope>(localScopes);
+      this.generatorScopes = generator.GetLocalScopes();
       List<ILocalDefinition> locals = new List<ILocalDefinition>();
-      foreach (var localScope in localScopes)
+      foreach (var localScope in this.generatorScopes)
         locals.AddRange(localScope.Locals);
       this.localVariables = locals.AsReadOnly();
       this.maxStack = maxStack;
@@ -36,13 +34,17 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    readonly IEnumerable<ILGeneratorScope> generatorScopes;
+
     /// <summary>
     /// Returns zero or more local (block) scopes into which the CLR IL operations of this method body is organized.
     /// </summary>
     public IEnumerable<ILocalScope> GetLocalScopes() {
-      return this.localScopes;
+      foreach (var generatorScope in this.generatorScopes) {
+        if (generatorScope.locals.Count > 0)
+          yield return generatorScope;
+      }
     }
-    readonly IEnumerable<ILocalScope> localScopes;
 
     /// <summary>
     /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
@@ -51,9 +53,11 @@ namespace Microsoft.Cci {
     /// is for the y.
     /// </summary>
     public IEnumerable<INamespaceScope> GetNamespaceScopes() {
-      return this.namespaceScopes;
+      foreach (var generatorScope in this.generatorScopes) {
+        if (generatorScope.usedNamespaces.Count > 0)
+          yield return generatorScope;
+      }
     }
-    readonly IEnumerable<INamespaceScope> namespaceScopes;
 
     /// <summary>
     /// A list exception data within the method body IL.
