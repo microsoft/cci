@@ -1037,10 +1037,12 @@ namespace CodeModelTestInput
                     yield return x;
 
                     local_0 = 1;
+                    goto IL_00a6;
                 }
                 yield return 8;
 
                 local_0 = 1;
+            IL_00a6:
                 goto IL_00f2;
             }
             if ((x > 0))

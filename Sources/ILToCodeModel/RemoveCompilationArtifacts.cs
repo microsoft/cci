@@ -28,7 +28,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var field = addressableExpression.Definition as IFieldReference;
       if (field != null) {
         object localOrParameter = null;
-        if (this.capturedLocalOrParameter.TryGetValue(field.ResolvedField.Name.Value, out localOrParameter)) {
+        if (this.capturedLocalOrParameter.TryGetValue(field.Name.Value, out localOrParameter)) {
           addressableExpression.Definition = localOrParameter;
           addressableExpression.Instance = null;
           return addressableExpression;
@@ -41,7 +41,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var field = targetExpression.Definition as IFieldReference;
       if (field != null) {
         object localOrParameter = null;
-        if (this.capturedLocalOrParameter.TryGetValue(field.ResolvedField.Name.Value, out localOrParameter)) {
+        if (this.capturedLocalOrParameter.TryGetValue(field.Name.Value, out localOrParameter)) {
           targetExpression.Definition = localOrParameter;
           targetExpression.Instance = null;
           return targetExpression;
@@ -98,25 +98,25 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (thisReference == null) {
           IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
           if (binding != null && (binding.Definition is IParameterDefinition || binding.Definition is ILocalDefinition)) {
-            this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, binding.Definition);
+            this.capturedLocalOrParameter.Add(closureField.Name.Value, binding.Definition);
           } else {
             // Corner case: csc generated closure class captures a local that does not appear in the original method.
             // Assume this local is always holding a constant;
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                Name = closureField.ResolvedField.Name, Type = closureField.Type
+                 Name = closureField.ResolvedField.Name, Type = closureField.Type
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
                 LocalVariable = localDefinition, InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
-            } else 
-              continue;
+            }
+            else continue;
           }
         } else {
-          this.capturedLocalOrParameter.Add(closureField.ResolvedField.Name.Value, thisReference);
+          this.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
         }
         statements.RemoveAt(j--);
       }
@@ -141,13 +141,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       IFieldReference/*?*/ closureField = boundExpression.Definition as IFieldReference;
       if (closureField != null) {
         object/*?*/ localOrParameter = null;
-        this.capturedLocalOrParameter.TryGetValue(closureField.ResolvedField.Name.Value, out localOrParameter);
+        this.capturedLocalOrParameter.TryGetValue(closureField.Name.Value, out localOrParameter);
         if (localOrParameter != null) {
           IThisReference thisReference = localOrParameter as IThisReference;
           if (thisReference != null) return thisReference;
           boundExpression.Definition = localOrParameter;
           boundExpression.Instance = null;
-          return boundExpression;
+          return boundExpression; 
         }
       }
       IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
@@ -191,7 +191,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
+      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host, 
         this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.contractProvider).Block;
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
@@ -217,7 +217,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(Equality equality) {
-      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean){
         if (ExpressionHelper.IsIntegralZero(equality.RightOperand))
           return InvertCondition(this.Visit(equality.LeftOperand));
       }
@@ -229,10 +229,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (castIfPossible != null) {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
-          return this.Visit(new CheckIfInstance() {
+          return this.Visit(new CheckIfInstance() { 
             Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
-          });
+            Type = greaterThan.Type, Locations = greaterThan.Locations });
         }
       }
       castIfPossible = greaterThan.RightOperand as ICastIfPossible;
@@ -431,7 +430,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                 info.Label = gotoStatement.TargetStatement.Label;
                 info.State = 1;
               }
-              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) 
                 this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
               statements.RemoveAt(i--);
               continue;

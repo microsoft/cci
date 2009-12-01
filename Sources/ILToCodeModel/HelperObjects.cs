@@ -103,6 +103,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       return methodDefinition;
     }
 
+    internal static IFieldDefinition UnSpecializedFieldDefinition(IFieldDefinition fieldDefinition) {
+      ISpecializedFieldDefinition specializedFieldDefinition = fieldDefinition as ISpecializedFieldDefinition;
+      if (specializedFieldDefinition != null) return specializedFieldDefinition.UnspecializedVersion;
+      return fieldDefinition;
+    }
+
     internal static IMethodBody GetMethodBodyFromUnspecializedVersion(IMethodDefinition methodDefinition) {
       if (!methodDefinition.Body.Equals(Dummy.MethodBody)) return methodDefinition.Body;
       IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
