@@ -657,7 +657,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public PrimitiveTypeCode TypeCode {
+    public virtual PrimitiveTypeCode TypeCode {
       get { return PrimitiveTypeCode.NotPrimitive; }
     }
 
@@ -726,6 +726,51 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         return Dummy.Type;
       }
       return this.NamespaceTypeName.ResolveNominalTypeName(this.PEFileToObjectModel);
+    }
+
+    public override PrimitiveTypeCode TypeCode {
+      get {
+        if (this.typeCode == PrimitiveTypeCode.Invalid) {
+          this.typeCode = PrimitiveTypeCode.NotPrimitive;
+          if (this.Module.ContainingAssembly.AssemblyIdentity.Equals(this.PEFileToObjectModel.ModuleReader.metadataReaderHost.CoreAssemblySymbolicIdentity)) {
+            var td = this.ResolvedType;
+            if (td != Dummy.Type)
+              this.typeCode = td.TypeCode;
+            else
+              this.typeCode = this.UseNameToResolveTypeCode();
+          }
+        }
+        return this.typeCode;
+      }
+    }
+    PrimitiveTypeCode typeCode = PrimitiveTypeCode.Invalid;
+
+
+    private PrimitiveTypeCode UseNameToResolveTypeCode() {
+      var ns = this.ContainingUnitNamespace as INestedUnitNamespaceReference;
+      if (ns == null) return PrimitiveTypeCode.NotPrimitive;
+      var pe = this.PEFileToObjectModel;
+      if (ns.Name.UniqueKey != pe.SystemChar.NamespaceFullName.UniqueKey) return PrimitiveTypeCode.NotPrimitive;
+      var rs = ns.ContainingUnitNamespace as IRootUnitNamespaceReference;
+      if (rs == null) return PrimitiveTypeCode.NotPrimitive;
+      var key = this.Name.UniqueKey;
+      if (key == pe.SystemBoolean.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Boolean;
+      if (key == pe.SystemByte.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt8;
+      if (key == pe.SystemChar.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Char;
+      if (key == pe.SystemDouble.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Float64;
+      if (key == pe.SystemInt16.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int16;
+      if (key == pe.SystemInt32.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int32;
+      if (key == pe.SystemInt64.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int64;
+      if (key == pe.SystemSByte.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int8;
+      if (key == pe.SystemIntPtr.MangledTypeName.UniqueKey) return PrimitiveTypeCode.IntPtr;
+      if (key == pe.SystemSingle.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Float32;
+      if (key == pe.SystemString.MangledTypeName.UniqueKey) return PrimitiveTypeCode.String;
+      if (key == pe.SystemUInt16.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt16;
+      if (key == pe.SystemUInt32.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt32;
+      if (key == pe.SystemUInt64.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt64;
+      if (key == pe.SystemUIntPtr.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UIntPtr;
+      if (key == pe.SystemVoid.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Void;
+      return PrimitiveTypeCode.NotPrimitive;
     }
 
     #region INamespaceTypeReference Members
