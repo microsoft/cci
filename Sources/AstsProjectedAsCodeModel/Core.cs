@@ -1538,7 +1538,10 @@ namespace Microsoft.Cci.Ast {
       List<Expression> initializers = new List<Expression>();
       if (args != null) {
         slb = new SourceLocationBuilder(args.Current.SourceLocation);
-        do { initializers.Add(args.Current); slb.UpdateToSpan(args.Current.SourceLocation); } while (args.MoveNext());
+        do { 
+          initializers.Add(this.ImplicitConversionInAssignmentContext(args.Current, par.ParamArrayElementType.ResolvedType));
+          slb.UpdateToSpan(args.Current.SourceLocation);
+        } while (args.MoveNext());
       } else {
         slb = new SourceLocationBuilder(SourceDummy.SourceLocation);
       }
