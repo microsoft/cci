@@ -2970,6 +2970,9 @@ namespace Microsoft.Cci.Ast {
       yield return containingNamespace;
     }
 
+    /// <summary>
+    /// True if the method body is an iterator.
+    /// </summary>
     public bool IsIteratorBody {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();

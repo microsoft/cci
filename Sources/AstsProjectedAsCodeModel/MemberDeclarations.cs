@@ -1803,6 +1803,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// </summary>
     protected override List<ICustomAttribute> GetAttributes() {
       var result = base.GetAttributes();
       if ((this.flags & (int)MethodDeclaration.Flags.IsCompilerGenerated) != 0) {
