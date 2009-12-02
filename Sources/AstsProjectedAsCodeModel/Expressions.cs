@@ -12603,18 +12603,37 @@ namespace Microsoft.Cci.Ast {
       }
       if (!result.Type.IsReferenceType) {
         if (result is ThisReference || result is BaseClassReference) return result;
-        if (result is BoundExpression || result is IArrayIndexer)
-          result = new AddressOf(new AddressableExpression(result), true, result.SourceLocation);
+        if (this.IsStoredInWritableMemory(result))
+          result = new AddressOf(new AddressableExpression(result), result.SourceLocation);
+        else if (!TypeHelper.TypesAreEquivalent(this.ResolvedMethod.ContainingTypeDefinition, result.Type))
+          //The type will be System.Object, System.ValueType or System.Enum. Hence boxing is required.
+          result = new Conversion(result, this.PlatformType.SystemObject.ResolvedType, result.SourceLocation);
         else {
-          Expression boxedResult = new Conversion(result, this.PlatformType.SystemObject.ResolvedType, result.SourceLocation);
-          if (!TypeHelper.TypesAreEquivalent(this.ResolvedMethod.ContainingTypeDefinition, result.Type)) {
-            IManagedPointerTypeReference unboxedType = ManagedPointerType.GetManagedPointerType(result.Type, this.Compilation.HostEnvironment.InternFactory);
-            result = new Conversion(boxedResult, unboxedType.ResolvedType, result.SourceLocation);
-          }
+          var statements = new List<Statement>(1);
+          var block = new BlockStatement(statements, this.SourceLocation);
+          var temp = Expression.CreateInitializedLocalDeclarationAndAddDeclarationsStatementToList(result, statements);
+          var addressOf = new AddressOf(new AddressableExpression(new BoundExpression(result, temp)), result.SourceLocation);
+          var be = new BlockExpression(block, addressOf, this.SourceLocation);
+          be.SetContainingExpression(this);
+          result = be;
         }
         result.SetContainingExpression(this);
       }
       return result;
+    }
+
+    /// <summary>
+    /// Returns true if the expression binds to a writeable memory location, such as a local, a parameter, a field
+    /// that is not readonly, or an array element.
+    /// </summary>
+    private bool IsStoredInWritableMemory(Expression expression) {
+      var projectedExpression = expression.ProjectAsIExpression();
+      if (projectedExpression is IArrayIndexer) return true;
+      var boundExpression = projectedExpression as IBoundExpression;
+      if (boundExpression == null) return false;
+      var field = boundExpression.Definition as IFieldReference;
+      if (field == null) return true;
+      return !field.ResolvedField.IsReadOnly;
     }
 
     /// <summary>
