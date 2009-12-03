@@ -155,8 +155,12 @@ namespace Microsoft.Cci {
       if (isVolatile)
         this.generator.Emit(OperationCode.Volatile_);
       if (instance == null) {
-        this.generator.Emit(OperationCode.Ldsfld, field);
-        this.StackSize++;
+          if (field.ResolvedField.IsStatic) {
+              this.generator.Emit(OperationCode.Ldsfld, field);
+              this.StackSize++;
+          }
+          else // Object ref already on stack (maybe from prior "dup")
+              this.generator.Emit(OperationCode.Ldfld, field); // stack-delta == 0;
       } else {
         this.Visit(instance);
         this.generator.Emit(OperationCode.Ldfld, field);
@@ -391,7 +395,7 @@ namespace Microsoft.Cci {
           this.LoadAddressOf(local, null);
           this.generator.Emit(OperationCode.Initobj, local.Type);
         } else {
-          this.Visit(assignment.Source);
+          this.Visit(assignment.Source); 
           this.VisitAssignmentTo(local);
         }
         if (!treatAsStatement) this.LoadLocal(local);
