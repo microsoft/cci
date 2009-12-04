@@ -20,6 +20,7 @@ namespace Microsoft.Cci {
     ILocation location = Dummy.Location;
     uint offset;
     List<Operation> operations = new List<Operation>();
+    List<ILocalScope>/*?*/ iteratorScopes;
     List<ILGeneratorScope> scopes = new List<ILGeneratorScope>();
     Stack<ILGeneratorScope> scopeStack = new Stack<ILGeneratorScope>(); //TODO: write own stack so that dependecy on System.dll can go.
     Stack<TryBody> tryBodyStack = new Stack<TryBody>();
@@ -195,6 +196,20 @@ namespace Microsoft.Cci {
       ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable);
       this.scopeStack.Push(scope);
       this.scopes.Add(scope);
+    }
+
+    /// <summary>
+    /// Begins a lexical scope.
+    /// </summary>
+    public void BeginScope(uint numberOfIteratorLocalsInScope) {
+      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable);
+      this.scopeStack.Push(scope);
+      this.scopes.Add(scope);
+      if (numberOfIteratorLocalsInScope == 0) return;
+      if (this.iteratorScopes == null) this.iteratorScopes = new List<ILocalScope>();
+      while (numberOfIteratorLocalsInScope-- > 0) {
+        this.iteratorScopes.Add(scope);
+      }
     }
 
     /// <summary>
@@ -544,6 +559,17 @@ namespace Microsoft.Cci {
     public void UseNamespace(string namespaceToUse) {
       if (this.scopeStack.Count == 0) this.BeginScope();
       this.scopeStack.Peek().usedNamespaces.Add(namespaceToUse);
+    }
+
+    /// <summary>
+    /// Returns a block scope associated with each local variable in the iterator for which this is the generator for its MoveNext method.
+    /// May return null.
+    /// </summary>
+    /// <remarks>The PDB file model seems to be that scopes are duplicated if necessary so that there is a separate scope for each
+    /// local variable in the original iterator and the mapping from local to scope is done by position.</remarks>
+    public IEnumerable<ILocalScope>/*?*/ GetIteratorScopes() {
+      if (this.iteratorScopes == null) return null;
+      return this.iteratorScopes.AsReadOnly();
     }
 
     /// <summary>
