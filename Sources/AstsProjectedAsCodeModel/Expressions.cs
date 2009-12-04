@@ -15952,7 +15952,7 @@ namespace Microsoft.Cci.Ast {
       object/*?*/ resolvedQualifier = this.ResolveQualifierAsNamespaceOrType();
       ITypeDefinition/*?*/ qualifyingType = this.ResolveAsType(resolvedQualifier);
       if (qualifyingType != null) {
-        if (!this.ContainingBlock.CanAccess(qualifyingType))
+        if (!this.ContainingBlock.ContainingTypeDeclaration.CanAccess(qualifyingType))
           resolvedQualifier = this.ResolveQualifierAsNamespace();
         else {
           INestedTypeDefinition/*?*/ resolvedTypeMember = this.ResolveTypeMember(qualifyingType) as INestedTypeDefinition;
@@ -16059,7 +16059,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected virtual ITypeDefinitionMember/*?*/ ResolveTypeMember(ITypeDefinition qualifyingType) {
       foreach (ITypeDefinitionMember member in qualifyingType.GetMembersNamed(this.SimpleName.Name, this.SimpleName.IgnoreCase)) {
-        if (this.ContainingBlock.CanAccess(member)) return member;
+        if (this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
       }
       ITypeContract/*?*/ contract = this.Compilation.ContractProvider.GetTypeContractFor(qualifyingType);
       if (contract != null) {
@@ -16082,7 +16082,7 @@ namespace Microsoft.Cci.Ast {
         }
       }
       foreach (ITypeDefinitionMember member in this.Helper.GetExtensionMembers(qualifyingType, this.SimpleName.Name, this.SimpleName.IgnoreCase)) {
-        if (this.ContainingBlock.CanAccess(member)) return member;
+        if (this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
       }
       return null;
     }

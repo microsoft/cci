@@ -383,61 +383,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// True if the given type member may be accessed from the scope defined by this block. For example, if the member is private and this
-    /// block is defined inside a method of the containing type of the member, the result is true.
-    /// </summary>
-    /// <param name="member">The type member to check.</param>
-    public bool CanAccess(ITypeDefinitionMember member) {
-      if (!this.CanAccess(member.ContainingTypeDefinition)) return false;
-      if (member.ContainingTypeDefinition is TypeDefinition || member.ContainingTypeDefinition is GenericTypeInstance) return true;
-      switch (member.Visibility) {
-        case TypeMemberVisibility.Assembly:
-          if (this.Compilation.Result == TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition)) return true;
-          return false; //TODO: friend assemblies
-        case TypeMemberVisibility.Family:
-          if (this.ContainingTypeDeclaration == null) return false;
-          return TypeHelper.Type1DerivesFromOrIsTheSameAsType2(this.ContainingTypeDeclaration.TypeDefinition, member.ContainingTypeDefinition);
-        case TypeMemberVisibility.FamilyAndAssembly:
-          if (this.ContainingTypeDeclaration != null &&
-            !TypeHelper.Type1DerivesFromOrIsTheSameAsType2(this.ContainingTypeDeclaration.TypeDefinition, member.ContainingTypeDefinition))
-            return false;
-          goto case TypeMemberVisibility.Assembly;
-        case TypeMemberVisibility.FamilyOrAssembly:
-          if (this.ContainingTypeDeclaration != null &&
-            TypeHelper.Type1DerivesFromOrIsTheSameAsType2(this.ContainingTypeDeclaration.TypeDefinition, member.ContainingTypeDefinition))
-            return true;
-          goto case TypeMemberVisibility.Assembly;
-        case TypeMemberVisibility.Other:
-        case TypeMemberVisibility.Private:
-          if (this.ContainingTypeDeclaration != null && TypeHelper.TypesAreEquivalent(this.containingTypeDeclaration.TypeDefinition, member.ContainingTypeDefinition)) return true;
-          return false;
-        case TypeMemberVisibility.Public:
-          return true;
-        default:
-          return false;
-      }
-    }
-
-    /// <summary>
-    /// True if the given type may be accessed from the scope defined by this block. For example, if the type is private nested type and this
-    /// block is defined inside a method of the containing type of the member, the result is true.
-    /// </summary>
-    /// <param name="typeDefinition">The type to check.</param>
-    /// <returns></returns>
-    public bool CanAccess(ITypeDefinition typeDefinition) {
-      if (this.ContainingTypeDeclaration != null && TypeHelper.TypesAreEquivalent(this.containingTypeDeclaration.TypeDefinition, typeDefinition))
-        return true;
-      INamespaceTypeDefinition/*?*/ nsTypeDef = typeDefinition as INamespaceTypeDefinition;
-      if (nsTypeDef != null) {
-        if (nsTypeDef.IsPublic) return true;
-        return nsTypeDef.ContainingNamespace.RootOwner == this.Compilation.Result; //TODO: worry about /addmodule
-      }
-      INestedTypeDefinition/*?*/ nestedTypeDef = typeDefinition as INestedTypeDefinition;
-      if (nestedTypeDef != null) return this.CanAccess((ITypeDefinitionMember)nestedTypeDef);
-      return true; //TODO: structural types
-    }
-
-    /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>

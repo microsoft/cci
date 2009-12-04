@@ -1754,6 +1754,27 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if the given type member may be accessed from the scope defined by this block. For example, if the member is private and this
+    /// block is defined inside a method of the containing type of the member, the result is true.
+    /// </summary>
+    /// <param name="member">The type member to check.</param>
+    public override bool CanAccess(ITypeDefinitionMember member) {
+      if (base.CanAccess(member)) return true;
+      return this.ContainingTypeDeclaration.CanAccess(member);
+    }
+
+    /// <summary>
+    /// True if the given type may be accessed from the scope defined by this block. For example, if the type is private nested type and this
+    /// block is defined inside a method of the containing type of the member, the result is true.
+    /// </summary>
+    /// <param name="typeDefinition">The type to check.</param>
+    /// <returns></returns>
+    public override bool CanAccess(ITypeDefinition typeDefinition) {
+      if (base.CanAccess(typeDefinition)) return true;
+      return this.ContainingTypeDeclaration.CanAccess(typeDefinition);
+    }
+
+    /// <summary>
     /// The type declaration that contains this member.
     /// </summary>
     /// <value></value>
@@ -2165,6 +2186,74 @@ namespace Microsoft.Cci.Ast {
     readonly List<TypeExpression> baseTypes;
 
     /// <summary>
+    /// True if the given type member may be accessed by this type declaration. For example, if the member is private and this
+    /// is that same as the containing type of the member, or is a nested type of the containing type of the member, the result is true.
+    /// </summary>
+    /// <param name="member">The type member to check.</param>
+    public virtual bool CanAccess(ITypeDefinitionMember member) {
+      if (this.TypeDefinition == member.ContainingTypeDefinition) return true;
+      if (this.TypeDefinition.IsGeneric && TypeHelper.TypesAreEquivalent(this.TypeDefinition.InstanceType, member.ContainingTypeDefinition))
+        return true;
+      var geninst = member.ContainingTypeDefinition as IGenericTypeInstance;
+      if (geninst != null && this.TypeDefinition == geninst.GenericType.ResolvedType) return true;
+      if (!this.CanAccess(member.ContainingTypeDefinition)) return false;
+      switch (member.Visibility) {
+        case TypeMemberVisibility.Assembly:
+          return this.Compilation.Result == TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition);
+        //TODO: friend assemblies
+        case TypeMemberVisibility.Family:
+          return TypeHelper.Type1DerivesFromOrIsTheSameAsType2(this.TypeDefinition, member.ContainingTypeDefinition);
+        case TypeMemberVisibility.FamilyAndAssembly:
+          return this.Compilation.Result == TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition) &&
+            TypeHelper.Type1DerivesFromOrIsTheSameAsType2(this.TypeDefinition, member.ContainingTypeDefinition);
+        //TODO: friend assemblies
+        case TypeMemberVisibility.FamilyOrAssembly:
+          return this.Compilation.Result == TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition) ||
+            TypeHelper.Type1DerivesFromOrIsTheSameAsType2(this.TypeDefinition, member.ContainingTypeDefinition);
+        //TODO: friend assemblies
+        case TypeMemberVisibility.Public:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    /// <summary>
+    /// True if the given type may be accessed from the scope defined by this block. For example, if the type is private nested type and this
+    /// block is defined inside a method of the containing type of the member, the result is true.
+    /// </summary>
+    /// <param name="typeDefinition">The type to check.</param>
+    public virtual bool CanAccess(ITypeDefinition typeDefinition) {
+      if (this.TypeDefinition == typeDefinition) return true;
+      if (this.TypeDefinition.IsGeneric && TypeHelper.TypesAreEquivalent(this.TypeDefinition.InstanceType, typeDefinition))
+        return true;
+      var nsTypeDef = typeDefinition as INamespaceTypeDefinition;
+      if (nsTypeDef != null) {
+        if (nsTypeDef.IsPublic) return true;
+        return nsTypeDef.ContainingNamespace.RootOwner == this.Compilation.Result; //TODO: worry about /addmodule
+      }
+      INestedTypeDefinition/*?*/ nestedTypeDef = typeDefinition as INestedTypeDefinition;
+      if (nestedTypeDef != null) return this.CanAccess((ITypeDefinitionMember)nestedTypeDef);
+      IManagedPointerType/*?*/ managedPointerType = typeDefinition as IManagedPointerType;
+      if (managedPointerType != null) return this.CanAccess(managedPointerType.TargetType.ResolvedType);
+      IPointerType/*?*/ pointerType = typeDefinition as IPointerType;
+      if (pointerType != null) return this.CanAccess(pointerType.TargetType.ResolvedType);
+      IArrayType/*?*/ arrayType = typeDefinition as IArrayType;
+      if (arrayType != null) return this.CanAccess(arrayType.ElementType.ResolvedType);
+      IGenericTypeInstance/*?*/ genericTypeInstance = typeDefinition as IGenericTypeInstance;
+      if (genericTypeInstance != null) {
+        if (!this.CanAccess(genericTypeInstance.GenericType.ResolvedType)) return false;
+        foreach (var typeRef in genericTypeInstance.GenericArguments) {
+          if (!this.CanAccess(typeRef.ResolvedType)) return false;
+        }
+        return true;
+      }
+      IGenericTypeParameter/*?*/ genericParameter = typeDefinition as IGenericTypeParameter;
+      if (genericParameter != null) return genericParameter.DefiningType == this.TypeDefinition;
+      return false;
+    }
+
+    /// <summary>
     /// A map from names to resolved metadata items. Use this table for case insensitive lookup.
     /// Do not use this dictionary unless you are implementing SimpleName.ResolveUsing(TypeDeclaration typeDeclaration). 
     /// </summary>
@@ -2521,6 +2610,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     #endregion
+
 
 
   }
