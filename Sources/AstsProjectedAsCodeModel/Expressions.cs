@@ -15826,16 +15826,16 @@ namespace Microsoft.Cci.Ast {
       if (simpleQualifier != null && (simpleQualifier.ResolvesToLocalOrParameter || !simpleQualifier.Type.IsReferenceType)) 
         return this;
       else if (!this.Qualifier.Type.IsReferenceType) {
-        // If Qualifier evaluates to a value-type we cannot use that as the cached 
+        // If Qualifier denotes a value-type we cannot use that as the cached 
         // value because we would end up mutating a *copy* rather than the target.
-        // So we must recurse in case there are side-effects nested in Qualifier.
+        // Thus we must recurse in case there are side-effects nested in Qualifier.
         Expression factored = this.Qualifier.FactoredExpression();
-        if (factored != this) {
-          // Suppose Qualifier was "SomeExpression.ValueField". Then:
-          //   factored will be a BlockExpression with block "temp = SomeExpression",
-          //   and expression a QualifiedName "temp.ValueField".
-          //   Thus we want to return "temp.ValueField.SimpleNameOfThis" with the same block
-          BlockExpression bExp = factored as BlockExpression; // Asserted by postcondition
+        if (factored != this.Qualifier) {
+          // Suppose Qualifier was "SomeExpression.ValueField". 
+          // Then: factored might be a BlockExpression with block "temp = SomeExpression", 
+          // and the expression will be QualifiedName denoting "temp.ValueField".
+          // In this case we want to return the same block, with expression "temp.ValueField.SimpleNameOfThis".
+          BlockExpression bExp = (BlockExpression)factored; // Asserted by postcondition
           QualifiedName aliasName = new QualifiedName(bExp.Expression, this.SimpleName, this.SourceLocation);
           BlockExpression result = new BlockExpression(bExp.BlockStatement, aliasName, this.sourceLocation); 
           result.SetContainingExpression(this);
@@ -15843,7 +15843,8 @@ namespace Microsoft.Cci.Ast {
         } else
           return this;
       } else {
-        // In this case Qualifier is an alias to the target object.
+        // In this case Qualifier is a reference to the target object,
+        // and the cached factor will be a safe alias to the target.
         Expression objectRef = this.Qualifier;
         List<Statement> statements = new List<Statement>();
         LocalDefinition cachedQualifier =
