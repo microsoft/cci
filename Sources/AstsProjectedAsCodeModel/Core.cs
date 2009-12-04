@@ -1538,7 +1538,7 @@ namespace Microsoft.Cci.Ast {
       List<Expression> initializers = new List<Expression>();
       if (args != null) {
         slb = new SourceLocationBuilder(args.Current.SourceLocation);
-        do { 
+        do {
           initializers.Add(this.ImplicitConversionInAssignmentContext(args.Current, par.ParamArrayElementType.ResolvedType));
           slb.UpdateToSpan(args.Current.SourceLocation);
         } while (args.MoveNext());
@@ -3224,7 +3224,7 @@ namespace Microsoft.Cci.Ast {
     /// calls to MoveNext.
     /// </summary>
     public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
-      var mbody = methodBody as MethodBody;
+      var mbody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
       if (mbody == null) return emptyLocalScopes;
       return mbody.GetIteratorScopes();
     }

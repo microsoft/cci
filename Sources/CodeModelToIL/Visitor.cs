@@ -34,17 +34,38 @@ namespace Microsoft.Cci {
       this.minizeCodeSize = true;
     }
 
+    /// <summary>
+    /// Initializes an object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private 
+    /// helper types.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements.</param>
+    /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
+    public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount)
+      : base(contractProvider) {
+      this.generator = new ILGenerator(host);
+      this.host = host;
+      this.sourceLocationProvider = sourceLocationProvider;
+      this.minizeCodeSize = true;
+      this.iteratorLocalCount = iteratorLocalCount;
+    }
+
     ILGeneratorLabel currentBreakTarget = new ILGeneratorLabel();
     ILGeneratorLabel currentContinueTarget = new ILGeneratorLabel();
     ILGeneratorLabel/*?*/ currentTryCatchFinallyEnd;
     ITryCatchFinallyStatement/*?*/ currentTryCatch;
     ILGeneratorLabel endOfMethod = new ILGeneratorLabel();
     ILGenerator generator;
+
     /// <summary>
     /// An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.
     /// </summary>
     protected IMetadataHost host;
+
     Dictionary<int, ILGeneratorLabel> labelFor = new Dictionary<int, ILGeneratorLabel>();
     bool lastStatementWasUnconditionalTransfer;
     Dictionary<ILocalDefinition, ushort> localIndex = new Dictionary<ILocalDefinition, ushort>();
@@ -52,11 +73,18 @@ namespace Microsoft.Cci {
     bool minizeCodeSize;
     Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor = new Dictionary<object, ITryCatchFinallyStatement>();
     ILocalDefinition/*?*/ returnLocal;
+
     /// <summary>
     /// An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.
     /// </summary>
     protected ISourceLocationProvider/*?*/ sourceLocationProvider;
+
     List<ILocalDefinition> temporaries = new List<ILocalDefinition>();
+
+    /// <summary>
+    /// A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.
+    /// </summary>
+    IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
 
     private static ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
       ushort parameterIndex = parameterDefinition.Index;
@@ -155,12 +183,12 @@ namespace Microsoft.Cci {
       if (isVolatile)
         this.generator.Emit(OperationCode.Volatile_);
       if (instance == null) {
-          if (field.ResolvedField.IsStatic) {
-              this.generator.Emit(OperationCode.Ldsfld, field);
-              this.StackSize++;
-          }
-          else // Object ref already on stack (maybe from prior "dup")
-              this.generator.Emit(OperationCode.Ldfld, field); // stack-delta == 0;
+        if (field.ResolvedField.IsStatic) {
+          this.generator.Emit(OperationCode.Ldsfld, field);
+          this.StackSize++;
+        } else
+          //The caller has already generated code to load the instance on the stack.
+          this.generator.Emit(OperationCode.Ldfld, field);
       } else {
         this.Visit(instance);
         this.generator.Emit(OperationCode.Ldfld, field);
@@ -395,7 +423,7 @@ namespace Microsoft.Cci {
           this.LoadAddressOf(local, null);
           this.generator.Emit(OperationCode.Initobj, local.Type);
         } else {
-          this.Visit(assignment.Source); 
+          this.Visit(assignment.Source);
           this.VisitAssignmentTo(local);
         }
         if (!treatAsStatement) this.LoadLocal(local);
@@ -655,7 +683,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="block">The block.</param>
     public override void Visit(IBlockStatement block) {
-      this.generator.BeginScope();
+      uint numberOfIteratorLocals = 0;
+      if (this.iteratorLocalCount != null)
+        this.iteratorLocalCount.TryGetValue(block, out numberOfIteratorLocals);
+      this.generator.BeginScope(numberOfIteratorLocals);
       this.Visit(block.Statements);
       this.generator.EndScope();
     }
@@ -3771,6 +3802,15 @@ namespace Microsoft.Cci {
       this.localIndex.Add(local, localIndex);
       this.temporaries.Add(local);
       return localIndex;
+    }
+
+    /// <summary>
+    /// Returns a local scope for each local variable in the iterator that generated the MoveNext method body that was
+    /// converted to IL by this converter. The scopes may be duplicated and occur in the same order as the local variable
+    /// declarations occur in the iterator. If this converter did not convert a MoveNext method, the result is null.
+    /// </summary>
+    public IEnumerable<ILocalScope>/*?*/ GetIteratorScopes() {
+      return this.generator.GetIteratorScopes();
     }
 
     /// <summary>

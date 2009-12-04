@@ -33,6 +33,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Allocates an object that provides a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this source method body. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
+    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
+      this.Block = CodeDummy.Block;
+      this.contractProvider = contractProvider;
+      this.host = host;
+      this.sourceLocationProvider = sourceLocationProvider;
+      this.iteratorLocalCount = iteratorLocalCount;
+    }
+
+    /// <summary>
     /// The collection of statements making up the body.
     /// This is produced by either language parser or through decompilation of the Instructions.
     /// </summary>
@@ -60,13 +77,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void GenerateIL() {
       IEnumerable<ILocalDefinition> localVariables;
       ushort maxStack;
+      IEnumerable<ILocalScope> iteratorScopes;
       IEnumerable<IOperation> operations;
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
 
       if (this.isNormalized) {
-        var converter = new CodeModelToILConverter(this.host, this.sourceLocationProvider, this.contractProvider);
+        var converter = new CodeModelToILConverter(this.host, this.sourceLocationProvider, this.contractProvider, this.iteratorLocalCount);
         converter.ConvertToIL(this.MethodDefinition, this.Block);
+        iteratorScopes = converter.GetIteratorScopes();
         localVariables = converter.GetLocalVariables();
         maxStack = converter.MaximumStackSizeNeeded;
         operations = converter.GetOperations();
@@ -77,6 +96,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider, this.contractProvider);
         var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
         normalizedBody.isNormalized = true;
+        iteratorScopes = normalizedBody.iteratorScopes;
         localVariables = normalizedBody.LocalVariables;
         maxStack = normalizedBody.MaxStack;
         operations = normalizedBody.Operations;
@@ -90,6 +110,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       lock (this) {
         if (this.ilWasGenerated) return;
         this.ilWasGenerated = true;
+        this.iteratorScopes = iteratorScopes;
         this.localVariables = localVariables;
         this.maxStack = maxStack;
         this.operations = operations;
@@ -99,7 +120,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     bool ilWasGenerated;
+
+    /// <summary>
+    /// True if the method body does not contain any anonymous delegates or yield statements.
+    /// </summary>
+    public bool IsNormalized {
+      get { return this.isNormalized; }
+      set { this.isNormalized = value; }
+    }
     bool isNormalized;
+
+    IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
+
+    /// <summary>
+    /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
+    /// The scopes are returned by the MoveNext method of the object returned by the iterator method.
+    /// The index of the scope corresponds to the index of the local. Specifically local scope i corresponds
+    /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
+    /// calls to MoveNext.
+    /// </summary>
+    public IEnumerable<ILocalScope> GetIteratorScopes() {
+      return this.iteratorScopes;
+    }
+    IEnumerable<ILocalScope> iteratorScopes = emptyLocalScopes;
+    static IEnumerable<ILocalScope> emptyLocalScopes = IteratorHelper.GetEmptyEnumerable<ILocalScope>();
 
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.
