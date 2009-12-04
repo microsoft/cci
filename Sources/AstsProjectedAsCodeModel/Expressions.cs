@@ -15443,11 +15443,9 @@ namespace Microsoft.Cci.Ast {
           source = overloadedMethodCall;
         statements.Add(new ExpressionStatement(new Assignment(target, source, this.SourceLocation), this.SourceLocation));
       } else {
-        object one = GetConstantOneOfMatchingTypeForIncrementDecrement(target.Type);
-        if (this is PostfixDecrement)
-          source = new SubtractionAssignment(target, new CompileTimeConstant(one, SourceDummy.SourceLocation), this.SourceLocation);
-        else
-          source = new AdditionAssignment(target, new CompileTimeConstant(one, SourceDummy.SourceLocation), this.SourceLocation);
+        // For the postfix case we must make another temporary to hold the 
+        // initial value of the target, while the target is being incremented/decremented.
+        source = NewAssignUsingTemporary(target, this, originalValue);
         statements.Add(new ExpressionStatement(source, this.SourceLocation));
       }
       BlockStatement block = new BlockStatement(statements, this.SourceLocation);
@@ -15456,6 +15454,18 @@ namespace Microsoft.Cci.Ast {
       return this.cachedProjection = bexpr.ProjectAsIExpression();
     }
     IExpression/*?*/ cachedProjection;
+
+    private Expression NewAssignUsingTemporary(TargetExpression target, PostfixUnaryOperationAssignment parent, BoundExpression temporary)
+    {
+      Expression source;
+      object one = GetConstantOneOfMatchingTypeForIncrementDecrement(target.Type);
+      CompileTimeConstant delta = new CompileTimeConstant(one, SourceDummy.SourceLocation);
+      if (parent is PostfixDecrement)
+        source = new Subtraction(temporary, delta, parent.SourceLocation);
+      else
+        source = new Addition(temporary, delta, parent.SourceLocation);
+      return new Assignment(target, source, parent.SourceLocation);
+    }
 
     /// <summary>
     /// 
@@ -15803,6 +15813,50 @@ namespace Microsoft.Cci.Ast {
         return false;
       }
     }
+
+    /// <summary>
+    /// Either returns this expression, or returns a BlockExpression that assigns each subexpression to a temporary local variable
+    /// and then evaluates an expression that is the same as this expression, but which refers to the temporaries rather than the 
+    /// factored out subexpressions. This transformation is useful when expressing the semantics of operation assignments and increment/decrement operations.
+    /// </summary>
+    public override Expression FactoredExpression()
+    //^^ ensures result == this || result is BlockExpression;
+    {
+      SimpleName simpleQualifier = this.Qualifier as SimpleName;
+      if (simpleQualifier != null && (simpleQualifier.ResolvesToLocalOrParameter || !simpleQualifier.Type.IsReferenceType)) 
+        return this;
+      else if (!this.Qualifier.Type.IsReferenceType) {
+        // If Qualifier evaluates to a value-type we cannot use that as the cached 
+        // value because we would end up mutating a *copy* rather than the target.
+        // So we must recurse in case there are side-effects nested in Qualifier.
+        Expression factored = this.Qualifier.FactoredExpression();
+        if (factored != this) {
+          // Suppose Qualifier was "SomeExpression.ValueField". Then:
+          //   factored will be a BlockExpression with block "temp = SomeExpression",
+          //   and expression a QualifiedName "temp.ValueField".
+          //   Thus we want to return "temp.ValueField.SimpleNameOfThis" with the same block
+          BlockExpression bExp = factored as BlockExpression; // Asserted by postcondition
+          QualifiedName aliasName = new QualifiedName(bExp.Expression, this.SimpleName, this.SourceLocation);
+          BlockExpression result = new BlockExpression(bExp.BlockStatement, aliasName, this.sourceLocation); 
+          result.SetContainingExpression(this);
+          return result;
+        } else
+          return this;
+      } else {
+        // In this case Qualifier is an alias to the target object.
+        Expression objectRef = this.Qualifier;
+        List<Statement> statements = new List<Statement>();
+        LocalDefinition cachedQualifier =
+            Expression.CreateInitializedLocalDeclarationAndAddDeclarationsStatementToList(objectRef, statements);
+        BoundExpression cachedExpression = new BoundExpression(objectRef, cachedQualifier);
+        QualifiedName aliasName = new QualifiedName(cachedExpression, this.SimpleName, this.SourceLocation);
+        BlockStatement block = new BlockStatement(statements, this.SourceLocation);
+        BlockExpression result = new BlockExpression(block, aliasName, this.SourceLocation);
+        result.SetContainingExpression(this);
+        return result;
+      }
+    }
+
 
     /// <summary>
     /// Calls the visitor.Visit(QualifiedName) method.
@@ -17628,6 +17682,15 @@ namespace Microsoft.Cci.Ast {
       return this.resolvedValue;
     }
     object/*?*/ resolvedValue;
+
+      /// <summary>
+      /// Returns true if this resolves to a local declaration or a 
+      /// call parameter of the current method. Used for finding a
+      /// worthwhile QualifiedName.Qualifier to cache in FactoredExpression.
+      /// </summary>
+    public bool ResolvesToLocalOrParameter {
+        get { return (resolvedValue is LocalDefinition || resolvedValue is ParameterDefinition); }
+    }
 
     /// <summary>
     /// Returns either null or the namespace or type that binds to this name using the applicable scope chain and compilation context.
