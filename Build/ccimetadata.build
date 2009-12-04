@@ -152,11 +152,11 @@ using System.Reflection;
 
   <Target Name="CreateReleaseZips">
     <ItemGroup>
-      <Assembly Include="
+      <Assemblies Include="
       $(BinReleaseDirectory)\Microsoft.Cci.*.dll;
       $(BinReleaseDirectory)\Microsoft.Cci.*.xml;
       " />
-      <Assembly Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb" />
+      <Symbols Include="$(BinReleaseDirectory)\Microsoft.Cci.*.pdb" />
     </ItemGroup>
     <Exec
       Condition="$(CleanRootDirectory) != ''"

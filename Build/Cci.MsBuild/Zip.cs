@@ -45,6 +45,12 @@ namespace Microsoft.Cci.MsBuild
                         zip.AddDirectory(directory.ItemSpec, ".");
                     }
 
+                if (zip.Count == 0)
+                {                  
+                    this.Log.LogMessage("no files added to the zip");
+                    return false;
+                }
+
                 this.Log.LogMessage("saving zip to {0}", this.OutputFile.ItemSpec);
                 zip.Save(this.OutputFile.ItemSpec);
             }
