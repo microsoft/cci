@@ -786,8 +786,8 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns the unit that defines the given type. If the type is a structural type, such as a pointer or a generic type instance,
-    /// then the result is null.
+    /// Returns the unit that defines the given type. If the type is a structural type, such as a pointer the result is 
+    /// the defining unit of the element type, or in the case of a generic type instance, the definining type of the generic template type.
     /// </summary>
     public static IUnit/*?*/ GetDefiningUnit(ITypeDefinition typeDefinition) {
       INestedTypeDefinition/*?*/ nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
@@ -796,8 +796,16 @@ namespace Microsoft.Cci {
         nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
       }
       INamespaceTypeDefinition/*?*/ namespaceTypeDefinition = typeDefinition as INamespaceTypeDefinition;
-      if (namespaceTypeDefinition == null) return null;
-      return namespaceTypeDefinition.ContainingUnitNamespace.Unit;
+      if (namespaceTypeDefinition != null) return namespaceTypeDefinition.ContainingUnitNamespace.Unit;
+      IGenericTypeInstance/*?*/ genericTypeInstance = typeDefinition as IGenericTypeInstance;
+      if (genericTypeInstance != null) return TypeHelper.GetDefiningUnit(genericTypeInstance.GenericType.ResolvedType);
+      IManagedPointerType/*?*/ managedPointerType = typeDefinition as IManagedPointerType;
+      if (managedPointerType != null) return TypeHelper.GetDefiningUnit(managedPointerType.TargetType.ResolvedType);
+      IPointerType/*?*/ pointerType = typeDefinition as IPointerType;
+      if (pointerType != null) return TypeHelper.GetDefiningUnit(pointerType.TargetType.ResolvedType);
+      IArrayType/*?*/ arrayType = typeDefinition as IArrayType;
+      if (arrayType != null) return TypeHelper.GetDefiningUnit(arrayType.ElementType.ResolvedType);
+      return null;
     }
 
     /// <summary>
