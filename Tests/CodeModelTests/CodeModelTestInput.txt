@@ -1,1223 +1,5 @@
 namespace CodeModelTestInput
 {
-    public class Class3
-    {
-        public  Class3()
-        {
-            this.list = new System.Collections.Generic.List<int>();
-            this.object();
-            return;
-
-        }
-
-        private static bool <Method3_19>b__27(int t)
-        {
-            return (t == 10);
-
-        }
-
-        private bool <Method3_25>b__39(int t)
-        {
-            System.Collections.Generic.List<int> local_0 = this.list;
-            return true;
-
-        }
-
-        private static bool <Method3_3>b__6<T1>(T1 t)
-        {
-            return (t == null);
-
-        }
-
-        private static bool <Method3_7>b__10<T1>(T1 t)
-        {
-            return (t == null);
-
-        }
-
-        public static bool Method3_1<T>(T p1)
-        {
-            T tmp;
-            tmp = p1;
-            return new System.Collections.Generic.List<T>().TrueForAll(delegate (T t) {
-                return t.Equals(tmp);
-
-            });
-
-        }
-
-        public bool Method3_10<T1>(T1 p1)
-        {
-            int j = 1;
-            System.Collections.Generic.List<T1> list;
-            list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                int k;
-                k = 12;
-                return (list.TrueForAll(delegate (T1 t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
-
-                }) && list.TrueForAll(delegate (T1 t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
-
-                }));
-
-            });
-
-        }
-
-        public bool Method3_17(int p1)
-        {
-            int local = 3;
-            return this.list.TrueForAll(delegate (int t) {
-                return (t.GetHashCode() == local);
-
-            });
-
-        }
-
-        public bool Method3_18(int p1)
-        {
-            return this.list.TrueForAll(delegate (int t) {
-                return (t.GetHashCode() == p1);
-
-            });
-
-        }
-
-        public bool Method3_19(int p1)
-        {
-            bool local_0;
-            local_0 = this.list.TrueForAll(delegate (int t) {
-                return (t == 10);
-
-            });
-            return local_0;
-
-        }
-
-        public static bool Method3_2<T>(T p1)
-        {
-            return new System.Collections.Generic.List<T>().TrueForAll(delegate (T t) {
-                return t.Equals(p1);
-
-            });
-
-        }
-
-        public bool Method3_20(int p1)
-        {
-            int j = 1;
-            return this.list.TrueForAll(delegate (int t) {
-                return (t == (p1 + j));
-
-            });
-
-        }
-
-        public bool Method3_21(int p1)
-        {
-            int j = 1;
-            return this.list.TrueForAll(delegate (int t) {
-                int k;
-                k = 12;
-                return this.list.TrueForAll(delegate (int t1) {
-                    return (t == (((t1 + p1) + j) + k));
-
-                });
-
-            });
-
-        }
-
-        public bool Method3_22(int p1)
-        {
-            int j = 1;
-            return this.list.TrueForAll(delegate (int t) {
-                int k;
-                k = 12;
-                return (this.list.TrueForAll(delegate (int t1) {
-                    return (t.GetHashCode() == (((t1 + p1) + j) + k));
-
-                }) && this.list.TrueForAll(delegate (int t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
-
-                }));
-
-            });
-
-        }
-
-        public bool Method3_25(int i)
-        {
-            return this.list.TrueForAll(delegate (int t) {
-                System.Collections.Generic.List<int> local_0 = this.list;
-                return true;
-
-            });
-
-        }
-
-        public static bool Method3_3<T1>(T1 p1)
-        {
-            return new System.Collections.Generic.List<T1>().TrueForAll(delegate (T1 t) {
-                return (t == null);
-
-            });
-
-        }
-
-        public static bool Method3_4<T1>(T1 p1)
-        {
-            int j = 1;
-            return new System.Collections.Generic.List<T1>().TrueForAll(delegate (T1 t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
-
-            });
-
-        }
-
-        public bool Method3_5<T1>(T1 p1)
-        {
-            return new System.Collections.Generic.List<T1>().TrueForAll(delegate (T1 t) {
-                return t.Equals(p1);
-
-            });
-
-        }
-
-        public bool Method3_6<T1>(T1 p1)
-        {
-            return new System.Collections.Generic.List<T1>().TrueForAll(delegate (T1 t) {
-                return (t.GetHashCode() == p1.GetHashCode());
-
-            });
-
-        }
-
-        public bool Method3_7<T1>(T1 p1)
-        {
-            return new System.Collections.Generic.List<T1>().TrueForAll(delegate (T1 t) {
-                return (t == null);
-
-            });
-
-        }
-
-        public bool Method3_8<T1>(T1 p1)
-        {
-            int j = 1;
-            return new System.Collections.Generic.List<T1>().TrueForAll(delegate (T1 t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
-
-            });
-
-        }
-
-        public bool Method3_9<T1>(T1 p1)
-        {
-            int j = 1;
-            System.Collections.Generic.List<T1> list;
-            list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                int k;
-                k = 12;
-                return list.TrueForAll(delegate (T1 t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
-
-                });
-
-            });
-
-        }
-
-
-        private System.Collections.Generic.List<int> list;
-        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
-        private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate28;
-
-        private class Class3Inner1
-        {
-            public  Class3Inner1()
-            {
-                this.list_inner = new System.Collections.Generic.List<int>();
-                this.object();
-                return;
-
-            }
-
-            public bool Method3_13(int i)
-            {
-                int j = 1;
-                return this.list_inner.TrueForAll(delegate (int t) {
-                    int k;
-                    k = 12;
-                    return this.list_inner.TrueForAll(delegate (int t1) {
-                        return (t == (((t1 + i) + j) + k));
-
-                    });
-
-                });
-
-            }
-
-            public bool Method3_14(int i)
-            {
-                int j = 1;
-                return this.list_inner.TrueForAll(delegate (int t) {
-                    int k;
-                    k = 12;
-                    return (this.list_inner.TrueForAll(delegate (int t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    }) && this.list_inner.TrueForAll(delegate (int t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
-
-                    }));
-
-                });
-
-            }
-
-
-            private System.Collections.Generic.List<int> list_inner;
-        }
-
-        private class Class3Inner1<T2>
-        {
-            public  Class3Inner1()
-            {
-                this.list_inner = new System.Collections.Generic.List<T2>();
-                this.object();
-                return;
-
-            }
-
-            public bool Method3_11(int i)
-            {
-                int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
-                    int k;
-                    k = 12;
-                    return this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    });
-
-                });
-
-            }
-
-            public bool Method3_12(int i)
-            {
-                int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
-                    int k;
-                    k = 12;
-                    return (this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    }) && this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
-
-                    }));
-
-                });
-
-            }
-
-
-            private System.Collections.Generic.List<T2> list_inner;
-        }
-
-        private class Class3Inner2<T2>
-        {
-            public  Class3Inner2()
-            {
-                this.list_inner = new System.Collections.Generic.List<T2>();
-                this.object();
-                return;
-
-            }
-
-            public bool Method3_23(int i)
-            {
-                int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
-                    int k;
-                    k = 12;
-                    return this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    });
-
-                });
-
-            }
-
-            public bool Method3_24(int i)
-            {
-                int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
-                    int k;
-                    k = 12;
-                    return (this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    }) && this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
-
-                    }));
-
-                });
-
-            }
-
-
-            private System.Collections.Generic.List<T2> list_inner;
-        }
-
-    }
-
-    public class Class1
-    {
-        public  Class1()
-        {
-            this.c = 0;
-            this.object();
-            return;
-
-        }
-
-        public void Method1()
-        {
-            byte[] local_0 = new byte[3] {1, 2, 255};
-            ushort[] local_1 = new ushort[3] {1, 255, 65535};
-            uint[] local_2 = new uint[3] {255, 65535, 4294967295};
-            ulong[] local_3 = new ulong[4] {255, 65535, 4294967295, 18446744073709551615};
-            sbyte[] local_4 = new sbyte[5] {-128, 1, 2, 3, 127};
-            short[] local_5 = new short[3] {-128, -32768, 32767};
-            int[] local_6 = new int[3] {-128, -32768, -2147483648};
-            long[] local_7 = new long[4] {-128, -32768, -2147483648, -9223372036854775808};
-            char[] local_8 = new char[3] {a, b, c};
-            return;
-
-        }
-
-        private static void Method10(int x)
-        {
-            int[] local_0 = new int[((x > 0) ? x : 5)];
-            return;
-
-        }
-
-        private static void Method11(int x)
-        {
-            null[0] = new int[((x > 0) ? x : 5)];
-            return;
-
-        }
-
-        private static bool Method12(int x)
-        {
-            bool local_0;
-            switch((x - 1)){
-                case 0:
-                    goto IL_001d;
-                case 1:
-                case 2:
-                case 3:
-                    goto IL_0021;
-                default:
-                    goto IL_0025;
-            }
-        IL_001d:
-            local_0 = 0;
-            goto IL_0029;
-        IL_0021:
-            local_0 = 1;
-            goto IL_0029;
-        IL_0025:
-            local_0 = 0;
-        IL_0029:
-            return local_0;
-
-        }
-
-        private string Method13()
-        {
-            int local_0;
-            string local_1;
-            int local_2;
-            try
-            {
-                local_2 = this.c;
-                switch(local_2){
-                    case 0:
-                        goto IL_0019;
-                    case 1:
-                        goto IL_0021;
-                    default:
-                        goto IL_0034;
-                }
-            IL_0019:
-                local_1 = "1";
-                goto IL_007c;
-            IL_0021:
-                try
-                {
-                    local_1 = "2";
-                    goto IL_007c;
-                }
-                catch(object )
-                {
-                    local_1 = "3";
-                    goto IL_007c;
-                }
-            IL_0034:
-                local_0 = 0;
-                try
-                {
-                    local_2 = (local_0 + this.c);
-                    switch(local_2){
-                        case 0:
-                            goto IL_0050;
-                        case 1:
-                            goto IL_0058;
-                        default:
-                            goto IL_0060;
-                    }
-                IL_0050:
-                    local_1 = "4";
-                    goto IL_007c;
-                IL_0058:
-                    local_1 = "5";
-                    goto IL_007c;
-                IL_0060:
-                    local_1 = "6";
-                    goto IL_007c;
-                }
-                catch(object )
-                {
-                    local_1 = "7";
-                    goto IL_007c;
-                }
-            }
-            catch(object )
-            {
-                local_1 = "8";
-            }
-        IL_007c:
-            return local_1;
-
-        }
-
-        private void Method14()
-        {
-            int local_1;
-            try
-            {
-                goto IL_003a;
-            }
-            catch(System.ApplicationException local_0)
-            {
-                try
-                {
-                    local_1 = 4;
-                    System.Console.WriteLine(local_1);
-                    System.Console.WriteLine(local_0);
-                    System.Console.WriteLine(local_0);
-                    goto IL_002c;
-                }
-                catch(System.Exception local_2)
-                {
-                    System.Console.WriteLine(local_2);
-                    goto IL_003a;
-                }
-            IL_002c:
-                goto IL_003a;
-            }
-            catch(System.Exception local_3)
-            {
-                System.Console.WriteLine(local_3);
-            }
-        IL_003a:
-            return;
-
-        }
-
-        private System.Type Method15()
-        {
-            return typeof(CodeModelTestInput.Class1);
-
-        }
-
-        private int[] Method16(int[] xs)
-        {
-            int& __temp_1 = &xs[0];
-            __temp_1 = (__temp_1 + 1);
-            return xs;
-
-        }
-
-        private bool Method17(bool A, bool B, bool C, bool D)
-        {
-            bool local_0;
-            bool __temp_1;
-            if (!(A && B))
-            {
-                __temp_1 = (C && D);
-            }
-            else
-            {
-                __temp_1 = 1;
-            }
-            local_0 = __temp_1;
-            return local_0;
-
-        }
-
-        private int Method18(int x, int y, int z)
-        {
-            int local_1;
-            int local_0 = z;
-            if ((y < z))
-            {
-                if ((x < y))
-                {
-                    local_0 = y;
-                }
-                else
-                {
-                    if ((x >= z))
-                    {
-                        goto IL_002b;
-                    }
-                    local_0 = x;
-                }
-            IL_002b:
-            }
-            local_1 = local_0;
-            return local_1;
-
-        }
-
-        public System.Collections.Generic.IEnumerable<int> Method19(int x)
-        {
-            <i>5__4 = 0;
-            goto IL_0101;
-        IL_0043:
-            if ((<i>5__4 == 8))
-            {
-                if ((x == <i>5__4))
-                {
-                    yield return x;
-
-                    goto IL_00a6;
-                }
-                yield return 8;
-
-            IL_00a6:
-                goto IL_00f2;
-            }
-            if ((x > 0))
-            {
-                goto IL_0113;
-            }
-            if ((x < -2))
-            {
-                goto IL_0113;
-            }
-            yield return <i>5__4;
-
-            {
-            IL_00f2:
-                <i>5__4 = (<i>5__4 + 1);
-            IL_0101:
-                if ((<i>5__4 < 10))
-                {
-                    goto IL_0043;
-                }
-            IL_0113:
-                yield break;
-
-            }
-        }
-
-        public void Method2()
-        {
-            byte[] local_11 = new byte[1];
-            local_11[0] = 255;
-            byte[] local_0 = local_11;
-            ushort[] local_12 = new ushort[1];
-            local_12[0] = 65535;
-            ushort[] local_1 = local_12;
-            uint[] local_13 = new uint[1];
-            local_13[0] = -1;
-            uint[] local_2 = local_13;
-            ulong[] local_14 = new ulong[1];
-            local_14[0] = -1;
-            ulong[] local_3 = local_14;
-            sbyte[] local_15 = new sbyte[1];
-            local_15[0] = -128;
-            sbyte[] local_4 = local_15;
-            short[] local_16 = new short[1];
-            local_16[0] = -32768;
-            short[] local_5 = local_16;
-            int[] local_17 = new int[1];
-            local_17[0] = -2147483648;
-            int[] local_6 = local_17;
-            long[] local_18 = new long[1];
-            local_18[0] = -9223372036854775808;
-            long[] local_7 = local_18;
-            char[] local_19 = new char[1];
-            local_19[0] = 97;
-            char[] local_8 = local_19;
-            bool[] local_20 = new bool[1];
-            local_20[0] = 1;
-            bool[] local_9 = local_20;
-            decimal[] local_21 = new decimal[1];
-            local_21[0] = new decimal(11, 0, 0, 0, 1);
-            decimal[] local_10 = local_21;
-            return;
-
-        }
-
-        public System.Collections.Generic.IEnumerable<int> Method20(int x)
-        {
-            {
-                goto IL_0011;
-            }
-            goto IL_0057;
-        IL_0011:
-            if ((x > 0))
-            {
-                x = 2;
-                goto IL_0057;
-            }
-            if ((x > 1))
-            {
-                x = 3;
-            }
-            else
-            {
-                x = 4;
-            }
-        IL_0057:
-            yield break;
-
-        }
-
-        private void Method3()
-        {
-            int local_1;
-            int local_0 = 1;
-            if ((local_0 == 1))
-            {
-                local_1 = 2;
-            }
-            else
-            {
-                local_1 = 3;
-            }
-            local_2 = (local_0 + local_1);
-            return;
-
-        }
-
-        private bool Method4(int[] xs, int x)
-        {
-            return Microsoft.Contracts.Contract.ForAll<int>(xs, delegate (int i) {
-                return (i < x);
-
-            });
-
-        }
-
-        private void Method5(int[] xs, int x)
-        {
-            if ((x < xs.Length))
-            {
-                xs[x] = 3;
-            }
-            return;
-
-        }
-
-        private void Method6(int[] xs, int x)
-        {
-            if ((x < xs.Length))
-            {
-                xs[x] = 3;
-            }
-            if ((0 < xs.Length))
-            {
-                xs[0] = x;
-            }
-            return;
-
-        }
-
-        private void Method7(int[] xs, int x)
-        {
-            if ((x < xs.Length))
-            {
-                xs[x] = 3;
-            }
-            if ((0 < xs.Length))
-            {
-                xs[0] = x;
-            }
-            else
-            {
-                xs = new int[3];
-            }
-            return;
-
-        }
-
-        private void Method8(int[] xs, int x)
-        {
-            if ((0 < xs.Length))
-            {
-                xs[0] = x;
-            }
-            else
-            {
-                xs = new int[3];
-            }
-            if ((x < xs.Length))
-            {
-                xs[x] = 3;
-            }
-            return;
-
-        }
-
-        private void Method9(int[] xs, int x)
-        {
-            if (!((0 >= xs.Length) || (x >= xs.Length)))
-            {
-                xs[x] = 3;
-            }
-            return;
-
-        }
-
-
-        private int c;
-    }
-
-    public class Class4<T>
-    {
-        private static void .cctor()
-        {
-            list = new System.Collections.Generic.List<T>();
-            return;
-
-        }
-
-        public  Class4()
-        {
-            this.object();
-            return;
-
-        }
-
-        private static bool <Method4_15>b__27(T t)
-        {
-            return (t == null);
-
-        }
-
-        private static bool <Method4_19>b__32(T t)
-        {
-            return (t == null);
-
-        }
-
-        private static bool <Method4_3>b__6<T1>(T t)
-        {
-            return (t == null);
-
-        }
-
-        private static bool <Method4_7>b__10<T1>(T t)
-        {
-            return (t == null);
-
-        }
-
-        public static bool Method4_1<T1>(T1 p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
-
-            });
-
-        }
-
-        public bool Method4_10<T1>(T1 p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                int k;
-                k = 12;
-                return (list.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
-
-                }) && list.TrueForAll(delegate (T t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
-
-                }));
-
-            });
-
-        }
-
-        public static bool Method4_13()
-        {
-            int local = 3;
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == local);
-
-            });
-
-        }
-
-        public static bool Method4_14(int p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1);
-
-            });
-
-        }
-
-        public static bool Method4_15(int p1)
-        {
-            bool local_0;
-            local_0 = list.TrueForAll(delegate (T t) {
-                return (t == null);
-
-            });
-            return local_0;
-
-        }
-
-        public static bool Method4_16(int p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1 + j));
-
-            });
-
-        }
-
-        public bool Method4_17(int p1)
-        {
-            int local = 3;
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == local);
-
-            });
-
-        }
-
-        public bool Method4_18(int p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1);
-
-            });
-
-        }
-
-        public bool Method4_19(int p1)
-        {
-            bool local_0;
-            local_0 = list.TrueForAll(delegate (T t) {
-                return (t == null);
-
-            });
-            return local_0;
-
-        }
-
-        public static bool Method4_2<T1>(T1 p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
-
-            });
-
-        }
-
-        public bool Method4_20(int p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1 + j));
-
-            });
-
-        }
-
-        public bool Method4_21(int p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                int k;
-                k = 12;
-                return list.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1) + j) + k));
-
-                });
-
-            });
-
-        }
-
-        public bool Method4_22(int p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                int k;
-                k = 12;
-                return (list.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
-
-                }) && list.TrueForAll(delegate (T t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
-
-                }));
-
-            });
-
-        }
-
-        public static bool Method4_3<T1>(T1 p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t == null);
-
-            });
-
-        }
-
-        public static bool Method4_4<T1>(T1 p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
-
-            });
-
-        }
-
-        public bool Method4_5<T1>(T1 p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
-
-            });
-
-        }
-
-        public bool Method4_6<T1>(T1 p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
-
-            });
-
-        }
-
-        public bool Method4_7<T1>(T1 p1)
-        {
-            return list.TrueForAll(delegate (T t) {
-                return (t == null);
-
-            });
-
-        }
-
-        public bool Method4_8<T1>(T1 p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
-
-            });
-
-        }
-
-        public bool Method4_9<T1>(T1 p1)
-        {
-            int j = 1;
-            return list.TrueForAll(delegate (T t) {
-                int k;
-                k = 12;
-                return list.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
-
-                });
-
-            });
-
-        }
-
-
-        private static System.Collections.Generic.List<T> list;
-        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
-        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate28;
-        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
-        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate33;
-
-        private class Class4Inner1<T2>
-        {
-            public  Class4Inner1()
-            {
-                this.list_inner = new System.Collections.Generic.List<T2>();
-                this.object();
-                return;
-
-            }
-
-            public bool Method4_11(int i)
-            {
-                int j = 1;
-                return list.TrueForAll(delegate (T t) {
-                    int k;
-                    k = 12;
-                    return list.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    });
-
-                });
-
-            }
-
-            public bool Method4_12(int i)
-            {
-                int j = 1;
-                return list.TrueForAll(delegate (T t) {
-                    int k;
-                    k = 12;
-                    return (list.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    }) && this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
-
-                    }));
-
-                });
-
-            }
-
-
-            private System.Collections.Generic.List<T2> list_inner;
-        }
-
-        private class Class4Inner2
-        {
-            public  Class4Inner2()
-            {
-                this.list_inner = new System.Collections.Generic.List<T>();
-                this.object();
-                return;
-
-            }
-
-            public bool Method4_11(int i)
-            {
-                int j = 1;
-                return list.TrueForAll(delegate (T t) {
-                    int k;
-                    k = 12;
-                    return list.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    });
-
-                });
-
-            }
-
-            public bool Method4_12(int i)
-            {
-                int j = 1;
-                return list.TrueForAll(delegate (T t) {
-                    int k;
-                    k = 12;
-                    return (list.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    }) && this.list_inner.TrueForAll(delegate (T t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
-
-                    }));
-
-                });
-
-            }
-
-
-            private System.Collections.Generic.List<T> list_inner;
-        }
-
-        private class Class4Inner3<T2>
-        {
-            public  Class4Inner3()
-            {
-                this.list_inner = new System.Collections.Generic.List<T2>();
-                this.object();
-                return;
-
-            }
-
-            public bool Method4_23(int i)
-            {
-                int j = 1;
-                return list.TrueForAll(delegate (T t) {
-                    int k;
-                    k = 12;
-                    return list.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    });
-
-                });
-
-            }
-
-            public bool Method4_24(int i)
-            {
-                int j = 1;
-                return list.TrueForAll(delegate (T t) {
-                    int k;
-                    k = 12;
-                    return (list.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
-
-                    }) && this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
-
-                    }));
-
-                });
-
-            }
-
-
-            private System.Collections.Generic.List<T2> list_inner;
-        }
-
-    }
-
     public class Class2
     {
         public  Class2()
@@ -1613,6 +395,1265 @@ namespace CodeModelTestInput
             private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate40;
         }
 
+    }
+
+    public class Class4<T>
+    {
+        private static void .cctor()
+        {
+            list = new System.Collections.Generic.List<T>();
+            return;
+
+        }
+
+        public  Class4()
+        {
+            this.object();
+            return;
+
+        }
+
+        private static bool <Method4_15>b__27(T t)
+        {
+            return (t == null);
+
+        }
+
+        private static bool <Method4_19>b__32(T t)
+        {
+            return (t == null);
+
+        }
+
+        private static bool <Method4_3>b__6<T1>(T t)
+        {
+            return (t == null);
+
+        }
+
+        private static bool <Method4_7>b__10<T1>(T t)
+        {
+            return (t == null);
+
+        }
+
+        public static bool Method4_1<T1>(T1 p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == p1.GetHashCode());
+
+            });
+
+        }
+
+        public bool Method4_10<T1>(T1 p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                System.Collections.Generic.List<T> newList = list;
+                int k;
+                k = 12;
+                bool b1 = newList.TrueForAll(delegate (T t1) {
+                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+
+                });
+                bool b2 = list.TrueForAll(delegate (T t1) {
+                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+
+                });
+                return (b1 && b2);
+
+            });
+
+        }
+
+        public static bool Method4_13()
+        {
+            int local = 3;
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == local);
+
+            });
+
+        }
+
+        public static bool Method4_14(int p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == p1);
+
+            });
+
+        }
+
+        public static bool Method4_15(int p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t == null);
+
+            });
+
+        }
+
+        public static bool Method4_16(int p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == (p1 + j));
+
+            });
+
+        }
+
+        public bool Method4_17(int p1)
+        {
+            int local = 3;
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == local);
+
+            });
+
+        }
+
+        public bool Method4_18(int p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == p1);
+
+            });
+
+        }
+
+        public bool Method4_19(int p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t == null);
+
+            });
+
+        }
+
+        public static bool Method4_2<T1>(T1 p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == p1.GetHashCode());
+
+            });
+
+        }
+
+        public bool Method4_20(int p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == (p1 + j));
+
+            });
+
+        }
+
+        public bool Method4_21(int p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                System.Collections.Generic.List<T> newList = list;
+                int k;
+                k = 12;
+                return newList.TrueForAll(delegate (T t1) {
+                    return (t.GetHashCode() == (((t1.GetHashCode() + p1) + j) + k));
+
+                });
+
+            });
+
+        }
+
+        public bool Method4_22(int p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                System.Collections.Generic.List<T> newList = list;
+                int k;
+                k = 12;
+                bool b1 = newList.TrueForAll(delegate (T t1) {
+                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+
+                });
+                bool b2 = list.TrueForAll(delegate (T t1) {
+                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+
+                });
+                return (b1 && b2);
+
+            });
+
+        }
+
+        public static bool Method4_3<T1>(T1 p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t == null);
+
+            });
+
+        }
+
+        public static bool Method4_4<T1>(T1 p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == (p1.GetHashCode() + j));
+
+            });
+
+        }
+
+        public bool Method4_5<T1>(T1 p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == p1.GetHashCode());
+
+            });
+
+        }
+
+        public bool Method4_6<T1>(T1 p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == p1.GetHashCode());
+
+            });
+
+        }
+
+        public bool Method4_7<T1>(T1 p1)
+        {
+            return list.TrueForAll(delegate (T t) {
+                return (t == null);
+
+            });
+
+        }
+
+        public bool Method4_8<T1>(T1 p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                return (t.GetHashCode() == (p1.GetHashCode() + j));
+
+            });
+
+        }
+
+        public bool Method4_9<T1>(T1 p1)
+        {
+            int j = 1;
+            return list.TrueForAll(delegate (T t) {
+                System.Collections.Generic.List<T> newList = list;
+                int k;
+                k = 12;
+                return newList.TrueForAll(delegate (T t1) {
+                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+
+                });
+
+            });
+
+        }
+
+
+        private static System.Collections.Generic.List<T> list;
+        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate28;
+        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+        private static System.Predicate<T> CS$<>9__CachedAnonymousMethodDelegate33;
+
+        private class Class4Inner1<T2>
+        {
+            public  Class4Inner1()
+            {
+                this.list_inner = new System.Collections.Generic.List<T2>();
+                this.object();
+                return;
+
+            }
+
+            public bool Method4_11(int i)
+            {
+                int j = 1;
+                return list.TrueForAll(delegate (T t) {
+                    System.Collections.Generic.List<T> newList = list;
+                    int k;
+                    k = 12;
+                    return newList.TrueForAll(delegate (T t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+
+                });
+
+            }
+
+            public bool Method4_12(int i)
+            {
+                int j = 1;
+                return list.TrueForAll(delegate (T t) {
+                    System.Collections.Generic.List<T> newList = list;
+                    int k;
+                    k = 12;
+                    bool b1 = newList.TrueForAll(delegate (T t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+                    bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
+                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+
+                    });
+                    return (b1 && b2);
+
+                });
+
+            }
+
+
+            private System.Collections.Generic.List<T2> list_inner;
+        }
+
+        private class Class4Inner2
+        {
+            public  Class4Inner2()
+            {
+                this.list_inner = new System.Collections.Generic.List<T>();
+                this.object();
+                return;
+
+            }
+
+            public bool Method4_11(int i)
+            {
+                int j = 1;
+                return list.TrueForAll(delegate (T t) {
+                    System.Collections.Generic.List<T> newList = list;
+                    int k;
+                    k = 12;
+                    return newList.TrueForAll(delegate (T t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+
+                });
+
+            }
+
+            public bool Method4_12(int i)
+            {
+                int j = 1;
+                return list.TrueForAll(delegate (T t) {
+                    System.Collections.Generic.List<T> newList = list;
+                    int k;
+                    k = 12;
+                    bool b1 = newList.TrueForAll(delegate (T t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+                    bool b2 = this.list_inner.TrueForAll(delegate (T t1) {
+                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+
+                    });
+                    return (b1 && b2);
+
+                });
+
+            }
+
+
+            private System.Collections.Generic.List<T> list_inner;
+        }
+
+        private class Class4Inner3<T2>
+        {
+            public  Class4Inner3()
+            {
+                this.list_inner = new System.Collections.Generic.List<T2>();
+                this.object();
+                return;
+
+            }
+
+            public bool Method4_23(int i)
+            {
+                int j = 1;
+                return list.TrueForAll(delegate (T t) {
+                    System.Collections.Generic.List<T> newList = list;
+                    int k;
+                    k = 12;
+                    return newList.TrueForAll(delegate (T t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+
+                });
+
+            }
+
+            public bool Method4_24(int i)
+            {
+                int j = 1;
+                return list.TrueForAll(delegate (T t) {
+                    System.Collections.Generic.List<T> newList = list;
+                    int k;
+                    k = 12;
+                    bool b1 = newList.TrueForAll(delegate (T t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+                    bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
+                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+
+                    });
+                    return (b1 && b2);
+
+                });
+
+            }
+
+
+            private System.Collections.Generic.List<T2> list_inner;
+        }
+
+    }
+
+    public class Class3
+    {
+        public  Class3()
+        {
+            this.list = new System.Collections.Generic.List<int>();
+            this.object();
+            return;
+
+        }
+
+        private static bool <Method3_19>b__27(int t)
+        {
+            return (t == 10);
+
+        }
+
+        private bool <Method3_25>b__39(int t)
+        {
+            System.Collections.Generic.List<int> newList = this.list;
+            return true;
+
+        }
+
+        private static bool <Method3_3>b__6<T1>(T1 t)
+        {
+            return (t == null);
+
+        }
+
+        private static bool <Method3_7>b__10<T1>(T1 t)
+        {
+            return (t == null);
+
+        }
+
+        public static bool Method3_1<T>(T p1)
+        {
+            System.Collections.Generic.List<T> list = new System.Collections.Generic.List<T>();
+            T tmp;
+            tmp = p1;
+            return list.TrueForAll(delegate (T t) {
+                return t.Equals(tmp);
+
+            });
+
+        }
+
+        public bool Method3_10<T1>(T1 p1)
+        {
+            int j = 1;
+            System.Collections.Generic.List<T1> list;
+            list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                System.Collections.Generic.List<T1> newList = list;
+                int k;
+                k = 12;
+                bool b1 = newList.TrueForAll(delegate (T1 t1) {
+                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+
+                });
+                bool b2 = list.TrueForAll(delegate (T1 t1) {
+                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+
+                });
+                return (b1 && b2);
+
+            });
+
+        }
+
+        public bool Method3_17(int p1)
+        {
+            int local = 3;
+            return this.list.TrueForAll(delegate (int t) {
+                return (t.GetHashCode() == local);
+
+            });
+
+        }
+
+        public bool Method3_18(int p1)
+        {
+            return this.list.TrueForAll(delegate (int t) {
+                return (t.GetHashCode() == p1);
+
+            });
+
+        }
+
+        public bool Method3_19(int p1)
+        {
+            return this.list.TrueForAll(delegate (int t) {
+                return (t == 10);
+
+            });
+
+        }
+
+        public static bool Method3_2<T>(T p1)
+        {
+            System.Collections.Generic.List<T> list = new System.Collections.Generic.List<T>();
+            return list.TrueForAll(delegate (T t) {
+                return t.Equals(p1);
+
+            });
+
+        }
+
+        public bool Method3_20(int p1)
+        {
+            int j = 1;
+            return this.list.TrueForAll(delegate (int t) {
+                return (t == (p1 + j));
+
+            });
+
+        }
+
+        public bool Method3_21(int p1)
+        {
+            int j = 1;
+            return this.list.TrueForAll(delegate (int t) {
+                System.Collections.Generic.List<int> newList = this.list;
+                int k;
+                k = 12;
+                return newList.TrueForAll(delegate (int t1) {
+                    return (t == (((t1 + p1) + j) + k));
+
+                });
+
+            });
+
+        }
+
+        public bool Method3_22(int p1)
+        {
+            int j = 1;
+            return this.list.TrueForAll(delegate (int t) {
+                System.Collections.Generic.List<int> newList = this.list;
+                int k;
+                k = 12;
+                bool b1 = newList.TrueForAll(delegate (int t1) {
+                    return (t.GetHashCode() == (((t1 + p1) + j) + k));
+
+                });
+                bool b2 = this.list.TrueForAll(delegate (int t1) {
+                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+
+                });
+                return (b1 && b2);
+
+            });
+
+        }
+
+        public bool Method3_25(int i)
+        {
+            return this.list.TrueForAll(delegate (int t) {
+                System.Collections.Generic.List<int> newList = this.list;
+                return true;
+
+            });
+
+        }
+
+        public static bool Method3_3<T1>(T1 p1)
+        {
+            System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                return (t == null);
+
+            });
+
+        }
+
+        public static bool Method3_4<T1>(T1 p1)
+        {
+            int j = 1;
+            System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                return (t.GetHashCode() == (p1.GetHashCode() + j));
+
+            });
+
+        }
+
+        public bool Method3_5<T1>(T1 p1)
+        {
+            System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                return t.Equals(p1);
+
+            });
+
+        }
+
+        public bool Method3_6<T1>(T1 p1)
+        {
+            System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                return (t.GetHashCode() == p1.GetHashCode());
+
+            });
+
+        }
+
+        public bool Method3_7<T1>(T1 p1)
+        {
+            System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                return (t == null);
+
+            });
+
+        }
+
+        public bool Method3_8<T1>(T1 p1)
+        {
+            int j = 1;
+            System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                return (t.GetHashCode() == (p1.GetHashCode() + j));
+
+            });
+
+        }
+
+        public bool Method3_9<T1>(T1 p1)
+        {
+            int j = 1;
+            System.Collections.Generic.List<T1> list;
+            list = new System.Collections.Generic.List<T1>();
+            return list.TrueForAll(delegate (T1 t) {
+                System.Collections.Generic.List<T1> newList = list;
+                int k;
+                k = 12;
+                return newList.TrueForAll(delegate (T1 t1) {
+                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+
+                });
+
+            });
+
+        }
+
+
+        private System.Collections.Generic.List<int> list;
+        [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
+        private static System.Predicate<int> CS$<>9__CachedAnonymousMethodDelegate28;
+
+        private class Class3Inner1
+        {
+            public  Class3Inner1()
+            {
+                this.list_inner = new System.Collections.Generic.List<int>();
+                this.object();
+                return;
+
+            }
+
+            public bool Method3_13(int i)
+            {
+                int j = 1;
+                return this.list_inner.TrueForAll(delegate (int t) {
+                    System.Collections.Generic.List<int> newList = this.list_inner;
+                    int k;
+                    k = 12;
+                    return newList.TrueForAll(delegate (int t1) {
+                        return (t == (((t1 + i) + j) + k));
+
+                    });
+
+                });
+
+            }
+
+            public bool Method3_14(int i)
+            {
+                int j = 1;
+                return this.list_inner.TrueForAll(delegate (int t) {
+                    System.Collections.Generic.List<int> newList = this.list_inner;
+                    int k;
+                    k = 12;
+                    bool b1 = newList.TrueForAll(delegate (int t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+                    bool b2 = this.list_inner.TrueForAll(delegate (int t1) {
+                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+
+                    });
+                    return (b1 && b2);
+
+                });
+
+            }
+
+
+            private System.Collections.Generic.List<int> list_inner;
+        }
+
+        private class Class3Inner1<T2>
+        {
+            public  Class3Inner1()
+            {
+                this.list_inner = new System.Collections.Generic.List<T2>();
+                this.object();
+                return;
+
+            }
+
+            public bool Method3_11(int i)
+            {
+                int j = 1;
+                return this.list_inner.TrueForAll(delegate (T2 t) {
+                    System.Collections.Generic.List<T2> newList = this.list_inner;
+                    int k;
+                    k = 12;
+                    return newList.TrueForAll(delegate (T2 t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+
+                });
+
+            }
+
+            public bool Method3_12(int i)
+            {
+                int j = 1;
+                return this.list_inner.TrueForAll(delegate (T2 t) {
+                    System.Collections.Generic.List<T2> newList = this.list_inner;
+                    int k;
+                    k = 12;
+                    bool b1 = newList.TrueForAll(delegate (T2 t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+                    bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
+                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+
+                    });
+                    return (b1 && b2);
+
+                });
+
+            }
+
+
+            private System.Collections.Generic.List<T2> list_inner;
+        }
+
+        private class Class3Inner2<T2>
+        {
+            public  Class3Inner2()
+            {
+                this.list_inner = new System.Collections.Generic.List<T2>();
+                this.object();
+                return;
+
+            }
+
+            public bool Method3_23(int i)
+            {
+                int j = 1;
+                return this.list_inner.TrueForAll(delegate (T2 t) {
+                    System.Collections.Generic.List<T2> newList = this.list_inner;
+                    int k;
+                    k = 12;
+                    return newList.TrueForAll(delegate (T2 t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+
+                });
+
+            }
+
+            public bool Method3_24(int i)
+            {
+                int j = 1;
+                return this.list_inner.TrueForAll(delegate (T2 t) {
+                    System.Collections.Generic.List<T2> newList = this.list_inner;
+                    int k;
+                    k = 12;
+                    bool b1 = newList.TrueForAll(delegate (T2 t1) {
+                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+
+                    });
+                    bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
+                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+
+                    });
+                    return (b1 && b2);
+
+                });
+
+            }
+
+
+            private System.Collections.Generic.List<T2> list_inner;
+        }
+
+    }
+
+    public class Class1
+    {
+        public  Class1()
+        {
+            this.c = 0;
+            this.object();
+            return;
+
+        }
+
+        public void Method1()
+        {
+            byte[] Bytes = new byte[3] {1, 2, 255};
+            ushort[] UShorts = new ushort[3] {1, 255, 65535};
+            uint[] UInts = new uint[3] {255, 65535, 4294967295};
+            ulong[] ULongs = new ulong[4] {255, 65535, 4294967295, 18446744073709551615};
+            sbyte[] SBytes = new sbyte[5] {-128, 1, 2, 3, 127};
+            short[] Shorts = new short[3] {-128, -32768, 32767};
+            int[] Ints = new int[3] {-128, -32768, -2147483648};
+            long[] Longs = new long[4] {-128, -32768, -2147483648, -9223372036854775808};
+            char[] Chars = new char[3] {a, b, c};
+            return;
+
+        }
+
+        private static void Method10(int x)
+        {
+            int[] a = new int[((x > 0) ? x : 5)];
+            return;
+
+        }
+
+        private static void Method11(int x)
+        {
+            int[][] a = null;
+            a[0] = new int[((x > 0) ? x : 5)];
+            return;
+
+        }
+
+        private static bool Method12(int x)
+        {
+            switch((x - 1)){
+                case 0:
+                    goto IL_001d;
+                case 1:
+                case 2:
+                case 3:
+                    goto IL_0021;
+                default:
+                    goto IL_0025;
+            }
+        IL_001d:
+            bool local_0 = 0;
+            goto IL_0029;
+        IL_0021:
+            local_0 = 1;
+            goto IL_0029;
+        IL_0025:
+            local_0 = 0;
+        IL_0029:
+            return local_0;
+
+        }
+
+        private string Method13()
+        {
+            string local_1;
+            int local_2;
+            try
+            {
+                local_2 = this.c;
+                switch(local_2){
+                    case 0:
+                        goto IL_0019;
+                    case 1:
+                        goto IL_0021;
+                    default:
+                        goto IL_0034;
+                }
+            IL_0019:
+                local_1 = "1";
+                goto IL_007c;
+            IL_0021:
+                try
+                {
+                    local_1 = "2";
+                    goto IL_007c;
+                }
+                catch(object )
+                {
+                    local_1 = "3";
+                    goto IL_007c;
+                }
+            IL_0034:
+                x = 0;
+                try
+                {
+                    local_2 = (x + this.c);
+                    switch(local_2){
+                        case 0:
+                            goto IL_0050;
+                        case 1:
+                            goto IL_0058;
+                        default:
+                            goto IL_0060;
+                    }
+                IL_0050:
+                    local_1 = "4";
+                    goto IL_007c;
+                IL_0058:
+                    local_1 = "5";
+                    goto IL_007c;
+                IL_0060:
+                    local_1 = "6";
+                    goto IL_007c;
+                }
+                catch(object )
+                {
+                    local_1 = "7";
+                    goto IL_007c;
+                }
+            }
+            catch(object )
+            {
+                local_1 = "8";
+            }
+            {
+                int x;
+            IL_007c:
+                return local_1;
+
+            }
+        }
+
+        private void Method14()
+        {
+            try
+            {
+                goto IL_003a;
+            }
+            catch(System.ApplicationException e)
+            {
+                {
+                    int x;
+                    try
+                    {
+                        x = 4;
+                        System.Console.WriteLine(x);
+                        System.Console.WriteLine(e);
+                        System.Console.WriteLine(e);
+                        goto IL_002c;
+                    }
+                    catch(System.Exception e1)
+                    {
+                        System.Console.WriteLine(e1);
+                        goto IL_003a;
+                    }
+                IL_002c:
+                    goto IL_003a;
+                }
+            }
+            catch(System.Exception ex)
+            {
+                System.Console.WriteLine(ex);
+            }
+        IL_003a:
+            return;
+
+        }
+
+        private System.Type Method15()
+        {
+            return typeof(CodeModelTestInput.Class1);
+
+        }
+
+        private int[] Method16(int[] xs)
+        {
+            int& __temp_1 = &xs[0];
+            __temp_1 = (__temp_1 + 1);
+            return xs;
+
+        }
+
+        private bool Method17(bool A, bool B, bool C, bool D)
+        {
+            bool __temp_1;
+            if (!(A && B))
+            {
+                __temp_1 = (C && D);
+            }
+            else
+            {
+                __temp_1 = 1;
+            }
+            return __temp_1;
+
+        }
+
+        private int Method18(int x, int y, int z)
+        {
+            int midVal = z;
+            if ((y < z))
+            {
+                if ((x < y))
+                {
+                    midVal = y;
+                }
+                else
+                {
+                    if ((x >= z))
+                    {
+                        goto IL_002b;
+                    }
+                    midVal = x;
+                }
+            IL_002b:
+            }
+            return midVal;
+
+        }
+
+        public System.Collections.Generic.IEnumerable<int> Method19(int x)
+        {
+            <i>5__4 = 0;
+            goto IL_0101;
+        IL_0043:
+            if ((<i>5__4 == 8))
+            {
+                if ((x == <i>5__4))
+                {
+                    yield return x;
+
+                    local_0 = 1;
+                    goto IL_00a6;
+                }
+                yield return 8;
+
+                local_0 = 1;
+            IL_00a6:
+                goto IL_00f2;
+            }
+            if ((x > 0))
+            {
+                goto IL_0113;
+            }
+            if ((x < -2))
+            {
+                goto IL_0113;
+            }
+            yield return <i>5__4;
+
+            {
+            IL_00f2:
+                <i>5__4 = (<i>5__4 + 1);
+            IL_0101:
+                if ((<i>5__4 < 10))
+                {
+                    goto IL_0043;
+                }
+            IL_0113:
+                yield break;
+
+            }
+        }
+
+        public void Method2()
+        {
+            byte[] local_11 = new byte[1];
+            local_11[0] = 255;
+            byte[] Bytes = local_11;
+            ushort[] local_12 = new ushort[1];
+            local_12[0] = 65535;
+            ushort[] UShorts = local_12;
+            uint[] local_13 = new uint[1];
+            local_13[0] = -1;
+            uint[] UInts = local_13;
+            ulong[] local_14 = new ulong[1];
+            local_14[0] = -1;
+            ulong[] ULongs = local_14;
+            sbyte[] local_15 = new sbyte[1];
+            local_15[0] = -128;
+            sbyte[] SBytes = local_15;
+            short[] local_16 = new short[1];
+            local_16[0] = -32768;
+            short[] Shorts = local_16;
+            int[] local_17 = new int[1];
+            local_17[0] = -2147483648;
+            int[] Ints = local_17;
+            long[] local_18 = new long[1];
+            local_18[0] = -9223372036854775808;
+            long[] Longs = local_18;
+            char[] local_19 = new char[1];
+            local_19[0] = 97;
+            char[] Chars = local_19;
+            bool[] local_20 = new bool[1];
+            local_20[0] = 1;
+            bool[] Bools = local_20;
+            decimal[] local_21 = new decimal[1];
+            local_21[0] = new decimal(11, 0, 0, 0, 1);
+            decimal[] Decimals = local_21;
+            return;
+
+        }
+
+        public System.Collections.Generic.IEnumerable<int> Method20(int x)
+        {
+            {
+                goto IL_0011;
+            }
+        IL_0011:
+            if ((x > 0))
+            {
+                x = 2;
+            }
+            if ((x > 1))
+            {
+                x = 3;
+            }
+            else
+            {
+                x = 4;
+            }
+            yield break;
+
+        }
+
+        private void Method3()
+        {
+            int j;
+            int i = 1;
+            if ((i == 1))
+            {
+                j = 2;
+            }
+            else
+            {
+                j = 3;
+            }
+            int k = (i + j);
+            return;
+
+        }
+
+        private bool Method4(int[] xs, int x)
+        {
+            return Microsoft.Contracts.Contract.ForAll<int>(xs, delegate (int i) {
+                return (i < x);
+
+            });
+
+        }
+
+        private void Method5(int[] xs, int x)
+        {
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            return;
+
+        }
+
+        private void Method6(int[] xs, int x)
+        {
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            if ((0 < xs.Length))
+            {
+                xs[0] = x;
+            }
+            return;
+
+        }
+
+        private void Method7(int[] xs, int x)
+        {
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            if ((0 < xs.Length))
+            {
+                xs[0] = x;
+            }
+            else
+            {
+                xs = new int[3];
+            }
+            return;
+
+        }
+
+        private void Method8(int[] xs, int x)
+        {
+            if ((0 < xs.Length))
+            {
+                xs[0] = x;
+            }
+            else
+            {
+                xs = new int[3];
+            }
+            if ((x < xs.Length))
+            {
+                xs[x] = 3;
+            }
+            return;
+
+        }
+
+        private void Method9(int[] xs, int x)
+        {
+            if (!((0 >= xs.Length) || (x >= xs.Length)))
+            {
+                xs[x] = 3;
+            }
+            return;
+
+        }
+
+
+        private int c;
     }
 
 }
