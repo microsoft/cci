@@ -1562,6 +1562,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns a singleton collection of locations that either provides the source location of the given
+    /// type definition member, or provides information about the name and assembly of the containing type
+    /// of the given member.
+    /// </summary>
+    /// <param name="member">A type member that is the subject of an error or warning.</param>
+    public virtual IEnumerable<ILocation> GetRelatedLocations(ITypeDefinitionMember member) {
+      var tdmem = member as TypeDefinitionMember;
+      if (tdmem != null) {
+        return IteratorHelper.GetSingletonEnumerable<ILocation>(tdmem.Declaration.Name.SourceLocation);
+      }
+      //TODO: return a location that refers to the assembly name of the referenced member.
+      return IteratorHelper.GetEmptyEnumerable<ILocation>(); ;
+    }
+
+    /// <summary>
     /// Returns a language specific string that corresponds to a source expression that would bind to the given type definition when appearing in an appropriate context.
     /// </summary>
     //^ [Pure]
@@ -2963,7 +2978,7 @@ namespace Microsoft.Cci.Ast {
       SimpleName/*?*/ simpleName = methodExpression as SimpleName;
       if (simpleName != null) return simpleName.Resolve();
       QualifiedName/*?*/ qualifiedName = methodExpression as QualifiedName;
-      if (qualifiedName != null) return qualifiedName.Resolve();
+      if (qualifiedName != null) return qualifiedName.Resolve(false);
       return null;
     }
 
@@ -3205,6 +3220,7 @@ namespace Microsoft.Cci.Ast {
       }
       return mostSpecificConversion;
     }
+
   }
 
   /// <summary>

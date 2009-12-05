@@ -211,6 +211,11 @@ namespace Microsoft.Cci.Ast {
     ExpressionStatementHasNoSideEffect,
 
     /// <summary>
+    /// '{0}' is inaccessible due to its protection level.
+    /// </summary>
+    InaccessibleTypeMember,
+  
+    /// <summary>
     /// Code page '{0}' is invalid or not installed.
     /// </summary>
     InvalidCodePage,

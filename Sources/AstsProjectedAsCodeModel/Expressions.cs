@@ -1181,7 +1181,7 @@ namespace Microsoft.Cci.Ast {
       }
       QualifiedName/*?*/ qualName = expression as QualifiedName;
       if (qualName != null) {
-        object/*?*/ result = qualName.Resolve();
+        object/*?*/ result = qualName.Resolve(false);
         IPropertyDefinition/*?*/ propertyDefinition = result as IPropertyDefinition;
         if (propertyDefinition != null) {
           if (propertyDefinition.Setter == null) return null;
@@ -8860,6 +8860,7 @@ namespace Microsoft.Cci.Ast {
     }
     /// <summary>
     /// Non null and true if this expression has errors. Visible to derived classes so that it can be set during construction.
+    /// When non null, the expression has been checked and need not be checked again.
     /// </summary>
     protected bool? hasErrors;
 
@@ -12560,7 +12561,7 @@ namespace Microsoft.Cci.Ast {
       SimpleName/*?*/ simpleName = methodExpression as SimpleName;
       if (simpleName != null) return simpleName.Resolve();
       QualifiedName/*?*/ qualifiedName = methodExpression as QualifiedName;
-      if (qualifiedName != null) return qualifiedName.Resolve();
+      if (qualifiedName != null) return qualifiedName.Resolve(false);
       return null;
     }
 
@@ -14879,7 +14880,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      ITypeDefinitionMember/*?*/ resolvedMember = this.ResolveAsValueContainer() as ITypeDefinitionMember;
+      ITypeDefinitionMember/*?*/ resolvedMember = this.ResolveAsValueContainer(false) as ITypeDefinitionMember;
       if (resolvedMember == null) {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
         if (qualifierType != null && qualifierType != Dummy.Type) {
@@ -14950,10 +14951,10 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Finds a type member with this.SimpleName as its name. Runs up the base type chain if necessary. Returns strictly the first match.
     /// </summary>
-    protected override ITypeDefinitionMember/*?*/ ResolveTypeMember(ITypeDefinition qualifyingType) {
+    protected override ITypeDefinitionMember/*?*/ ResolveTypeMember(ITypeDefinition qualifyingType, bool ignoreAccessibility) {
       IPointerTypeReference/*?*/ pointerQualifyingType = qualifyingType as IPointerTypeReference;
       if (pointerQualifyingType == null) return null;
-      return base.ResolveTypeMember(pointerQualifyingType.TargetType.ResolvedType);
+      return base.ResolveTypeMember(pointerQualifyingType.TargetType.ResolvedType, ignoreAccessibility);
     }
 
     //^ [Confined]
@@ -15797,9 +15798,12 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      ITypeDefinitionMember/*?*/ resolvedMember = this.ResolveAsValueContainer();
+      ITypeDefinitionMember/*?*/ resolvedMember = this.ResolveAsValueContainer(false);
       if (resolvedMember == null) {
         if (this.Qualifier.HasErrors()) return true;
+        resolvedMember = this.ResolveAsValueContainer(true);
+      }
+      if (resolvedMember == null) {
         ITypeDefinition qualifierType = this.Qualifier.Type;
         string qualifier;
         if (qualifierType == Dummy.Type)
@@ -15809,8 +15813,13 @@ namespace Microsoft.Cci.Ast {
         this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this, Error.NoSuchMember, qualifier, this.SimpleName.Name.Value));
         return true;
       } else {
-        //TODO: check that member is visible
-        return false;
+        if (!this.ContainingBlock.ContainingTypeDeclaration.CanAccess(resolvedMember)) {
+          var relatedLocations = this.ContainingBlock.Helper.GetRelatedLocations(resolvedMember);
+          this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this, Error.InaccessibleTypeMember, relatedLocations,
+            MemberHelper.GetMemberSignature(resolvedMember, NameFormattingOptions.None)));
+          return true;
+        } else
+          return false;
       }
     }
 
@@ -15870,7 +15879,7 @@ namespace Microsoft.Cci.Ast {
     /// Computes the compile time value of the expression. Can be null.
     /// </summary>
     protected override object/*?*/ GetValue() {
-      ITypeDefinitionMember/*?*/ container = this.ResolveAsValueContainer();
+      ITypeDefinitionMember/*?*/ container = this.ResolveAsValueContainer(false);
       if (container != null) {
         IFieldDefinition/*?*/ field = container as IFieldDefinition;
         if (field != null) {
@@ -15902,7 +15911,7 @@ namespace Microsoft.Cci.Ast {
     /// When type inference fails, Dummy.Type is returned.
     /// </summary>
     public override ITypeDefinition InferType() {
-      ITypeDefinitionMember/*?*/ boundDefinition = this.ResolveAsValueContainer();
+      ITypeDefinitionMember/*?*/ boundDefinition = this.ResolveAsValueContainer(false);
       IEventDefinition/*?*/ eventDef = boundDefinition as IEventDefinition;
       if (eventDef != null) return eventDef.Type.ResolvedType;
       IFieldDefinition/*?*/ field = boundDefinition as IFieldDefinition;
@@ -15945,7 +15954,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
       if (this.cachedProjection != null) return this.cachedProjection;
-      ITypeDefinitionMember/*?*/ boundDefinition = this.ResolveAsValueContainer();
+      ITypeDefinitionMember/*?*/ boundDefinition = this.ResolveAsValueContainer(false);
       IFieldDefinition/*?*/ field = boundDefinition as IFieldDefinition;
       if (field != null && this.Helper.UseCompileTimeValueOfField(field)) return this.cachedProjection = CompileTimeConstant.For(field.CompileTimeValue, this);
       IPropertyDefinition/*?*/ property = boundDefinition as IPropertyDefinition;
@@ -15980,21 +15989,22 @@ namespace Microsoft.Cci.Ast {
     /// Method groups are represented by the first matching method definition in the most derived type that defines or overrides methods in the group. 
     /// Likewise for property groups and type groups.
     /// </summary>
-    public virtual ITypeDefinitionMember/*?*/ Resolve() {
-      if (this.resolvedMember == null) {
+    /// <param name="ignoreAccessibility">Set this to true when the qualified name has failed to resolve and an appropriate error has to be
+    /// generated. In particular, if the qualified name can resolve to an inaccessible member, the error will say as much.</param>
+    public virtual ITypeDefinitionMember/*?*/ Resolve(bool ignoreAccessibility) {
+      var result = this.resolvedMember;
+      if (result == null || ignoreAccessibility) {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
         if (qualifierType == Dummy.Type)
           qualifierType = this.ResolveAsType(this.ResolveQualifierAsNamespaceOrType());
         if (qualifierType != Dummy.Type && qualifierType != null)
-          this.resolvedMember = this.ResolveTypeMember(qualifierType);
-        if (this.resolvedMember == null)
+          result = this.ResolveTypeMember(qualifierType, ignoreAccessibility);
+        if (ignoreAccessibility) return result;
+        if (result == null)
           this.resolvedMember = Dummy.Method;
-        else
-          this.hasErrors = false;
       }
-      if (this.resolvedMember == Dummy.Method) return null;
-      this.hasErrors = false;
-      return this.resolvedMember;
+      if (result != null) this.hasErrors = false; //If the qualified name resolved, it is error free and need not be checked for errors.
+      return result;
     }
     ITypeDefinitionMember/*?*/ resolvedMember;
 
@@ -16010,7 +16020,7 @@ namespace Microsoft.Cci.Ast {
         if (!this.ContainingBlock.ContainingTypeDeclaration.CanAccess(qualifyingType))
           resolvedQualifier = this.ResolveQualifierAsNamespace();
         else {
-          INestedTypeDefinition/*?*/ resolvedTypeMember = this.ResolveTypeMember(qualifyingType) as INestedTypeDefinition;
+          INestedTypeDefinition/*?*/ resolvedTypeMember = this.ResolveTypeMember(qualifyingType, false) as INestedTypeDefinition;
           if (resolvedTypeMember != null) {
             this.hasErrors = false;
             return new NestedTypeGroup(this, resolvedTypeMember.ContainingTypeDefinition, this.SimpleName);
@@ -16059,10 +16069,10 @@ namespace Microsoft.Cci.Ast {
     /// Returns the event, field or property that binds to this qualified name using the applicable scope chain and compilation context.
     /// Returns null if qualified name does not bind to one of the above cases.
     /// </summary>
-    public virtual ITypeDefinitionMember/*?*/ ResolveAsValueContainer()
+    public virtual ITypeDefinitionMember/*?*/ ResolveAsValueContainer(bool ignoreAccessibility)
       //^ ensures result == null || result is IEventDefinition || result is IFieldDefinition || result is IPropertyDefinition;
     {
-      ITypeDefinitionMember/*?*/ result = this.Resolve();
+      ITypeDefinitionMember/*?*/ result = this.Resolve(ignoreAccessibility);
       this.hasErrors = null;
       IPropertyDefinition/*?*/ property = result as IPropertyDefinition;
       if (property != null && property.Parameters.GetEnumerator().MoveNext()) {
@@ -16112,9 +16122,9 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Finds a type member with this.SimpleName as its name. Runs up the base type chain if necessary. Returns strictly the first match.
     /// </summary>
-    protected virtual ITypeDefinitionMember/*?*/ ResolveTypeMember(ITypeDefinition qualifyingType) {
+    protected virtual ITypeDefinitionMember/*?*/ ResolveTypeMember(ITypeDefinition qualifyingType, bool ignoreAccessibility) {
       foreach (ITypeDefinitionMember member in qualifyingType.GetMembersNamed(this.SimpleName.Name, this.SimpleName.IgnoreCase)) {
-        if (this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
+        if (ignoreAccessibility || this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
       }
       ITypeContract/*?*/ contract = this.Compilation.ContractProvider.GetTypeContractFor(qualifyingType);
       if (contract != null) {
@@ -16127,17 +16137,17 @@ namespace Microsoft.Cci.Ast {
         }
       }
       foreach (ITypeReference baseClass in qualifyingType.BaseClasses) {
-        ITypeDefinitionMember/*?*/ result = this.ResolveTypeMember(baseClass.ResolvedType);
+        ITypeDefinitionMember/*?*/ result = this.ResolveTypeMember(baseClass.ResolvedType, ignoreAccessibility);
         if (result != null) return result;
       }
       if (qualifyingType.IsInterface) {
         foreach (ITypeReference iface in qualifyingType.Interfaces) {
-          ITypeDefinitionMember/*?*/ result = this.ResolveTypeMember(iface.ResolvedType);
+          ITypeDefinitionMember/*?*/ result = this.ResolveTypeMember(iface.ResolvedType, ignoreAccessibility);
           if (result != null) return result;
         }
       }
       foreach (ITypeDefinitionMember member in this.Helper.GetExtensionMembers(qualifyingType, this.SimpleName.Name, this.SimpleName.IgnoreCase)) {
-        if (this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
+        if (ignoreAccessibility || this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
       }
       return null;
     }

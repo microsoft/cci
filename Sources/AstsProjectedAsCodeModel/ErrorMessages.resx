@@ -156,6 +156,9 @@
   <data name="DuplicateResponseFile" xml:space="preserve">
     <value>Response file '{0}' included multiple times.</value>
   </data>
+  <data name="InaccessibleTypeMember" xml:space="preserve">
+    <value>'{0}' is inaccessible due to its protection level.</value>
+  </data>
   <data name="InvalidCodePage" xml:space="preserve">
     <value>Code page '{0}' is invalid or not installed.</value>
   </data>
