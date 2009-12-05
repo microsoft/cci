@@ -1632,7 +1632,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private IBlockStatement DecompileMoveNext(IBlockStatement block) {
-      return new MoveNextDecompiler(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition).Decompile((BlockStatement)block);
+      return new MoveNextDecompiler(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, this.host).Decompile((BlockStatement)block);
     }
     private IBlockStatement DuplicateMoveNextForIteratorMethod(BlockStatement rootBlock) {
       return MoveNextToIteratorBlockTransformer.Transform(iteratorMethodBody.MethodDefinition, this.ilMethodBody.MethodDefinition, rootBlock, this.host);

@@ -191,6 +191,16 @@ namespace CodeModelTestInput {
       }
     }
 
+    public IEnumerable<int> Method20(int x) {
+      if (x > 0) {
+        x = 2; yield break;
+      } else if (x > 1) {
+        x = 3; yield break;
+      } else {
+        x = 4; yield break;
+      }
+    }
+
   }
 
   public class Class2 {
