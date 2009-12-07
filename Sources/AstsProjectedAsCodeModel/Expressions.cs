@@ -16003,7 +16003,7 @@ namespace Microsoft.Cci.Ast {
         if (result == null)
           this.resolvedMember = Dummy.Method;
       }
-      if (result != null) this.hasErrors = false; //If the qualified name resolved, it is error free and need not be checked for errors.
+      if (result != null && result != Dummy.Method) this.hasErrors = false; //If the qualified name resolved, it is error free and need not be checked for errors.
       return result;
     }
     ITypeDefinitionMember/*?*/ resolvedMember;

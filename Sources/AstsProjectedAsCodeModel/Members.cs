@@ -1530,7 +1530,7 @@ namespace Microsoft.Cci.Ast {
         if (this.type == null) {
           if (this.FieldDeclaration.IsVolatile) {
             ICustomModifier volatileModifier = new CustomModifier(true, this.FieldDeclaration.PlatformType.SystemRuntimeCompilerServicesIsVolatile);
-            this.type = new ModifiedTypeReference(this.fieldDeclaration.Compilation.HostEnvironment, this.fieldDeclaration.Type.ResolvedType,
+            this.type = new ModifiedTypeReference(this.fieldDeclaration.Compilation.HostEnvironment, this.FieldDeclaration.Type.ResolvedType,
               IteratorHelper.GetSingletonEnumerable(volatileModifier));
           } else
             this.type = this.FieldDeclaration.Type.ResolvedType;
