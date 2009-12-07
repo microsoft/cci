@@ -162,7 +162,11 @@ namespace Microsoft.Cci {
         foreach (ITypeDefinitionMember interfaceMember in interfaceReference.ResolvedType.GetMembersNamed(implementingMethod.Name, false)) {
           IMethodDefinition/*?*/ interfaceMethod = interfaceMember as IMethodDefinition;
           if (interfaceMethod == null) continue;
-          if (MemberHelper.SignaturesAreEqual(implementingMethod, interfaceMethod))
+          if (MemberHelper.SignaturesAreEqual(implementingMethod, interfaceMethod) ||
+            (implementingMethod.IsGeneric
+            && implementingMethod.GenericParameterCount == interfaceMethod.GenericParameterCount
+            && MemberHelper.GenericMethodSignaturesAreEqual(implementingMethod, interfaceMethod))
+            )
             yield return interfaceMethod;
         }
       }
