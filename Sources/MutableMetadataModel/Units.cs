@@ -125,7 +125,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public bool IsRetargetable {
-      get { return (this.Flags & 0x100) != 1; }
+      get { return (this.Flags & 0x100) != 0; }
       set {
         if (value)
           this.Flags |= 0x100u;
