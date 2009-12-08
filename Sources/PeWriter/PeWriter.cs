@@ -3103,8 +3103,11 @@ namespace Microsoft.Cci {
             cmw.WriteByte(4); //version
             cmw.WriteByte(4); //kind: ForwardIterator
             cmw.Align(4);
-            cmw.WriteUint(10+(uint)iteratorClassName.Length*2);
+            uint length = 10+(uint)iteratorClassName.Length*2;
+            while (length % 4 > 0) length++;
+            cmw.WriteUint(length);
             cmw.WriteString(iteratorClassName, true);
+            cmw.Align(4);
             this.customDebugMetadataForCurrentMethod.Add(customMetadata);
             return;
           }
