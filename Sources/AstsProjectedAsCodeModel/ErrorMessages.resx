@@ -256,4 +256,7 @@
     <value>Error while accessing file or path '{0}' -  {1}</value>
     <comment>The trailing '.' comes from the exception's message</comment>
   </data>
+  <data name="WrongNumberOfArgumentsInConstructorCall" xml:space="preserve">
+    <value>'{0}' does not contain a constructor that takes {1} arguments.</value>
+  </data>
 </root>

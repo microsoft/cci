@@ -346,6 +346,11 @@ namespace Microsoft.Cci.Ast {
     UndefinedOperationOnVoidPointers,
 
     /// <summary>
+    /// {0} does not contain a constructor with {1} arguments.
+    /// </summary>
+    WrongNumberOfArgumentsInConstructorCall,
+
+    /// <summary>
     /// Not an actual error message, but a convenient place holder during development.
     /// </summary>
     ToBeDefined

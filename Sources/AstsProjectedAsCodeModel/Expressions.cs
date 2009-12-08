@@ -6479,6 +6479,10 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
+      if (this.ResolvedMethod == Dummy.Method && !this.HasErrors())
+        // The only unresolved constructor call is a no-arg "new" on a value type.
+        // Value types do not have no-arg constructors, but translate to IL "initobj TypeRef"
+        return new DefaultValue(this.ObjectType, this.SourceLocation);
       return this;
     }
 
@@ -6504,7 +6508,31 @@ namespace Microsoft.Cci.Ast {
     /// Called when the arguments are good and no type inferences have failed. This means that the callee could not be found. Complain.
     /// </summary>
     protected override void ComplainAboutCallee() {
-      // TODO: complain
+      // If this.Type is a value type and this is a no-arg call, then do not issue an
+      // error message.  The "new MyType()" AST node will be projected as "default(MyType)".
+      uint argCount = IteratorHelper.EnumerableCount(this.OriginalArguments);
+      if (this.Type.IsValueType && argCount == 0)
+        return;
+
+      List<IMethodDefinition> candidates = new List<IMethodDefinition>(this.GetCandidateMethods(true));
+
+      // TODO: The candidate list will contain methods that do not even conform in number of parameters.
+      // The list should be thinned out to those with matching signature length so a more specific and
+      // correct error message may be given.  A corrected version of MethodIsEligible(x, x, true) maybe.
+
+      if (candidates.Count > 1) {
+        string cand0 = this.Helper.GetMethodSignature(candidates[0], NameFormattingOptions.Signature | NameFormattingOptions.ParameterModifiers);
+        string cand1 = this.Helper.GetMethodSignature(candidates[1], NameFormattingOptions.Signature | NameFormattingOptions.ParameterModifiers);
+        this.Helper.ReportError(new AstErrorMessage(this, Error.AmbiguousCall, cand0, cand1));
+        return;
+      } else if (candidates.Count == 1) {
+        this.Helper.ReportError(new AstErrorMessage(this, Error.WrongNumberOfArgumentsInConstructorCall, 
+          this.Helper.GetTypeName(this.Type), argCount.ToString())); 
+      } else if (candidates.Count == 0) {
+        this.Helper.ReportError(new AstErrorMessage(this, Error.WrongNumberOfArgumentsInConstructorCall,
+          this.Helper.GetTypeName(this.Type), argCount.ToString()));
+      } else
+        Debug.Assert(false, "Candidate count should not be negative");
     }
 
     #region ICreateObjectInstance Members
