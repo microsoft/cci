@@ -168,6 +168,10 @@ using System.Reflection;
     <Zip
       Condition="$(CleanRootDirectory) != ''"
       Directories="$(CleanRootDirectory)" OutputFile="@(ZipSources)" />
+    <!-- create command line file that uploads the release -->
+    <WriteFile File="$(RootDirectory)\uploadrelease.cmd" Lines="setlocal
+cd Build
+$(MSBuildCommand) ccimetadata.build /t:UploadCodePlexRelease /p:BuildVersion=$(BuildVersion) /p:CodePlexUser=%1 /p:CodeplexPassword=%2" />
   </Target>
 
   <Target Name="TestNightly">
