@@ -1097,9 +1097,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = false;
-      foreach (var member in this.TypeDeclarationMembers) {
-      }
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      //TODO: any namespace type specific error checks. For example, is this type a duplicate of another?
       return result;
     }
 
