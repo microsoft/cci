@@ -21,8 +21,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IExpression Members
 
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     public IEnumerable<ILocation> Locations {

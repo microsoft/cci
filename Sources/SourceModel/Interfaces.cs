@@ -100,7 +100,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Checks the object for errors and returns true if any have been found
     /// </summary>
-    bool HasErrors();
+    bool HasErrors { get; }
   }
 
   /// <summary>
