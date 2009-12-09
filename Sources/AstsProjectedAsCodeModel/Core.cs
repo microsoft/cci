@@ -97,6 +97,17 @@ namespace Microsoft.Cci.Ast {
     BuiltinMethods/*?*/ builtinMethods;
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the compilation.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = false;
+      foreach (var compilationPart in this.Parts)
+        result |= compilationPart.HasErrors;
+      return result;
+    }
+
+    /// <summary>
     /// Returns true if the given source document forms a part of the compilation.
     /// </summary>
     public bool Contains(ISourceDocument sourceDocument) {
@@ -156,6 +167,18 @@ namespace Microsoft.Cci.Ast {
       }
     }
     GlobalsClass globalsClass;
+
+    /// <summary>
+    /// Checks the compilation for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// An object that represents the (mutable) environment that hosts the compiler that produced this Compilation instance.
@@ -409,6 +432,17 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the compilation part.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = false;
+      result |= this.GlobalDeclarationContainer.HasErrors;
+      result |= this.RootNamespace.HasErrors;
+      return result;
+    }
+
+    /// <summary>
     /// The compilation to which this part belongs.
     /// </summary>
     public Compilation Compilation {
@@ -431,6 +465,18 @@ namespace Microsoft.Cci.Ast {
       get { return this.globalDeclarationContainer; }
     }
     readonly GlobalDeclarationContainerClass globalDeclarationContainer;
+
+    /// <summary>
+    /// Checks the compilation part for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 

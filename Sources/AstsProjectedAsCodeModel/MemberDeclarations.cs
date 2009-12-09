@@ -426,6 +426,14 @@ namespace Microsoft.Cci.Ast {
     //^ invariant caller == null || caller.ContainingTypeDeclaration == this.ContainingTypeDeclaration;
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the event or a constituent part of the event.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
     /// A body for use by the adder method of a field like event.
     /// </summary>
     private BlockStatement DefaultAdderBody() {
@@ -800,6 +808,14 @@ namespace Microsoft.Cci.Ast {
     public virtual uint BitLength {
       [DebuggerNonUserCode]
       get { return TypeHelper.SizeOfType(this.Type.ResolvedType)*8; }
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the field or a constituent part of the field.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
     }
 
     /// <summary>
@@ -1729,6 +1745,18 @@ namespace Microsoft.Cci.Ast {
         if (!this.IsStatic) result |= CallingConvention.HasThis;
         return result;
       } //TODO: extract from custom attributes
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the method or a constituent part of the method.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = false;
+      if (this.body != null)
+        result |= this.body.HasErrors();
+      //TODO: lots more
+      return result;
     }
 
     private void CheckIfNonVirtualThatImplicitlyImplementsInterfaceMethod() {
@@ -2788,6 +2816,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the property or a constituent part of the property.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
     /// A compile time constant value that provides the default value for the property. (Who uses this and why?)
     /// </summary>
     public Expression DefaultValue {
@@ -3480,6 +3516,12 @@ namespace Microsoft.Cci.Ast {
     IEnumerable<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected abstract bool CheckForErrorsAndReturnTrueIfAnyAreFound();
+
+    /// <summary>
     /// The compilation that this declaration forms a part of.
     /// </summary>
     public Compilation Compilation {
@@ -3552,6 +3594,18 @@ namespace Microsoft.Cci.Ast {
     protected virtual List<SourceCustomAttribute>/*?*/ GetSourceAttributes() {
       return null;
     }
+
+    /// <summary>
+    /// Checks the member for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 

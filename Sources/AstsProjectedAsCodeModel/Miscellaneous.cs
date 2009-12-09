@@ -780,6 +780,20 @@ namespace Microsoft.Cci.Ast {
     readonly List<Expression> arguments;
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = this.Type.HasErrors();
+      foreach (var argument in this.Arguments)
+        result |= argument.HasErrors();
+      if (!result) {
+        //TODO: check that constructor resolves
+      }
+      return result;
+    }
+
+    /// <summary>
     /// A reference to the constructor of the custom attribute.
     /// </summary>
     public IMethodReference Constructor {
@@ -897,6 +911,18 @@ namespace Microsoft.Cci.Ast {
     /// AllowMultiple is true, a bit (0x10000000) that indicates that Inherited is true and stores the value of ValidOn in the lower order bits.
     /// </summary>
     int flags;
+
+    /// <summary>
+    /// Checks the class for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// Specifies whether this attribute applies to derived types and/or overridden methods. This information is obtained from an attribute on the attribute type definition.

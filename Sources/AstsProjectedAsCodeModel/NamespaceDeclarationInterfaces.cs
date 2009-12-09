@@ -31,6 +31,11 @@ namespace Microsoft.Cci.Ast {
     //void Dispatch(IMetadataVisitor visitor);
 
     /// <summary>
+    /// Checks the member for errors and returns true if any were found.
+    /// </summary>
+    bool HasErrors { get; }
+
+    /// <summary>
     /// Makes a shallow copy of this member that can be added to the member list of the given target namespace declaration.
     /// The shallow copy may share child objects with this instance, but should never expose such child objects except through
     /// wrappers (or shallow copies made on demand). If this instance is already a member of the target namespace declaration it

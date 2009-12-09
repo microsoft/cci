@@ -40,6 +40,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the alias or a constituent part of the alias.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(AliasDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
@@ -224,6 +232,25 @@ namespace Microsoft.Cci.Ast {
     }
     Microsoft.Cci.UtilityDataStructures.Hashtable<AliasDeclaration> caseSensitiveAliasTable;
 
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = false;
+      foreach (var alias in this.Aliases)
+        result |= alias.HasErrors;
+      foreach (var import in this.Imports)
+        result |= import.HasErrors;
+      foreach (var member in this.Members)
+        result |= member.HasErrors;
+      foreach (var attribute in this.SourceAttributes)
+        result |= attribute.HasErrors;
+      foreach (var unitSetAlias in this.UnitSetAliases)
+        result |= unitSetAlias.HasErrors;
+      return result;
+    }
+
     private Microsoft.Cci.UtilityDataStructures.Hashtable<AliasDeclaration> ComputeAliasTable(bool ignoreCase) {
       var result = new Microsoft.Cci.UtilityDataStructures.Hashtable<AliasDeclaration>();
       foreach (AliasDeclaration alias in this.Aliases) {
@@ -345,6 +372,18 @@ namespace Microsoft.Cci.Ast {
       return null;
       //TODO: construct a method group object
     }
+
+    /// <summary>
+    /// Checks the namespace for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 
@@ -684,6 +723,12 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected abstract bool CheckForErrorsAndReturnTrueIfAnyAreFound();
+
+    /// <summary>
     /// The namespace declaration in which this nested namespace declaration is nested.
     /// </summary>
     /// <value></value>
@@ -700,6 +745,18 @@ namespace Microsoft.Cci.Ast {
     /// The namespace declaration in which this nested namespace declaration is nested.
     /// </summary>
     protected NamespaceDeclaration/*?*/ containingNamespaceDeclaration;
+
+    /// <summary>
+    /// Checks the member for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// Returns a shallow copy of this namespace declarations member with the given namespace declaration as the containing namespace of the copy.
@@ -830,6 +887,14 @@ namespace Microsoft.Cci.Ast {
       if (!recurse) return;
       DummyExpression containingExpression = new DummyExpression(containingNamespaceDeclaration.DummyBlock, SourceDummy.SourceLocation);
       this.importedNamespace.SetContainingExpression(containingExpression);
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the namespace import.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
     }
 
     /// <summary>
@@ -1003,6 +1068,16 @@ namespace Microsoft.Cci.Ast {
     {
       this.name = template.Name.MakeCopyFor(containingNamespaceDeclaration.CompilationPart.Compilation);
       this.containingNamespaceDeclaration = containingNamespaceDeclaration;
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the namespace or a constituent part of the namespace.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      //TODO: any checks that are specific to nested namespaces
+      return result;
     }
 
     /// <summary>
@@ -1318,6 +1393,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the option declaration.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(OptionDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
@@ -1408,6 +1491,16 @@ namespace Microsoft.Cci.Ast {
     protected RootNamespaceDeclaration(CompilationPart/*?*/ compilationPart, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.compilationPart = compilationPart;
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the namespace or a constituent part of the namespace.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      //TODO: any checks that are specific to root namespaces
+      return result;
     }
 
     /// <summary>
@@ -1588,6 +1681,14 @@ namespace Microsoft.Cci.Ast {
       Compilation targetCompilation = containingNamespaceDeclaration.CompilationPart.Compilation;
       this.unitSet = targetCompilation.GetUnitSetFor(template.Name.MakeCopyFor(targetCompilation));
       //^ assume containingNamespaceDeclaration == this.containingNamespaceDeclaration;
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the unit set alias declaration.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
     }
 
     /// <summary>

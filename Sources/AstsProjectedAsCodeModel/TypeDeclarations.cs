@@ -62,6 +62,18 @@ namespace Microsoft.Cci.Ast {
 
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      foreach (var globalMember in this.GlobalMembers) {
+        result |= globalMember.HasErrors;
+      }
+      return result;
+    }
+
+    /// <summary>
     /// Creates a new type definition to correspond to this type declaration.
     /// </summary>
     /// <returns></returns>
@@ -77,7 +89,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A list of type declaration members that correspond to global variables and functions.
     /// </summary>
-    public IEnumerable<ITypeDeclarationMember> GlobalMembers {
+    public IEnumerable<ITypeDeclarationMember> GlobalMembers { //TODO: 
       [DebuggerNonUserCode]
       get
         //^ ensures result is List<ITypeDeclarationMember>; //The return type is different so that a downcast is required before the members can be modified.
@@ -535,6 +547,15 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
+      return result;
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(NamespaceClassDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
@@ -612,6 +633,14 @@ namespace Microsoft.Cci.Ast {
     protected NamespaceDelegateDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceDelegateDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members) {
       this.signature = template.signature.MakeShallowCopyFor(containingNamespaceDeclaration.DummyBlock);
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
     }
 
     /// <summary>
@@ -736,6 +765,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(NamespaceEnumDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
@@ -854,6 +891,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(NamespaceInterfaceDeclaration) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
@@ -926,6 +971,14 @@ namespace Microsoft.Cci.Ast {
     /// <param name="members"></param>
     protected NamespaceStructDeclaration(NamespaceDeclaration containingNamespaceDeclaration, NamespaceStructDeclaration template, List<ITypeDeclarationMember> members)
       : base(containingNamespaceDeclaration, template, members) {
+    }
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
     }
 
     /// <summary>
@@ -1038,6 +1091,17 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     protected NamespaceDeclaration/*?*/ containingNamespaceDeclaration;
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = false;
+      foreach (var member in this.TypeDeclarationMembers) {
+      }
+      return result;
+    }
 
     /// <summary>
     /// A block that is the containing block for any expressions contained inside the type declaration
@@ -2265,6 +2329,21 @@ namespace Microsoft.Cci.Ast {
     internal Dictionary<int, object/*?*/> caseSensitiveCache = new Dictionary<int, object/*?*/>();
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
+    /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
+    /// </summary>
+    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = false;
+      foreach (var baseType in this.BaseTypes)
+        result |= baseType.HasErrors();
+      foreach (var member in this.TypeDeclarationMembers)
+        result |= member.HasErrors;
+      foreach (var attribute in this.SourceAttributes)
+        result |= attribute.HasErrors;
+      return result;
+    }
+
+    /// <summary>
     /// The compilation to which this type declaration belongs.
     /// </summary>
     public Compilation Compilation {
@@ -2325,6 +2404,18 @@ namespace Microsoft.Cci.Ast {
     public virtual TypeMemberVisibility GetDefaultVisibility() {
       return TypeMemberVisibility.Private;
     }
+
+    /// <summary>
+    /// Checks the class for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    bool? hasErrors;
 
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 

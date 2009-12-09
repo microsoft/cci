@@ -53,6 +53,11 @@ namespace Microsoft.Cci.Ast {
     TypeMemberVisibility GetDefaultVisibility();
 
     /// <summary>
+    /// Checks the member for errors and returns true if any were found.
+    /// </summary>
+    bool HasErrors { get; }
+
+    /// <summary>
     /// Indicates that this member is intended to hide the name of an inherited member.
     /// </summary>
     bool IsNew { get;  }
