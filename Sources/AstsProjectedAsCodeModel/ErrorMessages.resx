@@ -259,4 +259,10 @@
   <data name="WrongNumberOfArgumentsInConstructorCall" xml:space="preserve">
     <value>'{0}' does not contain a constructor that takes {1} arguments.</value>
   </data>
+  <data name="ExtensionMethodsOnlyInNonGenericClass" xml:space="preserve">
+    <value>Extension methods must be defined in a non-generic static class.</value>
+  </data>
+  <data name="ExtensionMethodsOnlyInStaticClass" xml:space="preserve">
+    <value>Extension methods must be defined in a top-level static class.</value>
+  </data>
 </root>

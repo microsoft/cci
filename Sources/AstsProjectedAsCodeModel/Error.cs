@@ -116,6 +116,11 @@ namespace Microsoft.Cci.Ast {
   public enum Error {
 
     /// <summary>
+    /// A placeholder to indicate no error.
+    /// </summary>
+    NotAnError = 0,
+
+    /// <summary>
     /// Alias '{0}' not found.
     /// </summary>
     AliasNotFound,
@@ -209,6 +214,16 @@ namespace Microsoft.Cci.Ast {
     /// The expression '{0}' has no side effect; expected operation with side effect.
     /// </summary>
     ExpressionStatementHasNoSideEffect,
+
+    /// <summary>
+    /// Extension methods can only be defined on static, non-nested classes
+    /// </summary>
+    ExtensionMethodsOnlyInStaticClass,
+
+    /// <summary>
+    /// Extension methods can only be defined on static, non-generic classes
+    /// </summary>
+    ExtensionMethodsOnlyInNonGenericClass,
 
     /// <summary>
     /// '{0}' is inaccessible due to its protection level.

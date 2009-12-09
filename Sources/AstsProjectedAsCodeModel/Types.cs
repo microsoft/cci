@@ -1520,6 +1520,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if this type contains one or more extension method.
+    /// </summary>
+    public bool HasExtensionMethod {
+      [DebuggerNonUserCode]
+      get {
+        foreach (ITypeDefinitionMember member in this.Members) {
+          MethodDefinition method = member as MethodDefinition;
+          if (method.IsExtensionMethod)
+            return true;
+        }
+        return false;
+      }
+    }
+
+    /// <summary>
     /// True if the type is a value type.
     /// Value types are sealed and extend System.ValueType or System.Enum.
     /// A type parameter for which MustBeValueType (the struct constraint in C#) is true also returns true for this property.

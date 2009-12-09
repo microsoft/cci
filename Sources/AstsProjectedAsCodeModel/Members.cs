@@ -3398,6 +3398,11 @@ namespace Microsoft.Cci.Ast {
       get { return this.declaration.IsStatic; }
     }
 
+    public bool IsExtensionMethod {
+      [DebuggerNonUserCode]
+      get { return this.declaration.IsExtensionMethod; }
+    }
+
     /// <summary>
     /// True if only one thread at a time may execute this method.
     /// </summary>

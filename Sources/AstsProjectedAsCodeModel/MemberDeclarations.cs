@@ -1753,9 +1753,28 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
+      // Check extension method validity
+      if (this.IsExtensionMethod) {
+        TypeDeclaration surroundingType = this.ContainingTypeDeclaration;
+        // Extension methods can only be declared on types that are:
+        //   classes, declared static, non-nested, not generic.
+        Error error = Error.NotAnError;
+        if (!surroundingType.TypeDefinition.IsClass
+          || !surroundingType.TypeDefinition.IsStatic
+          || surroundingType is NestedTypeDeclaration)
+          error = Error.ExtensionMethodsOnlyInStaticClass;
+        else if (surroundingType.GenericParameterCount != 0)
+          error = Error.ExtensionMethodsOnlyInNonGenericClass;
+        if (error != Error.NotAnError) {
+          this.Helper.ReportError(new AstErrorMessage(this, error));
+          result = true;
+        }
+      }
+      //TODO: lots more
+
+      // Finally, recurse to body ...
       if (this.body != null)
         result |= this.body.HasErrors;
-      //TODO: lots more
       return result;
     }
 
@@ -2389,9 +2408,11 @@ namespace Microsoft.Cci.Ast {
     /// <param name="isOut"></param>
     /// <param name="isParameterArray"></param>
     /// <param name="isRef"></param>
+    /// <param name="isThis"></param>
     /// <param name="sourceLocation"></param>
     public ParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
-      TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index, bool isOptional, bool isOut, bool isParameterArray, bool isRef, ISourceLocation sourceLocation)
+      TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index, 
+      bool isOptional, bool isOut, bool isParameterArray, bool isRef, bool isThis, ISourceLocation sourceLocation)
       : base(sourceLocation)
       //^ requires isParameterArray ==> type is ArrayTypeExpression;
     {
@@ -2406,8 +2427,30 @@ namespace Microsoft.Cci.Ast {
       if (isOut) flags |= 32;
       if (isParameterArray) flags |= 64;
       if (isRef) flags |= 128;
+      if (isThis) flags |= 256;
       this.flags = flags;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceAttributes"></param>
+    /// <param name="type"></param>
+    /// <param name="name"></param>
+    /// <param name="defaultValue"></param>
+    /// <param name="index"></param>
+    /// <param name="isOptional"></param>
+    /// <param name="isOut"></param>
+    /// <param name="isParameterArray"></param>
+    /// <param name="isRef"></param>
+    /// <param name="sourceLocation"></param>
+    public ParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
+      TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index,
+      bool isOptional, bool isOut, bool isParameterArray, bool isRef, ISourceLocation sourceLocation)
+      : this(sourceAttributes, type, name, defaultValue, index, isOptional, isOut, isParameterArray, isRef, false, sourceLocation)
+    {
+    }
+
 
     /// <summary>
     /// 
@@ -2588,6 +2631,14 @@ namespace Microsoft.Cci.Ast {
     public bool IsRef {
       [DebuggerNonUserCode]
       get { return (this.flags & 128) != 0; }
+    }
+
+    /// <summary>
+    /// True if this parameter is the "this" of an extension method.
+    /// </summary>
+    public bool IsThis {
+      [DebuggerNonUserCode]
+      get { return (this.flags & 256) != 0; }
     }
 
     // ^ [MustOverride]
