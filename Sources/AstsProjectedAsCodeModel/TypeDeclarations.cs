@@ -2334,7 +2334,7 @@ namespace Microsoft.Cci.Ast {
     protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (var baseType in this.BaseTypes)
-        result |= baseType.HasErrors();
+        result |= baseType.HasErrors;
       foreach (var member in this.TypeDeclarationMembers)
         result |= member.HasErrors;
       foreach (var attribute in this.SourceAttributes)

@@ -155,8 +155,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -193,8 +195,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -228,8 +232,10 @@ namespace Microsoft.Cci {
 
     #region IStatement Members
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -270,8 +276,10 @@ namespace Microsoft.Cci {
 
     #region IExpression Members
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -316,8 +324,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -339,8 +349,10 @@ namespace Microsoft.Cci {
 
     #region IExpression Members
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -379,8 +391,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -424,8 +438,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -483,8 +499,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -512,8 +530,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -554,8 +574,10 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     public IEnumerable<ILocation> Locations {

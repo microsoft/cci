@@ -219,8 +219,10 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Checks the expression for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     #endregion
@@ -402,8 +404,10 @@ namespace Microsoft.Cci.Contracts {
     /// Checks the object for errors and returns true if any have been found
     /// </summary>
     /// <returns></returns>
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     IEnumerable<IExpression> IMethodContract.Allocates {
@@ -628,8 +632,10 @@ namespace Microsoft.Cci.Contracts {
     /// Checks the object for errors and returns true if any have been found
     /// </summary>
     /// <returns></returns>
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     IEnumerable<IFieldDefinition> ITypeContract.ContractFields {
@@ -779,8 +785,10 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Checks the expression for errors and returns true if any were found.
     /// </summary>
-    public virtual bool HasErrors() {
-      return false;
+    public virtual bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     #endregion

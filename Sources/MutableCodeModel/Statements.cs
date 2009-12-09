@@ -1083,8 +1083,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Checks the statement for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     /// <summary>

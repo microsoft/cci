@@ -39,7 +39,7 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Condition.HasErrors() || this.Condition.HasSideEffect(true);
+      return this.Condition.HasErrors || this.Condition.HasSideEffect(true);
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Condition.HasErrors() || this.Condition.HasSideEffect(true);
+      return this.Condition.HasErrors || this.Condition.HasSideEffect(true);
     }
 
     /// <summary>
@@ -389,7 +389,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (Statement statement in this.Statements)
-        result |= statement.HasErrors();
+        result |= statement.HasErrors;
       return result;
     }
 
@@ -793,10 +793,10 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     public virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ExceptionType.HasErrors();
-      result |= this.Body.HasErrors();
+      bool result = this.ExceptionType.HasErrors;
+      result |= this.Body.HasErrors;
       if (this.FilterCondition != null)
-        result |= this.FilterCondition.HasErrors();
+        result |= this.FilterCondition.HasErrors;
       return result;
     }
 
@@ -994,7 +994,7 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Condition.HasErrors() || this.ConvertedCondition.HasErrors() || this.TrueBranch.HasErrors() || this.FalseBranch.HasErrors();
+      return this.Condition.HasErrors || this.ConvertedCondition.HasErrors || this.TrueBranch.HasErrors || this.FalseBranch.HasErrors;
     }
 
     /// <summary>
@@ -1239,8 +1239,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ConvertedCondition.HasErrors();
-      result |= Body.HasErrors();
+      bool result = this.ConvertedCondition.HasErrors;
+      result |= Body.HasErrors;
       return result;
     }
 
@@ -1363,8 +1363,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ConvertedCondition.HasErrors();
-      result |= this.Body.HasErrors();
+      bool result = this.ConvertedCondition.HasErrors;
+      result |= this.Body.HasErrors;
       return result;
     }
 
@@ -1692,11 +1692,11 @@ namespace Microsoft.Cci.Ast {
       if (cast != null) {
         //Casting to void is normally an error, but is OK if the cast is part of an expression statement.
         if (TypeHelper.TypesAreEquivalent(cast.TargetType.ResolvedType, this.PlatformType.SystemVoid))
-          return cast.ValueToCast.HasErrors();
+          return cast.ValueToCast.HasErrors;
       }
       if (!(this.Expression is IMethodCall) && !(this.Expression is Parenthesis) && !this.Expression.HasSideEffect(false))
         this.Helper.ReportError(new AstErrorMessage(this.Expression, Error.ExpressionStatementHasNoSideEffect, this.Expression.SourceLocation.Source));
-      return this.Expression.HasErrors();
+      return this.Expression.HasErrors;
     }
 
     /// <summary>
@@ -1835,7 +1835,7 @@ namespace Microsoft.Cci.Ast {
       foreach (TypeDeclaration typeDeclaration in containingTypeDeclaration.TypeDefinition.TypeDeclarations) {
         foreach (ITypeDeclarationMember member in typeDeclaration.TypeDeclarationMembers) {
           FieldDeclaration/*?*/ fieldDecl = member as FieldDeclaration;
-          if (fieldDecl != null && !fieldDecl.IsStatic && fieldDecl.Initializer != null && !fieldDecl.Initializer.HasErrors()) {
+          if (fieldDecl != null && !fieldDecl.IsStatic && fieldDecl.Initializer != null && !fieldDecl.Initializer.HasErrors) {
             if (TypeHelper.IsPrimitiveInteger(fieldDecl.Type.ResolvedType) && ExpressionHelper.IsIntegralZero(fieldDecl.Initializer.ProjectAsIExpression()))
               continue;
             fieldsToIntialize.Add(fieldDecl);
@@ -1902,8 +1902,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.FixedPointerDeclarators.HasErrors();
-      result |= this.Body.HasErrors();
+      bool result = this.FixedPointerDeclarators.HasErrors;
+      result |= this.Body.HasErrors;
       return result;
     }
 
@@ -2035,9 +2035,9 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.VariableType.HasErrors();
-      result |= this.Collection.HasErrors();
-      result |= this.Body.HasErrors();
+      bool result = this.VariableType.HasErrors;
+      result |= this.Collection.HasErrors;
+      result |= this.Body.HasErrors;
       return result;
     }
 
@@ -2407,12 +2407,12 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ConvertedCondition.HasErrors();
+      bool result = this.ConvertedCondition.HasErrors;
       foreach (Statement statement in this.InitStatements)
-        result |= statement.HasErrors();
+        result |= statement.HasErrors;
       foreach (Statement statement in this.IncrementStatements)
-        result |= statement.HasErrors();
-      result |= this.Body.HasErrors();
+        result |= statement.HasErrors;
+      result |= this.Body.HasErrors;
       return result;
     }
 
@@ -2896,9 +2896,11 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the declaration for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      //TODO: check for duplicate name
-      return this.Type.HasErrors();
+    public bool HasErrors {
+      get {
+        //TODO: check for duplicate name
+        return this.Type.HasErrors;
+      }
     }
 
     /// <summary>
@@ -3082,7 +3084,7 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.DeclarationNameIsInUse() || (this.InitialValue != null && this.ConvertedInitialValue.HasErrors());
+      return this.DeclarationNameIsInUse() || (this.InitialValue != null && this.ConvertedInitialValue.HasErrors);
     }
 
     /// <summary>
@@ -3107,7 +3109,7 @@ namespace Microsoft.Cci.Ast {
     protected virtual Expression ConvertInitialValue() {
       if (this.InitialValue == null) return new DummyExpression(SourceDummy.SourceLocation);
       Expression result = this.ContainingLocalDeclarationsStatement.Helper.ImplicitConversionInAssignmentContext(this.InitialValue, this.Type);
-      if (result is DummyExpression && this.InitialValue != null && !this.InitialValue.HasErrors()) {
+      if (result is DummyExpression && this.InitialValue != null && !this.InitialValue.HasErrors) {
         if (this.InitialValue.Type == Dummy.Type && this.Type.IsDelegate)
           this.ContainingLocalDeclarationsStatement.Helper.ReportFailedMethodGroupToDelegateConversion(this.InitialValue, this.Type);
         else
@@ -3174,10 +3176,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the declaration for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if ((this.flags & 4) == 0)
-        this.flags |= this.CheckForErrorsAndReturnTrueIfAnyAreFound() ? 8 : 0;
-      return (this.flags & 8) != 0;
+    public bool HasErrors {
+      get {
+        if ((this.flags & 4) == 0)
+          this.flags |= this.CheckForErrorsAndReturnTrueIfAnyAreFound() ? 8 : 0;
+        return (this.flags & 8) != 0;
+      }
     }
 
     /// <summary>
@@ -3370,9 +3374,9 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
-      if (this.TypeExpression != null) result = this.TypeExpression.HasErrors();
+      if (this.TypeExpression != null) result = this.TypeExpression.HasErrors;
       foreach (LocalDeclaration localDeclaration in this.Declarations)
-        result = result || localDeclaration.HasErrors();
+        result = result || localDeclaration.HasErrors;
       return result;
     }
 
@@ -4414,8 +4418,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      if (this.Expression != null && this.Expression.HasErrors()) return true;
-      if (this.ConvertedExpression != null && this.ConvertedExpression.HasErrors()) return true;
+      if (this.Expression != null && this.Expression.HasErrors) return true;
+      if (this.ConvertedExpression != null && this.ConvertedExpression.HasErrors) return true;
       //TODO: special error if return is in void method or in property setter.
       //TODO: check if return is nested inside a finally block
       return false;
@@ -4570,10 +4574,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the statement for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     bool? hasErrors;
 
@@ -4716,11 +4722,11 @@ namespace Microsoft.Cci.Ast {
       //TODO: check that expression is a constant
       bool result = false;
       if (!this.IsDefault) {
-        result |= this.Expression == null || this.Expression.HasErrors();
-        result |= this.ConvertedExpression == null || this.ConvertedExpression.HasErrors();
+        result |= this.Expression == null || this.Expression.HasErrors;
+        result |= this.ConvertedExpression == null || this.ConvertedExpression.HasErrors;
       }
       foreach (Statement statement in this.Body)
-        result |= statement.HasErrors();
+        result |= statement.HasErrors;
       return result;
     }
 
@@ -4791,10 +4797,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the switch case for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     bool? hasErrors;
 
@@ -4935,9 +4943,9 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.Expression.HasErrors();
+      bool result = this.Expression.HasErrors;
       foreach (SwitchCase switchCase in this.Cases)
-        result |= switchCase.HasErrors();
+        result |= switchCase.HasErrors;
       return false;
     }
 
@@ -4947,7 +4955,7 @@ namespace Microsoft.Cci.Ast {
     public Expression ConvertedExpression {
       [DebuggerNonUserCode]
       get {
-        if (this.Expression.HasErrors()) return this.Expression;
+        if (this.Expression.HasErrors) return this.Expression;
         ITypeDefinition switchableType = this.GetSwitchableType(this.Expression.Type);
         if (switchableType == Dummy.Type) return this.Expression;
         return this.Helper.ImplicitConversion(this.Expression, switchableType);
@@ -5071,7 +5079,7 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Exception.HasErrors();
+      return this.Exception.HasErrors;
     }
 
     /// <summary>
@@ -5311,8 +5319,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ConvertedCondition.HasErrors();
-      result |= this.Body.HasErrors();
+      bool result = this.ConvertedCondition.HasErrors;
+      result |= this.Body.HasErrors;
       return result;
     }
 
@@ -5411,8 +5419,8 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ConvertedCondition.HasErrors();
-      result |= this.Body.HasErrors();
+      bool result = this.ConvertedCondition.HasErrors;
+      result |= this.Body.HasErrors;
       return result;
     }
 
@@ -5642,7 +5650,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       //TODO: check that expression return type is compatible with method return type
       //check that yield is not inside a finally block or inside a try block with catch clauses
-      return this.Expression.HasErrors();
+      return this.Expression.HasErrors;
     }
 
     /// <summary>

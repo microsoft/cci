@@ -71,10 +71,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the precondition for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     bool? hasErrors;
 
@@ -155,7 +157,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the condition.
     /// </summary>
     public virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.Condition.HasErrors();
+      bool result = this.Condition.HasErrors;
       if (this.Condition.ContainingBlock.Helper.ImplicitConversionInAssignmentContext(this.Condition, this.Condition.PlatformType.SystemBoolean.ResolvedType) is DummyExpression) {
         this.Condition.ContainingBlock.Helper.ReportFailedImplicitConversion(this.Condition, this.Condition.PlatformType.SystemBoolean.ResolvedType);
         result = true;
@@ -167,10 +169,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the precondition for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     bool? hasErrors;
   }
@@ -221,7 +225,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (LoopInvariant invariant in this.Invariants)
-        result |= invariant.HasErrors();
+        result |= invariant.HasErrors;
       return result;
     }
 
@@ -594,21 +598,21 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (Precondition preCond in this.Preconditions)
-        result |= preCond.HasErrors() || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(preCond.Condition, this.containingBlock.CompilationPart.Helper);
+        result |= preCond.HasErrors || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(preCond.Condition, this.containingBlock.CompilationPart.Helper);
       foreach (Postcondition postCond in this.Postconditions)
-        result |= postCond.HasErrors();
+        result |= postCond.HasErrors;
       foreach (Expression read in this.reads) {
-        result |= read.HasErrors() || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(read, this.containingBlock.CompilationPart.Helper);
+        result |= read.HasErrors || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(read, this.containingBlock.CompilationPart.Helper);
         if (read.ProjectAsIExpression() is ICompileTimeConstant)
           this.containingBlock.CompilationPart.Helper.ReportError(new AstErrorMessage(read, Error.ConstInReadsOrWritesClause, read.SourceLocation.Source));
       }
       foreach (Expression write in this.writes) {
-        result |= write.HasErrors() || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(write, this.containingBlock.CompilationPart.Helper);
+        result |= write.HasErrors || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(write, this.containingBlock.CompilationPart.Helper);
         if (write.ProjectAsIExpression() is ICompileTimeConstant)
           this.containingBlock.CompilationPart.Helper.ReportError(new AstErrorMessage(write, Error.ConstInReadsOrWritesClause, write.SourceLocation.Source));
       }
       foreach (Expression alloc in this.allocates)
-        result |= alloc.HasErrors();
+        result |= alloc.HasErrors;
       return result;
     }
 
@@ -739,7 +743,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ConvertedCondition.HasErrors() || this.ConvertedCondition.HasSideEffect(true);
+      return this.ConvertedCondition.HasErrors || this.ConvertedCondition.HasSideEffect(true);
     }
 
     /// <summary>
@@ -787,10 +791,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the condition for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     bool? hasErrors;
 
@@ -846,7 +852,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      result |= this.ExceptionToThrow != null && this.ExceptionToThrow.HasErrors();
+      result |= this.ExceptionToThrow != null && this.ExceptionToThrow.HasErrors;
       return result;
     }
 
@@ -1004,9 +1010,9 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ExceptionType.HasErrors();
+      bool result = this.ExceptionType.HasErrors;
       //TODO: check that ExceptionType really is an exception.
-      result |= this.Postcondition.HasErrors();
+      result |= this.Postcondition.HasErrors;
       return result;
     }
 
@@ -1036,10 +1042,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the precondition for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() {
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     bool? hasErrors;
 
@@ -1163,7 +1171,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (TypeInvariant invariant in this.invariants)
-        result |= invariant.HasErrors();
+        result |= invariant.HasErrors;
       return result;
     }
 

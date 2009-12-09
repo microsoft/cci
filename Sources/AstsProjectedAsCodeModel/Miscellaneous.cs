@@ -784,9 +784,9 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
     /// </summary>
     protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.Type.HasErrors();
+      bool result = this.Type.HasErrors;
       foreach (var argument in this.Arguments)
-        result |= argument.HasErrors();
+        result |= argument.HasErrors;
       if (!result) {
         //TODO: check that constructor resolves
       }

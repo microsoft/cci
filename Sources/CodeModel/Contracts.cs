@@ -593,8 +593,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region IErrorCheckable Members
 
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     #endregion
@@ -626,8 +628,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region IErrorCheckable Members
 
-    public bool HasErrors() {
-      return false;
+    public bool HasErrors {
+      get {
+        return false;
+      }
     }
 
     #endregion
@@ -659,8 +663,10 @@ namespace Microsoft.Cci.Contracts {
 
     #region IErrorCheckable Members
 
-    public bool HasErrors() {
-      return true;
+    public bool HasErrors {
+      get {
+        return true;
+      }
     }
 
     #endregion

@@ -2916,7 +2916,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="targetType">The type to which the expression could not be implicitly converted.</param>
     //^ [Pure]
     public virtual void ReportFailedImplicitConversion(Expression expression, ITypeDefinition targetType) {
-      if (expression.HasErrors() || targetType == Dummy.Type) return;
+      if (expression.HasErrors || targetType == Dummy.Type) return;
       if (expression.Type == Dummy.Type) {
         if (targetType.IsDelegate)
           this.ReportFailedMethodGroupToDelegateConversion(expression, targetType);
@@ -2950,7 +2950,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="targetType">The delegate type to which the expression could not be implicitly converted.</param>
     //^ [Pure]
     public virtual void ReportFailedMethodGroupToDelegateConversion(Expression expression, ITypeDefinition targetType)
-      //^ requires !expression.HasErrors();
+      //^ requires !expression.HasErrors;
       //^ requires targetType.IsDelegate;
     {
       IMethodDefinition/*?*/ methodGroupRepresentative = this.ResolveIfName(expression) as IMethodDefinition;

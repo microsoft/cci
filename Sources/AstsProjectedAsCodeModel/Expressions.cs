@@ -289,8 +289,10 @@ namespace Microsoft.Cci.Ast {
         visitor.Visit(this);
       }
 
-      public bool HasErrors() {
-        return this.addition.HasErrors();
+      public bool HasErrors {
+        get {
+          return this.addition.HasErrors;
+        }
       }
 
       public IExpression LeftOperand {
@@ -999,7 +1001,7 @@ namespace Microsoft.Cci.Ast {
         } else {
           IAddressDereference/*?*/ addrDeref = resolvedTarget as IAddressDereference;
           if (addrDeref != null) {
-            if (addrDeref.HasErrors())
+            if (addrDeref.HasErrors)
               return true;
             if (allowAssignment && DerefConstVisitor.Check(addrDeref)) {
               this.Helper.ReportError(new AstErrorMessage(this, Error.AssignmentLeftHandValueExpected, addrDeref.Locations));
@@ -1007,7 +1009,7 @@ namespace Microsoft.Cci.Ast {
             }
           }
           if (resolvedTarget == null) {
-            if (!this.Expression.HasErrors())
+            if (!this.Expression.HasErrors)
               this.ReportError();
             return true;
           }
@@ -1279,7 +1281,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Address.HasErrors();
+      return this.Address.HasErrors;
     }
 
     /// <summary>
@@ -1442,7 +1444,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Address.HasErrors() || this.Type == Dummy.Type;
+      return this.Address.HasErrors || this.Type == Dummy.Type;
     }
 
     /// <summary>
@@ -1723,9 +1725,9 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.Body.HasErrors();
+      bool result = this.Body.HasErrors;
       foreach (ParameterDeclaration parDecl in this.Parameters)
-        result |= parDecl.Type.HasErrors();
+        result |= parDecl.Type.HasErrors;
       return result;
     }
 
@@ -2455,7 +2457,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Target.HasErrors() || this.ConvertedSourceExpression is DummyExpression;
+      return this.Target.HasErrors || this.ConvertedSourceExpression is DummyExpression;
     }
 
     /// <summary>
@@ -2490,7 +2492,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected virtual Expression GetConvertedSourceExpression() {
       Expression result = this.Helper.ImplicitConversionInAssignmentContext(this.source, this.Type);
-      if (result is DummyExpression && !this.Source.HasErrors() && !this.Target.HasErrors())
+      if (result is DummyExpression && !this.Source.HasErrors && !this.Target.HasErrors)
         this.Helper.ReportFailedImplicitConversion(this.Source, this.Type);
       return result;
     }
@@ -2531,7 +2533,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
       if (this.cachedProjection != null) return this.cachedProjection;
-      if (this.HasErrors())
+      if (this.HasErrors)
         return this.cachedProjection = new DummyExpression(this.SourceLocation);
       object resolvedTarget = this.Target.Definition;
       IPropertyDefinition/*?*/ property = resolvedTarget as IPropertyDefinition;
@@ -2955,8 +2957,8 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.LeftOperand.HasErrors();
-      result |= this.RightOperand.HasErrors();
+      bool result = this.LeftOperand.HasErrors;
+      result |= this.RightOperand.HasErrors;
       if (!result) {
         IMethodCall/*?*/ overloadCall = this.OverloadMethodCall;
         if (overloadCall == null) {
@@ -3146,7 +3148,7 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (!this.HasErrors()) {
+      if (!this.HasErrors) {
         MethodCall/*?*/ overloadedMethodCall = this.OverloadMethodCall;
         if (overloadedMethodCall != null) {
           if (!(overloadedMethodCall.ResolvedMethod is BuiltinMethodDefinition))
@@ -3248,7 +3250,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ProjectAsIExpression().HasErrors();
+      return this.ProjectAsIExpression().HasErrors;
     }
 
     /// <summary>
@@ -3833,7 +3835,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Expression.HasErrors();
+      return this.Expression.HasErrors;
     }
 
     /// <summary>
@@ -4133,7 +4135,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.GetConversion().HasErrors();
+      return this.GetConversion().HasErrors;
     }
 
     /// <summary>
@@ -4148,11 +4150,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     private Expression GetConversion() {
       if (this.conversion == null) {
-        if (this.ValueToCast.HasErrors() || this.TargetType.HasErrors())
+        if (this.ValueToCast.HasErrors || this.TargetType.HasErrors)
           this.conversion = new DummyExpression(this.SourceLocation);
         else {
           this.conversion = this.Helper.ExplicitConversion(this.ValueToCast, this.TargetType.ResolvedType);
-          if (!this.ValueToCast.HasErrors() && !this.TargetType.HasErrors() && this.conversion.HasErrors()) {
+          if (!this.ValueToCast.HasErrors && !this.TargetType.HasErrors && this.conversion.HasErrors) {
             string sourceTypeName = this.Helper.GetTypeName(this.ValueToCast.Type);
             string targetTypeName = this.Helper.GetTypeName(this.TargetType.ResolvedType);
             if (this.Helper.ExpressionIsNumericLiteral(this.ValueToCast)) {
@@ -4477,7 +4479,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Operand.HasErrors();
+      return this.Operand.HasErrors;
     }
 
     /// <summary>
@@ -4739,7 +4741,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (Expression arg in this.ConvertedArguments)
-        result |= arg.HasErrors();
+        result |= arg.HasErrors;
       result |= this.Type == Dummy.Type;
       return result;
     }
@@ -4887,7 +4889,7 @@ namespace Microsoft.Cci.Ast {
     protected virtual bool ComplainedAboutArguments() {
       bool badSubExpression = false;
       foreach (Expression argument in this.OriginalArguments) {
-        if (argument.HasErrors()) badSubExpression = true;
+        if (argument.HasErrors) badSubExpression = true;
       }
       return badSubExpression;
     }
@@ -4972,7 +4974,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ValueToConvert.HasErrors();
+      return this.ValueToConvert.HasErrors;
     }
 
     /// <summary>
@@ -5234,7 +5236,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.LeftOperand.HasErrors() || this.RightOperand.HasErrors();
+      return this.LeftOperand.HasErrors || this.RightOperand.HasErrors;
     }
 
     /// <summary>
@@ -6151,9 +6153,9 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.ConvertedCondition.HasErrors();
-      result |= this.ConvertedResultIfTrue.HasErrors();
-      result |= this.ConvertedResultIfFalse.HasErrors();
+      bool result = this.ConvertedCondition.HasErrors;
+      result |= this.ConvertedResultIfTrue.HasErrors;
+      result |= this.ConvertedResultIfFalse.HasErrors;
       result |= this.Type == Dummy.Type;
       if (this.Type == Dummy.Type) {
         var leftType = this.ResultIfTrue.Type;
@@ -6479,7 +6481,7 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (this.ResolvedMethod == Dummy.Method && !this.HasErrors())
+      if (this.ResolvedMethod == Dummy.Method && !this.HasErrors)
         // The only unresolved constructor call is a no-arg "new" on a value type.
         // Value types do not have no-arg constructors, but translate to IL "initobj TypeRef"
         return new DefaultValue(this.ObjectType, this.SourceLocation);
@@ -8247,7 +8249,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      if (this.LeftOperand.HasErrors() || this.RightOperand.HasErrors()) return true;
+      if (this.LeftOperand.HasErrors || this.RightOperand.HasErrors) return true;
       //The point of all this is to check that the operands are not value types and are not known at compile time to never be equal or never be unequal.
       MethodCall/*?*/ overloadCall = this.OverloadMethodCall;
       if (overloadCall != null && overloadCall.ResolvedMethod.Name != this.NameTable.ObjectOpObject) return false;
@@ -8328,7 +8330,7 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (!this.HasErrors()) {
+      if (!this.HasErrors) {
         IExpression result = base.ProjectAsNonConstantIExpression();
         if (result == this) {
           if (this.LeftOperand.Type.IsValueType && this.RightOperand.Type.IsReferenceType) {
@@ -8881,10 +8883,12 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Checks the expression for errors and returns true if any were found.
     /// </summary>
-    public bool HasErrors() { //TODO: change this into a property
-      if (this.hasErrors == null)
-        this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      return this.hasErrors.Value;
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
     }
     /// <summary>
     /// Non null and true if this expression has errors. Visible to derived classes so that it can be set during construction.
@@ -9164,8 +9168,8 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.GenericTypeOrMethod.HasErrors();
-      foreach (TypeExpression typeArg in this.ArgumentTypes) result |= typeArg.HasErrors();
+      bool result = this.GenericTypeOrMethod.HasErrors;
+      foreach (TypeExpression typeArg in this.ArgumentTypes) result |= typeArg.HasErrors;
       return result;
     }
 
@@ -10021,7 +10025,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = base.CheckForErrorsAndReturnTrueIfAnyAreFound();
-      result |= this.IndexedObject.HasErrors();
+      result |= this.IndexedObject.HasErrors;
       return result;
     }
 
@@ -10585,7 +10589,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      if (this.Operand.HasErrors()) return true;
+      if (this.Operand.HasErrors) return true;
       return this.Type == Dummy.Type;
     }
 
@@ -10640,7 +10644,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (!this.HasErrors()) {
+      if (!this.HasErrors) {
         MethodCall/*?*/ overloadedMethodCall = this.OverloadMethodCall;
         if (overloadedMethodCall != null) {
           if (overloadedMethodCall.ResolvedMethod is BuiltinMethodDefinition)
@@ -11693,7 +11697,7 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (!this.HasErrors()) {
+      if (!this.HasErrors) {
         IMethodCall/*?*/ overloadMethodCall = this.OverloadMethodCall;
         if (overloadMethodCall != null) {
           if (!(overloadMethodCall.MethodToCall.ResolvedMethod is BuiltinMethodDefinition))
@@ -12685,7 +12689,7 @@ namespace Microsoft.Cci.Ast {
         return;
       }
       if (candidates.Count == 0) {
-        if (!this.MethodExpression.HasErrors()) {
+        if (!this.MethodExpression.HasErrors) {
           //this.MethodExpression binds to something that is not callable.
           object/*?*/ badSymbol = this.ResolveMethodExpression(this.MethodExpression);
           string/*?*/ symbolKind = null;
@@ -14382,7 +14386,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Expression.HasErrors();
+      return this.Expression.HasErrors;
     }
 
     /// <summary>
@@ -14501,7 +14505,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Expression.HasErrors();
+      return this.Expression.HasErrors;
     }
 
     /// <summary>
@@ -14767,7 +14771,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ParenthesizedExpression.HasErrors();
+      return this.ParenthesizedExpression.HasErrors;
     }
 
     /// <summary>
@@ -14920,7 +14924,7 @@ namespace Microsoft.Cci.Ast {
             this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this.Qualifier, Error.PointerExpected, RhsToStringForError()));
           }
         } else {
-          if (!this.Qualifier.HasErrors()) // qualifier is ok, but not of pointer type
+          if (!this.Qualifier.HasErrors) // qualifier is ok, but not of pointer type
             this.ContainingBlock.Helper.ReportError(new AstErrorMessage(this.Qualifier, Error.PointerExpected, RhsToStringForError()));
         }
         return true;
@@ -15123,7 +15127,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.elementType.HasErrors() || this.elementType == Dummy.Type;
+      return this.elementType.HasErrors || this.elementType == Dummy.Type;
     }
 
     /// <summary>
@@ -15828,7 +15832,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       ITypeDefinitionMember/*?*/ resolvedMember = this.ResolveAsValueContainer(false);
       if (resolvedMember == null) {
-        if (this.Qualifier.HasErrors()) return true;
+        if (this.Qualifier.HasErrors) return true;
         resolvedMember = this.ResolveAsValueContainer(true);
       }
       if (resolvedMember == null) {
@@ -16111,7 +16115,7 @@ namespace Microsoft.Cci.Ast {
       }
       if (!(result is IEventDefinition || result is IFieldDefinition || result is IPropertyDefinition || result is INestedTypeDefinition)) {
         if (result == null) {
-          if (this.Qualifier.HasErrors()) return null;
+          if (this.Qualifier.HasErrors) return null;
         }
         //TODO: error, result not expected here
         return null;
@@ -16284,8 +16288,8 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       foreach (LocalDeclarationsStatement decl in this.BoundVariables)
-        result |= decl.HasErrors();
-      result |= this.ConvertedCondition.HasErrors();
+        result |= decl.HasErrors;
+      result |= this.ConvertedCondition.HasErrors;
       result |= this.HasSideEffect(true);
       return result;
     }
@@ -16356,7 +16360,7 @@ namespace Microsoft.Cci.Ast {
       //TODO: global qualifier
       IExpression/*?*/ result = this.projectedExpression;
       if (result == null) {
-        if (this.HasErrors())
+        if (this.HasErrors)
           result = new DummyExpression(this.SourceLocation);
         else {
           Expression forallRef = NamespaceHelper.CreateInSystemDiagnosticsContractsCodeContractExpr(this.NameTable, this.GetQuantifierName());
@@ -18678,8 +18682,10 @@ namespace Microsoft.Cci.Ast {
         visitor.Visit(this);
       }
 
-      public bool HasErrors() {
-        return this.subtraction.HasErrors();
+      public bool HasErrors {
+        get {
+          return this.subtraction.HasErrors;
+        }
       }
 
       public IExpression LeftOperand {
@@ -19445,7 +19451,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Operand.HasErrors() || this.Type == Dummy.Type;
+      return this.Operand.HasErrors || this.Type == Dummy.Type;
     }
 
     /// <summary>
@@ -19546,7 +19552,7 @@ namespace Microsoft.Cci.Ast {
       MethodCall/*?*/ overloadCall = this.OverloadCall();
       if (overloadCall != null) return overloadCall.Type;
       //The operation has a bad operand that cannot be matched to a single overload method. For example + string.
-      if (!this.Operand.HasErrors()) {
+      if (!this.Operand.HasErrors) {
         this.Helper.ReportError(this.GetUnaryBadOperandErrorMessage());
       }
       return Dummy.Type;
@@ -19609,7 +19615,7 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (!this.HasErrors()) {
+      if (!this.HasErrors) {
         MethodCall/*?*/ overloadedMethodCall = this.OverloadMethodCall;
         if (overloadedMethodCall != null) {
           if (!(overloadedMethodCall.ResolvedMethod is BuiltinMethodDefinition))
@@ -19935,7 +19941,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Operand.HasErrors();
+      return this.Operand.HasErrors;
     }
 
     /// <summary>

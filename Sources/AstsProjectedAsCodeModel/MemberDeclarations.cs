@@ -1754,7 +1754,7 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       if (this.body != null)
-        result |= this.body.HasErrors();
+        result |= this.body.HasErrors;
       //TODO: lots more
       return result;
     }
