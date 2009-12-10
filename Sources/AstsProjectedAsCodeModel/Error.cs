@@ -136,6 +136,16 @@ namespace Microsoft.Cci.Ast {
     AssignmentLeftHandValueExpected,
 
     /// <summary>
+    /// The best overloaded method match for '{0}' has some invalid arguments.
+    /// </summary>
+    BadArgumentTypes,
+
+    /// <summary>
+    /// Argument '{0}': cannot convert from '{1}' to '{2}'.
+    /// </summary>
+    BadArgumentType,
+
+    /// <summary>
     /// Operator '{0}' cannot be applied to operands of type '{1}' and '{2}'.
     /// </summary>
     BadBinaryOperation,
@@ -199,6 +209,11 @@ namespace Microsoft.Cci.Ast {
     /// Constant value '{0}' cannot be converted to a '{1}'.
     /// </summary>
     ConstOutOfRange,
+
+    /// <summary>
+    /// Constant value '{0}' cannot be converted to a '{1}' (use 'unchecked' syntax to override).
+    /// </summary>
+    ConstOutOfRangeChecked,
 
     /// <summary>
     /// Response file '{0}' included multiple times.

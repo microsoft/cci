@@ -126,14 +126,20 @@
   <data name="AssignmentLeftHandValueExpected" xml:space="preserve">
     <value>The left-hand side of an assignment must be a variable, property or indexer.</value>
   </data>
-  <data name="BadNumberOfArguments" xml:space="preserve">
-    <value>No overload for method '{0}' takes '{1}' arguments.</value>
+  <data name="BadArgumentTypes">
+    <value>The best overloaded method match for '{0}' has some invalid arguments.</value>
+  </data>
+  <data name="BadArgumentType">
+    <value>Argument '{0}': cannot convert from '{1}' to '{2}'.</value>
   </data>
   <data name="BadBinaryOperation" xml:space="preserve">
     <value>Operator '{0}' cannot be applied to operands of type '{1}' and '{2}'.</value>
   </data>
   <data name="BadExternAlias" xml:space="preserve">
     <value>The extern alias '{0}' was not specified in a /reference option.</value>
+  </data>
+  <data name="BadNumberOfArguments" xml:space="preserve">
+    <value>No overload for method '{0}' takes '{1}' arguments.</value>
   </data>
   <data name="BadReferenceCompareLeft" xml:space="preserve">
     <value>Possible unintended reference comparison; to get a value comparison, cast the left hand side to type '{0}'.</value>
@@ -176,6 +182,9 @@
   </data>
   <data name="ConstOutOfRange" xml:space="preserve">
     <value>Constant value '{0}' cannot be converted to a '{1}'.</value>
+  </data>
+  <data name="ConstOutOfRangeChecked">
+    <value>Constant value '{0}' cannot be converted to a '{1}' (use 'unchecked' syntax to override).</value>
   </data>
   <data name="ExpressionHasSideEffect" xml:space="preserve">
     <value>Evaluating this expression has the side effect of modifying memory, which is not permitted in this context.</value>

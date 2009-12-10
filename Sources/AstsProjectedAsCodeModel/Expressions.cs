@@ -4159,7 +4159,10 @@ namespace Microsoft.Cci.Ast {
             string targetTypeName = this.Helper.GetTypeName(this.TargetType.ResolvedType);
             if (this.Helper.ExpressionIsNumericLiteral(this.ValueToCast)) {
               //^ assert this.ValueToCast.Value != null;
-              this.Helper.ReportError(new AstErrorMessage(this.ValueToCast, Error.ConstOutOfRange, String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", this.ValueToCast.Value), targetTypeName));
+              if (this.ContainingBlock.UseCheckedArithmetic)
+                this.Helper.ReportError(new AstErrorMessage(this, Error.ConstOutOfRangeChecked, String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", this.ValueToCast.Value), targetTypeName));
+              else
+                this.Helper.ReportError(new AstErrorMessage(this, Error.ConstOutOfRange, String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", this.ValueToCast.Value), targetTypeName));
             } else {
               this.Helper.ReportError(new AstErrorMessage(this, Error.NoExplicitConversion, sourceTypeName, targetTypeName));
             }
@@ -4878,6 +4881,12 @@ namespace Microsoft.Cci.Ast {
       if (resolvedMethod == Dummy.Method) {
         if (this.ComplainedAboutArguments()) return resolvedMethod;
         if (this.ComplainedAboutFailedInferences()) return resolvedMethod;
+        resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, true);
+        if (resolvedMethod != Dummy.Method) {
+          this.Helper.ReportError(new AstErrorMessage(this, Error.BadArgumentTypes, this.Helper.GetMethodSignature(resolvedMethod,
+            NameFormattingOptions.Signature|NameFormattingOptions.UseTypeKeywords)));
+          return resolvedMethod;
+        }
         this.ComplainAboutCallee();
       }
       return resolvedMethod;

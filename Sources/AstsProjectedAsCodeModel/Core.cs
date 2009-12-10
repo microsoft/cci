@@ -1342,7 +1342,7 @@ namespace Microsoft.Cci.Ast {
             }
             convertedArg = this.ImplicitConversionInAssignmentContext(arg, parType);
             if (convertedArg is DummyExpression)
-              this.ReportFailedImplicitConversion(arg, parType);
+              this.ReportFailedArgumentConversion(arg, parType, par.Index);
           } else {
             //Still have parameters, but no more arguments have been specified.
             if (lastParameter && par.IsParameterArray) {
@@ -1403,11 +1403,37 @@ namespace Microsoft.Cci.Ast {
     //^ [Pure]
     public virtual IEnumerable<ITypeDefinitionMember> GetDefaultMembers(ITypeDefinition type) {
       //TODO: implement this for real
-      IName propName = Dummy.Name;
-      if (TypeHelper.TypesAreEquivalent(type, this.PlatformType.SystemString)) propName = this.NameTable.GetNameFor("Chars");
+      IName memberName = Dummy.Name;
+      if (TypeHelper.TypesAreEquivalent(type, this.PlatformType.SystemString)) memberName = this.NameTable.GetNameFor("Chars");
       // default to Item
-      else if (TypeHelper.TypesAreEquivalent(type, this.PlatformType.SystemCollectionsGenericDictionary) || true) propName = this.NameTable.GetNameFor("Item");
-      return type.GetMembersNamed(propName, false);
+      else if (TypeHelper.TypesAreEquivalent(type, this.PlatformType.SystemCollectionsGenericDictionary) || true) memberName = this.NameTable.GetNameFor("Item");
+      var result = new List<ITypeDefinitionMember>();
+      this.PopulateWithDefaultMembersIncludingInheritedMembers(type, memberName, result);
+      return result;
+    }
+
+    /// <summary>
+    /// Add all members named memberName to the given list, starting with the local members of the given type and then recursively
+    /// doing the same with the base classes. Do not add a member if there already is one with the same signature.
+    /// </summary>
+    private void PopulateWithDefaultMembersIncludingInheritedMembers(ITypeDefinition type, IName memberName, List<ITypeDefinitionMember> result) {
+      foreach (var member in type.GetMembersNamed(memberName, false)) {
+        if (result.Exists((x) => MembersMatch(x, member))) continue;
+        result.Add(member);
+      }
+      foreach (var baseClass in type.BaseClasses)
+        this.PopulateWithDefaultMembersIncludingInheritedMembers(baseClass.ResolvedType, memberName, result);
+    }
+
+    /// <summary>
+    /// Returns true if x and y are both properties with the same signature.
+    /// </summary>
+    private static bool MembersMatch(ITypeDefinitionMember x, ITypeDefinitionMember y) {
+      IPropertyDefinition xp = x as IPropertyDefinition;
+      IPropertyDefinition yp = y as IPropertyDefinition;
+      if (xp != null && yp != null) return MemberHelper.SignaturesAreEqual(xp, yp);
+      //TODO: more stuff
+      return false;
     }
 
     /// <summary>
@@ -2905,6 +2931,21 @@ namespace Microsoft.Cci.Ast {
     /// <param name="error">The error to report.</param>
     public void ReportError(IErrorMessage error) {
       this.Compilation.HostEnvironment.ReportError(error);
+    }
+
+    /// <summary>
+    /// Reports an error stating that the type of the given expression cannot be converted to the given parameter type.
+    /// </summary>
+    /// <param name="expression">The expression that results in the argument value.</param>
+    /// <param name="parameterType">The type of the parameter.</param>
+    /// <param name="parameterIndex">The zero based index of the parameter.</param>
+    public virtual void ReportFailedArgumentConversion(Expression expression, ITypeDefinition parameterType, int parameterIndex) {
+      if (expression.HasErrors) return;
+      if (expression.Type == Dummy.Type)
+        this.ReportFailedImplicitConversion(expression, parameterType);
+      else
+        this.ReportError(new AstErrorMessage(expression, Error.BadArgumentType, (parameterIndex+1).ToString(), 
+          this.GetTypeName(expression.Type), this.GetTypeName(parameterType)));
     }
 
     /// <summary>
