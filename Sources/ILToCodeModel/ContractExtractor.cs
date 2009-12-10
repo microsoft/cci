@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //-----------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
@@ -55,8 +56,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
     }
 
-    internal ContractExtractor(SourceMethodBody sourceMethodBody, ContractProvider contractProvider)
-      : base(sourceMethodBody.host, true) {
+    internal ContractExtractor(SourceMethodBody sourceMethodBody, ContractProvider contractProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(sourceMethodBody.host, true, sourceLocationProvider) {
       this.sourceMethodBody = sourceMethodBody;
       this.contractProvider = contractProvider;
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
@@ -131,10 +132,14 @@ namespace Microsoft.Cci.ILToCodeModel {
           List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
           List<ILocation> locations = new List<ILocation>(methodCall.Locations);
           int numArgs = arguments.Count;
+
+          string origSource;
+          TryGetConditionText(locations, numArgs, out origSource);
+
           TypeInvariant invariant = new TypeInvariant() {
             Condition = this.Visit(arguments[0]), // REVIEW: Does this need to be visited?
             Description = numArgs >= 2 ? arguments[1] : null,
-            OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
+            OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
             Locations = locations
           };
           this.CurrentTypeContract.Invariants.Add(invariant);
@@ -245,8 +250,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       IBlockStatement blockStatement = conditional.TrueBranch as IBlockStatement;
       if (blockStatement == null) return false;
       List<IStatement> statements = new List<IStatement>(blockStatement.Statements);
-      if (statements.Count != 1) return false;
-      IStatement stmt = statements[0];
+      // Zero or more assignments to locals
+      //TODO: Make sure they are compiler-generated locals
+      int i = 0;
+      while (i < statements.Count && IsAssignmentToLocal(statements[i])) i++;
+      if (i == statements.Count) return false;
+      IStatement stmt = statements[i];
       IThrowStatement throwStatement = stmt as IThrowStatement;
       if (throwStatement != null) {
         return true;
@@ -283,6 +292,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       return i == statements.Count || (statements[i] is IReturnStatement && i == statements.Count - 1);
     }
 
+    /// <summary>
+    /// Returns true iff statement is "loc := e" or "loc[i] := e"
+    /// </summary>
     private static bool IsAssignmentToLocal(IStatement statement) {
       IExpressionStatement exprStatement = statement as IExpressionStatement;
       if (exprStatement == null) return false;
@@ -290,7 +302,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (assignment == null) return false;
       ITargetExpression targetExpression = assignment.Target as ITargetExpression;
       if (targetExpression == null) return false;
-      return targetExpression.Definition is ILocalDefinition && targetExpression.Instance == null;
+      if (targetExpression.Definition is ILocalDefinition && targetExpression.Instance == null) return true;
+      IArrayIndexer iai = targetExpression.Definition as IArrayIndexer;
+      if (iai == null) return false;
+      IBoundExpression be = targetExpression.Instance as IBoundExpression;
+      if (be == null) return false;
+      return (be.Definition is ILocalDefinition && be.Instance == null);
     }
 
     private static bool IsDefinitionOfLocalWithInitializer(IStatement statement) {
@@ -347,10 +364,12 @@ namespace Microsoft.Cci.ILToCodeModel {
                 arg = be;
                 locations.AddRange(be.BlockStatement.Locations);
               }
+              string origSource;
+              TryGetConditionText(locations, numArgs, out origSource);
               PostCondition postcondition = new PostCondition() {
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                 Description = numArgs >=2 ? arguments[1] : null,
-                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
+                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
                 Locations = locations
               };
 
@@ -365,12 +384,14 @@ namespace Microsoft.Cci.ILToCodeModel {
                 arg = be;
                 locations.AddRange(be.BlockStatement.Locations);
               }
+              string origSource;
+              TryGetConditionText(locations, numArgs, out origSource);
               ThrownException exceptionalPostcondition = new ThrownException() {
                 ExceptionType = genericArgs[0],
                 Postcondition = new PostCondition() {
                   Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                   Description = numArgs >= 2 ? arguments[1] : null,
-                  OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
+                  OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
                   Locations = locations
                 }
               };
@@ -396,12 +417,14 @@ namespace Microsoft.Cci.ILToCodeModel {
                   break;
                 }
               }
+              string origSource;
+              TryGetConditionText(locations, numArgs, out origSource);
 
               Precondition precondition = new Precondition() {
                 AlwaysCheckedAtRuntime = false,
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                 Description = numArgs >= 2 ? arguments[1] : null,
-                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : null,
+                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
                 Locations = locations,
                 ExceptionToThrow = thrownException,
               };
@@ -414,7 +437,76 @@ namespace Microsoft.Cci.ILToCodeModel {
       return;
     }
 
-    private static string GetStringFromArgument(IExpression arg) {
+    private bool TryGetConditionText(IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
+      int startColumn;
+      if (!TryGetSourceText(locations, out sourceText, out startColumn)) return false;
+      int firstSourceTextIndex = sourceText.IndexOf('(');
+      firstSourceTextIndex = firstSourceTextIndex == -1 ? 0 : firstSourceTextIndex + 1; // the +1 is to skip the opening paren
+      int lastSourceTextIndex;
+      if (numArgs == 1) {
+        lastSourceTextIndex = sourceText.LastIndexOf(')'); // supposedly the character after the first (and only) argument
+      } else {
+        lastSourceTextIndex = IndexOfWhileSkippingBalancedThings(sourceText, firstSourceTextIndex, ','); // supposedly the character after the first argument
+      }
+      if (lastSourceTextIndex <= firstSourceTextIndex) {
+        //Console.WriteLine(sourceText);
+        lastSourceTextIndex = sourceText.Length; // if something went wrong, at least get the whole source text.
+      }
+      sourceText = sourceText.Substring(firstSourceTextIndex, lastSourceTextIndex - firstSourceTextIndex);
+      var indentSize = firstSourceTextIndex + startColumn;
+      sourceText = AdjustIndentationOfMultilineSourceText(sourceText, indentSize);
+      return true;
+    }
+    private bool TryGetSourceText(IEnumerable<ILocation> locations, out string/*?*/ sourceText, out int startColumn) {
+      sourceText = null;
+      startColumn = 0; // columns begin at 1, so this can work as a null value
+      if (this.sourceLocationProvider != null) {
+        foreach (var loc in locations) {
+          foreach (IPrimarySourceLocation psloc in this.sourceLocationProvider.GetPrimarySourceLocationsFor(loc)) {
+            if (!String.IsNullOrEmpty(psloc.Source)) {
+              sourceText = psloc.Source;
+              startColumn = psloc.StartColumn;
+              break;
+            }
+          }
+          if (sourceText != null) break;
+        }
+      }
+      return sourceText != null;
+    }
+    private int IndexOfWhileSkippingBalancedThings(string source, int startIndex, char targetChar) {
+      int i = startIndex;
+      while (i < source.Length) {
+        if (source[i] == targetChar) break;
+        else if (source[i] == '(') i = IndexOfWhileSkippingBalancedThings(source, i + 1, ')') + 1;
+        else if (source[i] == '"') i = IndexOfWhileSkippingBalancedThings(source, i + 1, '"') + 1;
+        else i++;
+      }
+      return i;
+    }
+    static char[] whiteSpace = { ' ', '\t' };
+    private string AdjustIndentationOfMultilineSourceText(string sourceText, int trimLength) {
+      if (!sourceText.Contains("\n")) return sourceText;
+      var lines = sourceText.Split('\n');
+      if (lines.Length == 1) return sourceText;
+      var trimmedSecondLine = lines[1].TrimStart(whiteSpace);
+      for (int i = 1; i < lines.Length; i++) {
+        var currentLine = lines[i];
+        if (trimLength < currentLine.Length) {
+          var prefix = currentLine.Substring(0, trimLength);
+          bool allBlank = true;
+          for (int j = 0, m = prefix.Length; j < m; j++)
+          if (prefix[j] != ' ')
+            allBlank = false;
+          if (allBlank)
+            lines[i] = currentLine.Substring(trimLength);
+        }
+      }
+      var numberOfLinesToJoin = String.IsNullOrEmpty(lines[lines.Length - 1].TrimStart(whiteSpace)) ? lines.Length - 1 : lines.Length;
+      return String.Join("\n", lines, 0, numberOfLinesToJoin);
+    }
+
+    private static string/*?*/ GetStringFromArgument(IExpression arg) {
       string s = null;
       ICompileTimeConstant c = arg as ICompileTimeConstant;
       if (c != null) {
@@ -443,12 +535,38 @@ namespace Microsoft.Cci.ILToCodeModel {
       EmptyStatement empty = conditional.FalseBranch as EmptyStatement;
       IBlockStatement blockStatement = conditional.TrueBranch as IBlockStatement;
       List<IStatement> statements = new List<IStatement>(blockStatement.Statements);
-      IStatement statement = statements[0];
-      var locations = new List<ILocation>(conditional.TrueBranch.Locations);
+      IStatement statement = statements[statements.Count - 1];
       IExpression failureBehavior;
       IThrowStatement throwStatement = statement as IThrowStatement;
+      var sourceLocations = new List<ILocation>(conditional.Condition.Locations);
+      if (sourceLocations.Count == 0) {
+        sourceLocations.AddRange(conditional.Locations);
+      }
+
+      string origSource = null;
+      if (0 < sourceLocations.Count) {
+        TryGetConditionText(sourceLocations, 1, out origSource);
+        if (origSource != null) {
+          origSource = BrianGru.NegatePredicate(origSource);
+        }
+      }
+      
+      var locations = new List<ILocation>();
       if (throwStatement != null) {
-        failureBehavior = throwStatement.Exception;
+        if (statements.Count == 1) {
+          failureBehavior = throwStatement.Exception;
+        } else {
+          var localAssignments = new List<IStatement>();
+          for (int i = 0; i < statements.Count -1; i++){
+            localAssignments.Add(statements[i]);
+          }
+          failureBehavior = new BlockExpression() {
+            BlockStatement = new BlockStatement() {
+              Statements = localAssignments,
+            },
+            Expression = throwStatement.Exception,
+          };
+        }
         locations.AddRange(throwStatement.Locations);
       } else {
         IExpressionStatement es = statement as IExpressionStatement;
@@ -456,11 +574,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         failureBehavior = methodCall; // REVIEW: Does this need to be visited?
         locations.AddRange(es.Locations);
       }
+
       Precondition precondition = new Precondition() {
         AlwaysCheckedAtRuntime = true,
         Condition = new LogicalNot() { Operand = conditional.Condition }, // REVIEW: Does this need to be visited?
         ExceptionToThrow = failureBehavior,
-        Locations = new List<ILocation>(locations)
+        Locations = new List<ILocation>(locations),
+        OriginalSource = origSource,
       };
       this.CurrentMethodContract.Preconditions.Add(precondition);
       return;
@@ -511,6 +631,161 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         return base.Visit(methodCall);
       }
+    }
+
+    private static class BrianGru {
+      #region Code from BrianGru to negate predicates coming from if-then-throw preconditions
+      // Recognize some common predicate forms, and negate them.  Also, fall back to a correct default.
+      internal static String NegatePredicate(String predicate) {
+        if (String.IsNullOrEmpty(predicate)) return "";
+        // "(p)", but avoiding stuff like "(p && q) || (!p)"
+        if (predicate[0] == '(' && predicate[predicate.Length - 1] == ')') {
+          if (predicate.IndexOf('(', 1) == -1)
+            return '(' + NegatePredicate(predicate.Substring(1, predicate.Length - 2)) + ')';
+        }
+
+        // "!p"
+        if (predicate[0] == '!' && (ContainsNoOperators(predicate, 1, predicate.Length - 1) || IsSimpleFunctionCall(predicate, 1, predicate.Length - 1)))
+          return predicate.Substring(1);
+
+        // "a < b" or "a <= b"
+        if (predicate.Contains("<")) {
+          int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
+          int ltIndex = predicate.IndexOf('<');
+          bool ltOrEquals = predicate[ltIndex + 1] == '=';
+          aEnd = ltIndex;
+          bStart = ltOrEquals ? ltIndex + 2 : ltIndex + 1;
+
+          String a = predicate.Substring(aStart, aEnd - aStart);
+          String b = predicate.Substring(bStart, bEnd - bStart);
+          if (ContainsNoOperators(a) && ContainsNoOperators(b))
+            return a + (ltOrEquals ? ">" : ">=") + b;
+        }
+
+        // "a > b" or "a >= b"
+        if (predicate.Contains(">")) {
+          int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
+          int gtIndex = predicate.IndexOf('>');
+          bool gtOrEquals = predicate[gtIndex + 1] == '=';
+          aEnd = gtIndex;
+          bStart = gtOrEquals ? gtIndex + 2 : gtIndex + 1;
+
+          String a = predicate.Substring(aStart, aEnd - aStart);
+          String b = predicate.Substring(bStart, bEnd - bStart);
+          if (ContainsNoOperators(a) && ContainsNoOperators(b))
+            return a + (gtOrEquals ? "<" : "<=") + b;
+        }
+
+        // "a == b"  or  "a != b"
+        if (predicate.Contains("=")) {
+          int aStart = 0, aEnd = -1, bStart = -1, bEnd = predicate.Length;
+          int eqIndex = predicate.IndexOf('=');
+          bool skip = false;
+          bool equalsOperator = false;
+          if (predicate[eqIndex - 1] == '!') {
+            aEnd = eqIndex - 1;
+            bStart = eqIndex + 1;
+            equalsOperator = false;
+          } else if (predicate[eqIndex + 1] == '=') {
+            aEnd = eqIndex;
+            bStart = eqIndex + 2;
+            equalsOperator = true;
+          } else
+            skip = true;
+
+          if (!skip) {
+            String a = predicate.Substring(aStart, aEnd - aStart);
+            String b = predicate.Substring(bStart, bEnd - bStart);
+            if (ContainsNoOperators(a) && ContainsNoOperators(b))
+              return a + (equalsOperator ? "!=" : "==") + b;
+          }
+        }
+
+        if (predicate.Contains("&&") || predicate.Contains("||")) {
+          // Consider predicates like "(P) && (Q)", "P || Q", "(P || Q) && R", etc.
+          // Apply DeMorgan's law, and recurse to negate both sides of the binary operator.
+          int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
+          int parenCount = 0;
+          bool skip = false;
+          bool foundAnd = false, foundOr = false;
+          aEnd = 0;
+          while (aEnd < predicate.Length && ((predicate[aEnd] != '&' && predicate[aEnd] != '|') || parenCount > 0)) {
+            if (predicate[aEnd] == '(')
+              parenCount++;
+            else if (predicate[aEnd] == ')')
+              parenCount--;
+            aEnd++;
+          }
+          if (aEnd >= predicate.Length - 1)
+            skip = true;
+          else {
+            if (aEnd + 1 < predicate.Length && predicate[aEnd] == '&' && predicate[aEnd + 1] == '&')
+              foundAnd = true;
+            else if (aEnd + 1 < predicate.Length && predicate[aEnd] == '|' && predicate[aEnd + 1] == '|')
+              foundOr = true;
+            if (!foundAnd && !foundOr)
+              skip = true;
+          }
+
+          if (!skip) {
+            bStart = aEnd + 2;
+            while (Char.IsWhiteSpace(predicate[aEnd - 1]))
+              aEnd--;
+            while (Char.IsWhiteSpace(predicate[bStart]))
+              bStart++;
+
+            String a = predicate.Substring(aStart, aEnd - aStart);
+            String b = predicate.Substring(bStart, bEnd - bStart);
+            String op = foundAnd ? " || " : " && ";
+            return NegatePredicate(a) + op + NegatePredicate(b);
+          }
+        }
+
+        return String.Format("!({0})", predicate);
+      }
+      private static bool ContainsNoOperators(String s) {
+        return ContainsNoOperators(s, 0, s.Length);
+      }
+      // These aren't operators like + per se, but ones that will cause evaluation order to possibly change,
+      // or alter the semantics of what might be in a predicate.
+      // @TODO: Consider adding '~'
+      static readonly String[] Operators = new String[] { "==", "!=", "=", "<", ">", "(", ")", "//", "/*", "*/" };
+      private static bool ContainsNoOperators(String s, int start, int end) {
+        foreach (String op in Operators)
+          if (s.IndexOf(op) >= 0)
+            return false;
+        return true;
+      }
+      private static bool ArrayContains<T>(T[] array, T item) {
+        foreach (T x in array)
+          if (item.Equals(x))
+            return true;
+        return false;
+      }
+      // Recognize only SIMPLE method calls, like "System.String.Equals("", "")".
+      private static bool IsSimpleFunctionCall(String s, int start, int end) {
+        char[] badChars = { '+', '-', '*', '/', '~', '<', '=', '>', ';', '?', ':' };
+        int parenCount = 0;
+        int index = start;
+        bool foundMethod = false;
+        for (; index < end; index++) {
+          if (s[index] == '(') {
+            parenCount++;
+            if (parenCount > 1)
+              return false;
+            if (foundMethod == true)
+              return false;
+            foundMethod = true;
+          } else if (s[index] == ')') {
+            parenCount--;
+            if (index != end - 1)
+              return false;
+          } else if (ArrayContains(badChars, s[index]))
+            return false;
+        }
+        return foundMethod;
+      }
+      #endregion Code from BrianGru to negate predicates coming from if-then-throw preconditions
     }
   }
 

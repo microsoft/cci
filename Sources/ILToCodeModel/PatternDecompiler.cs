@@ -136,7 +136,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfFalse = push2.ValueToPush;
         this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
         this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfFalse.Locations);
         push.ValueToPush = conditional;
         push.Locations = conditional.Locations;
         statements[i] = push;
@@ -159,7 +159,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
         this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
+        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfFalse.Locations);
         push.ValueToPush = conditional;
         push.Locations = conditional.Locations;
         statements[i] = push;
@@ -210,7 +210,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       conditional.ResultIfTrue = new CompileTimeConstant() { Value = 1, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
       conditional.ResultIfFalse = conditionalStatement2.Condition;
       conditionalStatement2.Condition = conditional;
-      conditionalStatement2.Locations = new List<ILocation>(conditionalStatement.Condition.Locations);
+      this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
       statements.RemoveAt(i);
       return true;
     }
@@ -247,7 +247,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
-        conditionalStatement2.Locations = conditionalStatement.Locations;
+        this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
         statements.RemoveAt(i);
         return this.ReplaceShortCircuitPattern2(statements, i);
       }
@@ -258,7 +258,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
-        conditionalStatement2.Locations = conditionalStatement.Locations;
+        this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
         statements.RemoveAt(i);
         return true;
       }

@@ -75,7 +75,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
       : this(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
       this.contractsOnly = contractsOnly;
-      this.contractExtractor = new ContractExtractor(this, this.contractProvider);
+      this.contractExtractor = new ContractExtractor(this, this.contractProvider, this.pdbReader);
     }
 
     /// <summary>
@@ -413,7 +413,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       if (this.contractProvider != null) {
         if (this.contractExtractor == null) {
-          this.contractExtractor = new ContractExtractor(this, this.contractProvider);
+          this.contractExtractor = new ContractExtractor(this, this.contractProvider, this.pdbReader);
         }
         result = this.contractExtractor.Visit(result);
       }
