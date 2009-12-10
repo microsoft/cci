@@ -3398,6 +3398,11 @@ namespace Microsoft.Cci.Ast {
       get { return this.declaration.IsStatic; }
     }
 
+    /// <summary>
+    /// True if this method is a static method that can be called as an instance method on another class because it has an explicit this parameter.
+    /// In other words, the class defining this static method is effectively extending another class, but doing so without subclassing it and
+    /// without requiring client code to instantiate the subclass.
+    /// </summary>
     public bool IsExtensionMethod {
       [DebuggerNonUserCode]
       get { return this.declaration.IsExtensionMethod; }

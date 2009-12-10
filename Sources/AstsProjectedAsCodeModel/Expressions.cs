@@ -1017,7 +1017,7 @@ namespace Microsoft.Cci.Ast {
       }
       //TODO: if assignments are not allowed, complain if the definition is a this reference, method or a dereference of a pointer to constant memory
       this.definition = resolvedTarget;
-      return false;
+      return this.Expression.HasErrors;
     }
 
     private class DerefConstVisitor : BaseCodeVisitor {
@@ -4884,10 +4884,10 @@ namespace Microsoft.Cci.Ast {
         resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, true);
         if (resolvedMethod != Dummy.Method) {
           this.Helper.ReportError(new AstErrorMessage(this, Error.BadArgumentTypes, this.Helper.GetMethodSignature(resolvedMethod,
-            NameFormattingOptions.Signature|NameFormattingOptions.UseTypeKeywords)));
-          return resolvedMethod;
+            NameFormattingOptions.Signature | NameFormattingOptions.UseTypeKeywords)));
+        } else {
+          this.ComplainAboutCallee();
         }
-        this.ComplainAboutCallee();
       }
       return resolvedMethod;
     }
