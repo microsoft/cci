@@ -672,7 +672,8 @@ namespace Microsoft.Cci {
     private IAssemblyReference/*?*/ contractAssemblyRef;
 
     /// <summary>
-    /// A reference to the assembly that contains the system types that have special encodings in metadata.
+    /// A reference to the assembly that contains the system types that have special encodings in metadata. Usually mscorlib, but
+    /// can be a different assembly on other non CLR based systems.
     /// </summary>
     protected IAssemblyReference CoreAssemblyRef {
       get {
@@ -682,6 +683,18 @@ namespace Microsoft.Cci {
       }
     }
     private IAssemblyReference/*?*/ coreAssemblyRef;
+
+    /// <summary>
+    /// A reference to the System.Core assembly.
+    /// </summary>
+    protected IAssemblyReference SystemCoreAssemblyRef {
+      get {
+        if (this.systemCoreAssemblyRef == null)
+          this.systemCoreAssemblyRef = new AssemblyReference(this.host, this.host.SystemCoreAssemblySymbolicIdentity);
+        return this.systemCoreAssemblyRef;
+      }
+    }
+    private IAssemblyReference/*?*/ systemCoreAssemblyRef;
 
     #region IPlatformType Members
 
@@ -1255,6 +1268,21 @@ namespace Microsoft.Cci {
       }
     }
     INamespaceTypeReference/*?*/ systemRuntimeCompilerServicesCompilerGeneratedAttribute;
+
+    /// <summary>
+    /// System.Runtime.CompilerServices.ExtensionAttribute
+    /// </summary>
+    public INamespaceTypeReference SystemRuntimeCompilerServicesExtensionAttribute {
+      [DebuggerNonUserCode]
+      get {
+        if (this.systemRuntimeCompilerServicesExtensionAttribute == null) {
+          this.systemRuntimeCompilerServicesExtensionAttribute = 
+            this.CreateReference(this.SystemCoreAssemblyRef, "System", "Runtime", "CompilerServices", "ExtensionAttribute");
+        }
+        return this.systemRuntimeCompilerServicesExtensionAttribute;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemRuntimeCompilerServicesExtensionAttribute;
 
     /// <summary>
     /// System.Runtime.CompilerServices.FriendAccessAllowedAttribute

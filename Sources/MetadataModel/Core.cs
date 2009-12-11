@@ -147,6 +147,11 @@ namespace Microsoft.Cci {
     AssemblyIdentity CoreAssemblySymbolicIdentity { get; }
 
     /// <summary>
+    /// The identity of the System.Core assembly.
+    /// </summary>
+    AssemblyIdentity SystemCoreAssemblySymbolicIdentity { get; }
+
+    /// <summary>
     /// Finds the assembly that matches the given identifier among the already loaded set of assemblies,
     /// or a dummy assembly if no matching assembly can be found.
     /// </summary>

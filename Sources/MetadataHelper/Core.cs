@@ -135,6 +135,32 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// The identity of the System.Core assembly.
+    /// </summary>
+    public AssemblyIdentity SystemCoreAssemblySymbolicIdentity {
+      get {
+        if (this.systemCoreAssemblySymbolicIdentity == null)
+          this.systemCoreAssemblySymbolicIdentity = this.GetSystemCoreAssemblySymbolicIdentity();
+        return this.systemCoreAssemblySymbolicIdentity;
+      }
+    }
+    AssemblyIdentity/*?*/ systemCoreAssemblySymbolicIdentity;
+
+    /// <summary>
+    /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System.Core" and the version is at least 3.5.
+    /// </summary>
+    private AssemblyIdentity GetSystemCoreAssemblySymbolicIdentity() {
+      var core = this.CoreAssemblySymbolicIdentity;
+      var name = this.NameTable.GetNameFor("System.Core");
+      var location = core.Location;
+      if (location != null)
+        location = Path.Combine(Path.GetDirectoryName(location), "System.Core.dll");
+      var version = new Version(3, 5, 0, 0);
+      if (version < core.Version) version = core.Version;
+      return new AssemblyIdentity(name, core.Culture, version, core.PublicKeyToken, location);
+    }
+
+    /// <summary>
     /// Finds the assembly that matches the given identifier among the already loaded set of assemblies,
     /// or a dummy assembly if no matching assembly can be found.
     /// </summary>

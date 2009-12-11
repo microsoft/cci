@@ -956,6 +956,10 @@ namespace Microsoft.Cci {
       get { return Dummy.Assembly.AssemblyIdentity; }
     }
 
+    public AssemblyIdentity SystemCoreAssemblySymbolicIdentity {
+      get { return Dummy.Assembly.AssemblyIdentity; }
+    }
+
     public IAssembly FindAssembly(AssemblyIdentity assemblyIdentity) {
       return Dummy.Assembly;
     }
