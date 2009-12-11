@@ -118,11 +118,23 @@ namespace Microsoft.Cci.ILToCodeModel {
       var typeHoldingContractDefinition = GetTypeDefinitionFromAttribute(definingType, "System.Diagnostics.Contracts.ContractClassAttribute");
       if (typeHoldingContractDefinition == null) return null;
       if (definingType.IsInterface) {
+        #region Explicit Interface Implementations
         foreach (IMethodImplementation methodImplementation in typeHoldingContractDefinition.ExplicitImplementationOverrides) {
           var implementedInterfaceMethod = UninstantiateAndUnspecialize(methodImplementation.ImplementedMethod);
           if (unspecializedMethodDefinition.InternedKey == implementedInterfaceMethod.InternedKey)
             return methodImplementation.ImplementingMethod.ResolvedMethod;
         }
+        #endregion Explicit Interface Implementations
+        #region Implicit Interface Implementations
+        var implicitImplementations = typeHoldingContractDefinition.GetMatchingMembers(
+          tdm => {
+            IMethodDefinition md = tdm as IMethodDefinition;
+            if (md == null) return false;
+            return MemberHelper.MethodsAreEquivalent(md, methodDefinition);
+          });
+        if (IteratorHelper.EnumerableIsNotEmpty(implicitImplementations))
+          return IteratorHelper.Single(implicitImplementations) as IMethodDefinition;
+        #endregion Implicit Interface Implementations
         return null;
       } else if (methodDefinition.IsAbstract) {
         IMethodReference methodReference = MemberHelper.GetImplicitlyOverridingDerivedClassMethod(methodDefinition, typeHoldingContractDefinition);

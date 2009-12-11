@@ -37,15 +37,17 @@ namespace Microsoft.Cci.ILToCodeModel {
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
     private bool extractingTypeContract;
+    private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
+
     private ITypeReference contractClass;
     private ITypeReference contractClassDefinedInReferenceAssembly;
 
 
-    private static bool TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
+    private static ITypeReference/*?*/ TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
       foreach (ICustomAttribute attribute in attributes) {
-        if (TypeHelper.GetTypeName(attribute.Type) == attributeTypeName) return true;
+        if (TypeHelper.GetTypeName(attribute.Type) == attributeTypeName) return attribute.Type;
       }
-      return false;
+      return null;
     }
 
     public bool IsContractMethod(IMethodReference/*?*/ method) {
@@ -103,7 +105,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         !sourceMethodBody.MethodDefinition.ContainingType.IsValueType;
       // TODO: this field makes sense only if extracting a type contract and not a method contract
       // TODO: Need the type loaded so don't have to use a string comparison
-      this.extractingTypeContract = TemporaryKludge(sourceMethodBody.MethodDefinition.Attributes, "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
+      this.extractingTypeContract = TemporaryKludge(sourceMethodBody.MethodDefinition.Attributes, "System.Diagnostics.Contracts.ContractInvariantMethodAttribute") != null;
+
+      // TODO: this should be true only if it is a contract class for an interface
+      this.extractingFromAMethodInAContractClass =
+        TemporaryKludge(sourceMethodBody.MethodDefinition.ContainingType.Attributes, "System.Diagnostics.Contracts.ContractClassForAttribute");
 
     }
 
@@ -160,6 +166,24 @@ namespace Microsoft.Cci.ILToCodeModel {
         newStmts.Add(stmts[0]);
       }
 
+      ILocalDefinition/*?*/ contractLocalAliasingThis = null;
+      if (beginning < stmts.Count) {
+        if (this.extractingFromAMethodInAContractClass != null) {
+          // Before the first contract, allow an assignment of the form "J jThis = this;"
+          // but only in a method that is in a contract class for an interface.
+          // If found, skip the statement (i.e., don't keep it in the method body)
+          // and replace all occurences of the local in the contracts by "this".
+
+          //TODO: Allow only an assignment to a local of the form "J jThis = this"
+          // (Need to hold onto the type J and make sure "this" is the RHS of the assignment.)
+          ILocalDeclarationStatement lds = stmts[beginning] as ILocalDeclarationStatement;
+          if (lds != null) {
+            contractLocalAliasingThis = lds.LocalVariable;
+            beginning++;
+          }
+        }
+      }
+
       // REVIEW: If the decompiler was better at finding the first use of a local, then there wouldn't be any of these here
       // Take zero or more local declarations, as long as they don't have initial values, and treat them
       // as part of the method body, not of any contract
@@ -170,9 +194,11 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       {
         int i = beginning;
+
         while (i <= indexOfLastContractCall) {
 
           int j = i;
+
           while (IsAssignmentToLocal(stmts[j])
             || IsDefinitionOfLocalWithInitializer(stmts[j])
             )
@@ -197,11 +223,69 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
 
+      if (contractLocalAliasingThis != null) {
+        var cltt = new ContractLocalToThis(this.host, contractLocalAliasingThis, this.sourceMethodBody.MethodDefinition.ContainingType);
+        cltt.Visit(this.CurrentMethodContract);
+      }
+
+      if (this.extractingFromAMethodInAContractClass != null) {
+        var scc = new ScrubContractClass(this.host, this.sourceMethodBody.MethodDefinition.ContainingType);
+        scc.Visit(this.CurrentMethodContract);
+      }
+
       for (int j = indexOfLastContractCall + 1; j < stmts.Count; j++)
         newStmts.Add(stmts[j]);
       blockStatement.Statements = newStmts;
       return blockStatement;
     }
+
+    private class ContractLocalToThis : CodeAndContractMutator {
+      ITypeReference typeOfThis;
+      ILocalDefinition local;
+
+      public ContractLocalToThis(IMetadataHost host, ILocalDefinition local, ITypeReference typeOfThis) :
+        base(host, true) {
+        this.local = local;
+        this.typeOfThis = typeOfThis;
+      }
+
+      public override IExpression Visit(BoundExpression boundExpression) {
+        ILocalDefinition/*?*/ ld = boundExpression.Definition as ILocalDefinition;
+        if (ld != null && ld == this.local)
+          return new ThisReference() { Type = typeOfThis, };
+        return base.Visit(boundExpression);
+      }
+    }
+
+    /// <summary>
+    /// When a class is used to express the contracts for an interface (or a third-party class)
+    /// certain modifications must be made to the code in the contained contracts. For instance,
+    /// if the contract class uses implicit interface implementations, then it might have a call
+    /// to one of those implementations in a contract, Requires(this.P), for some boolean property
+    /// P. That call has to be changed to be a call to the interface method.
+    /// 
+    /// Note!! This modifies the contract class so that in the rewritten assembly it is defined
+    /// differently than it was in the original assembly!!
+    /// </summary>
+    private sealed class ScrubContractClass : CodeAndContractMutator {
+      ITypeReference contractClass;
+
+      public ScrubContractClass(IMetadataHost host, ITypeReference contractClass) :
+        base(host, true) {
+        this.contractClass = contractClass;
+      }
+      public override IExpression Visit(MethodCall methodCall) {
+        if (methodCall.MethodToCall.ContainingType == this.contractClass) {
+          var md = methodCall.MethodToCall.ResolvedMethod;
+          if (md != null && md != Dummy.Method){
+            var ifaceMethods = MemberHelper.GetImplicitlyImplementedInterfaceMethods(md);
+            methodCall.MethodToCall = IteratorHelper.Single(ifaceMethods);
+          }
+        }
+        return base.Visit(methodCall);
+      }
+    }
+
 
     private int IndexOfLastContractCall(List<IStatement> statements) {
       // search from the end, stop at first call to Requires, Ensures, or EndContractBlock
