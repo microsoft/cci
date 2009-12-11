@@ -176,7 +176,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Represents a namespace construct as found in the source code.
   /// </summary>
-  public abstract class NamespaceDeclaration : SourceItem, IContainer<IAggregatableNamespaceDeclarationMember>, INamespaceScope {
+  public abstract class NamespaceDeclaration : SourceItemWithAttributes, IContainer<IAggregatableNamespaceDeclarationMember>, INamespaceScope {
 
     /// <summary>
     /// 
@@ -272,13 +272,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// 
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
     /// </summary>
-    public IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
-      get {
-        return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
+    protected override List<ICustomAttribute> GetAttributes() {
+      var result = new List<ICustomAttribute>();
+      foreach (var sourceAttribute in this.SourceAttributes) {
+        if (sourceAttribute.HasErrors) continue;
+        result.Add(new CustomAttribute(sourceAttribute));
       }
+      //TODO: suppress pseudo attributes and add in synthesized ones.
+      return result;
     }
 
     /// <summary>
@@ -460,6 +468,8 @@ namespace Microsoft.Cci.Ast {
       for (int i = 0, n = members.Count; i < n; i++) {
         //^ assume members[i].ContainingNamespaceDeclaration.GetType() == this.GetType(); //by construction
         members[i] = members[i].MakeShallowCopyFor(this);
+        var typeDecl = members[i] as TypeDeclaration;
+        //if (typeDecl != null && typeDecl.
       }
       if (this == this.CompilationPart.RootNamespace) {
         members = new List<INamespaceDeclarationMember>(members);

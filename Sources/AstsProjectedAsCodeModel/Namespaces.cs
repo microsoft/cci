@@ -152,15 +152,17 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
-    public override IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
+    public sealed override IEnumerable<ICustomAttribute> Attributes {
       get {
-        foreach (NamespaceDeclaration nsDecl in this.namespaceDeclarations) {
-          foreach (SourceCustomAttribute attr in nsDecl.SourceAttributes)
-            yield return new CustomAttribute(attr);
+        if (this.attributes == null) {
+          var attributes = this.GetAttributes();
+          attributes.TrimExcess();
+          this.attributes = attributes.AsReadOnly();
         }
+        return this.attributes;
       }
     }
+    IEnumerable<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// The list of namespace declarations that together define this namespace definition.
@@ -172,6 +174,55 @@ namespace Microsoft.Cci.Ast {
       }
     }
     List<NamespaceDeclaration> namespaceDeclarations = new List<NamespaceDeclaration>();
+
+    /// <summary>
+    /// Populate the given list with all of the assembly attributes in this namespace and its nested namespaces.
+    /// If sawTypeExtensions is false, also look for any types in this namespace and its nested namespaces that
+    /// have the HasExtensionMethod property set to true and set sawTypeExtensions to true if such a type is found.
+    /// </summary>
+    /// <param name="attributes">A list to fill in with the assembly attributes in this namespace.</param>
+    /// <param name="sawTypeWithExtensions">If sawTypeExtensions is false, also look for any types in this namespace and its nested namespaces that
+    /// have the HasExtensionMethod property set to true and set sawTypeExtensions to true if such a type is found.</param>
+    public void FillInWithAssemblyAttributes(List<ICustomAttribute> attributes, ref bool sawTypeWithExtensions) {
+      foreach (var nsDecl in this.namespaceDeclarations) {
+        foreach (var attribute in nsDecl.SourceAttributes) {
+          if (attribute.HasErrors) continue;
+          if ((attribute.Targets & System.AttributeTargets.Assembly) != System.AttributeTargets.Assembly) continue;
+          attributes.Add(new CustomAttribute(attribute));
+        }
+      }
+      foreach (var member in this.Members) {
+        var unitNamespace = member as UnitNamespace;
+        if (unitNamespace != null)
+          unitNamespace.FillInWithAssemblyAttributes(attributes, ref sawTypeWithExtensions);
+        else if (!sawTypeWithExtensions) {
+          var type = member as NamespaceTypeDefinition;
+          if (type != null && type.HasExtensionMethod) {
+            sawTypeWithExtensions = true;
+            break;
+          }
+        }
+      }
+    }
+
+    /// <summary>
+    /// Populate the given list with all of the module attributes in this namespace and its nested namespaces.
+    /// </summary>
+    /// <param name="attributes">A list to fill in with the module attributes in this namespace.</param>
+    public void FillInWithModuleAttributes(List<ICustomAttribute> attributes) {
+      foreach (var nsDecl in this.namespaceDeclarations) {
+        foreach (var attribute in nsDecl.SourceAttributes) {
+          if (attribute.HasErrors) continue;
+          if ((attribute.Targets & System.AttributeTargets.Module) != System.AttributeTargets.Module) continue;
+          attributes.Add(new CustomAttribute(attribute));
+        }
+      }
+      foreach (var member in this.Members) {
+        var unitNamespace = member as UnitNamespace;
+        if (unitNamespace == null) continue;
+        unitNamespace.FillInWithModuleAttributes(attributes);
+      }
+    }
 
     /// <summary>
     /// Appends all of the type members of the given namespace (as well as those of its nested namespaces and types) to
@@ -213,6 +264,21 @@ namespace Microsoft.Cci.Ast {
     /// <param name="member">The member to aggregate.</param>
     protected override INamespaceMember GetAggregatedMember(IAggregatableNamespaceDeclarationMember member) {
       return member.AggregatedMember;
+    }
+
+    /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
+    /// </summary>
+    protected virtual List<ICustomAttribute> GetAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      foreach (var nsDecl in this.namespaceDeclarations)
+        result.AddRange(nsDecl.Attributes);
+      return result;
     }
 
     #region IUnitNamespace Members

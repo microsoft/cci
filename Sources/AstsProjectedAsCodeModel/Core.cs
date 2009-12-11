@@ -190,6 +190,20 @@ namespace Microsoft.Cci.Ast {
     readonly ISourceEditHost hostEnvironment;
 
     /// <summary>
+    /// A reference to the default constructor of the System.Runtime.CompilerServices.CompilerGenerated attribute.
+    /// </summary>
+    public IMethodReference CompilerGeneratedCtor {
+      get {
+        if (this.compilerGeneratedCtor == null)
+          this.compilerGeneratedCtor = new MethodReference(this.HostEnvironment,
+            this.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
+             CallingConvention.HasThis, this.PlatformType.SystemVoid, this.NameTable.Ctor, 0);
+        return this.compilerGeneratedCtor;
+      }
+    }
+    private IMethodReference/*?*/ compilerGeneratedCtor;
+
+    /// <summary>
     /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops. 
     /// </summary>
     public SourceContractProvider ContractProvider {
@@ -206,6 +220,20 @@ namespace Microsoft.Cci.Ast {
     }
     //^ [Once]
     SourceContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// A reference to the default constructor of the System.Runtime.CompilerServices.CompilerGenerated attribute.
+    /// </summary>
+    public IMethodReference ExtensionAttributeCtor {
+      get {
+        if (this.extensionAttributeCtor == null)
+          this.extensionAttributeCtor = new MethodReference(this.HostEnvironment,
+            this.PlatformType.SystemRuntimeCompilerServicesExtensionAttribute,
+             CallingConvention.HasThis, this.PlatformType.SystemVoid, this.NameTable.Ctor, 0);
+        return this.extensionAttributeCtor;
+      }
+    }
+    private IMethodReference/*?*/ extensionAttributeCtor;
 
     /// <summary>
     /// An object that can provide information about the local scopes of a method.
@@ -1083,20 +1111,6 @@ namespace Microsoft.Cci.Ast {
       get { return this.compilation; }
     }
     readonly Compilation compilation;
-
-    /// <summary>
-    /// A reference to the default constructor of the System.Runtime.CompilerServices.CompilerGenerated attribute.
-    /// </summary>
-    public IMethodReference CompilerGeneratedCtor {
-      get {
-        if (this.compilerGeneratedCtor == null)
-          this.compilerGeneratedCtor = new MethodReference(this.Compilation.HostEnvironment,
-            this.Compilation.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
-             CallingConvention.HasThis, this.Compilation.PlatformType.SystemVoid, this.Compilation.NameTable.Ctor, 0);
-        return this.compilerGeneratedCtor;
-      }
-    }
-    private IMethodReference/*?*/ compilerGeneratedCtor;
 
     /// <summary>
     /// Returns an expression that will convert the value of the given expression to a value of the given type.
@@ -3511,6 +3525,48 @@ namespace Microsoft.Cci.Ast {
     /// The location in the source document that has been parsed to construct this item.
     /// </summary>
     protected ISourceLocation sourceLocation;
+
+  }
+
+  /// <summary>
+  /// An object that has been derived from a portion of a source document and that can have custom attributes
+  /// associated with it.
+  /// </summary>
+  public abstract class SourceItemWithAttributes : SourceItem {
+
+    /// <summary>
+    /// Initializes an object that has been derived from a portion of a source document and that can have custom attributes
+    /// associated with it.
+    /// </summary>
+    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
+    protected SourceItemWithAttributes(ISourceLocation sourceLocation) 
+      : base(sourceLocation) {
+    }
+
+    /// <summary>
+    /// Custom attributes that are to be persisted in the metadata.
+    /// </summary>
+    public IEnumerable<ICustomAttribute> Attributes {
+      get {
+        if (this.attributes == null) {
+          List<ICustomAttribute> attrs = this.GetAttributes();
+          attrs.TrimExcess();
+          this.attributes = attrs.AsReadOnly();
+        }
+        return this.attributes;
+      }
+    }
+    IEnumerable<ICustomAttribute>/*?*/ attributes;
+
+    /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
+    /// </summary>
+    protected abstract List<ICustomAttribute> GetAttributes();
 
   }
 

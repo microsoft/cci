@@ -184,7 +184,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Corresponds to a source construct that declares a type parameter for a generic method or type.
   /// </summary>
-  public abstract class GenericParameterDeclaration : SourceItem, IDeclaration, INamedEntity, IParameterListEntry {
+  public abstract class GenericParameterDeclaration : SourceItemWithAttributes, IDeclaration, INamedEntity, IParameterListEntry {
 
     /// <summary>
     /// 
@@ -230,14 +230,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Custom attributes that are to be persisted in the metadata.
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
     /// </summary>
-    /// <value></value>
-    public IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
-      get {
-        return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); //TODO: extract attributes from SourceAttributes.
+    protected override List<ICustomAttribute> GetAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      foreach (var attribute in this.SourceAttributes) {
+        if (attribute.HasErrors) continue;
+        //TODO: ignore pseudo attributes
+        result.Add(new CustomAttribute(attribute));
       }
+      return result;
     }
 
     /// <summary>
@@ -2081,7 +2088,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Corresponds to a source language type declaration, such as a C# partial class. One of more of these make up a type definition. 
   /// </summary>
-  public abstract class TypeDeclaration : SourceItem, IContainer<IAggregatableTypeDeclarationMember>, IContainer<ITypeDeclarationMember>, IDeclaration, INamedEntity {
+  public abstract class TypeDeclaration : SourceItemWithAttributes, IContainer<IAggregatableTypeDeclarationMember>, IContainer<ITypeDeclarationMember>, IDeclaration, INamedEntity {
     /// <summary>
     /// A collection of flags that correspond to modifiers such as public and abstract.
     /// </summary>
@@ -2222,18 +2229,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Custom attributes that are to be persisted in the metadata.
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
     /// </summary>
-    /// <value></value>
-    public virtual IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
-      get {
-        foreach (SourceCustomAttribute attribute in this.SourceAttributes) {
-          yield return new CustomAttribute(attribute);
-          //TODO: filter out pseudo custom attributes
-        }
-        //TODO: cache the result of this property
+    protected override List<ICustomAttribute> GetAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      foreach (var attribute in this.SourceAttributes) {
+        if (attribute.HasErrors) continue;
+        //TODO: filter out pseudo custom attributes
+        result.Add(new CustomAttribute(attribute));
       }
+      return result;
     }
 
     /// <summary>

@@ -43,7 +43,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
     public IEnumerable<IName> Aliases {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
     }
 
@@ -52,16 +51,21 @@ namespace Microsoft.Cci.Ast {
     /// with this assembly.
     /// </summary>
     public IEnumerable<ICustomAttribute> AssemblyAttributes {
-      [DebuggerNonUserCode]
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.assemblyAttributes == null) {
+          var assemblyAttributes = this.GetAssemblyAttributes();
+          assemblyAttributes.TrimExcess();
+          this.assemblyAttributes = assemblyAttributes.AsReadOnly();
+        }
+        return this.assemblyAttributes; 
+      }
     }
-    readonly List<ICustomAttribute> attributes = new List<ICustomAttribute>();
+    IEnumerable<ICustomAttribute> assemblyAttributes;
 
     /// <summary>
     /// The identity of the assembly.
     /// </summary>
     public AssemblyIdentity AssemblyIdentity {
-      [DebuggerNonUserCode]
       get {
         if (this.assemblyIdentity == null)
           this.assemblyIdentity = UnitHelper.GetAssemblyIdentity(this);
@@ -74,7 +78,6 @@ namespace Microsoft.Cci.Ast {
     /// The assembly that contains this module.
     /// </summary>
     public override IAssembly/*?*/ ContainingAssembly {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -83,7 +86,6 @@ namespace Microsoft.Cci.Ast {
     /// Empty if not specified.
     /// </summary>
     public virtual string Culture {
-      [DebuggerNonUserCode]
       get { return string.Empty; }
     }
 
@@ -91,7 +93,6 @@ namespace Microsoft.Cci.Ast {
     /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly.
     /// </summary>
     public virtual IEnumerable<IAliasForType> ExportedTypes {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IAliasForType>(); }
     }
 
@@ -101,7 +102,6 @@ namespace Microsoft.Cci.Ast {
     /// as any external resources. It corresonds to the File table of the .NET assembly file format.
     /// </summary>
     public IEnumerable<IFileReference> Files {
-      [DebuggerNonUserCode]
       get { return this.files; }
     }
     readonly IEnumerable<IFileReference> files;
@@ -111,15 +111,33 @@ namespace Microsoft.Cci.Ast {
     /// from source code via the AssemblyFlags assembly custom attribute. The interpretation of the property depends on the target platform.
     /// </summary>
     public virtual uint Flags {
-      [DebuggerNonUserCode]
       get { return 0; } //TODO: get from options or an attribute
+    }
+
+    /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
+    /// </summary>
+    protected virtual List<ICustomAttribute> GetAssemblyAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      bool sawTypeWithExtensions = false;
+      this.UnitNamespaceRoot.FillInWithAssemblyAttributes(result, ref sawTypeWithExtensions);
+      if (sawTypeWithExtensions) {
+        var eattr = new Microsoft.Cci.MutableCodeModel.CustomAttribute();
+        eattr.Constructor = this.Compilation.ExtensionAttributeCtor;
+        result.Add(eattr);
+      }
+      return result;
     }
 
     /// <summary>
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public virtual bool IsRetargetable {
-      [DebuggerNonUserCode]
       get { return false; } //TODO: get from options or an attribute
     }
 
@@ -127,7 +145,6 @@ namespace Microsoft.Cci.Ast {
     /// The kind of metadata stored in the module. For example whether the module is an executable or a manifest resource file.
     /// </summary>
     public override ModuleKind Kind {
-      [DebuggerNonUserCode]
       get { return this.EntryPoint.ResolvedMethod == Dummy.Method ? ModuleKind.DynamicallyLinkedLibrary : ModuleKind.ConsoleApplication; } //TODO: obtain it from the compiler options
     }
 
@@ -135,7 +152,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of the modules that constitute the assembly.
     /// </summary>
     public IEnumerable<IModule> MemberModules {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<IModule>(); }
     }
 
@@ -143,7 +159,6 @@ namespace Microsoft.Cci.Ast {
     /// The identity of the module.
     /// </summary>
     public override ModuleIdentity ModuleIdentity {
-      [DebuggerNonUserCode]
       get { return this.AssemblyIdentity; }
     }
 
@@ -151,7 +166,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the module containing the assembly manifest. This can be different from the name of the assembly itself.
     /// </summary>
     public override IName ModuleName {
-      [DebuggerNonUserCode]
       get { return this.moduleName; }
     }
     readonly IName moduleName;
@@ -162,7 +176,6 @@ namespace Microsoft.Cci.Ast {
     /// integrity of the assembly.
     /// </summary>
     public virtual IEnumerable<byte> PublicKey {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<byte>(); } //TODO: get this from an option or attribute
     }
 
@@ -170,7 +183,6 @@ namespace Microsoft.Cci.Ast {
     /// The hashed 8 bytes of the public key called public key token of the referenced assembly. This is non empty of the referenced assembly is strongly signed.
     /// </summary>
     public IEnumerable<byte> PublicKeyToken {
-      [DebuggerNonUserCode]
       get { return UnitHelper.ComputePublicKeyToken(this.PublicKey); }
     }
 
@@ -178,7 +190,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of named byte sequences persisted with the assembly and used during execution, typically via .NET Framework helper classes.
     /// </summary>
     public IEnumerable<IResourceReference> Resources {
-      [DebuggerNonUserCode]
       get { return this.resources; }
     }
     readonly IEnumerable<IResourceReference> resources;
@@ -188,7 +199,6 @@ namespace Microsoft.Cci.Ast {
     /// These apply by default to every method reachable from the module.
     /// </summary>
     public virtual IEnumerable<ISecurityAttribute> SecurityAttributes {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); } //TODO: compute this
     }
 
@@ -196,7 +206,6 @@ namespace Microsoft.Cci.Ast {
     /// The version of the assembly.
     /// </summary>
     public virtual Version Version {
-      [DebuggerNonUserCode]
       get { return new System.Version(0, 0, 0, 0); } //TODO: obtain from compiler options or custom attributes
     }
 
@@ -421,6 +430,20 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
+    /// </summary>
+    protected override List<ICustomAttribute> GetAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      this.UnitNamespaceRoot.FillInWithModuleAttributes(result);
+      return result;
+    }
+
+    /// <summary>
     /// Returns zero or more strings used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
     /// of the user string heap. If the module is produced some other way, the method may return an empty enumeration or an enumeration that is a
     /// subset of the strings actually used in the module. The main purpose of this method is to provide a way to control the order of strings in a
@@ -622,7 +645,6 @@ namespace Microsoft.Cci.Ast {
     /// To set the value of this property, add an instance of System.Diagnostics.DebuggableAttribute to the MetadataAttributes list.
     /// </summary>
     public virtual bool TrackDebugData {
-      [DebuggerNonUserCode]
       get { return false; } //TODO: get this from an option or an attribute
     }
 
@@ -630,15 +652,13 @@ namespace Microsoft.Cci.Ast {
     /// The identity of the unit.
     /// </summary>
     public override UnitIdentity UnitIdentity {
-      [DebuggerNonUserCode]
       get { return this.ModuleIdentity; }
     }
 
     /// <summary>
     /// A root namespace that contains nested namespaces as well as top level types and anything else that implements INamespaceMember.
     /// </summary>
-    public override IRootUnitNamespace UnitNamespaceRoot {
-      [DebuggerNonUserCode]
+    public override RootUnitNamespace UnitNamespaceRoot {
       get {
         if (this.unitNamespaceRoot == null) {
           lock (GlobalLock.LockingObject) {
@@ -649,8 +669,6 @@ namespace Microsoft.Cci.Ast {
             }
           }
         }
-        //^ assume this.unitNamespaceRoot.RootOwner == this;
-        //^ assume false; //Boogie bug
         return this.unitNamespaceRoot;
       }
     }
@@ -662,7 +680,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of other units that are referenced by this unit. 
     /// </summary>
     public override IEnumerable<IUnitReference> UnitReferences {
-      [DebuggerNonUserCode]
       get {
         foreach (IAssemblyReference assemblyReference in this.AssemblyReferences)
           yield return assemblyReference;
@@ -678,7 +695,6 @@ namespace Microsoft.Cci.Ast {
     /// When building for deployment it is safer to set this property to false.
     /// </summary>
     public virtual bool UsePublicKeyTokensForAssemblyReferences {
-      [DebuggerNonUserCode]
       get { return true; } //TODO: get the value from an option
     }
 
@@ -688,7 +704,6 @@ namespace Microsoft.Cci.Ast {
     /// and not typically use the data in its own code.
     /// </summary>
     public IEnumerable<IWin32Resource> Win32Resources {
-      [DebuggerNonUserCode]
       get { return this.win32Resources.AsReadOnly(); }
     }
     readonly List<IWin32Resource> win32Resources = new List<IWin32Resource>();
@@ -899,7 +914,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A root namespace that contains nested namespaces as well as top level types and anything else that implements INamespaceMember.
     /// </summary>
-    public abstract IRootUnitNamespace UnitNamespaceRoot {
+    public abstract RootUnitNamespace UnitNamespaceRoot {
       get;
       //^ ensures result.RootOwner == this;
     }
@@ -959,10 +974,29 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
-    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get {
+        if (this.attributes == null) {
+          var attributes = this.GetAttributes();
+          attributes.TrimExcess();
+          this.attributes = attributes.AsReadOnly();
+        }
+        return this.attributes;
+      }
+    }
+    IEnumerable<ICustomAttribute>/*?*/ attributes;
+
+    /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
+    /// </summary>
+    protected virtual List<ICustomAttribute> GetAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      return result;
     }
 
     /// <summary>
@@ -970,7 +1004,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
-      [DebuggerNonUserCode]
       get {
         foreach (CompilationPart compilationPart in this.Compilation.Parts)
           yield return compilationPart.SourceLocation;
@@ -1000,7 +1033,6 @@ namespace Microsoft.Cci.Ast {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
@@ -1015,7 +1047,6 @@ namespace Microsoft.Cci.Ast {
     /// A potentially empty collection of locations that correspond to this IReference instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
@@ -1023,7 +1054,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the unit.
     /// </summary>
     public IName Name {
-      [DebuggerNonUserCode]
       get { return this.UnitIdentity.Name; }
     }
 
@@ -1031,7 +1061,6 @@ namespace Microsoft.Cci.Ast {
     /// The referenced unit.
     /// </summary>
     public IUnit ResolvedUnit {
-      [DebuggerNonUserCode]
       get {
         return this.resolvedUnit;
       }

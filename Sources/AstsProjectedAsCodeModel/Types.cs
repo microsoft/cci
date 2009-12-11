@@ -1023,15 +1023,39 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
-    /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
       get {
-        foreach (TypeDeclaration typeDeclaration in this.typeDeclarations) {
-          foreach (ICustomAttribute customAttribute in typeDeclaration.Attributes)
-            yield return customAttribute;
+        if (this.attributes == null) {
+          List<ICustomAttribute> attrs = this.GetAttributes();
+          attrs.TrimExcess();
+          this.attributes = attrs.AsReadOnly();
         }
+        return this.attributes;
       }
+    }
+    IEnumerable<ICustomAttribute>/*?*/ attributes;
+
+    /// <summary>
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
+    /// </summary>
+    protected virtual List<ICustomAttribute> GetAttributes() {
+      List<ICustomAttribute> result = new List<ICustomAttribute>();
+      LanguageSpecificCompilationHelper/*?*/ helper = null;
+      foreach (TypeDeclaration typeDeclaration in this.TypeDeclarations) {
+        if (helper == null) helper = typeDeclaration.Helper;
+        result.AddRange(typeDeclaration.Attributes);
+      }
+      if (this.HasExtensionMethod) {
+        var eattr = new Microsoft.Cci.MutableCodeModel.CustomAttribute();
+        eattr.Constructor = helper.Compilation.ExtensionAttributeCtor;
+        result.Add(eattr);
+      }
+      return result;
     }
 
     /// <summary>
@@ -1527,7 +1551,7 @@ namespace Microsoft.Cci.Ast {
       get {
         foreach (ITypeDefinitionMember member in this.Members) {
           MethodDefinition method = member as MethodDefinition;
-          if (method.IsExtensionMethod)
+          if (method != null && method.IsExtensionMethod)
             return true;
         }
         return false;

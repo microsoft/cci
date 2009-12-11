@@ -1855,13 +1855,20 @@ namespace Microsoft.Cci.Ast {
     /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
     /// might instead be persisted as metadata bits and other custom attributes may be synthesized
     /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
     /// </summary>
     protected override List<ICustomAttribute> GetAttributes() {
       var result = base.GetAttributes();
       if ((this.flags & (int)MethodDeclaration.Flags.IsCompilerGenerated) != 0) {
         var cgattr = new Microsoft.Cci.MutableCodeModel.CustomAttribute();
-        cgattr.Constructor = this.Helper.CompilerGeneratedCtor;
+        cgattr.Constructor = this.Compilation.CompilerGeneratedCtor;
         result.Add(cgattr);
+      }
+      if ((this.flags & (int)MethodDeclaration.Flags.ExtensionMethod) != 0) {
+        var eattr = new Microsoft.Cci.MutableCodeModel.CustomAttribute();
+        eattr.Constructor = this.Compilation.ExtensionAttributeCtor;
+        result.Add(eattr);
       }
       return result;
     }
@@ -2394,7 +2401,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// 
   /// </summary>
-  public class ParameterDeclaration : SourceItem, IDeclaration, INamedEntity, IParameterListEntry {
+  public class ParameterDeclaration : SourceItemWithAttributes, IDeclaration, INamedEntity, IParameterListEntry {
 
     /// <summary>
     /// 
@@ -2471,16 +2478,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Custom attributes that are to be persisted in the metadata.
+    /// Returns a list of custom attributes that describes this type declaration member.
+    /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
+    /// might instead be persisted as metadata bits and other custom attributes may be synthesized
+    /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
     /// </summary>
-    /// <value></value>
-    public virtual IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
-      get {
-        foreach (var sourceAttribute in this.SourceAttributes)
-          yield return new CustomAttribute(sourceAttribute);
-        //TODO: suppress pseudo attributes and add in synthesized ones, such as the param array attribute
+    protected override List<ICustomAttribute> GetAttributes() {
+      var result = new List<ICustomAttribute>();
+      foreach (var sourceAttribute in this.SourceAttributes) {
+        if (sourceAttribute.HasErrors) continue;
+        result.Add(new CustomAttribute(sourceAttribute));
       }
+      //TODO: suppress pseudo attributes and add in synthesized ones, such as the param array attribute
+      return result;
     }
 
     /// <summary>
@@ -3473,7 +3485,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A member of a type declaration, such as a field or a method.
   /// </summary>
-  public abstract class TypeDeclarationMember : SourceItem, IAggregatableTypeDeclarationMember, ITypeDeclarationMember {
+  public abstract class TypeDeclarationMember : SourceItemWithAttributes, IAggregatableTypeDeclarationMember, ITypeDeclarationMember {
 
     /// <summary>
     /// Initializes a member of a type declaration, such as a field or a method.
@@ -3550,23 +3562,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Custom attributes that are to be persisted in the metadata.
-    /// </summary>
-    public virtual IEnumerable<ICustomAttribute> Attributes {
-      [DebuggerNonUserCode]
-      get {
-        if (this.attributes == null) {
-          List<ICustomAttribute> attrs = this.GetAttributes();
-          attrs.TrimExcess();
-          this.attributes = attrs.AsReadOnly();
-        }
-        return this.attributes;
-      }
-    }
-    //^ [Once]
-    IEnumerable<ICustomAttribute>/*?*/ attributes;
-
-    /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
     /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
     /// </summary>
@@ -3616,10 +3611,13 @@ namespace Microsoft.Cci.Ast {
     /// Typically, these will be derived from this.SourceAttributes. However, some source attributes
     /// might instead be persisted as metadata bits and other custom attributes may be synthesized
     /// from information not provided in the form of source custom attributes.
+    /// The list is not trimmed to size, since an override of this method may call the base method
+    /// and then add more attributes.
     /// </summary>
-    protected virtual List<ICustomAttribute> GetAttributes() {
-      List<ICustomAttribute> result = new List<ICustomAttribute>();
-      foreach (SourceCustomAttribute sourceAttribute in this.SourceAttributes) {
+    protected override List<ICustomAttribute> GetAttributes() {
+      var result = new List<ICustomAttribute>();
+      foreach (var sourceAttribute in this.SourceAttributes) {
+        if (sourceAttribute.HasErrors) continue;
         if (TypeHelper.TypesAreEquivalent(sourceAttribute.Type.ResolvedType, this.Helper.PlatformType.SystemRuntimeInteropServicesDllImportAttribute))
           continue;
         //TODO: ignore source attribute if it is not meant to be persisted.
