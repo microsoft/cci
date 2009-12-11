@@ -1295,6 +1295,7 @@ namespace Microsoft.Cci {
         this.generator.AddConstantToCurrentScope(localDeclarationStatement.LocalVariable);
         this.generator.Emit(OperationCode.Nop); //Make sure the constant always has a scope
       } else {
+        this.GetLocalIndex(localDeclarationStatement.LocalVariable);
         this.generator.AddVariableToCurrentScope(localDeclarationStatement.LocalVariable);
         if (localDeclarationStatement.InitialValue != null) {
           this.Visit(localDeclarationStatement.InitialValue);
