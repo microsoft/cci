@@ -153,6 +153,17 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true iff the two methods are identical (if they are both non-generic) or
+    /// if they are equivalent modulo method generic type parameters (if they are both generic).
+    /// </summary>
+    public static bool MethodsAreEquivalent(IMethodDefinition m1, IMethodDefinition m2) {
+      if (m1.IsGeneric)
+        return m1.GenericParameterCount == m2.GenericParameterCount && MemberHelper.GenericMethodSignaturesAreEqual(m1, m2);
+      else
+        return MemberHelper.SignaturesAreEqual(m1, m2);
+    }
+
+    /// <summary>
     /// Returns zero or more interface methods that are implemented by the given method. Only methods from interfaces that
     /// are directly implemented by the containing type of the given method are returned. Interfaces declared on base classes
     /// are always fully implemented by the base class, albeit sometimes by an abstract method that is itself implemented by a derived class method.
@@ -162,11 +173,7 @@ namespace Microsoft.Cci {
         foreach (ITypeDefinitionMember interfaceMember in interfaceReference.ResolvedType.GetMembersNamed(implementingMethod.Name, false)) {
           IMethodDefinition/*?*/ interfaceMethod = interfaceMember as IMethodDefinition;
           if (interfaceMethod == null) continue;
-          if (MemberHelper.SignaturesAreEqual(implementingMethod, interfaceMethod) ||
-            (implementingMethod.IsGeneric
-            && implementingMethod.GenericParameterCount == interfaceMethod.GenericParameterCount
-            && MemberHelper.GenericMethodSignaturesAreEqual(implementingMethod, interfaceMethod))
-            )
+          if (MethodsAreEquivalent(implementingMethod, interfaceMethod))
             yield return interfaceMethod;
         }
       }
