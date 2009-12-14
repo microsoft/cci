@@ -344,6 +344,113 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// Find a method group that is accessible and applicable for the given
+    /// simple name and argument list. If no methods found go to enclosing namespaces.
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="simpleName"></param>
+    /// <param name="arguments"></param>
+    public void GetApplicableExtensionMethods(List<IMethodDefinition> result, SimpleName simpleName, IEnumerable<Expression> arguments) {
+      // First look for methods in directly enclosed types.
+      this.GetExtensionMethodsFromDirectlyEnclosedTypes(result, simpleName, arguments);
+      if (result.Count > 0) return;
+      // Failing that, look for methods in namespaces in using declarations.
+      this.GetExtensionMethodsViaUsingDirectives(result, simpleName, arguments);
+      if (result.Count > 0) return;
+      // If nothing found recurse to enclosing namespace, if any.
+      NestedNamespaceDeclaration nested = this as NestedNamespaceDeclaration;
+      if (nested != null)
+        nested.ContainingNamespaceDeclaration.GetApplicableExtensionMethods(result, simpleName, arguments);
+    }
+
+    class ExtensionMethodScope : Scope<IMethodDefinition> {
+      internal void InsertInExtensionScope(IMethodDefinition method) {
+        this.AddMemberToCache(method);
+      }
+    }
+
+    private ExtensionMethodScope extensionMethodsFromEnclosedScope;
+    private ExtensionMethodScope extensionMethodsFromUsingDirectives;
+
+    /// <summary>
+    /// All the applicable methods found in ALL directly enclosed
+    /// classes are aggregated into result method group.
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="simpleName"></param>
+    /// <param name="arguments"></param>
+    private void GetExtensionMethodsFromDirectlyEnclosedTypes(List<IMethodDefinition> result, SimpleName simpleName, IEnumerable<Expression> arguments) {
+      IEnumerable<IMethodDefinition> candidates;
+      if (extensionMethodsFromEnclosedScope == null)
+        this.PopulateExtensionMethodsFromEnclosedScope();
+      // Get all the methods with the right simple name
+      candidates = this.extensionMethodsFromEnclosedScope.GetMembersNamed(simpleName.Name, false);
+      if (candidates != null)
+        // Now filter them for applicability with the given argument list
+        foreach (IMethodDefinition method in candidates)
+          if (this.Helper.MethodIsEligible(method, arguments))
+            result.Add(method);      
+    }
+
+    private void PopulateExtensionMethodsFromEnclosedScope() {
+      extensionMethodsFromEnclosedScope = new ExtensionMethodScope();
+      // We look for TypeDeclarations with TypeDefinitions that declare extension methods.
+      // This might include methods declared in *other* partials of a directly enclosed class.
+      foreach (INamespaceDeclarationMember member in this.Members) {
+        TypeDeclaration typeDeclaration = member as TypeDeclaration;
+        if (typeDeclaration != null && typeDeclaration.TypeDefinition.HasExtensionMethod) {
+          foreach (ITypeDefinitionMember typeMember in typeDeclaration.TypeDefinition.Members) {
+            MethodDefinition method = typeMember as MethodDefinition;
+            if (method.IsExtensionMethod)
+              extensionMethodsFromEnclosedScope.InsertInExtensionScope(method);
+          }
+        }
+      }
+    }
+
+    /// <summary>
+    /// All the applicable methods found in ALL directly enclosed
+    /// classes in ALL of the included namespaces are aggregated 
+    /// into the result method group.
+    /// </summary>
+    /// <param name="result"></param>
+    /// <param name="simpleName"></param>
+    /// <param name="arguments"></param>
+    private void GetExtensionMethodsViaUsingDirectives(List<IMethodDefinition> result, SimpleName simpleName, IEnumerable<Expression> arguments) {
+      IEnumerable<IMethodDefinition> candidates;
+      if (extensionMethodsFromUsingDirectives == null)
+        this.PopulateExtensionMethodsViaUsingDirectives();
+      // Get all the extension methods with the right name.
+      candidates = this.extensionMethodsFromEnclosedScope.GetMembersNamed(simpleName.Name, false);
+      if (candidates != null)
+        // Now filter the methods for applicability.
+        foreach (IMethodDefinition method in candidates)
+          if (this.Helper.MethodIsEligible(method, arguments))
+            result.Add(method);
+    }
+
+    private void PopulateExtensionMethodsViaUsingDirectives() {
+      extensionMethodsFromUsingDirectives = new ExtensionMethodScope();
+      IEnumerable<NamespaceImportDeclaration> imports = this.Imports;
+      foreach (NamespaceImportDeclaration import in imports) {
+        NamespaceReferenceExpression nsImport = import.ImportedNamespace;
+        INamespaceDefinition nsDefinition = nsImport.Resolve();
+        if (nsDefinition != Dummy.RootUnitNamespace) {
+          foreach (INamespaceMember member in nsDefinition.Members) {
+            TypeDefinition typeDefinition = member as TypeDefinition;
+            if (typeDefinition != null && typeDefinition.HasExtensionMethod) {
+              foreach (ITypeDefinitionMember typeMember in typeDefinition.Members) {
+                MethodDefinition method = typeMember as MethodDefinition;
+                if (method.IsExtensionMethod)
+                  extensionMethodsFromEnclosedScope.InsertInExtensionScope(method);
+              }
+            }
+          }
+        }
+      }
+    }
+
     private object/*?*/ GetCachedMethodExtensionGroup(IName methodName) {
       //TODO: implement this
       if (methodName == null) return null;

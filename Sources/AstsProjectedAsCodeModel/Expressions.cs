@@ -4743,8 +4743,12 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
-      foreach (Expression arg in this.ConvertedArguments)
-        result |= arg.HasErrors;
+      // Before checking converted arguments we must ensure that resolvedMethod has 
+      // successfully bound the methodExpression. If the method does not resolve, 
+      // checking conversion of the arguments against Dummy.Method is meaningless.
+      if (ResolvedMethod == Dummy.Method)
+        foreach (Expression arg in this.ConvertedArguments)
+          result |= arg.HasErrors;
       result |= this.Type == Dummy.Type;
       return result;
     }
@@ -4762,10 +4766,11 @@ namespace Microsoft.Cci.Ast {
     List<Expression>/*?*/ convertedArguments;
 
     /// <summary>
-    /// Returns a list of the arguments to pass to the constructor, indexer or method, after they have been converted to match the parameters of the resolved method.
+    /// Returns a list of the arguments to pass to the constructor, indexer or method, after they have been converted to 
+    /// match the parameters of the resolved method. This call uses ApplicableArguments in case this is an extension method call.
     /// </summary>
     protected virtual List<Expression> ConvertArguments() {
-      return this.Helper.ConvertArguments(this, this.OriginalArguments, this.ResolvedMethod.Parameters, false);
+      return this.Helper.ConvertArguments(this, this.ApplicableArguments, this.ResolvedMethod.Parameters, false);
     }
 
     /// <summary>
@@ -4856,6 +4861,17 @@ namespace Microsoft.Cci.Ast {
     readonly IEnumerable<Expression> originalArguments;
 
     /// <summary>
+    /// The arguments to pass to the constructor, index or method, before conversion.
+    /// In the case of an extension method call, these will be the static call arguments, 
+    /// in all other cases the result is the original argument enumeration.
+    /// </summary>
+    public virtual IEnumerable<Expression> ApplicableArguments {
+      [DebuggerNonUserCode]
+      get { return (this.argumentsForExtensionCall != null ? this.argumentsForExtensionCall : this.originalArguments); }
+    }
+    private IEnumerable<Expression> argumentsForExtensionCall;
+
+    /// <summary>
     /// The constructor, indexer or method that is being called.
     /// </summary>
     public IMethodDefinition ResolvedMethod {
@@ -4876,8 +4892,23 @@ namespace Microsoft.Cci.Ast {
     /// Uses the this.OriginalArguments and this.GetCandidateMethods to resolve the actual method to call.
     /// </summary>
     protected virtual IMethodDefinition ResolveMethod() {
+      MethodCall methodCall;
+      IMethodDefinition resolvedMethod = Dummy.Method;
       IEnumerable<IMethodDefinition> candidateMethods = this.GetCandidateMethods(false);
-      IMethodDefinition resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, false);
+
+      if (IteratorHelper.EnumerableCount(candidateMethods) > 0)
+        resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, false);
+      if (resolvedMethod == Dummy.Method &&
+        (methodCall = this as MethodCall) != null && methodCall.MethodExpression is QualifiedName) {
+        // Cannot reuse local variable "candidateMethods" here, as the current
+        // value is still live for use in error reporting in case of failure.
+        IEnumerable<Expression> argumentsForStaticCall = methodCall.GetExtensionArguments;
+        IEnumerable<IMethodDefinition> extensionCandidates = methodCall.GetCandidateExtensionMethods(argumentsForStaticCall);
+        resolvedMethod = this.Helper.ResolveOverload(extensionCandidates, argumentsForStaticCall, false);
+        if (resolvedMethod != Dummy.Method)
+          this.argumentsForExtensionCall = argumentsForStaticCall;
+      }
+
       if (resolvedMethod == Dummy.Method) {
         if (this.ComplainedAboutArguments()) return resolvedMethod;
         if (this.ComplainedAboutFailedInferences()) return resolvedMethod;
@@ -12298,6 +12329,38 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Find applicable extension methods for this call, if possible.
+    /// </summary>
+    /// <returns></returns>
+    public virtual IEnumerable<IMethodDefinition> GetCandidateExtensionMethods(IEnumerable<Expression> arguments){
+      // Binding extension methods requires a special traversal of the namespaces. Very C# specific.
+      List<IMethodDefinition> result = new List<IMethodDefinition>();
+      NamespaceDeclaration enclosingNamespace = this.ContainingBlock.ContainingNamespaceDeclaration;
+      SimpleName simpleName = ((QualifiedName)this.MethodExpression).SimpleName;
+      enclosingNamespace.GetApplicableExtensionMethods(result, simpleName, arguments);
+      if (result.Count != 0)
+        return result;
+      else
+        return MethodDefinition.EmptyCollection;
+    }
+
+    /// <summary>
+    /// Returns dummy argument list for a static call of an extension
+    /// method equivalent to the receiver + original argument list of
+    /// dispatched-call method call syntax.
+    /// </summary>
+    public virtual IEnumerable<Expression> GetExtensionArguments {
+      [DebuggerNonUserCode]
+      get {
+        //yield return this.ThisArgument; // Alias for ((QualifiedName)this.MethodExpression).Qualifier.
+        yield return ((QualifiedName)this.MethodExpression).Qualifier;
+        foreach (Expression argument in this.OriginalArguments)
+          yield return argument;
+      }
+    }
+
+
+    /// <summary>
     /// For each method in the group of methods defined by the given representative method, try to infer the type arguments
     /// from the types of the actual arguments of this call.
     /// Returns the intantiated versions of all methods for which type inference succeeds.
@@ -12691,7 +12754,7 @@ namespace Microsoft.Cci.Ast {
       }
       object/*?*/ resolvedMethodExpression = this.ResolveMethodExpression(this.MethodExpression);
       IMethodDefinition/*?*/ methodGroupRepresentative = resolvedMethodExpression as IMethodDefinition;
-      if (methodGroupRepresentative != null) {
+      if (methodGroupRepresentative != null && methodGroupRepresentative != Dummy.Method) {
         string/*?*/ numberOfArguments = IteratorHelper.EnumerableCount(this.OriginalArguments).ToString();
         //^ assume numberOfArguments != null;
         this.Helper.ReportError(new AstErrorMessage(this, Error.BadNumberOfArguments, this.Helper.GetMethodSignature(methodGroupRepresentative, NameFormattingOptions.None), numberOfArguments));

@@ -970,6 +970,10 @@ namespace Microsoft.Cci.Ast {
       /// </summary>
       ValueType=0x00400000,
       /// <summary>
+      /// This type contains at least one definition method.
+      /// </summary>
+      HasExtensionMethod,
+      /// <summary>
       /// 
       /// </summary>
       None=0x00000000,

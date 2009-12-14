@@ -1755,16 +1755,17 @@ namespace Microsoft.Cci.Ast {
       bool result = false;
       // Check extension method validity
       if (this.IsExtensionMethod) {
-        TypeDeclaration surroundingType = this.ContainingTypeDeclaration;
+        TypeDefinition surroundingType = this.ContainingTypeDeclaration.TypeDefinition;
         // Extension methods can only be declared on types that are:
         //   classes, declared static, non-nested, not generic.
         Error error = Error.NotAnError;
-        if (!surroundingType.TypeDefinition.IsClass
-          || !surroundingType.TypeDefinition.IsStatic
-          || surroundingType is NestedTypeDeclaration)
+        if (!surroundingType.IsClass
+          || !surroundingType.IsStatic
+          || surroundingType is NestedTypeDefinition)
           error = Error.ExtensionMethodsOnlyInStaticClass;
         else if (surroundingType.GenericParameterCount != 0)
           error = Error.ExtensionMethodsOnlyInNonGenericClass;
+        // TODO: Need to check that first parameter is not of pointer type.
         if (error != Error.NotAnError) {
           this.Helper.ReportError(new AstErrorMessage(this, error));
           result = true;
@@ -1777,6 +1778,16 @@ namespace Microsoft.Cci.Ast {
         result |= this.body.HasErrors;
       return result;
     }
+
+    //private ITypeDefinition TypeOfFirstParameter() {
+    //  ITypeDefinition firstParameter = Dummy.Type;
+    //  IEnumerator<ParameterDeclaration> parameters = this.Parameters.GetEnumerator();
+    //  if (parameters.MoveNext())
+    //    firstParameter = parameters.Current.Type.Type;
+    //  return firstParameter;
+    //}
+
+     
 
     private void CheckIfNonVirtualThatImplicitlyImplementsInterfaceMethod() {
       if ((this.flags & (int)ExtendedFlags.ImplicitInterfaceImplementationNotYetChecked) == 0) return;

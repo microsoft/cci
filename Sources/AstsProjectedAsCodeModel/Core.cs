@@ -2211,7 +2211,7 @@ namespace Microsoft.Cci.Ast {
     /// or a runtimeargumenthandle.
     /// </summary>
     //^ [Pure]
-    protected virtual bool MethodIsEligible(IMethodDefinition method, IEnumerable<Expression> arguments) {
+    public virtual bool MethodIsEligible(IMethodDefinition method, IEnumerable<Expression> arguments) {
       return this.MethodIsEligible(method, arguments, false);
     }
 
@@ -2843,7 +2843,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Selects the member of the given collection of methods that best mathces the given arguments.
+    /// Selects the member of the given collection of methods that best matches the given arguments.
     /// This method is expected to have language specific behavior when invoked via an instance of a subclass of LanguageSpecificCompilationHelper.
     /// When invoked via an instance of a standard framework class (such as CompilationHelper), C# rules apply.
     /// If no the method collection is empty or if there is no single best match, Dummy.Method is returned.
