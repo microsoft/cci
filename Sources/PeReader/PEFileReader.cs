@@ -24,8 +24,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
   #region Metadata Stream Readers
   internal struct StringStreamReader {
     internal MemoryReader MemoryReader;
-    internal string this[uint offset]
-    {
+    internal string this[uint offset] {
       get
         //^ requires offset >= 0 && offset < this.MemoryReader.Length;
       {
@@ -40,8 +39,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
   internal struct BlobStreamReader {
     static internal byte[] Empty = new byte[0];
     internal MemoryReader MemoryReader;
-    internal byte[] this[uint offset]
-    {
+    internal byte[] this[uint offset] {
       get
         //^ requires offset >= 0 && offset < this.MemoryReader.Length;
       {
@@ -64,7 +62,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       return this.MemoryReader.PeekByte((int)offset + bytesRead + index);
     }
     internal MemoryBlock GetMemoryBlockAt(uint offset)
-        //^ requires offset >= 0 && offset < this.MemoryReader.Length;
+      //^ requires offset >= 0 && offset < this.MemoryReader.Length;
     {
       uint bytesRead;
       uint numberOfBytes = this.MemoryReader.PeekCompressedUInt32(offset, out bytesRead);
@@ -76,8 +74,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
 
   internal struct GUIDStreamReader {
     internal MemoryReader MemoryReader;
-    internal Guid this[uint offset]
-    {
+    internal Guid this[uint offset] {
       get
         //^ requires offset >= 0 && offset + sizeof(Guid) <= this.MemoryReader.Length;
       {
@@ -92,8 +89,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
 
   internal struct UserStringStreamReader {
     internal MemoryReader MemoryReader;
-    internal string this[uint offset]
-    {
+    internal string this[uint offset] {
       get
         //^ requires offset >= 0 && offset < this.MemoryReader.Length;
       {
@@ -1201,9 +1197,9 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       //  We do a linear scan here because we dont have these tables sorted
       int rowNumber =
         this.EventMapTableMemoryReader.LinearSearchReference(
-          this.RowSize, 
-          this.ParentOffset, 
-          typeDefRowId, 
+          this.RowSize,
+          this.ParentOffset,
+          typeDefRowId,
           this.IsTypeDefTableRowRefSizeSmall
         );
       return (uint)(rowNumber + 1);
@@ -1348,9 +1344,9 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       //  We do a linear scan here because we dont have these tables sorted
       int rowNumber =
         this.PropertyMapTableMemoryReader.LinearSearchReference(
-          this.RowSize, 
-          this.ParentOffset, 
-          typeDefRowId, 
+          this.RowSize,
+          this.ParentOffset,
+          typeDefRowId,
           this.IsTypeDefTableRowRefSizeSmall
         );
       return (uint)(rowNumber + 1);
@@ -2176,8 +2172,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       this.RowSize = this.ImplementationOffset + implementationRefSize;
       this.ExportedTypeTableMemoryReader = new MemoryReader(buffer, (int)(this.RowSize * numberOfRows));
     }
-    internal ExportedTypeRow this[uint rowId]
-    {
+    internal ExportedTypeRow this[uint rowId] {
       get {
         int rowOffset = (int)(rowId - 1) * this.RowSize;
         TypeDefFlags typeDefFlags = (TypeDefFlags)this.ExportedTypeTableMemoryReader.PeekUInt32(rowOffset + this.FlagsOffset);
@@ -3078,7 +3073,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     internal MetadataStreamKind MetadataStreamKind;
     MemoryBlock MetadataTableStream;
     internal MemoryReader ResourceMemoryReader;
-//    internal MemoryBlock StrongNameSignature;
+    //    internal MemoryBlock StrongNameSignature;
     string MetadataStreamName {
       get {
         if (this.MetadataStreamKind == MetadataStreamKind.Compressed) {
@@ -3444,7 +3439,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       ulong requiredSortedTables = presentTables & validTablesForVersion & (ulong)TableMask.SortedTablesMask;
       if ((requiredSortedTables & (ulong)this.MetadataTableHeader.SortedTables) != requiredSortedTables) {
         this.ErrorContainer.AddMetadataStreamError(this.MetadataStreamName, 16, MetadataReaderErrorKind.SomeRequiredTablesNotSorted);
-        return false;
+        //Carry on regardless. There are/were compiler out there that sort the required tables, but fail to set the bit in SortedTables.
       }
       int numberOfTables = this.MetadataTableHeader.GetNumberOfTablesPresent();
       if (memReader.RemainingBytes < numberOfTables * sizeof(Int32)) {
@@ -3462,8 +3457,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       uint largeRowSize,
       uint[] rowCountArray,
       TableMask tablesReferenced
-    )
-    {
+    ) {
       bool isAllReferencedTablesSmall = true;
       ulong tablesReferencedMask = (ulong)tablesReferenced;
       for (int tableIndex = 0; tableIndex < (int)TableIndices.Count; tableIndex++) {
