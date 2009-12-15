@@ -1279,8 +1279,9 @@ namespace Microsoft.Cci.Ast {
     protected virtual Expression ConversionFromMethodGroupToDelegate(Expression expression, ITypeDefinition targetType)
       //^ requires targetType.IsDelegate;
     {
+      bool applicableButNotConsistent;
       QualifiedName qualifiedName;
-      IMethodDefinition matchingMethod = this.GetMatchingMethodFromMethodGroup(expression, targetType, true);
+      IMethodDefinition matchingMethod = this.GetMatchingMethodFromMethodGroup(expression, targetType, true, out applicableButNotConsistent);
       Expression/*?*/ instance = null;
       if (matchingMethod != Dummy.Method) {
         if (matchingMethod != Dummy.Method && !matchingMethod.IsStatic) {
@@ -1295,7 +1296,7 @@ namespace Microsoft.Cci.Ast {
         }
         //^ assume instance != null; //matchingMethod should be a dummy if expression is not going to result in something above.
       }
-      else if ((qualifiedName = expression as QualifiedName) != null) { // Look for extension method.
+      else if (!applicableButNotConsistent && (qualifiedName = expression as QualifiedName) != null) { // Look for extension method.
         List<IMethodDefinition> result = new List<IMethodDefinition>();
         SimpleName simpleName = qualifiedName.SimpleName;
         IMethodDefinition invokeMethod = this.GetInvokeMethod(targetType);
@@ -1542,8 +1543,15 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     private IMethodDefinition GetMatchingMethodFromMethodGroup(Expression expression, ITypeDefinition targetType, bool requireConsistency)
-      //^ requires targetType.IsDelegate;
     {
+      bool dummy;
+      return this.GetMatchingMethodFromMethodGroup(expression, targetType, requireConsistency, out dummy);
+    }
+
+    private IMethodDefinition GetMatchingMethodFromMethodGroup
+      (Expression expression, ITypeDefinition targetType, bool requireConsistency, out bool applicableButInconsistent)
+    {
+      applicableButInconsistent = false;
       GenericInstanceExpression/*?*/ genericInstance = expression as GenericInstanceExpression;
       IMethodDefinition/*?*/ methodGroupRepresentative = this.ResolveIfName(expression) as IMethodDefinition;
       if (methodGroupRepresentative == null) {
@@ -1561,8 +1569,12 @@ namespace Microsoft.Cci.Ast {
       else
         candidates = this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), genericInstance.GetArgumentTypeReferences());
       IMethodDefinition matchingMethod = this.ResolveOverload(candidates, fakeArguments);
-
-      if (matchingMethod != Dummy.Method && requireConsistency && !this.SignaturesAreConsistent(invokeMethod, matchingMethod)) matchingMethod = Dummy.Method;
+      // There is an applicable method, but is not consistent with delegate invocation semantics.
+      // The caller needs to know this, since no extension method is searched for in this case.
+      if (matchingMethod != Dummy.Method && requireConsistency && !this.SignaturesAreConsistent(invokeMethod, matchingMethod)) {
+        matchingMethod = Dummy.Method;
+        applicableButInconsistent = true;
+      }
       return matchingMethod;
     }
 
