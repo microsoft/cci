@@ -32,9 +32,9 @@ namespace Microsoft.Cci.Pdb {
       bits.ReadInt32(out age);    //  8..11 Age
       bits.ReadGuid(out guid);       // 12..27 GUID
 
-      if (ver != 20000404) {
-        throw new PdbDebugException("Unsupported PDB Stream version {0}", ver);
-      }
+      //if (ver != 20000404) {
+      //  throw new PdbDebugException("Unsupported PDB Stream version {0}", ver);
+      //}
 
       // Read string buffer.
       int buf;
@@ -331,10 +331,10 @@ namespace Microsoft.Cci.Pdb {
       DbiHeader dh = new DbiHeader(bits);
       header = new DbiDbgHdr();
 
-      if (dh.sig != -1 || dh.ver != 19990903) {
-        throw new PdbException("Unsupported DBI Stream version, sig={0}, ver={1}",
-                               dh.sig, dh.ver);
-      }
+      //if (dh.sig != -1 || dh.ver != 19990903) {
+      //  throw new PdbException("Unsupported DBI Stream version, sig={0}, ver={1}",
+      //                         dh.sig, dh.ver);
+      //}
 
       // Read gpmod section.
       ArrayList modList = new ArrayList();
