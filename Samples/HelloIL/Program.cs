@@ -6,8 +6,9 @@ using Microsoft.Cci.MutableCodeModel;
 namespace HelloCodeModel {
   class Program {
     static void Main(string[] args) {
-      var nameTable = new NameTable();
-      var host = new PeReader.DefaultHost(nameTable);
+      var host = new PeReader.DefaultHost();
+      var nameTable = host.NameTable;
+
       var coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
 
       var assembly = new Assembly() {

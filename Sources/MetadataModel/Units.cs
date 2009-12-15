@@ -357,7 +357,7 @@ namespace Microsoft.Cci {
   /// A unit of metadata stored as a single artifact and potentially produced and revised independently from other units.
   /// Examples of units include .NET assemblies and modules, as well C++ object files and compiled headers.
   /// </summary>
-  public interface IUnit : INamespaceRootOwner, IUnitReference {
+  public interface IUnit : INamespaceRootOwner, IUnitReference, IDefinition {
 
     /// <summary>
     /// The identity of the assembly corresponding to the target platform contract assembly at the time this unit was compiled.

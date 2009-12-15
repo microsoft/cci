@@ -395,9 +395,14 @@ namespace Microsoft.Cci {
     OmitContainingType=OmitContainingNamespace << 1,
 
     /// <summary>
+    /// Do not include optional and required custom modifiers.
+    /// </summary>
+    OmitCustomModifiers=OmitContainingType << 1,
+
+    /// <summary>
     /// If the type member explicitly implements an interface, do not include the name of the interface in the name of the member.
     /// </summary>
-    OmitImplementedInterface=OmitContainingType << 1,
+    OmitImplementedInterface=OmitCustomModifiers << 1,
 
     /// <summary>
     /// Do not include type argument names with the names of generic type instances.
@@ -1692,9 +1697,11 @@ namespace Microsoft.Cci {
     protected virtual string GetModifiedTypeName(IModifiedTypeReference modifiedType, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       sb.Append(this.GetTypeName(modifiedType.UnmodifiedType, formattingOptions));
-      foreach (ICustomModifier modifier in modifiedType.CustomModifiers) {
-        sb.Append(modifier.IsOptional ? " optmod " : " reqmod ");
-        sb.Append(this.GetTypeName(modifier.Modifier, formattingOptions));
+      if ((formattingOptions & NameFormattingOptions.OmitCustomModifiers) == 0) {
+        foreach (ICustomModifier modifier in modifiedType.CustomModifiers) {
+          sb.Append(modifier.IsOptional ? " optmod " : " reqmod ");
+          sb.Append(this.GetTypeName(modifier.Modifier, formattingOptions));
+        }
       }
       return sb.ToString();
     }

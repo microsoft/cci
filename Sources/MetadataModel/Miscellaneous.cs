@@ -197,6 +197,20 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns the first element from the given non-empty collection.
+    /// </summary>
+    /// <typeparam name="T">The element type of the collection</typeparam>
+    /// <param name="enumerable">An enumeration of elements.</param>
+    /// <returns>The first element from the enumerable</returns>
+    public static T First<T>(IEnumerable<T> enumerable)
+      //^ requires IteratorHelper.EnumerableIsNotEmpty(enumerable);
+    {
+      var e = enumerable.GetEnumerator();
+      e.MoveNext();
+      return e.Current;
+    }
+
+    /// <summary>
     /// Returns true if any element of the sequence satisfies the predicate
     /// </summary>
     /// <typeparam name="T">The element type of the collection</typeparam>
