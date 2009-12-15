@@ -1279,20 +1279,36 @@ namespace Microsoft.Cci.Ast {
     protected virtual Expression ConversionFromMethodGroupToDelegate(Expression expression, ITypeDefinition targetType)
       //^ requires targetType.IsDelegate;
     {
+      QualifiedName qualifiedName;
       IMethodDefinition matchingMethod = this.GetMatchingMethodFromMethodGroup(expression, targetType, true);
-      if (matchingMethod == Dummy.Method) return new DummyExpression(expression.SourceLocation);
       Expression/*?*/ instance = null;
-      if (!matchingMethod.IsStatic) {
-        SimpleName/*?*/ simpleName = expression as SimpleName;
-        if (simpleName != null)
-          instance = new ThisReference(simpleName.ContainingBlock, simpleName.SourceLocation);
-        else {
-          QualifiedName/*?*/ qualifiedName = expression as QualifiedName;
-          if (qualifiedName != null)
-            instance = qualifiedName.Qualifier;
+      if (matchingMethod != Dummy.Method) {
+        if (matchingMethod != Dummy.Method && !matchingMethod.IsStatic) {
+          SimpleName/*?*/ simpleName = expression as SimpleName;
+          if (simpleName != null)
+            instance = new ThisReference(simpleName.ContainingBlock, simpleName.SourceLocation);
+          else {
+            qualifiedName = expression as QualifiedName;
+            if (qualifiedName != null)
+              instance = qualifiedName.Qualifier;
+          }
         }
         //^ assume instance != null; //matchingMethod should be a dummy if expression is not going to result in something above.
       }
+      else if ((qualifiedName = expression as QualifiedName) != null) { // Look for extension method.
+        List<IMethodDefinition> result = new List<IMethodDefinition>();
+        SimpleName simpleName = qualifiedName.SimpleName;
+        IMethodDefinition invokeMethod = this.GetInvokeMethod(targetType);
+        IEnumerable<Expression> delegateArgs = 
+          MakeExtensionArgumentList(qualifiedName, MakeFakeArgumentList(expression, invokeMethod));
+
+        NamespaceDeclaration enclosingNamespace = expression.ContainingBlock.ContainingNamespaceDeclaration;
+        enclosingNamespace.GetApplicableExtensionMethods(result, simpleName, delegateArgs);
+        if (result.Count > 0)
+          matchingMethod = this.ResolveOverload(result, delegateArgs, false);
+      }
+      if (matchingMethod == Dummy.Method)
+        return new DummyExpression(expression.SourceLocation);
       return new CreateDelegateInstance(instance, targetType, matchingMethod, expression.SourceLocation);
     }
 
@@ -1538,9 +1554,7 @@ namespace Microsoft.Cci.Ast {
       if (methodGroupRepresentative == null) return Dummy.Method;
       //^ assume targetType.IsDelegate;
       IMethodDefinition invokeMethod = this.GetInvokeMethod(targetType);
-      List<Expression> fakeArguments = new List<Expression>();
-      foreach (IParameterDefinition delegateParam in invokeMethod.Parameters)
-        fakeArguments.Add(new DummyExpression(expression.ContainingBlock, SourceDummy.SourceLocation, delegateParam.Type.ResolvedType));
+      List<Expression> fakeArguments = MakeFakeArgumentList(expression, invokeMethod);
       IEnumerable<IMethodDefinition> candidates;
       if (genericInstance == null)
         candidates = this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), null);
@@ -1551,6 +1565,25 @@ namespace Microsoft.Cci.Ast {
       if (matchingMethod != Dummy.Method && requireConsistency && !this.SignaturesAreConsistent(invokeMethod, matchingMethod)) matchingMethod = Dummy.Method;
       return matchingMethod;
     }
+
+    private static List<Expression> MakeFakeArgumentList(Expression expression, IMethodDefinition invokeMethod) {
+      List<Expression> fakeArguments = new List<Expression>();
+      foreach (IParameterDefinition delegateParam in invokeMethod.Parameters)
+        fakeArguments.Add(new DummyExpression(expression.ContainingBlock, SourceDummy.SourceLocation, delegateParam.Type.ResolvedType));
+      return fakeArguments;
+    }
+
+    /// <summary>
+    /// Returns dummy argument list for a static call of an extension
+    /// method equivalent to the receiver + original argument list in
+    /// the "dispatched-call" method call syntax.
+    /// </summary>
+    internal static IEnumerable<Expression> MakeExtensionArgumentList(QualifiedName callExpression, IEnumerable<Expression> originalArguments) {
+      yield return callExpression.Qualifier;
+      foreach (Expression argument in originalArguments)
+        yield return argument;
+    }
+
 
     /// <summary>
     /// Returns the collection of methods with the same name as the given method and declared by the same type as the given method (or by a base type)

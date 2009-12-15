@@ -4907,7 +4907,8 @@ namespace Microsoft.Cci.Ast {
         (callExpression = methodCall.MethodExpression as QualifiedName) != null) {
         // Cannot reuse local variable "candidateMethods" here, as the current
         // value is still live for use in error reporting in case of failure.
-        IEnumerable<Expression> argumentsForStaticCall = methodCall.MakeExtensionArgumentList(callExpression);
+        IEnumerable<Expression> argumentsForStaticCall =
+          LanguageSpecificCompilationHelper.MakeExtensionArgumentList(callExpression, methodCall.OriginalArguments);
         IEnumerable<IMethodDefinition> extensionCandidates = methodCall.GetCandidateExtensionMethods(argumentsForStaticCall);
         resolvedMethod = this.Helper.ResolveOverload(extensionCandidates, argumentsForStaticCall, false);
         if (resolvedMethod != Dummy.Method)
@@ -12335,6 +12336,7 @@ namespace Microsoft.Cci.Ast {
 
     /// <summary>
     /// Find applicable extension methods for this call, if possible.
+    /// Precondition: this.MethodExpression must be a QualifiedName.
     /// </summary>
     /// <returns></returns>
     public virtual IEnumerable<IMethodDefinition> GetCandidateExtensionMethods(IEnumerable<Expression> arguments){
@@ -12349,18 +12351,8 @@ namespace Microsoft.Cci.Ast {
         return MethodDefinition.EmptyCollection;
     }
 
-    /// <summary>
-    /// Returns dummy argument list for a static call of an extension
-    /// method equivalent to the receiver + original argument list of
-    /// dispatched-call method call syntax.
-    /// </summary>
-    internal IEnumerable<Expression> MakeExtensionArgumentList(QualifiedName callExpression)  {
-        // Cannot use this.ThisArgument, since this may recurse to ResolveMethod()...
-        yield return callExpression.Qualifier;
-        foreach (Expression argument in this.OriginalArguments)
-          yield return argument;
-    }
-
+    //internal IEnumerable<Expression> MakeExtensionArgumentList(QualifiedName callExpression)  { ...}
+    //    This method replaced by a static method in LanguageSpecificCompilationHelper
 
     /// <summary>
     /// For each method in the group of methods defined by the given representative method, try to infer the type arguments
