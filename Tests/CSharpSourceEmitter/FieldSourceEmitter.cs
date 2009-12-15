@@ -14,14 +14,22 @@ namespace CSharpSourceEmitter {
       if (fieldDefinition.ContainingType.IsEnum && fieldDefinition.IsRuntimeSpecial && fieldDefinition.IsSpecialName)
         return; // implicit value field of an enum
 
+      if (AttributeHelper.Contains(fieldDefinition.Attributes, fieldDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+        return; // eg. a cached anonymous delegate - may have invalid symbols
+
+      foreach (var e in fieldDefinition.ContainingTypeDefinition.Events) {
+        if (e.Name == fieldDefinition.Name)
+          return;   // field is probably the implicit delegate backing the event
+      }
+
       // Figure out if this is a special fixed buffer field
       ICustomAttribute fixedBufferAttr = Utils.FindAttribute(fieldDefinition.Attributes, SpecialAttribute.FixedBuffer);
 
       if (fixedBufferAttr == null)
-        PrintAttributes(fieldDefinition.Attributes);
+        PrintAttributes(fieldDefinition);
 
       if (fieldDefinition.ContainingTypeDefinition.Layout == LayoutKind.Explicit)
-        sourceEmitterOutput.WriteLine(String.Format("[System.Runtime.InteropServices.FieldOffset({0})]", fieldDefinition.Offset), true);
+        PrintPseudoCustomAttribute(fieldDefinition, "System.Runtime.InteropServices.FieldOffset", fieldDefinition.Offset.ToString(), true, null);
 
       PrintToken(CSharpToken.Indent);
 
@@ -37,11 +45,7 @@ namespace CSharpSourceEmitter {
           PrintFieldDefinitionName(fieldDefinition);
           if (fieldDefinition.IsCompileTimeConstant) {
             sourceEmitterOutput.Write(" = ");
-            // For enums, the IMetadataConstant is just the primitive value
-            if (fieldDefinition.Type.ResolvedType.IsEnum)
-              PrintEnumValue(fieldDefinition.Type.ResolvedType, fieldDefinition.CompileTimeValue.Value);
-            else
-              this.Visit(fieldDefinition.CompileTimeValue);
+            PrintFieldDefinitionValue(fieldDefinition);
           }
         } else {
           PrintFieldDefinitionFixedBuffer(fieldDefinition, fixedBufferAttr);
@@ -50,11 +54,54 @@ namespace CSharpSourceEmitter {
       }
     }
 
+    public virtual void PrintFieldDefinitionValue(IFieldDefinition fieldDefinition) {
+      // We've got context here about the field that can be used to provide a better value.
+      // For enums, the IMetadataConstant is just the primitive value
+      var fieldType = fieldDefinition.Type.ResolvedType;
+      if (fieldType.IsEnum) {
+        PrintEnumValue(fieldType, fieldDefinition.CompileTimeValue.Value);
+      } else if (TypeHelper.TypesAreEquivalent(fieldDefinition.ContainingTypeDefinition, fieldType.PlatformType.SystemFloat32) && 
+                 fieldType.TypeCode == PrimitiveTypeCode.Float32) {
+        // Defining System.Single, can't reference the symbolic names, use constant hacks instead
+        float val = (float)fieldDefinition.CompileTimeValue.Value;
+        if (float.IsNegativeInfinity(val))
+          sourceEmitterOutput.Write("-1.0f / 0.0f");
+        else if (float.IsPositiveInfinity(val))
+          sourceEmitterOutput.Write("1.0f / 0.0f");
+        else if (float.IsNaN(val))
+          sourceEmitterOutput.Write("0.0f / 0.0f");
+        else
+          sourceEmitterOutput.Write(val.ToString("R") + "f");
+      } else if (TypeHelper.TypesAreEquivalent(fieldDefinition.ContainingTypeDefinition, fieldType.PlatformType.SystemFloat64) &&
+                 fieldType.TypeCode == PrimitiveTypeCode.Float64) {
+        // Defining System.Double, can't reference the symbolic names, use constant hacks instead
+        double val = (double)fieldDefinition.CompileTimeValue.Value;
+        if (double.IsNegativeInfinity(val))
+          sourceEmitterOutput.Write("-1.0 / 0.0");
+        else if (double.IsPositiveInfinity(val))
+          sourceEmitterOutput.Write("1.0 / 0.0");
+        else if (double.IsNaN(val))
+          sourceEmitterOutput.Write("0.0 / 0.0");
+        else
+          sourceEmitterOutput.Write(val.ToString("R"));
+      } else if (TypeHelper.TypesAreEquivalent(fieldDefinition.ContainingTypeDefinition, fieldType) && 
+        (fieldType.TypeCode == PrimitiveTypeCode.Int32 || fieldType.TypeCode == PrimitiveTypeCode.UInt32 ||
+         fieldType.TypeCode == PrimitiveTypeCode.Int64 || fieldType.TypeCode == PrimitiveTypeCode.UInt64)) {
+        // Defining a core integral system type, can't reference the symbolic names, use constants
+        sourceEmitterOutput.Write(fieldDefinition.CompileTimeValue.Value.ToString());
+      } else {
+        this.Visit(fieldDefinition.CompileTimeValue);
+      }
+    }
+
     public virtual void PrintFieldDefinitionVisibility(IFieldDefinition fieldDefinition) {
       PrintTypeMemberVisibility(fieldDefinition.Visibility);
     }
 
     public virtual void PrintFieldDefinitionModifiers(IFieldDefinition fieldDefinition) {
+
+      if (Utils.GetHiddenField(fieldDefinition) != Dummy.Field)
+        PrintKeywordNew();
 
       if (fieldDefinition.Type.TypeCode == PrimitiveTypeCode.Pointer) {
         PrintKeywordUnsafe();
@@ -105,7 +152,7 @@ namespace CSharpSourceEmitter {
       if (isFlags) {
         // Add cast if necessary
         var type = fieldDefinition.CompileTimeValue.Type;
-        long lv = Convert.ToInt64(fieldDefinition.CompileTimeValue.Value);
+        long lv = Convert.ToInt64(val);
         if (TypeHelper.IsSignedPrimitiveInteger(type) && lv < 0) {
           castNeeded = true;
           sourceEmitterOutput.Write("unchecked((");
@@ -113,8 +160,11 @@ namespace CSharpSourceEmitter {
           PrintToken(CSharpToken.RightParenthesis);
         }
       }
-      // Output flags values in hex, non-flags in decimal 
-      this.sourceEmitterOutput.Write(String.Format(isFlags ? "0x{0:X}" : "{0}", val));
+      // Output flags values in hex, non-flags in decimal
+      if (isFlags)
+        this.sourceEmitterOutput.Write(String.Format("0x{0:X}", val));
+      else
+        Visit(fieldDefinition.CompileTimeValue);
       if (castNeeded)
         PrintToken(CSharpToken.RightParenthesis);
       PrintToken(CSharpToken.Comma);

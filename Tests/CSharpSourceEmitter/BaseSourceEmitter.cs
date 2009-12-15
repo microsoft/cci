@@ -80,66 +80,68 @@ namespace CSharpSourceEmitter {
     YieldReturn,
   }
 
+  /// <summary>
+  /// Prints out C# source corresponding to CCI nodes as they are visited.
+  /// </summary>
+  /// <remarks>
+  /// Extenders can modify the output by overriding Visit or Print* methods.
+  /// This is a rather ugly and somewhat inflexible model.  A better approach would be to transform
+  /// the CCI object model into a C# AST (parse tree), then let extenders mutate that model before 
+  /// running a very simple visitor that prints it out as text.
+  /// </remarks>
   public partial class SourceEmitter : ICSharpSourceEmitter {
     protected ISourceEmitterOutput sourceEmitterOutput;
 
     public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost hostEnvironment) {
       this.sourceEmitterOutput = sourceEmitterOutput;
+      this.LeftCurlyOnNewLine = true;
     }
 
-    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput) {
-      this.sourceEmitterOutput = sourceEmitterOutput;
+    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput)
+      : this(sourceEmitterOutput, null) {
     }
 
-    public virtual void PrintAttributes(IEnumerable<ICustomAttribute> attributes) {
-      foreach (var attribute in attributes) {
-        if (Utils.GetAttributeType(attribute) != SpecialAttribute.Extension)
-          this.PrintAttribute(attribute, true, null);
-      }
-    }
-
-    public virtual void PrintAttribute(ICustomAttribute attribute, bool notInline, string target) {
-      this.sourceEmitterOutput.Write("[", notInline);
-      if (target != null) {
-        this.sourceEmitterOutput.Write(target);
-        this.sourceEmitterOutput.Write(": ");
-      }
-      this.PrintTypeReferenceName(attribute.Constructor.ContainingType);
-      if (attribute.NumberOfNamedArguments > 0 || IteratorHelper.EnumerableIsNotEmpty(attribute.Arguments)) {
-        this.sourceEmitterOutput.Write("(");
-        bool first = true;
-        foreach (var argument in attribute.Arguments) {
-          if (first)
-            first = false;
-          else
-            this.sourceEmitterOutput.Write(", ");
-          this.Visit(argument);
-        }
-        foreach (var namedArgument in attribute.NamedArguments) {
-          if (first)
-            first = false;
-          else
-            this.sourceEmitterOutput.Write(", ");
-          this.Visit(namedArgument);
-        }
-        this.sourceEmitterOutput.Write(")");
-      }
-      this.sourceEmitterOutput.Write("]");
-      if (notInline) this.sourceEmitterOutput.WriteLine("");
-    }
+    public bool LeftCurlyOnNewLine { get; set; }
 
     public virtual void PrintString(string str) {
-      this.sourceEmitterOutput.Write("\"");
-      foreach (char ch in str) {
-        if (ch == '\\')
-          this.sourceEmitterOutput.Write("\\\\");
-        else if (ch == '"')
-          this.sourceEmitterOutput.Write("\\\"");
-        else
-          this.sourceEmitterOutput.Write(ch.ToString());
-      }
-      this.sourceEmitterOutput.Write("\"");
+      this.sourceEmitterOutput.Write(QuoteString(str));
     }
+
+    public static string QuoteString(string str) {
+      StringBuilder sb = new StringBuilder(str.Length + 4);
+      sb.Append("\"");
+      foreach (char ch in str) {
+        sb.Append(EscapeChar(ch, true));
+      }
+      sb.Append("\"");
+      return sb.ToString();
+    }
+
+    public static string EscapeChar(char c, bool inString) {
+      switch (c) {
+        case '\r': return @"\r";
+        case '\n': return @"\n";
+        case '\f': return @"\f";
+        case '\t': return @"\t";
+        case '\v': return @"\v";
+        case '\0': return @"\0";
+        case '\a': return @"\a";
+        case '\b': return @"\b";
+        case '\\': return @"\\";
+        case '\'': return inString ? "'" : @"\'";
+        case '"': return inString ? "\\\"" : "\"";
+      }
+      var cat = Char.GetUnicodeCategory(c);
+      if (cat == UnicodeCategory.Control ||
+        cat == UnicodeCategory.LineSeparator ||
+        cat == UnicodeCategory.Format || 
+        cat == UnicodeCategory.Surrogate || 
+        cat == UnicodeCategory.PrivateUse || 
+        cat == UnicodeCategory.OtherNotAssigned)
+        return String.Format("\\u{0:X4}", (int)c);
+      return c.ToString();
+    }
+
 
     public virtual void PrintIdentifier(IName name) {
       sourceEmitterOutput.Write(EscapeIdentifier(name.Value));
@@ -252,7 +254,13 @@ namespace CSharpSourceEmitter {
           sourceEmitterOutput.Write(".");
           break;
         case CSharpToken.LeftCurly:
-          sourceEmitterOutput.WriteLine("{", true);
+          if (this.LeftCurlyOnNewLine) {
+            if (!this.sourceEmitterOutput.CurrentLineEmpty)
+              PrintToken(CSharpToken.NewLine);
+          } else {
+            PrintToken(CSharpToken.Space);
+          }
+          sourceEmitterOutput.WriteLine("{", this.LeftCurlyOnNewLine);
           sourceEmitterOutput.IncreaseIndent();
           break;
         case CSharpToken.RightCurly:

@@ -44,6 +44,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AttributeSourceEmitter.cs" />
     <Compile Include="BaseTypeOrInterfaceSourceEmitter.cs" />
     <Compile Include="BaseTypesAndInterfacesListSourceEmitter.cs" />
     <Compile Include="BaseSourceEmitter.cs" />
@@ -62,8 +63,7 @@
     <Compile Include="ParameterListSourceEmitter.cs" />
     <Compile Include="ParameterSourceEmitter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SourceEmitterOutputConsole.cs" />
-    <Compile Include="SourceEmitterContext.cs" />
+    <Compile Include="SourceEmitterOutputTextWriter.cs" />
     <Compile Include="ISourceEmitterOutput.cs" />
     <Compile Include="SourceEmitterOutputString.cs" />
     <Compile Include="TypeReferenceSourceEmitter.cs" />

@@ -27,8 +27,7 @@ namespace PeToText {
         pdbReader = new PdbReader(pdbStream, host);
       }
 
-      SourceEmitterContext sourceEmitterContext = new SourceEmitterContext();
-      SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString(sourceEmitterContext);
+      SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString(); 
       SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, noIL);
 
       csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);

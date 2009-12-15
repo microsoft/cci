@@ -27,15 +27,19 @@ namespace CodeModelTests {
       }
       ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), assembly);
 
-      SourceEmitterContext sourceEmitterContext = new SourceEmitterContext();
-      SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString(sourceEmitterContext);
+      SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
       SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, true);
 
       csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
       Stream resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt");
       StreamReader reader = new StreamReader(resource);
       string expected = reader.ReadToEnd();
-      Assert.True(sourceEmitterOutput.Data == expected);
+      var result = sourceEmitterOutput.Data;
+      if (result != expected) {
+        string resultFile = Path.GetFullPath("CodeModelTestOutput.txt");
+        File.WriteAllText(resultFile, result);
+        Assert.True(false, "Output didn't match CodeModelTestInput.txt: " + resultFile);
+      }
     }
   }
 

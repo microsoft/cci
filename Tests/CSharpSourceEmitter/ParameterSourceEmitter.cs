@@ -33,17 +33,20 @@ namespace CSharpSourceEmitter {
         if (Utils.GetAttributeType(attribute) == SpecialAttribute.ParamArray)
           sourceEmitterOutput.Write("params");
         else
-          this.PrintAttribute(attribute, false, null);
+          this.PrintAttribute(parameterDefinition, attribute, false, null);
 
         PrintToken(CSharpToken.Space);
       }
-      if (parameterDefinition.IsIn) {
-        // Note that this is not what the keyword 'in' is for (it's used only in foreach)
-        sourceEmitterOutput.Write("[System.Runtime.InteropServices.In] ");
-      } else if (parameterDefinition.IsOut) {
+      if (parameterDefinition.IsOut && !parameterDefinition.IsIn && parameterDefinition.IsByReference) {
+        // C# out keyword means [Out] ref (with no [In] allowed)
         PrintKeywordOut();
-      } else if (parameterDefinition.IsByReference) {
-        PrintKeywordRef();
+      } else {
+        if (parameterDefinition.IsIn)
+          PrintPseudoCustomAttribute(parameterDefinition, "System.Runtime.InteropServices.In", null, false, null);
+        if (parameterDefinition.IsOut)
+          PrintPseudoCustomAttribute(parameterDefinition, "System.Runtime.InteropServices.Out", null, false, null);
+        if (parameterDefinition.IsByReference)
+          PrintKeywordRef();
       }
     }
 

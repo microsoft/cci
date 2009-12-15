@@ -15,6 +15,16 @@ namespace CSharpSourceEmitter {
     void Write(string str);
     void IncreaseIndent();
     void DecreaseIndent();
+
+    /// <summary>
+    /// Indicates whether anything has been written to the current line yet
+    /// </summary>
+    bool CurrentLineEmpty { get; }
+
+    /// <summary>
+    /// Invoked at the start of a new non-empty line, just before writing the indent
+    /// </summary>
+    event Action<ISourceEmitterOutput> LineStart;
   }
 
 }

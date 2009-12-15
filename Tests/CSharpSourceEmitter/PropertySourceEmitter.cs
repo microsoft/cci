@@ -12,7 +12,22 @@ namespace CSharpSourceEmitter {
   public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
     public override void Visit(IPropertyDefinition propertyDefinition) {
 
-      PrintAttributes(propertyDefinition.Attributes);
+      PrintAttributes(propertyDefinition);
+
+      bool isIndexer = false;
+      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.Parameters)) {
+        // We have an indexer.  Note that this could still be an explicit interface implementation.
+        // If it's got a name other than 'Item', we need an attribute to rename it.
+        // Note that there will usually be a DefaultMemberAttribute on the class with the name
+        // but the attribute doesn't always exist (eg. if it's an explicit interaface impl)
+        isIndexer = true;
+        string id = propertyDefinition.Name.Value;
+        string simpleId = id.Substring(id.LastIndexOf('.') + 1);  // excludes any interface type
+        if (simpleId != "Item") {
+          PrintPseudoCustomAttribute(propertyDefinition, "System.Runtime.CompilerServices.IndexerName", QuoteString(simpleId), true, null);
+        }
+      }
+
       PrintToken(CSharpToken.Indent);
 
       IMethodDefinition propMeth = propertyDefinition.Getter == null ?
@@ -25,15 +40,13 @@ namespace CSharpSourceEmitter {
       PrintPropertyDefinitionReturnType(propertyDefinition);
       PrintToken(CSharpToken.Space);
 
-      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.Parameters)) {
-        // We have an indexer.  Note that this could still be an explicit interface implementation
-        // Replace the name "Item" with "this".  We could check for a DefaultMemberAttribute to confirm
-        // the name is "Item", but the attribute doesn't always exist (eg. if it's an explicit interaface impl)
+      if (isIndexer) {
+        // Indexers are always identified with a 'this' keyword, but might have an interface prefix
         string id = propertyDefinition.Name.Value;
-        string item = "Item";
-        if (id.EndsWith(item))
-          id = id.Substring(0, id.Length - item.Length) + "this";
-        sourceEmitterOutput.Write(id);
+        int lastDot = id.LastIndexOf('.');
+        if (lastDot != -1)
+          sourceEmitterOutput.Write(id.Substring(0, lastDot +1));
+        PrintToken(CSharpToken.This);
         PrintToken(CSharpToken.LeftSquareBracket);
         bool fFirstParameter = true;
         var parms = propertyDefinition.Parameters;
@@ -55,7 +68,6 @@ namespace CSharpSourceEmitter {
       } else {
         PrintPropertyDefinitionName(propertyDefinition);
       }
-      PrintToken(CSharpToken.NewLine);
       PrintToken(CSharpToken.LeftCurly);
       if (propertyDefinition.Getter != null) {
         PrintToken(CSharpToken.Indent);

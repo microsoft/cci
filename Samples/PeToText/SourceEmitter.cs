@@ -28,22 +28,7 @@ namespace PeToText {
     PdbReader/*?*/ pdbReader;
     bool noIL;
 
-    public override void Visit(IMethodDefinition methodDefinition) {
-      PrintToken(CSharpToken.Indent);
-      PrintMethodDefinitionVisibility(methodDefinition);
-      PrintMethodDefinitionModifiers(methodDefinition);
-      PrintMethodDefinitionReturnType(methodDefinition);
-      PrintToken(CSharpToken.Space);
-      PrintMethodDefinitionName(methodDefinition);
-      if (methodDefinition.IsGeneric) {
-        Visit(methodDefinition.GenericParameters);
-      }
-      Visit(methodDefinition.Parameters);
-      Visit(methodDefinition.Body);
-    }
-
     public override void Visit(IMethodBody methodBody) {
-      PrintToken(CSharpToken.NewLine);
       PrintToken(CSharpToken.LeftCurly);
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
@@ -75,7 +60,6 @@ namespace PeToText {
       }
 
       PrintToken(CSharpToken.RightCurly);
-      PrintToken(CSharpToken.NewLine);
     }
 
     private void PrintScopes(IMethodBody methodBody) {

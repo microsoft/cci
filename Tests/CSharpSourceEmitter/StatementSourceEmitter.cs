@@ -39,16 +39,17 @@ namespace CSharpSourceEmitter {
     public override void Visit(IConditionalStatement conditionalStatement) {
       sourceEmitterOutput.Write("if (", true);
       this.Visit(conditionalStatement.Condition);
-      sourceEmitterOutput.WriteLine(")");
+      sourceEmitterOutput.Write(")");
       if (conditionalStatement.TrueBranch is IBlockStatement)
         this.Visit(conditionalStatement.TrueBranch);
       else {
+        PrintToken(CSharpToken.NewLine);
         sourceEmitterOutput.IncreaseIndent();
         this.Visit(conditionalStatement.TrueBranch);
         sourceEmitterOutput.DecreaseIndent();
       }
       if (!(conditionalStatement.FalseBranch is IEmptyStatement)) {
-        this.sourceEmitterOutput.WriteLine("else", true);
+        this.sourceEmitterOutput.Write("else", true);
         this.Visit(conditionalStatement.FalseBranch);
       }
     }
@@ -218,7 +219,6 @@ namespace CSharpSourceEmitter {
     public override void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
       this.PrintToken(CSharpToken.Indent);
       this.PrintToken(CSharpToken.Try);
-      this.PrintToken(CSharpToken.NewLine);
       this.Visit(tryCatchFilterFinallyStatement.TryBody);
       foreach (ICatchClause clause in tryCatchFilterFinallyStatement.CatchClauses) {
         this.sourceEmitterOutput.Write("catch", true);
@@ -229,7 +229,6 @@ namespace CSharpSourceEmitter {
           this.PrintLocalName(clause.ExceptionContainer);
           this.sourceEmitterOutput.Write(")");
         }
-        this.sourceEmitterOutput.WriteLine("");
         this.Visit(clause.Body);
       }
       if (tryCatchFilterFinallyStatement.FinallyBody != null) {

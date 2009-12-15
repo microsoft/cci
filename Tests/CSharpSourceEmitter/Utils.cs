@@ -18,12 +18,15 @@ namespace CSharpSourceEmitter {
 
     /// <summary>
     /// Returns the method from the closest base class that is hidden by the given method according to C# rules.
+    /// If the method is an interface method definition, then look at it's base interfaces
     /// If no such method exists, Dummy.Method is returned.
     /// </summary>
     public static IMethodDefinition GetHiddenBaseClassMethod(IMethodDefinition derivedClassMethod) {
       if (derivedClassMethod.IsConstructor) return Dummy.Method;
       if (derivedClassMethod.IsVirtual && !derivedClassMethod.IsNewSlot) return Dummy.Method;   // an override
-      foreach (ITypeReference baseClassReference in derivedClassMethod.ContainingTypeDefinition.BaseClasses) {
+      var typeDef = derivedClassMethod.ContainingTypeDefinition;
+      var bases = typeDef.IsInterface ? typeDef.Interfaces : typeDef.BaseClasses;
+      foreach (ITypeReference baseClassReference in bases) {
         IMethodDefinition overriddenMethod = GetHiddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
         if (overriddenMethod != Dummy.Method) return overriddenMethod;
       }
@@ -34,6 +37,9 @@ namespace CSharpSourceEmitter {
         IMethodDefinition/*?*/ baseMethod = baseMember as IMethodDefinition;
         if (baseMethod == null) continue;
         if (baseMethod.Visibility == TypeMemberVisibility.Private) continue;
+        if ((baseMethod.Visibility == TypeMemberVisibility.Assembly || baseMethod.Visibility == TypeMemberVisibility.FamilyAndAssembly) &&
+          !UnitHelper.UnitsAreEquivalent(TypeHelper.GetDefiningUnit(derivedClassMethod.ContainingTypeDefinition), TypeHelper.GetDefiningUnit(baseClass)))
+          continue;
         if (!derivedClassMethod.IsHiddenBySignature) return baseMethod;
         if (derivedClassMethod.IsGeneric || baseMethod.IsGeneric) {
           if (derivedClassMethod.GenericParameterCount == baseMethod.GenericParameterCount &&
@@ -42,11 +48,38 @@ namespace CSharpSourceEmitter {
         } else if (IteratorHelper.EnumerablesAreEqual(((ISignature)derivedClassMethod).Parameters, ((ISignature)baseMethod).Parameters, MemberHelper.ParameterInformationComparer))
           return baseMethod;
       }
-      foreach (ITypeReference baseClassReference in baseClass.BaseClasses) {
+      var bases = baseClass.IsInterface ? baseClass.Interfaces : baseClass.BaseClasses;
+      foreach (ITypeReference baseClassReference in bases) {
         IMethodDefinition overriddenMethod = GetHiddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
         if (overriddenMethod != Dummy.Method) return overriddenMethod;
       }
       return Dummy.Method;
+    }
+
+    /// <summary>
+    /// Returns the field from the closest base class that is hidden by the given field according to C# rules.
+    /// </summary>
+    public static IFieldDefinition GetHiddenField(IFieldDefinition derivedClassField) {
+      var typeDef = derivedClassField.ContainingTypeDefinition;
+      foreach (ITypeReference baseClassReference in typeDef.BaseClasses) {
+        IFieldDefinition hiddenField = GetHiddenField(derivedClassField, baseClassReference.ResolvedType);
+        if (hiddenField != Dummy.Field) return hiddenField;
+      }
+      return Dummy.Field;
+    }
+    private static IFieldDefinition GetHiddenField(IFieldDefinition derivedClassField, ITypeDefinition baseClass) {
+      foreach (ITypeDefinitionMember baseMember in baseClass.GetMembersNamed(derivedClassField.Name, false)) {
+        IFieldDefinition/*?*/ baseField = baseMember as IFieldDefinition;
+        if (baseField == null) continue;
+        if (baseField.Visibility == TypeMemberVisibility.Private) continue;
+        return baseField;
+      }
+      var bases = baseClass.IsInterface ? baseClass.Interfaces : baseClass.BaseClasses;
+      foreach (ITypeReference baseClassReference in bases) {
+        IFieldDefinition hiddenField = GetHiddenField(derivedClassField, baseClassReference.ResolvedType);
+        if (hiddenField != Dummy.Field) return hiddenField;
+      }
+      return Dummy.Field;
     }
 
     /// <summary>

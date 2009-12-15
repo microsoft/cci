@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
@@ -110,7 +111,7 @@ namespace CSharpSourceEmitter {
           at == SpecialAttribute.AssemblyDelaySign ||
           at == SpecialAttribute.AssemblyKeyFile)
           continue;
-        PrintAttribute(attr, true, "assembly");
+        PrintAttribute(assembly, attr, true, "assembly");
       }
 
       // Assembly-level pseudo-custom attributes
@@ -405,38 +406,134 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IMetadataConstant constant) {
-      if (constant.Value == null)
+      var val = constant.Value;
+      if (val == null)
         this.PrintToken(CSharpToken.Null);
-      else if (constant.Value is string)
-        PrintString((string)constant.Value);
-      else if (constant.Value is bool)
-        PrintToken((bool)constant.Value ? CSharpToken.True : CSharpToken.False);
       else if (constant.Type.ResolvedType.IsEnum)
-        PrintEnumValue(constant.Type.ResolvedType, constant.Value);
+        PrintEnumValue(constant.Type.ResolvedType, val);
+      else if (val is string)
+        PrintString((string)val);
+      else if (val is bool)
+        PrintToken((bool)val ? CSharpToken.True : CSharpToken.False);
+      else if (val is char)
+        this.sourceEmitterOutput.Write(String.Format("'{0}'", EscapeChar((char)val, false)));
+      else if (val is float)
+        PrintFloat((float)val);
+      else if (val is double)
+        PrintDouble((double)val);
+      else if (val is int)
+        PrintInt((int)val);
+      else if (val is uint)
+        PrintUint((uint)val);
+      else if (val is long)
+        PrintLong((long)val);
+      else if (val is ulong)
+        PrintUlong((ulong)val);
       else
         this.sourceEmitterOutput.Write(constant.Value.ToString());
+    }
+
+    public virtual void PrintFloat(float value) {
+      // Use symbolic names for common constants
+      if (float.IsNaN(value))
+        sourceEmitterOutput.Write("float.NaN");
+      else if (float.IsPositiveInfinity(value))
+        sourceEmitterOutput.Write("float.PositiveInfinity");
+      else if (float.IsNegativeInfinity(value))
+        sourceEmitterOutput.Write("float.NegativeInfinity");
+      else if (value == float.Epsilon)
+        sourceEmitterOutput.Write("float.Epsilon");
+      else if (value == float.MaxValue)
+        sourceEmitterOutput.Write("float.MaxValue");
+      else if (value == float.MinValue)
+        sourceEmitterOutput.Write("float.MinValue");
+      else
+        sourceEmitterOutput.Write(value.ToString("R") + "f"); // round-trip format 
+    }
+
+    public virtual void PrintDouble(double value) {
+      // Use symbolic names for common constants
+      if (double.IsNaN(value))
+        sourceEmitterOutput.Write("double.NaN");
+      else if (double.IsPositiveInfinity(value))
+        sourceEmitterOutput.Write("double.PositiveInfinity");
+      else if (double.IsNegativeInfinity(value))
+        sourceEmitterOutput.Write("double.NegativeInfinity");
+      else if (value == double.Epsilon)
+        sourceEmitterOutput.Write("double.Epsilon");
+      else if (value == double.MaxValue)
+        sourceEmitterOutput.Write("double.MaxValue");
+      else if (value == double.MinValue)
+        sourceEmitterOutput.Write("double.MinValue");
+      else
+        sourceEmitterOutput.Write(value.ToString("R")); // round-trip format 
+    }
+
+    public virtual void PrintLong(long value) {
+      if (value == long.MaxValue)
+        sourceEmitterOutput.Write("long.MaxValue");
+      else if (value == long.MinValue)
+        sourceEmitterOutput.Write("long.MinValue");
+      else
+        sourceEmitterOutput.Write(value.ToString());
+    }
+
+    public virtual void PrintUlong(ulong value) {
+      if (value == ulong.MaxValue)
+        sourceEmitterOutput.Write("ulong.MaxValue");
+      else
+        sourceEmitterOutput.Write(value.ToString());
+    }
+
+    public virtual void PrintInt(int value) {
+      if (value == int.MaxValue)
+        sourceEmitterOutput.Write("int.MaxValue");
+      else if (value == int.MinValue)
+        sourceEmitterOutput.Write("int.MinValue");
+      else
+        sourceEmitterOutput.Write(value.ToString());
+    }
+
+    public virtual void PrintUint(uint value) {
+      if (value == uint.MaxValue)
+        sourceEmitterOutput.Write("uint.MaxValue");
+      else
+        sourceEmitterOutput.Write(value.ToString());
     }
 
     public virtual void PrintEnumValue(ITypeDefinition enumType, object valObj) {
       bool flags = (Utils.FindAttribute(enumType.Attributes, SpecialAttribute.Flags) != null);
 
       // Loop through all the enum constants looking for a match
-      ulong value = Convert.ToUInt64(valObj);
-      ulong valLeft = value;
+      ulong value = UnboxToULong(valObj);
       bool success = false;
       List<IFieldDefinition> constants = new List<IFieldDefinition>();
       foreach (var f in enumType.Fields) {
         if (f.IsCompileTimeConstant && TypeHelper.TypesAreEquivalent(f.Type, enumType))
           constants.Add(f);
       }
-      // Do largest first to ensure we get the minimum set of flags
-      constants.Sort((f1, f2) =>
-        Convert.ToUInt64(f2.CompileTimeValue.Value).CompareTo(Convert.ToUInt64(f1.CompileTimeValue.Value)));
+      // Sort by order in type - hopefully this gives the minimum set of flags
+      constants.Sort((f1, f2) => {
+        if (f1 is IMetadataObjectWithToken && f2 is IMetadataObjectWithToken)
+          return ((IMetadataObjectWithToken)f1).TokenValue.CompareTo(((IMetadataObjectWithToken)f2).TokenValue);
+        return UnboxToULong(f1.CompileTimeValue.Value).CompareTo(UnboxToULong(f2.CompileTimeValue.Value));
+      });
+
+      // If the value has the high bit set, and no constant does, then it's probably best represented as a negation
+      bool negate = false;
+      int nBits = Marshal.SizeOf(valObj)*8;
+      ulong highBit = 1ul << (nBits - 1);
+      if (flags && (value & highBit) == highBit && constants.Count > 0 && (UnboxToULong(constants[0].CompileTimeValue.Value) & highBit) == 0) {
+        value = (~value) & ((1UL << nBits) - 1);
+        negate = true;
+        sourceEmitterOutput.Write("~(");
+      }
+      ulong valLeft = value;
       foreach (var c in constants) {
-        ulong fv = Convert.ToUInt64(c.CompileTimeValue.Value);
+        ulong fv = UnboxToULong(c.CompileTimeValue.Value);
         if (valLeft == fv || (flags && (fv != 0) && ((valLeft & fv) == fv))) {
           if (valLeft != value)
-            sourceEmitterOutput.Write("|");
+            sourceEmitterOutput.Write(" | ");
           Visit((IFieldReference)c);
           valLeft -= fv;
           if (valLeft == 0) {
@@ -445,16 +542,41 @@ namespace CSharpSourceEmitter {
           }
         }
       }
-
       // No match, output cast
       if (!success) {
         if (valLeft != value)
-          sourceEmitterOutput.Write("|");
-        PrintToken(CSharpToken.LeftParenthesis);
+          sourceEmitterOutput.Write(" | ");
+        sourceEmitterOutput.Write("unchecked((");
         Visit((ITypeReference)enumType);
-        PrintToken(CSharpToken.RightParenthesis);
-        sourceEmitterOutput.Write(valLeft.ToString());
+        sourceEmitterOutput.Write(")0x" + valLeft.ToString("X") + ")");
       }
+      if (negate)
+        sourceEmitterOutput.Write(")");
+    }
+
+    private static ulong UnboxToULong(object obj) {
+      // Can't just cast - must unbox to specific type.
+      // Can't use Convert.ToUInt64 - it'll throw for negative numbers
+      switch (Convert.GetTypeCode(obj)) {
+        case TypeCode.Byte:
+          return (ulong)(Byte)obj;
+        case TypeCode.SByte:
+          return (ulong)(Byte)(SByte)obj;
+        case TypeCode.UInt16:
+          return (ulong)(UInt16)obj;
+        case TypeCode.Int16:
+          return (ulong)(UInt16)(Int16)obj;
+        case TypeCode.UInt32:
+          return (ulong)(UInt32)obj;
+        case TypeCode.Int32:
+          return (ulong)(UInt32)(Int32)obj;
+        case TypeCode.UInt64:
+          return (ulong)obj;
+        case TypeCode.Int64:
+          return (ulong)(Int64)obj;
+      }
+      // Argument must be of integral type (not in message becaseu we don't want english strings in CCI)
+      throw new ArgumentException();
     }
 
     public override void Visit(IMetadataCreateArray createArray) {
@@ -514,7 +636,7 @@ namespace CSharpSourceEmitter {
     public override void Visit(IModule module) {
       if (!(module is IAssembly)) {
         foreach (var attr in module.Attributes) {
-          PrintAttribute(attr, true, "module");
+          PrintAttribute(module, attr, true, "module");
         }
       }
 

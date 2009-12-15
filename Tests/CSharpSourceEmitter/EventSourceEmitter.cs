@@ -12,7 +12,7 @@ namespace CSharpSourceEmitter {
   public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
     public override void Visit(IEventDefinition eventDefinition) {
 
-      PrintAttributes(eventDefinition.Attributes);
+      PrintAttributes(eventDefinition);
       PrintToken(CSharpToken.Indent);
       IMethodDefinition eventMeth = eventDefinition.Adder == null ?
         eventDefinition.Remover.ResolvedMethod :

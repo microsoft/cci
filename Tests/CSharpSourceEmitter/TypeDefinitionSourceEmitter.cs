@@ -29,54 +29,18 @@ namespace CSharpSourceEmitter {
       }
       PrintTypeDefinitionBaseTypesAndInterfaces(typeDefinition);
 
-      PrintToken(CSharpToken.NewLine);
       PrintTypeDefinitionLeftCurly(typeDefinition);
 
-      var methods = new List<IMethodDefinition>(typeDefinition.Methods);
-      var events = new List<IEventDefinition>(typeDefinition.Events);
-      var properties = new List<IPropertyDefinition>(typeDefinition.Properties);
-      var fields = new List<IFieldDefinition>(typeDefinition.Fields);
-      var nestedTypes = new List<INestedTypeDefinition>(typeDefinition.NestedTypes);
-
-      int methodsCount = 0;
-      foreach (var method in methods) {
-        if (method.IsConstructor && method.ParameterCount == 0) continue;
-        if (method.IsStaticConstructor) continue;
-        if (method.IsSpecialName && !method.IsConstructor) continue;
-        methodsCount++;
-      }
-
-      int nestedTypesCount = 0;
-      foreach (var nestedType in nestedTypes) {
-        if (AttributeHelper.Contains(nestedType.Attributes, nestedType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) continue;
-        nestedTypesCount++;
-      }
-
-      // TODO: Method order can be important too - eg. for COMImport types
-      Comparison<IMethodDefinition> mcomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
-      methods.Sort(mcomparison);
-      Visit(methods);
-      if (methodsCount > 0 && (events.Count + properties.Count + fields.Count + nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
-
-      Comparison<IEventDefinition> ecomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
-      events.Sort(ecomparison);
-      Visit(events);
-      if (events.Count > 0 && (properties.Count + fields.Count + nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
-
-      Comparison<IPropertyDefinition> pcomparison = (x, y) => string.Compare(x.Name.Value, y.Name.Value);
-      properties.Sort(pcomparison);
-      Visit(properties);
-      if (properties.Count > 0 && (fields.Count+nestedTypesCount) > 0) sourceEmitterOutput.WriteLine("");
-
-      // Order of fields can be important (eg. in sequential layout structs, and nice even just for enums, etc.)
-      // So use existing order
-      Visit(fields);
-      if (fields.Count > 0 && nestedTypesCount > 0) sourceEmitterOutput.WriteLine("");
-
-      Comparison<INestedTypeDefinition> tcomparison = (x, y) =>
-        x.Name.UniqueKey == y.Name.UniqueKey ? x.GenericParameterCount - y.GenericParameterCount : string.Compare(x.Name.Value, y.Name.Value);
-      nestedTypes.Sort(tcomparison);
-      Visit(nestedTypes);
+      // Get the members in metadata order for each type
+      // Note that it's important to preserve the metadata order here (eg. sequential layout fields,
+      // methods in COMImport types, etc.).
+      var members = new List<ITypeDefinitionMember>();
+      foreach (var m in typeDefinition.Methods) members.Add(m);
+      foreach (var m in typeDefinition.Events) members.Add(m);
+      foreach (var m in typeDefinition.Properties) members.Add(m);
+      foreach (var m in typeDefinition.Fields) members.Add(m);
+      foreach (var m in typeDefinition.NestedTypes) members.Add(m);
+      Visit(members);
 
       PrintTypeDefinitionRightCurly(typeDefinition);
     }
@@ -120,13 +84,14 @@ namespace CSharpSourceEmitter {
         if (at == SpecialAttribute.Extension)
           continue;
 
-        PrintAttribute(attribute, true, null);
+        PrintAttribute(typeDefinition, attribute, true, null);
       }
 
       if (typeDefinition.Layout != LayoutKind.Auto) {
-        sourceEmitterOutput.WriteLine(String.Format("[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.{0})]",
-          typeDefinition.Layout.ToString()),
-          true);
+        PrintPseudoCustomAttribute(typeDefinition,
+          "System.Runtime.InteropServices.StructLayout",
+          String.Format("System.Runtime.InteropServices.LayoutKind.{0}", typeDefinition.Layout.ToString()),
+          true, null);
       }
     }
 
@@ -217,8 +182,18 @@ namespace CSharpSourceEmitter {
 
     public virtual void PrintTypeDefinitionRightCurly(ITypeDefinition typeDefinition) {
       PrintToken(CSharpToken.RightCurly);
-      PrintToken(CSharpToken.NewLine);
     }
 
+    public override void Visit(IEnumerable<ITypeDefinitionMember> typeMembers) {
+
+      if (IteratorHelper.EnumerableIsNotEmpty(typeMembers) && IteratorHelper.First(typeMembers).ContainingTypeDefinition.IsEnum) {
+        // Enums don't get intervening blank lines
+        foreach (var member in typeMembers)
+          Visit(member);
+      } else {
+        // Ensure there's exactly one blank line between each non-empty member
+        VisitWithInterveningBlankLines(typeMembers, m => Visit(m));
+      }
+    }
   }
 }
