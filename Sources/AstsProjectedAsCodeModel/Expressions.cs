@@ -4746,7 +4746,7 @@ namespace Microsoft.Cci.Ast {
       // Before checking converted arguments we must ensure that resolvedMethod has 
       // successfully bound the methodExpression. If the method does not resolve, 
       // checking conversion of the arguments against Dummy.Method is meaningless.
-      if (ResolvedMethod == Dummy.Method)
+      if (this.ResolvedMethod != Dummy.Method)
         foreach (Expression arg in this.ConvertedArguments)
           result |= arg.HasErrors;
       result |= this.Type == Dummy.Type;
@@ -4867,7 +4867,10 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public virtual IEnumerable<Expression> ApplicableArguments {
       [DebuggerNonUserCode]
-      get { return (this.argumentsForExtensionCall != null ? this.argumentsForExtensionCall : this.originalArguments); }
+      get {
+        IMethodDefinition dummy = this.ResolvedMethod; // Called for side-effect;
+        return (this.argumentsForExtensionCall != null ? this.argumentsForExtensionCall : this.originalArguments); 
+      }
     }
     private IEnumerable<Expression> argumentsForExtensionCall;
 

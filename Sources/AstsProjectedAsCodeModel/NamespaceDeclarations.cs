@@ -438,17 +438,33 @@ namespace Microsoft.Cci.Ast {
         INamespaceDefinition nsDefinition = nsImport.Resolve();
         if (nsDefinition != Dummy.RootUnitNamespace) {
           foreach (INamespaceMember member in nsDefinition.Members) {
-            TypeDefinition typeDefinition = member as TypeDefinition;
-            if (typeDefinition != null && typeDefinition.HasExtensionMethod) {
+            ITypeDefinition typeDefinition = member as ITypeDefinition;
+            if (typeDefinition != null && this.HasExtensionMethod(typeDefinition)) {
               foreach (ITypeDefinitionMember typeMember in typeDefinition.Members) {
-                MethodDefinition method = typeMember as MethodDefinition;
-                if (method.IsExtensionMethod)
+                IMethodDefinition method = typeMember as IMethodDefinition;
+                if (method != null && this.IsExtensionMethod(method))
                   extensionMethodsFromEnclosedScope.InsertInExtensionScope(method);
               }
             }
           }
         }
       }
+    }
+
+    private bool IsExtensionMethod(IMethodDefinition method) {
+      MethodDefinition methodDef = method as MethodDefinition;
+      if (methodDef != null)
+        return methodDef.IsExtensionMethod;
+      else
+        return AttributeHelper.Contains(method.Attributes, this.Helper.PlatformType.SystemRuntimeCompilerServicesExtensionAttribute);
+    }
+
+    private bool HasExtensionMethod(ITypeDefinition typeDefinition) {
+      TypeDefinition typeDef = typeDefinition as TypeDefinition;
+      if (typeDef != null)
+        return typeDef.HasExtensionMethod;
+      else
+        return AttributeHelper.Contains(typeDefinition.Attributes, this.Helper.PlatformType.SystemRuntimeCompilerServicesExtensionAttribute);
     }
 
     private object/*?*/ GetCachedMethodExtensionGroup(IName methodName) {
