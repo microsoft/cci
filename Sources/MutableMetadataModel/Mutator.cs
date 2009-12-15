@@ -241,7 +241,13 @@ namespace Microsoft.Cci.MutableCodeModel {
         result = eventDefinition as EventDefinition;
         if (result != null) return result;
       }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(eventDefinition, out cachedValue);
+      result = cachedValue as EventDefinition;
+      if (result != null) return result;
       result = new EventDefinition();
+      this.cache.Add(eventDefinition, result);
+      this.cache.Add(result, result);
       result.Copy(eventDefinition, this.host.InternFactory);
       return result;
     }
@@ -1075,7 +1081,13 @@ namespace Microsoft.Cci.MutableCodeModel {
         result = propertyDefinition as PropertyDefinition;
         if (result != null) return result;
       }
+      object/*?*/ cachedValue = null;
+      this.cache.TryGetValue(propertyDefinition, out cachedValue);
+      result = cachedValue as PropertyDefinition;
+      if (result != null) return result;
       result = new PropertyDefinition();
+      this.cache.Add(propertyDefinition, result);
+      this.cache.Add(result, result);
       result.Copy(propertyDefinition, this.host.InternFactory);
       return result;
     }
