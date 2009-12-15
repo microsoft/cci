@@ -4896,16 +4896,18 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected virtual IMethodDefinition ResolveMethod() {
       MethodCall methodCall;
+      QualifiedName callExpression;
       IMethodDefinition resolvedMethod = Dummy.Method;
       IEnumerable<IMethodDefinition> candidateMethods = this.GetCandidateMethods(false);
 
       if (IteratorHelper.EnumerableCount(candidateMethods) > 0)
         resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, false);
       if (resolvedMethod == Dummy.Method &&
-        (methodCall = this as MethodCall) != null && methodCall.MethodExpression is QualifiedName) {
+        (methodCall = this as MethodCall) != null && 
+        (callExpression = methodCall.MethodExpression as QualifiedName) != null) {
         // Cannot reuse local variable "candidateMethods" here, as the current
         // value is still live for use in error reporting in case of failure.
-        IEnumerable<Expression> argumentsForStaticCall = methodCall.GetExtensionArguments;
+        IEnumerable<Expression> argumentsForStaticCall = methodCall.MakeExtensionArgumentList(callExpression);
         IEnumerable<IMethodDefinition> extensionCandidates = methodCall.GetCandidateExtensionMethods(argumentsForStaticCall);
         resolvedMethod = this.Helper.ResolveOverload(extensionCandidates, argumentsForStaticCall, false);
         if (resolvedMethod != Dummy.Method)
@@ -12352,14 +12354,11 @@ namespace Microsoft.Cci.Ast {
     /// method equivalent to the receiver + original argument list of
     /// dispatched-call method call syntax.
     /// </summary>
-    public virtual IEnumerable<Expression> GetExtensionArguments {
-      [DebuggerNonUserCode]
-      get {
-        //yield return this.ThisArgument; // Alias for ((QualifiedName)this.MethodExpression).Qualifier.
-        yield return ((QualifiedName)this.MethodExpression).Qualifier;
+    internal IEnumerable<Expression> MakeExtensionArgumentList(QualifiedName callExpression)  {
+        // Cannot use this.ThisArgument, since this may recurse to ResolveMethod()...
+        yield return callExpression.Qualifier;
         foreach (Expression argument in this.OriginalArguments)
           yield return argument;
-      }
     }
 
 
