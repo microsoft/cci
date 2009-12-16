@@ -613,7 +613,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public abstract void Dispatch(IMetadataVisitor visitor);
 
-    protected abstract ITypeDefinition Resolve();
+    protected abstract TypeBase Resolve();
 
     #region ITypeReference Members
 
@@ -651,8 +651,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     ITypeDefinition ITypeReference.ResolvedType {
       get {
-        ITypeDefinition/*?*/ result = this.Resolve();
-        if (result == null) return Dummy.Type;
+        ITypeDefinition/*?*/ result = this.ResolvedModuleType;
+        if (this.ResolvedModuleType == null) return Dummy.Type;
         return result;
       }
     }
@@ -686,8 +686,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IModuleTypeDefAndRef/*?*/ ResolvedModuleType {
-      get { return null; }
+      get {
+        if (!this.resolvedModuleTypeHasValue) {
+          this.resolvedModuleType = this.Resolve();
+          this.resolvedModuleTypeHasValue = true;
+        }
+        return this.resolvedModuleType;
+      }
     }
+    TypeBase resolvedModuleType;
+    bool resolvedModuleTypeHasValue;
 
     public ModuleTypeKind ModuleTypeKind {
       get { return ModuleTypeKind.Nominal; }
@@ -713,17 +721,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    protected override ITypeDefinition Resolve() {
+    protected override TypeBase/*?*/ Resolve() {
       if (this.Module != this.PEFileToObjectModel.Module) {
         AssemblyReference assemRef = this.Module as AssemblyReference;
-        if (assemRef == null) return Dummy.Type;
+        if (assemRef == null) return null;
         var internalAssembly = assemRef.ResolvedAssembly as Assembly;
-        if (internalAssembly == null) return Dummy.Type;
+        if (internalAssembly == null) return null;
         PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
-        ITypeDefinition/*?*/ retModuleType = 
-          assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(this.NamespaceFullName, this.Name);
+        var retModuleType = 
+          assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(this.NamespaceFullName, this.MangledTypeName);
         if (retModuleType != null) return retModuleType;
-        return Dummy.Type;
+        return null;
       }
       return this.NamespaceTypeName.ResolveNominalTypeName(this.PEFileToObjectModel);
     }
@@ -790,11 +798,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public INamespaceTypeDefinition ResolvedType {
       get {
-        INamespaceTypeDefinition/*?*/ result = this.Resolve() as INamespaceTypeDefinition;
-        if (result == null) return Dummy.NamespaceTypeDefinition;
+        INamespaceTypeDefinition/*?*/ result = this.resolvedType;
+        if (result == null) {
+          result = this.Resolve() as INamespaceTypeDefinition;
+          if (result == null) result = Dummy.NamespaceTypeDefinition;
+          this.resolvedType = result;
+        }
         return result;
       }
     }
+    INamespaceTypeDefinition resolvedType;
 
     #endregion
 
@@ -865,7 +878,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    protected override ITypeDefinition Resolve() {
+    protected override TypeBase Resolve() {
       return this.NestedTypeName.ResolveNominalTypeName(this.PEFileToObjectModel);
     }
 
@@ -877,11 +890,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public INestedTypeDefinition ResolvedType {
       get {
-        INestedTypeDefinition/*?*/ result = this.Resolve() as INestedTypeDefinition;
-        if (result == null) return Dummy.NestedType;
+        INestedTypeDefinition/*?*/ result = this.resolvedType;
+        if (result == null) {
+          result = this.Resolve() as INestedTypeDefinition;
+          if (result == null) result = Dummy.NestedType;
+          this.resolvedType = result;
+        }
         return result;
       }
     }
+    INestedTypeDefinition resolvedType;
+
 
     #endregion
 
