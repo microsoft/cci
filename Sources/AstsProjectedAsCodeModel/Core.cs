@@ -1307,6 +1307,7 @@ namespace Microsoft.Cci.Ast {
         enclosingNamespace.GetApplicableExtensionMethods(result, simpleName, delegateArgs);
         if (result.Count > 0)
           matchingMethod = this.ResolveOverload(result, delegateArgs, false);
+        instance = qualifiedName.Qualifier;
       }
       if (matchingMethod == Dummy.Method)
         return new DummyExpression(expression.SourceLocation);
