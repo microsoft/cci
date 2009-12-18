@@ -6818,6 +6818,19 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      bool result = this.Type == Dummy.Type;
+      if (!result && IteratorHelper.EnumerableCount(this.Initializers) > 0) {
+        // Need to check initializers define rectangular arrays if rank > 1.
+        // If Sizes is set then these must be constant and consistent with initializers.
+        // Elsewhere(?), compatibility of all values to the declared element type must be checked.
+      }
+      return result;
+    }
+
+    /// <summary>
     /// The lowerbound for each dimension of the array instance.
     /// </summary>
     public IEnumerable<int> ComputedLowerBounds {
@@ -6963,10 +6976,14 @@ namespace Microsoft.Cci.Ast {
     /// When type inference fails, Dummy.Type is returned.
     /// </summary>
     public override ITypeDefinition InferType() {
-      if (this.Rank == 1 && IteratorHelper.EnumerableIsEmpty(this.LowerBounds))
+      if (this.Rank == 1 && IteratorHelper.EnumerableIsEmpty(this.LowerBounds)) {
+        // TODO: check that all initializer values are implicitly convertible to this.ElementType.
         return Vector.GetVector(this.ElementType, this.Compilation.HostEnvironment.InternFactory);
-      else
+      }
+      else {
+        // TODO: check that all initializer leaf values are implicitly convertible to this.ElementType.
         return Matrix.GetMatrix(this.ElementType, this.Rank, this.ComputedLowerBounds, this.ComputedSizes, this.Compilation.HostEnvironment.InternFactory);
+      }
     }
 
     /// <summary>

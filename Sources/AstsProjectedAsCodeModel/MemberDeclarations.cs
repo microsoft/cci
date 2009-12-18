@@ -815,7 +815,11 @@ namespace Microsoft.Cci.Ast {
     /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return false;
+      bool result = false;
+      if (this.ConvertedInitializer != null)
+        result |= this.ConvertedInitializer.HasErrors;
+      // TODO ... more?
+      return result;
     }
 
     /// <summary>
