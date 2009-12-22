@@ -397,7 +397,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Do not include optional and required custom modifiers.
     /// </summary>
-    OmitCustomModifiers=OmitContainingType << 1,
+    OmitCustomModifiers = OmitContainingType << 1,
 
     /// <summary>
     /// If the type member explicitly implements an interface, do not include the name of the interface in the name of the member.
@@ -979,6 +979,24 @@ namespace Microsoft.Cci {
     //^ [Pure]
     public static string GetNamespaceName(IUnitNamespaceReference namespaceReference, NameFormattingOptions formattingOptions) {
       return (new TypeNameFormatter()).GetNamespaceName(namespaceReference, formattingOptions);
+    }
+
+    /// <summary>
+    /// Returns the nested type, if any, of the given declaring type with the given name and given generic parameter count.
+    /// If no such type is found, Dummy.NestedType is returned.
+    /// </summary>
+    /// <param name="declaringType">The type to search for a nested type with the given name and number of generic parameters.</param>
+    /// <param name="typeName">The name of the nested type to return.</param>
+    /// <param name="genericParameterCount">The number of generic parameters. Zero if the type is not generic, larger than zero otherwise.</param>
+    /// <returns></returns>
+    public static INestedTypeDefinition GetNestedType(ITypeDefinition declaringType, IName typeName, int genericParameterCount) {
+      foreach (var member in declaringType.GetMembersNamed(typeName, false)) {
+        var nestedType = member as INestedTypeDefinition;
+        if (nestedType == null) continue;
+        if (nestedType.GenericParameterCount != genericParameterCount) continue;
+        return nestedType;
+      }
+      return Dummy.NestedType;
     }
 
     /// <summary>

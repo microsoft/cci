@@ -424,7 +424,9 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// A type definition that is a specialized nested type.
+  /// A type definition that is a specialized nested type. That is, the type definition is a member of a generic type instance, or of another specialized nested type.
+  /// It is specialized, because if it had any references to the type parameters of the generic type, then those references have been replaced with the type arguments of the instance.
+  /// In other words, it may be less generic than before, and hence it has been "specialized".
   /// </summary>
   public interface ISpecializedNestedTypeDefinition : INestedTypeDefinition, ISpecializedNestedTypeReference {
 

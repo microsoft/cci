@@ -1149,14 +1149,25 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) {
-          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
-          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        }
+        if (this.type == null)
+          this.type =  this.SpecializeIfConstructed(this.partiallySpecializedVersion.Type);
         return this.type;
       }
     }
     ITypeReference/*?*/ type;
+
+    /// <summary>
+    /// Makes a copy of the given type reference, making sure that any references to this.partiallySpecializedVersion.ContainingType or something defined, directly or indirectly,
+    /// by this.partiallySpecializedVersion.Containing type are replaced with the equivalent reference to this.ContainingType or something defined, directly or indirectly
+    /// by this.ContainingType. Also replaces all references to type parameters of this.ContainingGenericTypeInstance with the corresponding type arguments.
+    /// </summary>
+    /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
+    private ITypeReference SpecializeIfConstructed(ITypeReference partiallySpecializedTypeReference) {
+      SpecializedNestedTypeDefinition specializedParent = this.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
+      if (specializedParent != null) 
+        partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReference(partiallySpecializedTypeReference, specializedParent, this.ContainingGenericTypeInstance.InternFactory);
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+    }
 
     #region IEventDefinition Members
 
@@ -1210,14 +1221,26 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) {
-          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
-          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        }
+        if (this.type == null)
+          this.type = this.CopyAndSpecialize(this.partiallySpecializedVersion.Type);
         return this.type;
       }
     }
     ITypeReference/*?*/ type;
+
+    /// <summary>
+    /// Makes a copy of the given type reference, making sure that any references to this.partiallySpecializedVersion.ContainingType or something defined, directly or indirectly,
+    /// by this.partiallySpecializedVersion.Containing type are replaced with the equivalent reference to this.ContainingType or something defined, directly or indirectly
+    /// by this.ContainingType. Also replaces all references to type parameters of this.ContainingGenericTypeInstance with the corresponding type arguments.
+    /// </summary>
+    /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
+    private ITypeReference CopyAndSpecialize(ITypeReference partiallySpecializedTypeReference) {
+      var specializedParent = this.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
+      if (specializedParent != null) {
+        partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReference(partiallySpecializedTypeReference, specializedParent, this.ContainingGenericTypeInstance.InternFactory);
+      }
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+    }
 
     /// <summary>
     /// The number of bits that form part of the value of the field.
@@ -1424,8 +1447,8 @@ namespace Microsoft.Cci {
       get {
         if (this.constraints == null) {
           var constrs = new List<ITypeReference>();
-          foreach (ITypeReference unspecializedConstraint in this.PartiallySpecializedParameter.Constraints)
-            constrs.Add(TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(unspecializedConstraint, this.DefiningMethod.ContainingGenericTypeInstance, this.DefiningMethod.ContainingGenericTypeInstance.InternFactory));
+          foreach (ITypeReference partiallySpecializedConstraint in this.PartiallySpecializedParameter.Constraints)
+            constrs.Add(this.CopyAndSpecialize(partiallySpecializedConstraint));
           constrs.TrimExcess();
           this.constraints = constrs.AsReadOnly();
         }
@@ -1433,6 +1456,18 @@ namespace Microsoft.Cci {
       }
     }
     IEnumerable<ITypeReference>/*?*/ constraints;
+
+    /// <summary>
+    /// Makes a copy of the given type reference, making sure that any references to this.partiallySpecializedVersion.ContainingType or something defined, directly or indirectly,
+    /// by this.partiallySpecializedVersion.Containing type are replaced with the equivalent reference to this.ContainingType or something defined, directly or indirectly
+    /// by this.ContainingType. Also replaces all references to type parameters of this.ContainingGenericTypeInstance with the corresponding type arguments.
+    /// </summary>
+    /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
+    private ITypeReference CopyAndSpecialize(ITypeReference partiallySpecializedTypeReference) {
+      partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(partiallySpecializedTypeReference,
+        this.DefiningMethod, this.DefiningMethod.ContainingGenericTypeInstance.InternFactory);
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.DefiningMethod.ContainingGenericTypeInstance, this.DefiningMethod.ContainingGenericTypeInstance.InternFactory);
+    }
 
     /// <summary>
     /// Calls the visitor.Visit(IGenericMethodParameter) method.
@@ -1532,6 +1567,8 @@ namespace Microsoft.Cci {
     }
     IEnumerable<IGenericMethodParameter>/*?*/ genericParameters;
 
+
+
     //^ [Pure] 
     /// <summary>
     /// The number of generic parameters of the method. Zero if the referenced method is not generic.
@@ -1586,6 +1623,15 @@ namespace Microsoft.Cci {
       get { return this.UnspecializedVersion.ParameterCount; }
     }
 
+    /// <summary>
+    /// Partially specialized version of this method.
+    /// </summary>
+    public IMethodDefinition PartiallySpecializedVersion {
+      get {
+        return partiallySpecializedVersion;
+      }
+    }
+
     readonly IMethodDefinition partiallySpecializedVersion;
 
     /// <summary>
@@ -1610,15 +1656,23 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) {
-          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
-          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        }
+        if (this.type == null) 
+          this.type = this.CopyAndSpecialize(this.partiallySpecializedVersion.Type);
         return this.type;
       }
     }
     ITypeReference/*?*/ type;
 
+    /// <summary>
+    /// Makes a copy of the given type reference, making sure that any references to this.partiallySpecializedVersion.ContainingType or something defined, directly or indirectly,
+    /// by this.partiallySpecializedVersion.Containing type are replaced with the equivalent reference to this.ContainingType or something defined, directly or indirectly
+    /// by this.ContainingType. Replaces all references to type parameters of this.ContainingGenericTypeInstance with the corresponding type arguments.
+    /// </summary>
+    /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
+    private ITypeReference CopyAndSpecialize(ITypeReference partiallySpecializedTypeReference) {
+      partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(partiallySpecializedTypeReference, this, this.ContainingGenericTypeInstance.InternFactory);
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+    }
     #region IMethodDefinition Members
 
     /// <summary>
@@ -2019,26 +2073,46 @@ namespace Microsoft.Cci {
         //^^ requires this.IsParameterArray;
       {
         //^ assume this.unspecializedParameter.IsParameterArray; //postcondition of this.IsParameterArray
-        if (this.paramArrayElementType == null) {
-          ITypeReference partiallySpecializedType = this.partiallySpecializedParameter.ParamArrayElementType;
-          this.paramArrayElementType = this.SpecializeIfConstructed(partiallySpecializedType);
-        }
+        if (this.paramArrayElementType == null)
+          this.paramArrayElementType = this.CopyAndSpecialize(this.partiallySpecializedParameter.ParamArrayElementType);
         return this.paramArrayElementType;
       }
     }
     ITypeReference/*?*/ paramArrayElementType;
 
-    //^ [Confined]
-    private ITypeReference SpecializeIfConstructed(ITypeReference partiallySpecializedType) {
-      IGenericMethodInstanceReference/*?*/ genericMethodInstance = this.ContainingSignature as IGenericMethodInstanceReference;
-      if (genericMethodInstance != null) return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, genericMethodInstance, this.InternFactory);
-      SpecializedMethodDefinition/*?*/ specializedMethodDefinition = this.ContainingSignature as SpecializedMethodDefinition;
+    /// <summary>
+    /// Replace the references to type and generic method parameters in partiallySpecializedType with matching type and generic
+    /// method arguments. 
+    /// </summary>
+    /// <remarks>
+    /// For example: method Outer[A->int].Mid[T1 => T1+].bar1[T=>T+](T p1, T1 p2, A p3), where Outer[A->int] means a generic type
+    /// instance obtained from Outer by substituting A with int, Outer[A->int].Mid[T1 => T1+] means a specialized nested type 
+    /// definition obtained from Outer[A->int].Mid by specializing Mid within Outer[A->int], in the process T1 is specialized to T1+. 
+    /// 
+    /// T, type of p1, needs to be specialized to T+;
+    /// T1, type of p2, needs to be specialized to T1+, and A needs to be instantiated to int. 
+    /// 
+    /// Implementation involves a step of replacing references to type and generic method parameters with their matching specialized
+    /// version for the aboved mentioned substitution to work. 
+    /// </remarks>
+    private ITypeReference CopyAndSpecialize(ITypeReference partiallySpecializedType) {
+      var genericMethodInstance = this.ContainingSignature as IGenericMethodInstance;
+      if (genericMethodInstance != null) {
+        //Note that partiallySpecializedType is obtained from genericMethodInstance.GenericMethod which will have been specialized with respect
+        //to everything but the generic method parameters. Hence only the following call is necessary to specialize partiallySpecializedType.
+        return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, genericMethodInstance, this.InternFactory);
+      }
+      //Since the containing signature is not a generic method instance, it must be a member of a type that has been specialized.
+      //The things that need to be specialized in partiallySpecializedType are defined by this containing type and/or its containing types.
+      var specializedMethodDefinition = this.ContainingSignature as SpecializedMethodDefinition;
       if (specializedMethodDefinition != null) {
-        if (specializedMethodDefinition.IsGeneric)
-          partiallySpecializedType = TypeDefinition.SpecializeIfConstructedFromApplicableMethodTypeParameter(partiallySpecializedType, specializedMethodDefinition, this.internFactory);
+        partiallySpecializedType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(partiallySpecializedType, specializedMethodDefinition, this.internFactory);
         return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, specializedMethodDefinition.ContainingGenericTypeInstance, this.InternFactory);
       }
-      SpecializedPropertyDefinition specializedPropertyDefinition = (SpecializedPropertyDefinition)this.ContainingSignature;
+      var specializedPropertyDefinition = (SpecializedPropertyDefinition)this.ContainingSignature;
+      SpecializedNestedTypeDefinition snt = specializedPropertyDefinition.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
+      if (snt != null)
+        partiallySpecializedType = TypeDefinition.DeepCopyTypeReference(partiallySpecializedType, snt, this.internFactory);
       return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, specializedPropertyDefinition.ContainingGenericTypeInstance, this.InternFactory);
     }
 
@@ -2048,10 +2122,8 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) {
-          ITypeReference partiallySpecializedType = this.partiallySpecializedParameter.Type;
-          this.type = this.SpecializeIfConstructed(partiallySpecializedType);
-        }
+        if (this.type == null)
+          this.type = this.CopyAndSpecialize(this.partiallySpecializedParameter.Type);
         return this.type;
       }
     }
@@ -2448,14 +2520,25 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) {
-          ITypeReference partiallySpecializedType = this.partiallySpecializedVersion.Type;
-          this.type = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedType, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
-        }
+        if (this.type == null)
+          this.type = this.CopyAndSpecialize(this.partiallySpecializedVersion.Type);
         return this.type;
       }
     }
     ITypeReference/*?*/ type;
+
+    /// <summary>
+    /// Makes a copy of the given type reference, making sure that any references to this.partiallySpecializedVersion.ContainingType or something defined, directly or indirectly,
+    /// by this.partiallySpecializedVersion.Containing type are replaced with the corresponding reference to this.ContainingType or something defined, directly or indirectly
+    /// by this.ContainingType. Also replaces all references to type parameters of this.ContainingGenericTypeInstance with the corresponding type arguments.
+    /// </summary>
+    /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
+    private ITypeReference CopyAndSpecialize(ITypeReference partiallySpecializedTypeReference) {
+      SpecializedNestedTypeDefinition specializedNestedParent = this.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
+      if (specializedNestedParent != null)
+        partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReference(partiallySpecializedTypeReference, specializedNestedParent, this.ContainingGenericTypeInstance.InternFactory);
+      return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
+    }
 
     /// <summary>
     /// A compile time constant value that provides the default value for the property. (Who uses this and why?)
@@ -2593,6 +2676,7 @@ namespace Microsoft.Cci {
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
 
     /// <summary>
     /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.

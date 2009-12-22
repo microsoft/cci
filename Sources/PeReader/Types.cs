@@ -738,9 +738,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override PrimitiveTypeCode TypeCode {
       get {
-        if (this.typeCode == PrimitiveTypeCode.Invalid) {
+        if (this.typeCode == PrimitiveTypeCode.Invalid){
           this.typeCode = PrimitiveTypeCode.NotPrimitive;
-          if (this.Module.ContainingAssembly.AssemblyIdentity.Equals(this.PEFileToObjectModel.ModuleReader.metadataReaderHost.CoreAssemblySymbolicIdentity)) {
+          if (this.Module.ContainingAssembly.AssemblyIdentity.Equals(this.PEFileToObjectModel.ModuleReader.metadataReaderHost.CoreAssemblySymbolicIdentity)){
             var td = this.ResolvedType;
             if (td != Dummy.Type)
               this.typeCode = td.TypeCode;
@@ -748,7 +748,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
               this.typeCode = this.UseNameToResolveTypeCode();
           }
         }
-        return this.typeCode;
+        return this.typeCode; 
       }
     }
     PrimitiveTypeCode typeCode = PrimitiveTypeCode.Invalid;
