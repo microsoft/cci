@@ -85,12 +85,12 @@ namespace Microsoft.Cci {
         if (unit == Dummy.Unit) return Dummy.UnitSet;
         units.Add(unit);
       }
-      if (result != null && IteratorHelper.EnumerablesAreEqual(units, result.Units))
+      if (result != null && UnitsAreTheSameObjects(units, result.Units))
         return result;
       lock (GlobalLock.LockingObject) {
         if (this.unitSetCache.TryGetValue(referencedUnitSet, out entry)) {
           if (entry != null) result = entry.Target as IUnitSet;
-          if (result != null && IteratorHelper.EnumerablesAreEqual(units, result.Units)) return result;
+          if (result != null && UnitsAreTheSameObjects(units, result.Units)) return result;
         }
         result = new UnitSet(units);
         this.unitSetCache[referencedUnitSet] = new WeakReference(result);
@@ -98,6 +98,17 @@ namespace Microsoft.Cci {
       return result;
     }
     readonly Dictionary<UnitSetIdentity, WeakReference> unitSetCache = new Dictionary<UnitSetIdentity, WeakReference>();
+
+    /// <summary>
+    /// Returns true if the given list of units has the same number of elements as the given enumeration of units and
+    /// each corresponding element is the object.
+    /// </summary>
+    private static bool UnitsAreTheSameObjects(List<IUnit> unitList, IEnumerable<IUnit> unitEnumeration) {
+      var enumerator = unitEnumeration.GetEnumerator();
+      for (int i = 0, n = unitList.Count; i < n; i++)
+        if (!enumerator.MoveNext() || !object.ReferenceEquals(unitList[i], enumerator.Current)) return false;
+      return !enumerator.MoveNext();
+    }
 
     /// <summary>
     /// When a source document that forms part of a compilation that is registered with this environment has been edited a new compilation is computed
@@ -1082,7 +1093,7 @@ namespace Microsoft.Cci {
   /// An object that represents a source document that corresponds to a persistable artifact such as a file or an editor buffer.
   /// The document is parsed according to the rules of a particular language, such as C#, to produce an object model that can be obtained via the CompilationPart property.
   /// </summary>
-  public abstract class PrimarySourceDocument : SourceDocument, IDisposable, IPrimarySourceDocument {
+  public abstract class PrimarySourceDocument : SourceDocument, IPrimarySourceDocument {
 
     /// <summary>
     /// Allocates an object that represents a source document, such as file, which is parsed according to the rules of a particular langauge, 
@@ -1569,31 +1580,6 @@ namespace Microsoft.Cci {
 
     IPrimarySourceLocation IPrimarySourceDocument.PrimarySourceLocation {
       get { return (IPrimarySourceLocation)this.SourceLocation; }
-    }
-
-    #endregion
-
-    #region IDisposable Members
-
-    /// <summary>
-    /// Releases all resources used by this object.
-    /// </summary>
-    public void Dispose() {
-      this.Dispose(true);
-      GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Releases all resources used by this object.
-    /// </summary>
-    private void Dispose(bool disposing) {
-      if (!disposing) return;
-      if (this.streamReader != null) {
-        this.streamReader.Dispose();
-        this.streamReader = null;
-      }
-      this.buffer = null;
-      this.text = string.Empty;
     }
 
     #endregion

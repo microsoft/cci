@@ -109,8 +109,10 @@ public class RoundTripTests {
 
     void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly) {
         using (var rewrittenFile = File.Create(assembly.Location)){
-          using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
-            PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+          using (pdbReader) {
+            using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
+              PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+            }
           }
         }
 

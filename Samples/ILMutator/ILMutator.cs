@@ -50,8 +50,10 @@ namespace ILMutator {
 
       // Need to not pass in a local scope provider until such time as we have one that will use the mutator
       // to remap things (like the type of a scope constant) from the original assembly to the mutated one.
-      using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
-        PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
+      using (pdbReader) {
+        using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
+          PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
+        }
       }
       return 0; // success
     }

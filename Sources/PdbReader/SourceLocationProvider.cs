@@ -17,10 +17,11 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that can map offsets in an IL stream to source locations and block scopes.
   /// </summary>
-  public sealed class PdbReader : ISourceLocationProvider, ILocalScopeProvider {
+  public sealed class PdbReader : ISourceLocationProvider, ILocalScopeProvider, IDisposable {
 
     IMetadataHost host;
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
+    List<StreamReader> sourceFilesOpenedByReader = new List<StreamReader>();
 
     /// <summary>
     /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
@@ -321,7 +322,9 @@ namespace Microsoft.Cci {
       if (this.documentCache.TryGetValue(pdbSourceFile, out result)) return result;
       IName name = this.host.NameTable.GetNameFor(Path.GetFileName(pdbSourceFile.name));
       if (File.Exists(pdbSourceFile.name)) {
-        result = new PdbSourceDocument(name, pdbSourceFile, new StreamReader(pdbSourceFile.name));
+        var sourceFileReader = new StreamReader(pdbSourceFile.name);
+        this.sourceFilesOpenedByReader.Add(sourceFileReader);
+        result = new PdbSourceDocument(name, pdbSourceFile, sourceFileReader);
       } else
         result = new PdbSourceDocument(name, pdbSourceFile);
       this.documentCache.Add(pdbSourceFile, result);
@@ -329,6 +332,14 @@ namespace Microsoft.Cci {
     }
 
     Dictionary<PdbSource, PdbSourceDocument> documentCache = new Dictionary<PdbSource, PdbSourceDocument>();
+
+    /// <summary>
+    /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
+    /// </summary>
+    public void Dispose() {
+      foreach (var source in this.sourceFilesOpenedByReader)
+        source.Dispose();
+    }
 
   }
 
