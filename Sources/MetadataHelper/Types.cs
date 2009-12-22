@@ -208,6 +208,7 @@ namespace Microsoft.Cci {
     /// <param name="customModifier">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="customModifier"/>.</param>
+    /// <param name="internFactory">An intern factory. </param>
     internal static ICustomModifier CopyModifierToNewContainer(ICustomModifier customModifier, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       ITypeReference copiedModifier = TypeDefinition.DeepCopyTypeReference(customModifier.Modifier, targetContainer, internFactory);
       if (copiedModifier == customModifier.Modifier) return customModifier;
@@ -507,6 +508,7 @@ namespace Microsoft.Cci {
     /// <param name="genericTypeInstance">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="genericTypeInstance"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(IGenericTypeInstanceReference genericTypeInstance, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       var copiedGenericType = TypeDefinition.DeepCopyTypeReference(genericTypeInstance.GenericType, targetContainer, internFactory);
       List<ITypeReference>/*?*/ copiedArguments = null;
@@ -901,6 +903,7 @@ namespace Microsoft.Cci {
     /// <param name="pointer">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="pointer"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(IManagedPointerTypeReference pointer, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       ITypeReference targetType = pointer.TargetType;
       ITypeReference specializedtargetType = TypeDefinition.DeepCopyTypeReference(targetType, targetContainer, internFactory);
@@ -1007,6 +1010,7 @@ namespace Microsoft.Cci {
     /// <param name="array">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="array"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(IArrayTypeReference array, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory)
       //^ requires !array.IsVector;
     {
@@ -1086,6 +1090,7 @@ namespace Microsoft.Cci {
     /// <param name="pointer">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="pointer"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(IPointerTypeReference pointer, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       ITypeReference targetType = pointer.TargetType;
       ITypeReference specializedtargetType = TypeDefinition.DeepCopyTypeReference(targetType, targetContainer, internFactory);
@@ -1161,6 +1166,7 @@ namespace Microsoft.Cci {
     /// <param name="modifiedPointer">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="modifiedPointer"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(ModifiedPointerType modifiedPointer, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       var copiedTargetType = TypeDefinition.DeepCopyTypeReference(modifiedPointer.TargetType, targetContainer, internFactory);
       List<ICustomModifier>/*?*/ copiedModifiers = null;
@@ -1295,6 +1301,7 @@ namespace Microsoft.Cci {
     /// <param name="modifiedTypeReference">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="modifiedTypeReference"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(IModifiedTypeReference modifiedTypeReference, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       ITypeReference copiedUnmodifiedType = TypeDefinition.DeepCopyTypeReference(modifiedTypeReference.UnmodifiedType, targetContainer, internFactory);
       List<ICustomModifier>/*?*/ copiedModifiers = null;
@@ -3304,6 +3311,7 @@ namespace Microsoft.Cci {
     /// <param name="array">An array type reference to be deep copied. </param>
     /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
     /// replace the occurrences of matching type parameters in <paramref name="array"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
     public static ITypeReference DeepCopyTypeReference(IArrayTypeReference array, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory)
       //^ requires array.IsVector;
     {
