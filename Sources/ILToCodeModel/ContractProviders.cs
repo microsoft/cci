@@ -4,11 +4,10 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.IO;
-//using Microsoft.Cci;
-using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -150,7 +149,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// A contract provider that can be used to get contracts from a unit by querying in
   /// a random-access manner. That is, the unit is *not* traversed eagerly.
   /// </summary>
-  public class LazyContractProvider : IContractProvider {
+  public class LazyContractProvider : IContractProvider, IDisposable {
 
     /// <summary>
     /// Needed because the decompiler requires the concrete class ContractProvider
@@ -182,6 +181,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.pdbReader = new PdbReader(pdbStream, host);
       }
       this.unit = unit;
+    }
+
+    /// <summary>
+    /// Disposes the PdbReader object, if any, that is used to obtain the source text locations corresponding to contracts.
+    /// </summary>
+    public void Dispose() {
+      if (this.pdbReader != null)
+        this.pdbReader.Dispose();
     }
 
     /// <summary>
@@ -310,6 +317,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     #endregion
+
   }
 
   /// <summary>
@@ -423,7 +431,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// being contracts expressed over the types/members as defined by the primary provider and additively
   /// merged into the contracts from the primary provider.
   /// </summary>
-  public class AggregatingContractProvider : IContractProvider {
+  public class AggregatingContractProvider : IContractProvider, IDisposable {
 
     private IUnit unit;
     private IContractProvider primaryProvider;
@@ -464,6 +472,19 @@ namespace Microsoft.Cci.ILToCodeModel {
           this.mapperForOobToPrimary.Add(oobProvider, new MappingMutator(host, primaryUnit, oobUnit));
           this.mapperForPrimaryToOob.Add(oobProvider, new MappingMutator(oobHost, oobUnit, primaryUnit));
         }
+      }
+    }
+
+    /// <summary>
+    /// Disposes any constituent contract providers that implement the IDisposable interface.
+    /// </summary>
+    public void Dispose() {
+      var primaryDisposable = this.primaryProvider as IDisposable;
+      if (primaryDisposable != null) primaryDisposable.Dispose();
+      foreach (var oobProvider in this.oobProviders) {
+        var oobDisposable = oobProvider as IDisposable;
+        if (oobDisposable != null)
+          oobDisposable.Dispose();
       }
     }
 
@@ -608,6 +629,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     #endregion
+
   }
 
 }

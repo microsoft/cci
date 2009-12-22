@@ -28,9 +28,10 @@ namespace CodeModelTests {
       ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), assembly);
 
       SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
-      SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, true);
-
-      csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
+      using (pdbReader) {
+        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, true);
+        csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
+      }
       Stream resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt");
       StreamReader reader = new StreamReader(resource);
       string expected = reader.ReadToEnd();

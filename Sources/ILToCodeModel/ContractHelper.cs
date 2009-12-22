@@ -357,47 +357,48 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private void AttachContractProviderAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
       var contractMethods = new ContractMethods(this);
-      var lazyContractProviderForLoadedUnit = new LazyContractProvider(this, alreadyLoadedUnit, contractMethods);
-      var contractProviderForLoadedUnit = new CodeContractsContractProvider(this, lazyContractProviderForLoadedUnit);
-      if (this.IsContractReferenceAssembly(alreadyLoadedUnit)) {
-        // If we're asked to explicitly load a reference assembly, then go ahead and attach a contract provider to it,
-        // but *don't* look for reference assemblies for *it*.
-        this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, contractProviderForLoadedUnit);
-      } else {
-        #region Load any reference assemblies for the loaded unit
-        var oobProvidersAndHosts = new List<KeyValuePair<IContractProvider, IMetadataHost>>();
-        var loadedAssembly = alreadyLoadedUnit as IAssembly; // Only assemblies can have associated reference assemblies.
-        if (loadedAssembly != null) {
-          var refAssemWithoutLocation = new AssemblyIdentity(this.NameTable.GetNameFor(alreadyLoadedUnit.Name.Value + ".Contracts"), loadedAssembly.AssemblyIdentity.Culture, loadedAssembly.AssemblyIdentity.Version, loadedAssembly.AssemblyIdentity.PublicKeyToken, "");
-          var referenceAssemblyIdentity = this.ProbeAssemblyReference(alreadyLoadedUnit, refAssemWithoutLocation);
-          if (referenceAssemblyIdentity.Location != "unknown://location") {
-            #region Load reference assembly and attach a contract provider to it
-            IMetadataHost hostForReferenceAssembly = this; // default
-            IUnit referenceUnit = null;
-            if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
-              // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
-              var separateHost = new SimpleHostEnvironment(this.NameTable);
-              referenceUnit = separateHost.LoadUnitFrom(referenceAssemblyIdentity.Location);
-              hostForReferenceAssembly = separateHost;
-            } else {
-              // Load reference assembly, but don't cause a recursive call!! So don't call LoadUnit or LoadUnitFrom
-              referenceUnit = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(referenceAssemblyIdentity.Location, this));
-              this.RegisterAsLatest(referenceUnit);
-            }
-            if (referenceUnit != null && referenceUnit != Dummy.Unit) {
-              IAssembly referenceAssembly = referenceUnit as IAssembly;
-              if (referenceAssembly != null) {
-                IContractProvider referenceAssemblyContractProvider = new LazyContractProvider(hostForReferenceAssembly, referenceAssembly, contractMethods);
-                referenceAssemblyContractProvider = new CodeContractsContractProvider(hostForReferenceAssembly, referenceAssemblyContractProvider);
-                oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
+      using (var lazyContractProviderForLoadedUnit = new LazyContractProvider(this, alreadyLoadedUnit, contractMethods)) {
+        var contractProviderForLoadedUnit = new CodeContractsContractProvider(this, lazyContractProviderForLoadedUnit);
+        if (this.IsContractReferenceAssembly(alreadyLoadedUnit)) {
+          // If we're asked to explicitly load a reference assembly, then go ahead and attach a contract provider to it,
+          // but *don't* look for reference assemblies for *it*.
+          this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, contractProviderForLoadedUnit);
+        } else {
+          #region Load any reference assemblies for the loaded unit
+          var oobProvidersAndHosts = new List<KeyValuePair<IContractProvider, IMetadataHost>>();
+          var loadedAssembly = alreadyLoadedUnit as IAssembly; // Only assemblies can have associated reference assemblies.
+          if (loadedAssembly != null) {
+            var refAssemWithoutLocation = new AssemblyIdentity(this.NameTable.GetNameFor(alreadyLoadedUnit.Name.Value + ".Contracts"), loadedAssembly.AssemblyIdentity.Culture, loadedAssembly.AssemblyIdentity.Version, loadedAssembly.AssemblyIdentity.PublicKeyToken, "");
+            var referenceAssemblyIdentity = this.ProbeAssemblyReference(alreadyLoadedUnit, refAssemWithoutLocation);
+            if (referenceAssemblyIdentity.Location != "unknown://location") {
+              #region Load reference assembly and attach a contract provider to it
+              IMetadataHost hostForReferenceAssembly = this; // default
+              IUnit referenceUnit = null;
+              if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
+                // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
+                var separateHost = new SimpleHostEnvironment(this.NameTable);
+                referenceUnit = separateHost.LoadUnitFrom(referenceAssemblyIdentity.Location);
+                hostForReferenceAssembly = separateHost;
+              } else {
+                // Load reference assembly, but don't cause a recursive call!! So don't call LoadUnit or LoadUnitFrom
+                referenceUnit = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(referenceAssemblyIdentity.Location, this));
+                this.RegisterAsLatest(referenceUnit);
               }
+              if (referenceUnit != null && referenceUnit != Dummy.Unit) {
+                IAssembly referenceAssembly = referenceUnit as IAssembly;
+                if (referenceAssembly != null) {
+                  IContractProvider referenceAssemblyContractProvider = new LazyContractProvider(hostForReferenceAssembly, referenceAssembly, contractMethods);
+                  referenceAssemblyContractProvider = new CodeContractsContractProvider(hostForReferenceAssembly, referenceAssemblyContractProvider);
+                  oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
+                }
+              }
+              #endregion Load reference assembly and attach a contract provider to it
             }
-            #endregion Load reference assembly and attach a contract provider to it
           }
+          var aggregateContractProvider = new AggregatingContractProvider(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
+          this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
+          #endregion Load any reference assemblies for the loaded unit
         }
-        var aggregateContractProvider = new AggregatingContractProvider(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
-        this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
-        #endregion Load any reference assemblies for the loaded unit
       }
     }
 

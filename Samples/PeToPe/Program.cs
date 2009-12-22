@@ -48,8 +48,10 @@ namespace PeToPe {
       if (pdbReader == null) {
         PeWriter.WritePeToStream(module, host, peStream);
       } else {
-        using (var pdbWriter = new PdbWriter(module.Location + ".pdb", pdbReader)) {
-          PeWriter.WritePeToStream(module, host, peStream, pdbReader, pdbReader, pdbWriter);
+        using (pdbReader) {
+          using (var pdbWriter = new PdbWriter(module.Location + ".pdb", pdbReader)) {
+            PeWriter.WritePeToStream(module, host, peStream, pdbReader, pdbReader, pdbWriter);
+          }
         }
       }
     }

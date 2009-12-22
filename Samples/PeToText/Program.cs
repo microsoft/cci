@@ -30,7 +30,9 @@ namespace PeToText {
       SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString(); 
       SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, noIL);
 
-      csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
+      using (pdbReader) {
+        csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
+      }
       string txtFile = Path.ChangeExtension(pdbFile, "txt");
       File.WriteAllText(txtFile, sourceEmitterOutput.Data);
 

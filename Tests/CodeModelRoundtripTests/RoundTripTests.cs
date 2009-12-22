@@ -104,7 +104,9 @@ public class CodeModelRoundTripTests {
 
   void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly) {
     using (FileStream rewrittenFile = File.Create(assembly.Location)) {
-      PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+      using (this.pdbReader) {
+        PeWriter.WritePeToStream(assembly, this.host, rewrittenFile, this.pdbReader, this.pdbReader, this.pdbWriter);
+      }
     }
 
     Assert.True(File.Exists(assembly.Location));
