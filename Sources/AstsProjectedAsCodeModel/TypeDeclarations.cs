@@ -1842,8 +1842,15 @@ namespace Microsoft.Cci.Ast {
     //^ [Once]
     private BlockStatement/*?*/ dummyBlock;
 
-    private NestedTypeDefinition GetOrCreateNestedType() {
-      foreach (TypeDeclaration containingTypeDeclaration in this.ContainingTypeDeclaration.TypeDefinition.TypeDeclarations) {
+    private NestedTypeDefinition CreateNestedTypeAndUpdateBackingField() {
+      var containingTypeDef = this.ContainingTypeDeclaration.TypeDefinition;
+      if (this.nestedTypeDefinition != null) {
+        //Could have happened as a side-effect of contructing the containing type definition.
+        //Typically this only happens if the nested type declaration is asked about its type definition 
+        //before the containing type declaration is asked about its type definition.
+        return this.nestedTypeDefinition;
+      }
+      foreach (TypeDeclaration containingTypeDeclaration in containingTypeDef.TypeDeclarations) {
         foreach (ITypeDeclarationMember member in containingTypeDeclaration.TypeDeclarationMembers) {
           if (member == this) continue;
           NestedTypeDeclaration/*?*/ nt = member as NestedTypeDeclaration;
@@ -1853,7 +1860,10 @@ namespace Microsoft.Cci.Ast {
           }
         }
       }
-      return this.CreateNestedType();
+      if (this.nestedTypeDefinition != null) 
+        return this.nestedTypeDefinition; //TODO: this might be dead code. For now, rather be safe than sorry.
+      else
+        return this.CreateNestedType();
     }
 
     /// <summary>
@@ -1906,7 +1916,7 @@ namespace Microsoft.Cci.Ast {
         if (this.nestedTypeDefinition == null) {
           lock (GlobalLock.LockingObject) {
             if (this.nestedTypeDefinition == null)
-              this.nestedTypeDefinition = this.GetOrCreateNestedType();
+              this.CreateNestedTypeAndUpdateBackingField(); //the backing field is updated before returning, in order to short-circuit recursive call backs.
           }
         }
         return this.nestedTypeDefinition;
