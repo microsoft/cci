@@ -20,9 +20,23 @@ namespace CciSharp
     {
         readonly PeReader peReader;
         readonly object syncLock = new object();
+        readonly TextWriter @out = Console.Out;
+        int errorCount;
+        int warningCount; 
+
         #region protected by syncLock
         readonly Dictionary<string, PdbReader> pdbReaders;
         #endregion
+
+        public int ErrorCount
+        {
+            get { return this.errorCount; }
+        }
+
+        public int WarningCount
+        {
+            get { return this.warningCount; }
+        }
 
         public CcsHost()
         {
@@ -60,5 +74,48 @@ namespace CciSharp
                 return reader != null;
             }
         }
+
+        #region ICcsHost Members
+        static string LevelToString(CcsEventLevel level)
+        {
+            switch (level)
+            {
+                case CcsEventLevel.Error: return "error: ";
+                case CcsEventLevel.Warning:
+                    return "warning: ";
+                default: return "";
+            }
+        }
+        public void Event(CcsEventLevel level, string message)
+        {
+            this.CountErrorsAndWarnings(level);
+            this.@out.WriteLine("{0}{1}", LevelToString(level), message);
+        }
+
+        private void CountErrorsAndWarnings(CcsEventLevel level)
+        {
+            switch (level)
+            {
+                case CcsEventLevel.Error: this.errorCount++; break;
+                case CcsEventLevel.Warning: this.warningCount++; break;
+            }
+        }
+
+        public void Event(CcsEventLevel level, string format, params object[] args)
+        {
+            this.Event(level, String.Format(format, args));
+        }
+
+        public void Event(CcsEventLevel level, string url, int line,  string message)
+        {
+            this.CountErrorsAndWarnings(level);
+            this.@out.WriteLine("{0}({1}): {2}{3}", url, line, LevelToString(level), message);
+        }
+
+        public void Event(CcsEventLevel level, string url, int line, string format, params object[] args)
+        {
+            this.Event(level, url, line, String.Format(format, args));
+        }
+        #endregion
     }
 }

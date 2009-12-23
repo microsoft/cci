@@ -37,7 +37,11 @@ namespace CciSharp.AssertMessage
         public override Module Visit(Module module)
         {
             if (!this.Host.TryGetPdbReader(module, out this.pdbReader))
-                throw new InvalidOperationException("no symbols available");
+            {
+                this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", module.Location);
+                return module;
+            }
+
             return base.Visit(module);
         }
 

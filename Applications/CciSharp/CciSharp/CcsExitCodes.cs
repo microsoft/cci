@@ -13,5 +13,7 @@ namespace CciSharp
     {
         public const int Success = 0;
         public const int InvalidArguments = -1;
+        public const int Errors = -2;
+        public const int UnexpectedException = -1000;
     }
 }

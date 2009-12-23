@@ -22,10 +22,17 @@ namespace CciSharp
                 return CcsExitCodes.InvalidArguments;
             }
 
-            var engine = new CcsEngine();
-            engine.Mutate(args[0]);
-
-            return CcsExitCodes.Success;
+            try
+            {
+                var engine = new CcsEngine();
+                return engine.Mutate(args[0]);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("unexpected error: {0}", ex.Message);
+                Console.WriteLine(ex);
+                return CcsExitCodes.UnexpectedException;
+            }
         }
     }
 }

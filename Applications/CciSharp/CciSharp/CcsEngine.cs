@@ -23,7 +23,7 @@ namespace CciSharp
             this.host = new CcsHost();
         }
 
-        public void Mutate(string assembly)
+        public int Mutate(string assembly)
         {
             Contract.Requires(!String.IsNullOrEmpty(assembly));
 
@@ -36,9 +36,15 @@ namespace CciSharp
             var moduleCopy = copier.Visit(module);
 
             foreach (var mutator in mutators)
+            {
+                if (this.host.ErrorCount > 0) break;
                 mutator.Visit(moduleCopy);
+            }
 
-            this.WriteModule(assemblyPath, moduleCopy, pdbReader);
+            if (this.host.ErrorCount == 0)
+                this.WriteModule(assemblyPath, moduleCopy, pdbReader);
+
+            return this.host.ErrorCount == 0 ? CcsExitCodes.Success : CcsExitCodes.Errors;
       }
 
         private void WriteModule(string assemblyPath,  Module module, PdbReader _pdbReader)
