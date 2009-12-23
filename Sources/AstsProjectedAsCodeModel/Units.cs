@@ -212,12 +212,10 @@ namespace Microsoft.Cci.Ast {
     #region IAssemblyReference Members
 
     IAssembly IAssemblyReference.ResolvedAssembly {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
     AssemblyIdentity IAssemblyReference.UnifiedAssemblyIdentity {
-      [DebuggerNonUserCode]
       get { return this.AssemblyIdentity; }
     }
 
@@ -226,7 +224,6 @@ namespace Microsoft.Cci.Ast {
     #region IModuleReference Members
 
     IAssemblyReference/*?*/ IModuleReference.ContainingAssembly {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -252,7 +249,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
     public IEnumerable<IName> Aliases {
-      [DebuggerNonUserCode]
       get { return this.aliases; }
     }
     IEnumerable<IName> aliases;
@@ -261,7 +257,6 @@ namespace Microsoft.Cci.Ast {
     /// The identity of the assembly reference.
     /// </summary>
     public AssemblyIdentity AssemblyIdentity {
-      [DebuggerNonUserCode]
       get { return this.ResolvedAssembly.AssemblyIdentity; }
     }
 
@@ -270,7 +265,6 @@ namespace Microsoft.Cci.Ast {
     /// Empty if not specified.
     /// </summary>
     public string Culture {
-      [DebuggerNonUserCode]
       get { return this.ResolvedAssembly.Culture; }
     }
 
@@ -285,7 +279,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public virtual bool IsRetargetable {
-      [DebuggerNonUserCode]
       get { return this.ResolvedAssembly.IsRetargetable; }
     }
 
@@ -293,7 +286,6 @@ namespace Microsoft.Cci.Ast {
     /// The hashed 8 bytes of the public key called public key token of the referenced assembly. This is non empty of the referenced assembly is strongly signed.
     /// </summary>
     public IEnumerable<byte> PublicKeyToken {
-      [DebuggerNonUserCode]
       get {
         return UnitHelper.ComputePublicKeyToken(this.ResolvedAssembly.PublicKey);
       }
@@ -303,7 +295,6 @@ namespace Microsoft.Cci.Ast {
     /// The referenced assembly.
     /// </summary>
     public IAssembly ResolvedAssembly {
-      [DebuggerNonUserCode]
       get {
         IAssembly/*?*/ result = this.ResolvedUnit as IAssembly;
         //^ assume result != null; //The constructor + immutability guarantees this.
@@ -315,7 +306,6 @@ namespace Microsoft.Cci.Ast {
     /// Returns the identity of the assembly reference to which this assembly reference has been unified.
     /// </summary>
     public AssemblyIdentity UnifiedAssemblyIdentity {
-      [DebuggerNonUserCode]
       get { return this.ResolvedAssembly.AssemblyIdentity; }
     }
 
@@ -323,7 +313,6 @@ namespace Microsoft.Cci.Ast {
     /// The identity of the unit reference.
     /// </summary>
     public override UnitIdentity UnitIdentity {
-      [DebuggerNonUserCode]
       get {
         return this.AssemblyIdentity;
       }
@@ -333,14 +322,12 @@ namespace Microsoft.Cci.Ast {
     /// The version of the assembly reference.
     /// </summary>
     public Version Version {
-      [DebuggerNonUserCode]
       get { return this.ResolvedAssembly.Version; }
     }
 
     #region IModuleReference Members
 
     IAssemblyReference/*?*/ IModuleReference.ContainingAssembly {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -373,7 +360,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of the assemblies that are referenced by this module.
     /// </summary>
     public IEnumerable<IAssemblyReference> AssemblyReferences {
-      [DebuggerNonUserCode]
       get { return this.assemblyReferences; }
     }
     readonly IEnumerable<IAssemblyReference> assemblyReferences;
@@ -382,7 +368,6 @@ namespace Microsoft.Cci.Ast {
     /// The preferred memory address at which the module is to be loaded at runtime.
     /// </summary>
     public ulong BaseAddress {
-      [DebuggerNonUserCode]
       get { return 0x400000; } //TODO: allow this to be specified via a compilation flag
     }
 
@@ -390,7 +375,6 @@ namespace Microsoft.Cci.Ast {
     /// The assembly that contains this module.
     /// </summary>
     public virtual IAssembly/*?*/ ContainingAssembly {
-      [DebuggerNonUserCode]
       get { return this.containingAssembly; }
     }
     IAssembly containingAssembly;
@@ -410,7 +394,6 @@ namespace Microsoft.Cci.Ast {
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.
     /// </summary>
     public virtual ushort DllCharacteristics {
-      [DebuggerNonUserCode]
       get { return 0; } //TODO: provide compilation flag or attribute to control this
     }
 
@@ -425,7 +408,6 @@ namespace Microsoft.Cci.Ast {
     /// The alignment of sections in the module's image file.
     /// </summary>
     public virtual uint FileAlignment {
-      [DebuggerNonUserCode]
       get { return 512; } //TODO: provide an option for setting this
     }
 
@@ -472,7 +454,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the module contains only IL and is processor independent.
     /// </summary>
     public virtual bool ILOnly {
-      [DebuggerNonUserCode]
       get { return true; }
     }
 
@@ -480,7 +461,6 @@ namespace Microsoft.Cci.Ast {
     /// The kind of metadata stored in the module. For example whether the module is an executable or a manifest resource file.
     /// </summary>
     public virtual ModuleKind Kind {
-      [DebuggerNonUserCode]
       get { return ModuleKind.DynamicallyLinkedLibrary; }
     }
 
@@ -488,7 +468,6 @@ namespace Microsoft.Cci.Ast {
     /// The first part of a two part version number indicating the version of the linker that produced this module. For example, the 8 in 8.0.
     /// </summary>
     public virtual byte LinkerMajorVersion {
-      [DebuggerNonUserCode]
       get { return 6; }
     }
 
@@ -496,7 +475,6 @@ namespace Microsoft.Cci.Ast {
     /// The first part of a two part version number indicating the version of the linker that produced this module. For example, the 0 in 8.0.
     /// </summary>
     public virtual byte LinkerMinorVersion {
-      [DebuggerNonUserCode]
       get { return 0; }
     }
 
@@ -504,7 +482,6 @@ namespace Microsoft.Cci.Ast {
     /// The first part of a two part version number indicating the version of the format used to persist this module. For example, the 1 in 1.0.
     /// </summary>
     public byte MetadataFormatMajorVersion {
-      [DebuggerNonUserCode]
       get { return this.metadataFormatMajorVersion; }
     }
     readonly byte metadataFormatMajorVersion = 2; //TODO: get from compilation host
@@ -513,7 +490,6 @@ namespace Microsoft.Cci.Ast {
     /// The second part of a two part version number indicating the version of the format used to persist this module. For example, the 0 in 1.0.
     /// </summary>
     public byte MetadataFormatMinorVersion {
-      [DebuggerNonUserCode]
       get { return this.metadataFormatMinorVersion; }
     }
     readonly byte metadataFormatMinorVersion = 0; //TODO: get from compilation host
@@ -523,7 +499,6 @@ namespace Microsoft.Cci.Ast {
     /// with this module.
     /// </summary>
     public IEnumerable<ICustomAttribute> ModuleAttributes {
-      [DebuggerNonUserCode]
       get { return this.attributes.AsReadOnly(); }
       //TODO: run through the namespaces and collect together all of their attributes that
       //specify their target to be a module
@@ -541,7 +516,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the module. This can be different from the name if this module is also an assembly.
     /// </summary>
     public virtual IName ModuleName {
-      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 
@@ -549,7 +523,6 @@ namespace Microsoft.Cci.Ast {
     /// A list of the modules that are referenced by this module.
     /// </summary>
     public IEnumerable<IModuleReference> ModuleReferences {
-      [DebuggerNonUserCode]
       get { return this.moduleReferences; }
     }
     readonly IEnumerable<IModuleReference> moduleReferences;
@@ -558,7 +531,6 @@ namespace Microsoft.Cci.Ast {
     /// A globally unique persistent identifier for this module.
     /// </summary>
     public Guid PersistentIdentifier {
-      [DebuggerNonUserCode]
       get { return this.persistentIdentifier; }
     }
     readonly Guid persistentIdentifier = Guid.NewGuid();
@@ -568,7 +540,6 @@ namespace Microsoft.Cci.Ast {
     /// true also sets Requires64bits to true.
     /// </summary>
     public virtual bool RequiresAmdInstructionSet {
-      [DebuggerNonUserCode]
       get { return false; } //TODO: provide an option for setting this
     }
 
@@ -577,7 +548,6 @@ namespace Microsoft.Cci.Ast {
     /// This may be true even if the module contains only IL instructions because of PlatformInvoke and COM interop.
     /// </summary>
     public virtual bool Requires32bits {
-      [DebuggerNonUserCode]
       get { return false; } //TODO: provide an option for setting this
     }
 
@@ -586,7 +556,6 @@ namespace Microsoft.Cci.Ast {
     /// This may be true even if the module contains only IL instructions because of PlatformInvoke and COM interop.
     /// </summary>
     public virtual bool Requires64bits {
-      [DebuggerNonUserCode]
       get { return false; } //TODO: provide an option for setting this
     }
 
@@ -594,7 +563,6 @@ namespace Microsoft.Cci.Ast {
     /// The size of the virtual memory initially committed for the initial process heap.
     /// </summary>
     public virtual ulong SizeOfHeapCommit {
-      [DebuggerNonUserCode]
       get { return 0x1000; } //TODO: provide an option for setting this
     }
 
@@ -602,7 +570,6 @@ namespace Microsoft.Cci.Ast {
     /// The size of the virtual memory to reserve for the initial process heap.
     /// </summary>
     public virtual ulong SizeOfHeapReserve {
-      [DebuggerNonUserCode]
       get { return 0x100000; } //TODO: provide an option for setting this
     }
 
@@ -610,7 +577,6 @@ namespace Microsoft.Cci.Ast {
     /// The size of the virtual memory to reserve for the initial thread's stack.
     /// </summary>
     public virtual ulong SizeOfStackReserve {
-      [DebuggerNonUserCode]
       get { return 0x100000; } //TODO: provide an option for setting this
     }
 
@@ -618,7 +584,6 @@ namespace Microsoft.Cci.Ast {
     /// The size of the virtual memory initially committed for the initial thread's stack.
     /// </summary>
     public virtual ulong SizeOfStackCommit {
-      [DebuggerNonUserCode]
       get { return 0x1000; } //TODO: provide an option for setting this
     }
 
@@ -626,7 +591,6 @@ namespace Microsoft.Cci.Ast {
     /// Identifies the version of the CLR that is required to load this module or assembly.
     /// </summary>
     public string TargetRuntimeVersion {
-      [DebuggerNonUserCode]
       get {
         if (this.targetRuntimeVersion == null) {
           IModule/*?*/ mscorlib = TypeHelper.GetDefiningUnit(this.Compilation.PlatformType.SystemObject.ResolvedType) as IModule;
@@ -711,12 +675,10 @@ namespace Microsoft.Cci.Ast {
     #region IModuleReference Members
 
     IAssemblyReference/*?*/ IModuleReference.ContainingAssembly {
-      [DebuggerNonUserCode]
       get { return this.ContainingAssembly; }
     }
 
     IModule IModuleReference.ResolvedModule {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -740,7 +702,6 @@ namespace Microsoft.Cci.Ast {
     /// The Assembly that contains this module. May be null if the module is not part of an assembly.
     /// </summary>
     public IAssemblyReference/*?*/ ContainingAssembly {
-      [DebuggerNonUserCode]
       get { return this.ResolvedModule.ContainingAssembly; }
     }
 
@@ -755,7 +716,6 @@ namespace Microsoft.Cci.Ast {
     /// Returns the identity of the module reference.
     /// </summary>
     public ModuleIdentity ModuleIdentity {
-      [DebuggerNonUserCode]
       get { return this.ResolvedModule.ModuleIdentity; }
     }
 
@@ -763,7 +723,6 @@ namespace Microsoft.Cci.Ast {
     /// The referenced module.
     /// </summary>
     public IModule ResolvedModule {
-      [DebuggerNonUserCode]
       get {
         IModule/*?*/ result = this.ResolvedUnit as IModule;
         //^ assume result != null; //The constructor+immutability guarantees this.
@@ -775,7 +734,6 @@ namespace Microsoft.Cci.Ast {
     /// The identity of the unit reference.
     /// </summary>
     public override UnitIdentity UnitIdentity {
-      [DebuggerNonUserCode]
       get { return this.ModuleIdentity; }
     }
 
@@ -805,7 +763,6 @@ namespace Microsoft.Cci.Ast {
     /// consequently not use the latter.
     /// </summary>
     public AssemblyIdentity ContractAssemblySymbolicIdentity {
-      [DebuggerNonUserCode]
       get {
         AssemblyIdentity/*?*/ result = null;
         foreach (IUnit unit in this.UnitReferences) {
@@ -839,7 +796,6 @@ namespace Microsoft.Cci.Ast {
     /// consequently not use the latter.
     /// </summary>
     public AssemblyIdentity CoreAssemblySymbolicIdentity {
-      [DebuggerNonUserCode]
       get {
         AssemblyIdentity/*?*/ result = null;
         foreach (IUnit unit in this.UnitReferences) {
@@ -874,7 +830,6 @@ namespace Microsoft.Cci.Ast {
     /// The interpretation depends on the ICompilationHostEnviroment instance used to resolve references to unit.
     /// </summary>
     public string Location {
-      [DebuggerNonUserCode]
       get { return this.location; }
     }
     readonly string location;
@@ -883,7 +838,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the entity.
     /// </summary>
     public IName Name {
-      [DebuggerNonUserCode]
       get {
         return this.name;
         //TODO: if name is the empty name, then look for the main routine and use the name of the source file in which it appears.
@@ -898,7 +852,6 @@ namespace Microsoft.Cci.Ast {
     /// It is mutuable, in as much as it is possible to add new names to the table.
     /// </summary>
     public INameTable NameTable {
-      [DebuggerNonUserCode]
       get { return this.Compilation.NameTable; }
     }
 
@@ -907,7 +860,6 @@ namespace Microsoft.Cci.Ast {
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
     public IPlatformType PlatformType {
-      [DebuggerNonUserCode]
       get { return this.Compilation.PlatformType; }
     }
 
@@ -941,7 +893,6 @@ namespace Microsoft.Cci.Ast {
     #region IUnit Members
 
     IRootUnitNamespace IUnit.UnitNamespaceRoot {
-      [DebuggerNonUserCode]
       get { return this.UnitNamespaceRoot; }
     }
 
@@ -954,7 +905,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IUnit ResolvedUnit {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -963,7 +913,6 @@ namespace Microsoft.Cci.Ast {
     #region INamespaceRootOwner Members
 
     INamespaceDefinition INamespaceRootOwner.NamespaceRoot {
-      [DebuggerNonUserCode]
       get { return this.UnitNamespaceRoot; }
     }
 

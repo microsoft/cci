@@ -115,7 +115,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition that must be maintained.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -143,7 +142,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -213,7 +211,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of loop invariants.
     /// </summary>
     public IEnumerable<ILoopInvariant> Invariants {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetConversionEnumerable<LoopInvariant, ILoopInvariant>(this.invariants); }
     }
     readonly IEnumerable<LoopInvariant> invariants;
@@ -271,7 +268,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the body of the loop.
     /// </summary>
     public IEnumerable<IExpression>/*?*/ Writes {
-      [DebuggerNonUserCode]
       get {
         if (writes == null) return null;
         else return this.GetWrites();
@@ -282,7 +278,6 @@ namespace Microsoft.Cci.Ast {
     #region IObjectWithLocations Members
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      [DebuggerNonUserCode]
       get {
         foreach (var inv in this.invariants)
           foreach (var loc in inv.Locations) yield return loc;
@@ -354,7 +349,6 @@ namespace Microsoft.Cci.Ast {
     #region ILoopInvariant Members
 
     IExpression IContractElement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
@@ -457,7 +451,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of expressions that each represents a set of memory locations that are newly allocated by a call to the method.
     /// </summary>
     public IEnumerable<IExpression> Allocates {
-      [DebuggerNonUserCode]
       get {
         foreach (Expression expr in this.allocates)
           yield return expr.ProjectAsIExpression();
@@ -469,7 +462,6 @@ namespace Microsoft.Cci.Ast {
     /// The signature declaration (such as a lambda, method, property or anonymous method) that defines this contract.
     /// </summary>
     public ISignatureDeclaration/*?*/ ContainingSignatureDeclaration {
-      [DebuggerNonUserCode]
       get {
         return this.containingBlock != null ? this.containingBlock.ContainingSignatureDeclaration : null;
       }
@@ -491,7 +483,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of expressions that each represents a set of memory locations that are freed by a call to the method.
     /// </summary>
     public IEnumerable<IExpression> Frees {
-      [DebuggerNonUserCode]
       get {
         foreach (Expression expr in this.frees)
           yield return expr.ProjectAsIExpression();
@@ -503,7 +494,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of addressable expressions (variables) that are modified by the called method.
     /// </summary>
     public IEnumerable<IAddressableExpression> ModifiedVariables {
-      [DebuggerNonUserCode]
       get {
         foreach (AddressableExpression expr in this.modifiedVariables)
           yield return expr;
@@ -515,7 +505,6 @@ namespace Microsoft.Cci.Ast {
     /// The method body constitutes its contract. Callers must substitute the body in line with the call site.
     /// </summary>
     public bool MustInline {
-      [DebuggerNonUserCode]
       get { return this.mustInline; }
     }
     readonly bool mustInline;
@@ -524,7 +513,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of postconditions that are established by the called method.
     /// </summary>
     public IEnumerable<IPostcondition> Postconditions {
-      [DebuggerNonUserCode]
       get {
         foreach (Postcondition postcondition in this.postconditions)
           yield return postcondition;
@@ -536,7 +524,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of preconditions that must be established by the calling method.
     /// </summary>
     public IEnumerable<IPrecondition> Preconditions {
-      [DebuggerNonUserCode]
       get {
         foreach (Precondition precondition in this.preconditions)
           yield return precondition;
@@ -548,7 +535,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of expressions that each represents a set of memory locations that may be read by the called method.
     /// </summary>
     public IEnumerable<IExpression> Reads {
-      [DebuggerNonUserCode]
       get {
         foreach (Expression expr in this.reads)
           yield return expr.ProjectAsIExpression();
@@ -560,7 +546,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of exceptions that may be thrown (or passed on) by the called method.
     /// </summary>
     public IEnumerable<IThrownException> ThrownExceptions {
-      [DebuggerNonUserCode]
       get {
         foreach (ThrownException thrownException in this.thrownExceptions)
           yield return thrownException;
@@ -572,7 +557,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
     public IEnumerable<IExpression> Writes {
-      [DebuggerNonUserCode]
       get {
         foreach (Expression expr in this.writes)
           yield return expr.ProjectAsIExpression();
@@ -585,7 +569,6 @@ namespace Microsoft.Cci.Ast {
     /// which may or may not be executed, depending on how the program has been compiled.
     /// </summary>
     public bool IsPure {
-      [DebuggerNonUserCode]
       get { return IsPure; }
     }
 
@@ -662,7 +645,6 @@ namespace Microsoft.Cci.Ast {
     #region IObjectWithLocations Members
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      [DebuggerNonUserCode]
       get {
         foreach (var a in this.allocates)
           foreach (var loc in a.Locations) yield return loc;
@@ -750,7 +732,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition that must be true at the start or end of the method that is associated with this MethodContractItem instance.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -778,7 +759,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition that must be true at the start or end of the method that is associated with this MethodContractItem instance.
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -843,7 +823,6 @@ namespace Microsoft.Cci.Ast {
     /// The precondition is always checked at runtime, even in release builds.
     /// </summary>
     public virtual bool AlwaysCheckedAtRuntime {
-      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -875,7 +854,6 @@ namespace Microsoft.Cci.Ast {
     /// May be null. If null, the runtime behavior of the associated method is undefined when Condition is not true.
     /// </summary>
     public Expression/*?*/ ExceptionToThrow {
-      [DebuggerNonUserCode]
       get { return this.exceptionToThrow; }
     }
     readonly Expression/*?*/ exceptionToThrow;
@@ -904,12 +882,10 @@ namespace Microsoft.Cci.Ast {
     #region IPrecondition Members
 
     IExpression IContractElement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
     IExpression/*?*/ IPrecondition.ExceptionToThrow {
-      [DebuggerNonUserCode]
       get {
         if (this.ExceptionToThrow == null) return null;
         return this.ExceptionToThrow.ProjectAsIExpression();
@@ -970,7 +946,6 @@ namespace Microsoft.Cci.Ast {
     #region IPostcondition Members
 
     IExpression IContractElement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
@@ -1034,7 +1009,6 @@ namespace Microsoft.Cci.Ast {
     /// The exception that can be thrown by the associated method.
     /// </summary>
     public TypeExpression ExceptionType {
-      [DebuggerNonUserCode]
       get { return this.exceptionType; }
     }
     readonly TypeExpression exceptionType;
@@ -1065,7 +1039,6 @@ namespace Microsoft.Cci.Ast {
     /// The postcondition that holds if the associated method throws this exception.
     /// </summary>
     public Postcondition Postcondition {
-      [DebuggerNonUserCode]
       get { return this.postcondition; }
     }
     Postcondition postcondition;
@@ -1083,12 +1056,10 @@ namespace Microsoft.Cci.Ast {
     #region IThrownException Members
 
     ITypeReference IThrownException.ExceptionType {
-      [DebuggerNonUserCode]
       get { return this.ExceptionType.ResolvedType; }
     }
 
     IPostcondition IThrownException.Postcondition {
-      [DebuggerNonUserCode]
       get { return this.Postcondition; }
     }
 
@@ -1144,7 +1115,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of contract fields. Contract fields can only be used inside contracts and are not available at runtime.
     /// </summary>
     public IEnumerable<IFieldDefinition> ContractFields {
-      [DebuggerNonUserCode]
       get {
         foreach (FieldDeclaration fieldDecl in this.contractFields) yield return fieldDecl.FieldDefinition;
       }
@@ -1156,7 +1126,6 @@ namespace Microsoft.Cci.Ast {
     /// method is specified by the axioms (assumed invariants) of the associated type. Contract methods are not available at runtime.
     /// </summary>
     public IEnumerable<IMethodDefinition> ContractMethods {
-      [DebuggerNonUserCode]
       get {
         foreach (MethodDeclaration methDecl in this.contractMethods)
           yield return methDecl.MethodDefinition;
@@ -1190,7 +1159,6 @@ namespace Microsoft.Cci.Ast {
     /// A possibly empty list of type invariants. Axioms are a special type of invariant.
     /// </summary>
     public IEnumerable<ITypeInvariant> Invariants {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetConversionEnumerable<TypeInvariant, ITypeInvariant>(this.invariants); }
     }
     readonly IEnumerable<TypeInvariant> invariants;
@@ -1224,7 +1192,6 @@ namespace Microsoft.Cci.Ast {
     #region IObjectWithLocations Members
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      [DebuggerNonUserCode]
       get {
         foreach (var f in this.contractFields)
           foreach (var loc in f.Locations) yield return loc;
@@ -1286,7 +1253,6 @@ namespace Microsoft.Cci.Ast {
     /// An axiom is a type invariant whose truth is assumed rather than derived. Commonly used to make statements about the meaning of contract methods.
     /// </summary>
     public bool IsAxiom {
-      [DebuggerNonUserCode]
       get { return this.isAxiom; }
     }
     readonly bool isAxiom;
@@ -1306,7 +1272,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the axiom. Used in error diagnostics. May be null.
     /// </summary>
     public NameDeclaration/*?*/ Name {
-      [DebuggerNonUserCode]
       get { return this.name; }
     }
     NameDeclaration/*?*/ name;
@@ -1323,12 +1288,10 @@ namespace Microsoft.Cci.Ast {
     #region ITypeInvariant Members
 
     IExpression IContractElement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
     IName/*?*/ ITypeInvariant.Name {
-      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 

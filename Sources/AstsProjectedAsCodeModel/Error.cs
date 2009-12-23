@@ -52,7 +52,6 @@ namespace Microsoft.Cci.Ast {
     /// The object reporting the error. This can be used to filter out errors coming from non interesting sources.
     /// </summary>
     public override object ErrorReporter {
-      [DebuggerNonUserCode]
       get { return SemanticErrorReporter.Instance; }
     }
 
@@ -60,7 +59,6 @@ namespace Microsoft.Cci.Ast {
     /// A short identifier for the reporter of the error, suitable for use in human interfaces. For example "CS" in the case of a C# language error.
     /// </summary>
     public override string ErrorReporterIdentifier {
-      [DebuggerNonUserCode]
       get { return "CciAst"; }
     }
 
@@ -70,7 +68,6 @@ namespace Microsoft.Cci.Ast {
     /// not depend solely on this.Code but can be influenced by compiler options such as the csc /warnaserror option.
     /// </summary>
     public override bool IsWarning {
-      [DebuggerNonUserCode]
       get {
         switch ((Error)this.Code) {
           case Error.BadReferenceCompareLeft:
@@ -102,7 +99,6 @@ namespace Microsoft.Cci.Ast {
     /// A description of the error suitable for user interaction. Localized to the current culture.
     /// </summary>
     public override string Message {
-      [DebuggerNonUserCode]
       get {
         System.Resources.ResourceManager rmgr = new System.Resources.ResourceManager("Microsoft.Cci.Ast.ErrorMessages", typeof(AstErrorMessage).Assembly);
         return this.GetMessage(rmgr);

@@ -33,7 +33,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IUnitNamespace ContainingUnitNamespace {
-      [DebuggerNonUserCode]
       get
         //^ ensures result is RootUnitNamespace || result is NestedUnitNamespace;
       {
@@ -62,7 +61,6 @@ namespace Microsoft.Cci.Ast {
     #region INamespaceMember Members
 
     INamespaceDefinition INamespaceMember.ContainingNamespace {
-      [DebuggerNonUserCode]
       get { return this.ContainingUnitNamespace; }
     }
 
@@ -75,7 +73,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IScope<INamespaceMember> ContainingScope {
-      [DebuggerNonUserCode]
       get { return this.ContainingUnitNamespace; }
     }
 
@@ -88,7 +85,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public INamespaceDefinition Container {
-      [DebuggerNonUserCode]
       get { return this.ContainingUnitNamespace; }
     }
 
@@ -97,7 +93,6 @@ namespace Microsoft.Cci.Ast {
     #region IUnitNamespaceReference Members
 
     IUnitReference IUnitNamespaceReference.Unit {
-      [DebuggerNonUserCode]
       get { return this.Unit; }
     }
 
@@ -106,7 +101,6 @@ namespace Microsoft.Cci.Ast {
     #region INestedUnitNamespaceReference Members
 
     IUnitNamespaceReference INestedUnitNamespaceReference.ContainingUnitNamespace {
-      [DebuggerNonUserCode]
       get { return this.ContainingUnitNamespace; }
     }
 
@@ -115,7 +109,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public INestedUnitNamespace ResolvedNestedUnitNamespace {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 
@@ -168,7 +161,6 @@ namespace Microsoft.Cci.Ast {
     /// The list of namespace declarations that together define this namespace definition.
     /// </summary>
     public IEnumerable<NamespaceDeclaration> NamespaceDeclarations {
-      [DebuggerNonUserCode]
       get {
         return this.namespaceDeclarations.AsReadOnly();
       }
@@ -287,7 +279,6 @@ namespace Microsoft.Cci.Ast {
     /// The IUnit instance associated with this namespace.
     /// </summary>
     public IUnit Unit {
-      [DebuggerNonUserCode]
       get { return this.unit; }
     }
     IUnit unit;
@@ -301,7 +292,6 @@ namespace Microsoft.Cci.Ast {
     /// or it is a nested namespace that is directly of indirectly nested in the root namespace.
     /// </summary>
     public sealed override INamespaceRootOwner RootOwner {
-      [DebuggerNonUserCode]
       get { return this.unit; }
     }
 
@@ -313,7 +303,6 @@ namespace Microsoft.Cci.Ast {
     /// The source locations of the zero or more namespace declarations that together define this namespace definition.
     /// </summary>
     public sealed override IEnumerable<ILocation> Locations {
-      [DebuggerNonUserCode]
       get {
         foreach (NamespaceDeclaration declaration in this.namespaceDeclarations)
           yield return declaration.SourceLocation;
@@ -325,7 +314,6 @@ namespace Microsoft.Cci.Ast {
     #region IUnitNamespaceReference Members
 
     IUnitReference IUnitNamespaceReference.Unit {
-      [DebuggerNonUserCode]
       get { return this.unit; }
     }
 
@@ -334,7 +322,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IUnitNamespace ResolvedUnitNamespace {
-      [DebuggerNonUserCode]
       get { return this; }
     }
 

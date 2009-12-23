@@ -46,7 +46,6 @@ namespace Microsoft.Cci.Ast {
     /// A condition that must be true when execution reaches this statement.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     Expression condition;
@@ -55,7 +54,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition that must be true at the start of the method that is associated with this Precondition instance.
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -83,7 +81,6 @@ namespace Microsoft.Cci.Ast {
     /// True if a static verification tool has determined that the condition will always be true when execution reaches this statement.
     /// </summary>
     public bool HasBeenVerified {
-      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -112,7 +109,6 @@ namespace Microsoft.Cci.Ast {
     #region IAssertStatement Members
 
     IExpression IAssertStatement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
@@ -157,7 +153,6 @@ namespace Microsoft.Cci.Ast {
     /// A condition that must be true when execution reaches this statement.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -166,7 +161,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition that must be true at the start of the method that is associated with this Precondition instance.
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -215,7 +209,6 @@ namespace Microsoft.Cci.Ast {
     #region IAssumeStatement Members
 
     IExpression IAssumeStatement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
@@ -264,7 +257,6 @@ namespace Microsoft.Cci.Ast {
     /// The event to attach an event-handler delegate to.
     /// </summary>
     public Expression Event {
-      [DebuggerNonUserCode]
       get { return this.@event; }
     }
     readonly Expression @event;
@@ -273,7 +265,6 @@ namespace Microsoft.Cci.Ast {
     /// The event-handler delegate to attach to the event
     /// </summary>
     public Expression Handler {
-      [DebuggerNonUserCode]
       get { return this.handler; }
     }
     readonly Expression handler;
@@ -371,7 +362,6 @@ namespace Microsoft.Cci.Ast {
     /// True if unsafe constructs are allowed inside this block.
     /// </summary>
     public bool AllowUnsafe {
-      [DebuggerNonUserCode]
       get {
         if ((this.flags & 1) == 0) { //not yet initialized
           this.flags |= 1;
@@ -398,7 +388,6 @@ namespace Microsoft.Cci.Ast {
     /// The compilation part that contains this statement.
     /// </summary>
     new public CompilationPart CompilationPart {
-      [DebuggerNonUserCode]
       get {
         //^ assume this.compilationPart != null;
         return this.compilationPart;
@@ -411,7 +400,6 @@ namespace Microsoft.Cci.Ast {
     /// is used to initialize a field.
     /// </summary>
     public IMethodDefinition/*?*/ ContainingMethodDefinition {
-      [DebuggerNonUserCode]
       get {
         MethodDeclaration/*?*/ containingMethodDeclaration = this.ContainingSignatureDeclaration as MethodDeclaration;
         if (containingMethodDeclaration == null)
@@ -425,7 +413,6 @@ namespace Microsoft.Cci.Ast {
     /// The namespace declaration that contains this statement block.
     /// </summary>
     public NamespaceDeclaration ContainingNamespaceDeclaration {
-      [DebuggerNonUserCode]
       get {
         //^ assume this.containingNamespaceDeclaration != null;
         return this.containingNamespaceDeclaration;
@@ -439,7 +426,6 @@ namespace Microsoft.Cci.Ast {
     /// This can be null if this is a dummy block associated with a type declaration or namespace declaration.
     /// </summary>
     public ISignatureDeclaration/*?*/ ContainingSignatureDeclaration {
-      [DebuggerNonUserCode]
       get {
         return this.containingSignatureDeclaration;
       }
@@ -450,7 +436,6 @@ namespace Microsoft.Cci.Ast {
     /// The type declaration that contains this statement block.
     /// </summary>
     public TypeDeclaration/*?*/ ContainingTypeDeclaration {
-      [DebuggerNonUserCode]
       get {
         return this.containingTypeDeclaration;
       }
@@ -574,7 +559,6 @@ namespace Microsoft.Cci.Ast {
     /// The scope defined by this block.
     /// </summary>
     public StatementScope Scope {
-      [DebuggerNonUserCode]
       get {
         if (this.scope == null)
           this.scope = this.CreateStatementScope();
@@ -587,7 +571,6 @@ namespace Microsoft.Cci.Ast {
     /// If the block contains a single executable statement, that statement is returned. Otherwise null.
     /// </summary>
     public IStatement/*?*/ SingletonStatement {
-      [DebuggerNonUserCode]
       get {
         if (this.statements.Count == 1 && !(this.statements[0] is LocalDeclarationsStatement))
           return this.statements[0] = this.statements[0].MakeCopyFor(this);
@@ -599,7 +582,6 @@ namespace Microsoft.Cci.Ast {
     /// The statements making up the block.
     /// </summary>
     public IEnumerable<Statement> Statements {
-      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.statements.Count; i < n; i++) {
           yield return this.statements[i] = this.statements[i].MakeCopyFor(this);
@@ -613,7 +595,6 @@ namespace Microsoft.Cci.Ast {
     /// can be overridden by nested blocks and expressions.
     /// </summary>
     public bool UseCheckedArithmetic {
-      [DebuggerNonUserCode]
       get {
         if ((this.flags & 8) == 0) { //not yet initialized
           this.flags |= 8;
@@ -628,7 +609,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public bool IsEmpty {
-      [DebuggerNonUserCode]
       get { return this.statements.Count == 0; }
     }
 
@@ -651,7 +631,6 @@ namespace Microsoft.Cci.Ast {
     #region IBlock Members
 
     IEnumerable<IStatement> IBlockStatement.Statements {
-      [DebuggerNonUserCode]
       get {
         foreach (Statement statement in this.Statements) {
           LocalDeclarationsStatement/*?*/ locDeclStatement = statement as LocalDeclarationsStatement;
@@ -783,7 +762,6 @@ namespace Microsoft.Cci.Ast {
     /// The statements within the catch clause.
     /// </summary>
     public BlockStatement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly BlockStatement body;
@@ -818,7 +796,6 @@ namespace Microsoft.Cci.Ast {
     /// The local that contains the exception instance when executing the catch clause body.
     /// </summary>
     public ILocalDefinition ExceptionContainer {
-      [DebuggerNonUserCode]
       get {
         if (this.exceptionContainer == null) {
           LocalDefinition exceptionContainer = this.GetNewExceptionContainer();
@@ -835,7 +812,6 @@ namespace Microsoft.Cci.Ast {
     /// The type of the exception to handle.
     /// </summary>
     public TypeExpression ExceptionType {
-      [DebuggerNonUserCode]
       get { return this.exceptionType; }
     }
     readonly TypeExpression exceptionType;
@@ -845,7 +821,6 @@ namespace Microsoft.Cci.Ast {
     /// May be null, in which case any exception of ExceptionType will cause the handler to execute.
     /// </summary>
     public Expression/*?*/ FilterCondition {
-      [DebuggerNonUserCode]
       get { return this.filterCondition; }
     }
     readonly Expression/*?*/ filterCondition;
@@ -866,7 +841,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the local definition that contains the exception value during the execution of the catch clause body.
     /// </summary>
     public NameDeclaration Name {
-      [DebuggerNonUserCode]
       get {
         if (this.name == null)
           this.name = new NameDeclaration(Dummy.Name, this.ExceptionType.SourceLocation);
@@ -900,17 +874,14 @@ namespace Microsoft.Cci.Ast {
     #region ICatchClause Members
 
     IBlockStatement ICatchClause.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     ITypeReference ICatchClause.ExceptionType {
-      [DebuggerNonUserCode]
       get { return this.ExceptionType.ResolvedType; }
     }
 
     IExpression/*?*/ ICatchClause.FilterCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.FilterCondition == null) return null;
         return this.FilterCondition.ProjectAsIExpression();
@@ -1001,7 +972,6 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate as true or false.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -1010,7 +980,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -1037,7 +1006,6 @@ namespace Microsoft.Cci.Ast {
     /// Statement to execute if the conditional expression evaluates to false. 
     /// </summary>
     public Statement FalseBranch {
-      [DebuggerNonUserCode]
       get { return this.falseBranch; }
     }
     readonly Statement falseBranch;
@@ -1057,7 +1025,6 @@ namespace Microsoft.Cci.Ast {
     /// Statement to execute if the conditional expression evaluates to true. 
     /// </summary>
     public Statement TrueBranch {
-      [DebuggerNonUserCode]
       get { return this.trueBranch; }
     }
     readonly Statement trueBranch;
@@ -1078,12 +1045,10 @@ namespace Microsoft.Cci.Ast {
     #region IConditionStatement Members
 
     IExpression IConditionalStatement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
     IStatement IConditionalStatement.TrueBranch {
-      [DebuggerNonUserCode]
       get {
         BlockStatement/*?*/ blockStatement = this.TrueBranch as BlockStatement;
         if (blockStatement != null) {
@@ -1095,7 +1060,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     IStatement IConditionalStatement.FalseBranch {
-      [DebuggerNonUserCode]
       get { return this.FalseBranch; }
     }
 
@@ -1248,7 +1212,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -1257,7 +1220,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition to evaluate as false or true.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -1266,7 +1228,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -1353,7 +1314,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -1372,7 +1332,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition to evaluate as false or true.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -1381,7 +1340,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -1432,12 +1390,10 @@ namespace Microsoft.Cci.Ast {
     #region IDoUntilStatement Members
 
     IStatement IDoUntilStatement.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     IExpression IDoUntilStatement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
@@ -1496,7 +1452,6 @@ namespace Microsoft.Cci.Ast {
     /// True if this statement is a sentinel that should never be reachable.
     /// </summary>
     public bool IsSentinel {
-      [DebuggerNonUserCode]
       get { return this.isSentinel; }
     }
     readonly bool isSentinel;
@@ -1592,7 +1547,6 @@ namespace Microsoft.Cci.Ast {
     /// The target locations to be set to null.
     /// </summary>
     public IEnumerable<AddressableExpression> Targets {
-      [DebuggerNonUserCode]
       get { return this.targets; }
     }
     readonly IEnumerable<AddressableExpression> targets;
@@ -1642,7 +1596,6 @@ namespace Microsoft.Cci.Ast {
     /// Results in an error number that is wrapped with a System.Exception object that is thrown when the containing error statement is executed.
     /// </summary>
     public Expression ErrorNumber {
-      [DebuggerNonUserCode]
       get { return this.errorNumber; }
     }
     readonly Expression errorNumber;
@@ -1721,7 +1674,6 @@ namespace Microsoft.Cci.Ast {
     /// The expression.
     /// </summary>
     public Expression Expression {
-      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression expression;
@@ -1751,7 +1703,6 @@ namespace Microsoft.Cci.Ast {
     #region IExpressionStatement Members
 
     IExpression IExpressionStatement.Expression {
-      [DebuggerNonUserCode]
       get {
         Cast/*?*/ cast = this.Expression as Cast;
         if (cast != null) {
@@ -1818,7 +1769,6 @@ namespace Microsoft.Cci.Ast {
     /// Returns a list of statements that will initialize any instance fields that have explicit initial values.
     /// </summary>
     public IEnumerable<Statement> FieldInitializers {
-      [DebuggerNonUserCode]
       get {
         if (this.fieldInitializers == null)
           this.fieldInitializers = this.GetFieldInitializers();
@@ -1937,7 +1887,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the fixed statement.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -1946,7 +1895,6 @@ namespace Microsoft.Cci.Ast {
     /// A dummy block that provides a scope for the loop variable.
     /// </summary>
     protected BlockStatement DummyBlock {
-      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           BlockStatement block = this.CreateDummyBlock();
@@ -1965,7 +1913,6 @@ namespace Microsoft.Cci.Ast {
     /// A local declarations statement that declares one or more pointer typed variables to hold the fixed pointers.
     /// </summary>
     public LocalDeclarationsStatement FixedPointerDeclarators {
-      [DebuggerNonUserCode]
       get { return this.fixedPointerDeclarators; }
     }
     readonly LocalDeclarationsStatement fixedPointerDeclarators;
@@ -2045,7 +1992,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -2054,7 +2000,6 @@ namespace Microsoft.Cci.Ast {
     /// An epxression resulting in an enumerable collection of values (an object implementing System.Collections.IEnumerable).
     /// </summary>
     public Expression Collection {
-      [DebuggerNonUserCode]
       get { return this.collection; }
     }
     readonly Expression collection;
@@ -2095,7 +2040,6 @@ namespace Microsoft.Cci.Ast {
     /// A dummy block that provides a scope for the loop variable.
     /// </summary>
     protected BlockStatement DummyBlock {
-      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           LocalDefinition loopVar;
@@ -2145,7 +2089,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the foreach loop variable that holds the current element from the collection.
     /// </summary>
     public NameDeclaration VariableName {
-      [DebuggerNonUserCode]
       get { return this.variableName; }
     }
     readonly NameDeclaration variableName;
@@ -2154,7 +2097,6 @@ namespace Microsoft.Cci.Ast {
     /// The type of the foreach loop variable that holds the current element from the collection.
     /// </summary>
     public TypeExpression VariableType {
-      [DebuggerNonUserCode]
       get { return this.variableType; }
     }
     readonly TypeExpression variableType;
@@ -2163,7 +2105,6 @@ namespace Microsoft.Cci.Ast {
     /// The foreach loop variable that holds the current element from the collection.
     /// </summary>
     public ILocalDefinition Variable {
-      [DebuggerNonUserCode]
       get {
         if (this.variable == null) {
           if (this.DummyBlock == CodeDummy.Block) {
@@ -2179,12 +2120,10 @@ namespace Microsoft.Cci.Ast {
     #region IForEachStatement Members
 
     IStatement IForEachStatement.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     IExpression IForEachStatement.Collection {
-      [DebuggerNonUserCode]
       get { return this.Collection.ProjectAsIExpression(); }
     }
 
@@ -2218,7 +2157,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -2235,7 +2173,6 @@ namespace Microsoft.Cci.Ast {
     /// An expression that returns true if the loop variable falls inside the range.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get {
         Expression le = new LessThanOrEqual(this.VariableName, this.Range.EndValue, this.Range.EndValue.SourceLocation);
         le.SetContainingExpression(new DummyExpression(this.ContainingBlock, this.SourceLocation));
@@ -2267,7 +2204,6 @@ namespace Microsoft.Cci.Ast {
     /// A statement that increments the loop variable (by Step, if specified, otherwise by 1).
     /// </summary>
     public Statement Incrementer {
-      [DebuggerNonUserCode]
       get {
         ExpressionStatement result;
         if (this.Step != null)
@@ -2283,7 +2219,6 @@ namespace Microsoft.Cci.Ast {
     /// A statement that initializes the loop variable.
     /// </summary>
     public Statement Initializer {
-      [DebuggerNonUserCode]
       get {
         ExpressionStatement result = new ExpressionStatement(new Assignment(new TargetExpression(this.VariableName), this.Range.StartValue, this.Range.StartValue.SourceLocation));
         result.SetContainingBlock(this.ContainingBlock);
@@ -2295,7 +2230,6 @@ namespace Microsoft.Cci.Ast {
     /// An expression resulting in an enumerable range of numeric values.
     /// </summary>
     public Range Range {
-      [DebuggerNonUserCode]
       get { return this.range; }
     }
     readonly Range range;
@@ -2322,7 +2256,6 @@ namespace Microsoft.Cci.Ast {
     /// until the result is greater than or equal to the ending value of the Range. May be null.
     /// </summary>
     public Expression/*?*/ Step {
-      [DebuggerNonUserCode]
       get { return this.step; }
     }
     readonly Expression/*?*/ step;
@@ -2331,7 +2264,6 @@ namespace Microsoft.Cci.Ast {
     /// The for range loop variable that holds the number from the range.
     /// </summary>
     public SimpleName VariableName {
-      [DebuggerNonUserCode]
       get { return this.variableName; }
     }
     readonly SimpleName variableName;
@@ -2340,7 +2272,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public TypeExpression/*?*/ VariableTypeExpression {
-      [DebuggerNonUserCode]
       get { return this.variableTypeExpression; }
     }
     readonly TypeExpression/*?*/ variableTypeExpression;
@@ -2349,7 +2280,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public ITypeDefinition VariableType {
-      [DebuggerNonUserCode]
       get {
         if (this.VariableTypeExpression != null)
           return this.VariableTypeExpression.ResolvedType;
@@ -2397,7 +2327,6 @@ namespace Microsoft.Cci.Ast {
     /// The statements making up the body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -2420,7 +2349,6 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate as true or false, which determines if the loop is to continue.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -2429,7 +2357,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         Expression/*?*/ result = this.convertedCondition;
         if (result == null)
@@ -2457,7 +2384,6 @@ namespace Microsoft.Cci.Ast {
     /// A block that encloses the initializer statements, condition, increment statements and the for body.
     /// </summary>
     public BlockStatement ForBlock {
-      [DebuggerNonUserCode]
       get {
         if (this.forBlock == null) {
           BlockStatement forBlock = this.GetNewForBlock();
@@ -2486,7 +2412,6 @@ namespace Microsoft.Cci.Ast {
     /// Statements that are called after each loop cycle, typically to increment a counter.
     /// </summary>
     public IEnumerable<Statement> IncrementStatements {
-      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.incrementStatements.Count; i < n; i++)
           yield return this.incrementStatements[i] = this.incrementStatements[i].MakeCopyFor(this.ForBlock);
@@ -2498,7 +2423,6 @@ namespace Microsoft.Cci.Ast {
     /// The loop initialization statements.
     /// </summary>
     public IEnumerable<Statement> InitStatements {
-      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.initStatements.Count; i < n; i++)
           yield return this.initStatements[i] = this.initStatements[i].MakeCopyFor(this.ForBlock);
@@ -2535,24 +2459,20 @@ namespace Microsoft.Cci.Ast {
     #region IForStatement Members
 
     IStatement IForStatement.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     IExpression IForStatement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
     IEnumerable<IStatement> IForStatement.IncrementStatements {
-      [DebuggerNonUserCode]
       get {
         return IteratorHelper.GetConversionEnumerable<Statement, IStatement>(this.IncrementStatements);
       }
     }
 
     IEnumerable<IStatement> IForStatement.InitStatements {
-      [DebuggerNonUserCode]
       get {
         foreach (Statement statement in this.InitStatements) {
           LocalDeclarationsStatement/*?*/ locDeclStatement = statement as LocalDeclarationsStatement;
@@ -2637,7 +2557,6 @@ namespace Microsoft.Cci.Ast {
     /// The label of the statement at which the program execution is to continue.
     /// </summary>
     public SimpleName TargetLabel {
-      [DebuggerNonUserCode]
       get { return this.targetLabel; }
     }
     readonly SimpleName targetLabel;
@@ -2646,7 +2565,6 @@ namespace Microsoft.Cci.Ast {
     /// The statement at which the program execution is to continue.
     /// </summary>
     public ILabeledStatement TargetStatement {
-      [DebuggerNonUserCode]
       get {
         if (this.targetStatement == null)
           this.targetStatement = this.TargetLabel.ResolveAsTargetStatement();
@@ -2721,7 +2639,6 @@ namespace Microsoft.Cci.Ast {
     /// The case label (constant) of the switch statement case clause to which this statement transfers control to. May be null (for the default case).
     /// </summary>
     public Expression/*?*/ TargetCaseLabel {
-      [DebuggerNonUserCode]
       get { return this.targetCaseLabel; }
     }
     readonly Expression/*?*/ targetCaseLabel;
@@ -2730,7 +2647,6 @@ namespace Microsoft.Cci.Ast {
     /// The switch statement case clause to which this statement transfers control to.
     /// </summary>
     public ISwitchCase TargetCase {
-      [DebuggerNonUserCode]
       get {
         //TODO: find the most nested enclosing switch statement and search it for a matching case.
         return CodeDummy.SwitchCase;
@@ -2794,7 +2710,6 @@ namespace Microsoft.Cci.Ast {
     /// The label.
     /// </summary>
     public NameDeclaration Label {
-      [DebuggerNonUserCode]
       get { return this.label; }
     }
     readonly NameDeclaration label;
@@ -2814,7 +2729,6 @@ namespace Microsoft.Cci.Ast {
     /// The associated statement. Contains an empty statement if this is a stand-alone label.
     /// </summary>
     public Statement Statement {
-      [DebuggerNonUserCode]
       get { return this.statement; }
     }
     readonly Statement statement;
@@ -2834,12 +2748,10 @@ namespace Microsoft.Cci.Ast {
     #region ILabeledStatement Members
 
     IName ILabeledStatement.Label {
-      [DebuggerNonUserCode]
       get { return this.Label; }
     }
 
     IStatement ILabeledStatement.Statement {
-      [DebuggerNonUserCode]
       get { return this.statement; }
     }
 
@@ -2878,7 +2790,6 @@ namespace Microsoft.Cci.Ast {
     /// The block that contains the bound variable.
     /// </summary>
     public BlockStatement ContainingBlock {
-      [DebuggerNonUserCode]
       get {
         //^ assume this.containingBlock != null;
         return this.containingBlock;
@@ -2918,7 +2829,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the variable.
     /// </summary>
     public NameDeclaration Name {
-      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly NameDeclaration name;
@@ -2938,7 +2848,6 @@ namespace Microsoft.Cci.Ast {
     /// The type of the variable.
     /// </summary>
     public TypeExpression Type {
-      [DebuggerNonUserCode]
       get { return this.type; }
     }
     readonly TypeExpression type;
@@ -3057,7 +2966,6 @@ namespace Microsoft.Cci.Ast {
     /// The compile time value of the declaration, if it is a local constant.
     /// </summary>
     public CompileTimeConstant CompileTimeValue {
-      [DebuggerNonUserCode]
       get {
         if (this.compileTimeValue == null)
           this.compileTimeValue = this.GetCompileTimeValue();
@@ -3071,7 +2979,6 @@ namespace Microsoft.Cci.Ast {
     /// The statement that contains the local declaration.
     /// </summary>
     public LocalDeclarationsStatement ContainingLocalDeclarationsStatement {
-      [DebuggerNonUserCode]
       get {
         //^ assume this.containingLocalDeclarationsStatement != null;
         return this.containingLocalDeclarationsStatement;
@@ -3092,7 +2999,6 @@ namespace Microsoft.Cci.Ast {
     /// If this.InitialValue is null, a dummy expression is returned.
     /// </summary>
     public Expression ConvertedInitialValue {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedInitialValue == null)
           this.convertedInitialValue = this.ConvertInitialValue();
@@ -3188,7 +3094,6 @@ namespace Microsoft.Cci.Ast {
     /// The value, if any, to assign to the local as its initial value. May be null.
     /// </summary>
     public Expression/*?*/ InitialValue {
-      [DebuggerNonUserCode]
       get { return this.initialValue; }
     }
     readonly Expression/*?*/ initialValue;
@@ -3197,7 +3102,6 @@ namespace Microsoft.Cci.Ast {
     /// True if this local declaration is readonly and initialized with a compile time constant value.
     /// </summary>
     public bool IsConstant {
-      [DebuggerNonUserCode]
       get { return this.ContainingLocalDeclarationsStatement.IsConstant; }
     }
 
@@ -3205,7 +3109,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the value referenced by the local must not be moved by the actions of the garbage collector.
     /// </summary>
     public bool IsPinned {
-      [DebuggerNonUserCode]
       get { return (this.flags & 1) != 0; }
     }
 
@@ -3213,7 +3116,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the local contains a managed pointer (for example a reference to an object or a reference to a field of an object).
     /// </summary>
     public bool IsReference {
-      [DebuggerNonUserCode]
       get { return (this.flags & 2) != 0; }
     }
 
@@ -3229,7 +3131,6 @@ namespace Microsoft.Cci.Ast {
     /// The local variable that corresponds to this declaration. It is not valid to evaluate this property if the declaration is for a constant.
     /// </summary>
     public LocalDefinition LocalVariable {
-      [DebuggerNonUserCode]
       get {
         if (this.localVariable == null) {
           LocalDefinition def = CreateLocalDefinition();
@@ -3258,7 +3159,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the local.
     /// </summary>
     public NameDeclaration Name {
-      [DebuggerNonUserCode]
       get { return this.name; }
     }
     readonly NameDeclaration name;
@@ -3281,7 +3181,6 @@ namespace Microsoft.Cci.Ast {
     /// The type of the local.
     /// </summary>
     public virtual ITypeDefinition Type {
-      [DebuggerNonUserCode]
       get {
         return this.ContainingLocalDeclarationsStatement.Type;
       }
@@ -3290,7 +3189,6 @@ namespace Microsoft.Cci.Ast {
     #region ILocalDeclarationStatement Members
 
     IExpression/*?*/ ILocalDeclarationStatement.InitialValue {
-      [DebuggerNonUserCode]
       get {
         if (this.InitialValue == null) return null;
         return this.ConvertedInitialValue.ProjectAsIExpression();
@@ -3298,7 +3196,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     ILocalDefinition ILocalDeclarationStatement.LocalVariable {
-      [DebuggerNonUserCode]
       get { return this.LocalVariable; }
     }
 
@@ -3311,7 +3208,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IScope<LocalDeclaration> ContainingScope {
-      [DebuggerNonUserCode]
       get { return this.ContainingLocalDeclarationsStatement.ContainingBlock.Scope; }
     }
 
@@ -3320,7 +3216,6 @@ namespace Microsoft.Cci.Ast {
     #region INamedEntity Members
 
     IName INamedEntity.Name {
-      [DebuggerNonUserCode]
       get { return this.Name; }
     }
 
@@ -3384,7 +3279,6 @@ namespace Microsoft.Cci.Ast {
     /// The individual local declarations making up the statement. The collection has at least one element.
     /// </summary>
     public IEnumerable<LocalDeclaration> Declarations {
-      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.declarations.Count; i < n; i++)
           yield return this.declarations[i] = this.declarations[i].MakeCopyFor(this);
@@ -3443,7 +3337,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the local declarations are readonly and initialized with compile time constant values.
     /// </summary>
     public bool IsConstant {
-      [DebuggerNonUserCode]
       get { return (this.flags & 1) != 0; }
     }
 
@@ -3451,7 +3344,6 @@ namespace Microsoft.Cci.Ast {
     /// True if it is an error to assign to the local declarations after they have been initialized.
     /// </summary>
     public bool IsReadOnly {
-      [DebuggerNonUserCode]
       get { return (this.flags & 2) != 0; }
     }
 
@@ -3460,7 +3352,6 @@ namespace Microsoft.Cci.Ast {
     /// declarations must be inferred from the types of their initial values.
     /// </summary>
     public bool MayInferType {
-      [DebuggerNonUserCode]
       get { return (this.flags & 4) != 0; }
     }
 
@@ -3481,7 +3372,6 @@ namespace Microsoft.Cci.Ast {
     /// All of the locals declared by this statement are of this type.
     /// </summary>
     public ITypeDefinition Type {
-      [DebuggerNonUserCode]
       get {
         if (this.type == null)
           this.type = this.InferType();
@@ -3494,7 +3384,6 @@ namespace Microsoft.Cci.Ast {
     /// All of the locals declared by this statement are of the type to which this expression resolves.
     /// </summary>
     public TypeExpression/*?*/ TypeExpression {
-      [DebuggerNonUserCode]
       get { return this.typeExpression; }
     }
     readonly TypeExpression/*?*/ typeExpression;
@@ -3518,7 +3407,6 @@ namespace Microsoft.Cci.Ast {
     /// The compile time value of the definition, if it is a local constant.
     /// </summary>
     public CompileTimeConstant CompileTimeValue {
-      [DebuggerNonUserCode]
       get
         //^ requires this.IsConstant;
       {
@@ -3530,7 +3418,6 @@ namespace Microsoft.Cci.Ast {
     /// The block that contains (defines) this local variable or constant.
     /// </summary>
     public BlockStatement ContainingBlock {
-      [DebuggerNonUserCode]
       get { return this.LocalDeclaration.ContainingLocalDeclarationsStatement.ContainingBlock; }
     }
 
@@ -3538,7 +3425,6 @@ namespace Microsoft.Cci.Ast {
     /// Custom modifiers associated with local definition.
     /// </summary>
     public virtual IEnumerable<CustomModifier> CustomModifiers {
-      [DebuggerNonUserCode]
       get
         //^ requires this.IsModified;
       {
@@ -3550,7 +3436,6 @@ namespace Microsoft.Cci.Ast {
     /// True if this local definition is readonly and initialized with a compile time constant value.
     /// </summary>
     public bool IsConstant {
-      [DebuggerNonUserCode]
       get { return this.LocalDeclaration.IsConstant; }
     }
 
@@ -3558,7 +3443,6 @@ namespace Microsoft.Cci.Ast {
     /// The local definition has custom modifiers.
     /// </summary>
     public virtual bool IsModified {
-      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -3566,7 +3450,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the value referenced by the local must not be moved by the actions of the garbage collector.
     /// </summary>
     public bool IsPinned {
-      [DebuggerNonUserCode]
       get { return this.LocalDeclaration.IsPinned; }
     }
 
@@ -3574,7 +3457,6 @@ namespace Microsoft.Cci.Ast {
     /// True if the local contains a managed pointer (for example a reference to an object or reference to a field of an object).
     /// </summary>
     public bool IsReference {
-      [DebuggerNonUserCode]
       get { return this.LocalDeclaration.IsReference; }
     }
 
@@ -3590,7 +3472,6 @@ namespace Microsoft.Cci.Ast {
     /// The name of the local.
     /// </summary>
     public IName Name {
-      [DebuggerNonUserCode]
       get { return this.LocalDeclaration.Name; }
     }
 
@@ -3598,21 +3479,18 @@ namespace Microsoft.Cci.Ast {
     /// The type of the local.
     /// </summary>
     public ITypeReference Type {
-      [DebuggerNonUserCode]
       get { return this.LocalDeclaration.Type; }
     }
 
     #region ILocalDefinition Members
 
     IMetadataConstant ILocalDefinition.CompileTimeValue {
-      [DebuggerNonUserCode]
       get {
         return this.CompileTimeValue;
       }
     }
 
     IEnumerable<ICustomModifier> ILocalDefinition.CustomModifiers {
-      [DebuggerNonUserCode]
       get
         //^^ requires this.IsModified;
       {
@@ -3622,7 +3500,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.LocalDeclaration.SourceLocation); }
     }
 
@@ -3661,7 +3538,6 @@ namespace Microsoft.Cci.Ast {
     /// The statement to execute inside the try body after the monitor has been entered.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -3692,7 +3568,6 @@ namespace Microsoft.Cci.Ast {
     /// The monitor object (which gets locked when the monitor is entered and unlocked in the finally clause).
     /// </summary>
     public Expression Guard {
-      [DebuggerNonUserCode]
       get { return this.guard; }
     }
     readonly Expression guard;
@@ -3724,12 +3599,10 @@ namespace Microsoft.Cci.Ast {
     #region ILockStatement Members
 
     IStatement ILockStatement.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     IExpression ILockStatement.Guard {
-      [DebuggerNonUserCode]
       get { return this.Guard.ProjectAsIExpression(); }
     }
 
@@ -3777,7 +3650,6 @@ namespace Microsoft.Cci.Ast {
     /// A goto statement that is invoked if an exception occurs.
     /// </summary>
     public GotoStatement Goto {
-      [DebuggerNonUserCode]
       get { return this.@goto; }
     }
     readonly GotoStatement @goto;
@@ -3842,7 +3714,6 @@ namespace Microsoft.Cci.Ast {
     /// The arguments to pass to the event delegate.
     /// </summary>
     public IEnumerable<Expression> Arguments {
-      [DebuggerNonUserCode]
       get { return this.arguments; }
     }
     readonly IEnumerable<Expression> arguments;
@@ -3873,7 +3744,6 @@ namespace Microsoft.Cci.Ast {
     /// The event to raise.
     /// </summary>
     public SimpleName EventToRaise {
-      [DebuggerNonUserCode]
       get { return this.eventToRaise; }
     }
     readonly SimpleName eventToRaise;
@@ -3882,7 +3752,6 @@ namespace Microsoft.Cci.Ast {
     /// The resulting call expression. This is derived from EventToRaise and Arguments.
     /// </summary>
     public IMethodCall MethodCall {
-      [DebuggerNonUserCode]
       get {
         //TODO: implement this
         return CodeDummy.MethodCall;
@@ -3926,7 +3795,6 @@ namespace Microsoft.Cci.Ast {
     /// Target location where the newly allocated array will be stored (and whose existing element values may optionally be copied to the newly allocated array).
     /// </summary>
     public AddressableExpression Target {
-      [DebuggerNonUserCode]
       get { return this.target; }
     }
     readonly AddressableExpression target;
@@ -3935,7 +3803,6 @@ namespace Microsoft.Cci.Ast {
     /// An expression providing the new dimensions of the array to be reallocated.
     /// </summary>
     public CreateArray Value {
-      [DebuggerNonUserCode]
       get { return this.value; }
     }
     readonly CreateArray value;
@@ -3986,7 +3853,6 @@ namespace Microsoft.Cci.Ast {
     /// The locations and new dimensions of the arrays to reallocate.
     /// </summary>
     public IEnumerable<RedimensionClause> Arrays {
-      [DebuggerNonUserCode]
       get { return this.arrays; }
     }
     readonly IEnumerable<RedimensionClause> arrays;
@@ -3995,7 +3861,6 @@ namespace Microsoft.Cci.Ast {
     /// If true, the element values must be copied from the existing arrays at the target expressions to the newly allocated arrays.
     /// </summary>
     public bool PreserveExistingElementValues {
-      [DebuggerNonUserCode]
       get { return this.preserveExistingElementValues; }
     }
     readonly bool preserveExistingElementValues;
@@ -4045,7 +3910,6 @@ namespace Microsoft.Cci.Ast {
     /// The event from which to remove the event-handler delegate.
     /// </summary>
     public Expression Event {
-      [DebuggerNonUserCode]
       get { return this.@event; }
     }
     readonly Expression @event;
@@ -4054,7 +3918,6 @@ namespace Microsoft.Cci.Ast {
     /// The event-handler delegate to remove from the event
     /// </summary>
     public Expression Handler {
-      [DebuggerNonUserCode]
       get { return this.handler; }
     }
     readonly Expression handler;
@@ -4107,7 +3970,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the resource use statement.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -4148,7 +4010,6 @@ namespace Microsoft.Cci.Ast {
     /// A dummy block that provides a scope for the acquired resources.
     /// </summary>
     protected BlockStatement DummyBlock {
-      [DebuggerNonUserCode]
       get {
         if (this.dummyBlock == null) {
           BlockStatement block = this.CreateDummyBlock();
@@ -4168,7 +4029,6 @@ namespace Microsoft.Cci.Ast {
     /// An expression that results in a used resource, or a local declaration that is intialized with one or more used resources.
     /// </summary>
     public Statement ResourceAcquisitions {
-      [DebuggerNonUserCode]
       get
         //^ ensures result is LocalDeclarationsStatement || result is ExpressionStatement;
       {
@@ -4192,12 +4052,10 @@ namespace Microsoft.Cci.Ast {
     #region IResourceUseStatement Members
 
     IStatement IResourceUseStatement.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     IStatement IResourceUseStatement.ResourceAcquisitions {
-      [DebuggerNonUserCode]
       get { return this.ResourceAcquisitions; }
     }
 
@@ -4246,7 +4104,6 @@ namespace Microsoft.Cci.Ast {
     /// The label of the statement at which to resume normal program execution.
     /// </summary>
     public SimpleName TargetLabel {
-      [DebuggerNonUserCode]
       get { return this.targetLabel; }
     }
     readonly SimpleName targetLabel;
@@ -4429,7 +4286,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Expression/*?*/ ConvertedExpression {
-      [DebuggerNonUserCode]
       get {
         if (this.expression == null) return null;
         Expression/*?*/ result = this.convertedExpression;
@@ -4467,7 +4323,6 @@ namespace Microsoft.Cci.Ast {
     /// The return value, if any.
     /// </summary>
     public Expression/*?*/ Expression {
-      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression/*?*/ expression;
@@ -4499,7 +4354,6 @@ namespace Microsoft.Cci.Ast {
     #region IReturnStatement Members
 
     IExpression/*?*/ IReturnStatement.Expression {
-      [DebuggerNonUserCode]
       get {
         if (this.ConvertedExpression == null) return null;
         return this.ConvertedExpression.ProjectAsIExpression();
@@ -4536,7 +4390,6 @@ namespace Microsoft.Cci.Ast {
     /// The compilation that contains this statement.
     /// </summary>
     public Compilation Compilation {
-      [DebuggerNonUserCode]
       get {
         return this.CompilationPart.Compilation;
       }
@@ -4546,7 +4399,6 @@ namespace Microsoft.Cci.Ast {
     /// The compilation part that contains this statement.
     /// </summary>
     public CompilationPart CompilationPart {
-      [DebuggerNonUserCode]
       get {
         return this.ContainingBlock.CompilationPart;
       }
@@ -4562,7 +4414,6 @@ namespace Microsoft.Cci.Ast {
     /// The block in which this statement is nested. If the statement is the outer most block of a method, then the containing block is itself.
     /// </summary>
     public BlockStatement ContainingBlock {
-      [DebuggerNonUserCode]
       get {
         //^ assume this.containingBlock != null;
         return this.containingBlock;
@@ -4587,7 +4438,6 @@ namespace Microsoft.Cci.Ast {
     /// An instance of a language specific class containing methods that are of general utility. 
     /// </summary>
     public LanguageSpecificCompilationHelper Helper {
-      [DebuggerNonUserCode]
       get { return this.ContainingBlock.CompilationPart.Helper; }
     }
 
@@ -4605,7 +4455,6 @@ namespace Microsoft.Cci.Ast {
     /// It is mutuable, in as much as it is possible to add new names to the table.
     /// </summary>
     public INameTable NameTable {
-      [DebuggerNonUserCode]
       get { return this.Compilation.NameTable; }
     }
 
@@ -4614,7 +4463,6 @@ namespace Microsoft.Cci.Ast {
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
     public PlatformType PlatformType {
-      [DebuggerNonUserCode]
       get { return this.Compilation.PlatformType; }
     }
 
@@ -4700,7 +4548,6 @@ namespace Microsoft.Cci.Ast {
     /// An instance of a language specific class containing methods that are of general utility. 
     /// </summary>
     public LanguageSpecificCompilationHelper Helper {
-      [DebuggerNonUserCode]
       get { return this.ContainingSwitchStatement.Helper; }
     }
 
@@ -4709,7 +4556,6 @@ namespace Microsoft.Cci.Ast {
     /// The statements representing this switch case.
     /// </summary>
     public IEnumerable<Statement> Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly IEnumerable<Statement> body;
@@ -4734,7 +4580,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Expression/*?*/ ConvertedExpression {
-      [DebuggerNonUserCode]
       get {
         if (this.expression == null) return null;
         Expression/*?*/ result = this.convertedExpression;
@@ -4758,7 +4603,6 @@ namespace Microsoft.Cci.Ast {
     /// The switch statement that branches to this switch case.
     /// </summary>
     public SwitchStatement ContainingSwitchStatement {
-      [DebuggerNonUserCode]
       get {
         //^ assume this.containingSwitchStatement != null;
         return this.containingSwitchStatement;
@@ -4784,7 +4628,6 @@ namespace Microsoft.Cci.Ast {
     /// An expression that is expected to have a compile time constant value of the same type as the switch expression.
     /// </summary>
     public Expression Expression {
-      [DebuggerNonUserCode]
       get
         //^ requires !this.IsDefault;
       {
@@ -4810,7 +4653,6 @@ namespace Microsoft.Cci.Ast {
     /// True if this case will be branched to for all values where no other case is applicable. Only of of these is legal per switch statement.
     /// </summary>
     public bool IsDefault {
-      [DebuggerNonUserCode]
       get { return this.expression == null; }
     }
 
@@ -4843,7 +4685,6 @@ namespace Microsoft.Cci.Ast {
     #region ISwitchCase Members
 
     IEnumerable<IStatement> ISwitchCase.Body {
-      [DebuggerNonUserCode]
       get {
         foreach (Statement statement in this.Body) {
           LocalDeclarationsStatement/*?*/ locDeclStatement = statement as LocalDeclarationsStatement;
@@ -4858,7 +4699,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     ICompileTimeConstant ISwitchCase.Expression {
-      [DebuggerNonUserCode]
       get
         //^^ requires !this.IsDefault;
       {
@@ -4871,7 +4711,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     bool ISwitchCase.IsDefault {
-      [DebuggerNonUserCode]
       get { return this.IsDefault; }
     }
 
@@ -4911,7 +4750,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public BlockStatement Block {
-      [DebuggerNonUserCode]
       get {
         if (this.block == null) {
           List<Statement> statements = new List<Statement>(1);
@@ -4930,7 +4768,6 @@ namespace Microsoft.Cci.Ast {
     /// The switch cases.
     /// </summary>
     public IEnumerable<SwitchCase> Cases {
-      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = cases.Count; i < n; i++)
           yield return cases[i] = cases[i].MakeShallowCopyFor(this);
@@ -4953,7 +4790,6 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate in order to determine with switch case to branch to, after conversion to a switchable type.
     /// </summary>
     public Expression ConvertedExpression {
-      [DebuggerNonUserCode]
       get {
         if (this.Expression.HasErrors) return this.Expression;
         ITypeDefinition switchableType = this.GetSwitchableType(this.Expression.Type);
@@ -5006,7 +4842,6 @@ namespace Microsoft.Cci.Ast {
     /// The expression to evaluate in order to determine with switch case to branch to.
     /// </summary>
     public Expression Expression {
-      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression expression;
@@ -5037,12 +4872,10 @@ namespace Microsoft.Cci.Ast {
     #region ISwitchStatement Members
 
     IEnumerable<ISwitchCase> ISwitchStatement.Cases {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetConversionEnumerable<SwitchCase, ISwitchCase>(this.Cases); }
     }
 
     IExpression ISwitchStatement.Expression {
-      [DebuggerNonUserCode]
       get { return this.Expression.ProjectAsIExpression(); }
     }
 
@@ -5100,7 +4933,6 @@ namespace Microsoft.Cci.Ast {
     /// The exception to throw.
     /// </summary>
     public Expression Exception {
-      [DebuggerNonUserCode]
       get { return this.exception; }
     }
     readonly Expression exception;
@@ -5130,7 +4962,6 @@ namespace Microsoft.Cci.Ast {
     #region IThrowStatement Members
 
     IExpression IThrowStatement.Exception {
-      [DebuggerNonUserCode]
       get { return this.Exception.ProjectAsIExpression(); }
     }
 
@@ -5201,7 +5032,6 @@ namespace Microsoft.Cci.Ast {
     /// The catch clauses.
     /// </summary>
     public IEnumerable<CatchClause> CatchClauses {
-      [DebuggerNonUserCode]
       get {
         for (int i = 0, n = this.catchClauses.Count; i < n; i++)
           yield return this.catchClauses[i] = this.catchClauses[i].MakeCopyFor(this.ContainingBlock);
@@ -5227,7 +5057,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the finally clause, if any. May be null.
     /// </summary>
     public BlockStatement/*?*/ FinallyBody {
-      [DebuggerNonUserCode]
       get { return this.finallyBody; }
     }
     readonly BlockStatement/*?*/ finallyBody;
@@ -5237,7 +5066,6 @@ namespace Microsoft.Cci.Ast {
     /// There is no C# equivalent of a fault clause. It is just like a finally clause, but is only invoked if an exception occurred.
     /// </summary>
     public BlockStatement/*?*/ FaultBody {
-      [DebuggerNonUserCode]
       get { return this.faultBody; }
     }
     readonly BlockStatement/*?*/ faultBody;
@@ -5246,7 +5074,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the try clause.
     /// </summary>
     public BlockStatement TryBody {
-      [DebuggerNonUserCode]
       get { return this.tryBody; }
     }
     readonly BlockStatement tryBody;
@@ -5266,22 +5093,18 @@ namespace Microsoft.Cci.Ast {
     #region ITryCatchFinallyStatement Members
 
     IEnumerable<ICatchClause> ITryCatchFinallyStatement.CatchClauses {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetConversionEnumerable<CatchClause, ICatchClause>(this.CatchClauses); }
     }
 
     IBlockStatement/*?*/ ITryCatchFinallyStatement.FinallyBody {
-      [DebuggerNonUserCode]
       get { return this.FinallyBody; }
     }
 
     IBlockStatement/*?*/ ITryCatchFinallyStatement.FaultBody {
-      [DebuggerNonUserCode]
       get { return this.FaultBody; }
     }
 
     IBlockStatement ITryCatchFinallyStatement.TryBody {
-      [DebuggerNonUserCode]
       get { return this.TryBody; }
     }
 
@@ -5309,7 +5132,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -5342,7 +5164,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition to evaluate as false or true;
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -5351,7 +5172,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         Expression/*?*/ convertedCondition = this.convertedCondition;
         if (convertedCondition == null)
@@ -5409,7 +5229,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the loop.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -5428,7 +5247,6 @@ namespace Microsoft.Cci.Ast {
     /// The condition to evaluate as false or true.
     /// </summary>
     public Expression Condition {
-      [DebuggerNonUserCode]
       get { return this.condition; }
     }
     readonly Expression condition;
@@ -5437,7 +5255,6 @@ namespace Microsoft.Cci.Ast {
     /// IsTrue(this.Condition)
     /// </summary>
     public Expression ConvertedCondition {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedCondition == null)
           this.convertedCondition = new IsTrue(this.Condition);
@@ -5488,12 +5305,10 @@ namespace Microsoft.Cci.Ast {
     #region IWhileDoStatement Members
 
     IStatement IWhileDoStatement.Body {
-      [DebuggerNonUserCode]
       get { return this.Body; }
     }
 
     IExpression IWhileDoStatement.Condition {
-      [DebuggerNonUserCode]
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
     }
 
@@ -5522,7 +5337,6 @@ namespace Microsoft.Cci.Ast {
     /// The body of the with.
     /// </summary>
     public Statement Body {
-      [DebuggerNonUserCode]
       get { return this.body; }
     }
     readonly Statement body;
@@ -5553,7 +5367,6 @@ namespace Microsoft.Cci.Ast {
     /// The expression that supplies the implicit qualifier.
     /// </summary>
     public Expression ImplicitQualifier {
-      [DebuggerNonUserCode]
       get { return this.implicitQualifier; }
     }
     readonly Expression implicitQualifier;
@@ -5671,7 +5484,6 @@ namespace Microsoft.Cci.Ast {
     /// Returns this.Expression after implicit conversion to this.GetIteratorElementType().
     /// </summary>
     public Expression ConvertedExpression {
-      [DebuggerNonUserCode]
       get {
         if (this.convertedExpression == null) {
           ITypeDefinition iteratorElementType = this.GetIteratorElementType();
@@ -5686,7 +5498,6 @@ namespace Microsoft.Cci.Ast {
     /// The value to yield.
     /// </summary>
     public Expression Expression {
-      [DebuggerNonUserCode]
       get { return this.expression; }
     }
     readonly Expression expression;
@@ -5739,7 +5550,6 @@ namespace Microsoft.Cci.Ast {
     #region IYieldReturnStatement Members
 
     IExpression IYieldReturnStatement.Expression {
-      [DebuggerNonUserCode]
       get { return this.ConvertedExpression.ProjectAsIExpression(); }
     }
 

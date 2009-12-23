@@ -82,7 +82,6 @@ namespace Microsoft.Cci.Ast {
     /// conversions to apply to the arguments.
     /// </summary>
     public BuiltinMethods BuiltinMethods {
-      [DebuggerNonUserCode]
       get {
         if (this.builtinMethods == null) {
           lock (GlobalLock.LockingObject) {
@@ -159,7 +158,6 @@ namespace Microsoft.Cci.Ast {
     /// The class that contains any global variables and funcions.
     /// </summary>
     public GlobalsClass GlobalsClass {
-      [DebuggerNonUserCode]
       get {
         if (this.globalsClass == null)
           this.globalsClass = new GlobalsClass(this);
@@ -184,7 +182,6 @@ namespace Microsoft.Cci.Ast {
     /// An object that represents the (mutable) environment that hosts the compiler that produced this Compilation instance.
     /// </summary>
     public ISourceEditHost HostEnvironment {
-      [DebuggerNonUserCode]
       get { return this.hostEnvironment; }
     }
     readonly ISourceEditHost hostEnvironment;
@@ -207,7 +204,6 @@ namespace Microsoft.Cci.Ast {
     /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops. 
     /// </summary>
     public SourceContractProvider ContractProvider {
-      [DebuggerNonUserCode]
       get {
         if (this.contractProvider == null) {
           lock (this) {
@@ -239,7 +235,6 @@ namespace Microsoft.Cci.Ast {
     /// An object that can provide information about the local scopes of a method.
     /// </summary>
     public ILocalScopeProvider LocalScopeProvider {
-      [DebuggerNonUserCode]
       get {
         if (this.localScopeProvider == null)
           this.localScopeProvider = this.GetLocalScopeProvider();
@@ -252,7 +247,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public ModuleClass ModuleClass {
-      [DebuggerNonUserCode]
       get {
         if (this.moduleClass == null)
           this.moduleClass = new ModuleClass(this);
@@ -266,7 +260,6 @@ namespace Microsoft.Cci.Ast {
     /// It is mutuable, in as much as it is possible to add new names to the table.
     /// </summary>
     public INameTable NameTable {
-      [DebuggerNonUserCode]
       get {
         return this.HostEnvironment.NameTable;
       }
@@ -276,7 +269,6 @@ namespace Microsoft.Cci.Ast {
     /// Compilation options, for example whether or not checked arithmetic is the default.
     /// </summary>
     public FrameworkOptions Options {
-      [DebuggerNonUserCode]
       get { return this.options; }
     }
     readonly FrameworkOptions options;
@@ -285,7 +277,6 @@ namespace Microsoft.Cci.Ast {
     /// A collection of ASTs, each of which corresponds to source input to the compilation.
     /// </summary>
     public IEnumerable<CompilationPart> Parts {
-      [DebuggerNonUserCode]
       get {
         if (this.parts == null) {
           lock (GlobalLock.LockingObject) {
@@ -310,7 +301,6 @@ namespace Microsoft.Cci.Ast {
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
     public PlatformType PlatformType {
-      [DebuggerNonUserCode]
       get {
         PlatformType/*?*/ platformType = this.platformType;
         if (platformType == null) {
@@ -331,7 +321,6 @@ namespace Microsoft.Cci.Ast {
     /// metadata in a PE file, as well as compiled method bodies that corresponds to the instructions streams in a PE file.
     /// </summary>
     public Unit Result {
-      [DebuggerNonUserCode]
       get { return this.result; }
     }
     readonly Unit result;
@@ -341,7 +330,6 @@ namespace Microsoft.Cci.Ast {
     /// In this case, it is primarily needed to map IDerivedSourceLocations and IIncludedSourceLocations to IPrimarySourceLocations.
     /// </summary>
     public ISourceLocationProvider SourceLocationProvider {
-      [DebuggerNonUserCode]
       get {
         if (this.sourceLocationProvider == null)
           this.sourceLocationProvider = this.GetSourceLocationProvider();
@@ -370,7 +358,6 @@ namespace Microsoft.Cci.Ast {
     /// A set of units comprised by the result of the compilation along with all of the units referenced by this compilation.
     /// </summary>
     public UnitSet UnitSet {
-      [DebuggerNonUserCode]
       get {
         if (this.unitSet == null) {
           lock (GlobalLock.LockingObject) {
@@ -398,19 +385,16 @@ namespace Microsoft.Cci.Ast {
     #region ICompilation Members
 
     IPlatformType ICompilation.PlatformType {
-      [DebuggerNonUserCode]
       get { return this.PlatformType; }
     }
 
     IUnit ICompilation.Result {
-      [DebuggerNonUserCode]
       get {
         return this.Result;
       }
     }
 
     IUnitSet ICompilation.UnitSet {
-      [DebuggerNonUserCode]
       get { return this.UnitSet; }
     }
 
@@ -474,7 +458,6 @@ namespace Microsoft.Cci.Ast {
     /// The compilation to which this part belongs.
     /// </summary>
     public Compilation Compilation {
-      [DebuggerNonUserCode]
       get { return this.Helper.Compilation; }
     }
 
@@ -489,7 +472,6 @@ namespace Microsoft.Cci.Ast {
     /// A class that contains global variables and methods as its members.
     /// </summary>
     public GlobalDeclarationContainerClass GlobalDeclarationContainer {
-      [DebuggerNonUserCode]
       get { return this.globalDeclarationContainer; }
     }
     readonly GlobalDeclarationContainerClass globalDeclarationContainer;
@@ -510,7 +492,6 @@ namespace Microsoft.Cci.Ast {
     /// An instance of a language specific class containing methods that are of general utility. 
     /// </summary>
     public LanguageSpecificCompilationHelper Helper {
-      [DebuggerNonUserCode]
       get { return this.helper; }
     }
     readonly LanguageSpecificCompilationHelper helper;
@@ -533,7 +514,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public virtual RootNamespaceDeclaration RootNamespace {
       //^ [MustOverride] //TODO Boogie: perhaps MustOverride should also mean that the override may not call back? If not, an additional attribute is needed.
-      [DebuggerNonUserCode]
       get {
         //^ assume this.rootNamespace != null; //This assumes that the derived class will not call back here
         return this.rootNamespace;
@@ -924,7 +904,6 @@ namespace Microsoft.Cci.Ast {
     /// Call this only when holding a lock on GlobalLock.LockingObject. Use the result only while holding the lock.
     /// </summary>
     internal Dictionary<MethodDeclaration, IPlatformInvokeInformation> PlatformInvokeInformationTable {
-      [DebuggerNonUserCode]
       get {
         if (this.platformInvokeInformationTable == null)
           this.platformInvokeInformationTable = new Dictionary<MethodDeclaration, IPlatformInvokeInformation>();
@@ -986,7 +965,6 @@ namespace Microsoft.Cci.Ast {
     /// The source location that should be contained by namespace or type member, if any, that this instance is going to try and find.
     /// </summary>
     protected ISourceLocation LocationToContain {
-      [DebuggerNonUserCode]
       get { return this.locationToContain; }
     }
     private ISourceLocation locationToContain;
@@ -996,7 +974,6 @@ namespace Microsoft.Cci.Ast {
     /// May be null, in which case either no such member exists, or this visitor has not yet been dispatched on a member that contains the location.
     /// </summary>
     public INamespaceDeclarationMember/*?*/ MostNestedContainingNamespaceDeclarationMember {
-      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
       {
@@ -1012,7 +989,6 @@ namespace Microsoft.Cci.Ast {
     /// May be null, in which case either no such member exists, or this visitor has not yet been dispatched on a member that contains the location.
     /// </summary>
     public ITypeDeclarationMember/*?*/ MostNestedContainingTypeDeclarationMember {
-      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
       {
@@ -1107,7 +1083,6 @@ namespace Microsoft.Cci.Ast {
     /// The compilation for which this helper exists. In general, a single compilation instance can have multiple language specific compilation helpers.
     /// </summary>
     public Compilation Compilation {
-      [DebuggerNonUserCode]
       get { return this.compilation; }
     }
     readonly Compilation compilation;
@@ -1822,7 +1797,6 @@ namespace Microsoft.Cci.Ast {
     /// Returns true if a value of an enumeration type can be implicitly converted to an integer type.
     /// </summary>
     protected virtual bool ImplicitEnumToIntegerConversionIsAllowed {
-      [DebuggerNonUserCode]
       get { return false; }
     }
 
@@ -2191,7 +2165,6 @@ namespace Microsoft.Cci.Ast {
     /// A string identifying the specific language for which this is a compilation helper.
     /// </summary>
     public string LanguageName {
-      [DebuggerNonUserCode]
       get { return this.languageName; }
     }
     readonly string languageName;
@@ -2429,7 +2402,6 @@ namespace Microsoft.Cci.Ast {
     /// It is mutuable, in as much as it is possible to add new names to the table.
     /// </summary>
     public INameTable NameTable {
-      [DebuggerNonUserCode]
       get { return this.Compilation.NameTable; }
     }
 
@@ -2884,7 +2856,6 @@ namespace Microsoft.Cci.Ast {
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
     public PlatformType PlatformType {
-      [DebuggerNonUserCode]
       get { return this.Compilation.PlatformType; }
     }
 
@@ -3040,7 +3011,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     protected virtual bool ReportAreYouMissingACast {
-      [DebuggerNonUserCode]
       get { return true; }
     }
 
@@ -3154,7 +3124,6 @@ namespace Microsoft.Cci.Ast {
     /// A language specific object that formats type member signatures according to syntax of the language.
     /// </summary>
     SignatureFormatter SignatureFormatter {
-      [DebuggerNonUserCode]
       get {
         if (this.signatureFormatter == null)
           this.signatureFormatter = this.CreateSignatureFormatter();
@@ -3189,7 +3158,6 @@ namespace Microsoft.Cci.Ast {
     /// A language specific object that formats type names according to syntax of the language.
     /// </summary>
     TypeNameFormatter TypeNameFormatter {
-      [DebuggerNonUserCode]
       get {
         if (this.typeNameFormatter == null)
           this.typeNameFormatter = this.CreateTypeNameFormatter();
@@ -3510,7 +3478,6 @@ namespace Microsoft.Cci.Ast {
     /// The collection of member instances that are members of this scope.
     /// </summary>
     public IEnumerable<MemberType> Members {
-      [DebuggerNonUserCode]
       get { return this.members; }
     }
     IEnumerable<MemberType> members;
@@ -3550,7 +3517,6 @@ namespace Microsoft.Cci.Ast {
     /// A collection with exactly one element, namely this.SourceLocation.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      [DebuggerNonUserCode]
       get { return IteratorHelper.GetSingletonEnumerable<ILocation>(this.SourceLocation); }
     }
 
@@ -3559,7 +3525,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     public ISourceLocation SourceLocation {
-      [DebuggerNonUserCode]
       get {
         SourceLocationBuilder/*?*/ bldr = this.sourceLocation as SourceLocationBuilder;
         if (bldr != null)
@@ -7692,7 +7657,6 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     public Statement/*?*/ MostNestedStatement {
-      [DebuggerNonUserCode]
       get
         //^ ensures result == null || result.SourceLocation.Contains(this.LocationToContain);
       {
