@@ -816,8 +816,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
-      if (this.ConvertedInitializer != null)
-        result |= this.ConvertedInitializer.HasErrors;
+      if (this.Initializer != null)
+        if (this.Initializer.HasErrors)
+          result = true;
+        else if (this.ConvertedInitializer != null && this.ConvertedInitializer.HasErrors) {
+          this.Helper.ReportFailedImplicitConversion(this.Initializer, this.Type.ResolvedType);
+          result = true;
+        }
       // TODO ... more?
       return result;
     }
