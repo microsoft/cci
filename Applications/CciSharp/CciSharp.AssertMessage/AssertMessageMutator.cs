@@ -11,26 +11,28 @@ using Microsoft.Cci.MutableCodeModel;
 using System.Diagnostics.Contracts;
 using CciSharp.Framework;
 
-namespace CciSharp.AssertMessage
+namespace CciSharp.Mutators
 {
+    /// <summary>
+    /// This mutator takes Xunit' Assert.True(condition) method calls and turns them
+    /// into Assert.True(condition, "condition").
+    /// </summary>
     public sealed class AssertMessageMutator
         : CcsMutatorBase
     {
-        readonly IMethodReference isTrueBooleanMethod;
-        readonly IMethodReference isTrueBooleanStringMethod;
+        readonly Dictionary<uint, IMethodReference> assertMethods;
+
         public AssertMessageMutator(ICcsHost host)
             : base(host, "AssertMessage", 5)
         {
             var testTypes = new TestType(host);
-            this.isTrueBooleanMethod = testTypes.IsTrueBooleanMethod;
-            this.isTrueBooleanStringMethod = testTypes.IsTrueBooleanStringMethod;
+            this.assertMethods = testTypes.Methods;
         }
 
         [ContractInvariantMethod]
         void ObjectInvariant()
         {
-            Contract.Invariant(this.isTrueBooleanMethod != null);
-            Contract.Invariant(this.isTrueBooleanStringMethod != null);
+            Contract.Invariant(this.assertMethods != null);
         }
 
         PdbReader pdbReader;
@@ -45,10 +47,10 @@ namespace CciSharp.AssertMessage
             return base.Visit(module);
         }
 
-        const string AssertTrueString = "Assert.True(";
         public override IExpression Visit(MethodCall methodCall)
         {
-            if (methodCall.MethodToCall.InternedKey == this.isTrueBooleanMethod.InternedKey)
+            IMethodReference assertStringMethod;
+            if (this.assertMethods.TryGetValue(methodCall.MethodToCall.InternedKey, out assertStringMethod))
             {
                 // we've got a winner here.
                 var condition = methodCall.Arguments[0];
@@ -60,14 +62,18 @@ namespace CciSharp.AssertMessage
                         sb.Append(primarySourceLocation.Source);
 
                 var message = sb.ToString();
-                // trim away Assert.True(
-                if (message.StartsWith(AssertTrueString))
-                    message = message.Substring(AssertTrueString.Length);
+                var methodName = assertStringMethod.Name.Value + "(";
+                // HACK: trim away Assert.True(
+                int index;
+                if ((index = message.IndexOf(methodName)) > -1)
+                    message = message.Substring(methodName.Length);
+                // HACK: trim away the parenthesis
                 if (message.EndsWith(");"))
                     message = message.Substring(0, message.Length - 2);
+
                 var newCall = new MethodCall
                 {
-                    MethodToCall = this.isTrueBooleanStringMethod,
+                    MethodToCall = assertStringMethod,
                     Arguments = new List<IExpression>(new IExpression[] { condition, new CompileTimeConstant { Value = message } })
                 };
                 return newCall;
@@ -76,34 +82,34 @@ namespace CciSharp.AssertMessage
             return methodCall;
         }
 
+        // TODO: why do I need a platform type here?
         class TestType : PlatformType
         {
-            readonly INamespaceTypeReference assertType;
-            readonly IMethodReference isTrueBooleanMethod;
-            readonly IMethodReference isTrueBooleanStringMethod;
-
+            public readonly Dictionary<uint, IMethodReference> Methods;
+            
             public TestType(IMetadataHost host)
                 : base(host)
             {
                 var unitTestModule = (IModule)host.LoadUnitFrom(typeof(Xunit.Assert).Assembly.Location);
                 var unitTestIdentity = unitTestModule.ContainingAssembly;
-                this.assertType = this.CreateReference(unitTestIdentity, "Xunit", "Assert");
+                var assertType = this.CreateReference(unitTestIdentity, "Xunit", "Assert");
                 var platformType = host.PlatformType;
-                var isTrueName = host.NameTable.GetNameFor("True");
                 var booleanType = platformType.SystemBoolean;
                 var stringType = platformType.SystemString;
-                this.isTrueBooleanMethod = new Microsoft.Cci.MethodReference(host, this.assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isTrueName, 0, booleanType);
-                this.isTrueBooleanStringMethod = new Microsoft.Cci.MethodReference(host, this.assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isTrueName, 0, booleanType, stringType);
-            }
 
-            public IMethodReference IsTrueBooleanMethod
-            {
-                get { return this.isTrueBooleanMethod; }
-            }
+                this.Methods = new Dictionary<uint, IMethodReference>();
 
-            public IMethodReference IsTrueBooleanStringMethod
-            {
-                get { return this.isTrueBooleanStringMethod; }
+                var isTrueName = host.NameTable.GetNameFor("True");
+                this.Methods.Add(
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isTrueName, 0, booleanType).InternedKey,
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isTrueName, 0, booleanType, stringType)
+                    );
+
+                var isFalseName = host.NameTable.GetNameFor("False");
+                this.Methods.Add(
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isFalseName, 0, booleanType).InternedKey,
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isFalseName, 0, booleanType, stringType)
+                    );
             }
         }
     }

@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}</ProjectGuid>
+    <ProjectGuid>{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CciSharp.Mutators</RootNamespace>
-    <AssemblyName>CciSharp.AssertMessage</AssemblyName>
+    <AssemblyName>CciSharp.ReadOnlyAutoProperty</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>
@@ -23,33 +23,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeContractsEnableRuntimeChecking>True</CodeContractsEnableRuntimeChecking>
-    <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
-    <CodeContractsRuntimeThrowOnFailure>False</CodeContractsRuntimeThrowOnFailure>
-    <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
-    <CodeContractsRunCodeAnalysis>True</CodeContractsRunCodeAnalysis>
-    <CodeContractsNonNullObligations>True</CodeContractsNonNullObligations>
-    <CodeContractsBoundsObligations>False</CodeContractsBoundsObligations>
-    <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
-    <CodeContractsRedundantAssumptions>False</CodeContractsRedundantAssumptions>
-    <CodeContractsRunInBackground>True</CodeContractsRunInBackground>
-    <CodeContractsShowSquigglies>False</CodeContractsShowSquigglies>
-    <CodeContractsUseBaseLine>False</CodeContractsUseBaseLine>
-    <CodeContractsEmitXMLDocs>False</CodeContractsEmitXMLDocs>
-    <CodeContractsCustomRewriterAssembly>
-    </CodeContractsCustomRewriterAssembly>
-    <CodeContractsCustomRewriterClass>
-    </CodeContractsCustomRewriterClass>
-    <CodeContractsLibPaths>
-    </CodeContractsLibPaths>
-    <CodeContractsPlatformPath>
-    </CodeContractsPlatformPath>
-    <CodeContractsExtraAnalysisOptions>
-    </CodeContractsExtraAnalysisOptions>
-    <CodeContractsBaseLineFile>
-    </CodeContractsBaseLineFile>
-    <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
-    <CodeContractsReferenceAssembly>Build</CodeContractsReferenceAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -60,27 +33,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="xunit, Version=1.4.9.1416, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Ast\Metadata\External\Xunit\xunit.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\..\ast\metadata\sources\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
-    <Compile Include="AssertMessageMutator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReadOnlyAutoPropertyMutator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
-      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
-      <Name>MetadataHelper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataModel\MetadataModel.csproj">
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>
@@ -88,14 +52,6 @@
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
       <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
       <Name>MutableMetadataModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PdbReader\PdbReader.csproj">
-      <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
-      <Name>PdbReader</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PeReader\PeReader.csproj">
-      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
-      <Name>PeReader</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>

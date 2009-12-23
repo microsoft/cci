@@ -11,12 +11,8 @@ using Xunit;
 
 namespace CciSharp.Test
 {
-    public class AssertMessageTest
+    public partial class AssertMessageTest
     {
-        private void AssertTrue(bool value)
-        {
-        }
-
         [Fact]
         public void AddMessageToTrue()
         {

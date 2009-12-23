@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssertMessage", "CciSharp.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILToCodeModel", "..\..\Ast\Sources\ILToCodeModel\ILToCodeModel.csproj", "{27F2A417-B6ED-43AD-A38E-A0B6142216F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadOnlyAutoProperty", "ReadOnlyAutoProperty\ReadOnlyAutoProperty.csproj", "{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +197,14 @@ Global
 		{27F2A417-B6ED-43AD-A38E-A0B6142216F6}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{27F2A417-B6ED-43AD-A38E-A0B6142216F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27F2A417-B6ED-43AD-A38E-A0B6142216F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
