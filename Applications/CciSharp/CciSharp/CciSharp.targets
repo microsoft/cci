@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--=====================================================================
+      Begin CciSharp 
+  ======================================================================-->
+  <!-- 
+  
+  This target hooks the ccs compiler into the build process. 
+  The generator runs on the product after the build is complete. 
+
+  Properties project/configuration level:
+  
+    - CcsRewriting : boolean, turns on the task
+-->
+
+  <!--== Multiple Import Guard -->
+  <PropertyGroup>
+    <CcsImported>true</CcsImported>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(CcsRewriting) == 'true'">
+    <CcsPath Condition="$(CcsPath) == ''">$(CcsInstallDir)bin\</CcsPath>
+    <CcsTool Condition="$(CcsTool) == ''">Ccs.exe</CcsTool>
+    <CcsCommand>"$(CcsPath)$(CcsTool)"</CcsCommand>
+    <CcsIgnoreExitCode Condition="$(CcsIgnoreErrors) == ''">false</CcsIgnoreExitCode>
+    <CcsContinueOnError Condition="$(CcsContinueOnError) == ''">false</CcsContinueOnError>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CcsRewriteDependsOn>
+      CcsPreRewrite
+    </CcsRewriteDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CcsCommandOptions>$(CcsCommandOptions)</CcsCommandOptions>
+  </PropertyGroup>
+
+  <Target
+    Name="CcsPreGenerate"
+    Condition="$(CcsRewriting) == 'true'">
+    <!-- needs to be evaluated after the CopyToTargetDirectory task has run otherwise @(MainAssembly) is empty -->
+    <ItemGroup>
+      <CcsAssemblies Include="@(MainAssembly)" />
+    </ItemGroup>
+  </Target>
+
+  <Target
+    Name="CcsRewrite"
+    Condition="$(CcsRewriting) == 'true'"
+    Inputs="@(CcsAssemblies)"
+    Outputs="@(CcsAssemblies)"
+    DependsOnTargets="$(CcsRewriteDependsOn)">
+  <PropertyGroup>
+      <CcsFile>@(CcsAssemblies->'$(CcsOutputPath)\%(FileName)$(CcsAssemblyExt)')</CcsFile>
+      <CcsXmlFile>@(CcsAssemblies->'$(CcsOutputPath)\%(FileName)$(CcsXmlExt)')</CcsXmlFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <CcsFiles Include="$(CcsFile)" />
+      <CcsFiles Include="$(CcsXmlFile)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
+      <CcsExecCommand>$(CcsCommand) $(CcsFileCommandOptions) &quot;@(CcsAssemblies)&quot;</CcsExecCommand>
+    </PropertyGroup>
+    <Exec
+      Command="$(CcsExecCommand)"
+      IgnoreExitCode="$(_CcsIgnoreExitCode)"
+      ContinueOnError="$(_CcsContinueOnError)"
+      />
+    <Touch Files="@(CcsAssemblies)" />
+  </Target>
+
+  <PropertyGroup>
+    <BuildCompiledDependsOn Condition="$(CcsRewriteOnBuildCompiled) == 'true'">
+      $(BuildCompiledDependsOn);
+      CcsRewrite
+    </BuildCompiledDependsOn>
+  </PropertyGroup>
+  <PrepareForRunDependsOn>
+      $(PrepareForRunDependsOn);
+      CcsRewrite
+  </PrepareForRunDependsOn>
+  </PropertyGroup>
+
+  <!--=====================================================================
+      End Microsoft Ccs 
+  ======================================================================-->
+</Project>
