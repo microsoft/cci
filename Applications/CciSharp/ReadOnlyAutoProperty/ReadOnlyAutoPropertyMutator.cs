@@ -169,6 +169,26 @@ namespace CciSharp.ReadOnlyAutoProperty
                 }
                 return methodCall;
             }
+
+            bool clearBody;
+            public override MethodDefinition Visit(MethodDefinition methodDefinition)
+            {
+                this.clearBody = this.fields.ContainsKey(methodDefinition.InternedKey);
+                return base.Visit(methodDefinition);
+            }
+
+            // why not the mutable overload?
+            public override IMethodBody Visit(IMethodBody methodBody)
+            {
+                if (this.clearBody)
+                {
+                    var body = new MethodBody();
+                    body.Operations.Add(new Operation { OperationCode = OperationCode.Ret } );
+                    return body;
+                }
+
+                return base.Visit(methodBody);
+            }
         }
     }
 }

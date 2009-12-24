@@ -11,6 +11,7 @@
   Properties project/configuration level:
   
     - CcsRewriting : boolean, turns on the task
+    - CcsVerify: runs peverify before and after
     - CcsPath: path to the ccs.exe binaries
     - CcsMutatorPath: path to the default mutators assemblies path. By default, mutators folder next to
     the binaries path
@@ -66,7 +67,19 @@
       <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
       <CcsExecCommand>$(CcsCommand) &quot;@(CcsAssemblies)&quot; &quot;@(CcsMutatorAssemblies)&quot;</CcsExecCommand>
     </PropertyGroup>
+    <GetFrameworkSdkPath>
+      <Output TaskParameter="Path" PropertyName="SdkPath" />
+    </GetFrameworkSdkPath>
+    <PropertyGroup>
+      <PeVerify>&quot;$(SdkPath)bin\peverify.exe&quot;</PeVerify>
+    </PropertyGroup>
+    <Exec
+      Condition="$(CcsVerify) == 'true'"
+      Command="$(PeVerify) &quot;@(CcsAssemblies)&quot;" />
     <Exec Command="$(CcsExecCommand)" />
+    <Exec
+      Condition="$(CcsVerify) == 'true'"
+      Command="$(PeVerify) &quot;@(CcsAssemblies)&quot;" />
     <Copy
       SourceFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
       DestinationFiles="@(CcsAssemblies)"

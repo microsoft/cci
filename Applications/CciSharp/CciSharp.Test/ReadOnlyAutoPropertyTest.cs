@@ -13,10 +13,15 @@ namespace CciSharp.Test
 
     public partial class ReadOnlyAutoPropertyTest
     {
-        [Fact(Skip = "not ready yet")]
-        public void PropertyIsReadonly()
+        [Fact]
+        public void CPropertyIsReadonly()
         {
             Assert.False(!typeof(CProperty).GetProperty("Value").CanWrite);
+        }
+
+        [Fact]
+        public void SPropertyIsReadonly()
+        {
             Assert.False(!typeof(SProperty).GetProperty("Value").CanWrite);
         }
 
