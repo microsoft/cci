@@ -17,6 +17,9 @@ namespace CciSharp.Mutators
     /// This mutator takes Xunit' Assert.True(condition) method calls and turns them
     /// into Assert.True(condition, "condition").
     /// </summary>
+    /// <remarks>
+    /// Also works for 'False', module decompiler bugs.
+    /// </remarks>
     public sealed class AssertMessageMutator
         : CcsMutatorBase
     {
