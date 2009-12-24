@@ -27,7 +27,15 @@ namespace CciSharp.Framework
         /// <param name="owner">the owner mutator</param>
         protected CcsCodeMutatorBase(TMutator owner)
             : base(owner.Host, true)
-        {}
+        {
+            this.Owner = owner;
+        }
+
+        [ContractInvariantMethod]
+        void ObjectInvariant()
+        {
+            Contract.Invariant(this.Owner != null);
+        }
 
         /// <summary>
         /// Gets the owner

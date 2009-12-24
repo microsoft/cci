@@ -77,7 +77,7 @@ namespace CciSharp.Mutators
                     // HACK: trim away Assert.True(
                     int index;
                     if ((index = message.IndexOf(methodName)) > -1)
-                        message = message.Substring(methodName.Length);
+                        message = message.Substring(index + methodName.Length);
                     // HACK: trim away the parenthesis
                     if (message.EndsWith(");"))
                         message = message.Substring(0, message.Length - 2);

@@ -22,8 +22,6 @@
     <CcsPath Condition="$(CcsPath) == ''">$(CcsInstallDir)bin\</CcsPath>
     <CcsTool Condition="$(CcsTool) == ''">Ccs.exe</CcsTool>
     <CcsCommand>"$(CcsPath)$(CcsTool)"</CcsCommand>
-    <CcsIgnoreExitCode Condition="$(CcsIgnoreErrors) == ''">false</CcsIgnoreExitCode>
-    <CcsContinueOnError Condition="$(CcsContinueOnError) == ''">false</CcsContinueOnError>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -37,7 +35,7 @@
   </PropertyGroup>
 
   <Target
-    Name="CcsPreGenerate"
+    Name="CcsPreRewrite"
     Condition="$(CcsRewriting) == 'true'">
     <!-- needs to be evaluated after the CopyToTargetDirectory task has run otherwise @(MainAssembly) is empty -->
     <ItemGroup>
@@ -49,26 +47,26 @@
     Name="CcsRewrite"
     Condition="$(CcsRewriting) == 'true'"
     Inputs="@(CcsAssemblies)"
-    Outputs="@(CcsAssemblies)"
+    Outputs="@(CcsAssemblies->'%(Directory)%(FileName).ccs')"
     DependsOnTargets="$(CcsRewriteDependsOn)">
-  <PropertyGroup>
-      <CcsFile>@(CcsAssemblies->'$(CcsOutputPath)\%(FileName)$(CcsAssemblyExt)')</CcsFile>
-      <CcsXmlFile>@(CcsAssemblies->'$(CcsOutputPath)\%(FileName)$(CcsXmlExt)')</CcsXmlFile>
-    </PropertyGroup>
-    <ItemGroup>
-      <CcsFiles Include="$(CcsFile)" />
-      <CcsFiles Include="$(CcsXmlFile)" />
-    </ItemGroup>
     <PropertyGroup>
       <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
       <CcsExecCommand>$(CcsCommand) $(CcsFileCommandOptions) &quot;@(CcsAssemblies)&quot;</CcsExecCommand>
     </PropertyGroup>
-    <Exec
-      Command="$(CcsExecCommand)"
-      IgnoreExitCode="$(_CcsIgnoreExitCode)"
-      ContinueOnError="$(_CcsContinueOnError)"
-      />
-    <Touch Files="@(CcsAssemblies)" />
+    <Exec Command="$(CcsExecCommand)" />
+    <Copy
+      SourceFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
+      DestinationFiles="@(CcsAssemblies)"
+      SkipUnchangedFiles="true"/>
+    <Copy
+      Condition="Exists('@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).pdb')')"
+      SourceFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).ccs.pdb')"
+      DestinationFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).pdb')"
+      SkipUnchangedFiles="true"/>
+    <Touch Files="
+           @(CcsAssemblies);
+           @(CcsIntermediateAssemblies);
+           " />
   </Target>
 
   <PropertyGroup>
@@ -77,6 +75,7 @@
       CcsRewrite
     </BuildCompiledDependsOn>
   </PropertyGroup>
+  <PropertyGroup>
   <PrepareForRunDependsOn>
       $(PrepareForRunDependsOn);
       CcsRewrite

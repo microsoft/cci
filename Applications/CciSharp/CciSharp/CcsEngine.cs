@@ -53,8 +53,10 @@ namespace CciSharp
             Contract.Requires(module != null);
 
             // write module to disk
-            var newAssemblyPath = Path.ChangeExtension(assemblyPath, ".ccs" + Path.GetExtension(assemblyPath));
-            Console.WriteLine("writing {0}", newAssemblyPath);
+            var newAssemblyPath = Path.ChangeExtension(assemblyPath, ".ccs") + Path.GetExtension(assemblyPath);
+            var pdbPath = Path.ChangeExtension(assemblyPath, ".pdb");
+            var newPdbPath = Path.ChangeExtension(newAssemblyPath, ".pdb");
+            this.host.Event(CcsEventLevel.Message, "rewriting {0} -> {1}", assemblyPath, newAssemblyPath);
             using (var peStream = File.Create(newAssemblyPath))
             {
                 if (_pdbReader == null)
@@ -62,7 +64,8 @@ namespace CciSharp
                 else
                 {
                     Contract.Assert(_pdbReader != null);
-                    using (var pdbWriter = new PdbWriter(Path.ChangeExtension(newAssemblyPath, ".pdb"), _pdbReader))
+                    this.host.Event(CcsEventLevel.Message, "rewriting {0} -> {1}", pdbPath, newPdbPath);
+                    using (var pdbWriter = new PdbWriter(newPdbPath, _pdbReader))
                         PeWriter.WritePeToStream(module, this.host, peStream, _pdbReader, _pdbReader, pdbWriter);
                 }
             }

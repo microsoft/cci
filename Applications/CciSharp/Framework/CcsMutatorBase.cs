@@ -28,8 +28,10 @@ namespace CciSharp.Framework
         /// <param name="priority"></param>
         protected CcsMutatorBase(ICcsHost host, string name, int priority)
         {
+            Contract.Requires(host != null);
             Contract.Requires(!String.IsNullOrEmpty(name));
             Contract.Requires(priority >= 0);
+
             this.Host = host;
             this.Name = name;
             this.Priority = priority;
