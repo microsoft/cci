@@ -21,11 +21,10 @@ namespace CciSharp.ReadOnlyAutoProperty
             : base(host, "ReadOnly Auto Property", 1)
         { }
 
-        public override Module Visit(Module module)
+        public override void Visit(Module module)
         {
             // pass1: collect properties to mutate and field references,
             // pass2: mutate properties and update field references
-            return module;
         }
     }
 }

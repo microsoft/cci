@@ -35,51 +35,63 @@ namespace CciSharp.Mutators
             Contract.Invariant(this.assertMethods != null);
         }
 
-        PdbReader pdbReader;
-        public override Module Visit(Module module)
+        public override void Visit(Module module)
         {
-            if (!this.Host.TryGetPdbReader(module, out this.pdbReader))
-            {
-                this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", module.Location);
-                return module;
-            }
-
-            return base.Visit(module);
+            new Mutator(this).Visit(module);
         }
 
-        public override IExpression Visit(MethodCall methodCall)
+        class Mutator 
+            : CcsCodeMutatorBase<AssertMessageMutator>
         {
-            IMethodReference assertStringMethod;
-            if (this.assertMethods.TryGetValue(methodCall.MethodToCall.InternedKey, out assertStringMethod))
+            public Mutator(AssertMessageMutator owner)
+                : base(owner)
+            { }
+
+            PdbReader pdbReader;
+            public override Module Visit(Module module)
             {
-                // we've got a winner here.
-                var condition = methodCall.Arguments[0];
-
-                var sb = new StringBuilder();
-                Contract.Assert(this.pdbReader != null);
-                foreach (var location in condition.Locations)
-                    foreach (var primarySourceLocation in this.pdbReader.GetPrimarySourceLocationsFor(location))
-                        sb.Append(primarySourceLocation.Source);
-
-                var message = sb.ToString();
-                var methodName = assertStringMethod.Name.Value + "(";
-                // HACK: trim away Assert.True(
-                int index;
-                if ((index = message.IndexOf(methodName)) > -1)
-                    message = message.Substring(methodName.Length);
-                // HACK: trim away the parenthesis
-                if (message.EndsWith(");"))
-                    message = message.Substring(0, message.Length - 2);
-
-                var newCall = new MethodCall
+                if (!this.Host.TryGetPdbReader(module, out this.pdbReader))
                 {
-                    MethodToCall = assertStringMethod,
-                    Arguments = new List<IExpression>(new IExpression[] { condition, new CompileTimeConstant { Value = message } })
-                };
-                return newCall;
+                    this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", module.Location);
+                    return module;
+                }
+                return base.Visit(module);
             }
 
-            return methodCall;
+            public override IExpression Visit(MethodCall methodCall)
+            {
+                IMethodReference assertStringMethod;
+                if (this.Owner.assertMethods.TryGetValue(methodCall.MethodToCall.InternedKey, out assertStringMethod))
+                {
+                    // we've got a winner here.
+                    var condition = methodCall.Arguments[0];
+
+                    var sb = new StringBuilder();
+                    Contract.Assert(this.pdbReader != null);
+                    foreach (var location in condition.Locations)
+                        foreach (var primarySourceLocation in this.pdbReader.GetPrimarySourceLocationsFor(location))
+                            sb.Append(primarySourceLocation.Source);
+
+                    var message = sb.ToString();
+                    var methodName = assertStringMethod.Name.Value + "(";
+                    // HACK: trim away Assert.True(
+                    int index;
+                    if ((index = message.IndexOf(methodName)) > -1)
+                        message = message.Substring(methodName.Length);
+                    // HACK: trim away the parenthesis
+                    if (message.EndsWith(");"))
+                        message = message.Substring(0, message.Length - 2);
+
+                    var newCall = new MethodCall
+                    {
+                        MethodToCall = assertStringMethod,
+                        Arguments = new List<IExpression>(new IExpression[] { condition, new CompileTimeConstant { Value = message } })
+                    };
+                    return newCall;
+                }
+
+                return methodCall;
+            }
         }
 
         // TODO: why do I need a platform type here?

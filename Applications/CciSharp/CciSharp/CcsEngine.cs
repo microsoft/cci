@@ -79,8 +79,11 @@ namespace CciSharp
                 var mutatorAssembly = System.Reflection.Assembly.LoadFrom(file);
                 foreach (var type in mutatorAssembly.GetExportedTypes())
                 {
-                    var mutator = (CcsMutatorBase)Activator.CreateInstance(type, this.host);
-                    mutators.Add(mutator);
+                    if (typeof(CcsMutatorBase).IsAssignableFrom(type))
+                    {
+                        var mutator = (CcsMutatorBase)Activator.CreateInstance(type, this.host);
+                        mutators.Add(mutator);
+                    }
                 }
             }
 

@@ -73,8 +73,10 @@
       <Link>Build\Version.cs</Link>
     </Compile>
     <Compile Include="CcsMutatorBase.cs" />
+    <Compile Include="CcsCodeMutatorBase.cs" />
     <Compile Include="ICcsHost.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReadOnlyAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">

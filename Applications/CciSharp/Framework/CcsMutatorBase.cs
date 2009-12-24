@@ -1,4 +1,9 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (C) Microsoft Corporation.  All Rights Reserved.
+//
+//-----------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci.MutableCodeModel;
@@ -14,7 +19,6 @@ namespace CciSharp.Framework
     /// </summary>
     [DebuggerDisplay("{Name}")]
     public abstract class CcsMutatorBase
-        : CodeAndContractMutator
     {
         /// <summary>
         /// Initializes a new instance of the mutator
@@ -23,30 +27,36 @@ namespace CciSharp.Framework
         /// <param name="name"></param>
         /// <param name="priority"></param>
         protected CcsMutatorBase(ICcsHost host, string name, int priority)
-            : base(host, true)
         {
             Contract.Requires(!String.IsNullOrEmpty(name));
             Contract.Requires(priority >= 0);
+            this.Host = host;
             this.Name = name;
             this.Priority = priority;
         }
 
         /// <summary>
+        /// Visits and mutates the module in-place.
+        /// </summary>
+        /// <param name="module"></param>
+        public abstract void Visit(Module module);
+
+        /// <summary>
         /// Gets the host
         /// </summary>
-        public ICcsHost Host
-        {
-            get { return (ICcsHost)this.host; }
-        }
+        [ReadOnly]
+        public ICcsHost Host { get; private set; }
 
         /// <summary>
         /// Gets the mutator name
         /// </summary>
+        [ReadOnly]
         public string Name { get; private set; }
 
         /// <summary>
         /// Gets the mutator priority
         /// </summary>
+        [ReadOnly]
         public int Priority { get; private set; }
 
         /// <summary>
