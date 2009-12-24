@@ -41,7 +41,7 @@ namespace CciSharp.Framework
         /// Visits and mutates the module in-place.
         /// </summary>
         /// <param name="module"></param>
-        public abstract void Visit(Module module);
+        public abstract bool Visit(Module module);
 
         /// <summary>
         /// Gets the host

@@ -35,15 +35,22 @@ namespace CciSharp
             var copier = new CodeAndContractMutator(host, false);
             var moduleCopy = copier.Visit(module);
 
+            bool dirty = false;
             foreach (var mutator in mutators)
             {
+                this.host.Event(CcsEventLevel.Message, "rewrite with {0}", mutator);
+                dirty |= mutator.Visit(moduleCopy);
                 if (this.host.ErrorCount > 0) break;
-                mutator.Visit(moduleCopy);
             }
 
-            if (this.host.ErrorCount == 0)
+            if (!dirty)
+                this.host.Event(CcsEventLevel.Message, "no mutation, skipping rewritting");
+            else if (this.host.ErrorCount == 0)
                 this.WriteModule(assemblyPath, moduleCopy, pdbReader);
 
+            this.host.Event(CcsEventLevel.Message, "Rewrite complete -- {0} errors, {1} warnings",
+                this.host.ErrorCount,
+                this.host.WarningCount);
             return this.host.ErrorCount == 0 ? CcsExitCodes.Success : CcsExitCodes.Errors;
       }
 

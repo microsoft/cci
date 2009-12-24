@@ -23,7 +23,7 @@ namespace CciSharp.ReadOnlyAutoProperty
             : base(host, "ReadOnly Auto Property", 1)
         { }
 
-        public override void Visit(Module module)
+        public override bool Visit(Module module)
         {
             // pass1: collect properties to mutate and field references,
             var collector = new PropertyCollector(this.Host);
@@ -32,6 +32,7 @@ namespace CciSharp.ReadOnlyAutoProperty
 
             // pass2: mutate properties and update field references
 
+            return false;
         }
 
         class PropertyCollector
