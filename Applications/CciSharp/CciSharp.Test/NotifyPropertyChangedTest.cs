@@ -9,7 +9,7 @@ namespace CciSharp.Test
 {
     public partial class NotifyPropertyChangedTest
     {
-        [Fact]
+        [Fact(Skip = "not ready")]
         public void Changed()
         {
             var target = new Target();

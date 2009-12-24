@@ -13,9 +13,7 @@
     - CcsRewriting : boolean, turns on the task
     - CcsVerify: runs peverify before and after
     - CcsPath: path to the ccs.exe binaries
-    - CcsMutatorPath: path to the default mutators assemblies path. By default, mutators folder next to
-    the binaries path
-    
+    - CcsMutatorPath: path to the default mutators assemblies path. By default, CcsPath.    
     
   Items project /configuration level:
   
@@ -29,7 +27,7 @@
 
   <PropertyGroup Condition="$(CcsRewriting) == 'true'">
     <CcsPath Condition="$(CcsPath) == ''">$(CcsInstallDir)bin\</CcsPath>
-    <CcsMutatorPath Condition="$(CcsMutatorPath) == ''">$(CcsInstallDir)mutators\</CcsMutatorPath>
+    <CcsMutatorPath Condition="$(CcsMutatorPath) == ''">$(CcsMutatorPath)</CcsMutatorPath>
     <CcsTool Condition="$(CcsTool) == ''">Ccs.exe</CcsTool>
     <CcsCommand>"$(CcsPath)$(CcsTool)"</CcsCommand>
   </PropertyGroup>
