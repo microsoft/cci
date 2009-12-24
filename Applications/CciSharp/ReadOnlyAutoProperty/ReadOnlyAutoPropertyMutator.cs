@@ -26,35 +26,38 @@ namespace CciSharp.ReadOnlyAutoProperty
         public override bool Visit(Module module)
         {
             // pass1: collect properties to mutate and field references,
-            var collector = new PropertyCollector(this.Host);
+            var collector = new PropertyCollector(this);
             collector.Visit(module);
             var properties = collector.Properties;
+            // nothing to do...
+            if (properties.Count == 0)
+                return false;
 
             // pass2: mutate properties and update field references
-
-            return false;
+            var mutator = new SetterReplacer(this, properties);
+            mutator.Visit(module);
+            return true;
         }
 
         class PropertyCollector
-            : BaseMetadataTraverser
+            : CcsCodeMutatorBase<ReadOnlyAutoPropertyMutator>
         {
-            ICcsHost host;
             readonly ITypeReference compilerGeneratedAttribute;
 
-            public PropertyCollector(ICcsHost host)
+            public PropertyCollector(ReadOnlyAutoPropertyMutator owner)
+                :base(owner)
             {
-                Contract.Requires(host != null);
-                this.host = host;
                 this.compilerGeneratedAttribute = host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute;
             }
-            public readonly List<IPropertyDefinition> Properties = new List<IPropertyDefinition>();
+            public readonly Dictionary<uint, IFieldReference> Properties 
+                = new Dictionary<uint, IFieldReference>();
 
-            private void Error(IPropertyDefinition propertyDefinition, string message)
+            private void Error(PropertyDefinition propertyDefinition, string message)
             {
-                this.host.Event(CcsEventLevel.Error, "{0} {1}", propertyDefinition, message);
+                this.Host.Event(CcsEventLevel.Error, "{0} {1}", propertyDefinition, message);
             }
 
-            public override void Visit(IPropertyDefinition propertyDefinition)
+            public override PropertyDefinition Visit(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as IMethodDefinition;
                 var setter = propertyDefinition.Setter as IMethodDefinition;
@@ -63,37 +66,63 @@ namespace CciSharp.ReadOnlyAutoProperty
                     if (getter == null)
                     {
                         this.Error(propertyDefinition, "must have a getter to be readonly");
-                        return;
+                        return propertyDefinition;
                     }
                     if (setter == null)
                     {
                         this.Error(propertyDefinition, "must have a setter to be readonly");
-                        return;
+                        return propertyDefinition;
                     }
                     if (!AttributeHelper.Contains(getter.Attributes, this.compilerGeneratedAttribute) ||
                         !AttributeHelper.Contains(setter.Attributes, this.compilerGeneratedAttribute)) // compiler generated
                     {
                         this.Error(propertyDefinition, "must be an auto-property to be readonly");
-                        return;
+                        return propertyDefinition;
                     }
                     if (getter.IsStatic || setter.IsStatic)
                     {
                         this.Error(propertyDefinition, "must be an instance property to be readonly");
-                        return;
+                        return propertyDefinition;
                     }
 
                     if (getter.IsVirtual || setter.IsVirtual)
                     {
                         this.Error(propertyDefinition, "cannot be virtual to be readonly");
-                        return;
+                        return propertyDefinition;
                     }
                     if (setter.Visibility != TypeMemberVisibility.Private) // setter is private
                     {
                         this.Error(propertyDefinition, "must have a private setter to be readonly");
-                        return;
+                        return propertyDefinition;
                     }
-                    this.Properties.Add(propertyDefinition);
+
+                    // decompile setter body and get the backing field.
+                    IFieldReference field = null;
+                    foreach (var operation in setter.Body.Operations)
+                    {
+                        if (operation.OperationCode == OperationCode.Stfld)
+                        {
+                            field = (IFieldReference)operation.Value;
+                            break;
+                        }
+                    }
+                    if (field == null)
+                    {
+                        this.Error(propertyDefinition, "has no backing field");
+                        return propertyDefinition;
+                    }
+
+                    // remove setter, make field readonly
+                    var fieldDefinition = (FieldDefinition)field.ResolvedField;
+                    fieldDefinition.IsReadOnly = true;
+                    propertyDefinition.Setter = null;
+
+                    // store field to update
+                    this.Properties[setter.InternedKey] = field;
+                    this.Host.Event(CcsEventLevel.Message, "readonly property: {0}, field {1}", propertyDefinition, field);
                 }
+
+                return propertyDefinition;
             }
 
             private static bool ContainsReadOnly(IEnumerable<ICustomAttribute> attributes)
@@ -108,28 +137,37 @@ namespace CciSharp.ReadOnlyAutoProperty
                 }
                 return false;
             }
-
-            // short cuts
-            public override void Visit(IEnumerable<IMethodDefinition> methods)
-            {}
-            public override void Visit(IEnumerable<IEventDefinition> events)
-            {}
-            public override void Visit(IEnumerable<IFieldDefinition> fields)
-            {}
-            public override void Visit(IEnumerable<ICustomAttribute> customAttributes)
-            {}
         }
 
-        class Mutator
+        class SetterReplacer
             : CcsCodeMutatorBase<ReadOnlyAutoPropertyMutator>
         {
-            public Mutator(ReadOnlyAutoPropertyMutator owner)
+            readonly Dictionary<uint, IFieldReference> fields;
+            public SetterReplacer(ReadOnlyAutoPropertyMutator owner, Dictionary<uint, IFieldReference> fields)
                 : base(owner)
-            { }
-
-            public override MethodDefinition Visit(MethodDefinition methodDefinition)
             {
-                return base.Visit(methodDefinition);
+                Contract.Requires(fields != null);
+                this.fields = fields;
+            }
+
+            public override IExpression Visit(MethodCall methodCall)
+            {
+                IFieldReference field;
+                var methodToCall = methodCall.MethodToCall;
+                if (this.fields.TryGetValue(methodToCall.InternedKey, out field))
+                {
+                    var storeField = new Assignment
+                    {
+                        Source = methodCall.Arguments[0],
+                        Target = new TargetExpression
+                        {
+                             Instance = methodCall.ThisArgument,
+                             Definition = field
+                        }
+                    };
+                    return storeField;
+                }
+                return methodCall;
             }
         }
     }
