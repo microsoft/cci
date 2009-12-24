@@ -23,13 +23,13 @@ namespace CciSharp
             this.host = new CcsHost();
         }
 
-        public int Mutate(string assembly)
+        public int Mutate(string assembly, IEnumerable<string> mutatorAssemblies)
         {
             Contract.Requires(!String.IsNullOrEmpty(assembly));
 
             var assemblyPath = Path.GetFullPath(assembly);
             // load mutators
-            var mutators = LoadMutators(assemblyPath);
+            var mutators = LoadMutators(mutatorAssemblies);
             PdbReader pdbReader;
             var module = this.host.LoadModuleFrom(assemblyPath, out pdbReader);
             var copier = new CodeAndContractMutator(host, false);
@@ -71,14 +71,13 @@ namespace CciSharp
             }
         }
 
-        private List<CcsMutatorBase> LoadMutators(string assemblyPath)
+        private List<CcsMutatorBase> LoadMutators(IEnumerable<string> mutatorAssemblyFiles)
         {
-            Contract.Requires(!String.IsNullOrEmpty(assemblyPath));
-
+            Contract.Requires(mutatorAssemblyFiles != null);
             var mutators = new List<CcsMutatorBase>();
-            var directory = Path.GetDirectoryName(assemblyPath);
-            foreach (var file in Directory.GetFiles(directory, "CciSharp.*.dll"))
+            foreach (var file in mutatorAssemblyFiles)
             {
+                this.host.Event(CcsEventLevel.Message, "loading mutators from {0}", file);
                 var mutatorAssembly = System.Reflection.Assembly.LoadFrom(file);
                 foreach (var type in mutatorAssembly.GetExportedTypes())
                 {

@@ -65,10 +65,6 @@
     <Compile Include="ReadOnlyAutoPropertyTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CciSharp.AssertMessage\AssertMessage.csproj">
-      <Project>{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}</Project>
-      <Name>AssertMessage</Name>
-    </ProjectReference>
     <ProjectReference Include="..\CciSharp\CciSharp.csproj">
       <Project>{5B994274-CEBB-429F-A9B6-612117C872ED}</Project>
       <Name>CciSharp</Name>
@@ -77,16 +73,16 @@
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ReadOnlyAutoProperty\ReadOnlyAutoProperty.csproj">
-      <Project>{EFBAECB0-A690-4147-A11C-BA25AC9EA94E}</Project>
-      <Name>ReadOnlyAutoProperty</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <CcsPath>..\CciSharp\bin\$(Configuration)\</CcsPath>
-  </PropertyGroup>  
-  <Import Project="..\CciSharp\CciSharp.targets"/>
+  </PropertyGroup>
+  <ItemGroup>
+    <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />
+    <CcsMutatorAssemblies Include="..\ReadOnlyAutoProperty\bin\$(Configuration)\CciSharp.ReadOnlyAutoProperty.dll" />
+  </ItemGroup>
+  <Import Project="..\CciSharp\CciSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

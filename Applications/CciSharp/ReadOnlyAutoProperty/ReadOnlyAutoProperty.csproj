@@ -33,6 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -45,6 +46,10 @@
     <Compile Include="ReadOnlyAutoPropertyMutator.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\MetadataModel\MetadataModel.csproj">
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>

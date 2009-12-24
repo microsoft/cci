@@ -11,6 +11,14 @@
   Properties project/configuration level:
   
     - CcsRewriting : boolean, turns on the task
+    - CcsPath: path to the ccs.exe binaries
+    - CcsMutatorPath: path to the default mutators assemblies path. By default, mutators folder next to
+    the binaries path
+    
+    
+  Items project /configuration level:
+  
+    - CcsMutatorAssemblies: list of assemblies containing mutators
 -->
 
   <!--== Multiple Import Guard -->
@@ -20,9 +28,14 @@
 
   <PropertyGroup Condition="$(CcsRewriting) == 'true'">
     <CcsPath Condition="$(CcsPath) == ''">$(CcsInstallDir)bin\</CcsPath>
+    <CcsMutatorPath Condition="$(CcsMutatorPath) == ''">$(CcsInstallDir)mutators\</CcsMutatorPath>
     <CcsTool Condition="$(CcsTool) == ''">Ccs.exe</CcsTool>
     <CcsCommand>"$(CcsPath)$(CcsTool)"</CcsCommand>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CcsMutatorAssemblies Include="$(CcsMutatorPath)\CciSharp.*.dll" />
+  </ItemGroup>
 
   <PropertyGroup>
     <CcsRewriteDependsOn>
@@ -45,13 +58,13 @@
 
   <Target
     Name="CcsRewrite"
-    Condition="$(CcsRewriting) == 'true'"
+    Condition="$(CcsRewriting) == 'true' and @(CcsMutatorAssemblies) != ''"
     Inputs="@(CcsAssemblies)"
     Outputs="@(CcsAssemblies->'%(Directory)%(FileName).ccs')"
     DependsOnTargets="$(CcsRewriteDependsOn)">
     <PropertyGroup>
       <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
-      <CcsExecCommand>$(CcsCommand) $(CcsFileCommandOptions) &quot;@(CcsAssemblies)&quot;</CcsExecCommand>
+      <CcsExecCommand>$(CcsCommand) &quot;@(CcsAssemblies)&quot; &quot;@(CcsMutatorAssemblies)&quot;</CcsExecCommand>
     </PropertyGroup>
     <Exec Command="$(CcsExecCommand)" />
     <Copy
