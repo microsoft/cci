@@ -26,5 +26,18 @@ namespace CciSharp.Test
                 Assert.True(ex.Message.Contains("x != 5"), ex.Message + "does not contain the expression");
             }
         }
+
+        [Fact]
+        public void AddLargeExpressionToTrue()
+        {
+            try
+            {
+                Assert.True(this.ToString() == null);
+            }
+            catch (Exception ex)
+            {
+                Assert.True(ex.Message.Contains("this.ToString() == null"), ex.Message + "does not contain the expression");
+            }
+        }
     }
 }

@@ -84,7 +84,7 @@ namespace CciSharp.Mutators
                     return newCall;
                 }
 
-                return methodCall;
+                return base.Visit(methodCall);
             }
 
             private static string PretifyMessage(IMethodReference assertStringMethod, string message)

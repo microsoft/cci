@@ -16,13 +16,13 @@ namespace CciSharp.Test
         [Fact]
         public void CPropertyIsReadonly()
         {
-            Assert.False(!typeof(CProperty).GetProperty("Value").CanWrite);
+            Assert.False(typeof(CProperty).GetProperty("Value").CanWrite, "setter should be removed");
         }
 
         [Fact]
         public void SPropertyIsReadonly()
         {
-            Assert.False(!typeof(SProperty).GetProperty("Value").CanWrite);
+            Assert.False(typeof(SProperty).GetProperty("Value").CanWrite, "setter should be removed");
         }
 
         class CProperty
