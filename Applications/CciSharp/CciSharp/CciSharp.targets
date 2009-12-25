@@ -10,14 +10,19 @@
 
   Properties project/configuration level:
   
+    - CcsPath: path to the ccs.exe seop
     - CcsRewriting : boolean, turns on the task
     - CcsVerify: runs peverify before and after
-    - CcsPath: path to the ccs.exe binaries
-    - CcsMutatorPath: path to the default mutators assemblies path. By default, CcsPath.    
-    
+
   Items project /configuration level:
   
     - CcsMutatorAssemblies: list of assemblies containing mutators
+    
+  By default, ccs loads the mutator assemblies from the following folders
+  (mutator assemblies must be named 'CciSharp.....dll'):
+      - $(ProjectDir)\CciSharp\
+      - $(SolutionDir)\CciSharp\
+      - $(CcsMutator) if defined
 -->
 
   <!--== Multiple Import Guard -->
@@ -26,14 +31,23 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$(CcsRewriting) == 'true'">
-    <CcsPath Condition="$(CcsPath) == ''">$(CcsInstallDir)bin\</CcsPath>
-    <CcsMutatorPath Condition="$(CcsMutatorPath) == ''">$(CcsMutatorPath)</CcsMutatorPath>
+    <CcsPath Condition="$(CcsPath) == ''">$(CcsInstallDir)</CcsPath>
     <CcsTool Condition="$(CcsTool) == ''">Ccs.exe</CcsTool>
     <CcsCommand>"$(CcsPath)$(CcsTool)"</CcsCommand>
   </PropertyGroup>
 
   <ItemGroup>
-    <CcsMutatorAssemblies Include="$(CcsMutatorPath)\CciSharp.*.dll" />
+    <!-- default locations where mutators are looked up-->
+    <!-- local project subfolder -->
+    <CcsMutatorAssemblies Include="CciSharp\CciSharp.*.dll" />
+    <!-- solution subfolder -->
+    <CcsMutatorAssemblies 
+      Condition="$(SolutionDir) != ''" 
+      Include="$(SolutionDir)CciSharp\CciSharp.*.dll" />
+    <!-- custom user path -->
+    <CcsMutatorAssemblies
+      Condition="$(CcsMutatorDir) != ''"
+      Include="$(CcsMutatorDir)CciSharp.*.dll" />
   </ItemGroup>
 
   <PropertyGroup>
