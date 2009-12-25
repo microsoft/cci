@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
-    <CcsRewriting>True</CcsRewriting>
+    <CcsRewriting>False</CcsRewriting>
     <CcsVerify>True</CcsVerify>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

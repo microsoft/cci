@@ -116,6 +116,7 @@ namespace CciSharp.ReadOnlyAutoProperty
                     var fieldDefinition = (FieldDefinition)field.ResolvedField;
                     fieldDefinition.IsReadOnly = true;
                     propertyDefinition.Setter = null;
+                    propertyDefinition.Accessors.Remove(setter);
 
                     // store field to update
                     this.Properties[setter.InternedKey] = field;
@@ -171,24 +172,17 @@ namespace CciSharp.ReadOnlyAutoProperty
                 return methodCall;
             }
 
-            bool clearBody;
-            public override MethodDefinition Visit(MethodDefinition methodDefinition)
+            protected override void Visit(TypeDefinition typeDefinition)
             {
-                this.clearBody = this.fields.ContainsKey(methodDefinition.InternedKey);
-                return base.Visit(methodDefinition);
-            }
-
-            // why not the mutable overload?
-            public override IMethodBody Visit(IMethodBody methodBody)
-            {
-                if (this.clearBody)
+                var methods = new List<IMethodDefinition>();
+                foreach (var method in typeDefinition.Methods)
                 {
-                    var body = new MethodBody();
-                    body.Operations.Add(new Operation { OperationCode = OperationCode.Ret } );
-                    return body;
+                    if (this.fields.ContainsKey(method.InternedKey))
+                        continue;
+                    methods.Add(method);
                 }
-
-                return base.Visit(methodBody);
+                typeDefinition.Methods = methods;
+                base.Visit(typeDefinition);
             }
         }
     }
