@@ -240,29 +240,61 @@ namespace CciSharp.Mutators
         class TestType : PlatformType
         {
             public readonly Dictionary<uint, IMethodReference> Methods;
-            
+            readonly IMetadataHost host;
             public TestType(IMetadataHost host)
                 : base(host)
             {
-                var unitTestModule = (IModule)host.LoadUnitFrom(typeof(Xunit.Assert).Assembly.Location);
-                var unitTestIdentity = unitTestModule.ContainingAssembly;
-                var assertType = this.CreateReference(unitTestIdentity, "Xunit", "Assert");
+                this.host = host;
+                this.Methods = new Dictionary<uint, IMethodReference>();
+            }
+
+            public void Visit(IModule module)
+            {
+                foreach(var assembly in module.AssemblyReferences)
+                {
+                    switch (assembly.Name.Value)
+                    {
+                        case "MbUnit.Framework":
+                            this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsTrue");
+                            this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsFalse");
+                            break;
+                        case "nunit.framework":
+                            this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsTrue");
+                            this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsFalse");
+                            break;
+                        case "Xunit": 
+                            this.AddAssertMethod(assembly, "Xunit.Assert", "True");
+                            this.AddAssertMethod(assembly, "Xunit.Assert", "False");
+                            break;
+                        case "Microsoft.Pex.Framework":
+                            this.AddAssertMethod(assembly, "Microsoft.Pex.Framework.PexAssert", "IsTrue");
+                            this.AddAssertMethod(assembly, "Microsoft.Pex.Framework.PexAssert", "IsFalse");
+                            break;
+                        case "Microsoft.VisualStudio.QualityTools.UnitTestFramework":
+                            this.AddAssertMethod(assembly, "Microsoft.VisualStudio.TestTools.UnitTesting.Assert", "IsTrue");
+                            this.AddAssertMethod(assembly, "Microsoft.VisualStudio.TestTools.UnitTesting.Assert", "IsFalse");
+                            break;
+                    }
+                }
+            }
+
+            private void AddAssertMethod(
+                IAssemblyReference assembly,
+                string assertTypeFullName,
+                string methodName)
+            {
+                Contract.Requires(host != null);
+                Contract.Requires(assembly != null);
+
+                var assertType = this.CreateReference(assembly, assertTypeFullName.Split('.'));
+                var name = host.NameTable.GetNameFor(methodName);
                 var platformType = host.PlatformType;
                 var booleanType = platformType.SystemBoolean;
                 var stringType = platformType.SystemString;
 
-                this.Methods = new Dictionary<uint, IMethodReference>();
-
-                var isTrueName = host.NameTable.GetNameFor("True");
                 this.Methods.Add(
-                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isTrueName, 0, booleanType).InternedKey,
-                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isTrueName, 0, booleanType, stringType)
-                    );
-
-                var isFalseName = host.NameTable.GetNameFor("False");
-                this.Methods.Add(
-                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isFalseName, 0, booleanType).InternedKey,
-                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, isFalseName, 0, booleanType, stringType)
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType).InternedKey,
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType)
                     );
             }
         }
