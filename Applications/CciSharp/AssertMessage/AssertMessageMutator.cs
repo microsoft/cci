@@ -35,6 +35,8 @@ namespace CciSharp.Mutators
             var testTypes = new TestType(this.Host);
             testTypes.Visit(module);
             this.assertMethods = testTypes.Methods;
+            if (this.assertMethods.Count == 0)
+                return false; // nothing todo here.
 
             var mutator = new Mutator(this);
             mutator.Visit(module);
