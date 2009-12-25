@@ -45,20 +45,18 @@ namespace CciSharp.Framework
         /// Logs an event
         /// </summary>
         /// <param name="level"></param>
-        /// <param name="url"></param>
-        /// <param name="line"></param>
+        /// <param name="location"></param>
         /// <param name="message"></param>
-        void Event(CcsEventLevel level, string url, int line, string message);
+        void Event(CcsEventLevel level, IPrimarySourceLocation location, string message);
 
         /// <summary>
         /// Logs an event
         /// </summary>
         /// <param name="level"></param>
-        /// <param name="url"></param>
-        /// <param name="line"></param>
+        /// <param name="location"></param>
         /// <param name="format"></param>
         /// <param name="args"></param>
-        void Event(CcsEventLevel level, string url, int line, string format, params object[] args);
+        void Event(CcsEventLevel level, IPrimarySourceLocation location, string format, params object[] args);
     }
 
     /// <summary>
@@ -105,16 +103,16 @@ namespace CciSharp.Framework
             throw new NotImplementedException();
         }
 
-        void ICcsHost.Event(CcsEventLevel level, string url, int line, string message)
+        void ICcsHost.Event(CcsEventLevel level, IPrimarySourceLocation location, string message)
         {
-            Contract.Requires(!String.IsNullOrEmpty(url));
+            Contract.Requires(location != null);
             Contract.Requires(!String.IsNullOrEmpty(message));
             throw new NotImplementedException();
         }
 
-        void ICcsHost.Event(CcsEventLevel level, string url, int line, string format, params object[] args)
+        void ICcsHost.Event(CcsEventLevel level, IPrimarySourceLocation location, string format, params object[] args)
         {
-            Contract.Requires(!String.IsNullOrEmpty(url));
+            Contract.Requires(location != null);
             Contract.Requires(!String.IsNullOrEmpty(format));
             Contract.Requires(args != null);
             throw new NotImplementedException();

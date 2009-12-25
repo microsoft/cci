@@ -106,15 +106,15 @@ namespace CciSharp
             this.Event(level, String.Format(format, args));
         }
 
-        public void Event(CcsEventLevel level, string url, int line,  string message)
+        public void Event(CcsEventLevel level, IPrimarySourceLocation location,  string message)
         {
             this.CountErrorsAndWarnings(level);
-            this.@out.WriteLine("{0}({1}): {2}{3}", url, line, LevelToString(level), message);
+            this.@out.WriteLine("{0}({1}): {2}{3}", location.SourceDocument.Location, location.StartLine, LevelToString(level), message);
         }
 
-        public void Event(CcsEventLevel level, string url, int line, string format, params object[] args)
+        public void Event(CcsEventLevel level, IPrimarySourceLocation location, string format, params object[] args)
         {
-            this.Event(level, url, line, String.Format(format, args));
+            this.Event(level, location, String.Format(format, args));
         }
         #endregion
     }

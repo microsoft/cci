@@ -67,6 +67,10 @@
     <Compile Include="ReadOnlyAutoPropertyTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AssertMessage\AssertMessage.csproj">
+      <Project>{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}</Project>
+      <Name>AssertMessage</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CciSharp\CciSharp.csproj">
       <Project>{5B994274-CEBB-429F-A9B6-612117C872ED}</Project>
       <Name>CciSharp</Name>

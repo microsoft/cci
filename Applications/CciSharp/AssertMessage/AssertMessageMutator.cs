@@ -48,9 +48,21 @@ namespace CciSharp.Mutators
         class Mutator 
             : CcsCodeMutatorBase<AssertMessageMutator>
         {
+            readonly Microsoft.Cci.MethodReference stringFormatStringObjectArray;
             public Mutator(AssertMessageMutator owner)
                 : base(owner)
-            { }
+            {
+                this.stringFormatStringObjectArray =
+                    new Microsoft.Cci.MethodReference(
+                        this.Host,
+                        this.Host.PlatformType.SystemString,
+                        CallingConvention.Default,
+                        host.PlatformType.SystemVoid,
+                        this.Host.NameTable.GetNameFor("Format"), 0,
+                        this.Host.PlatformType.SystemString,
+                        Vector.GetVector(this.Host.PlatformType.SystemObject, this.Host.InternFactory)
+                        );
+            }
 
             public int MutationCount = 0;
 
@@ -74,20 +86,96 @@ namespace CciSharp.Mutators
                     var condition = methodCall.Arguments[0];
                     var message = ExtractSourceFromPdb(condition);
                     message = PretifyMessage(assertStringMethod, message);
+                    IExpression messageExpression = new CompileTimeConstant { Value = message };
+
+                    // collect the values of locals and parameters
+                    var variables = CollectSubExpressions(condition);
+                    var variableNames = new Dictionary<string, object>();
+                    if (variables.Count > 0)
+                    {
+                        var args = new CreateArray
+                        {
+                            ElementType = this.Host.PlatformType.SystemObject,
+                            Rank = 1
+                        };
+                        var sb = new StringBuilder(message);
+                        sb.Append(" where ");
+                        int k = 0;
+                        for (int i = 0; i < variables.Count; i++)
+                        {
+                            var variable = variables[i];
+                            var name = this.GetVariableName(variable);
+                            if (!variableNames.ContainsKey(name))
+                            {
+                                variableNames.Add(name, null);
+                                if (k > 0)
+                                    sb.Append(", ");
+                                this.AppendVariable(sb, k, name);
+                                args.Initializers.Add(variable);
+                                k++;
+                            }
+                        }
+
+                        message = sb.ToString();
+                        messageExpression = new MethodCall
+                        {
+                            MethodToCall = this.stringFormatStringObjectArray,
+                            Arguments = new List<IExpression>(new IExpression[] { 
+                                new CompileTimeConstant { Value = message }, 
+                                args })
+                        };
+                    }
+
                     var newCall = new MethodCall
                     {
                         MethodToCall = assertStringMethod,
                         Arguments = new List<IExpression>(
                             new IExpression[] { 
                                 condition, 
-                                new CompileTimeConstant { Value = message } 
-                            })
+                                messageExpression
+                            }), 
+                        IsStaticCall = true, 
+                        Locations = methodCall.Locations
                     };
                     this.MutationCount++;
                     return newCall;
                 }
 
                 return base.Visit(methodCall);
+            }
+
+            private void AppendVariable(StringBuilder sb, int i, string name)
+            {
+                Contract.Requires(sb != null);
+                Contract.Requires(!String.IsNullOrEmpty(name));
+
+                sb.AppendFormat("{0} = ", name);
+                sb.Append('{');
+                sb.Append(i);
+                sb.Append('}');
+            }
+
+            private string GetVariableName(IBoundExpression variable)
+            {
+                string name;
+                var local = variable.Definition as ILocalDefinition;
+                if (local != null)
+                {
+                    bool compilerGenerated;
+                    name = this.pdbReader.GetSourceNameFor(local, out compilerGenerated);
+                }
+                else
+                    name = ((INamedEntity)variable.Definition).Name.Value;
+                return name;
+            }
+
+            private List<IBoundExpression> CollectSubExpressions(IExpression condition)
+            {
+                Contract.Requires(condition != null);
+
+                var vis = new SubExpressionTraverser();
+                vis.Visit(condition);
+                return vis.Temps;
             }
 
             private static string PretifyMessage(IMethodReference assertStringMethod, string message)
@@ -116,10 +204,35 @@ namespace CciSharp.Mutators
                 Contract.Assert(this.pdbReader != null);
                 foreach (var location in condition.Locations)
                     foreach (var primarySourceLocation in this.pdbReader.GetPrimarySourceLocationsFor(location))
-                        sb.Append(primarySourceLocation.Source);
+                    {
+                        var source = primarySourceLocation.Source;
+                        for (int i = 0; i < source.Length; i++)
+                        {
+                            char c = source[i];
+                            switch (c)
+                            {
+                                case '{': sb.Append("{{"); break;
+                                case '}': sb.Append("}}"); break;
+                                default: sb.Append(c); break;
+                            }
+                        }
+                    }
 
                 var message = sb.ToString();
                 return message;
+            }
+        }
+
+        class SubExpressionTraverser
+            : BaseCodeTraverser
+        {
+            public readonly List<IBoundExpression> Temps =
+                new List<IBoundExpression>();
+
+            public override void Visit(IBoundExpression boundExpression)
+            {
+                this.Temps.Add(boundExpression);
+                base.Visit(boundExpression);
             }
         }
 
