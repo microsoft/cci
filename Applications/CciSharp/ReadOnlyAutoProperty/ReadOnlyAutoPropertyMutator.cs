@@ -162,7 +162,8 @@ namespace CciSharp.ReadOnlyAutoProperty
                         Target = new TargetExpression
                         {
                              Instance = methodCall.ThisArgument,
-                             Definition = field
+                             Definition = field,
+                             Locations = methodCall.Locations
                         }
                     };
                     return storeField;
