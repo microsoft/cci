@@ -23,23 +23,19 @@ namespace CciSharp.Mutators
     public sealed class AssertMessageMutator
         : CcsMutatorBase
     {
-        readonly Dictionary<uint, IMethodReference> assertMethods;
+        Dictionary<uint, IMethodReference> assertMethods;
 
         public AssertMessageMutator(ICcsHost host)
             : base(host, "AssertMessage", 5)
         {
-            var testTypes = new TestType(host);
-            this.assertMethods = testTypes.Methods;
-        }
-
-        [ContractInvariantMethod]
-        void ObjectInvariant()
-        {
-            Contract.Invariant(this.assertMethods != null);
         }
 
         public override bool Visit(Module module)
         {
+            var testTypes = new TestType(this.Host);
+            testTypes.Visit(module);
+            this.assertMethods = testTypes.Methods;
+
             var mutator = new Mutator(this);
             mutator.Visit(module);
             return mutator.MutationCount > 0;
@@ -265,7 +261,7 @@ namespace CciSharp.Mutators
                             this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsTrue");
                             this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsFalse");
                             break;
-                        case "Xunit": 
+                        case "xunit": 
                             this.AddAssertMethod(assembly, "Xunit.Assert", "True");
                             this.AddAssertMethod(assembly, "Xunit.Assert", "False");
                             break;
