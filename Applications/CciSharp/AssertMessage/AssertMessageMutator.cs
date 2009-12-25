@@ -254,6 +254,9 @@ namespace CciSharp.Mutators
                 {
                     switch (assembly.Name.Value)
                     {
+                        case "System":
+                            this.AddAssertMethod(assembly, "System.Diagnostics.Debug", "Assert");
+                            break;
                         case "MbUnit.Framework":
                             this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsTrue");
                             this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsFalse");
