@@ -13,6 +13,21 @@ namespace CciSharp.Test
 {
     public partial class AssertMessageTest
     {
+        int value = -1;
+        [Fact]
+        public void Field()
+        {
+            int x = 3;
+            try
+            {
+                Assert.True(x != value);
+            }
+            catch (Exception ex)
+            {
+                Assert.True(ex.Message.Contains("x != value"), ex.Message + "does not contain the expression");
+            }
+        }
+
         [Fact]
         public void AddMessageToTrue2Variables()
         {
