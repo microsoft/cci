@@ -23,7 +23,7 @@ namespace CciSharp.Mutators
     public sealed class AssertMessageMutator
         : CcsMutatorBase
     {
-        Dictionary<uint, IMethodReference> assertMethods;
+        Dictionary<uint, AssertMethods> assertMethods;
 
         public AssertMessageMutator(ICcsHost host)
             : base(host, "AssertMessage", 5)
@@ -55,7 +55,7 @@ namespace CciSharp.Mutators
                         this.Host,
                         this.Host.PlatformType.SystemString,
                         CallingConvention.Default,
-                        host.PlatformType.SystemVoid,
+                        host.PlatformType.SystemString,
                         this.Host.NameTable.GetNameFor("Format"), 0,
                         this.Host.PlatformType.SystemString,
                         Vector.GetVector(this.Host.PlatformType.SystemObject, this.Host.InternFactory)
@@ -77,14 +77,19 @@ namespace CciSharp.Mutators
 
             public override IExpression Visit(MethodCall methodCall)
             {
-                IMethodReference assertStringMethod;
-                if (this.Owner.assertMethods.TryGetValue(methodCall.MethodToCall.InternedKey, out assertStringMethod))
+                AssertMethods assertMethods;
+                if (this.Owner.assertMethods.TryGetValue(methodCall.MethodToCall.InternedKey, out assertMethods))
                 {
                     // we've got a winner here.
                     var condition = methodCall.Arguments[0];
                     var message = ExtractSourceFromPdb(condition);
-                    message = PretifyMessage(assertStringMethod, message);
+                    IMethodReference assertMethod;
+                    bool hasFormatMethod = assertMethods.TryGetStringFormatMethod(out assertMethod);
+                    if (!hasFormatMethod)
+                        assertMethod = assertMethods.StringMethod;
+                    message = PretifyMessage(assertMethod, message);
                     IExpression messageExpression = new CompileTimeConstant { Value = message };
+                    IExpression formatArgs = null;
 
                     // collect the values of locals and parameters
                     var variables = CollectSubExpressions(condition);
@@ -113,28 +118,37 @@ namespace CciSharp.Mutators
                                 k++;
                             }
                         }
+                        args.Sizes = new List<IExpression>(new IExpression[] { new CompileTimeConstant { Value = args.Initializers.Count } });
 
                         message = sb.ToString();
-                        messageExpression = new MethodCall
+                        if (hasFormatMethod)
                         {
-                            MethodToCall = this.stringFormatStringObjectArray,
-                            Arguments = new List<IExpression>(new IExpression[] { 
+                            messageExpression = new CompileTimeConstant { Value = message };
+                            formatArgs = args;
+                        }
+                        else
+                        {
+                            messageExpression = new MethodCall
+                            {
+                                MethodToCall = this.stringFormatStringObjectArray,
+                                Arguments = new List<IExpression>(new IExpression[] { 
                                 new CompileTimeConstant { Value = message }, 
                                 args })
-                        };
+                            };
+                            formatArgs = null;
+                        }
                     }
 
                     var newCall = new MethodCall
                     {
-                        MethodToCall = assertStringMethod,
-                        Arguments = new List<IExpression>(
-                            new IExpression[] { 
-                                condition, 
-                                messageExpression
-                            }), 
-                        IsStaticCall = true, 
+                        MethodToCall = assertMethod,
+                        IsStaticCall = true,
                         Locations = methodCall.Locations
                     };
+                    newCall.Arguments.Add(condition);
+                    newCall.Arguments.Add(messageExpression);
+                    if (formatArgs != null)
+                        newCall.Arguments.Add(formatArgs);
                     this.MutationCount++;
                     return newCall;
                 }
@@ -148,9 +162,9 @@ namespace CciSharp.Mutators
                 Contract.Requires(!String.IsNullOrEmpty(name));
 
                 sb.AppendFormat("{0} = ", name);
-                sb.Append('{');
+                sb.Append("'{");
                 sb.Append(i);
-                sb.Append('}');
+                sb.Append("}'");
             }
 
             private string GetVariableName(IBoundExpression variable)
@@ -234,16 +248,34 @@ namespace CciSharp.Mutators
             }
         }
 
+        struct AssertMethods
+        {         
+            public readonly IMethodReference StringMethod;
+            private readonly IMethodReference stringFormatMethod;
+            public AssertMethods(IMethodReference stringMethod, IMethodReference stringFormatMethod)
+            {
+                Contract.Requires(stringMethod != null);
+                this.StringMethod = stringMethod;
+                this.stringFormatMethod = stringFormatMethod;
+            }
+
+            public bool TryGetStringFormatMethod(out IMethodReference assertMethod)
+            {
+                assertMethod = this.stringFormatMethod;
+                return assertMethod != null;
+            }
+        }
+
         // TODO: why do I need a platform type here?
         class TestType : PlatformType
         {
-            public readonly Dictionary<uint, IMethodReference> Methods;
+            public readonly Dictionary<uint, AssertMethods> Methods;
             readonly IMetadataHost host;
             public TestType(IMetadataHost host)
                 : base(host)
             {
                 this.host = host;
-                this.Methods = new Dictionary<uint, IMethodReference>();
+                this.Methods = new Dictionary<uint, AssertMethods>();
             }
 
             public void Visit(IModule module)
@@ -253,27 +285,27 @@ namespace CciSharp.Mutators
                     switch (assembly.Name.Value)
                     {
                         case "System":
-                            this.AddAssertMethod(assembly, "System.Diagnostics.Debug", "Assert");
+                            this.AddAssertMethod(assembly, "System.Diagnostics.Debug", "Assert", false);
                             break;
                         case "MbUnit.Framework":
-                            this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsTrue");
-                            this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsFalse");
+                            this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsTrue", true);
+                            this.AddAssertMethod(assembly, "MbUnit.Framework.Assert", "IsFalse", true);
                             break;
                         case "nunit.framework":
-                            this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsTrue");
-                            this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsFalse");
+                            this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsTrue", true);
+                            this.AddAssertMethod(assembly, "NUnit.Framework.Assert", "IsFalse", true);
                             break;
                         case "xunit": 
-                            this.AddAssertMethod(assembly, "Xunit.Assert", "True");
-                            this.AddAssertMethod(assembly, "Xunit.Assert", "False");
+                            this.AddAssertMethod(assembly, "Xunit.Assert", "True", false);
+                            this.AddAssertMethod(assembly, "Xunit.Assert", "False", false);
                             break;
                         case "Microsoft.Pex.Framework":
-                            this.AddAssertMethod(assembly, "Microsoft.Pex.Framework.PexAssert", "IsTrue");
-                            this.AddAssertMethod(assembly, "Microsoft.Pex.Framework.PexAssert", "IsFalse");
+                            this.AddAssertMethod(assembly, "Microsoft.Pex.Framework.PexAssert", "IsTrue", true);
+                            this.AddAssertMethod(assembly, "Microsoft.Pex.Framework.PexAssert", "IsFalse", true);
                             break;
                         case "Microsoft.VisualStudio.QualityTools.UnitTestFramework":
-                            this.AddAssertMethod(assembly, "Microsoft.VisualStudio.TestTools.UnitTesting.Assert", "IsTrue");
-                            this.AddAssertMethod(assembly, "Microsoft.VisualStudio.TestTools.UnitTesting.Assert", "IsFalse");
+                            this.AddAssertMethod(assembly, "Microsoft.VisualStudio.TestTools.UnitTesting.Assert", "IsTrue", true);
+                            this.AddAssertMethod(assembly, "Microsoft.VisualStudio.TestTools.UnitTesting.Assert", "IsFalse", true);
                             break;
                     }
                 }
@@ -282,7 +314,8 @@ namespace CciSharp.Mutators
             private void AddAssertMethod(
                 IAssemblyReference assembly,
                 string assertTypeFullName,
-                string methodName)
+                string methodName,
+                bool hasFormatOverload)
             {
                 Contract.Requires(host != null);
                 Contract.Requires(assembly != null);
@@ -292,10 +325,18 @@ namespace CciSharp.Mutators
                 var platformType = host.PlatformType;
                 var booleanType = platformType.SystemBoolean;
                 var stringType = platformType.SystemString;
+                var objectType = platformType.SystemObject;
+
+                var stringMethod =
+                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType);
+                var stringFormatMethod =
+                    hasFormatOverload
+                    ? new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType, Vector.GetVector(objectType, host.InternFactory))
+                    : null;
 
                 this.Methods.Add(
                     new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType).InternedKey,
-                    new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType)
+                    new AssertMethods(stringMethod, stringFormatMethod)
                     );
             }
         }
