@@ -39,6 +39,11 @@ namespace CciSharp.ReadOnlyAutoProperty
             return true;
         }
 
+        private void Error(PropertyDefinition propertyDefinition, string message)
+        {
+            this.Host.Event(CcsEventLevel.Error, "{0} {1}", propertyDefinition, message);
+        }
+
         class PropertyCollector
             : CcsCodeMutatorBase<ReadOnlyAutoPropertyMutator>
         {
@@ -49,13 +54,8 @@ namespace CciSharp.ReadOnlyAutoProperty
             {
                 this.compilerGeneratedAttribute = host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute;
             }
-            public readonly Dictionary<uint, IFieldReference> Properties 
-                = new Dictionary<uint, IFieldReference>();
-
-            private void Error(PropertyDefinition propertyDefinition, string message)
-            {
-                this.Host.Event(CcsEventLevel.Error, "{0} {1}", propertyDefinition, message);
-            }
+            public readonly Dictionary<uint, Setter> Properties 
+                = new Dictionary<uint, Setter>();
 
             public override PropertyDefinition Visit(PropertyDefinition propertyDefinition)
             {
@@ -65,34 +65,34 @@ namespace CciSharp.ReadOnlyAutoProperty
                 {
                     if (getter == null)
                     {
-                        this.Error(propertyDefinition, "must have a getter to be readonly");
+                        this.Owner.Error(propertyDefinition, "must have a getter to be readonly");
                         return propertyDefinition;
                     }
                     if (setter == null)
                     {
-                        this.Error(propertyDefinition, "must have a setter to be readonly");
+                        this.Owner.Error(propertyDefinition, "must have a setter to be readonly");
                         return propertyDefinition;
                     }
                     if (!AttributeHelper.Contains(getter.Attributes, this.compilerGeneratedAttribute) ||
                         !AttributeHelper.Contains(setter.Attributes, this.compilerGeneratedAttribute)) // compiler generated
                     {
-                        this.Error(propertyDefinition, "must be an auto-property to be readonly");
+                        this.Owner.Error(propertyDefinition, "must be an auto-property to be readonly");
                         return propertyDefinition;
                     }
                     if (getter.IsStatic || setter.IsStatic)
                     {
-                        this.Error(propertyDefinition, "must be an instance property to be readonly");
+                        this.Owner.Error(propertyDefinition, "must be an instance property to be readonly");
                         return propertyDefinition;
                     }
 
                     if (getter.IsVirtual || setter.IsVirtual)
                     {
-                        this.Error(propertyDefinition, "cannot be virtual to be readonly");
+                        this.Owner.Error(propertyDefinition, "cannot be virtual to be readonly");
                         return propertyDefinition;
                     }
                     if (setter.Visibility != TypeMemberVisibility.Private) // setter is private
                     {
-                        this.Error(propertyDefinition, "must have a private setter to be readonly");
+                        this.Owner.Error(propertyDefinition, "must have a private setter to be readonly");
                         return propertyDefinition;
                     }
 
@@ -108,7 +108,7 @@ namespace CciSharp.ReadOnlyAutoProperty
                     }
                     if (field == null)
                     {
-                        this.Error(propertyDefinition, "has no backing field");
+                        this.Owner.Error(propertyDefinition, "has no backing field");
                         return propertyDefinition;
                     }
 
@@ -119,7 +119,7 @@ namespace CciSharp.ReadOnlyAutoProperty
                     propertyDefinition.Accessors.Remove(setter);
 
                     // store field to update
-                    this.Properties[setter.InternedKey] = field;
+                    this.Properties[setter.InternedKey] = new Setter(propertyDefinition, field);
                     this.Host.Event(CcsEventLevel.Message, "readonly property: {0}, field {1}", propertyDefinition, field);
                 }
 
@@ -140,23 +140,54 @@ namespace CciSharp.ReadOnlyAutoProperty
             }
         }
 
+        struct Setter
+        {
+            public readonly PropertyDefinition Property;
+            public readonly IFieldReference Field;
+            public Setter(PropertyDefinition property, IFieldReference field)
+            {
+                Contract.Requires(property != null);
+                Contract.Requires(field != null);
+                this.Property = property;
+                this.Field = field;
+            }
+        }
+
         class SetterReplacer
             : CcsCodeMutatorBase<ReadOnlyAutoPropertyMutator>
         {
-            readonly Dictionary<uint, IFieldReference> fields;
-            public SetterReplacer(ReadOnlyAutoPropertyMutator owner, Dictionary<uint, IFieldReference> fields)
+            readonly Dictionary<uint, Setter> fields;
+            public SetterReplacer(ReadOnlyAutoPropertyMutator owner, Dictionary<uint, Setter> fields)
                 : base(owner)
             {
                 Contract.Requires(fields != null);
                 this.fields = fields;
             }
 
+            MethodDefinition currentMethod = null;
+            public override MethodDefinition Visit(MethodDefinition methodDefinition)
+            {
+                currentMethod = methodDefinition;
+                var result = base.Visit(methodDefinition);
+                currentMethod = null;
+                return result;
+            }
+
             public override IExpression Visit(MethodCall methodCall)
             {
-                IFieldReference field;
+                Setter setter;
                 var methodToCall = methodCall.MethodToCall;
-                if (this.fields.TryGetValue(methodToCall.InternedKey, out field))
+                if (this.fields.TryGetValue(methodToCall.InternedKey, out setter))
                 {
+                    var field = setter.Field;
+                    var property = setter.Property;
+                    // are we in a .ctor?
+                    if (!currentMethod.IsConstructor)
+                    {
+                        this.Owner.Error(property, "can only be assigned in a constructor");
+                        return methodCall;
+                    }
+
                     var storeField = new Assignment
                     {
                         Source = methodCall.Arguments[0],
