@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
-    <CcsRewriting>False</CcsRewriting>
+    <CcsRewriting>True</CcsRewriting>
     <CcsVerify>True</CcsVerify>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -78,6 +78,10 @@
     <ProjectReference Include="..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NotifyAutoPropertyChanged\NotifyAutoPropertyChanged.csproj">
+      <Project>{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}</Project>
+      <Name>NotifyAutoPropertyChanged</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

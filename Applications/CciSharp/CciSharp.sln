@@ -51,6 +51,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mutators", "Mutators", "{7B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssertMessage", "AssertMessage\AssertMessage.csproj", "{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotifyAutoPropertyChanged", "NotifyAutoPropertyChanged\NotifyAutoPropertyChanged.csproj", "{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -211,6 +213,14 @@ Global
 		{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -234,5 +244,6 @@ Global
 		{27F2A417-B6ED-43AD-A38E-A0B6142216F6} = {BEDD0E63-6EFD-4FF6-B0F9-D155D8DC5205}
 		{EFBAECB0-A690-4147-A11C-BA25AC9EA94E} = {7BF53A15-F802-47BE-90B7-CC7744E1D489}
 		{A8DD96BA-3DC1-49AE-B050-DBC92732DF5C} = {7BF53A15-F802-47BE-90B7-CC7744E1D489}
+		{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445} = {7BF53A15-F802-47BE-90B7-CC7744E1D489}
 	EndGlobalSection
 EndGlobal
