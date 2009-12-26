@@ -143,12 +143,14 @@ namespace CciSharp.Mutators
                     {
                         MethodToCall = assertMethod,
                         IsStaticCall = true,
-                        Locations = methodCall.Locations
+                        Locations = methodCall.Locations,
+                        Type = this.Host.PlatformType.SystemVoid
                     };
                     newCall.Arguments.Add(condition);
                     newCall.Arguments.Add(messageExpression);
                     if (formatArgs != null)
                         newCall.Arguments.Add(formatArgs);
+                    Contract.Assert(newCall.Arguments.Count == assertMethod.ParameterCount);
                     this.MutationCount++;
                     return newCall;
                 }
