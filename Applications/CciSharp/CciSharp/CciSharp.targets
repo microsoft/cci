@@ -63,23 +63,27 @@
   <Target
     Name="CcsPreRewrite"
     Condition="$(CcsRewriting) == 'true'">
-    <!-- needs to be evaluated after the CopyToTargetDirectory task has run otherwise @(MainAssembly) is empty -->
-    <ItemGroup>
-      <CcsAssemblies Include="@(MainAssembly)" />
-    </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <CcsRewriterInputs
+       Include="@(IntermediateAssembly)"/>
+  </ItemGroup>
+  <PropertyGroup>
+    <CcsRewriterOutput>$(IntermediateOutputPath)$(TargetName).ccs</CcsRewriterOutput>
+  </PropertyGroup>
 
   <Target
     Name="CcsRewrite"
     Condition="$(CcsRewriting) == 'true' and @(CcsMutatorAssemblies) != ''"
-    Inputs="@(CcsAssemblies)"
-    Outputs="@(CcsAssemblies->'%(Directory)%(FileName).ccs')"
+    Inputs="@(CcsRewriterInputs)"
+    Outputs="$(CcsRewriterOutput)"
     DependsOnTargets="$(CcsRewriteDependsOn)">
     <PropertyGroup>
       <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
-      <CcsExecCommand>$(CcsCommand) &quot;@(CcsAssemblies)&quot; &quot;@(CcsMutatorAssemblies)&quot;</CcsExecCommand>
+      <CcsExecCommand>$(CcsCommand) &quot;@(CcsRewriterInputs)&quot; &quot;@(CcsMutatorAssemblies)&quot;</CcsExecCommand>
     </PropertyGroup>
-    <GetFrameworkSdkPath>
+    <!--<GetFrameworkSdkPath>
       <Output TaskParameter="Path" PropertyName="SdkPath" />
     </GetFrameworkSdkPath>
     <PropertyGroup>
@@ -87,37 +91,37 @@
     </PropertyGroup>
     <Exec
       Condition="$(CcsVerify) == 'true'"
-      Command="$(PeVerify) &quot;@(CcsAssemblies)&quot;" />
+      Command="$(PeVerify) &quot;@(CcsRewriterInputs)&quot;" />-->
     <Exec Command="$(CcsExecCommand)" />
-    <Exec
+    <!--    <Exec
       Condition="$(CcsVerify) == 'true'"
-      Command="$(PeVerify) &quot;@(CcsAssemblies)&quot;" />
+      Command="$(PeVerify) &quot;@(CcsRewriterInputs)&quot;" />-->
     <Copy
-      SourceFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
-      DestinationFiles="@(CcsAssemblies)"
+      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
+      DestinationFiles="@(CcsRewriterInputs)"
       SkipUnchangedFiles="true"/>
     <Copy
-      Condition="Exists('@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).pdb')')"
-      SourceFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).ccs.pdb')"
-      DestinationFiles="@(CcsAssemblies->'%(RootDir)%(Directory)%(FileName).pdb')"
+      Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')')"
+      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs.pdb')"
+      DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')"
       SkipUnchangedFiles="true"/>
-    <Touch Files="
-           @(CcsAssemblies);
-           @(CcsIntermediateAssemblies);
-           " />
+    <WriteLinesToFile
+           File="$(CcsRewriterOutput)"
+       />
+    <Touch Files="$(CcsRewriterOutput)"/>
+    <ItemGroup>
+      <FileWrites
+         Include="$(CcsRewriterOutput)"/>
+    </ItemGroup>    
   </Target>
 
+<!--  <PropertyGroup>
+    <PrepareForRunDependsOn>
+      CcsRewrite;$(PrepareForRunDependsOn)
+    </PrepareForRunDependsOn>
+  </PropertyGroup> -->
   <PropertyGroup>
-    <BuildCompiledDependsOn Condition="$(CcsRewriteOnBuildCompiled) == 'true'">
-      $(BuildCompiledDependsOn);
-      CcsRewrite
-    </BuildCompiledDependsOn>
-  </PropertyGroup>
-  <PropertyGroup>
-  <PrepareForRunDependsOn>
-      $(PrepareForRunDependsOn);
-      CcsRewrite
-  </PrepareForRunDependsOn>
+    <CompileDependsOn>$(CompileDependsOn);CcsRewrite</CompileDependsOn>
   </PropertyGroup>
 
   <!--=====================================================================
