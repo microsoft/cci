@@ -11,6 +11,7 @@ using System.IO;
 using CciSharp.Framework;
 using Microsoft.Cci.ILToCodeModel;
 using Microsoft.Cci.MutableCodeModel;
+using System.Diagnostics.Contracts;
 
 namespace CciSharp
 {
@@ -103,6 +104,7 @@ namespace CciSharp
 
         public void Event(CcsEventLevel level, string format, params object[] args)
         {
+            Contract.Requires(!String.IsNullOrEmpty(format));
             this.Event(level, String.Format(format, args));
         }
 
@@ -114,6 +116,9 @@ namespace CciSharp
 
         public void Event(CcsEventLevel level, IPrimarySourceLocation location, string format, params object[] args)
         {
+            Contract.Requires(location != null);
+            Contract.Requires(!String.IsNullOrEmpty(format));
+
             this.Event(level, location, String.Format(format, args));
         }
         #endregion

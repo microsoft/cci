@@ -23,9 +23,16 @@ namespace CciSharp
             this.host = new CcsHost();
         }
 
+        [ContractInvariantMethod]
+        void ObjectInvariant()
+        {
+            Contract.Invariant(this.host != null);
+        }
+
         public int Mutate(string assembly, IEnumerable<string> mutatorAssemblies)
         {
             Contract.Requires(!String.IsNullOrEmpty(assembly));
+            Contract.Requires(mutatorAssemblies != null);
 
             var assemblyPath = Path.GetFullPath(assembly);
             // load mutators
@@ -81,6 +88,7 @@ namespace CciSharp
         private List<CcsMutatorBase> LoadMutators(IEnumerable<string> mutatorAssemblyFiles)
         {
             Contract.Requires(mutatorAssemblyFiles != null);
+
             var mutators = new List<CcsMutatorBase>();
             foreach (var file in mutatorAssemblyFiles)
             {

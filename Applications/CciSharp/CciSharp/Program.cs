@@ -30,7 +30,7 @@ namespace CciSharp
             }
             catch (Exception ex)
             {
-                Console.WriteLine("unexpected error: {0}", ex.Message);
+                Console.WriteLine("CciSharp: error: {0}", ex.Message);
                 Console.WriteLine(ex);
                 return CcsExitCodes.UnexpectedException;
             }
