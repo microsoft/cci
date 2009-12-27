@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace CciSharp.Test
 {
@@ -18,7 +19,15 @@ namespace CciSharp.Test
             newArgs.Add(typeof(Program).Assembly.Location);
             if (args != null)
                 newArgs.AddRange(args);
-            return Xunit.ConsoleClient.Program.Main(newArgs.ToArray());
+            try
+            {
+                return Xunit.ConsoleClient.Program.Main(newArgs.ToArray());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return -1000;
+            }
         }
     }
 }

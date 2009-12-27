@@ -88,7 +88,10 @@ namespace CciSharp.Mutators
                     if (!hasFormatMethod)
                         assertMethod = assertMethods.StringMethod;
                     message = PretifyMessage(assertMethod, message);
-                    IExpression messageExpression = new CompileTimeConstant { Value = message };
+                    IExpression messageExpression = new CompileTimeConstant { 
+                        Value = message, 
+                        Type = this.Host.PlatformType.SystemString 
+                    };
                     IExpression formatArgs = null;
 
                     // collect the values of locals and parameters
@@ -114,16 +117,31 @@ namespace CciSharp.Mutators
                                 if (k > 0)
                                     sb.Append(", ");
                                 this.AppendVariable(sb, k, name);
-                                args.Initializers.Add(variable);
+                                if (!variable.Type.IsValueType)
+                                    args.Initializers.Add(variable);
+                                else
+                                    args.Initializers.Add(new Conversion
+                                    {
+                                        ValueToConvert = variable,
+                                        TypeAfterConversion = this.Host.PlatformType.SystemObject,
+                                        Type = this.Host.PlatformType.SystemObject
+                                    });
                                 k++;
                             }
                         }
-                        args.Sizes = new List<IExpression>(new IExpression[] { new CompileTimeConstant { Value = args.Initializers.Count } });
+                        args.Sizes = new List<IExpression>(new IExpression[] { 
+                            new CompileTimeConstant { 
+                                Value = args.Initializers.Count,
+                                Type = this.Host.PlatformType.SystemInt32
+                            } });
 
                         message = sb.ToString();
                         if (hasFormatMethod)
                         {
-                            messageExpression = new CompileTimeConstant { Value = message };
+                            messageExpression = new CompileTimeConstant { 
+                                Value = message, 
+                                Type = this.Host.PlatformType.SystemString
+                                };
                             formatArgs = args;
                         }
                         else
@@ -132,8 +150,10 @@ namespace CciSharp.Mutators
                             {
                                 MethodToCall = this.stringFormatStringObjectArray,
                                 Arguments = new List<IExpression>(new IExpression[] { 
-                                new CompileTimeConstant { Value = message }, 
-                                args })
+                                    new CompileTimeConstant { Value = message }, 
+                                    args }),
+                                IsStaticCall = true,
+                                Type = this.Host.PlatformType.SystemString
                             };
                             formatArgs = null;
                         }
@@ -155,7 +175,7 @@ namespace CciSharp.Mutators
                     return newCall;
                 }
 
-                return base.Visit(methodCall);
+                return methodCall;
             }
 
             private void AppendVariable(StringBuilder sb, int i, string name)
