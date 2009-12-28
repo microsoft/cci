@@ -6,7 +6,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
 
-namespace CciSharp.ReadOnlyAutoProperty
+namespace CciSharp.Mutators
 {
     /// <summary>
     /// Turns an auto property annotated with a [ReadOnly] attribute
@@ -20,7 +20,7 @@ namespace CciSharp.ReadOnlyAutoProperty
         : CcsMutatorBase
     {
         public ReadOnlyAutoPropertyMutator(ICcsHost host)
-            : base(host, "ReadOnly Auto Property", 1)
+            : base(host, "ReadOnly Auto Property", 1, typeof(ReadOnlyAutoPropertyResources))
         { }
 
         public override bool Visit(Module module)

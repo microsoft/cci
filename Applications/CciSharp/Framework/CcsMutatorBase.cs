@@ -20,13 +20,16 @@ namespace CciSharp.Framework
     [DebuggerDisplay("{Name}")]
     public abstract class CcsMutatorBase
     {
+        readonly Type resourceType;
+
         /// <summary>
         /// Initializes a new instance of the mutator
         /// </summary>
         /// <param name="host"></param>
         /// <param name="name"></param>
         /// <param name="priority"></param>
-        protected CcsMutatorBase(ICcsHost host, string name, int priority)
+        /// <param name="resourceType"></param>
+        protected CcsMutatorBase(ICcsHost host, string name, int priority, Type resourceType)
         {
             Contract.Requires(host != null);
             Contract.Requires(!String.IsNullOrEmpty(name));
@@ -35,6 +38,7 @@ namespace CciSharp.Framework
             this.Host = host;
             this.Name = name;
             this.Priority = priority;
+            this.resourceType = resourceType;
         }
 
         /// <summary>

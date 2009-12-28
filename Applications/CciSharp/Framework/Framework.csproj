@@ -72,6 +72,8 @@
     <Compile Include="..\..\..\Ast\Metadata\Sources\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
+    <Compile Include="CcsErrorMessage.cs" />
+    <Compile Include="CcsErrorReporter.cs" />
     <Compile Include="CcsMutatorBase.cs" />
     <Compile Include="CcsCodeMutatorBase.cs" />
     <Compile Include="ICcsHost.cs" />

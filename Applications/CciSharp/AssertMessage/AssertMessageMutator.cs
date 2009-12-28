@@ -26,7 +26,7 @@ namespace CciSharp.Mutators
         Dictionary<uint, AssertMethods> assertMethods;
 
         public AssertMessageMutator(ICcsHost host)
-            : base(host, "AssertMessage", 5)
+            : base(host, "AssertMessage", 5, typeof(AssertMessageResources))
         {
         }
 

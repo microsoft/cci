@@ -69,6 +69,11 @@
     <Compile Include="..\..\..\ast\metadata\sources\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
+    <Compile Include="AssertMessageResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AssertMessageResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="AssertMessageMutator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -109,6 +114,12 @@
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="AssertMessageResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AssertMessageResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
