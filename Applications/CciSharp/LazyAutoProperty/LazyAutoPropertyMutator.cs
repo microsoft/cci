@@ -42,9 +42,12 @@ namespace CciSharp.Mutators
         class Mutator
             : CcsCodeMutatorBase<LazyAutoPropertyMutator>
         {
+            readonly INamespaceTypeReference booleanType;
             public Mutator(LazyAutoPropertyMutator owner, ISourceLocationProvider _pdbReader)
                 : base(owner, _pdbReader)
-            { }
+            {
+                this.booleanType = this.Host.PlatformType.SystemBoolean; 
+            }
 
             public int MutationCount { get; private set; }
 
@@ -81,29 +84,33 @@ namespace CciSharp.Mutators
                     return propertyDefinition;
                 }
 
-                var booleanType = this.Host.PlatformType.SystemBoolean;
                 // ok we're good,
                 // 1# add a field for the result and to check if the value was set
                 var declaringType = (TypeDefinition)propertyDefinition.ContainingTypeDefinition;
-                var resultFieldDefinition = new FieldDefinition
-                {
-                    Type = propertyDefinition.Type,
-                    Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
-                };
-                resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
-                declaringType.Fields.Add(resultFieldDefinition);
-                var resultInitializedFieldDefinition = new FieldDefinition
-                {
-                    Type = booleanType,
-                    Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")
-                };
-                resultInitializedFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
-                declaringType.Fields.Add(resultInitializedFieldDefinition);
+                FieldDefinition resultFieldDefinition;
+                FieldDefinition resultInitializedFieldDefinition;
+                this.DefineFields(declaringType, propertyDefinition, out resultFieldDefinition, out resultInitializedFieldDefinition);
 
                 // 2# generate a new method for the getter and move the old getter
                 // somewhere else
+                this.DefineUncachedGetter(declaringType, propertyDefinition, getter, resultFieldDefinition, resultInitializedFieldDefinition);
+
+                return propertyDefinition;
+            }
+
+            private void DefineUncachedGetter(
+                TypeDefinition declaringType,
+                PropertyDefinition propertyDefinition, 
+                MethodDefinition getter, 
+                FieldDefinition resultFieldDefinition, 
+                FieldDefinition resultInitializedFieldDefinition)
+            {
+                Contract.Requires(declaringType != null);
+                Contract.Requires(propertyDefinition != null);
+                Contract.Requires(getter != null);
+                Contract.Requires(resultFieldDefinition != null);
+                Contract.Requires(resultInitializedFieldDefinition != null);
+
                 var uncachedGetter = new MethodDefinition();
                 uncachedGetter.Copy(getter, this.Host.InternFactory);
                 uncachedGetter.Name = this.Host.NameTable.GetNameFor("Uncached" + getter.Name);
@@ -129,21 +136,21 @@ namespace CciSharp.Mutators
                     new ExpressionStatement
                     {
                         Expression = new Assignment
-                       {
-                           Type = propertyDefinition.Type,
-                           Source = new MethodCall
-                           {
-                               MethodToCall = uncachedGetter,
-                               ThisArgument = new ThisReference(),
-                               Type = propertyDefinition.Type
-                           },
-                           Target = new TargetExpression
-                           {
-                               Type = resultFieldDefinition.Type,
-                               Instance = new ThisReference(),
-                               Definition = resultFieldDefinition
-                           }
-                       }
+                        {
+                            Type = propertyDefinition.Type,
+                            Source = new MethodCall
+                            {
+                                MethodToCall = uncachedGetter,
+                                ThisArgument = new ThisReference(),
+                                Type = propertyDefinition.Type
+                            },
+                            Target = new TargetExpression
+                            {
+                                Type = resultFieldDefinition.Type,
+                                Instance = new ThisReference(),
+                                Definition = resultFieldDefinition
+                            }
+                        }
                     }
                     );
                 //      this.value$Init = true;
@@ -193,8 +200,37 @@ namespace CciSharp.Mutators
                         }
                     });
                 declaringType.Methods.Add(uncachedGetter);
+            }
 
-                return propertyDefinition;
+            private void DefineFields(
+                TypeDefinition declaringType,
+                PropertyDefinition propertyDefinition, 
+                out FieldDefinition resultFieldDefinition, 
+                out FieldDefinition resultInitializedFieldDefinition)
+            {
+                Contract.Requires(declaringType != null);
+                Contract.Requires(propertyDefinition != null);
+                Contract.Ensures(Contract.ValueAtReturn(out resultFieldDefinition) != null);
+                Contract.Ensures(Contract.ValueAtReturn(out resultInitializedFieldDefinition) != null);
+                Contract.Ensures(resultFieldDefinition.Type == propertyDefinition.Type);
+                Contract.Ensures(resultInitializedFieldDefinition.Type == this.booleanType);
+
+                resultFieldDefinition = new FieldDefinition
+                {
+                    Type = propertyDefinition.Type,
+                    Visibility = TypeMemberVisibility.Private,
+                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
+                };
+                resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
+                declaringType.Fields.Add(resultFieldDefinition);
+                resultInitializedFieldDefinition = new FieldDefinition
+                {
+                    Type = booleanType,
+                    Visibility = TypeMemberVisibility.Private,
+                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")
+                };
+                resultInitializedFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
+                declaringType.Fields.Add(resultInitializedFieldDefinition);
             }
 
             /// <summary>
