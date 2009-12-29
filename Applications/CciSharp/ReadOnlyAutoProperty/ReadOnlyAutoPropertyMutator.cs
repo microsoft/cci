@@ -108,16 +108,8 @@ namespace CciSharp.Mutators
                     }
 
                     // decompile setter body and get the backing field.
-                    IFieldReference field = null;
-                    foreach (var operation in setter.Body.Operations)
-                    {
-                        if (operation.OperationCode == OperationCode.Stfld)
-                        {
-                            field = (IFieldReference)operation.Value;
-                            break;
-                        }
-                    }
-                    if (field == null)
+                    IFieldReference field;
+                    if (!CcsHelper.TryGetFirstFieldReference(setter.Body, out field))
                     {
                         this.Owner.Error(propertyDefinition, "has no backing field");
                         return propertyDefinition;

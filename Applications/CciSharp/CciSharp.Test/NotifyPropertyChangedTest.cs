@@ -45,5 +45,17 @@ namespace CciSharp.Test
                 }
             }
         }
+
+        public class ExplicitTarget : INotifyPropertyChanged
+        {
+            event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+            {
+                add { }
+                remove { }
+            }
+
+            [NotifyChanged]
+            public int Value { get; set; }
+        }
     }
 }

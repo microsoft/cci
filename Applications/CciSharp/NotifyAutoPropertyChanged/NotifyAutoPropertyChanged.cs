@@ -11,6 +11,7 @@ using CciSharp.Framework;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.IO;
+using System.Diagnostics.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -30,7 +31,9 @@ namespace CciSharp.Mutators
 
         public override bool Visit(Module module, PdbReader _pdbReader)
         {
-            return false;
+            var mutator = new Mutator(this, _pdbReader);
+            mutator.Visit(module);
+            return mutator.MutationCount > 0;
         }
 
         class Mutator
@@ -40,15 +43,68 @@ namespace CciSharp.Mutators
                 : base(owner, sourceLocationProvider)
             { }
 
+            public int MutationCount { get; private set; }
+
             protected override void Visit(TypeDefinition typeDefinition)
             {
-                if (TypeHelper.Type1ImplementsType2(
+                if (!typeDefinition.IsInterface &&
+                    TypeHelper.Type1ImplementsType2(
                     typeDefinition, 
                     this.Owner.testTypes.INotifyPropertyChanged))
                 {
-                    // find event that implements interface method
+                    // try find the method that raises the event,
+                    // or create it if necessary
+                    IMethodDefinition onNotifyPropertyChangedMethod;
+                    if (!this.TryFindOrCreateOnNotifyPropertyChangedMethod(typeDefinition, out onNotifyPropertyChangedMethod))
+                    {
+                        this.Host.Event(CcsEventLevel.Error, "could not find or create OnNotifyPropertyChanged method");
+                        return;
+                    }
                 }
                 base.Visit(typeDefinition);
+            }
+
+            private bool TryFindOrCreateOnNotifyPropertyChangedMethod(
+                TypeDefinition typeDefinition, 
+                out IMethodDefinition onNotifyPropertyChangedMethod)
+            {
+                for (ITypeDefinition t = typeDefinition; t != null; t = TypeHelper.BaseClass(t))
+                {
+                    foreach (var method in t.Methods)
+                    {
+                        // todo visibility
+                    }
+                }
+                onNotifyPropertyChangedMethod = null;
+                return false;
+            }
+
+            private bool TryGetEvent(TypeDefinition typeDefinition, out IEventDefinition @event, out IFieldReference field)
+            {
+                Contract.Requires(typeDefinition != null);
+
+                var name = this.Host.NameTable.GetNameFor("PropertyChanged");
+                for (ITypeDefinition t = typeDefinition; t != null; t = TypeHelper.BaseClass(t))
+                {
+                    foreach (var e in typeDefinition.Events)
+                    {
+                        if (e.Name == name)
+                        {
+                            @event = e;
+                            MethodDefinition adder;
+                            if ((adder = e.Adder as MethodDefinition) != null &&
+                                CcsHelper.TryGetFirstFieldReference(adder.Body, out field))
+                                return true;
+
+                            goto notFound;
+                        }
+                    }                    
+                }
+
+            notFound:
+                @event = null;
+                field = null;
+                return false;
             }
         }
 

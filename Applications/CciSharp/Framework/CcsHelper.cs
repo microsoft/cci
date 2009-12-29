@@ -43,5 +43,29 @@ namespace CciSharp.Framework
             lazyAttribute = null;
             return false;
         }
+
+        /// <summary>
+        /// Tries to get the first field reference in the method body
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="field"></param>
+        /// <returns></returns>
+        public static bool TryGetFirstFieldReference(IMethodBody body, out IFieldReference field)
+        {
+            Contract.Requires(body != null);
+            Contract.Ensures(!Contract.Result<bool>() || Contract.ValueAtReturn(out field) != null);
+
+            foreach (var operation in body.Operations)
+            {
+                if (operation.OperationCode == OperationCode.Stfld)
+                {
+                    field = (IFieldReference)operation.Value;
+                    return field != null;
+                }
+            }
+
+            field = null;
+            return false;
+        }
     }
 }
