@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CciSharp.Mutators</RootNamespace>
-    <AssemblyName>CciSharp.LazyAutoProperty</AssemblyName>
+    <AssemblyName>CciSharp.LazyProperty</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>
@@ -67,11 +67,11 @@
     <Compile Include="..\..\..\ast\metadata\sources\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
-    <Compile Include="LazyAutoPropertyMutator.cs" />
-    <Compile Include="LazyAutoPropertyResources.Designer.cs">
+    <Compile Include="LazyPropertyMutator.cs" />
+    <Compile Include="LazyPropertyResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>LazyAutoPropertyResources.resx</DependentUpon>
+      <DependentUpon>LazyPropertyResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -110,9 +110,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="LazyAutoPropertyResources.resx">
+    <EmbeddedResource Include="LazyPropertyResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>LazyAutoPropertyResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>LazyPropertyResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

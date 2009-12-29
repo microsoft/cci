@@ -19,11 +19,11 @@ namespace CciSharp.Mutators
     /// <remarks>
     /// The [Lazy] attribute namespace and assembly does not matter.
     /// </remarks>
-    public sealed class LazyAutoPropertyMutator
+    public sealed class LazyPropertyMutator
         : CcsMutatorBase
     {
         readonly INamespaceTypeReference nonSerializedAttribute;
-        public LazyAutoPropertyMutator(ICcsHost host)
+        public LazyPropertyMutator(ICcsHost host)
             : base(host, "Lazy Auto Property", 1, typeof(LazyAutoPropertyResources))
         {
             var types = new NetTypes(host);
@@ -58,10 +58,10 @@ namespace CciSharp.Mutators
         }
 
         class Mutator
-            : CcsCodeMutatorBase<LazyAutoPropertyMutator>
+            : CcsCodeMutatorBase<LazyPropertyMutator>
         {
             readonly INamespaceTypeReference booleanType;
-            public Mutator(LazyAutoPropertyMutator owner, ISourceLocationProvider _pdbReader)
+            public Mutator(LazyPropertyMutator owner, ISourceLocationProvider _pdbReader)
                 : base(owner, _pdbReader)
             {
                 this.booleanType = this.Host.PlatformType.SystemBoolean; 

@@ -107,9 +107,9 @@
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\LazyAutoProperty\LazyAutoProperty.csproj">
+    <ProjectReference Include="..\LazyAutoProperty\LazyProperty.csproj">
       <Project>{F048D884-5356-4276-94A4-B880C55E585B}</Project>
-      <Name>LazyAutoProperty</Name>
+      <Name>LazyProperty</Name>
     </ProjectReference>
     <ProjectReference Include="..\NotifyAutoPropertyChanged\NotifyAutoPropertyChanged.csproj">
       <Project>{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}</Project>
@@ -123,7 +123,7 @@
   <ItemGroup>
     <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />
     <CcsMutatorAssemblies Include="..\ReadOnlyAutoProperty\bin\$(Configuration)\CciSharp.ReadOnlyAutoProperty.dll" />
-    <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyAutoProperty.dll" />
+    <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" />
   </ItemGroup>
   <Import Project="..\CciSharp\CciSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
