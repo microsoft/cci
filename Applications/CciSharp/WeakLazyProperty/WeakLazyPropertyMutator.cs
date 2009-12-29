@@ -17,17 +17,19 @@ namespace CciSharp.Mutators
     /// Make property getters lazy
     /// </summary>
     /// <remarks>
-    /// The [Lazy] attribute namespace and assembly does not matter.
+    /// The [WeakLazy] attribute namespace and assembly does not matter.
     /// </remarks>
-    public sealed class LazyPropertyMutator
+    public sealed class WeakLazyPropertyMutator
         : CcsMutatorBase
     {
         readonly INamespaceTypeReference nonSerializedAttribute;
-        public LazyPropertyMutator(ICcsHost host)
-            : base(host, "Lazy Property", 1, typeof(LazyPropertyResources))
+        readonly INamedTypeReference weakReferenceType;
+        public WeakLazyPropertyMutator(ICcsHost host)
+            : base(host, "Weak Lazy Property", 1, typeof(WeakLazyPropertyResources))
         {
             var types = new NetTypes(host);
             this.nonSerializedAttribute = types.SystemNonSerializedAttribute;
+            this.weakReferenceType = types.SystemWeakReference;
         }
 
         class NetTypes : PlatformType
@@ -41,6 +43,16 @@ namespace CciSharp.Mutators
                     return this.CreateReference(
                         this.CoreAssemblyRef,
                         "System", "NonSerializedAttribute");
+                }
+            }
+
+            public INamespaceTypeReference SystemWeakReference
+            {
+                get
+                {
+                    return this.CreateReference(
+                        this.CoreAssemblyRef,
+                        "System", "WeakReference");
                 }
             }
         }
@@ -58,12 +70,14 @@ namespace CciSharp.Mutators
         }
 
         class Mutator
-            : CcsCodeMutatorBase<LazyPropertyMutator>
+            : CcsCodeMutatorBase<WeakLazyPropertyMutator>
         {
+            readonly INamespaceTypeReference objectType;
             readonly INamespaceTypeReference booleanType;
-            public Mutator(LazyPropertyMutator owner, ISourceLocationProvider _pdbReader)
+            public Mutator(WeakLazyPropertyMutator owner, ISourceLocationProvider _pdbReader)
                 : base(owner, _pdbReader)
             {
+                this.objectType = this.Host.PlatformType.SystemObject;
                 this.booleanType = this.Host.PlatformType.SystemBoolean; 
             }
 
@@ -74,45 +88,50 @@ namespace CciSharp.Mutators
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute lazyAttribute;
-                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "LazyAttribute", out lazyAttribute)) // [ReadOnly]
+                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "WeakLazyAttribute", out lazyAttribute)) // [ReadOnly]
                     return propertyDefinition;
 
                 if (setter != null)
                 {
-                    this.Owner.Error(propertyDefinition, "cannot have a setter to be lazy");
+                    this.Owner.Error(propertyDefinition, "cannot have a setter to be weak lazy");
                     return propertyDefinition;
                 }
                 if (getter == null)
                 {
-                    this.Owner.Error(propertyDefinition, "must have a getter to be lazy");
+                    this.Owner.Error(propertyDefinition, "must have a getter to be weak lazy");
                     return propertyDefinition;
                 }
                 if (getter.IsStatic)
                 {
-                    this.Owner.Error(propertyDefinition, "must be an instance property to be lazy");
+                    this.Owner.Error(propertyDefinition, "must be an instance property to be weak lazy");
                     return propertyDefinition;
                 }
                 if (getter.IsVirtual)
                 {
-                    this.Owner.Error(propertyDefinition, "cannot be virtual to be lazy");
+                    this.Owner.Error(propertyDefinition, "cannot be virtual to be weak lazy");
                     return propertyDefinition;
                 }
                 if (getter.ParameterCount > 0)
                 {
-                    this.Owner.Error(propertyDefinition, "must not be an indexer to be lazy");
+                    this.Owner.Error(propertyDefinition, "must not be an indexer to be weak lazy");
+                    return propertyDefinition;
+                }
+                if (propertyDefinition.Type.IsValueType)
+                {
+                    this.Owner.Error(propertyDefinition, "must a reference type to be weak lazy");
                     return propertyDefinition;
                 }
 
                 // ok we're good,
                 // 1# add a field for the result and to check if the value was set
                 var declaringType = (TypeDefinition)propertyDefinition.ContainingTypeDefinition;
-                FieldDefinition resultFieldDefinition;
-                FieldDefinition resultInitializedFieldDefinition;
-                this.DefineFields(declaringType, propertyDefinition, out resultFieldDefinition, out resultInitializedFieldDefinition);
+
+                var resultFieldDefinition =
+                    this.DefineField(declaringType, propertyDefinition);
 
                 // 2# generate a new method for the getter and move the old getter
                 // somewhere else
-                this.DefineUncachedGetter(declaringType, propertyDefinition, getter, resultFieldDefinition, resultInitializedFieldDefinition);
+                this.DefineUncachedGetter(declaringType, propertyDefinition, getter, resultFieldDefinition);
 
                 // 3# remove the lazy attribute
                 propertyDefinition.Attributes.Remove(lazyAttribute);
@@ -125,14 +144,12 @@ namespace CciSharp.Mutators
                 TypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
                 MethodDefinition getter, 
-                FieldDefinition resultFieldDefinition, 
-                FieldDefinition resultInitializedFieldDefinition)
+                FieldDefinition resultFieldDefinition)
             {
                 Contract.Requires(declaringType != null);
                 Contract.Requires(propertyDefinition != null);
                 Contract.Requires(getter != null);
                 Contract.Requires(resultFieldDefinition != null);
-                Contract.Requires(resultInitializedFieldDefinition != null);
 
                 var uncachedGetter = new MethodDefinition();
                 uncachedGetter.Copy(getter, this.Host.InternFactory);
@@ -149,26 +166,102 @@ namespace CciSharp.Mutators
                 getter.Locations.Clear();
                 var bodyBlock = new BlockStatement();
                 body.Block = bodyBlock;
-                // if (!this.value$Init)
-                // { 
-                //      this.value$Value = this.get_Value();
-                //      this.value$Init = true;
-                // }
-                // return this.value$Value;
-                var block = new BlockStatement();
-                //      this.value$Value = this.get_Value();
-                block.Statements.Add(
-                    new ExpressionStatement
+                // var value = this.weakValue != null ? this.weakValue.Value as T : null;
+                // if (value == null)
+                //      this.weakValue = new WeakReference(value = this.get_Value());
+                // return value;
+                var valueLocal = new LocalDefinition
+                {
+                     Type = propertyDefinition.Type,
+                     Name = this.Host.NameTable.GetNameFor("value")
+                };
+                // var value = this.weakValue != null ? this.weakValue.Value as T : null;
+                var valueLocalDefinition = new LocalDeclarationStatement
+                {
+                    LocalVariable = valueLocal,
+                    InitialValue = new Conditional
+                    {
+                        Type = valueLocal.Type,
+                        Condition = new Equality
+                        {
+                            Type = booleanType,
+                            LeftOperand = new BoundExpression
+                            {
+                                Type = resultFieldDefinition.Type,
+                                Instance = new ThisReference(),
+                                Definition = resultFieldDefinition
+                            },
+                            RightOperand = new CompileTimeConstant
+                            {
+                                Type = resultFieldDefinition.Type,
+                                Value = null
+                            }
+                        },
+                        ResultIfTrue = new CompileTimeConstant
+                        {
+                            Type = valueLocal.Type,
+                            Value = null
+                        },
+                        ResultIfFalse = new CastIfPossible {
+                             TargetType = valueLocal.Type,
+                             Type = valueLocal.Type,
+                             ValueToCast = new MethodCall
+                            {
+                                Type = this.objectType, 
+                                MethodToCall = this.WeakReferenceTargetGet,
+                                IsStaticCall = false,
+                                ThisArgument = new BoundExpression {
+                                     Instance = new ThisReference(),
+                                     Definition = resultFieldDefinition,
+                                     Type = this.Owner.weakReferenceType
+                                }
+                            }
+                        }
+                    }
+                };
+
+                //    value =  this.get_Value();
+                var getValueCall = new Assignment
+                {
+                    Type = valueLocal.Type,
+                    Source = new MethodCall
+                    {
+                        MethodToCall = uncachedGetter,
+                        ThisArgument = new ThisReference(),
+                        Type = propertyDefinition.Type
+                    },
+                    Target = new TargetExpression
+                    {
+                        Type = valueLocal.Type,
+                        Definition = valueLocal
+                    }
+                };
+                //      new WeakReference(this.get_Value());
+                var newWeakReference = new CreateObjectInstance
+                {
+                    MethodToCall = this.WeakReferenceCtor,
+                    Type = this.Owner.weakReferenceType
+                };
+                newWeakReference.Arguments.Add(getValueCall);
+                var ifStatement = new ConditionalStatement
+                {
+                    // if (value == null) {...}
+                    Condition = new LogicalNot
+                    {
+                        Type = booleanType,
+                        Operand = new BoundExpression
+                        {
+                            Type = booleanType,
+                            Definition = valueLocal
+                        }
+                    },
+                    //      this.weakValue = new WeakReference(value = this.get_Value());
+                    TrueBranch = new ExpressionStatement
                     {
                         Expression = new Assignment
                         {
-                            Type = propertyDefinition.Type,
-                            Source = new MethodCall
-                            {
-                                MethodToCall = uncachedGetter,
-                                ThisArgument = new ThisReference(),
-                                Type = propertyDefinition.Type
-                            },
+                            Type = resultFieldDefinition.Type,
+                            Source = newWeakReference,
                             Target = new TargetExpression
                             {
                                 Type = resultFieldDefinition.Type,
@@ -176,89 +269,73 @@ namespace CciSharp.Mutators
                                 Definition = resultFieldDefinition
                             }
                         }
-                    }
-                    );
-                //      this.value$Init = true;
-                block.Statements.Add(
-                    new ExpressionStatement
-                    {
-                        Expression = new Assignment
-                        {
-                            Type = booleanType,
-                            Source = new CompileTimeConstant { Type = booleanType, Value = true },
-                            Target = new TargetExpression
-                            {
-                                Type = booleanType,
-                                Instance = new ThisReference(),
-                                Definition = resultInitializedFieldDefinition
-                            }
-                        }
-                    }
-                    );
-                // if (!this.value$Init) {...}
-                var ifStatement = new ConditionalStatement
-                {
-                    Condition = new LogicalNot
-                    {
-                        Type = booleanType,
-                        Operand = new BoundExpression
-                        {
-                            Type = booleanType,
-                            Instance = new ThisReference(),
-                            Definition = resultInitializedFieldDefinition
-                        }
                     },
-                    TrueBranch = block,
                     FalseBranch = new EmptyStatement()
                 };
 
                 // return this.value$Value;
+                bodyBlock.Statements.Add(valueLocalDefinition);
                 bodyBlock.Statements.Add(ifStatement);
                 bodyBlock.Statements.Add(
                     new ReturnStatement
                     {
                         Expression = new BoundExpression
                         {
-                            Type = resultFieldDefinition.Type,
-                            Instance = new ThisReference(),
-                            Definition = resultFieldDefinition
+                            Type = valueLocal.Type,
+                            Definition = valueLocal
                         }
                     });
                 declaringType.Methods.Add(uncachedGetter);
             }
 
-            private void DefineFields(
+            private FieldDefinition DefineField(
                 TypeDefinition declaringType,
-                PropertyDefinition propertyDefinition, 
-                out FieldDefinition resultFieldDefinition, 
-                out FieldDefinition resultInitializedFieldDefinition)
+                PropertyDefinition propertyDefinition)
             {
                 Contract.Requires(declaringType != null);
                 Contract.Requires(propertyDefinition != null);
-                Contract.Ensures(Contract.ValueAtReturn(out resultFieldDefinition) != null);
-                Contract.Ensures(Contract.ValueAtReturn(out resultInitializedFieldDefinition) != null);
-                Contract.Ensures(resultFieldDefinition.Type == propertyDefinition.Type);
-                Contract.Ensures(resultInitializedFieldDefinition.Type == this.booleanType);
+                Contract.Ensures(Contract.Result<FieldDefinition>() != null);
 
-                resultFieldDefinition = new FieldDefinition
+                var resultFieldDefinition = new FieldDefinition
                 {
-                    Type = propertyDefinition.Type,
+                    Type = this.Owner.weakReferenceType,
                     Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
+                    Name = this.Host.NameTable.GetNameFor("_weak$" + propertyDefinition.Name)
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
                 declaringType.Fields.Add(resultFieldDefinition);
-                resultInitializedFieldDefinition = new FieldDefinition
-                {
-                    Type = booleanType,
-                    Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")
-                };
-                resultInitializedFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
-                resultInitializedFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
-                declaringType.Fields.Add(resultInitializedFieldDefinition);
+
+                return resultFieldDefinition;
             }
+
+            public IMethodReference WeakReferenceCtor
+            {
+                get
+                {
+                    if (this.weakReferenceCtor == null)
+                        this.weakReferenceCtor = new Microsoft.Cci.MethodReference(this.Host,
+                            this.Owner.weakReferenceType,
+                           CallingConvention.HasThis, this.Host.PlatformType.SystemVoid, this.Host.NameTable.Ctor, 0, 
+                           this.objectType);
+                    return this.weakReferenceCtor;
+                }
+            }
+            private IMethodReference/*?*/ weakReferenceCtor;
+
+            public IMethodReference WeakReferenceTargetGet
+            {
+                get
+                {
+                    if (this._weakReferenceTargetGet == null)
+                        this._weakReferenceTargetGet = new Microsoft.Cci.MethodReference(this.Host,
+                            this.Owner.weakReferenceType,
+                           CallingConvention.HasThis, this.objectType, 
+                           this.Host.NameTable.GetNameFor("get_Target"), 0);
+                    return this._weakReferenceTargetGet;
+                }
+            }
+            private IMethodReference/*?*/ _weakReferenceTargetGet;
 
             public CustomAttribute CompilerGeneratedAttribute
             {

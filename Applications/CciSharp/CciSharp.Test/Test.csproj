@@ -88,6 +88,7 @@
       <Link>Build\Version.cs</Link>
     </Compile>
     <Compile Include="AssertMessageTest.cs" />
+    <Compile Include="WeakLazyAutoPropertyTest.cs" />
     <Compile Include="LazyAutoPropertyTest.cs" />
     <Compile Include="NotifyPropertyChangedTest.cs" />
     <Compile Include="Program.cs" />
@@ -115,6 +116,10 @@
       <Project>{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}</Project>
       <Name>NotifyAutoPropertyChanged</Name>
     </ProjectReference>
+    <ProjectReference Include="..\WeakLazyProperty\WeakLazyProperty.csproj">
+      <Project>{61682EF5-3821-4756-85D1-A90ECA59CC5F}</Project>
+      <Name>WeakLazyProperty</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -124,6 +129,7 @@
     <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />
     <CcsMutatorAssemblies Include="..\ReadOnlyAutoProperty\bin\$(Configuration)\CciSharp.ReadOnlyAutoProperty.dll" />
     <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" />
+    <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" />
   </ItemGroup>
   <Import Project="..\CciSharp\CciSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
