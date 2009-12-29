@@ -45,7 +45,8 @@ namespace CciSharp.Framework
         /// Visits and mutates the module in-place.
         /// </summary>
         /// <param name="module"></param>
-        public abstract bool Visit(Module module);
+        /// <param name="pdbReader">the pdb reader</param>
+        public abstract bool Visit(Module module, PdbReader pdbReader);
 
         /// <summary>
         /// Gets the host

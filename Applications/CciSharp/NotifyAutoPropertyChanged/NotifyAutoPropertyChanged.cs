@@ -28,7 +28,7 @@ namespace CciSharp.Mutators
             this.testTypes = new TestType(host);
         }
 
-        public override bool Visit(Module module)
+        public override bool Visit(Module module, PdbReader _pdbReader)
         {
             return false;
         }
@@ -36,8 +36,8 @@ namespace CciSharp.Mutators
         class Mutator
             : CcsCodeMutatorBase<NotifyAutoPropertyChanged>
         {
-            public Mutator(NotifyAutoPropertyChanged owner)
-                : base(owner)
+            public Mutator(NotifyAutoPropertyChanged owner, ISourceLocationProvider sourceLocationProvider)
+                : base(owner, sourceLocationProvider)
             { }
 
             protected override void Visit(TypeDefinition typeDefinition)

@@ -15,7 +15,6 @@
     <StartupObject>
     </StartupObject>
     <CcsRewriting>True</CcsRewriting>
-    <CcsVerify>True</CcsVerify>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

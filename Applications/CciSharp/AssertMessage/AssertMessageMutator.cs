@@ -30,15 +30,21 @@ namespace CciSharp.Mutators
         {
         }
 
-        public override bool Visit(Module module)
+        public override bool Visit(Module module, PdbReader _pdbReader)
         {
+            if (_pdbReader == null)
+            {
+                this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", module.Location);
+                return false;
+            }
+
             var testTypes = new TestType(this.Host);
             testTypes.Visit(module);
             this.assertMethods = testTypes.Methods;
             if (this.assertMethods.Count == 0)
                 return false; // nothing todo here.
 
-            var mutator = new Mutator(this);
+            var mutator = new Mutator(this, _pdbReader);
             mutator.Visit(module);
             return mutator.MutationCount > 0;
         }
@@ -47,8 +53,8 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<AssertMessageMutator>
         {
             readonly Microsoft.Cci.MethodReference stringFormatStringObjectArray;
-            public Mutator(AssertMessageMutator owner)
-                : base(owner)
+            public Mutator(AssertMessageMutator owner, ISourceLocationProvider sourceLocationProvider)
+                : base(owner, sourceLocationProvider)
             {
                 this.stringFormatStringObjectArray =
                     new Microsoft.Cci.MethodReference(
@@ -63,17 +69,6 @@ namespace CciSharp.Mutators
             }
 
             public int MutationCount = 0;
-
-            PdbReader pdbReader;
-            public override Module Visit(Module module)
-            {
-                if (!this.Host.TryGetPdbReader(module, out this.pdbReader))
-                {
-                    this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", module.Location);
-                    return module;
-                }
-                return base.Visit(module);
-            }
 
             public override IExpression Visit(MethodCall methodCall)
             {
@@ -159,20 +154,18 @@ namespace CciSharp.Mutators
                         }
                     }
 
-                    var newCall = new MethodCall
-                    {
-                        MethodToCall = assertMethod,
-                        IsStaticCall = true,
-                        Locations = methodCall.Locations,
-                        Type = this.Host.PlatformType.SystemVoid
-                    };
-                    newCall.Arguments.Add(condition);
-                    newCall.Arguments.Add(messageExpression);
+                    methodCall.MethodToCall = assertMethod;
+                    methodCall.IsStaticCall = true;
+                    methodCall.IsTailCall = false;
+                    methodCall.IsVirtualCall = false;
+                    methodCall.Type = this.Host.PlatformType.SystemVoid;
+                    methodCall.Arguments.Clear();
+                    methodCall.Arguments.Add(condition);
+                    methodCall.Arguments.Add(messageExpression);
                     if (formatArgs != null)
-                        newCall.Arguments.Add(formatArgs);
-                    Contract.Assert(newCall.Arguments.Count == assertMethod.ParameterCount);
+                        methodCall.Arguments.Add(formatArgs);
+                    Contract.Assert(methodCall.Arguments.Count == assertMethod.ParameterCount);
                     this.MutationCount++;
-                    return newCall;
                 }
 
                 return methodCall;
@@ -196,7 +189,7 @@ namespace CciSharp.Mutators
                 if (local != null)
                 {
                     bool compilerGenerated;
-                    name = this.pdbReader.GetSourceNameFor(local, out compilerGenerated);
+                    name = this.sourceLocationProvider.GetSourceNameFor(local, out compilerGenerated);
                 }
                 else
                     name = ((INamedEntity)variable.Definition).Name.Value;
@@ -235,9 +228,8 @@ namespace CciSharp.Mutators
                 Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
 
                 var sb = new StringBuilder();
-                Contract.Assert(this.pdbReader != null);
                 foreach (var location in condition.Locations)
-                    foreach (var primarySourceLocation in this.pdbReader.GetPrimarySourceLocationsFor(location))
+                    foreach (var primarySourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(location))
                     {
                         var source = primarySourceLocation.Source;
                         for (int i = 0; i < source.Length; i++)

@@ -63,6 +63,10 @@
       <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
       <Name>MutableMetadataModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Ast\Metadata\Sources\PdbReader\PdbReader.csproj">
+      <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
+      <Name>PdbReader</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Ast\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>

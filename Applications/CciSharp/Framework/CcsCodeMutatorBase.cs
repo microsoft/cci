@@ -18,15 +18,16 @@ namespace CciSharp.Framework
     /// Abstract base class for mutator that will be run as a post build step
     /// </summary>
     public abstract class CcsCodeMutatorBase<TMutator>
-        : CodeAndContractMutator
+        : CodeMutator
         where TMutator : CcsMutatorBase
     {
         /// <summary>
         /// Initializes a new instance of the mutator
         /// </summary>
         /// <param name="owner">the owner mutator</param>
-        protected CcsCodeMutatorBase(TMutator owner)
-            : base(owner.Host, true)
+        /// <param name="sourceLocationProvider">the pdb reader</param>
+        protected CcsCodeMutatorBase(TMutator owner, ISourceLocationProvider sourceLocationProvider)
+            : base(owner.Host, true, sourceLocationProvider)
         {
             this.Owner = owner;
         }

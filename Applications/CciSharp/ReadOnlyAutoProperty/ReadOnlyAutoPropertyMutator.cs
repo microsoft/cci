@@ -23,10 +23,10 @@ namespace CciSharp.Mutators
             : base(host, "ReadOnly Auto Property", 1, typeof(ReadOnlyAutoPropertyResources))
         { }
 
-        public override bool Visit(Module module)
+        public override bool Visit(Module module, PdbReader _pdbReader)
         {
             // pass1: collect properties to mutate and field references,
-            var collector = new PropertyCollector(this);
+            var collector = new PropertyCollector(this, _pdbReader);
             collector.Visit(module);
             var properties = collector.Properties;
             // nothing to do...
@@ -34,7 +34,7 @@ namespace CciSharp.Mutators
                 return false;
 
             // pass2: mutate properties and update field references
-            var mutator = new SetterReplacer(this, properties);
+            var mutator = new SetterReplacer(this, properties, _pdbReader);
             mutator.Visit(module);
             return true;
         }
@@ -49,8 +49,8 @@ namespace CciSharp.Mutators
         {
             readonly ITypeReference compilerGeneratedAttribute;
 
-            public PropertyCollector(ReadOnlyAutoPropertyMutator owner)
-                :base(owner)
+            public PropertyCollector(ReadOnlyAutoPropertyMutator owner, ISourceLocationProvider sourceLocationProvider)
+                : base(owner, sourceLocationProvider)
             {
                 this.compilerGeneratedAttribute = host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute;
             }
@@ -157,8 +157,8 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<ReadOnlyAutoPropertyMutator>
         {
             readonly Dictionary<uint, Setter> fields;
-            public SetterReplacer(ReadOnlyAutoPropertyMutator owner, Dictionary<uint, Setter> fields)
-                : base(owner)
+            public SetterReplacer(ReadOnlyAutoPropertyMutator owner, Dictionary<uint, Setter> fields, ISourceLocationProvider _pdbReader)
+                : base(owner, _pdbReader)
             {
                 Contract.Requires(fields != null);
                 this.fields = fields;

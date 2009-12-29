@@ -39,14 +39,14 @@ namespace CciSharp
             var mutators = LoadMutators(mutatorAssemblies);
             PdbReader pdbReader;
             var module = this.host.LoadModuleFrom(assemblyPath, out pdbReader);
-            var copier = new CodeAndContractMutator(host, false);
+            var copier = new CodeMutator(host, false, pdbReader);
             var moduleCopy = copier.Visit(module);
 
             bool dirty = false;
             foreach (var mutator in mutators)
             {
                 this.host.Event(CcsEventLevel.Message, "rewrite with {0}", mutator);
-                dirty |= mutator.Visit(moduleCopy);
+                dirty |= mutator.Visit(moduleCopy, pdbReader);
                 if (this.host.ErrorCount > 0) break;
             }
 
