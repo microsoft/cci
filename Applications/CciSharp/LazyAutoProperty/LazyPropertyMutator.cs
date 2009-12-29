@@ -24,7 +24,7 @@ namespace CciSharp.Mutators
     {
         readonly INamespaceTypeReference nonSerializedAttribute;
         public LazyPropertyMutator(ICcsHost host)
-            : base(host, "Lazy Auto Property", 1, typeof(LazyAutoPropertyResources))
+            : base(host, "Lazy Property", 1, typeof(LazyPropertyResources))
         {
             var types = new NetTypes(host);
             this.nonSerializedAttribute = types.SystemNonSerializedAttribute;
