@@ -15,7 +15,7 @@ namespace CciSharp.Test
     {
         public static int Main(string[] args)
         {
-            var newArgs = new List<string>();
+            var newArgs = new List<string>(args.Length + 1);
             newArgs.Add(typeof(Program).Assembly.Location);
             if (args != null)
                 newArgs.AddRange(args);

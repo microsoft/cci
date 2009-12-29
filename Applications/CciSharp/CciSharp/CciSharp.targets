@@ -12,7 +12,6 @@
   
     - CcsPath: path to the ccs.exe seop
     - CcsRewriting : boolean, turns on the task
-    - CcsVerify: runs peverify before and after
 
   Items project /configuration level:
   
@@ -51,9 +50,14 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <CcsRewriteDependsOn>
-      CcsPreRewrite
-    </CcsRewriteDependsOn>
+    <CompileDependsOn>$(CompileDependsOn);CcsRewrite</CompileDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);CcsRewriteTimestamp</PrepareForRunDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CcsRewriteDependsOn>CcsPreRewrite</CcsRewriteDependsOn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -73,31 +77,26 @@
   </PropertyGroup>
 
   <Target
+    Name="CcsRewriteTimestamp"
+    Condition="$(CcsRewriting) == 'true' and @(CcsMutatorAssemblies) != ''"
+    Inputs="@(CcsRewriterInputs)"
+    Outputs="$(CcsRewriterOutput)">
+    <Touch Files="$(CcsRewriterOutput)"/>
+  </Target>
+  
+  <Target
     Name="CcsRewrite"
     Condition="$(CcsRewriting) == 'true' and @(CcsMutatorAssemblies) != ''"
     Inputs="@(CcsRewriterInputs)"
-    Outputs="
-      @(CcsRewriterInputs);
-      $(CcsRewriterOutput)"
+    Outputs="$(CcsRewriterOutput)"
     DependsOnTargets="$(CcsRewriteDependsOn)">
     <PropertyGroup>
       <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
       <CcsExecCommand>$(CcsCommand) &quot;@(CcsRewriterInputs)&quot; &quot;@(CcsMutatorAssemblies)&quot;</CcsExecCommand>
     </PropertyGroup>
-    <!--<GetFrameworkSdkPath>
-      <Output TaskParameter="Path" PropertyName="SdkPath" />
-    </GetFrameworkSdkPath>
-    <PropertyGroup>
-      <PeVerify>&quot;$(SdkPath)bin\peverify.exe&quot;</PeVerify>
-    </PropertyGroup>
-    <Exec
-      Condition="$(CcsVerify) == 'true'"
-      Command="$(PeVerify) &quot;@(CcsRewriterInputs)&quot;" />-->
+    
     <Exec Command="$(CcsExecCommand)" />
-    <!--    <Exec
-      Condition="$(CcsVerify) == 'true'"
-      Command="$(PeVerify) &quot;@(CcsRewriterInputs)&quot;" />-->
-    <!-- copy original -->
+    <!-- keep a copy of the original -->
     <Copy
       SourceFiles="@(CcsRewriterInputs)"
       DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).csc%(Extension)')" />
@@ -106,9 +105,6 @@
       SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')"
       DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).csc.pdb')" />
     <!-- copy ccs in -->
-    <WriteLinesToFile
-           File="$(CcsRewriterOutput)"
-       />
     <Copy
       SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
       DestinationFiles="@(CcsRewriterInputs)" />
@@ -116,9 +112,9 @@
       Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')')"
       SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs.pdb')"
       DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')" />
-    <Touch Files="
-           @(CcsRewriterInputs);
-           $(CcsRewriterOutput)"/>
+    <!-- touch files for lazy build -->
+    <WriteLinesToFile File="$(CcsRewriterOutput)"/>
+    <Touch Files="$(CcsRewriterOutput)"/>
     <ItemGroup>
       <FileWrites
          Include="
@@ -130,14 +126,6 @@
     </ItemGroup>    
   </Target>
 
-<!--  <PropertyGroup>
-    <PrepareForRunDependsOn>
-      CcsRewrite;$(PrepareForRunDependsOn)
-    </PrepareForRunDependsOn>
-  </PropertyGroup> -->
-  <PropertyGroup>
-    <CompileDependsOn>$(CompileDependsOn);CcsRewrite</CompileDependsOn>
-  </PropertyGroup>
 
   <!--=====================================================================
       End Microsoft Ccs 
