@@ -74,6 +74,7 @@
     </Compile>
     <Compile Include="CcsErrorMessage.cs" />
     <Compile Include="CcsErrorReporter.cs" />
+    <Compile Include="CcsHelper.cs" />
     <Compile Include="CcsMutatorBase.cs" />
     <Compile Include="CcsCodeMutatorBase.cs" />
     <Compile Include="ICcsHost.cs" />

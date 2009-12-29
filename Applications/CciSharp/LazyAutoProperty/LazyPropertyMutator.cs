@@ -74,7 +74,7 @@ namespace CciSharp.Mutators
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute lazyAttribute;
-                if (!ContainsLazy(propertyDefinition.Attributes, out lazyAttribute)) // [ReadOnly]
+                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "LazyAttribute", out lazyAttribute)) // [ReadOnly]
                     return propertyDefinition;
 
                 if (setter != null)
@@ -284,24 +284,6 @@ namespace CciSharp.Mutators
                 }
             }
             private IMethodReference/*?*/ nonSerializedAttributeCtor;
-
-            private static bool ContainsLazy(IEnumerable<ICustomAttribute> attributes, out ICustomAttribute lazyAttribute)
-            {
-                Contract.Requires(attributes != null);
-                foreach (var attribute in attributes)
-                {
-                    var type = attribute.Type as INamedEntity;
-                    if (type != null &&
-                        type.Name.Value == "LazyAttribute")
-                    {
-                        lazyAttribute = attribute;
-                        return true;
-                    }
-                }
-                lazyAttribute = null;
-                return false;
-            }
-
         }
     }
 }
