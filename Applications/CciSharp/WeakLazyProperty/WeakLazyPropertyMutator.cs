@@ -300,7 +300,7 @@ namespace CciSharp.Mutators
                 {
                     Type = this.Owner.weakReferenceType,
                     Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor("_weak$" + propertyDefinition.Name)
+                    Name = this.Host.NameTable.GetNameFor("_" + propertyDefinition.Name + "$Weak")
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
