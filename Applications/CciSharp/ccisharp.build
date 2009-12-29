@@ -149,7 +149,7 @@ using System.Reflection;
 
   <Target
     Name="UploadCodePlexRelease"
-    Condition="$(CodeplexUser) != '' and $(CodeplexPassword) != ''">
+    Condition="$(BuildVersion) != '' and $(CodeplexUser) != '' and $(CodeplexPassword) != ''">
 
     <ItemGroup>
       <ReleaseFiles Include="@(ZipBinaries)">
