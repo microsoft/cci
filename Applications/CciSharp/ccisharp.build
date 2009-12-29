@@ -165,7 +165,7 @@ using System.Reflection;
     <CreateRelease
       ProjectName="$(CodeplexProjectName)"
       ReleaseName="CciSharp $(BuildVersion)"
-      IsDefaultRelease="true"
+      IsDefaultRelease="false"
       ShowToPublic="true"
       ShowOnHomePage="true"
       Description="Latest build of the CciSharp mutators"
