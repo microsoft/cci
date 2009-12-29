@@ -90,7 +90,7 @@ namespace CciSharp
         public void Event(CcsEventLevel level, string message)
         {
             this.CountErrorsAndWarnings(level);
-            this.@out.WriteLine("{0}{1}", LevelToString(level), message);
+            this.@out.WriteLine("CciSharp: {0}{1}", LevelToString(level), message);
         }
 
         private void CountErrorsAndWarnings(CcsEventLevel level)
@@ -111,7 +111,7 @@ namespace CciSharp
         public void Event(CcsEventLevel level, IPrimarySourceLocation location,  string message)
         {
             this.CountErrorsAndWarnings(level);
-            this.@out.WriteLine("{0}({1}): {2}{3}", location.SourceDocument.Location, location.StartLine, LevelToString(level), message);
+            this.@out.WriteLine("CciSharp: {0}({1}): {2}{3}", location.SourceDocument.Location, location.StartLine, LevelToString(level), message);
         }
 
         public void Event(CcsEventLevel level, IPrimarySourceLocation location, string format, params object[] args)
