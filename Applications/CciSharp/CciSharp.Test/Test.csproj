@@ -59,6 +59,33 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeContractsEnableRuntimeChecking>True</CodeContractsEnableRuntimeChecking>
+    <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
+    <CodeContractsRuntimeThrowOnFailure>False</CodeContractsRuntimeThrowOnFailure>
+    <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
+    <CodeContractsRunCodeAnalysis>False</CodeContractsRunCodeAnalysis>
+    <CodeContractsNonNullObligations>False</CodeContractsNonNullObligations>
+    <CodeContractsBoundsObligations>False</CodeContractsBoundsObligations>
+    <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
+    <CodeContractsRedundantAssumptions>False</CodeContractsRedundantAssumptions>
+    <CodeContractsRunInBackground>True</CodeContractsRunInBackground>
+    <CodeContractsShowSquigglies>False</CodeContractsShowSquigglies>
+    <CodeContractsUseBaseLine>False</CodeContractsUseBaseLine>
+    <CodeContractsEmitXMLDocs>False</CodeContractsEmitXMLDocs>
+    <CodeContractsCustomRewriterAssembly>
+    </CodeContractsCustomRewriterAssembly>
+    <CodeContractsCustomRewriterClass>
+    </CodeContractsCustomRewriterClass>
+    <CodeContractsLibPaths>
+    </CodeContractsLibPaths>
+    <CodeContractsPlatformPath>
+    </CodeContractsPlatformPath>
+    <CodeContractsExtraAnalysisOptions>
+    </CodeContractsExtraAnalysisOptions>
+    <CodeContractsBaseLineFile>
+    </CodeContractsBaseLineFile>
+    <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
+    <CodeContractsReferenceAssembly>DoNotBuild</CodeContractsReferenceAssembly>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Contracts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
@@ -88,6 +115,7 @@
       <Link>Build\Version.cs</Link>
     </Compile>
     <Compile Include="AssertMessageTest.cs" />
+    <Compile Include="NotNullTest.cs" />
     <Compile Include="WeakLazyAutoPropertyTest.cs" />
     <Compile Include="LazyAutoPropertyTest.cs" />
     <Compile Include="NotifyPropertyChangedTest.cs" />
@@ -116,6 +144,10 @@
       <Project>{F1B2C5CF-222F-44A3-89D4-96FBEFBEF445}</Project>
       <Name>NotifyAutoPropertyChanged</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NotNull\NotNull.csproj">
+      <Project>{4F93DC7A-D7F4-47DD-946A-D53D10AB7200}</Project>
+      <Name>NotNull</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WeakLazyProperty\WeakLazyProperty.csproj">
       <Project>{61682EF5-3821-4756-85D1-A90ECA59CC5F}</Project>
       <Name>WeakLazyProperty</Name>
@@ -130,6 +162,7 @@
     <CcsMutatorAssemblies Include="..\ReadOnlyAutoProperty\bin\$(Configuration)\CciSharp.ReadOnlyAutoProperty.dll" />
     <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" />
     <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" />
+    <CcsMutatorAssemblies Include="..\NotNull\bin\$(Configuration)\CciSharp.NotNull.dll" />
   </ItemGroup>
   <Import Project="..\CciSharp\CciSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

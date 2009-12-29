@@ -30,22 +30,22 @@ namespace CciSharp.Mutators
         {
         }
 
-        public override bool Visit(Module module, PdbReader _pdbReader)
+        public override bool Visit(Assembly assembly, PdbReader _pdbReader)
         {
             if (_pdbReader == null)
             {
-                this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", module.Location);
+                this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", assembly.Location);
                 return false;
             }
 
             var testTypes = new TestType(this.Host);
-            testTypes.Visit(module);
+            testTypes.Visit(assembly);
             this.assertMethods = testTypes.Methods;
             if (this.assertMethods.Count == 0)
                 return false; // nothing todo here.
 
             var mutator = new Mutator(this, _pdbReader);
-            mutator.Visit(module);
+            mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
 

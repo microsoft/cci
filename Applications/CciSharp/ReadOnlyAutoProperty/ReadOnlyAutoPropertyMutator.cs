@@ -29,11 +29,11 @@ namespace CciSharp.Mutators
             : base(host, "ReadOnly Auto Property", 1, typeof(ReadOnlyAutoPropertyResources))
         { }
 
-        public override bool Visit(Module module, PdbReader _pdbReader)
+        public override bool Visit(Assembly assembly, PdbReader _pdbReader)
         {
             // pass1: collect properties to mutate and field references,
             var collector = new PropertyCollector(this, _pdbReader);
-            collector.Visit(module);
+            collector.Visit(assembly);
             var properties = collector.Properties;
             // nothing to do...
             if (properties.Count == 0)
@@ -41,7 +41,7 @@ namespace CciSharp.Mutators
 
             // pass2: mutate properties and update field references
             var mutator = new SetterReplacer(this, properties, _pdbReader);
-            mutator.Visit(module);
+            mutator.Visit(assembly);
             return true;
         }
 

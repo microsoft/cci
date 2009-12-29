@@ -29,31 +29,32 @@ namespace CciSharp
             Contract.Invariant(this.host != null);
         }
 
-        public int Mutate(string assembly, IEnumerable<string> mutatorAssemblies)
+        public int Mutate(string assemblyPath, IEnumerable<string> mutatorAssemblies)
         {
-            Contract.Requires(!String.IsNullOrEmpty(assembly));
+            Contract.Requires(!String.IsNullOrEmpty(assemblyPath));
             Contract.Requires(mutatorAssemblies != null);
 
-            var assemblyPath = Path.GetFullPath(assembly);
+            var assemblyFullPath = Path.GetFullPath(assemblyPath);
             // load mutators
             var mutators = LoadMutators(mutatorAssemblies);
             PdbReader pdbReader;
-            var module = this.host.LoadModuleFrom(assemblyPath, out pdbReader);
+            var assembly = this.host.LoadAssemblyFrom(assemblyFullPath, out pdbReader);
+
             var copier = new CodeMutator(host, false, pdbReader);
-            var moduleCopy = copier.Visit(module);
+            var assemblyCopy = copier.Visit(assembly);
 
             bool dirty = false;
             foreach (var mutator in mutators)
             {
                 this.host.Event(CcsEventLevel.Message, "rewrite with {0}", mutator);
-                dirty |= mutator.Visit(moduleCopy, pdbReader);
+                dirty |= mutator.Visit(assemblyCopy, pdbReader);
                 if (this.host.ErrorCount > 0) break;
             }
 
             if (!dirty)
                 this.host.Event(CcsEventLevel.Message, "no mutation, skipping rewritting");
             else if (this.host.ErrorCount == 0)
-                this.WriteModule(assemblyPath, moduleCopy, pdbReader);
+                this.WriteModule(assemblyFullPath, assemblyCopy, pdbReader);
 
             this.host.Event(CcsEventLevel.Message, "Rewrite complete -- {0} errors, {1} warnings",
                 this.host.ErrorCount,

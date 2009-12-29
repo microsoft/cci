@@ -21,10 +21,10 @@ namespace CciSharp.Framework
         /// <summary>
         /// Tries to get a pdb reader for the given module
         /// </summary>
-        /// <param name="module"></param>
+        /// <param name="assembly"></param>
         /// <param name="reader"></param>
         /// <returns></returns>
-        bool TryGetPdbReader(IModule module, out PdbReader reader);
+        bool TryGetPdbReader(IAssembly assembly, out PdbReader reader);
 
         /// <summary>
         /// Logs an event
@@ -82,9 +82,9 @@ namespace CciSharp.Framework
     class ICcsHostContract : ICcsHost
     {
         #region ICcsHost Members
-        bool ICcsHost.TryGetPdbReader(IModule module, out PdbReader reader)
+        bool ICcsHost.TryGetPdbReader(IAssembly assembly, out PdbReader reader)
         {
-            Contract.Requires(module != null);
+            Contract.Requires(assembly != null);
             Contract.Ensures(!Contract.Result<bool>() || Contract.ValueAtReturn(out reader) != null);
 
             reader = default(PdbReader);

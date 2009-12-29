@@ -47,25 +47,25 @@ namespace CciSharp
 
         public override IUnit LoadUnitFrom(string location)
         {
-            IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(location, this));
+            IUnit result = this.peReader.OpenAssembly(BinaryDocument.GetBinaryDocumentForFile(location, this));
             this.RegisterAsLatest(result);
             return result;
         }
 
-        public Module LoadModuleFrom(string location, out PdbReader pdbReader)
+        public Assembly LoadAssemblyFrom(string location, out PdbReader pdbReader)
         {
-            var module = (IModule)this.LoadUnitFrom(location);
-            if (!this.TryGetPdbReader(module, out pdbReader))
+            var assembly = (IAssembly)this.LoadUnitFrom(location);
+            if (!this.TryGetPdbReader(assembly, out pdbReader))
                 pdbReader = null;
             
-            return Decompiler.GetCodeAndContractModelFromMetadataModel(this, module, pdbReader, null);
+            return Decompiler.GetCodeAndContractModelFromMetadataModel(this, assembly, pdbReader, null);
         }
            
-        public bool TryGetPdbReader(IModule module, out PdbReader reader)
+        public bool TryGetPdbReader(IAssembly assembly, out PdbReader reader)
         {
             lock (this.syncLock)
             {
-                string pdbFile = Path.ChangeExtension(module.Location, ".pdb");
+                string pdbFile = Path.ChangeExtension(assembly.Location, ".pdb");
                 if (!this.pdbReaders.TryGetValue(pdbFile, out reader))
                     this.pdbReaders[pdbFile] = reader =
                         File.Exists(pdbFile)

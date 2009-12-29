@@ -29,10 +29,10 @@ namespace CciSharp.Mutators
             this.testTypes = new TestType(host);
         }
 
-        public override bool Visit(Module module, PdbReader _pdbReader)
+        public override bool Visit(Assembly assembly, PdbReader _pdbReader)
         {
             var mutator = new Mutator(this, _pdbReader);
-            mutator.Visit(module);
+            mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
 

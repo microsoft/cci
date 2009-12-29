@@ -57,10 +57,10 @@ namespace CciSharp.Mutators
             }
         }
 
-        public override bool Visit(Module module, PdbReader pdbReader)
+        public override bool Visit(Assembly assembly, PdbReader pdbReader)
         {
             var mutator = new Mutator(this, pdbReader);
-            mutator.Visit(module);
+            mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
 

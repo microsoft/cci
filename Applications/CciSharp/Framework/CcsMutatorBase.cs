@@ -18,6 +18,7 @@ namespace CciSharp.Framework
     /// Abstract base class for mutator that will be run as a post build step
     /// </summary>
     [DebuggerDisplay("{Name}")]
+    [ContractClass(typeof(CcsMutatorBaseContract))]
     public abstract class CcsMutatorBase
     {
         readonly Type resourceType;
@@ -44,9 +45,9 @@ namespace CciSharp.Framework
         /// <summary>
         /// Visits and mutates the module in-place.
         /// </summary>
-        /// <param name="module"></param>
+        /// <param name="assembly"></param>
         /// <param name="pdbReader">the pdb reader</param>
-        public abstract bool Visit(Module module, PdbReader pdbReader);
+        public abstract bool Visit(Assembly assembly, PdbReader pdbReader);
 
         /// <summary>
         /// Gets the host
@@ -73,6 +74,21 @@ namespace CciSharp.Framework
         public override string ToString()
         {
             return this.Name;
+        }
+    }
+
+    [ContractClassFor(typeof(CcsMutatorBase))]
+    abstract class CcsMutatorBaseContract : CcsMutatorBase
+    {
+        protected CcsMutatorBaseContract()
+            : base(null, null, -1, null)
+        { }
+
+        public override bool Visit(Assembly assembly, PdbReader pdbReader)
+        {
+            Contract.Requires(assembly != null);            
+
+            throw new NotImplementedException();
         }
     }
 }
