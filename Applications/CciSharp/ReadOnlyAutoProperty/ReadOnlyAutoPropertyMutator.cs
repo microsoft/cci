@@ -1,4 +1,10 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (C) Microsoft Corporation.  All Rights Reserved.
+//
+//-----------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using CciSharp.Framework;
@@ -93,6 +99,11 @@ namespace CciSharp.Mutators
                     if (setter.Visibility != TypeMemberVisibility.Private) // setter is private
                     {
                         this.Owner.Error(propertyDefinition, "must have a private setter to be readonly");
+                        return propertyDefinition;
+                    }
+                    if (getter.ParameterCount > 0)
+                    {
+                        this.Owner.Error(propertyDefinition, "must not be an indexer");
                         return propertyDefinition;
                     }
 
