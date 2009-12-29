@@ -22,9 +22,27 @@ namespace CciSharp.Mutators
     public sealed class LazyAutoPropertyMutator
         : CcsMutatorBase
     {
+        readonly INamespaceTypeReference nonSerializedAttribute;
         public LazyAutoPropertyMutator(ICcsHost host)
             : base(host, "Lazy Auto Property", 1, typeof(LazyAutoPropertyResources))
         {
+            var types = new NetTypes(host);
+            this.nonSerializedAttribute = types.SystemNonSerializedAttribute;
+        }
+
+        class NetTypes : PlatformType
+        {
+            public NetTypes(IMetadataHost host)
+                : base(host) { }
+            public INamespaceTypeReference SystemNonSerializedAttribute
+            {
+                get
+                {
+                    return this.CreateReference(
+                        this.CoreAssemblyRef,
+                        "System", "NonSerializedAttribute");
+                }
+            }
         }
 
         public override bool Visit(Module module, PdbReader pdbReader)
@@ -117,7 +135,9 @@ namespace CciSharp.Mutators
 
                 var uncachedGetter = new MethodDefinition();
                 uncachedGetter.Copy(getter, this.Host.InternFactory);
-                uncachedGetter.Name = this.Host.NameTable.GetNameFor("Uncached" + getter.Name);
+                var name = getter.Name.Value;
+                if (name.StartsWith("get_")) name = name.Substring("get_".Length);
+                uncachedGetter.Name = this.Host.NameTable.GetNameFor("Get" + name + "Uncached");
                 uncachedGetter.Locations.AddRange(getter.Locations);
                 uncachedGetter.Visibility = TypeMemberVisibility.Private;
 
@@ -226,6 +246,7 @@ namespace CciSharp.Mutators
                     Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
+                resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
                 declaringType.Fields.Add(resultFieldDefinition);
                 resultInitializedFieldDefinition = new FieldDefinition
                 {
@@ -234,12 +255,10 @@ namespace CciSharp.Mutators
                     Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")
                 };
                 resultInitializedFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
+                resultInitializedFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
                 declaringType.Fields.Add(resultInitializedFieldDefinition);
             }
 
-            /// <summary>
-            /// A reference to the default constructor of the System.Runtime.CompilerServices.CompilerGenerated attribute.
-            /// </summary>
             public CustomAttribute CompilerGeneratedAttribute
             {
                 get
@@ -252,6 +271,19 @@ namespace CciSharp.Mutators
                 }
             }
             private IMethodReference/*?*/ compilerGeneratedCtor;
+
+            public CustomAttribute NonSerializedAttribute
+            {
+                get
+                {
+                    if (this.nonSerializedAttributeCtor == null)
+                        this.nonSerializedAttributeCtor = new Microsoft.Cci.MethodReference(this.Host,
+                          this.Owner.nonSerializedAttribute,
+                           CallingConvention.HasThis, this.Host.PlatformType.SystemVoid, this.Host.NameTable.Ctor, 0);
+                    return new CustomAttribute { Constructor = this.nonSerializedAttributeCtor };
+                }
+            }
+            private IMethodReference/*?*/ nonSerializedAttributeCtor;
 
             private static bool ContainsLazy(IEnumerable<ICustomAttribute> attributes, out ICustomAttribute lazyAttribute)
             {
