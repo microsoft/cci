@@ -196,7 +196,8 @@ namespace CciSharp.Mutators
                              Instance = methodCall.ThisArgument,
                              Definition = field,
                              Locations = methodCall.Locations
-                        }
+                        },
+                        Locations = methodCall.Locations
                     };
                     return storeField;
                 }

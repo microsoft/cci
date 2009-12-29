@@ -23,7 +23,7 @@ namespace CciSharp.Mutators
     {
         TestType testTypes;
         public NotifyAutoPropertyChanged(ICcsHost host)
-            : base(host, "NotifyAutoPropertyChanged", 10)
+            : base(host, "NotifyAutoPropertyChanged", 10, typeof(NotifyAutoPropertyResources))
         {
             this.testTypes = new TestType(host);
         }

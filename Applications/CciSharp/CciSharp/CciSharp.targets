@@ -66,8 +66,7 @@
   </Target>
 
   <ItemGroup>
-    <CcsRewriterInputs
-       Include="@(IntermediateAssembly)"/>
+    <CcsRewriterInputs Include="@(IntermediateAssembly)"/>
   </ItemGroup>
   <PropertyGroup>
     <CcsRewriterOutput>$(IntermediateOutputPath)$(TargetName).ccs</CcsRewriterOutput>
@@ -77,7 +76,9 @@
     Name="CcsRewrite"
     Condition="$(CcsRewriting) == 'true' and @(CcsMutatorAssemblies) != ''"
     Inputs="@(CcsRewriterInputs)"
-    Outputs="$(CcsRewriterOutput)"
+    Outputs="
+      @(CcsRewriterInputs);
+      $(CcsRewriterOutput)"
     DependsOnTargets="$(CcsRewriteDependsOn)">
     <PropertyGroup>
       <CcsFileCommandOptions>$(CcsCommandOptions)</CcsFileCommandOptions>
@@ -96,22 +97,36 @@
     <!--    <Exec
       Condition="$(CcsVerify) == 'true'"
       Command="$(PeVerify) &quot;@(CcsRewriterInputs)&quot;" />-->
+    <!-- copy original -->
     <Copy
-      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
-      DestinationFiles="@(CcsRewriterInputs)"
-      SkipUnchangedFiles="true"/>
+      SourceFiles="@(CcsRewriterInputs)"
+      DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).csc%(Extension)')" />
     <Copy
       Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')')"
-      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs.pdb')"
-      DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')"
-      SkipUnchangedFiles="true"/>
+      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')"
+      DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).csc.pdb')" />
+    <!-- copy ccs in -->
     <WriteLinesToFile
            File="$(CcsRewriterOutput)"
        />
-    <Touch Files="$(CcsRewriterOutput)"/>
+    <Copy
+      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
+      DestinationFiles="@(CcsRewriterInputs)" />
+    <Copy
+      Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')')"
+      SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs.pdb')"
+      DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')" />
+    <Touch Files="
+           @(CcsRewriterInputs);
+           $(CcsRewriterOutput)"/>
     <ItemGroup>
       <FileWrites
-         Include="$(CcsRewriterOutput)"/>
+         Include="
+           @(CcsRewriterInputs);
+           $(CcsRewriterOutput);
+           $(IntermediateOutputPath)$(TargetName).ccs.*; 
+           $(IntermediateOutputPath)$(TargetName).csc.*
+         "/>
     </ItemGroup>    
   </Target>
 
