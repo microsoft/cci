@@ -54,7 +54,7 @@
     Name="CreateVersion" 
     Condition="$(BuildVersion) != ''">
     <PropertyGroup>
-      <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
+      <VersionFile>$(RootDirectory)\Ast\Metadata\Sources\common\include\version.cs</VersionFile>
       <VersionSource>
         <![CDATA[// ==++==
 //
@@ -164,11 +164,11 @@ using System.Reflection;
 
     <CreateRelease
       ProjectName="$(CodeplexProjectName)"
-      ReleaseName="$(BuildVersion)"
+      ReleaseName="CciSharp $(BuildVersion)"
       IsDefaultRelease="true"
       ShowToPublic="true"
       ShowOnHomePage="true"
-      Description="Latest build"
+      Description="Latest build of the CciSharp mutators"
       ReleaseDate="%(ZipBinaries.CreatedTime)"
       ReleaseStatus="Released"
       Username="$(CodeplexUser)"
