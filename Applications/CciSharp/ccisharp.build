@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project 
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  DefaultTargets="ContinuousBuild">
+  <!-- constants -->
+  <PropertyGroup>
+    <CodeplexProjectName>ccisamples</CodeplexProjectName>
+    <BuildVersion>$(CCNetLabel)</BuildVersion>
+
+    <RootDirectory>..\..\</RootDirectory>
+    <ToolsDirectory>$(RootDirectory)Ast\Metadata\Build\</ToolsDirectory>
+    <Solution>ccisharp.sln</Solution>
+
+    <BinDirectory>Bin\</BinDirectory>
+    <BinDebugDirectory>$(BinDirectory)Debug\</BinDebugDirectory>
+    <BinReleaseDirectory>$(BinDirectory)Release\</BinReleaseDirectory>
+    <BinCodePlexDirectory>$(BinDirectory)CodePlex\</BinCodePlexDirectory>
+  </PropertyGroup>
+
+  <UsingTask
+    TaskName="Microsoft.Cci.MsBuild.WriteFile"
+    AssemblyFile="$(ToolsDirectory)Microsoft.Cci.MsBuild.dll" />
+  <UsingTask
+    TaskName="Microsoft.Cci.MsBuild.Zip"
+    AssemblyFile="$(ToolsDirectory)Microsoft.Cci.MsBuild.dll" />
+  <UsingTask
+    TaskName="CreateRelease"
+    AssemblyFile="$(ToolsDirectory)CodePlex.WebServices.Client.dll" />
+  <UsingTask
+    TaskName="UploadFiles"
+    AssemblyFile="$(ToolsDirectory)CodePlex.WebServices.Client.dll" />
+
+  <!-- target definitions  -->
+  <!-- quick build -->
+  <Target
+    Name="ContinuousBuild"
+    DependsOnTargets="
+      Clean;
+      CreateVersion;
+      BuildDebug;
+      TestDebug;
+      BuildRelease;
+      TestRelease;
+      BuildDocumentation;
+      CreateReleaseZips;
+      UploadCodePlexRelease;
+      " />
+
+  <Target Name="Clean">
+    <RemoveDir Directories="$(BinDirectory)" ContinueOnError="true" />
+  </Target>
+
+  <Target 
+    Name="CreateVersion" 
+    Condition="$(BuildVersion) != ''">
+    <PropertyGroup>
+      <VersionFile>$(RootDirectory)\Sources\common\include\version.cs</VersionFile>
+      <VersionSource>
+        <![CDATA[// ==++==
+//
+//   Copyright (c) Microsoft Corporation.  All rights reserved.
+//
+// ==--==
+// Warning: Automatically generated file. DO NOT EDIT
+// Generated at $(CCNetBuildDate)
+
+using System.Reflection;
+[assembly: AssemblyVersion("$(BuildVersion)")]
+[assembly: AssemblyFileVersion("$(BuildVersion)")]
+[assembly: AssemblyCompany("Microsoft Corporation")]
+[assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+]]>
+      </VersionSource>
+    </PropertyGroup>
+    <Message Text="Writing version file $(VersionFile) with $(VersionSource)" />
+    <WriteFile File="$(VersionFile)" Content="$(VersionSource)" />
+  </Target>
+
+  <Target Name="BuildDebug">
+    <MSBuild
+      Projects="$(Solution)"
+      Targets="Clean;Build"
+      Properties="
+        Configuration=Debug
+      " />
+  </Target>
+
+  <Target Name="BuildRelease">
+    <MSBuild
+      Projects="$(Solution)"
+      Targets="Clean;Build"
+      Properties="
+        Configuration=Release
+      " />
+  </Target>
+
+  <Target Name="BuildDocumentation">
+
+  </Target>
+
+  <Target Name="TestDebug">
+    <ItemGroup>
+      <TestDebugAssembly Include="$(BinDebugDirectory)*Test.exe" />
+    </ItemGroup>
+    <Exec
+      WorkingDirectory="$(BinDebugDirectory)"
+      Command="%(TestDebugAssembly.FileName)%(TestDebugAssembly.FileExtension) /xml ..\%(TestDebugAssembly.FileName).dbg.results.xml" />
+  </Target>
+
+  <Target Name="TestRelease">
+    <ItemGroup>
+      <TestReleaseAssembly Include="$(BinReleaseDirectory)*Test.exe" />
+    </ItemGroup>
+    <Exec
+      WorkingDirectory="$(BinReleaseDirectory)"
+      Command="%(TestReleaseAssembly.FileName)%(TestReleaseAssembly.FileExtension) /xml ..\%(TestReleaseAssembly.FileName).ret.results.xml" />
+  </Target>
+
+  <ItemGroup>
+    <ZipBinaries Include="$(BinCodePlexDirectory)$(CodeplexProjectName)-$(BuildVersion).zip">
+      <Name>Binaries and Xml documentation files</Name>
+      <FileType>RuntimeBinary</FileType>
+    </ZipBinaries>
+    <ZipSymbols Include="$(BinCodePlexDirectory)$(CodeplexProjectName)-$(BuildVersion)-symbols.zip">
+      <Name>Symbols</Name>
+      <FileType>RuntimeBinary</FileType>
+    </ZipSymbols>
+  </ItemGroup>
+
+  <Target Name="CreateReleaseZips">
+    <ItemGroup>
+      <Assemblies Include="
+      $(BinReleaseDirectory)Microsoft.Cci.*.dll;
+      $(BinReleaseDirectory)Microsoft.Cci.*.xml;
+      $(BinReleaseDirectory)CciSharp.*.exe;
+      $(BinReleaseDirectory)CciSharp.*.dll;
+      $(BinReleaseDirectory)CciSharp.targets;
+      " />
+      <Symbols Include="
+      $(BinReleaseDirectory)Microsoft.Cci.*.pdb;
+      $(BinReleaseDirectory)CciSharp.*.pdb;       
+      " />
+    </ItemGroup>
+
+    <MakeDir Directories="$(BinCodePlexDirectory)" />
+    <Zip Files="@(Assemblies)" OutputFile="@(ZipBinaries)" />
+    <Zip Files="@(Symbols)" OutputFile="@(ZipSymbols)" />
+  </Target>
+
+  <Target
+    Name="UploadCodePlexRelease"
+    Condition="$(CodeplexUser) != '' and $(CodeplexPassword) != ''">
+
+    <ItemGroup>
+      <ReleaseFiles Include="@(ZipBinaries)">
+        <Name>Compiled binaries</Name>
+        <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+      <ReleaseFiles Include="@(ZipSymbols)">
+        <Name>Symbols</Name>
+        <FileType>RuntimeBinary</FileType>
+      </ReleaseFiles>
+    </ItemGroup>
+
+    <CreateRelease
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(BuildVersion)"
+      IsDefaultRelease="true"
+      ShowToPublic="true"
+      ShowOnHomePage="true"
+      Description="Latest build"
+      ReleaseDate="%(ZipBinaries.CreatedTime)"
+      ReleaseStatus="Released"
+      Username="$(CodeplexUser)"
+      Password="$(CodeplexPassword)" />
+    <UploadFiles
+      ProjectName="$(CodeplexProjectName)"
+      ReleaseName="$(BuildVersion)"
+      ReleaseFiles="@(ReleaseFiles)"
+      Username="$(CodeplexUser)"
+      Password="$(CodeplexPassword)"
+	    />
+  </Target>
+
+</Project>

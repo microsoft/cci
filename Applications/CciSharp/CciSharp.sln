@@ -56,6 +56,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "All", "Build\All\All.csproj", "{2CBCE25A-721C-4347-B34D-7FD74CA9BE74}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{8B5B49CA-CDFE-4BFB-892D-756C5F00BA38}"
+	ProjectSection(SolutionItems) = preProject
+		build.cmd = build.cmd
+		ccisharp.build = ccisharp.build
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyProperty", "LazyAutoProperty\LazyProperty.csproj", "{F048D884-5356-4276-94A4-B880C55E585B}"
 EndProject
