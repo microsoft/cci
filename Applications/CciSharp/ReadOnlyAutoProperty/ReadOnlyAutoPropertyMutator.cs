@@ -26,7 +26,7 @@ namespace CciSharp.Mutators
         : CcsMutatorBase
     {
         public ReadOnlyAutoPropertyMutator(ICcsHost host)
-            : base(host, "ReadOnly Auto Property", 1, typeof(ReadOnlyAutoPropertyResources))
+            : base(host, "ReadOnly Auto Property", 10, typeof(ReadOnlyAutoPropertyResources))
         { }
 
         public override bool Visit(Assembly assembly, PdbReader _pdbReader)

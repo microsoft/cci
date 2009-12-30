@@ -79,7 +79,7 @@ namespace CciSharp.Test
             }
         }
 
-        [NotNull(Skip = "not ready yet")]
+        [NotNull]
         class FooNotNull
         {
             public void ParameterNotNull(object o)
