@@ -101,6 +101,9 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="xunit, Version=1.4.9.1416, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Ast\Metadata\External\Xunit\xunit.dll</HintPath>
@@ -116,6 +119,7 @@
     </Compile>
     <Compile Include="AssertMessageTest.cs" />
     <Compile Include="DefaultPropertyValueTest.cs" />
+    <Compile Include="DependencyAutoPropertyTest.cs" />
     <Compile Include="NotNullTest.cs" />
     <Compile Include="WeakLazyAutoPropertyTest.cs" />
     <Compile Include="LazyAutoPropertyTest.cs" />
@@ -132,6 +136,10 @@
     <ProjectReference Include="..\CciSharp\CciSharp.csproj">
       <Project>{5B994274-CEBB-429F-A9B6-612117C872ED}</Project>
       <Name>CciSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DependencyAutoProperty\DependencyAutoProperty.csproj">
+      <Project>{CE5831A2-5C56-456B-8742-8DB4C6012CF8}</Project>
+      <Name>DependencyAutoProperty</Name>
     </ProjectReference>
     <ProjectReference Include="..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>

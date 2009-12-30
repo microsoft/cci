@@ -115,6 +115,10 @@
       <Project>{5B994274-CEBB-429F-A9B6-612117C872ED}</Project>
       <Name>CciSharp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\DefaultPropertyValue\DefaultPropertyValue.csproj">
+      <Project>{191E8E27-78EF-4000-9774-1EC31D9C202A}</Project>
+      <Name>DefaultPropertyValue</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>
