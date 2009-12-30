@@ -38,10 +38,13 @@ namespace CciSharp.Test
             public int ValueWithDefault { get; set; }
         }
 
-        [Fact(Skip = "not ready")]
+        [Fact(Skip = "requires WPF message pump")]
         public void ValueTest()
         {
             var foo = new Foo();
+            foo.Value = 100;
+            var value = foo.Value;
+            Assert.True(100 == value);
         }
     }
 }

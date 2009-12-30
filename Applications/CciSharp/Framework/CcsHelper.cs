@@ -57,7 +57,8 @@ namespace CciSharp.Framework
 
             foreach (var operation in body.Operations)
             {
-                if (operation.OperationCode == OperationCode.Stfld)
+                if (operation.OperationCode == OperationCode.Stfld ||
+                    operation.OperationCode == OperationCode.Ldfld)
                 {
                     field = (IFieldReference)operation.Value;
                     return field != null;

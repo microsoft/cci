@@ -119,6 +119,10 @@
       <Project>{191E8E27-78EF-4000-9774-1EC31D9C202A}</Project>
       <Name>DefaultPropertyValue</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\DependencyAutoProperty\DependencyAutoProperty.csproj">
+      <Project>{CE5831A2-5C56-456B-8742-8DB4C6012CF8}</Project>
+      <Name>DependencyAutoProperty</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>
