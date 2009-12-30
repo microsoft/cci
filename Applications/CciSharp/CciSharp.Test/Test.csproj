@@ -173,6 +173,7 @@
     <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" />
     <CcsMutatorAssemblies Include="..\NotNull\bin\$(Configuration)\CciSharp.NotNull.dll" />
     <CcsMutatorAssemblies Include="..\DefaultPropertyValue\bin\$(Configuration)\CciSharp.DefaultPropertyValue.dll" />
+    <CcsMutatorAssemblies Include="..\DependencyAutoProperty\bin\$(Configuration)\CciSharp.DependencyAutoProperty.dll" />
   </ItemGroup>
   <Import Project="..\CciSharp\CciSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

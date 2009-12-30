@@ -17,10 +17,21 @@ namespace CciSharp.Test
     public partial class DependencyAutoPropertyTest
     {
         [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-        public class DependencyPropertyAttribute : Attribute { }
+        public class DependencyPropertyAttribute : Attribute {
+            static DependencyPropertyAttribute()
+            {
+                "foo".ToString();
+            }
+        
+        }
 
         class Foo : DependencyObject
         {
+            static Foo() 
+            {
+                "foo".ToString();
+            }
+
             [DependencyProperty]
             public int Value { get; set; }
             [DependencyProperty, DefaultValue(10)]
