@@ -236,7 +236,8 @@ namespace CciSharp.Mutators
                 };
                 declaringType.Fields.Add(propertyField);
 
-                this.RegisterProperty(declaringType, propertyDefinition, propertyField);
+                if (!this.TryRegisterProperty(declaringType, propertyDefinition, propertyField))
+                    return propertyDefinition;
 
                 // replace method bodies with SetValue, GetValue
                 this.ReplaceGetter(declaringType, getter, propertyField);
@@ -320,7 +321,7 @@ namespace CciSharp.Mutators
                     });
             }
 
-            private void RegisterProperty(
+            private bool TryRegisterProperty(
                 TypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
                 FieldDefinition propertyField)
@@ -344,6 +345,13 @@ namespace CciSharp.Mutators
                 IExpression defaultValue;
                 if (this.TryGetDefaultValue(propertyDefinition, out defaultValue))
                 {
+                    // ensure type matches
+                    if (defaultValue.Type.InternedKey != propertyDefinition.Type.InternedKey)
+                    {
+                        this.Owner.Error(propertyDefinition, "has a default value that does not match its type");
+                        return false;
+                    }
+
                     register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
                     var newPropertyMetadata = new CreateObjectInstance
                     {
@@ -379,6 +387,7 @@ namespace CciSharp.Mutators
                         }
                     });
 
+                return true;
             }
 
             private bool TryGetDefaultValue(PropertyDefinition propertyDefinition, out IExpression defaultValue)
