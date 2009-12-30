@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CciSharp.Mutators</RootNamespace>
-    <AssemblyName>CciSharp.DefaultAutoPropertyValue</AssemblyName>
+    <AssemblyName>CciSharp.DefaultPropertyValue</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>
@@ -67,11 +67,11 @@
     <Compile Include="..\..\..\ast\metadata\sources\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
-    <Compile Include="DefaultAutoPropertyValue.cs" />
-    <Compile Include="DefaultAutoPropertyValueResources.Designer.cs">
+    <Compile Include="DefaultPropertyValue.cs" />
+    <Compile Include="DefaultPropertyValueResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>DefaultAutoPropertyValueResources.resx</DependentUpon>
+      <DependentUpon>DefaultPropertyValueResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -110,9 +110,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DefaultAutoPropertyValueResources.resx">
+    <EmbeddedResource Include="DefaultPropertyValueResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>DefaultAutoPropertyValueResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>DefaultPropertyValueResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -115,7 +115,7 @@
       <Link>Build\Version.cs</Link>
     </Compile>
     <Compile Include="AssertMessageTest.cs" />
-    <Compile Include="DefaultAutoPropertyValueTest.cs" />
+    <Compile Include="DefaultPropertyValueTest.cs" />
     <Compile Include="NotNullTest.cs" />
     <Compile Include="WeakLazyAutoPropertyTest.cs" />
     <Compile Include="LazyAutoPropertyTest.cs" />
@@ -132,10 +132,6 @@
     <ProjectReference Include="..\CciSharp\CciSharp.csproj">
       <Project>{5B994274-CEBB-429F-A9B6-612117C872ED}</Project>
       <Name>CciSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DefaultAutoPropertyValue\DefaultAutoPropertyValue.csproj">
-      <Project>{191E8E27-78EF-4000-9774-1EC31D9C202A}</Project>
-      <Name>DefaultAutoPropertyValue</Name>
     </ProjectReference>
     <ProjectReference Include="..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
@@ -168,6 +164,7 @@
     <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" />
     <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" />
     <CcsMutatorAssemblies Include="..\NotNull\bin\$(Configuration)\CciSharp.NotNull.dll" />
+    <CcsMutatorAssemblies Include="..\DefaultPropertyValue\bin\$(Configuration)\CciSharp.DefaultPropertyValue.dll" />
   </ItemGroup>
   <Import Project="..\CciSharp\CciSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
