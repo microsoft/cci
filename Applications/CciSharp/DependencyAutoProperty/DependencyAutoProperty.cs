@@ -21,6 +21,8 @@ namespace CciSharp.Mutators
         {
             public readonly INamespaceTypeReference DependencyObjectType;
             public readonly INamespaceTypeReference DependencyPropertyType;
+            public readonly INamespaceTypeReference PropertyMetadataType;
+            public readonly INamespaceTypeReference DefaultAttributeType;
             public WindowsBaseTypes(IMetadataHost host, IAssemblyReference windowsBaseAssembly)
                 :base(host)
             {
@@ -30,6 +32,15 @@ namespace CciSharp.Mutators
                     this.CreateReference(windowsBaseAssembly, "System", "Windows", "DependencyObject");
                 this.DependencyPropertyType =
                     this.CreateReference(windowsBaseAssembly, "System", "Windows", "DependencyProperty");
+                this.PropertyMetadataType =
+                    this.CreateReference(windowsBaseAssembly, "System", "Windows", "PropertyMetadata");
+                var systemAssembly = new Microsoft.Cci.AssemblyReference(host, new AssemblyIdentity(
+                    host.NameTable.System,
+                    this.CoreAssemblyRef.Culture,
+                    this.CoreAssemblyRef.Version,
+                    this.CoreAssemblyRef.PublicKeyToken,
+                    null));
+                this.DefaultAttributeType = this.CreateReference(systemAssembly, "System", "ComponentModel", "DefaultAttribute");
             }
         }
 
@@ -74,12 +85,15 @@ namespace CciSharp.Mutators
             readonly ITypeReference stringType;
             readonly ITypeReference objectType;
             readonly ITypeReference typeType;
+            readonly ITypeReference defaultAttributeType;
             readonly INamespaceTypeReference dependencyObjectType;
             readonly INamespaceTypeReference dependencyPropertyType;
+            readonly INamespaceTypeReference propertyMetadataType;
+            readonly IMethodReference propertyMetadataCtorObject;
             readonly IMethodReference dependencyPropertyRegisterStringTypeTypeMethod;
+            readonly IMethodReference dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
             readonly IMethodReference dependencyObjectGetValueMethod;
             readonly IMethodReference dependencyObjectSetValueMethod;
-            //readonly IMethodReference dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
 
             public Mutator(DependencyAutoProperty owner, ISourceLocationProvider sourceLocationProvider, IAssemblyReference windowsBaseReference)
                 : base(owner, sourceLocationProvider)
@@ -87,15 +101,26 @@ namespace CciSharp.Mutators
                 var types = new WindowsBaseTypes(host, windowsBaseReference);
                 this.dependencyObjectType = types.DependencyObjectType;
                 this.dependencyPropertyType = types.DependencyPropertyType;
+                this.propertyMetadataType = types.PropertyMetadataType;
                 this.compilerGeneratedAttribute = host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute;
                 this.voidType = host.PlatformType.SystemVoid;
                 this.stringType = host.PlatformType.SystemString;
                 this.objectType = host.PlatformType.SystemObject;
                 this.typeType = host.PlatformType.SystemType;
+                this.defaultAttributeType = types.DefaultAttributeType;
 
                 var registerName = this.host.NameTable.GetNameFor("Register");
                 var stringType = types.SystemString;
                 var typeType = types.SystemType;
+                this.propertyMetadataCtorObject =
+                    new Microsoft.Cci.MethodReference(
+                        this.host,
+                        this.propertyMetadataType,
+                        CallingConvention.HasThis,
+                        this.voidType,
+                        this.host.NameTable.Ctor,
+                        0,
+                        this.objectType);
                 this.dependencyPropertyRegisterStringTypeTypeMethod =
                     new Microsoft.Cci.MethodReference(
                         this.host,
@@ -105,6 +130,15 @@ namespace CciSharp.Mutators
                         registerName,
                         0,
                         stringType, typeType, typeType);
+                this.dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod =
+                    new Microsoft.Cci.MethodReference(
+                        this.host,
+                        this.dependencyPropertyType,
+                        CallingConvention.Default,
+                        this.dependencyPropertyType,
+                        registerName,
+                        0,
+                        stringType, typeType, typeType, this.propertyMetadataType);
 
                 this.dependencyObjectGetValueMethod =
                     new Microsoft.Cci.MethodReference(
@@ -297,9 +331,9 @@ namespace CciSharp.Mutators
 
                 // initialize with Register
                 var cctorBody = GetOrCreateStaticCtorBody(declaringType);
+
                 var register = new MethodCall
                 {
-                    MethodToCall = this.dependencyPropertyRegisterStringTypeTypeMethod,
                     IsStaticCall = true,
                     IsVirtualCall = false,
                     Type = this.dependencyPropertyType
@@ -307,6 +341,29 @@ namespace CciSharp.Mutators
                 register.Arguments.Add(new CompileTimeConstant { Value = propertyDefinition.Name.Value, Type = this.stringType });
                 register.Arguments.Add(new TypeOf { Type = this.typeType, TypeToGet = propertyDefinition.Type });
                 register.Arguments.Add(new TypeOf { Type = this.typeType, TypeToGet = declaringType });
+                IExpression defaultValue;
+                if (this.TryGetDefaultValue(propertyDefinition, out defaultValue))
+                {
+                    register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
+                    var newPropertyMetadata = new CreateObjectInstance
+                    {
+                        MethodToCall = this.propertyMetadataCtorObject,
+                        Type = this.propertyMetadataType
+                    };
+                    // boxing
+                    if (defaultValue.Type.IsValueType)
+                        defaultValue = new Conversion {
+                            Type = this.objectType, 
+                            ValueToConvert = defaultValue
+                        };
+                    newPropertyMetadata.Arguments.Add(defaultValue);
+                    register.Arguments.Add(newPropertyMetadata);
+                }
+                else
+                {
+                    register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypeMethod;
+                }
+
                 cctorBody.Statements.Insert(0,
                     new ExpressionStatement
                     {
@@ -322,6 +379,23 @@ namespace CciSharp.Mutators
                         }
                     });
 
+            }
+
+            private bool TryGetDefaultValue(PropertyDefinition propertyDefinition, out IExpression defaultValue)
+            {
+                Contract.Requires(propertyDefinition != null);
+                ICustomAttribute attribute;
+                if (CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "DefaultValueAttribute", out attribute))
+                {
+                    IMetadataExpression valueExpression = new List<IMetadataExpression>(attribute.Arguments)[0];
+                    var value = valueExpression as IMetadataConstant;
+                    defaultValue = new CompileTimeConstant { Type = value.Type, Value = value.Value };
+                    // good candidate
+                    return true;
+                }
+
+                defaultValue = null;
+                return false;
             }
 
             private BlockStatement GetOrCreateStaticCtorBody(TypeDefinition typeDefinition)

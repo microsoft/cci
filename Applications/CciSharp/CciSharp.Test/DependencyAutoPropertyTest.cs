@@ -27,11 +27,6 @@ namespace CciSharp.Test
 
         class Foo : DependencyObject
         {
-            static Foo() 
-            {
-                "foo".ToString();
-            }
-
             [DependencyProperty]
             public int Value { get; set; }
             [DependencyProperty, DefaultValue(10)]
