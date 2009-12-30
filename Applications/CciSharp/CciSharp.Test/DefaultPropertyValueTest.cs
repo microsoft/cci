@@ -18,8 +18,10 @@ namespace CciSharp.Test
         {
             [DefaultValue(10)]
             public int ValueGetPrivateSet { get; private set; }
-            [DefaultValue(10)]
+            [DefaultValue(100)]
             public int ValueGetSet { get; set; }
+            [DefaultValue(1000), ReadOnly]
+            public int ReadonlyValueGetPrivateSet { get; private set; }
         }
 
         [Fact]
@@ -31,7 +33,13 @@ namespace CciSharp.Test
         [Fact]
         public void ValueGetSet()
         {
-            Assert.True(new Foo().ValueGetSet == 10);
+            Assert.True(new Foo().ValueGetSet == 100);
+        }
+
+        [Fact]
+        public void ReadonlyValueGetPrivateSet()
+        {
+            Assert.True(new Foo().ReadonlyValueGetPrivateSet == 1000);
         }
     }
 }
