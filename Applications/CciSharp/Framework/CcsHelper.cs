@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci;
+using Microsoft.Cci.MutableCodeModel;
 
 namespace CciSharp.Framework
 {
@@ -24,7 +25,7 @@ namespace CciSharp.Framework
         /// <param name="attribute"></param>
         /// <returns></returns>
         public static bool TryGetAttributeByName(
-            IEnumerable<ICustomAttribute> attributes, 
+            IEnumerable<ICustomAttribute> attributes,
             string attributeName,
             out ICustomAttribute attribute)
         {
@@ -69,6 +70,40 @@ namespace CciSharp.Framework
 
             field = null;
             return false;
+        }
+
+        /// <summary>
+        /// Tries to extarct the value of a named argument and make it an expression
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <param name="argumentName"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        public static bool TryGetNamedArgumentValue(
+            ICustomAttribute attribute,
+            string argumentName,
+            out CompileTimeConstant defaultValue)
+        {
+                Contract.Requires(attribute != null);
+                Contract.Requires(!String.IsNullOrEmpty(argumentName));
+
+                foreach(var namedArgument in attribute.NamedArguments)
+                {
+                    if (String.Equals(namedArgument.ArgumentName.Value, argumentName, StringComparison.Ordinal))
+                    {
+                        var valueExpression = namedArgument.ArgumentValue;
+                        var value = valueExpression as IMetadataConstant;
+                        if (value != null)
+                        {
+                            defaultValue = new CompileTimeConstant { Type = value.Type, Value = value.Value };
+                            // good candidate
+                            return true;
+                        }
+                    }
+                }
+
+                defaultValue = null;
+                return false;
         }
     }
 }

@@ -19,10 +19,10 @@ namespace CciSharp.Mutators
 
         class WindowsBaseTypes : PlatformType
         {
-            public readonly INamespaceTypeReference DependencyObjectType;
-            public readonly INamespaceTypeReference DependencyPropertyType;
-            public readonly INamespaceTypeReference PropertyMetadataType;
-            public readonly INamespaceTypeReference DefaultAttributeType;
+            public readonly ITypeReference DependencyObjectType;
+            public readonly ITypeReference DependencyPropertyType;
+            public readonly ITypeReference PropertyMetadataType;
+            public readonly ITypeReference ValidateValueCallbackType;
             public WindowsBaseTypes(IMetadataHost host, IAssemblyReference windowsBaseAssembly)
                 :base(host)
             {
@@ -34,13 +34,14 @@ namespace CciSharp.Mutators
                     this.CreateReference(windowsBaseAssembly, "System", "Windows", "DependencyProperty");
                 this.PropertyMetadataType =
                     this.CreateReference(windowsBaseAssembly, "System", "Windows", "PropertyMetadata");
+                this.ValidateValueCallbackType =
+                    this.CreateReference(windowsBaseAssembly, "System", "Windows", "ValidateValueCallback");
                 var systemAssembly = new Microsoft.Cci.AssemblyReference(host, new AssemblyIdentity(
                     host.NameTable.System,
                     this.CoreAssemblyRef.Culture,
                     this.CoreAssemblyRef.Version,
                     this.CoreAssemblyRef.PublicKeyToken,
                     null));
-                this.DefaultAttributeType = this.CreateReference(systemAssembly, "System", "ComponentModel", "DefaultAttribute");
             }
         }
 
@@ -85,13 +86,16 @@ namespace CciSharp.Mutators
             readonly ITypeReference stringType;
             readonly ITypeReference objectType;
             readonly ITypeReference typeType;
-            readonly ITypeReference defaultAttributeType;
-            readonly INamespaceTypeReference dependencyObjectType;
-            readonly INamespaceTypeReference dependencyPropertyType;
-            readonly INamespaceTypeReference propertyMetadataType;
+            readonly ITypeReference booleanType;
+            readonly ITypeReference dependencyObjectType;
+            readonly ITypeReference dependencyPropertyType;
+            readonly ITypeReference propertyMetadataType;
+            readonly ITypeReference validateValueCallbackType;
+            readonly IMethodReference compilerGeneratedAttributeCtor;
             readonly IMethodReference propertyMetadataCtorObject;
             readonly IMethodReference dependencyPropertyRegisterStringTypeTypeMethod;
             readonly IMethodReference dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
+            readonly IMethodReference dependencyPropertyRegisterStringTypeTypePropertyMetadataValidateValueCallbackMethod;
             readonly IMethodReference dependencyObjectGetValueMethod;
             readonly IMethodReference dependencyObjectSetValueMethod;
 
@@ -102,12 +106,13 @@ namespace CciSharp.Mutators
                 this.dependencyObjectType = types.DependencyObjectType;
                 this.dependencyPropertyType = types.DependencyPropertyType;
                 this.propertyMetadataType = types.PropertyMetadataType;
+                this.validateValueCallbackType = types.ValidateValueCallbackType;
                 this.compilerGeneratedAttribute = host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute;
                 this.voidType = host.PlatformType.SystemVoid;
                 this.stringType = host.PlatformType.SystemString;
                 this.objectType = host.PlatformType.SystemObject;
                 this.typeType = host.PlatformType.SystemType;
-                this.defaultAttributeType = types.DefaultAttributeType;
+                this.booleanType = host.PlatformType.SystemBoolean;
 
                 var registerName = this.host.NameTable.GetNameFor("Register");
                 var stringType = types.SystemString;
@@ -139,6 +144,16 @@ namespace CciSharp.Mutators
                         registerName,
                         0,
                         stringType, typeType, typeType, this.propertyMetadataType);
+                this.dependencyPropertyRegisterStringTypeTypePropertyMetadataValidateValueCallbackMethod =
+                    new Microsoft.Cci.MethodReference(
+                        this.host,
+                        this.dependencyPropertyType,
+                        CallingConvention.Default,
+                        this.dependencyPropertyType,
+                        registerName,
+                        0,
+                        stringType, typeType, typeType, 
+                        this.propertyMetadataType, this.validateValueCallbackType);
 
                 this.dependencyObjectGetValueMethod =
                     new Microsoft.Cci.MethodReference(
@@ -160,7 +175,13 @@ namespace CciSharp.Mutators
                         this.dependencyPropertyType,
                         this.objectType
                         );
-
+                this.compilerGeneratedAttributeCtor = new Microsoft.Cci.MethodReference(
+                    this.Host,
+                    this.Host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
+                    CallingConvention.HasThis, 
+                    this.Host.PlatformType.SystemVoid, 
+                    this.Host.NameTable.Ctor, 
+                    0);
             }
 
             public int MutationCount { get; private set; }
@@ -236,7 +257,7 @@ namespace CciSharp.Mutators
                 };
                 declaringType.Fields.Add(propertyField);
 
-                if (!this.TryRegisterProperty(declaringType, propertyDefinition, propertyField))
+                if (!this.TryRegisterProperty(declaringType, propertyDefinition, propertyField, attribute))
                     return propertyDefinition;
 
                 // replace method bodies with SetValue, GetValue
@@ -324,11 +345,13 @@ namespace CciSharp.Mutators
             private bool TryRegisterProperty(
                 TypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
-                FieldDefinition propertyField)
+                FieldDefinition propertyField,
+                ICustomAttribute attribute)
             {
                 Contract.Requires(declaringType != null);
                 Contract.Requires(propertyDefinition != null);
                 Contract.Requires(propertyField != null);
+                Contract.Requires(attribute != null);
 
                 // initialize with Register
                 var cctorBody = GetOrCreateStaticCtorBody(declaringType);
@@ -337,39 +360,40 @@ namespace CciSharp.Mutators
                 {
                     IsStaticCall = true,
                     IsVirtualCall = false,
-                    Type = this.dependencyPropertyType
+                    Type = this.dependencyPropertyType,                    
+                    MethodToCall = this.dependencyPropertyRegisterStringTypeTypeMethod,
                 };
                 register.Arguments.Add(new CompileTimeConstant { Value = propertyDefinition.Name.Value, Type = this.stringType });
                 register.Arguments.Add(new TypeOf { Type = this.typeType, TypeToGet = propertyDefinition.Type });
                 register.Arguments.Add(new TypeOf { Type = this.typeType, TypeToGet = declaringType });
-                IExpression defaultValue;
-                if (this.TryGetDefaultValue(propertyDefinition, out defaultValue))
+                if (attribute.NumberOfNamedArguments > 0)
                 {
-                    // ensure type matches
-                    if (defaultValue.Type.InternedKey != propertyDefinition.Type.InternedKey)
-                    {
-                        this.Owner.Error(propertyDefinition, "has a default value that does not match its type");
+                    // get the default value.
+                    IExpression defaultValue;
+                    if (!this.TryGetDefaultValue(propertyDefinition, attribute, out defaultValue))
                         return false;
-                    }
-
-                    register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
                     var newPropertyMetadata = new CreateObjectInstance
                     {
                         MethodToCall = this.propertyMetadataCtorObject,
                         Type = this.propertyMetadataType
                     };
-                    // boxing
-                    if (defaultValue.Type.IsValueType)
-                        defaultValue = new Conversion {
-                            Type = this.objectType, 
-                            ValueToConvert = defaultValue
-                        };
                     newPropertyMetadata.Arguments.Add(defaultValue);
                     register.Arguments.Add(newPropertyMetadata);
-                }
-                else
-                {
-                    register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypeMethod;
+                    register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypePropertyMetadataMethod;
+
+                    if (this.RequiresValidation(attribute))
+                    {
+                        // let's look for a method to validate the property value
+                        IMethodReference validateCallback;
+                        if (!this.TryCreateValidationMethod(declaringType, propertyDefinition, out validateCallback))
+                            return false;
+                        register.MethodToCall = this.dependencyPropertyRegisterStringTypeTypePropertyMetadataValidateValueCallbackMethod;
+                        register.Arguments.Add(new CreateDelegateInstance
+                        {
+                             Type = this.validateValueCallbackType, 
+                             MethodToCallViaDelegate = validateCallback
+                        });
+                    }
                 }
 
                 cctorBody.Statements.Insert(0,
@@ -390,21 +414,159 @@ namespace CciSharp.Mutators
                 return true;
             }
 
-            private bool TryGetDefaultValue(PropertyDefinition propertyDefinition, out IExpression defaultValue)
+            private bool TryCreateValidationMethod(
+                TypeDefinition declaringType, 
+                PropertyDefinition propertyDefinition,
+                out IMethodReference validateCallback)
             {
+                Contract.Requires(declaringType != null); 
                 Contract.Requires(propertyDefinition != null);
-                ICustomAttribute attribute;
-                if (CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "DefaultValueAttribute", out attribute))
+
+                MethodDefinition validationMethod;
+                if (this.TryGetValidationMethod(declaringType, propertyDefinition, out validationMethod))
                 {
-                    IMetadataExpression valueExpression = new List<IMetadataExpression>(attribute.Arguments)[0];
-                    var value = valueExpression as IMetadataConstant;
-                    defaultValue = new CompileTimeConstant { Type = value.Type, Value = value.Value };
-                    // good candidate
+                    // we need to generate a delegate that takes an object
+                    var validator = new MethodDefinition
+                    {
+                        Type = this.booleanType,
+                        Name = this.Host.NameTable.GetNameFor("Validate" + propertyDefinition.Name.Value + "$Proxy"),
+                        IsStatic = true,
+                        Visibility = TypeMemberVisibility.Private,
+                        CallingConvention = CallingConvention.Default,
+                        ContainingType = declaringType
+                    };
+                    validator.Parameters.Add(new ParameterDefinition
+                    {
+                        Index = 0,
+                        Type = this.objectType, 
+                        Name = this.Host.NameTable.value,
+                    });
+                    validator.Attributes.Add(new CustomAttribute { Constructor = this.compilerGeneratedAttributeCtor });
+                    declaringType.Methods.Add(validator);
+                    var block = new BlockStatement();
+                    SourceMethodBody body;
+                    validator.Body = body = new SourceMethodBody(this.Host, this.sourceLocationProvider, this.contractProvider)
+                    {
+                        MethodDefinition = validator,
+                        Block = block,
+                    };
+                    var proxyCall = new MethodCall
+                    {
+                        MethodToCall = validationMethod,
+                        Type = this.booleanType, 
+                        IsStaticCall = true
+                    };
+                    proxyCall.Arguments.Add(new Conversion 
+                    { 
+                        TypeAfterConversion = propertyDefinition.Type,
+                        Type = propertyDefinition.Type,
+                        ValueToConvert = new BoundExpression 
+                        {
+                             Type = this.objectType,
+                             Definition = validator.Parameters[0],
+                        }
+                    });
+                    block.Statements.Add(new ReturnStatement
+                    {
+                        Expression = proxyCall
+                    });
+
+
+                    validateCallback = validator;
                     return true;
                 }
 
-                defaultValue = null;
+                validateCallback = null;
                 return false;
+            }
+
+            private bool TryGetValidationMethod(
+                TypeDefinition declaringType, 
+                PropertyDefinition propertyDefinition, 
+                out MethodDefinition validationMethod)
+            {
+                Contract.Requires(declaringType != null);
+                Contract.Requires(propertyDefinition != null);
+
+                var name = this.Host.NameTable.GetNameFor("Validate" + propertyDefinition.Name.Value);
+                foreach (MethodDefinition method in declaringType.Methods)
+                {
+                    if (method.IsStatic &&
+                        method.Type.InternedKey == this.booleanType.InternedKey &&
+                        method.ParameterCount == 1 &&
+                        method.Parameters[0].Type.InternedKey == propertyDefinition.Type.InternedKey &&
+                        method.Name.UniqueKey == name.UniqueKey)
+                    {
+                        validationMethod = method;
+                        return true;
+                    }
+                }
+
+                this.Owner.Error(propertyDefinition,
+                    String.Format("requires the method static bool {0}({1} value)", name.Value, propertyDefinition.Type)
+                    );
+                validationMethod = null;
+                return false;
+            }
+
+            private bool RequiresValidation(ICustomAttribute attribute)
+            {
+                Contract.Requires(attribute != null);
+                CompileTimeConstant value;
+                if (CcsHelper.TryGetNamedArgumentValue(attribute, "Validate", out value))
+                {
+                    if (value.Type.InternedKey != this.booleanType.InternedKey)
+                    {
+                        this.Host.Event(CcsEventLevel.Error, "DependencyPropertyAttribute.Validate must be a boolean type");
+                        return false;
+                    }
+
+                    var b = (bool)value.Value;
+                    return b;
+                }
+
+                return false;
+            }
+
+            private bool TryGetDefaultValue(
+                PropertyDefinition propertyDefinition,
+                ICustomAttribute attribute,
+                out IExpression defaultValue)
+            {
+                Contract.Requires(propertyDefinition != null);
+                Contract.Requires(attribute != null);
+
+                CompileTimeConstant constant;
+                if (CcsHelper.TryGetNamedArgumentValue(attribute, "DefaultValue", out constant))
+                {
+                    // ensure type matches
+
+                    if (constant.Type.InternedKey != propertyDefinition.Type.InternedKey)
+                    {
+                        this.Owner.Error(propertyDefinition, "has a default value that does not match its type");
+                        defaultValue = null;
+                        return false;
+                    }
+                    defaultValue = constant;
+                }
+                else
+                {
+                    defaultValue = new DefaultValue
+                    {
+                        DefaultValueType = propertyDefinition.Type,
+                        Type = propertyDefinition.Type
+                    };
+                }
+                // boxing
+                if (defaultValue.Type.IsValueType)
+                {
+                    defaultValue = new Conversion
+                    {
+                        Type = this.objectType,
+                        ValueToConvert = defaultValue
+                    };
+                }
+                return true;
             }
 
             private BlockStatement GetOrCreateStaticCtorBody(TypeDefinition typeDefinition)

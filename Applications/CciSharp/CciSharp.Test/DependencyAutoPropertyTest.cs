@@ -18,22 +18,20 @@ namespace CciSharp.Test
     {
         [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
         public class DependencyPropertyAttribute : Attribute {
-            static DependencyPropertyAttribute()
-            {
-                "foo".ToString();
-            }
-        
+            public DependencyPropertyAttribute() { }
+            public object DefaultValue { get; set; }
+            public bool Validate { get; set; }
         }
 
         class Foo : DependencyObject
         {
             [DependencyProperty]
             public int Value { get; set; }
-            [DependencyProperty, DefaultValue(10)]
+            [DependencyProperty(DefaultValue = 10)]
             public int ValueWithDefault { get; set; }
-            [DependencyProperty]
+            [DependencyProperty(Validate = true)]
             public int ValueWithValidation { get; set; }
-            static bool ValueValidation(int value)
+            static bool ValidateValueWithValidation(int value)
             {
                 return true;
             }
