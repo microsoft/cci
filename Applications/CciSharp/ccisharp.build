@@ -132,12 +132,14 @@ using System.Reflection;
       <Assemblies Include="
       $(BinReleaseDirectory)Microsoft.Cci.*.dll;
       $(BinReleaseDirectory)Microsoft.Cci.*.xml;
-      $(BinReleaseDirectory)CciSharp.*.exe;
+      $(BinReleaseDirectory)ccs.exe;
+      $(BinReleaseDirectory)CciSharp.Framework.xml;
       $(BinReleaseDirectory)CciSharp.*.dll;
       $(BinReleaseDirectory)CciSharp.targets;
       " />
       <Symbols Include="
       $(BinReleaseDirectory)Microsoft.Cci.*.pdb;
+      $(BinReleaseDirectory)ccs.pdb;
       $(BinReleaseDirectory)CciSharp.*.pdb;       
       " />
     </ItemGroup>
