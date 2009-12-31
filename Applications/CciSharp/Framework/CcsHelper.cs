@@ -21,26 +21,28 @@ namespace CciSharp.Framework
         /// </summary>
         /// <param name="attributes"></param>
         /// <param name="attributeName"></param>
-        /// <param name="lazyAttribute"></param>
+        /// <param name="attribute"></param>
         /// <returns></returns>
         public static bool TryGetAttributeByName(
             IEnumerable<ICustomAttribute> attributes, 
             string attributeName,
-            out ICustomAttribute lazyAttribute)
+            out ICustomAttribute attribute)
         {
             Contract.Requires(attributes != null);
             Contract.Requires(!String.IsNullOrEmpty(attributeName));
-            foreach (var attribute in attributes)
+            Contract.Ensures(!Contract.Result<bool>() || Contract.ValueAtReturn(out attribute) != null);
+
+            foreach (var a in attributes)
             {
-                var type = attribute.Type as INamedEntity;
+                var type = a.Type as INamedEntity;
                 if (type != null &&
                     String.Equals(type.Name.Value, attributeName, StringComparison.Ordinal))
                 {
-                    lazyAttribute = attribute;
+                    attribute = a;
                     return true;
                 }
             }
-            lazyAttribute = null;
+            attribute = null;
             return false;
         }
 

@@ -163,10 +163,13 @@ using System.Reflection;
         <FileType>RuntimeBinary</FileType>
       </ReleaseFiles>
     </ItemGroup>
+    <PropertyGroup>
+      <ReleaseName>CciSharp $(BuildVersion)</ReleaseName>
+    </PropertyGroup>
 
     <CreateRelease
       ProjectName="$(CodeplexProjectName)"
-      ReleaseName="CciSharp $(BuildVersion)"
+      ReleaseName="$(ReleaseName)"
       IsDefaultRelease="false"
       ShowToPublic="true"
       ShowOnHomePage="true"
@@ -177,7 +180,7 @@ using System.Reflection;
       Password="$(CodeplexPassword)" />
     <UploadFiles
       ProjectName="$(CodeplexProjectName)"
-      ReleaseName="$(BuildVersion)"
+      ReleaseName="$(ReleaseName)"
       ReleaseFiles="@(ReleaseFiles)"
       Username="$(CodeplexUser)"
       Password="$(CodeplexPassword)"

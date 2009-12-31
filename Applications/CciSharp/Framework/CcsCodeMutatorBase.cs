@@ -29,6 +29,7 @@ namespace CciSharp.Framework
         protected CcsCodeMutatorBase(TMutator owner, ISourceLocationProvider sourceLocationProvider)
             : base(owner.Host, true, sourceLocationProvider, null)
         {
+            Contract.Requires(owner != null);
             this.Owner = owner;
         }
 
@@ -36,6 +37,7 @@ namespace CciSharp.Framework
         void ObjectInvariant()
         {
             Contract.Invariant(this.Owner != null);
+            Contract.Invariant(this.Host != null);
         }
 
         /// <summary>

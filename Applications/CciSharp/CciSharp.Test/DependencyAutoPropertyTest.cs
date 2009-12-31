@@ -31,6 +31,12 @@ namespace CciSharp.Test
             public int Value { get; set; }
             [DependencyProperty, DefaultValue(10)]
             public int ValueWithDefault { get; set; }
+            [DependencyProperty]
+            public int ValueWithValidation { get; set; }
+            static bool ValueValidation(int value)
+            {
+                return true;
+            }
         }
 
         [Fact(Skip = "requires WPF message pump")]
