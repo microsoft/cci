@@ -10,6 +10,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using System.Diagnostics.Contracts;
 using CciSharp.Framework;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -30,9 +31,12 @@ namespace CciSharp.Mutators
         {
         }
 
-        public override bool Visit(Assembly assembly, PdbReader _pdbReader)
+        public override bool Visit()
         {
-            if (_pdbReader == null)
+            var assembly = this.Host.MutatedAssembly;
+            var contracts = this.Host.MutatedContracts;
+            PdbReader pdbReader;
+            if (!this.Host.TryGetMutatedPdbReader(out pdbReader))
             {
                 this.Host.Event(CcsEventLevel.Error, "missing symbols for {0}", assembly.Location);
                 return false;
@@ -44,7 +48,7 @@ namespace CciSharp.Mutators
             if (this.assertMethods.Count == 0)
                 return false; // nothing todo here.
 
-            var mutator = new Mutator(this, _pdbReader);
+            var mutator = new Mutator(this, pdbReader, contracts);
             mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
@@ -53,8 +57,8 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<AssertMessageMutator>
         {
             readonly Microsoft.Cci.MethodReference stringFormatStringObjectArray;
-            public Mutator(AssertMessageMutator owner, ISourceLocationProvider sourceLocationProvider)
-                : base(owner, sourceLocationProvider)
+            public Mutator(AssertMessageMutator owner, ISourceLocationProvider sourceLocationProvider, ContractProvider contracts)
+                : base(owner, sourceLocationProvider, contracts)
             {
                 this.stringFormatStringObjectArray =
                     new Microsoft.Cci.MethodReference(

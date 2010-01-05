@@ -45,9 +45,7 @@ namespace CciSharp.Framework
         /// <summary>
         /// Visits and mutates the module in-place.
         /// </summary>
-        /// <param name="assembly"></param>
-        /// <param name="pdbReader">the pdb reader</param>
-        public abstract bool Visit(Assembly assembly, PdbReader pdbReader);
+        public abstract bool Visit();
 
         /// <summary>
         /// Gets the host
@@ -84,10 +82,8 @@ namespace CciSharp.Framework
             : base(null, null, -1, null)
         { }
 
-        public override bool Visit(Assembly assembly, PdbReader pdbReader)
+        public override bool Visit()
         {
-            Contract.Requires(assembly != null);            
-
             throw new NotImplementedException();
         }
     }

@@ -12,6 +12,7 @@ using CciSharp.Framework;
 using Microsoft.Cci.ILToCodeModel;
 using Microsoft.Cci.MutableCodeModel;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp
 {
@@ -122,5 +123,28 @@ namespace CciSharp
             this.Event(level, location, String.Format(format, args));
         }
         #endregion
+
+        public Assembly MutatedAssembly { get; private set; }
+        PdbReader _mutatedPdbReader;
+        public bool TryGetMutatedPdbReader(out PdbReader pdbReader)
+        {
+            pdbReader = this._mutatedPdbReader;
+            return pdbReader != null;
+        }
+        public ContractProvider MutatedContracts { get; private set; }
+
+        public void LoadMutatedAssembly(string assemblyFullPath)
+        {
+            Contract.Requires(!String.IsNullOrEmpty(assemblyFullPath));
+
+            var assembly = this.LoadAssemblyFrom(assemblyFullPath, out this._mutatedPdbReader);
+            var contractMethods = new ContractMethods(this);
+            var contractsProvider = new ContractProvider(contractMethods, assembly);
+            var copier = new CodeAndContractMutator(this, false, this._mutatedPdbReader, contractsProvider);
+            var assemblyCopy = copier.Visit(assembly);
+
+            this.MutatedAssembly = assemblyCopy;
+            this.MutatedContracts = new ContractProvider(new ContractMethods(this), this.MutatedAssembly);
+        }
     }
 }

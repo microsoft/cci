@@ -4,6 +4,7 @@ using CciSharp.Framework;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -45,13 +46,18 @@ namespace CciSharp.Mutators
             }
         }
 
-        public override bool Visit(Assembly assembly, PdbReader pdbReader)
+        public override bool Visit()
         {
+            var assembly = this.Host.MutatedAssembly;
             IAssemblyReference windowsBaseReference;
             if (!this.TryGetWindowsBase(assembly.AssemblyReferences, out windowsBaseReference))
                 return false;
 
-            var mutator = new Mutator(this, pdbReader, windowsBaseReference);
+            PdbReader _pdbReader;
+            if (!this.Host.TryGetMutatedPdbReader(out _pdbReader))
+                _pdbReader = null;
+            var contracts = this.Host.MutatedContracts;
+            var mutator = new Mutator(this, _pdbReader, contracts, windowsBaseReference);
             mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
@@ -99,8 +105,12 @@ namespace CciSharp.Mutators
             readonly IMethodReference dependencyObjectGetValueMethod;
             readonly IMethodReference dependencyObjectSetValueMethod;
 
-            public Mutator(DependencyAutoProperty owner, ISourceLocationProvider sourceLocationProvider, IAssemblyReference windowsBaseReference)
-                : base(owner, sourceLocationProvider)
+            public Mutator(
+                DependencyAutoProperty owner, 
+                ISourceLocationProvider sourceLocationProvider, 
+                ContractProvider contracts,
+                IAssemblyReference windowsBaseReference)
+                : base(owner, sourceLocationProvider, contracts)
             {
                 var types = new WindowsBaseTypes(host, windowsBaseReference);
                 this.dependencyObjectType = types.DependencyObjectType;

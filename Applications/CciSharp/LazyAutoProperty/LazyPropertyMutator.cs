@@ -10,6 +10,7 @@ using CciSharp.Framework;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -45,9 +46,15 @@ namespace CciSharp.Mutators
             }
         }
 
-        public override bool Visit(Assembly assembly, PdbReader pdbReader)
+        public override bool Visit()
         {
-            var mutator = new Mutator(this, pdbReader);
+            var assembly = this.Host.MutatedAssembly;
+            PdbReader _pdbReader;
+            if (!this.Host.TryGetMutatedPdbReader(out _pdbReader))
+                _pdbReader = null; 
+            var contracts = this.Host.MutatedContracts;
+
+            var mutator = new Mutator(this, _pdbReader, contracts);
             mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
@@ -61,8 +68,8 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<LazyPropertyMutator>
         {
             readonly INamespaceTypeReference booleanType;
-            public Mutator(LazyPropertyMutator owner, ISourceLocationProvider _pdbReader)
-                : base(owner, _pdbReader)
+            public Mutator(LazyPropertyMutator owner, ISourceLocationProvider _pdbReader, ContractProvider contracts)
+                : base(owner, _pdbReader, contracts)
             {
                 this.booleanType = this.Host.PlatformType.SystemBoolean; 
             }
@@ -143,7 +150,10 @@ namespace CciSharp.Mutators
                 uncachedGetter.Visibility = TypeMemberVisibility.Private;
 
                 // replace getter body
-                var body = new SourceMethodBody(this.Host, this.sourceLocationProvider, this.contractProvider);
+                var body = new SourceMethodBody(this.Host, this.sourceLocationProvider, this.contractProvider)
+                {
+                    MethodDefinition = getter
+                };
                 getter.Attributes.Add(this.CompilerGeneratedAttribute);
                 getter.Body = body;
                 getter.Locations.Clear();

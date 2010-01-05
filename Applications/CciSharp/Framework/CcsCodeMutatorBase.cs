@@ -11,6 +11,7 @@ using Microsoft.Cci;
 using System.Diagnostics.Contracts;
 using System.Diagnostics;
 using CciSharp;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Framework
 {
@@ -26,10 +27,15 @@ namespace CciSharp.Framework
         /// </summary>
         /// <param name="owner">the owner mutator</param>
         /// <param name="sourceLocationProvider">the pdb reader</param>
-        protected CcsCodeMutatorBase(TMutator owner, ISourceLocationProvider sourceLocationProvider)
-            : base(owner.Host, true, sourceLocationProvider, null)
+        /// <param name="contractProvider"></param>
+        protected CcsCodeMutatorBase(
+            TMutator owner, 
+            ISourceLocationProvider sourceLocationProvider,
+            ContractProvider contractProvider)
+            : base(owner.Host, true, sourceLocationProvider, contractProvider)
         {
             Contract.Requires(owner != null);
+            Contract.Requires(contractProvider != null);
             this.Owner = owner;
         }
 

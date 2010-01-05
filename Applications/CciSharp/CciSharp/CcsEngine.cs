@@ -11,6 +11,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using System.IO;
 using CciSharp.Framework;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp
 {
@@ -35,26 +36,22 @@ namespace CciSharp
             Contract.Requires(mutatorAssemblies != null);
 
             var assemblyFullPath = Path.GetFullPath(assemblyPath);
+            this.host.LoadMutatedAssembly(assemblyFullPath);
+
             // load mutators
             var mutators = LoadMutators(mutatorAssemblies);
-            PdbReader pdbReader;
-            var assembly = this.host.LoadAssemblyFrom(assemblyFullPath, out pdbReader);
-
-            var copier = new CodeMutator(host, false, pdbReader);
-            var assemblyCopy = copier.Visit(assembly);
-
             bool dirty = false;
             foreach (var mutator in mutators)
             {
                 this.host.Event(CcsEventLevel.Message, "rewrite with {0}", mutator);
-                dirty |= mutator.Visit(assemblyCopy, pdbReader);
+                dirty |= mutator.Visit();
                 if (this.host.ErrorCount > 0) break;
             }
 
             if (!dirty)
                 this.host.Event(CcsEventLevel.Message, "no mutation, skipping rewritting");
             else if (this.host.ErrorCount == 0)
-                this.WriteModule(assemblyFullPath, assemblyCopy, pdbReader);
+                this.WriteModule(assemblyFullPath);
 
             this.host.Event(CcsEventLevel.Message, "Rewrite complete -- {0} errors, {1} warnings",
                 this.host.ErrorCount,
@@ -62,10 +59,14 @@ namespace CciSharp
             return this.host.ErrorCount == 0 ? CcsExitCodes.Success : CcsExitCodes.Errors;
       }
 
-        private void WriteModule(string assemblyPath,  Module module, PdbReader _pdbReader)
+        private void WriteModule(string assemblyPath)
         {
             Contract.Requires(!String.IsNullOrEmpty(assemblyPath));
-            Contract.Requires(module != null);
+
+            var module = this.host.MutatedAssembly;
+            PdbReader _pdbReader;
+            if (!this.host.TryGetMutatedPdbReader(out _pdbReader))
+                _pdbReader = null;
 
             // write module to disk
             var newAssemblyPath = Path.ChangeExtension(assemblyPath, ".ccs") + Path.GetExtension(assemblyPath);

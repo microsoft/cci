@@ -11,6 +11,7 @@ using CciSharp.Framework;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -29,10 +30,16 @@ namespace CciSharp.Mutators
             : base(host, "ReadOnly Auto Property", 10, typeof(ReadOnlyAutoPropertyResources))
         { }
 
-        public override bool Visit(Assembly assembly, PdbReader _pdbReader)
+        public override bool Visit()
         {
+            var assembly = this.Host.MutatedAssembly;
+            PdbReader _pdbReader;
+            if (!this.Host.TryGetMutatedPdbReader(out _pdbReader))
+                _pdbReader = null; 
+            var contracts = this.Host.MutatedContracts;
+
             // pass1: collect properties to mutate and field references,
-            var collector = new PropertyCollector(this, _pdbReader);
+            var collector = new PropertyCollector(this, _pdbReader, contracts);
             collector.Visit(assembly);
             var properties = collector.Properties;
             // nothing to do...
@@ -40,7 +47,7 @@ namespace CciSharp.Mutators
                 return false;
 
             // pass2: mutate properties and update field references
-            var mutator = new SetterReplacer(this, properties, _pdbReader);
+            var mutator = new SetterReplacer(this, _pdbReader, contracts, properties);
             mutator.Visit(assembly);
             return true;
         }
@@ -55,8 +62,11 @@ namespace CciSharp.Mutators
         {
             readonly ITypeReference compilerGeneratedAttribute;
 
-            public PropertyCollector(ReadOnlyAutoPropertyMutator owner, ISourceLocationProvider sourceLocationProvider)
-                : base(owner, sourceLocationProvider)
+            public PropertyCollector(
+                ReadOnlyAutoPropertyMutator owner, 
+                ISourceLocationProvider sourceLocationProvider,
+                ContractProvider contracts)
+                : base(owner, sourceLocationProvider, contracts)
             {
                 this.compilerGeneratedAttribute = host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute;
             }
@@ -160,8 +170,12 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<ReadOnlyAutoPropertyMutator>
         {
             readonly Dictionary<uint, Setter> fields;
-            public SetterReplacer(ReadOnlyAutoPropertyMutator owner, Dictionary<uint, Setter> fields, ISourceLocationProvider _pdbReader)
-                : base(owner, _pdbReader)
+            public SetterReplacer(
+                ReadOnlyAutoPropertyMutator owner, 
+                ISourceLocationProvider _pdbReader,
+                ContractProvider contracts,
+                Dictionary<uint, Setter> fields)
+                : base(owner, _pdbReader, contracts)
             {
                 Contract.Requires(fields != null);
                 this.fields = fields;

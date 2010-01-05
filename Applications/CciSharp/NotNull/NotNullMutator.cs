@@ -11,6 +11,7 @@ using CciSharp.Framework;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -25,9 +26,15 @@ namespace CciSharp.Mutators
             : base(host, "Not Null", 10, typeof(NotNullResources))
         { }
 
-        public override bool Visit(Assembly assembly, PdbReader pdbReader)
+        public override bool Visit()
         {
-            var mutator = new Mutator(this, pdbReader);
+            var assembly = this.Host.MutatedAssembly;
+            PdbReader _pdbReader;
+            if (!this.Host.TryGetMutatedPdbReader(out _pdbReader))
+                _pdbReader = null;
+            var contracts = this.Host.MutatedContracts;
+
+            var mutator = new Mutator(this, _pdbReader, contracts);
             mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
@@ -40,8 +47,8 @@ namespace CciSharp.Mutators
             readonly INamespaceTypeReference voidType;
             readonly IMethodReference contractRequiresMethod;
 
-            public Mutator(NotNullMutator owner, ISourceLocationProvider reader)
-                : base(owner, reader)
+            public Mutator(NotNullMutator owner, ISourceLocationProvider reader, ContractProvider contracts)
+                : base(owner, reader, contracts)
             {
                 this.notNullsContext.Push(false);
                 this.booleanType = this.Host.PlatformType.SystemBoolean;

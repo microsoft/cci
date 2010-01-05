@@ -12,6 +12,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.IO;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Mutators
 {
@@ -29,9 +30,14 @@ namespace CciSharp.Mutators
             this.testTypes = new TestType(host);
         }
 
-        public override bool Visit(Assembly assembly, PdbReader _pdbReader)
+        public override bool Visit()
         {
-            var mutator = new Mutator(this, _pdbReader);
+            var assembly = this.Host.MutatedAssembly;
+            PdbReader _pdbReader;
+            if (!this.Host.TryGetMutatedPdbReader(out _pdbReader))
+                _pdbReader = null; 
+            var contracts = this.Host.MutatedContracts;
+            var mutator = new Mutator(this, _pdbReader, contracts);
             mutator.Visit(assembly);
             return mutator.MutationCount > 0;
         }
@@ -39,8 +45,11 @@ namespace CciSharp.Mutators
         class Mutator
             : CcsCodeMutatorBase<NotifyAutoPropertyChanged>
         {
-            public Mutator(NotifyAutoPropertyChanged owner, ISourceLocationProvider sourceLocationProvider)
-                : base(owner, sourceLocationProvider)
+            public Mutator(
+                NotifyAutoPropertyChanged owner, 
+                ISourceLocationProvider sourceLocationProvider,
+                ContractProvider contracts)
+                : base(owner, sourceLocationProvider, contracts)
             { }
 
             public int MutationCount { get; private set; }

@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.Contracts;
 
 namespace CciSharp.Framework
 {
@@ -18,6 +20,21 @@ namespace CciSharp.Framework
     public interface ICcsHost
         : IMetadataHost
     {
+        /// <summary>
+        /// Gets the mutated assembly
+        /// </summary>
+        Assembly MutatedAssembly { get; }
+
+        /// <summary>
+        /// Tries to get the mutated pdb reader
+        /// </summary>
+        bool TryGetMutatedPdbReader(out PdbReader pdbReader);
+
+        /// <summary>
+        /// Gets the mutated contracts
+        /// </summary>
+        ContractProvider MutatedContracts { get; }
+
         /// <summary>
         /// Tries to get a pdb reader for the given module
         /// </summary>
@@ -228,5 +245,29 @@ namespace CciSharp.Framework
         }
 
         #endregion
+
+        Assembly ICcsHost.MutatedAssembly
+        {
+            get {
+                Contract.Ensures(Contract.Result<Assembly>() != null);
+                return null;
+            }
+        }
+
+        bool ICcsHost.TryGetMutatedPdbReader(out PdbReader pdbReader)
+        {
+            Contract.Ensures(!Contract.Result<bool>() || Contract.ValueAtReturn(out pdbReader) != null);
+            pdbReader = null;
+            return false;
+        }
+
+        ContractProvider ICcsHost.MutatedContracts
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<ContractProvider>() != null);
+                return null;
+            }
+        }
     }
 }

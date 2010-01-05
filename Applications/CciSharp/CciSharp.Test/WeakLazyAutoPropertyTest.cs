@@ -19,7 +19,6 @@ namespace CciSharp.Test
 
         public class Foo
         {
-            string value;
             [WeakLazy]
             public string Value
             {
