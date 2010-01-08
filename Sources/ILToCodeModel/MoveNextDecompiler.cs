@@ -173,7 +173,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private void RemoveToplevelSwitch(BlockStatement blockStatement, ILocalDefinition localForThisDotState) {
       // First: collect the goto statements in the switch case bodies.
       List<IGotoStatement> gotosFromSwitchCases = new List<IGotoStatement>();
-      var pass1 = new RemoveSwitchAndCollectGotos(localForThisDotState, this, gotosFromSwitchCases);
+      var pass1 = new RemoveSwitchAndCollectGotos(localForThisDotState, gotosFromSwitchCases);
       pass1.Visit(blockStatement);
       // Second, follow the link from gotos in switch cases, find and remove the gotoes whose targets are either
       // the starting point of the iterator method, a yield break, or a label that is internal to the state machine
@@ -239,7 +239,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// substitutes every occurrance of a iterator closure type parameter with a method generic parameter and every reference 
   /// to this.field to the locals or parameters captured by the closure field.
   /// </summary>
-  internal class MoveNextToIteratorBlockTransformer : MethodBodyCodeMutator {
+  internal class MoveNextToIteratorBlockTransformer : MethodBodyMappingMutator {
     /// <summary>
     /// A mapping from a closure field (a unique key of its name) to the local or parameter it captures.
     /// </summary>
@@ -347,8 +347,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override ITypeReference Visit(ITypeReference typeReference) {
       var genericTypeParameterReference = typeReference as IGenericTypeParameterReference;
       if (genericTypeParameterReference != null) {
-        if (this.typeParameterMapping.ContainsKey(genericTypeParameterReference.ResolvedType)) {
-          return this.typeParameterMapping[genericTypeParameterReference.ResolvedType];
+        var genericTypeParameter = genericTypeParameterReference.ResolvedType;
+        if (this.typeParameterMapping.ContainsKey(genericTypeParameter)) {
+          return this.typeParameterMapping[genericTypeParameter];
         }
       }
       return base.Visit(typeReference);
@@ -537,7 +538,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Helper class that removes assignments to this.&lt;&gt;__state. 
     /// </summary>
     internal RemoveStateFieldAccessAndMFinallyCall(MoveNextDecompiler decompiler) {
-      this.thisDotStateLocal = null;
       this.decompiler = decompiler;
     }
 
@@ -829,7 +829,6 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// }
   /// </summary>
   internal class RemoveSwitchAndCollectGotos : BaseCodeTraverser {
-    private MoveNextDecompiler decompiler;
     /// <summary>
     /// Used for detecting whether whether thisdotstate is tested.
     /// </summary>
@@ -844,9 +843,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// Collect goto statements in switch cases and remove the switch statement. 
     /// </summary>
-    internal RemoveSwitchAndCollectGotos(ILocalDefinition localForThisDotState, MoveNextDecompiler decompiler, List<IGotoStatement> gotosFromSwitchCases) {
+    internal RemoveSwitchAndCollectGotos(ILocalDefinition localForThisDotState, List<IGotoStatement> gotosFromSwitchCases) {
       this.localForThisDotState = localForThisDotState;
-      this.decompiler = decompiler;
       this.gotosFromSwitchCases = gotosFromSwitchCases;
     }
 

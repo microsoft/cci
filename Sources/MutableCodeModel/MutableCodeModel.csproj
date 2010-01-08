@@ -87,6 +87,7 @@
     <Compile Include="Members.cs" />
     <Compile Include="Mutator.cs" />
     <Compile Include="Normalizer\CapturedLocalOrArgumentFinder.cs" />
+    <Compile Include="Normalizer\Duplicator.cs" />
     <Compile Include="Normalizer\FixAnonymousDelegateBodyToUseClosure.cs" />
     <Compile Include="Normalizer\Helper.cs" />
     <Compile Include="Normalizer\Normalizer.cs" />

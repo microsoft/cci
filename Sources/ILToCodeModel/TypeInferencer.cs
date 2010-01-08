@@ -639,7 +639,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IThisReference thisReference) {
       base.Visit(thisReference);
-      ((ThisReference)thisReference).Type = this.containingType;
+      ITypeDefinition typeForThis = this.containingType.ResolvedType;
+      ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }
 
     public override void Visit(ITokenOf tokenOf) {

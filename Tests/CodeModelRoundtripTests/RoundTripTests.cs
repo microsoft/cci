@@ -61,6 +61,12 @@ public class CodeModelRoundTripTests {
     RoundTripWithILMutator("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
   }
 
+  [Fact]
+  public void IteratorWithCode() {
+    ExtractAndCompile("IteratorRoundTripTest.cs");
+    RoundTripWithCodeMutator("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
+  }
+
   //[Fact]
   public void SystemCoreWithCode() {
     ExtractResource("CodeModelRoundtripTests.TestData.v4.System.Core.dll", "System.Core.dll");

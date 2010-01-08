@@ -12,388 +12,469 @@ using Microsoft.Cci.Contracts;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// A closure created by the compiler  for an iterator
+  /// Information needed for and during the creation of the closure class for an iterator method. Such information includes:
+  /// 1) the closure class,
+  /// 2) its members, and
+  /// 3) references to the generic instances of the class and its members, as used by methods in the closure class.
   /// </summary>
-  internal class IteratorClosure {
-    public NestedTypeDefinition ClosureDefinition;
+  internal class IteratorClosureInformation {
+    /// <summary>
+    /// Information needed for and during the creation of the closure class for an iterator method. Such information includes:
+    /// 1) the closure class,
+    /// 2) its members, and
+    /// 3) references to the generic instances of the class and its members
+    /// </summary>
+    internal IteratorClosureInformation(IMetadataHost host) {
+      this.host = host;
+    }
 
-    public ITypeReference ClosureDefinitionReference {
+    private IMetadataHost host;
+
+    /// <summary>
+    /// Closure class definition.
+    /// </summary>
+    internal NestedTypeDefinition ClosureDefinition;
+
+    /// <summary>
+    /// The fully instantiated/specialized version of the closure class, where all the instantiations use the type parameters themselves. 
+    /// </summary>
+    /// <remarks>
+    /// The specialized version of the closure class does not exist yet. We have to specialize it ourselves. 
+    /// </remarks>
+    internal ITypeReference ClosureDefinitionReference {
       get {
-        ITypeReference result = null;
-        // GetFullyInstantiatedSpecializedTypeReference not yet working on ClosureDefinition, has 
-        // to get the specialized version from its containing type.
-        if (closureDefinitionReference == null) {
-          var containingTypeRef = GetFullyInstantiatedSpecializedTypeReference(ClosureDefinition.ContainingTypeDefinition);
-          foreach (var t in containingTypeRef.ResolvedType.NestedTypes) {
-            if (t.Name == ClosureDefinition.Name) {
-              result = t; break;
-            }
-          }
-          if (result == null) {
-            GenericTypeInstance genericInstance = containingTypeRef.ResolvedType as GenericTypeInstance;
-            if (genericInstance != null) {
-              result = (ITypeReference)genericInstance.SpecializeMember(ClosureDefinition, this.ClosureDefinition.InternFactory);
-            } else {
-              SpecializedNestedTypeDefinition specializedNestedType = containingTypeRef.ResolvedType as SpecializedNestedTypeDefinition;
-              if (specializedNestedType != null) {
-                result = (ITypeReference)specializedNestedType.SpecializeMember(ClosureDefinition, this.ClosureDefinition.InternFactory);
-              }
-            }
-          }
-          if (result == null) {
-            result = ClosureDefinition;
-          }
-          if (ClosureDefinition.IsGeneric) closureDefinitionReference = result.ResolvedType.InstanceType;
-          else closureDefinitionReference = result;
+        if (this.closureDefinitionReference == null) {
+          this.closureDefinitionReference = TypeDefinition.SelfInstance(this.ClosureDefinition, this.host.InternFactory);
         }
         return closureDefinitionReference;
       }
     }
     ITypeReference/*?*/ closureDefinitionReference = null;
 
-    bool IsTypeGeneric(ITypeDefinition typeDef) {
-      if (typeDef.IsGeneric) return true;
-      INestedTypeDefinition nestedType = typeDef as INestedTypeDefinition;
-      if (nestedType != null) {
-        if (IsTypeGeneric(nestedType.ContainingTypeDefinition)) return true;
-      }
-      return false;
+    /// <summary>
+    /// Given a field definition in the closure class, get its reference as will be used by the methods in the closure class. 
+    /// </summary>
+    internal IFieldReference GetReferenceOfFieldUsedByPeers(IFieldDefinition fieldDef) {
+
+      IFieldReference fieldReference = null;
+      ITypeReference typeReference = this.ClosureDefinitionReference;
+      ISpecializedNestedTypeReference nestedTypeRef = typeReference as ISpecializedNestedTypeReference;
+      IGenericTypeInstanceReference genericTypeInstanceRef = typeReference as IGenericTypeInstanceReference;
+      if (nestedTypeRef != null || genericTypeInstanceRef != null) {
+        fieldReference = new SpecializedFieldReference() {
+          ContainingType = typeReference,
+          Name = fieldDef.Name,
+          UnspecializedVersion = fieldDef,
+          Type = fieldDef.Type
+        };
+      } else fieldReference = fieldDef;
+      return fieldReference;
     }
 
-    ITypeReference GetFullyInstantiatedSpecializedTypeReference(ITypeDefinition typeDefinition) {
-      if (typeDefinition.IsGeneric) return typeDefinition.InstanceType;
-      INestedTypeDefinition nestedType = typeDefinition as INestedTypeDefinition;
-      if (nestedType != null) {
-        ITypeReference containingTypeReference = GetFullyInstantiatedSpecializedTypeReference(nestedType.ContainingTypeDefinition);
-        foreach (var t in containingTypeReference.ResolvedType.NestedTypes) {
-          if (t.Name == nestedType.Name && t.GenericParameterCount == nestedType.GenericParameterCount) {
-            return t;
-          }
-        }
-        //GenericTypeInstance genericTypeInstance = containingTypeReference as GenericTypeInstance;
-        //if (genericTypeInstance != null) {
-        //  //var specialiedTypeDef = new SpecializedNestedTypeDefinition(nestedType, nestedType, containingTypeReference.ResolvedType, genericTypeInstance, this.ClosureDefinition.InternFactory);
-        //  var specializedTypeDef = genericTypeInstance.SpecializeMember(nestedType, this.ClosureDefinition.InternFactory);
-        //  return (ITypeReference)specializedTypeDef; // cannot be a generic type, no instantiation is needed. 
-        //} else {
-        //  SpecializedNestedTypeDefinition specializedNestedType = containingTypeReference.ResolvedType as SpecializedNestedTypeDefinition;
-        //  if (specializedNestedType != null) {
-        //    var specializedTypeDef = specializedNestedType.SpecializeMember(nestedType, this.ClosureDefinition.InternFactory);
-        //    return (ITypeReference)specializedTypeDef;
-        //  }
-        //}
-      }
-      return typeDefinition;
-    }
-
-    Dictionary<IFieldDefinition, IFieldReference> fieldReferences = new Dictionary<IFieldDefinition, IFieldReference>();
-
-    public IFieldReference GetFieldReference(IFieldDefinition fieldDef) {
-      if (!fieldReferences.ContainsKey(fieldDef)) {
-        IFieldReference fieldReference = null;
-        ITypeReference typeReference = ClosureDefinitionReference;
-        foreach (var f in typeReference.ResolvedType.Fields) {
-          if (f.Name == fieldDef.Name) { fieldReference = f; break; }
-        }
-        if (fieldReference == null) {
-          GenericTypeInstance genericInstance = typeReference as GenericTypeInstance;
-          if (genericInstance != null) {
-            fieldReference = (IFieldReference)genericInstance.SpecializeMember(fieldDef, this.ClosureDefinition.InternFactory);
-          } else {
-            SpecializedNestedTypeDefinition specializedNestedType = typeReference as SpecializedNestedTypeDefinition;
-            if (specializedNestedType != null)
-              fieldReference = (IFieldReference)specializedNestedType.SpecializeMember(fieldDef, this.ClosureDefinition.InternFactory);
-          }
-        }
-        if (fieldReference == null) {
-          fieldReference = fieldDef;
-        }
-        //fieldReference = new SpecializedFieldDefinition(fieldDef, fieldDef, ClosureDefinitionReference.ResolvedType, (GenericTypeInstance)ClosureDefinitionReference);
-        fieldReferences[fieldDef] = fieldReference;
-      }
-      return fieldReferences[fieldDef];
-    }
-
-    private IFieldDefinition currentField;
-    public IFieldDefinition CurrentField {
-      get { return currentField; }
+    /// <summary>
+    /// The "current" field of the iterator closure class. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IFieldDefinition CurrentField {
+      get { return this.currentField; }
       set {
-        currentField = value;
-        this.ClosureDefinition.Fields.Add(value);
-        currentFieldReference = GetFieldReference(value);
+        if (this.currentField == null) {
+          this.currentField = value;
+          this.ClosureDefinition.Fields.Add(value);
+        } else Debug.Assert(false); 
       }
     }
-    public IFieldReference CurrentFieldReference {
-      get {
-        if (currentFieldReference == null) {
-          currentFieldReference = GetFieldReference(currentField);
-        }
-        return currentFieldReference;
-      }
-    }
-    IFieldReference currentFieldReference;
+    private IFieldDefinition currentField;
 
+    /// <summary>
+    /// The reference to this.current as used by methods in the closure class.
+    /// </summary>
+    internal IFieldReference CurrentFieldReference {
+      get {
+        if (this.currentFieldReference == null) {
+          this.currentFieldReference = this.GetReferenceOfFieldUsedByPeers(this.currentField);
+        }
+        return this.currentFieldReference;
+      }
+    }
+    private IFieldReference currentFieldReference;
+
+    /// <summary>
+    /// The "state" field of the iterator closure. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IFieldDefinition StateField {
+      get { return this.stateField; }
+      set {
+        if (this.stateField == null) {
+          this.stateField = value;
+          this.ClosureDefinition.Fields.Add(value);
+        } else Debug.Assert(false);
+      }
+    }
     private IFieldDefinition stateField;
 
-    public IFieldReference StateFieldReference {
+    /// <summary>
+    /// The reference to this.state as used by methods in the closure class.
+    /// </summary>
+    internal IFieldReference StateFieldReference {
       get {
-        if (stateFieldReference == null) {
-          stateFieldReference = GetFieldReference(stateField);
+        if (this.stateFieldReference == null) {
+          this.stateFieldReference = this.GetReferenceOfFieldUsedByPeers(this.stateField);
         }
-        return stateFieldReference;
+        return this.stateFieldReference;
       }
     }
-    IFieldReference stateFieldReference;
+    private IFieldReference stateFieldReference;
 
-    public IFieldDefinition StateField {
-      get { return stateField; }
+    /// <summary>
+    /// The "this" field of the iterator closure, that is, the one that captures the this parameter
+    /// of the orginal iterator method, if any. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IFieldDefinition ThisField {
+      get { return this.thisField; }
       set {
-        stateField = value;
-        this.ClosureDefinition.Fields.Add(value);
+        if (this.thisField == null) {
+          this.thisField = value;
+          this.ClosureDefinition.Fields.Add(value);
+        } else Debug.Assert(false);
       }
     }
     private IFieldDefinition thisField = null;
 
-    public IFieldDefinition ThisField {
-      get { return thisField; }
-      set { thisField = value; this.ClosureDefinition.Fields.Add(value); }
-    }
-
-    public IFieldReference ThisFieldReference {
+    /// <summary>
+    /// The reference to the this field of the iterator closure, as used by the methods in the closure class.
+    /// </summary>
+    internal IFieldReference ThisFieldReference {
       get {
-        if (thisFieldReference == null) {
-          thisFieldReference = GetFieldReference(thisField);
+        if (this.thisFieldReference == null) {
+          this.thisFieldReference = this.GetReferenceOfFieldUsedByPeers(this.thisField);
         }
-        return thisFieldReference;
+        return this.thisFieldReference;
       }
     }
     IFieldReference thisFieldReference;
 
+    /// <summary>
+    /// The "l_initialThreadId" field of the closure. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IFieldDefinition InitialThreadId {
+      get { return this.initialThreadId; }
+      set {
+        if (this.initialThreadId == null) {
+          this.initialThreadId = value;
+          this.ClosureDefinition.Fields.Add(value);
+        } else Debug.Assert(false);
+      }
+    }
     private IFieldDefinition initialThreadId;
 
-    public IFieldDefinition InitialThreadId {
-      get { return initialThreadId; }
-      set { initialThreadId = value; this.ClosureDefinition.Fields.Add(value); }
-    }
-
-    public IFieldReference InitThreadIdFieldReference {
+    /// <summary>
+    /// The reference to the l_initialThreadId as used by methods in the closure class.
+    /// </summary>
+    internal IFieldReference InitThreadIdFieldReference {
       get {
-        if (threadIdFieldReference == null) {
-          threadIdFieldReference = GetFieldReference(initialThreadId);
+        if (this.threadIdFieldReference == null) {
+          this.threadIdFieldReference = this.GetReferenceOfFieldUsedByPeers(this.initialThreadId);
         }
-        return threadIdFieldReference;
+        return this.threadIdFieldReference;
       }
     }
-    IFieldReference threadIdFieldReference;
+    private IFieldReference threadIdFieldReference;
 
+    /// <summary>
+    /// Constructor of the iterator closure. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IMethodDefinition Constructor {
+      get { return this.constructor; }
+      set {
+        if (this.constructor == null) {
+          this.constructor = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
+      }
+    }
     private IMethodDefinition constructor;
 
-    public IMethodDefinition Constructor {
-      get { return constructor; }
-      set {
-        constructor = value;
-        this.ClosureDefinition.Methods.Add(value);
-      }
-    }
-
-    public IMethodReference ConstructorReference {
+    /// <summary>
+    /// The reference to the constructor as used by the methods (for example, GetEnumerator) in the closure class. 
+    /// </summary>
+    internal IMethodReference ConstructorReference {
       get {
-        if (constructorReference == null) {
-          constructorReference = GetSpecializedMethodReference(constructor);
+        if (this.constructorReference == null) {
+          this.constructorReference = this.GetReferenceOfMethodUsedByPeers(this.constructor);
         }
-        return constructorReference;
+        return this.constructorReference;
       }
     }
-    IMethodReference constructorReference;
+    private IMethodReference constructorReference;
 
+    /// <summary>
+    /// MoveNext method of the iterator class. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// 
+    /// MoveNext is not used by other methods in the closure class.
+    /// </summary>
+    internal IMethodDefinition MoveNext {
+      get { return this.moveNext; }
+      set {
+        if (this.moveNext == null) {
+          this.moveNext = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
+      }
+    }
     private IMethodDefinition moveNext;
 
-    public IMethodDefinition MoveNext {
-      get { return moveNext; }
-      set { moveNext = value; this.ClosureDefinition.Methods.Add(value); }
+    /// <summary>
+    /// Get the reference of a method in the closure class as used by other methods in the same class. 
+    /// </summary>
+    private IMethodReference GetReferenceOfMethodUsedByPeers(IMethodDefinition method) {
+      IMethodReference methodReference = null;
+      ITypeReference typeReference = this.ClosureDefinitionReference;
+      ISpecializedNestedTypeReference specializedNestedTypeRef = typeReference as ISpecializedNestedTypeReference;
+      IGenericTypeInstanceReference genericInstanceRef = typeReference as IGenericTypeInstanceReference;
+      if (specializedNestedTypeRef != null || genericInstanceRef != null) {
+        methodReference = new SpecializedMethodReference() {
+          ContainingType = typeReference,
+          GenericParameterCount = method.GenericParameterCount,
+          InternFactory = this.host.InternFactory,
+          UnspecializedVersion = method,
+          Type = method.Type,
+          Name = method.Name,
+          CallingConvention = method.CallingConvention,
+          IsGeneric = method.IsGeneric,
+          Parameters = new List<IParameterTypeInformation>(((IMethodReference)method).Parameters),
+          ExtraParameters = new List<IParameterTypeInformation>(((IMethodReference)method).ExtraParameters),
+          ReturnValueIsByRef = method.ReturnValueIsByRef,
+          ReturnValueIsModified = method.ReturnValueIsModified,
+          Attributes = new List<ICustomAttribute>(method.Attributes)
+        };
+      } else methodReference = method;
+      return methodReference;
+    }
+   
+    /// <summary>
+    /// The generic version of the GetEnumerator method. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IMethodDefinition GenericGetEnumerator {
+      get { return this.genericGetEnumerator; }
+      set {
+        if (this.genericGetEnumerator == null) {
+          genericGetEnumerator = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
+      }
     }
     private IMethodDefinition genericGetEnumerator;
 
-    public IMethodReference MoveNextReference {
+    /// <summary>
+    /// The reference to the generic version of GetEnumerator as used by other methods (for example, the non-generic
+    /// version of GetEnumerator) in the same closure class. 
+    /// </summary>
+    internal IMethodReference GenericGetEnumeratorReference {
       get {
-        if (moveNextReference == null) {
-
-          moveNextReference = GetSpecializedMethodReference(moveNext);
-
+        if (this.genericGetEnumeratorReference == null) {
+            this.genericGetEnumeratorReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetEnumerator);
         }
-        return moveNextReference;
+        return this.genericGetEnumeratorReference;
       }
     }
-    IMethodReference moveNextReference;
+    private IMethodReference genericGetEnumeratorReference;
 
-    IMethodReference GetSpecializedMethodReference(IMethodDefinition method) {
-      IMethodReference methodReference = null;
-      ITypeReference typeReference = ClosureDefinitionReference;
-      foreach (var f in typeReference.ResolvedType.Methods) {
-        if (f.Name == method.Name) { methodReference = f; break; }
+    /// <summary>
+    /// The generic version of the get_Current method. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IMethodDefinition GenericGetCurrent {
+      get { return this.genericGetCurrent; }
+      set {
+        if (this.genericGetCurrent == null) {
+          this.genericGetCurrent = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
       }
-      if (methodReference == null) {
-        GenericTypeInstance genericInstance = typeReference as GenericTypeInstance;
-        if (genericInstance != null) {
-          methodReference = (IMethodReference)genericInstance.SpecializeMember(method, this.ClosureDefinition.InternFactory);
-        } else {
-          SpecializedNestedTypeDefinition specializedNestedType = typeReference as SpecializedNestedTypeDefinition;
-          if (specializedNestedType != null)
-            methodReference = (IMethodReference)specializedNestedType.SpecializeMember(method, this.ClosureDefinition.InternFactory);
-        }
-      }
-      // methodReference = new SpecializedMethodDefinition(method, method, ClosureDefinitionReference.ResolvedType, (GenericTypeInstance)closureDefinitionReference);
-      return methodReference;
-    }
-
-
-    public IMethodDefinition GenericGetEnumerator {
-      get { return genericGetEnumerator; }
-      set { genericGetEnumerator = value; this.ClosureDefinition.Methods.Add(value); }
     }
     private IMethodDefinition genericGetCurrent;
 
-    public IMethodReference GenericGetEnumeratorReference {
+    /// <summary>
+    /// The reference to the get_Current method, as used by other methods (for example, the non-generic version of get_Current)
+    /// in the same closure class. 
+    /// </summary>
+    internal IMethodReference GenericGetCurrentReference {
       get {
-        if (genericGetEnumeratorReference == null) {
-          genericGetEnumeratorReference = GetSpecializedMethodReference(genericGetEnumerator);
+        if (this.genericGetCurrentReference == null) {
+            this.genericGetCurrentReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetCurrent);
         }
-        return genericGetEnumeratorReference;
+        return this.genericGetCurrentReference;
       }
     }
-    IMethodReference genericGetEnumeratorReference;
+    private IMethodReference genericGetCurrentReference;
 
-    public IMethodDefinition GenericGetCurrent {
-      get { return genericGetCurrent; }
-      set { genericGetCurrent = value; this.ClosureDefinition.Methods.Add(value); }
-    }
-
-    public IMethodReference GenericGetCurrentReference {
-      get {
-        if (genericGetCurrentReference == null) {
-          genericGetCurrentReference = GetSpecializedMethodReference(genericGetCurrent);
-        }
-        return genericGetCurrentReference;
+    /// <summary>
+    /// The dispose Method of the closure class. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IMethodDefinition DisposeMethod {
+      get { return this.disposeMethod; }
+      set {
+        if (this.disposeMethod == null) {
+          this.disposeMethod = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
       }
     }
-    IMethodReference genericGetCurrentReference;
+    private IMethodDefinition disposeMethod;
 
-    private IMethodDefinition dispose;
-
-    public IMethodDefinition Dispose {
-      get { return dispose; }
-      set { dispose = value; this.ClosureDefinition.Methods.Add(value); }
-    }
-
-    public IMethodReference DisposeReference {
-      get {
-        if (disposeReference == null) {
-          disposeReference = GetSpecializedMethodReference(Dispose);
-        }
-        return disposeReference;
+    /// <summary>
+    /// The reset method of the closure class. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// </summary>
+    internal IMethodDefinition Reset {
+      get { return this.reset; }
+      set {
+        if (this.reset == null) {
+          this.reset = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
       }
     }
-    IMethodReference disposeReference;
-
     private IMethodDefinition reset;
 
-    public IMethodDefinition Reset {
-      get { return reset; }
-      set { reset = value; this.ClosureDefinition.Methods.Add(value); }
-    }
-
-    public IMethodReference ResetReference {
-      get {
-        if (resetReference == null) {
-          resetReference = GetSpecializedMethodReference(Reset);
-        }
-        return resetReference;
+    /// <summary>
+    /// The non-generic get_Current method of the closure class. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// 
+    /// This method is not used by other methods in the closure class. 
+    /// </summary>
+    internal IMethodDefinition NonGenericGetCurrent {
+      get { return this.nonGenericGetCurrent; }
+      set {
+        if (this.nonGenericGetCurrent == null) {
+          this.nonGenericGetCurrent = value; this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
       }
     }
-    IMethodReference resetReference;
-
     private IMethodDefinition nonGenericGetCurrent;
 
-    public IMethodDefinition NonGenericGetCurrent {
-      get { return nonGenericGetCurrent; }
-      set { nonGenericGetCurrent = value; this.ClosureDefinition.Methods.Add(value); }
+    /// <summary>
+    /// The non-generic GetEnumerator method of the closure class. Should not be set more than once. The setter also add the member to the member list of the closure class.
+    /// 
+    /// This method is not used by other methods in the closure class. 
+    /// </summary>
+    internal IMethodDefinition NonGenericGetEnumerator {
+      get { return this.nonGenericGetEnumerator; }
+      set {
+        if (this.nonGenericGetEnumerator == null) {
+          this.nonGenericGetEnumerator = value;
+          this.ClosureDefinition.Methods.Add(value);
+        } else Debug.Assert(false);
+      }
     }
     private IMethodDefinition nonGenericGetEnumerator;
 
-    public IMethodDefinition NonGenericGetEnumerator {
-      get { return nonGenericGetEnumerator; }
-      set { nonGenericGetEnumerator = value; this.ClosureDefinition.Methods.Add(value); }
-    }
-
-    public IteratorClosure() {
-      currentField = stateField = thisField = initialThreadId = Dummy.Field;
-      constructor = moveNext = genericGetCurrent = genericGetEnumerator = dispose = reset = nonGenericGetCurrent = nonGenericGetEnumerator = Dummy.Method;
-    }
-
-    public void AddField(IFieldDefinition field) {
+    /// <summary>
+    /// Add field definition to the clousre class.
+    /// </summary>
+    /// <param name="field"></param>
+    internal void AddField(IFieldDefinition field) {
       ClosureDefinition.Fields.Add(field);
     }
 
-    private ITypeReference nonGenericIEnumeratorInterface;
-
-    public ITypeReference NonGenericIEnumeratorInterface {
+    /// <summary>
+    /// The non-generic version of the IEnumerator implemented by the closure class. 
+    /// </summary>
+    internal ITypeReference NonGenericIEnumeratorInterface {
       get { return nonGenericIEnumeratorInterface; }
-      set {
-        nonGenericIEnumeratorInterface = value;
-        if (!this.ClosureDefinition.Interfaces.Contains(value)) {
-          this.ClosureDefinition.Interfaces.Add(value);
-        }
+      set { nonGenericIEnumeratorInterface = value;
+      if (!this.ClosureDefinition.Interfaces.Contains(value)) {
+        this.ClosureDefinition.Interfaces.Add(value);
+      }
       }
     }
+    private ITypeReference nonGenericIEnumeratorInterface;
 
+    /// <summary>
+    /// The generic version of the IEnumerator interface implemented by the closure class.
+    /// </summary>
+    internal ITypeReference GenericIEnumeratorInterface {
+      get { return genericIEnumeratorInterface; }
+      set { genericIEnumeratorInterface = value;
+      if (!this.ClosureDefinition.Interfaces.Contains(value))
+        this.ClosureDefinition.Interfaces.Add(value);
+      }
+    }
     private ITypeReference genericIEnumeratorInterface;
 
-    public ITypeReference GenericIEnumeratorInterface {
-      get { return genericIEnumeratorInterface; }
-      set {
-        genericIEnumeratorInterface = value;
-        if (!this.ClosureDefinition.Interfaces.Contains(value))
-          this.ClosureDefinition.Interfaces.Add(value);
+    /// <summary>
+    /// The non-generic version of IEnumerable implemented by the closure class.
+    /// </summary>
+    internal ITypeReference NonGenericIEnumerableInterface {
+      get { return nonGenericIEnumerableInterface; }
+      set { nonGenericIEnumerableInterface = value;
+      if (!this.ClosureDefinition.Interfaces.Contains(value))
+        this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference nonGenericIEnumerableInterface;
 
-    public ITypeReference NonGenericIEnumerableInterface {
-      get { return nonGenericIEnumerableInterface; }
-      set {
-        nonGenericIEnumerableInterface = value;
-        if (!this.ClosureDefinition.Interfaces.Contains(value))
-          this.ClosureDefinition.Interfaces.Add(value);
+    /// <summary>
+    /// The generic verision of IEnumerable implemented by the closure class. It is an instance of
+    /// IEnumerable[T] with T instantiated to the elementType of the iterator closure. 
+    /// </summary>
+    internal ITypeReference GenericIEnumerableInterface {
+      get { return genericIEnumerableInterface; }
+      set { genericIEnumerableInterface = value;
+      if (!this.ClosureDefinition.Interfaces.Contains(value))
+        this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference genericIEnumerableInterface;
 
-    public ITypeReference GenericIEnumerableInterface {
-      get { return genericIEnumerableInterface; }
-      set {
-        genericIEnumerableInterface = value;
-        if (!this.ClosureDefinition.Interfaces.Contains(value))
-          this.ClosureDefinition.Interfaces.Add(value);
+    /// <summary>
+    /// The IDisposable interface. 
+    /// </summary>
+    internal ITypeReference DisposableInterface {
+      get { return this.disposableInterface; }
+      set { this.disposableInterface = value;
+      if (!this.ClosureDefinition.Interfaces.Contains(value))
+        this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference disposableInterface;
 
-    public ITypeReference DisposableInterface {
-      get { return disposableInterface; }
-      set {
-        disposableInterface = value;
-        if (!this.ClosureDefinition.Interfaces.Contains(value))
-          this.ClosureDefinition.Interfaces.Add(value);
-      }
+    /// <summary>
+    /// The element type of the IEnumerable implemented by the closure class. If the iterator method's return type is not 
+    /// generic, this is System.Object. 
+    /// </summary>
+    internal ITypeReference ElementType {
+      get { return this.elementType; }
+      set { this.elementType = value; }
     }
-
     ITypeReference elementType;
 
-    public ITypeReference ElementType {
-      get { return elementType; }
-      set { elementType = value; }
+    internal void InitializeInterfaces(ITypeReference elementType) {
+      var methodTypeArguments = new List<ITypeReference>();
+      methodTypeArguments.Add(elementType);
+      ITypeReference genericEnumeratorType = GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerator, methodTypeArguments, this.host.InternFactory);
+      ITypeReference genericEnumerableType = GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerable, methodTypeArguments, this.host.InternFactory);
+      ITypeReference nongenericEnumeratorType = this.host.PlatformType.SystemCollectionsIEnumerator;
+      ITypeReference nongenericEnumerableType = this.host.PlatformType.SystemCollectionsIEnumerable;
+      ITypeReference iDisposable = this.PlatformIDisposable;
+
+      this.NonGenericIEnumerableInterface = nongenericEnumerableType;
+      this.NonGenericIEnumeratorInterface = nongenericEnumeratorType;
+      this.GenericIEnumerableInterface = genericEnumerableType;
+      this.GenericIEnumeratorInterface = genericEnumeratorType;
+      this.DisposableInterface = iDisposable;
     }
 
+    /// <summary>
+    /// IDisposable interface. 
+    /// </summary>
+    private ITypeReference PlatformIDisposable {
+      get {
+        if (this.platformIDisposable == null) {
+          this.platformIDisposable = new Microsoft.Cci.NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
+            this.host.NameTable.GetNameFor("IDisposable"), 0, false, false, PrimitiveTypeCode.Reference);
+        }
+        return this.platformIDisposable;
+      }
+    }
+    private ITypeReference platformIDisposable = null;
   }
 
   internal sealed class BoundField : Expression, IBoundExpression {
@@ -432,6 +513,4 @@ namespace Microsoft.Cci.MutableCodeModel {
       throw new NotImplementedException();
     }
   }
-
-
 }

@@ -95,7 +95,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 1.2) fields that manages the state machine: __current and __state, and a currentThreadId field.
     /// 1.3) a constructor that takes one int argument.  
     /// 1.4) methods that are required by the interfaces of the closure class: MoveNext, Reset,
-    /// GetEnumerator, Current getter, and Dispose. 
+    /// GetEnumerator, Current getter, and DisposeMethod. 
     /// 2) creates the new body of the iterator method: which returns a local variable that holds a new object of the closure class, with the fields of 
     /// the closure class that correspond to the parameters (including the self parameter if applicable)
     /// initialized. 
@@ -117,7 +117,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.iteratorLocalCount = new Dictionary<IBlockStatement, uint>();
       IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this.FieldForCapturedLocalOrParameter, this.iteratorLocalCount,
         method, privateHelperTypes, this.host, this.sourceLocationProvider, this.contractProvider);
-      return iteratorClosureGenerator.CompileIterator(body, method, methodContract);
+      return iteratorClosureGenerator.CompileIterator(body);
     }
 
     /// <summary>
@@ -630,38 +630,117 @@ namespace Microsoft.Cci.MutableCodeModel {
     Dictionary<ITypeDefinition, IExpression> closureInstanceFor = new Dictionary<ITypeDefinition, IExpression>();
   }
 
-  internal class IteratorClosureGenerator : MethodBodyCodeAndContractMutator {
-    IMethodDefinition method = Dummy.Method;
-    List<ITypeDefinition> privateHelperTypes;
-    List<ILocalDefinition> allLocals;
-    Dictionary<ITypeReference, ITypeReference> genericTypeParameterMapping = new Dictionary<ITypeReference, ITypeReference>();
-    Dictionary<object, BoundField>/*passed in from constructor*/ fieldForCapturedLocalOrParameter;
-    Dictionary<IBlockStatement, uint> iteratorLocalCount;
+  /// <summary>
+  /// Create closure class, including all its members for an iterator method and rewrite the body of the iterator method.
+  /// 
+  /// Specifically, we:
+  /// 1) creates a closure class that implements: IEnumerator, generic and nongeneric versions,
+  /// IEnumerable, generic and nongeneric versions, and IDisposable. The generic versions of IEnumerator
+  /// and IEnumerator is instantiated by a type T that is used to instantiate the return type of
+  /// the iterator method. The members of the closure class include:
+  /// 1.1) fields corresponding to every parameter and local variables.
+  /// 1.2) fields that manages the state machine: __current and __state, and a currentThreadId field.
+  /// 1.3) a constructor that takes one int argument.  
+  /// 1.4) methods that are required by the interfaces of the closure class: MoveNext, Reset,
+  /// GetEnumerator, Current getter, and DisposeMethod. 
+  /// 2) creates the new body of the iterator method: which returns a local variable that holds a new object of the closure class, with the fields of 
+  /// the closure class that correspond to the parameters (including the self parameter if applicable)
+  /// initialized. 
+  /// 3) transforms the body, which should now not contain any annonymous delegates, into the body of the 
+  /// MoveNext method of the closure class. This includes:
+  /// 3.1) every local/parameter reference -> this.field reference
+  /// 3.2) every yield return or yield break -> assignment to current and return true or false, respectively.
+  /// 3.3) a switch statement for the state machine, with state values corresponds to each yield return/yield break.
+  /// 3.4) try statement for foreach if the iterator method body uses one. 
+  /// 4) If the iterator method has a type parameter, so will the closure class. Make sure in the closure class only
+  /// the right type parameter is referenced. 
+  /// </summary>
+  internal class IteratorClosureGenerator : BaseCodeTraverser {
 
-    public IteratorClosureGenerator(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount,
-      IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
+    /// <summary>
+    /// Create closure class, including all its members for an iterator method and rewrite the body of the iterator method.
+    /// 
+    /// Specifically, we
+    /// 1) creates a closure class that implements: IEnumerator, generic and nongeneric versions,
+    /// IEnumerable, generic and nongeneric versions, and IDisposable. The generic versions of IEnumerator
+    /// and IEnumerator is instantiated by a type T that is used to instantiate the return type of
+    /// the iterator method. The members of the closure class include:
+    /// 1.1) fields corresponding to every parameter and local variables.
+    /// 1.2) fields that manages the state machine: __current and __state, and a currentThreadId field.
+    /// 1.3) a constructor that takes one int argument.  
+    /// 1.4) methods that are required by the interfaces of the closure class: MoveNext, Reset,
+    /// GetEnumerator, Current getter, and DisposeMethod. 
+    /// 2) creates the new body of the iterator method: which returns a local variable that holds a new object of the closure class, with the fields of 
+    /// the closure class that correspond to the parameters (including the self parameter if applicable)
+    /// initialized. 
+    /// 3) transforms the body, which should now not contain any annonymous delegates, into the body of the 
+    /// MoveNext method of the closure class. This includes:
+    /// 3.1) every local/parameter reference -> this.field reference
+    /// 3.2) every yield return or yield break -> assignment to current and return true or false, respectively.
+    /// 3.3) a switch statement for the state machine, with state values corresponds to each yield return/yield break.
+    /// 3.4) try statement for foreach if the iterator method body uses one. 
+    /// 4) If the iterator method has a type parameter, so will the closure class. Make sure in the closure class only
+    /// the right type parameter is referenced. 
+    /// </summary>
+    internal IteratorClosureGenerator(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount,
+        IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider, contractProvider) {
+    {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.iteratorLocalCount = iteratorLocalCount;
+      this.host = host; this.contractProvider = contractProvider; this.sourceLocationProvider = sourceLocationProvider;
     }
 
-    public IBlockStatement CompileIterator(IBlockStatement block, IMethodDefinition method, IMethodContract methodContract) {
+    IMetadataHost host;
+    ISourceLocationProvider/*?*/ sourceLocationProvider; 
+    ContractProvider/*?*/ contractProvider;
+
+    Dictionary<IBlockStatement, uint> iteratorLocalCount;
+    /// <summary>
+    /// Iterator method.
+    /// </summary>
+    private IMethodDefinition method = Dummy.Method;
+    /// <summary>
+    /// List of helper types generated during compilation. We shall add the iterator closure to the list. 
+    /// </summary>
+    private List<ITypeDefinition> privateHelperTypes;
+    /// <summary>
+    /// List of all locals in the body of iterator method.
+    /// </summary>
+    private List<ILocalDefinition> allLocals;
+
+    CopyTypeFromIteratorToClosure copyTypeToClosure;
+    /// <summary>
+    /// Mapping between method type parameters (of the iterator method) and generic type parameters (of the closure class).
+    /// </summary>
+    Dictionary<IGenericMethodParameter, IGenericTypeParameter> genericTypeParameterMapping = new Dictionary<IGenericMethodParameter, IGenericTypeParameter>();
+    /// <summary>
+    /// Mapping between parameters and locals to the fields of the closure class. 
+    /// </summary>
+    internal Dictionary<object, BoundField> FieldForCapturedLocalOrParameter {
+      get { return fieldForCapturedLocalOrParameter; }
+    }
+
+    Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
+   
+    /// <summary>
+    /// Compile the method body, represented by <paramref name="block"/>. It creates the closure class and all its members
+    /// and creates a new body for the iterator method. 
+    /// </summary>
+    internal IBlockStatement CompileIterator(IBlockStatement block) {
       this.allLocals = new List<ILocalDefinition>();
-      block = this.Visit(block);
+      this.Visit(block);
       BlockStatement mutableBlockStatement = new BlockStatement(block);
-      IteratorClosure iteratorClosure = this.CreateIteratorClosure(mutableBlockStatement);
+      IteratorClosureInformation iteratorClosure = this.CreateIteratorClosure(mutableBlockStatement);
       IBlockStatement result = this.CreateNewIteratorMethodBody(mutableBlockStatement, iteratorClosure);
       return result;
     }
 
-    internal Dictionary<object, BoundField> FieldForCapturedLocalOrParameter {
-      get { return fieldForCapturedLocalOrParameter; }
-      set { fieldForCapturedLocalOrParameter = value; }
-    }
-
+    /// <summary>
+    /// Constructor of the CompilerGeneratedAttribute.
+    /// </summary>
     private IMethodReference CompilerGeneratedCtor {
       get {
         if (this.compilerGeneratedCtor == null)
@@ -672,6 +751,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     private IMethodReference/*?*/ compilerGeneratedCtor;
 
+    /// <summary>
+    /// Constructor of the constructor of the Object class. 
+    /// </summary>
     private IMethodReference ObjectCtor {
       get {
         if (this.objectCtor == null)
@@ -682,8 +764,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     private IMethodReference/*?*/ objectCtor;
 
+    /// <summary>
+    /// Constructor of the DebuggerHiddenAttribute.
+    /// </summary>
     private IMethodReference/*?*/ debuggerHiddenCtor;
-
     private IMethodReference DebuggerHiddenCtor {
       get {
         IUnitNamespaceReference ns = this.host.PlatformType.SystemObject.ContainingUnitNamespace;
@@ -696,44 +780,79 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
-    private IBlockStatement CreateNewIteratorMethodBody(BlockStatement block, IteratorClosure iteratorClosure) {
+    /// <summary>
+    /// Create the new body of the iterator method. 
+    /// </summary>
+    /// <remarks>
+    /// Pseudo code:
+    /// iteratorClosureLocal = new Closure(-2);
+    /// iteratorClosureLocal.field = parameter; // for each parameter including this. 
+    /// return iteratorClosureLocal;
+    /// </remarks>
+    private IBlockStatement CreateNewIteratorMethodBody(BlockStatement block, IteratorClosureInformation iteratorClosure) {
       BlockStatement result = new BlockStatement();
+      // iteratorClosureLocal = new IteratorClosure(-2);
       LocalDefinition localDefinition = new LocalDefinition() {
         Name = this.host.NameTable.GetNameFor("iteratorClosureLocal"),
         Type = GetClosureTypeReferenceFromIterator(iteratorClosure),
         Locations = block.Locations
       };
       CreateObjectInstance createObjectInstance = new CreateObjectInstance() {
-        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor), Locations = block.Locations, Type = localDefinition.Type
+        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor), 
+        Locations = block.Locations, 
+        Type = localDefinition.Type
       };
       createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = -2, Type = this.host.PlatformType.SystemInt32 });
-
-      LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { InitialValue = createObjectInstance, LocalVariable = localDefinition };
+      LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { 
+        InitialValue = createObjectInstance, 
+        LocalVariable = localDefinition
+      };
       result.Statements.Add(localDeclarationStatement);
+      // Generate assignments to closure instance's fields for each of the parameters captured by the closure. 
       foreach (object capturedLocalOrParameter in FieldForCapturedLocalOrParameter.Keys) {
         BoundField boundField = FieldForCapturedLocalOrParameter[capturedLocalOrParameter];
         Assignment assignment;
         ITypeReference localOrParameterType = GetLocalOrParameterType(capturedLocalOrParameter);
+        if (capturedLocalOrParameter is ILocalDefinition) continue;
         if (capturedLocalOrParameter is IThisReference) {
           assignment = new Assignment {
             Source = new ThisReference(),
-            Type = boundField.Type,
+            Type = this.method.ContainingType,
             Target = new TargetExpression() {
               Definition = GetFieldReference(iteratorClosure, boundField.Field),
-              Type = boundField.Type,
-              Instance = new BoundExpression() { Type = localDefinition.Type, Instance = null, Definition = localDefinition, IsVolatile = false }
+              Type = this.method.ContainingType,
+              Instance = new BoundExpression() { 
+                Type = localDefinition.Type, 
+                Instance = null, 
+                Definition = localDefinition, 
+                IsVolatile = false 
+              }
             },
           };
         } else {
           assignment = new Assignment {
-            Source = new BoundExpression() { Definition = capturedLocalOrParameter, Instance = null, IsVolatile = false, Type = boundField.Type },
-            Type = boundField.Type,
-            Target = new TargetExpression() { Definition = GetFieldReference(iteratorClosure, boundField.Field), Type = localOrParameterType, Instance = new BoundExpression() { Type = localDefinition.Type, Instance = null, Definition = localDefinition, IsVolatile = false } },
+            Source = new BoundExpression() { 
+              Definition = capturedLocalOrParameter, 
+              Instance = null, 
+              IsVolatile = false, 
+              Type = localOrParameterType 
+            },
+            Type = localOrParameterType,
+            Target = new TargetExpression() { 
+              Definition = GetFieldReference(iteratorClosure, boundField.Field), 
+              Type = localOrParameterType, 
+              Instance = new BoundExpression() { 
+                Type = localDefinition.Type, 
+                Instance = null, 
+                Definition = localDefinition, 
+                IsVolatile = false } 
+            },
           };
         }
         ExpressionStatement expressionStatement = new ExpressionStatement() { Expression = assignment };
         result.Statements.Add(expressionStatement);
       }
+      // Generate: return iteratorClosureLocal;
       result.Statements.Add(new ReturnStatement() {
         Expression = new BoundExpression() { Definition = localDeclarationStatement.LocalVariable, Instance = null, Type = localDeclarationStatement.LocalVariable.Type }
       });
@@ -741,11 +860,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// return the type of the parameter (excluding this) or local variable represented by <paramref name="obj"/>
+    /// Return the type of the parameter (excluding this) or local variable represented by <paramref name="obj"/>.
     /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    ITypeReference GetLocalOrParameterType(object obj) {
+    private ITypeReference GetLocalOrParameterType(object obj) {
       IParameterDefinition parameterDefinition = obj as IParameterDefinition;
       if (parameterDefinition != null) {
         return parameterDefinition.Type;
@@ -755,130 +872,127 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.Type;
     }
 
-    bool IsTypeGeneric(ITypeDefinition typeDef) {
-      if (typeDef.IsGeneric) return true;
-      INestedTypeDefinition nestedType = typeDef as INestedTypeDefinition;
-      if (nestedType != null) {
-        if (IsTypeGeneric(nestedType.ContainingTypeDefinition)) return true;
-      }
-      return false;
-    }
-
-    ITypeReference GetFullyInstantiatedSpecializedTypeReference(ITypeDefinition typeDefinition) {
-      if (typeDefinition.IsGeneric) return typeDefinition.InstanceType;
-      INestedTypeDefinition nestedType = typeDefinition as INestedTypeDefinition;
-      if (nestedType != null) {
-        ITypeReference containingTypeReference = GetFullyInstantiatedSpecializedTypeReference(nestedType.ContainingTypeDefinition);
-        foreach (var t in containingTypeReference.ResolvedType.NestedTypes) {
-          if (t.Name == nestedType.Name && t.GenericParameterCount == nestedType.GenericParameterCount) {
-            return t;
-          }
-        }
-      }
-      return typeDefinition;
-    }
-
-    ITypeReference GetClosureTypeReferenceFromIterator(IteratorClosure iteratorClosure) {
+    /// <summary>
+    /// Instantiate the closure class using the generic method parameters of the iterator method, if any. 
+    /// </summary>
+    ITypeReference GetClosureTypeReferenceFromIterator(IteratorClosureInformation iteratorClosure) {
       ITypeReference closureReference = iteratorClosure.ClosureDefinitionReference;
-      if (method.IsGeneric) {
+      if (this.method.IsGeneric) {
         IGenericTypeInstanceReference genericTypeInstanceRef = closureReference as IGenericTypeInstanceReference;
         Debug.Assert(genericTypeInstanceRef != null);
         if (genericTypeInstanceRef != null) {
           List<ITypeReference> args = new List<ITypeReference>();
           foreach (var t in method.GenericParameters) args.Add(t);
-          return GenericTypeInstance.GetGenericTypeInstance(genericTypeInstanceRef.GenericType.ResolvedType, args, this.host.InternFactory);
+          return GenericTypeInstance.GetGenericTypeInstance(genericTypeInstanceRef.GenericType, args, this.host.InternFactory);
         }
       }
       return closureReference;
     }
 
-    IFieldReference GetFieldReference(IteratorClosure iteratorClosure, /*unspecialized*/IFieldDefinition fieldDefinition) {
+    /// <summary>
+    /// Instantiate a closure class field using the generic method parameters of the iterator method, if any. 
+    /// Code Review: cache the result of GetClosureTypeReferenceFromIterator.
+    /// </summary>
+    /// <param name="iteratorClosure"></param>
+    /// <param name="fieldDefinition"></param>
+    /// <returns></returns>
+    IFieldReference GetFieldReference(IteratorClosureInformation iteratorClosure, /*unspecialized*/IFieldDefinition fieldDefinition) {
       ITypeReference typeReference = GetClosureTypeReferenceFromIterator(iteratorClosure);
-      foreach (var f in typeReference.ResolvedType.Fields) {
-        if (f.Name == fieldDefinition.Name) return f;
-      }
+      IGenericTypeInstanceReference genericInstanceRef = typeReference as IGenericTypeInstanceReference;
+      ISpecializedNestedTypeReference specializedNestedTypeRef = typeReference as ISpecializedNestedTypeReference;
       IFieldReference fieldReference = fieldDefinition;
-      GenericTypeInstance genericInstance = typeReference as GenericTypeInstance;
-      if (genericInstance != null) {
-        fieldReference = (IFieldReference)genericInstance.SpecializeMember(fieldDefinition, this.host.InternFactory);
-      } else {
-        SpecializedNestedTypeDefinition specializedNestedType = typeReference as SpecializedNestedTypeDefinition;
-        if (specializedNestedType != null)
-          fieldReference = (IFieldReference)specializedNestedType.SpecializeMember(fieldDefinition, this.host.InternFactory);
+      if (genericInstanceRef != null || specializedNestedTypeRef != null) {
+        fieldReference = new SpecializedFieldReference() {
+          ContainingType = typeReference,
+          Name = fieldDefinition.Name,
+          UnspecializedVersion = fieldDefinition,
+          Type = fieldDefinition.Type
+        };
       }
       return fieldReference;
     }
 
-    IMethodReference GetMethodReference(IteratorClosure iteratorClosure, IMethodDefinition methodDefinition) {
+    /// <summary>
+    /// Instantiate a closure class method using the generic method parameters of the iterator method, if any. 
+    /// </summary>
+    IMethodReference GetMethodReference(IteratorClosureInformation iteratorClosure, IMethodDefinition methodDefinition) {
       ITypeReference typeReference = GetClosureTypeReferenceFromIterator(iteratorClosure);
-      foreach (var m in typeReference.ResolvedType.Methods) {
-        if (m.Name == methodDefinition.Name) return m;
-      }
+      //foreach (var m in typeReference.ResolvedType.Methods) {
+      //  if (m.Name == methodDefinition.Name) return m;
+      //}
       IMethodReference methodReference = methodDefinition;
-      GenericTypeInstance genericInstance = typeReference as GenericTypeInstance;
-      if (genericInstance != null) {
-        methodReference = (IMethodReference)genericInstance.SpecializeMember(methodDefinition, this.host.InternFactory);
-      } else {
-        SpecializedNestedTypeDefinition specializedNestedType = typeReference as SpecializedNestedTypeDefinition;
-        if (specializedNestedType != null)
-          methodReference = (IMethodReference)specializedNestedType.SpecializeMember(methodDefinition, this.host.InternFactory);
+      ISpecializedNestedTypeReference specializedNestedTypeRef = typeReference as ISpecializedNestedTypeReference;
+      IGenericTypeInstanceReference genericInstanceRef = typeReference as IGenericTypeInstanceReference;
+      if (specializedNestedTypeRef != null || genericInstanceRef != null) {
+        methodReference = new SpecializedMethodReference() {
+          ContainingType = typeReference,
+          GenericParameterCount = methodDefinition.GenericParameterCount,
+          InternFactory = this.host.InternFactory,
+          UnspecializedVersion = methodDefinition,
+          Type = methodDefinition.Type,
+          Name = methodDefinition.Name,
+          CallingConvention = methodDefinition.CallingConvention,
+          IsGeneric = methodDefinition.IsGeneric,
+          Parameters = new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).Parameters),
+          ExtraParameters = new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).ExtraParameters),
+          ReturnValueIsByRef = methodDefinition.ReturnValueIsByRef,
+          ReturnValueIsModified = methodDefinition.ReturnValueIsModified,
+          Attributes = new List<ICustomAttribute>(methodDefinition.Attributes)
+        };
       }
       return methodReference;
     }
 
-    ITypeReference PlatformIDisposable {
-      get {
-        if (this.platformIDisposable == null) {
-          this.platformIDisposable = new Microsoft.Cci.NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
-            this.host.NameTable.GetNameFor("IDisposable"), 0, false, false, PrimitiveTypeCode.Reference);
-        }
-        return this.platformIDisposable;
-      }
-    }
-    ITypeReference platformIDisposable = null;
-
-    private IteratorClosure CreateIteratorClosure(BlockStatement blockStatement) {
-      IteratorClosure result = new IteratorClosure();
+    /// <summary>
+    /// Create the iterator closure class and add it to the private helper types list. 
+    /// </summary>
+    private IteratorClosureInformation CreateIteratorClosure(BlockStatement blockStatement) {
+      IteratorClosureInformation result = new IteratorClosureInformation(this.host);
       CustomAttribute compilerGeneratedAttribute = new CustomAttribute();
       compilerGeneratedAttribute.Constructor = this.CompilerGeneratedCtor;
 
+      // Create the closure class with CompilerGeneratedAttribute, the list of generic type parameters isomorphic to 
+      // those of the iterator method. 
       NestedTypeDefinition iteratorClosureType = new NestedTypeDefinition();
+      this.privateHelperTypes.Add(iteratorClosureType);
       result.ClosureDefinition = iteratorClosureType;
-      List<ITypeReference> typeParameters = new List<ITypeReference>();
+      List<IGenericMethodParameter> genericMethodParameters = new List<IGenericMethodParameter>();
       ushort count =0;
-      foreach (var typeParameter in method.GenericParameters) {
-        typeParameters.Add(typeParameter);
+      foreach (var genericMethodParameter in method.GenericParameters) {
+        genericMethodParameters.Add(genericMethodParameter);
         GenericTypeParameter newTypeParam = new GenericTypeParameter() {
-          Name = this.host.NameTable.GetNameFor(typeParameter.Name.Value + "_"),
+          Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
           Index = (count++)
         };
-        this.genericTypeParameterMapping[typeParameter] = newTypeParam;
-        this.cache.Add(typeParameter, newTypeParam);
-        this.cache.Add(newTypeParam, newTypeParam);
+        this.genericTypeParameterMapping[genericMethodParameter] = newTypeParam;
         newTypeParam.DefiningType = iteratorClosureType;
         iteratorClosureType.GenericParameters.Add(newTypeParam);
       }
-      // Duplicate Constraints
-      foreach (var typeParameter in typeParameters) {
-        IGenericParameter originalTypeParameter = (IGenericParameter)typeParameter;
 
-        GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[originalTypeParameter];
-        if (originalTypeParameter.Constraints != null) {
+      this.copyTypeToClosure = new CopyTypeFromIteratorToClosure(this.host, this.genericTypeParameterMapping);
+
+      // Duplicate Constraints
+      foreach (var genericMethodParameter in genericMethodParameters) {
+        GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[genericMethodParameter];
+        if (genericMethodParameter.Constraints != null) {
           correspondingTypeParameter.Constraints = new List<ITypeReference>();
-          foreach (ITypeReference t in originalTypeParameter.Constraints) {
-            correspondingTypeParameter.Constraints.Add(this.Visit(t));
+          foreach (ITypeReference t in genericMethodParameter.Constraints) {
+            correspondingTypeParameter.Constraints.Add(copyTypeToClosure.Visit(t));
           }
         }
       }
-      IEnumerable<ITypeReference> methodTypeArguments = GetClosureEnumeratorTypeArguments(method.Type);
-      ITypeReference genericEnumeratorType = this.Visit(GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerator, methodTypeArguments, this.host.InternFactory));
-      ITypeReference genericEnumerableType = this.Visit(GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerable, methodTypeArguments, this.host.InternFactory));
-      ITypeReference nongenericEnumeratorType = this.host.PlatformType.SystemCollectionsIEnumerator;
-      ITypeReference nongenericEnumerableType = this.host.PlatformType.SystemCollectionsIEnumerable;
-      ITypeReference iDisposable = this.PlatformIDisposable;
+      // elementTypes contains only one element, the argument type of the return type (the T in IEnumerable<T>) of the iterator method, or simply System.Object if the
+      // iterator is not generic. 
+      IEnumerable<ITypeReference> elementTypes = GetClosureEnumeratorTypeArguments(method.Type);
+      // elementType of the IEnumerable. 
+      ITypeReference elementType = null;
+      foreach (ITypeReference t in elementTypes) {
+        elementType = t; break;
+      }
+      result.ElementType = this.copyTypeToClosure.Visit(elementType);
 
-      this.cache.Add(iteratorClosureType, iteratorClosureType);
-      this.privateHelperTypes.Add(iteratorClosureType);
+      // Set up the iterator closure class. 
+      // TODO: name generation to follow the convention of csc. 
       iteratorClosureType.Name = this.host.NameTable.GetNameFor("<" + this.method.Name.Value + ">" + "ic__" + this.privateHelperTypes.Count);
       iteratorClosureType.Attributes.Add(compilerGeneratedAttribute);
       iteratorClosureType.BaseClasses.Add(this.host.PlatformType.SystemObject);
@@ -891,19 +1005,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       iteratorClosureType.StringFormat = StringFormatKind.Ansi;
       iteratorClosureType.Visibility = TypeMemberVisibility.Private;
 
-      ITypeReference elementType = null;
-      foreach (ITypeReference t in methodTypeArguments) {
-        elementType = t; break;
-      }
-
       /* Interfaces. */
-      result.ElementType = this.Visit(elementType);
-      result.NonGenericIEnumerableInterface = nongenericEnumerableType;
-      result.NonGenericIEnumeratorInterface = nongenericEnumeratorType;
-      result.GenericIEnumerableInterface = genericEnumerableType;
-      result.GenericIEnumeratorInterface = genericEnumeratorType;
-      result.DisposableInterface = iDisposable;
-
+      result.InitializeInterfaces(result.ElementType);
+     
       /* Fields, Methods, and Properties. */
       CreateIteratorClosureFields(result);
       CreateIteratorClosureConstructor(result);
@@ -912,9 +1016,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
-    private void CreateIteratorClosureConstructor(IteratorClosure iteratorClosure) {
+    /// <summary>
+    /// Create the constuctor of the iterator class. The pseudo-code is: 
+    /// 
+    /// Ctor(int state) {
+    ///   object.Ctor();
+    ///   this.state = state;
+    ///   this.threadid = Thread.CurrentThread.ManagedThreadId;
+    /// }
+    /// </summary>
+    private void CreateIteratorClosureConstructor(IteratorClosureInformation iteratorClosure) {
       MethodDefinition constructor = new MethodDefinition();
-      this.cache.Add(constructor, constructor);
+      // Parameter
       ParameterDefinition stateParameter = new ParameterDefinition() {
         ContainingSignature = constructor,
         Index = 0,
@@ -922,7 +1035,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         Type = this.host.PlatformType.SystemInt32
       };
       constructor.Parameters.Add(stateParameter);
-
+      // Statements
       MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new BaseClassReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
       ExpressionStatement baseConstructorCallStatement = new ExpressionStatement() { Expression = baseConstructorCall };
       List<IStatement> statements = new List<IStatement>();
@@ -936,8 +1049,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       ExpressionStatement thisThreadIdEqCurrentThreadId = new ExpressionStatement() {
         Expression = new Assignment() {
           Source = new MethodCall() {
-            MethodToCall = ThreadDotManagedThreadId.Getter,
-            ThisArgument = ThreadDotCurrentThread,
+            MethodToCall = this.ThreadDotManagedThreadId.Getter,
+            ThisArgument = this.ThreadDotCurrentThread,
             Type = this.host.PlatformType.SystemInt32
           },
           Target = new TargetExpression() { Instance = new ThisReference(), Type = this.host.PlatformType.SystemInt32, Definition = iteratorClosure.InitThreadIdFieldReference },
@@ -954,6 +1067,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       body.Block = block;
       constructor.Body = body;
       body.MethodDefinition = constructor;
+      // Metadata of the constructor
       constructor.CallingConvention = CallingConvention.HasThis;
       constructor.ContainingType = iteratorClosure.ClosureDefinition;
       constructor.IsCil = true;
@@ -965,24 +1079,31 @@ namespace Microsoft.Cci.MutableCodeModel {
       constructor.Visibility = TypeMemberVisibility.Public;
       iteratorClosure.Constructor = constructor;
     }
-
-    private void CreateIteratorClosureMethods(IteratorClosure iteratorClosure, BlockStatement blockStatement) {
-
-      // Dispose: Currently do nothing. A more serious implementation should probably dispose helper objects
-      // since we dont have a specification at the moment, we will decide what to do after studying output
-      // from the C# compiler. 
+    /// <summary>
+    /// Create the methods of the iterator closure. 
+    /// </summary>
+    /// <param name="iteratorClosure"></param>
+    /// <param name="blockStatement"></param>
+    private void CreateIteratorClosureMethods(IteratorClosureInformation iteratorClosure, BlockStatement blockStatement) {
+      // Reset and DisposeMethod currently do nothing. 
       CreateResetMethod(iteratorClosure);
       CreateDisposeMethod(iteratorClosure);
+      // Two versions of GetEnumerator for generic and non-generic interfaces.
       CreateGetEnumeratorMethodGeneric(iteratorClosure);
       CreateGetEnumeratorMethodNonGeneric(iteratorClosure);
+      // MoveNext
       CreateMoveNextMethod(iteratorClosure, blockStatement);
     }
 
-    private void CreateMoveNextMethod(IteratorClosure /*!*/ iteratorClosure, BlockStatement blockStatement) {
+    /// <summary>
+    /// Create the MoveNext method. This method sets up metadata and calls TranslateIteratorMethodBodyToMoveNextBody
+    /// to compile the body. 
+    /// </summary>
+    private void CreateMoveNextMethod(IteratorClosureInformation /*!*/ iteratorClosure, BlockStatement blockStatement) {
+      // Method definition and metadata.
       MethodDefinition moveNext = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("MoveNext")
       };
-      this.cache.Add(moveNext, moveNext);
       moveNext.ContainingType = iteratorClosure.ClosureDefinition;
       moveNext.Visibility = TypeMemberVisibility.Private;
       moveNext.CallingConvention |= CallingConvention.HasThis;
@@ -998,6 +1119,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         moveNextOriginal = tmref as IMethodReference;
         if (moveNextOriginal != null) break;
       }
+      // Explicit method implementation
       MethodImplementation moveNextImp = new MethodImplementation() {
         ContainingType = iteratorClosure.ClosureDefinition,
         ImplementingMethod = moveNext,
@@ -1014,21 +1136,38 @@ namespace Microsoft.Cci.MutableCodeModel {
       body.MethodDefinition = moveNext;
     }
 
-    private IBlockStatement TranslateIteratorMethodBodyToMoveNextBody(IteratorClosure iteratorClosure, BlockStatement blockStatement) {
-      FixIteratorBodyToUseClosure copier = new FixIteratorBodyToUseClosure(this.FieldForCapturedLocalOrParameter, this.iteratorLocalCount,
-        this.cache, iteratorClosure, this.host, this.sourceLocationProvider);
+    /// <summary>
+    /// Create method body of the MoveNext from the body of the iterator method.
+    /// 
+    /// First we substitute the locals/parameters with closure fields, and generic method type parameter of the iterator
+    /// method with generic type parameters of the closure class (if any). 
+    /// Then, we build the state machine. 
+    /// </summary>
+    private IBlockStatement TranslateIteratorMethodBodyToMoveNextBody(IteratorClosureInformation iteratorClosure, BlockStatement blockStatement) {
+      // Copy and substitution.
+      CopyToIteratorClosure copier = new CopyToIteratorClosure(this.FieldForCapturedLocalOrParameter, this.iteratorLocalCount, this.genericTypeParameterMapping, iteratorClosure, this.host);
       IBlockStatement result = copier.Visit(blockStatement);
+      // State machine.
       Dictionary<int, ILabeledStatement> StateEntries = new YieldReturnYieldBreakReplacer(iteratorClosure, this.host).GetStateEntries(blockStatement);
       result = BuildStateMachine(iteratorClosure, (BlockStatement)result, StateEntries);
       return result;
     }
 
-    BlockStatement BuildStateMachine(IteratorClosure iteratorClosure, BlockStatement oldBody, Dictionary<int, ILabeledStatement> stateEntries) {
-      int max = 0; foreach (int i in stateEntries.Keys) { if (max < i) max = i; }
-      if (max > 16) return oldBody;
+    /// <summary>
+    /// Build the state machine. 
+    /// 
+    /// We start from state 0. For each yield return, we assign a unique state, which we call continueing state. For a yield return 
+    /// assigned with state x, we move the state machine from the previous state to x. Whenever we see a yield break, we transit
+    /// the state to -1. 
+    /// 
+    /// When we return from state x, we jump to a label that is inserted right after the previous yield return (that is assigned with state x). 
+    /// </summary>
+    private BlockStatement BuildStateMachine(IteratorClosureInformation iteratorClosure, BlockStatement oldBody, Dictionary<int, ILabeledStatement> stateEntries) {
+      // Switch on cases. StateEntries, which have been computed previously, map a state number (for initial and continuing states) to a label that has been inserted 
+      // right after the associated yield return. 
       BlockStatement result = new BlockStatement();
-      var returnFalse = new ReturnStatement() { Expression = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean } };
-      var returnFalseLabel = new LabeledStatement() { Label = this.host.NameTable.GetNameFor("return false"), Statement = returnFalse };
+      var returnFalse = new ReturnStatement() { Expression = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean} };
+      var returnFalseLabel = new LabeledStatement(){ Label = this.host.NameTable.GetNameFor("return false"), Statement = returnFalse};
       List<ISwitchCase> cases = new List<ISwitchCase>();
       foreach (int i in stateEntries.Keys) {
         SwitchCase c = new SwitchCase() {
@@ -1038,8 +1177,9 @@ namespace Microsoft.Cci.MutableCodeModel {
         c.Body.Add(new GotoStatement() { TargetStatement = stateEntries[i] });
         cases.Add(c);
       }
+      // Default case.
       SwitchCase defaultCase = new SwitchCase();
-      defaultCase.Body.Add(new GotoStatement() { TargetStatement = returnFalseLabel });
+      defaultCase.Body.Add(new GotoStatement(){ TargetStatement = returnFalseLabel });
       cases.Add(defaultCase);
       SwitchStatement switchStatement = new SwitchStatement() {
         Cases = cases,
@@ -1051,24 +1191,33 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
-    private void CreateResetMethod(IteratorClosure/*!*/ iteratorClosure) {
+    /// <summary>
+    /// Create the Reset method. Like in CSC, this method contains nothing. 
+    /// </summary>
+    private void CreateResetMethod(IteratorClosureInformation iteratorClosure) {
       // System.Collections.IEnumerator.Reset: Simply throws an exception
       MethodDefinition reset = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("Reset")
       };
-      this.cache.Add(reset, reset);
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute() { Constructor = this.DebuggerHiddenCtor };
       reset.Attributes.Add(debuggerHiddenAttribute);
       reset.CallingConvention |= CallingConvention.HasThis;
       reset.Visibility = TypeMemberVisibility.Private;
       reset.ContainingType = iteratorClosure.ClosureDefinition;
       reset.Type = this.host.PlatformType.SystemVoid;
-      reset.IsVirtual = true; reset.IsNewSlot = true; reset.IsHiddenBySignature = true; reset.IsSealed = true;
+      reset.IsVirtual = true; 
+      reset.IsNewSlot = true; 
+      reset.IsHiddenBySignature = true; 
+      reset.IsSealed = true;
       iteratorClosure.Reset = reset;
+      // explicitly state that this reset method implements IEnumerator's reset method. 
       IMethodReference resetImplemented = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.NonGenericIEnumeratorInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("Reset"), false)) {
         IMethodReference mref = memref as IMethodReference;
-        if (mref != null) { resetImplemented = mref; break; }
+        if (mref != null) { 
+          resetImplemented = mref; 
+          break; 
+        }
       }
       MethodImplementation resetImp = new MethodImplementation() {
         ContainingType = iteratorClosure.ClosureDefinition,
@@ -1091,22 +1240,32 @@ namespace Microsoft.Cci.MutableCodeModel {
       reset.Body = body;
     }
 
-    private void CreateDisposeMethod(IteratorClosure/*!*/ iteratorClosure) {
+    /// <summary>
+    /// DisposeMethod method. Currently the method body does nothing. 
+    /// </summary>
+    private void CreateDisposeMethod(IteratorClosureInformation iteratorClosure) {
       MethodDefinition disposeMethod = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("Dispose")
       };
-      this.cache.Add(disposeMethod, disposeMethod);
       disposeMethod.Attributes.Add(new CustomAttribute() { Constructor = this.debuggerHiddenCtor });
       disposeMethod.CallingConvention |= CallingConvention.HasThis;
       disposeMethod.Visibility = TypeMemberVisibility.Public;
       disposeMethod.ContainingType = iteratorClosure.ClosureDefinition;
       disposeMethod.Type = this.host.PlatformType.SystemVoid;
-      disposeMethod.IsVirtual = true; disposeMethod.IsNewSlot = true; disposeMethod.IsHiddenBySignature = true; disposeMethod.IsSealed = true;
-      iteratorClosure.Dispose = disposeMethod;
+      disposeMethod.IsVirtual = true; 
+      disposeMethod.IsNewSlot = true; 
+      disposeMethod.IsHiddenBySignature = true; 
+      disposeMethod.IsSealed = true;
+      // Add disposeMethod to parent's member list. 
+      iteratorClosure.DisposeMethod = disposeMethod;
+      // Explicitly implements IDisposable's dispose. 
       IMethodReference disposeImplemented = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.DisposableInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("Dispose"), false)) {
         IMethodReference mref = memref as IMethodReference;
-        if (mref != null) { disposeImplemented = mref; break; }
+        if (mref != null) { 
+          disposeImplemented = mref; 
+          break; 
+        }
       }
       MethodImplementation disposeImp = new MethodImplementation() {
         ContainingType = iteratorClosure.ClosureDefinition,
@@ -1114,6 +1273,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         ImplementingMethod = disposeMethod
       };
       iteratorClosure.ClosureDefinition.ExplicitImplementationOverrides.Add(disposeImp);
+      // Body is a sole return. 
       BlockStatement block = new BlockStatement();
       block.Statements.Add(new ReturnStatement() {
         Expression = null,
@@ -1127,6 +1287,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       disposeMethod.Body = body;
     }
 
+    /// <summary>
+    /// Property definition of Thread.ManagedThreadId
+    /// </summary>
     IPropertyDefinition/*?*/ ThreadDotManagedThreadId {
       get {
         var assemblyReference = new Microsoft.Cci.AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
@@ -1144,6 +1307,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// An Expression that represents Thread.CurrentThread
+    /// </summary>
     MethodCall ThreadDotCurrentThread {
       get {
         var assemblyReference = new Microsoft.Cci.AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
@@ -1168,16 +1334,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
-    private void CreateGetEnumeratorMethodGeneric(IteratorClosure iteratorClosure) {
-      // GetEnumerator generic version: it will be called by the non-generic version
-      // pseudo code: if (this.state == -2 && this.threadID == Thread.CurrentThread.ManagedThreadId) {
-      //                 this.state = 0; return this;
-      //              }
-      //              else { _d = new thisclosureclass(0); return _d; }
+    /// <summary>
+    /// Create the generic version of the GetEnumerator for the iterator closure class. 
+    /// </summary>
+    /// <param name="iteratorClosure"></param>
+    private void CreateGetEnumeratorMethodGeneric(IteratorClosureInformation iteratorClosure) {
+      // Metadata
       MethodDefinition genericGetEnumerator = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("System.Collections.Generic.IEnumerable<" + iteratorClosure.ElementType.ToString()+">.GetEnumerator")
       };
-      this.cache.Add(genericGetEnumerator, genericGetEnumerator);
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute() { Constructor = this.DebuggerHiddenCtor };
       genericGetEnumerator.Attributes.Add(debuggerHiddenAttribute);
       genericGetEnumerator.CallingConvention |= CallingConvention.HasThis;
@@ -1188,40 +1353,64 @@ namespace Microsoft.Cci.MutableCodeModel {
       genericGetEnumerator.IsNewSlot = true;
       genericGetEnumerator.IsHiddenBySignature = true;
       genericGetEnumerator.IsSealed = true;
+      // Membership 
       iteratorClosure.GenericGetEnumerator = genericGetEnumerator;
       IMethodReference genericGetEnumeratorOriginal = Dummy.MethodReference;
+      // Explicit implementation of IEnumerable<T>.GetEnumerator
       foreach (var memref in iteratorClosure.GenericIEnumerableInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("GetEnumerator"), false)) {
         IMethodReference mref = memref as IMethodReference;
         if (mref != null) { genericGetEnumeratorOriginal = mref; break; }
       }
-      MethodImplementation genericGetEnumeratorImp = new MethodImplementation() {
+      var genericGetEnumeratorImp = new MethodImplementation() {
         ContainingType = iteratorClosure.ClosureDefinition,
         ImplementingMethod = genericGetEnumerator,
         ImplementedMethod = genericGetEnumeratorOriginal
       };
       iteratorClosure.ClosureDefinition.ExplicitImplementationOverrides.Add(genericGetEnumeratorImp);
+      // Body
+      var block = GetBodyOfGenericGetEnumerator(iteratorClosure);
+      var body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
+      body.LocalsAreZeroed = true;
+      body.IsNormalized = true;
+      body.Block = block;
+      body.MethodDefinition = genericGetEnumerator;
+      genericGetEnumerator.Body = body;
+    }
 
-      #region body of the genericgetenumerator
-      BoundExpression thisDotState = new BoundExpression() {
+    /// <summary>
+    /// Create the body of the generic version of GetEnumerator for the iterator closure class.
+    /// 
+    /// The body's pseudo code. 
+    /// {
+    ///   if (Thread.CurrentThread.ManagedThreadId == this.l_initialThreadId AND this.state == -2) {
+    ///     this.state = 0;
+    ///     return this;
+    ///   }
+    ///   else {
+    ///     return a new copy of the iterator instance with state being zero.
+    ///   }
+    /// }
+    /// </summary>
+    private BlockStatement GetBodyOfGenericGetEnumerator(IteratorClosureInformation iteratorClosure) {
+      var thisDotState = new BoundExpression() {
         Definition = iteratorClosure.StateFieldReference,
         Instance = new ThisReference(),
         Type = this.host.PlatformType.SystemInt32
       };
-      BoundExpression thisDotThreadId = new BoundExpression() {
+      var thisDotThreadId = new BoundExpression() {
         Definition = iteratorClosure.InitThreadIdFieldReference,
         Instance = new ThisReference(),
         Type = this.host.PlatformType.SystemInt32
       };
-      MethodCall currentThreadId = new MethodCall() {
+      var currentThreadId = new MethodCall() {
         MethodToCall = ThreadDotManagedThreadId.Getter,
         ThisArgument = ThreadDotCurrentThread,
         Type = this.host.PlatformType.SystemInt32
       };
-      Equality stateEqMinus2 = new Equality() { LeftOperand = thisDotState, RightOperand = new CompileTimeConstant() { Type = this.host.PlatformType.SystemInt32, Value = -2 }, Type = this.host.PlatformType.SystemBoolean };
-      Equality threadIdEqCurrentThreadId = new Equality { LeftOperand = thisDotThreadId, RightOperand = currentThreadId, Type = this.host.PlatformType.SystemBoolean };
+      var stateEqMinus2 = new Equality() { LeftOperand = thisDotState, RightOperand = new CompileTimeConstant() { Type = this.host.PlatformType.SystemInt32, Value = -2 }, Type = this.host.PlatformType.SystemBoolean };
+      var threadIdEqCurrentThreadId = new Equality { LeftOperand = thisDotThreadId, RightOperand = currentThreadId, Type = this.host.PlatformType.SystemBoolean };
 
-      BlockStatement returnThis = new BlockStatement();
-      ExpressionStatement thisDotStateEq0 = new ExpressionStatement() {
+      var thisDotStateEq0 = new ExpressionStatement() {
         Expression = new Assignment() {
           Source = new CompileTimeConstant() { Type = this.host.PlatformType.SystemInt32, Value = 0 },
           Target = new TargetExpression() {
@@ -1232,12 +1421,13 @@ namespace Microsoft.Cci.MutableCodeModel {
           Type = this.host.PlatformType.SystemInt32
         },
       };
+      var returnThis = new BlockStatement();
       returnThis.Statements.Add(thisDotStateEq0);
       returnThis.Statements.Add(new ReturnStatement() { Expression = new ThisReference() });
-
-      BlockStatement returnNew = new BlockStatement();
-      List<IExpression> args = new List<IExpression>(); args.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
-      LocalDeclarationStatement closureInstanceLocalDecl = new LocalDeclarationStatement() {
+      var returnNew = new BlockStatement();
+      var args = new List<IExpression>(); 
+      args.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
+      var closureInstanceLocalDecl = new LocalDeclarationStatement() {
         LocalVariable = new LocalDefinition() {
           Name = this.host.NameTable.GetNameFor("local0"),
           Type = iteratorClosure.ClosureDefinitionReference
@@ -1248,8 +1438,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           Type = iteratorClosure.ClosureDefinitionReference
         }
       };
-
-      ReturnStatement returnNewClosureInstance = new ReturnStatement() {
+      var returnNewClosureInstance = new ReturnStatement() {
         Expression = new BoundExpression() {
           Instance = null,
           Type = iteratorClosure.ClosureDefinitionReference,
@@ -1291,29 +1480,23 @@ namespace Microsoft.Cci.MutableCodeModel {
         TrueBranch = returnThis,
         FalseBranch = returnNew
       };
-      #endregion
-
       BlockStatement block = new BlockStatement();
-      block.Statements.Add(returnThisOrNew
-        //new ReturnStatement() {
-        //  Expression = new CompileTimeConstant() { Value= null, Type = genericGetEnumerator.Type}
-        //}
-        );
-      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
-      body.IsNormalized = true;
-      body.LocalsAreZeroed = true;
-      body.Block = block;
-      body.MethodDefinition = genericGetEnumerator;
-      genericGetEnumerator.Body = body;
+      block.Statements.Add(returnThisOrNew);
+      return block;
     }
 
-    void CreateGetEnumeratorMethodNonGeneric(IteratorClosure iteratorClosure) {
-      // GetEnumerator non-generic version
+    /// <summary>
+    /// Create the non-generic version of GetEnumerator and add it to the member list of iterator closure class. 
+    /// </summary>
+    private void CreateGetEnumeratorMethodNonGeneric(IteratorClosureInformation iteratorClosure) {
+      // GetEnumerator non-generic version, which delegates to the generic version. 
+      // Metadata
       MethodDefinition nongenericGetEnumerator = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("System.Collections.IEnumerable.GetEnumerator")
       };
-      this.cache.Add(nongenericGetEnumerator, nongenericGetEnumerator);
-      nongenericGetEnumerator.Attributes.Add(new CustomAttribute() { Constructor = this.DebuggerHiddenCtor });
+      nongenericGetEnumerator.Attributes.Add(
+        new CustomAttribute() { Constructor = this.DebuggerHiddenCtor }
+        );
       nongenericGetEnumerator.CallingConvention |= CallingConvention.HasThis;
       nongenericGetEnumerator.ContainingType = iteratorClosure.ClosureDefinition;
       nongenericGetEnumerator.Visibility = TypeMemberVisibility.Public;
@@ -1323,6 +1506,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       nongenericGetEnumerator.IsHiddenBySignature = true;
       nongenericGetEnumerator.IsSealed = true;
       iteratorClosure.NonGenericGetEnumerator = nongenericGetEnumerator;
+      // Explicitly implements IEnumerable.GetEnumerator();
       IMethodReference nongenericGetEnumeratorOriginal = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.NonGenericIEnumerableInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("GetEnumerator"), false)) {
         IMethodReference mref = memref as IMethodReference;
@@ -1334,11 +1518,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         ImplementingMethod = nongenericGetEnumerator
       };
       iteratorClosure.ClosureDefinition.ExplicitImplementationOverrides.Add(nonGenericGetEnumeratorImp);
-
+      // Body: call this.GetEnumerator (the generic version).
       BlockStatement block1 = new BlockStatement();
       block1.Statements.Add(new ReturnStatement() {
-        Expression = /*new CompileTimeConstant() { Value = null, Type = nongenericGetEnumerator.Type }*/
-         new MethodCall() {
+        Expression = new MethodCall() {
            IsStaticCall = false,
            MethodToCall = iteratorClosure.GenericGetEnumeratorReference,
            ThisArgument = new ThisReference(),
@@ -1360,17 +1543,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Current Implementation generates getters, but not the property.
     /// </summary>
     /// <param name="iteratorClosure">Information about the closure created when compiling the current iterator method</param>
-    private void CreateIteratorClosureProperties(IteratorClosure iteratorClosure) {
-      // PropertyDefinition nongenericCurrent = new PropertyDefinition();
+    private void CreateIteratorClosureProperties(IteratorClosureInformation iteratorClosure) {
+      // Non-generic version of the get_Current, which returns the generic version of get_Current. 
       MethodDefinition getterNonGenericCurrent = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("System.Collections.IEnumerator.get_Current")
       };
-      this.cache.Add(getterNonGenericCurrent, getterNonGenericCurrent);
-
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute();
       debuggerHiddenAttribute.Constructor = this.DebuggerHiddenCtor;
       getterNonGenericCurrent.Attributes.Add(debuggerHiddenAttribute);
-
       getterNonGenericCurrent.CallingConvention |= CallingConvention.HasThis;
       getterNonGenericCurrent.Visibility |= TypeMemberVisibility.Public;
       getterNonGenericCurrent.ContainingType = iteratorClosure.ClosureDefinition;
@@ -1385,6 +1565,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       foreach (ITypeMemberReference tref in iteratorClosure.NonGenericIEnumeratorInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("get_Current"), false)) {
         originalMethod = tref as IMethodReference; if (originalMethod != null) break;
       }
+      // assert originalMethod != Dummy
       MethodImplementation getterImplementation = new MethodImplementation() {
         ContainingType = iteratorClosure.ClosureDefinition,
         ImplementingMethod = getterNonGenericCurrent,
@@ -1425,11 +1606,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       body.MethodDefinition = getterNonGenericCurrent;
       getterNonGenericCurrent.Body = body;
 
-      // Create generic version of get_Current
+      // Create generic version of get_Current, the body of which is simply returning this.current.
       MethodDefinition getterGenericCurrent = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("System.Collections.Generic.IEnumerator<" + iteratorClosure.ElementType.ToString() +">.get_Current")
       };
-      this.cache.Add(getterGenericCurrent, getterGenericCurrent);
       getterGenericCurrent.Attributes.Add(debuggerHiddenAttribute);
 
       getterGenericCurrent.CallingConvention |= CallingConvention.HasThis;
@@ -1441,7 +1621,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       getterGenericCurrent.IsNewSlot = true;
       getterGenericCurrent.IsHiddenBySignature = true;
       getterGenericCurrent.IsSealed = true;
-      iteratorClosure.NonGenericGetCurrent = getterGenericCurrent;
+      iteratorClosure.GenericGetCurrent = getterGenericCurrent;
       originalMethod = Dummy.MethodReference;
       foreach (ITypeMemberReference tref in iteratorClosure.GenericIEnumeratorInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("get_Current"), false)) {
         originalMethod = tref as IMethodReference; if (originalMethod != null) break;
@@ -1471,45 +1651,51 @@ namespace Microsoft.Cci.MutableCodeModel {
       getterGenericCurrent.Body = body;
     }
 
-    IEnumerable<ILocalDefinition> AllLocals {
-      get { return allLocals; }
-    }
-
-    private void CreateIteratorClosureFields(IteratorClosure iteratorClosure) {
+    /// <summary>
+    /// Create fields for the closure class, which include fields for captured variables and fields for maintaining the state machine.
+    /// </summary>
+    private void CreateIteratorClosureFields(IteratorClosureInformation iteratorClosure) 
+      //^ requires (iteratorClosure.ElementType != null);
+    {
       // Create fields of the closure class: parameters and this
-      if (!method.IsStatic) {
+      if (!this.method.IsStatic) {
         FieldDefinition field = new FieldDefinition();
+        // TODO: naming convention should use csc's.
         field.Name = this.host.NameTable.GetNameFor("<>__" + "this");
-        field.Type = GetFullyInstantiatedSpecializedTypeReference(method.ContainingTypeDefinition);
+        //ITypeReference typeRef;
+        //if (TypeHelper.TryGetFullyInstantiatedSpecializedTypeReference(method.ContainingTypeDefinition, out typeRef))
+        //  field.Type = typeRef;
+        //else
+        //  field.Type = method.ContainingTypeDefinition;
+        field.Type = TypeDefinition.SelfInstance(method.ContainingTypeDefinition, this.host.InternFactory);
         field.Visibility = TypeMemberVisibility.Public;
         field.ContainingType = iteratorClosure.ClosureDefinition;
         iteratorClosure.ThisField = field;
         BoundField boundField = new BoundField(field, iteratorClosure.ThisFieldReference.Type);
         this.FieldForCapturedLocalOrParameter.Add(new ThisReference(), boundField);
       }
-      foreach (IParameterDefinition parameter in method.Parameters) {
-        //this.CapturedParameters.Add(parameter, true);
+      foreach (IParameterDefinition parameter in this.method.Parameters) {
         FieldDefinition field = new FieldDefinition();
         field.Name = parameter.Name;
-        field.Type = this.Visit(parameter.Type);
+        field.Type = this.copyTypeToClosure.Visit(parameter.Type);
         field.ContainingType = iteratorClosure.ClosureDefinition;
         field.Visibility = TypeMemberVisibility.Public;
         iteratorClosure.AddField(field);
-        BoundField boundField = new BoundField(field, parameter.Type);
+        BoundField boundField = new BoundField(field, field.Type);
         this.FieldForCapturedLocalOrParameter.Add(parameter, boundField);
       }
       // Create fields of the closure class: Locals
-      foreach (ILocalDefinition local in AllLocals) {
+      foreach (ILocalDefinition local in this.allLocals) {
         FieldDefinition field = new FieldDefinition();
         field.Name = this.host.NameTable.GetNameFor("<>__" + local.Name.Value + this.privateHelperTypes.Count);
-        field.Type = this.Visit(local.Type);
+        field.Type = this.copyTypeToClosure.Visit(local.Type);
         field.Visibility = TypeMemberVisibility.Public;
         field.ContainingType = iteratorClosure.ClosureDefinition;
         iteratorClosure.AddField(field);
         BoundField boundField = new BoundField(field, field.Type);
         this.FieldForCapturedLocalOrParameter.Add(local, boundField);
       }
-      // Create fields of the fields that manages
+      // Create fields: current, state, and l_initialThreadId
       FieldDefinition current = new FieldDefinition();
       current.Name = this.host.NameTable.GetNameFor("<>__" + "current");
       current.Type = iteratorClosure.ElementType;
@@ -1533,77 +1719,126 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Find the type arguments of the IEnumerable generic type implemented by a <paramref name="methodTypeReference"/>.
+    /// Find the type argument of the IEnumerable generic type implemented by a <paramref name="methodTypeReference"/>, or 
+    /// System.Object if <paramref name="methodTypeReference"/> implements the non-generic IEnumerable.
     /// </summary>
-    /// <param name="methodTypeReference">A type that must implement IEnumerable. </param>
+    /// <param name="methodTypeReference">A type that must implement IEnumerable, or IEnumerable[T]. </param>
     /// <returns>An enumeration of ITypeReference of length 1. </returns>
     private IEnumerable<ITypeReference> GetClosureEnumeratorTypeArguments(ITypeReference /*!*/ methodTypeReference) {
       IGenericTypeInstanceReference genericTypeInstance = methodTypeReference as IGenericTypeInstanceReference;
       if (genericTypeInstance != null && TypeHelper.TypesAreEquivalent(genericTypeInstance.GenericType, methodTypeReference.PlatformType.SystemCollectionsGenericIEnumerable)) {
         return genericTypeInstance.GenericArguments;
       }
-      // should be unreachable
-      return new List<ITypeReference>();
+      var result = new List<ITypeReference>();
+      result.Add(this.host.PlatformType.SystemObject);
+      return result;
     }
 
-    public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(localDeclarationStatement.LocalVariable));
+    /// <summary>
+    /// Collect locals declared in the body. 
+    /// </summary>
+    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      //localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(localDeclarationStatement.LocalVariable));
       if (!this.allLocals.Contains(localDeclarationStatement.LocalVariable))
         this.allLocals.Add(localDeclarationStatement.LocalVariable);
-      return base.Visit(localDeclarationStatement);
+      base.Visit(localDeclarationStatement);
     }
 
-    public override ITargetExpression Visit(TargetExpression targetExpression) {
+    /// <summary>
+    /// Collect locals in TargetExpression
+    /// </summary>
+    public override void Visit(ITargetExpression targetExpression) {
       ILocalDefinition localDefinition = targetExpression.Definition as ILocalDefinition;
       if (localDefinition != null) {
         if (!this.allLocals.Contains(localDefinition)) {
           this.allLocals.Add(localDefinition);
         }
       }
-      return base.Visit(targetExpression);
+      base.Visit(targetExpression);
     }
 
-    public override ITypeReference Visit(ITypeReference typeReference) {
-      if (this.genericTypeParameterMapping.ContainsKey(typeReference)) return this.genericTypeParameterMapping[typeReference];
-      IGenericTypeInstanceReference genericTypeReference = typeReference as IGenericTypeInstanceReference;
-      if (genericTypeReference != null)
-        return this.Visit(genericTypeReference);
-      return base.Visit(typeReference);
+    public override void Visit(IBoundExpression boundExpression) {
+      ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
+      if (localDefinition != null) {
+        if (!this.allLocals.Contains(localDefinition)) {
+          this.allLocals.Add(localDefinition);
+        }
+      }
+      base.Visit(boundExpression);
+    }
+
+    public override void Visit(IAddressableExpression addressableExpression) {
+      ILocalDefinition localDefinition = addressableExpression.Definition as ILocalDefinition;
+      if (localDefinition != null) {
+        if (!this.allLocals.Contains(localDefinition)) {
+          this.allLocals.Add(localDefinition);
+        }
+      }
+      base.Visit(addressableExpression);
     }
   }
 
-  internal class YieldReturnYieldBreakReplacer : MethodBodyCodeMutator {
-    IteratorClosure iteratorClosure;
-    internal YieldReturnYieldBreakReplacer(IteratorClosure iteratorClosure, IMetadataHost host) :
+  internal class YieldReturnYieldBreakReplacer: MethodBodyCodeMutator {
+  /// <summary>
+  /// Used in the tranformation of an iterator method body into a MoveNext method body, this class replaces
+  /// yield returns and yield breaks with approppriate assignments to this dot current and return statements. 
+  /// In addition, it inserts a new label statement after each yield return, and associates a unique state 
+  /// number with the label. Such a mapping can be aquired from calling the GetStateEntries method. It is not
+  /// suggested to call the Visit methods directly. 
+  /// </summary>
+    IteratorClosureInformation iteratorClosure;
+    internal YieldReturnYieldBreakReplacer(IteratorClosureInformation iteratorClosure, IMetadataHost host) :
       base(host, true) {
       this.iteratorClosure = iteratorClosure;
     }
-
-    int count = 0;
-    int Count {
+    /// <summary>
+    /// State generator
+    /// </summary>
+    private int stateNumber;
+    private int FreshState {
       get {
-        return count++;
+        return stateNumber++;
       }
     }
-
+    /// <summary>
+    /// Mapping between state machine state and its target label.
+    /// </summary>
     Dictionary<int, ILabeledStatement> stateEntries;
+
+    /// <summary>
+    /// Compute the mapping between every (starting and continuing) state and their unique entry points. It does so
+    /// by inserting a unique label at the entry points and associate the state with the label. 
+    /// </summary>
     internal Dictionary<int, ILabeledStatement> GetStateEntries(BlockStatement body) {
       BlockStatement blockStatement = body;
       stateEntries = new Dictionary<int, ILabeledStatement>();
       LabeledStatement initialLabel = new LabeledStatement() {
-        Label = this.host.NameTable.GetNameFor("Label"+ Count), Statement = new EmptyStatement()
+        Label = this.host.NameTable.GetNameFor("Label"+ FreshState), Statement = new EmptyStatement()
       };
+      // O(n), but happen only once. 
       blockStatement.Statements.Insert(0, initialLabel);
       stateEntries.Add(0, initialLabel);
+      this.stateNumber = 1;
       base.Visit(blockStatement);
+      this.stateNumber = 0; 
       Dictionary<int, ILabeledStatement> result = stateEntries;
       stateEntries = null;
       return result;
     }
 
+    /// <summary>
+    /// Replace a (yield return exp)with a new block of the form:
+    /// {
+    ///   Fresh_Label:;
+    ///   this.current = exp;
+    ///   state = Fresh_state;
+    ///   return true;
+    /// }
+    /// and associate the newly generated Fresh_state with its entry point: Fresh_label.
+    /// </summary>
     public override IStatement Visit(YieldReturnStatement yieldReturnStatement) {
       BlockStatement blockStatement = new BlockStatement();
-      int state = Count;
+      int state = FreshState;
       ExpressionStatement thisDotStateEqState = new ExpressionStatement() {
         Expression = new Assignment() {
           Source = new CompileTimeConstant() { Value = state, Type = this.host.PlatformType.SystemInt32 },
@@ -1635,15 +1870,24 @@ namespace Microsoft.Cci.MutableCodeModel {
       return blockStatement;
     }
 
+    /// <summary>
+    /// Replace a yield break with:
+    /// {
+    ///   this.state = -2;
+    ///   return;
+    /// }
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
+    /// <returns></returns>
     public override IStatement Visit(YieldBreakStatement yieldBreakStatement) {
       BlockStatement blockStatement = new BlockStatement();
-      ExpressionStatement thisDotStateEqMinus1 = new ExpressionStatement() {
+      ExpressionStatement thisDotStateEqMinus2 = new ExpressionStatement() {
         Expression = new Assignment() {
-          Source = new CompileTimeConstant() { Value = -1, Type = this.host.PlatformType.SystemInt32 },
+          Source = new CompileTimeConstant() { Value = -2, Type = this.host.PlatformType.SystemInt32 },
           Target = new TargetExpression() { Definition = iteratorClosure.StateFieldReference, Type = this.host.PlatformType.SystemInt32, Instance = new ThisReference() }
         }
       };
-      blockStatement.Statements.Add(thisDotStateEqMinus1);
+      blockStatement.Statements.Add(thisDotStateEqMinus2);
       ReturnStatement returnFalse = new ReturnStatement() {
         Expression = new CompileTimeConstant() {
           Value = false,

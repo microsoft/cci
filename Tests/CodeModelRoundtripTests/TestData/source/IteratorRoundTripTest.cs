@@ -62,6 +62,10 @@ class Test1<T1>
     }
   }
 
+  public System.Collections.IEnumerable foo() {
+    yield return 0;
+  }
+
   class Inner1<T2> {
     public static IEnumerable<T2> foo3(T1 t1, T2 t2) {
       yield return t2;
@@ -147,8 +151,9 @@ class Test2 {
       }
     }
 
-    public IEnumerable<T3> foo10<T3>(T2 t2, T3 t3)
-      where T3: Valuable<T3> {
+    public IEnumerable<T3> foo10<T3>(T2 t2, T3 t3, Outer<T3>.Mid<T2> x, Outer<T2>.Mid<T3>.Inner1 y, Outer<T3>.Mid<T2>.Inner2<T3> z)
+      where T3 : Valuable<T3> {
+      x.bar3(); z.bar2(); y.bar1(); z.bar4(t2); y.bar5(t2); x.bar6(t2); z.bar4(t3); y.bar5(t3); x.bar6(t3);
       for (int i = 0; i < t2.IntValue; i++) {
         yield return t3;
       }
@@ -168,12 +173,29 @@ class Test2 {
       }
     }
 
-    IEnumerable<T2> foo9<T2>(T2 t2)
+    IEnumerable<T2> foo9<T2>(T2 t2, Outer<T2>.Mid<T2> x, Outer<T2>.Mid<T2>.Inner1 y, Outer<T2>.Mid<T2>.Inner2<T2> z)
       where T2 : Valuable<T2> {
+      x.bar3(); z.bar2(); y.bar1(); z.bar4(t2); y.bar5(t2); x.bar6(t2);
       for (int i = 0; i < t2.IntValue; i++) {
         yield return t2;
       }
     }
+  }
+}
+
+class Outer<A> {
+  public class Mid<B> {
+    public class Inner1 {
+      public void bar1() { }
+      public void bar5<T>(T t) { }
+    }
+    public class Inner2<C> {
+      public void bar2() { }
+      public void bar4<T>(T t) {
+      }
+    }
+    public void bar3() { }
+    public void bar6<T>(T t) { }
   }
 }
 
