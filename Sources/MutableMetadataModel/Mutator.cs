@@ -2787,7 +2787,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       IModifiedTypeReference/*?*/ modifiedTypeReference = typeReference as IModifiedTypeReference;
       if (modifiedTypeReference != null)
         return this.Visit(modifiedTypeReference);
-      IManagedPointerTypeReference/*?*/ managedPointerTypeReference = typeReference as IManagedPointerType;
+      IManagedPointerTypeReference/*?*/ managedPointerTypeReference = typeReference as IManagedPointerTypeReference;
       if (managedPointerTypeReference != null)
         return this.Visit(managedPointerTypeReference);
       //TODO: error

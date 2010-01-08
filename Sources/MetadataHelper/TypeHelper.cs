@@ -1000,6 +1000,39 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Try to compute the self instance of a type, that is, a fully instantiated and specialized type reference. 
+    /// For example, use T and T1 to instantiate A&lt;T&gt;.B.C&lt;T1&gt;. If successful, result is set to a 
+    /// IGenericTypeInstance if type definition is generic, or a specialized nested type reference if one of
+    /// the parent of typeDefinition is generic, or typeDefinition if none of the above. Failure happens when 
+    /// one of its parent's members is not properly initialized. 
+    /// </summary>
+    /// <param name="typeDefinition">A type definition whose self instance is to be computed.</param>
+    /// <param name="result">The self instantiated reference to typeDefinition. Valid only when returning true. </param>
+    /// <returns>True if the instantiation succeeded. False if typeDefinition is a nested type and we cannot find such a nested type definition 
+    /// in its parent's self instance.</returns>
+    public static bool TryGetFullyInstantiatedSpecializedTypeReference(ITypeDefinition typeDefinition, out ITypeReference result) {
+      result = typeDefinition;
+      if (typeDefinition.IsGeneric) {
+        result = typeDefinition.InstanceType;
+        return true;
+      }
+      INestedTypeDefinition nestedType = typeDefinition as INestedTypeDefinition;
+      if (nestedType != null) {
+        ITypeReference containingTypeReference;
+        if (TryGetFullyInstantiatedSpecializedTypeReference(nestedType.ContainingTypeDefinition, out containingTypeReference)) {
+          foreach (var t in containingTypeReference.ResolvedType.NestedTypes) {
+            if (t.Name == nestedType.Name && t.GenericParameterCount == nestedType.GenericParameterCount) {
+              result = t;
+              return true;
+            }
+          }
+          return false;
+        } else return false;
+      }
+      return true;
+    }
+
+    /// <summary>
     /// Returns a C#-like string that corresponds to a source expression that would bind to the given type definition when appearing in an appropriate context.
     /// </summary>
     //^ [Pure]

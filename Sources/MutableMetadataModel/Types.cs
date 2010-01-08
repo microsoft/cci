@@ -1993,6 +1993,47 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal Flags flags;
 
     /// <summary>
+    /// Get the reference to fully specialized/instantiated version of typeDefinition. 
+    /// </summary>
+    /// <param name="typeDefinition">Unspecialized type definition to be specialized/instantiated.</param>
+    /// <param name="internFactory">An internfactory. </param>
+    public static ITypeReference SelfInstance(ITypeDefinition typeDefinition, IInternFactory internFactory) {
+      INamespaceTypeDefinition namespaceTypeDefinition = typeDefinition as INamespaceTypeDefinition;
+      if (namespaceTypeDefinition != null) {
+        if (typeDefinition.IsGeneric)
+          return typeDefinition.InstanceType;
+        else 
+          return typeDefinition;
+      }
+      INestedTypeDefinition nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
+      ITypeReference result = typeDefinition;
+      if (nestedTypeDefinition != null) {
+        ITypeReference containingTypeReference = SelfInstance(nestedTypeDefinition.ContainingTypeDefinition, internFactory);
+        ISpecializedNestedTypeReference specializedNestedTypeRef = containingTypeReference as ISpecializedNestedTypeReference;
+        IGenericTypeInstanceReference genericInstanceRef = containingTypeReference as IGenericTypeInstanceReference;
+        if (specializedNestedTypeRef != null || genericInstanceRef != null) {
+          result = new SpecializedNestedTypeReference() {
+            ContainingType = containingTypeReference,
+            InternFactory = internFactory,
+            GenericParameterCount = typeDefinition.GenericParameterCount,
+            IsEnum = typeDefinition.IsEnum,
+            Attributes = new List<ICustomAttribute>(typeDefinition.Attributes),
+            UnspecializedVersion = nestedTypeDefinition,
+            Name = nestedTypeDefinition.Name,
+            IsValueType = typeDefinition.IsValueType
+          };
+        }
+      }
+      if (typeDefinition.IsGeneric) {
+        var args = new List<ITypeReference>();
+        foreach (var gpar in typeDefinition.GenericParameters)
+          args.Add(gpar);
+        result = GenericTypeInstance.GetGenericTypeInstance(result, args, internFactory);
+      }
+      return result;
+    }
+
+    /// <summary>
     /// Zero or more parameters that can be used as type annotations.
     /// </summary>
     /// <value></value>
