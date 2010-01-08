@@ -356,6 +356,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void AttachContractProviderAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
+
+      // Because of unification, the "alreadyLoadedUnit" might have actually already been loaded previously
+      // and gone through here (and so already has a contract provider attached to it).
+      if (this.unit2ContractProvider.ContainsKey(alreadyLoadedUnit.UnitIdentity)) return;
+
       var contractMethods = new ContractMethods(this);
       using (var lazyContractProviderForLoadedUnit = new LazyContractProvider(this, alreadyLoadedUnit, contractMethods)) {
         var contractProviderForLoadedUnit = new CodeContractsContractProvider(this, lazyContractProviderForLoadedUnit);
