@@ -26,16 +26,13 @@ namespace PeToText {
         Stream pdbStream = File.OpenRead(pdbFile);
         pdbReader = new PdbReader(pdbStream, host);
       }
-
-      SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString(); 
-      SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, noIL);
-
       using (pdbReader) {
+        SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
+        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, noIL);
         csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
+        string txtFile = Path.ChangeExtension(pdbFile, "txt");
+        File.WriteAllText(txtFile, sourceEmitterOutput.Data);
       }
-      string txtFile = Path.ChangeExtension(pdbFile, "txt");
-      File.WriteAllText(txtFile, sourceEmitterOutput.Data);
-
     }
   }
 

@@ -96,16 +96,12 @@ public class CodeModelRoundTripTests {
 
   void RoundTripWithCodeMutator(PeVerifyResult expectedResult, string assemblyName, string pdbName) {
     IAssembly assembly = LoadAssembly(assemblyName);
-    LoadPdbReaderWriter(pdbName, assembly);
-    var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
-    RoundTripWithMutator(expectedResult, codeAssembly, CreateCodeMutator(codeAssembly, pdbName));
-  }
-
-  void LoadPdbReaderWriter(string pdbPath, IAssembly assembly) {
-    using (var f = File.OpenRead(pdbPath)) {
-      pdbReader = new PdbReader(f, host);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        RoundTripWithMutator(expectedResult, codeAssembly, CreateCodeMutator(codeAssembly, pdbName));
+      }
     }
-    pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader);
   }
 
   void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly) {

@@ -13,7 +13,7 @@ namespace CodeModelTests {
   public class Test {
 
     [Fact]
-    public void TestCodeModel() {
+    public static void TestCodeModel() {
       HostEnvironment host = new HostEnvironment();
       var location = typeof(CodeModelTestInput.Class1).Assembly.Location;
       IAssembly/*?*/ assembly = host.LoadUnitFrom(location) as IAssembly;
@@ -22,24 +22,28 @@ namespace CodeModelTests {
       PdbReader/*?*/ pdbReader = null;
       string pdbFile = Path.ChangeExtension(assembly.Location, "pdb");
       if (File.Exists(pdbFile)) {
-        Stream pdbStream = File.OpenRead(pdbFile);
-        pdbReader = new PdbReader(pdbStream, host);
+        using (var pdbStream = File.OpenRead(pdbFile)) {
+          pdbReader = new PdbReader(pdbStream, host);
+        }
       }
-      ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), assembly);
-
-      SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
       using (pdbReader) {
+        ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), assembly);
+        SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
         SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, true);
         csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
-      }
-      Stream resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt");
-      StreamReader reader = new StreamReader(resource);
-      string expected = reader.ReadToEnd();
-      var result = sourceEmitterOutput.Data;
-      if (result != expected) {
-        string resultFile = Path.GetFullPath("CodeModelTestOutput.txt");
-        File.WriteAllText(resultFile, result);
-        Assert.True(false, "Output didn't match CodeModelTestInput.txt: " + resultFile);
+        string result = sourceEmitterOutput.Data;
+        string expected;
+        using (var resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt")) {
+          using (var reader = new StreamReader(resource)) {
+            expected = reader.ReadToEnd();
+          }
+        }
+
+        if (result != expected) {
+          string resultFile = Path.GetFullPath("CodeModelTestOutput.txt");
+          File.WriteAllText(resultFile, result);
+          Assert.True(false, "Output didn't match CodeModelTestInput.txt: " + resultFile);
+        }
       }
     }
   }

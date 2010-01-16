@@ -33,22 +33,21 @@ namespace PeToPe {
         Stream pdbStream = File.OpenRead(pdbFile);
         pdbReader = new PdbReader(pdbStream, host);
       }
+      using (pdbReader) {
+        //Construct a Code Model from the Metadata model via decompilation
+        module = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
 
-      //Construct a Code Model from the Metadata model via decompilation
-      module = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
-      
-      //Create a mutator for the CodeModel and run it over the module, producing a copy that could be different if the mutator
-      //were a subclass that made changes during the copy process.
-      var mutator = new CodeMutator(host, pdbReader);
-      module = mutator.Visit(module);
+        //Create a mutator for the CodeModel and run it over the module, producing a copy that could be different if the mutator
+        //were a subclass that made changes during the copy process.
+        var mutator = new CodeMutator(host, pdbReader);
+        module = mutator.Visit(module);
 
-      //Write out the normalized Code Model, traversing it as the Metadata Model it also is.
-      //This lazily uses CodeModelToILConverter, via the delegate that the mutator stored in the method bodies, to compile method bodies to IL.
-      Stream peStream = File.Create(module.Location + ".pe");
-      if (pdbReader == null) {
-        PeWriter.WritePeToStream(module, host, peStream);
-      } else {
-        using (pdbReader) {
+        //Write out the normalized Code Model, traversing it as the Metadata Model it also is.
+        //This lazily uses CodeModelToILConverter, via the delegate that the mutator stored in the method bodies, to compile method bodies to IL.
+        Stream peStream = File.Create(module.Location + ".pe");
+        if (pdbReader == null) {
+          PeWriter.WritePeToStream(module, host, peStream);
+        } else {
           using (var pdbWriter = new PdbWriter(module.Location + ".pdb", pdbReader)) {
             PeWriter.WritePeToStream(module, host, peStream, pdbReader, pdbReader, pdbWriter);
           }
