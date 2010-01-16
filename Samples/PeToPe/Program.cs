@@ -29,12 +29,11 @@ namespace PeToPe {
         Stream pdbStream = File.OpenRead(pdbFile);
         pdbReader = new PdbReader(pdbStream, host);
       }
-
-      Stream peStream = File.Create(module.Location + ".pe");
-      if (pdbReader == null) {
-        PeWriter.WritePeToStream(module, host, peStream);
-      } else {
-        using (pdbReader) {
+      using (pdbReader) {
+        Stream peStream = File.Create(module.Location + ".pe");
+        if (pdbReader == null) {
+          PeWriter.WritePeToStream(module, host, peStream);
+        } else {
           using (var pdbWriter = new PdbWriter(module.Location + ".pdb", pdbReader)) {
             PeWriter.WritePeToStream(module, host, peStream, pdbReader, pdbReader, pdbWriter);
           }

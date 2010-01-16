@@ -11,12 +11,10 @@ using Microsoft.Cci.MutableCodeModel;
 
 public class RoundTripTests {
 
-    PdbReader pdbReader;
     HostEnvironment host;
 
     public RoundTripTests() {
         // we assume peverify.exe is in the path
-        pdbReader = null;
         host = new HostEnvironment();
 
        // Debug.Listeners.Clear();
@@ -91,27 +89,29 @@ public class RoundTripTests {
         RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb");
     }
 
-    void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator) {
+    void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator, string pdbPath) {
         this.VisitAndMutate(mutator, ref assembly);
-        AssertWriteToPeFile(expectedResult, assembly);
+        AssertWriteToPeFile(expectedResult, assembly, pdbPath);
     }
 
-    void RoundTripWithILMutator(string assemblyName, string pdbName) {
+    void RoundTripWithILMutator(string assemblyName, string pdbPath) {
         PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
-        RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataMutator(host));
+        RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataMutator(host), pdbPath);
     }
 
-    void LoadPdbReaderWriter(string pdbPath, IAssembly assembly) {
-        using (var f = File.OpenRead(pdbPath)) {
-            pdbReader = new PdbReader(f, host);
-        }
-    }
-
-    void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly) {
+    void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly, string pdbPath) {
         using (var rewrittenFile = File.Create(assembly.Location)){
-          using (pdbReader) {
-            using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
-              PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+          if (pdbPath != null) {
+            using (var f = File.OpenRead(pdbPath)) {
+              using (var pdbReader = new PdbReader(f, host)) {
+                using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
+                  PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+                }
+              }
+            }
+          } else {
+            using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), null)) {
+              PeWriter.WritePeToStream(assembly, host, rewrittenFile, null, null, pdbWriter);
             }
           }
         }

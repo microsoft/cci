@@ -34,6 +34,14 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
+    /// </summary>
+    public void Dispose() {
+      foreach (var source in this.sourceFilesOpenedByReader)
+        source.Dispose();
+    }
+
+    /// <summary>
     /// Return zero or more locations in primary source documents that correspond to one or more of the given derived (non primary) document locations.
     /// </summary>
     /// <param name="locations">Zero or more locations in documents that have been derived from one or more source documents.</param>
@@ -332,14 +340,6 @@ namespace Microsoft.Cci {
     }
 
     Dictionary<PdbSource, PdbSourceDocument> documentCache = new Dictionary<PdbSource, PdbSourceDocument>();
-
-    /// <summary>
-    /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
-    /// </summary>
-    public void Dispose() {
-      foreach (var source in this.sourceFilesOpenedByReader)
-        source.Dispose();
-    }
 
   }
 

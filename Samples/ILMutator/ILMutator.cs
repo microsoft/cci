@@ -36,21 +36,20 @@ namespace ILMutator {
       } else {
         Console.WriteLine("Could not load the PDB file for '" + module.Name.Value + "' . Proceeding anyway.");
       }
-
-      ILMutator mutator = new ILMutator(host, pdbReader);
-      module = mutator.Visit(module);
-
-      string outputPath;
-      if (args.Length == 2)
-        outputPath = args[1];
-      else
-        outputPath = module.Location + ".pe";
-
-      var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
-
-      // Need to not pass in a local scope provider until such time as we have one that will use the mutator
-      // to remap things (like the type of a scope constant) from the original assembly to the mutated one.
       using (pdbReader) {
+        ILMutator mutator = new ILMutator(host, pdbReader);
+        module = mutator.Visit(module);
+
+        string outputPath;
+        if (args.Length == 2)
+          outputPath = args[1];
+        else
+          outputPath = module.Location + ".pe";
+
+        var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
+
+        // Need to not pass in a local scope provider until such time as we have one that will use the mutator
+        // to remap things (like the type of a scope constant) from the original assembly to the mutated one.
         using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
           PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
         }
