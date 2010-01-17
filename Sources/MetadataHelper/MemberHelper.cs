@@ -79,6 +79,10 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns zero or more base class and interface methods that are explicitly overridden by the given method.
     /// </summary>
+    /// <remarks>
+    /// IMethodReferences are returned (as opposed to IMethodDefinitions) because the references are directly available:
+    /// no resolving is needed to find them.
+    /// </remarks>
     public static IEnumerable<IMethodReference> GetExplicitlyOverriddenMethods(IMethodDefinition overridingMethod) {
       foreach (IMethodImplementation methodImplementation in overridingMethod.ContainingTypeDefinition.ExplicitImplementationOverrides) {
         if (overridingMethod.InternedKey == methodImplementation.ImplementingMethod.InternedKey)
@@ -168,12 +172,16 @@ namespace Microsoft.Cci {
     /// are directly implemented by the containing type of the given method are returned. Interfaces declared on base classes
     /// are always fully implemented by the base class, albeit sometimes by an abstract method that is itself implemented by a derived class method.
     /// </summary>
+    /// <remarks>
+    /// IMethodDefinitions are returned (as opposed to IMethodReferences) because it isn't possible to find the interface methods
+    /// without resolving the interface references to their definitions.
+    /// </remarks>
     public static IEnumerable<IMethodDefinition> GetImplicitlyImplementedInterfaceMethods(IMethodDefinition implementingMethod) {
       foreach (ITypeReference interfaceReference in implementingMethod.ContainingTypeDefinition.Interfaces) {
         foreach (ITypeDefinitionMember interfaceMember in interfaceReference.ResolvedType.GetMembersNamed(implementingMethod.Name, false)) {
           IMethodDefinition/*?*/ interfaceMethod = interfaceMember as IMethodDefinition;
           if (interfaceMethod == null) continue;
-          if (MethodsAreEquivalent(implementingMethod, interfaceMethod))
+          if (implementingMethod.IsVirtual && MethodsAreEquivalent(implementingMethod, interfaceMethod))
             yield return interfaceMethod;
         }
       }
