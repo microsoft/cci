@@ -4,51 +4,45 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.IO;
 using Microsoft.Cci;
 
-namespace FindThrowPlatformType
-{
-  class Program
-  {
-    static void Main(string[] args)
-    {
-      if (args == null || args.Length == 0)
-      {
-        Console.WriteLine("usage: FindThrowPlatformType [path]fileName.ext");
+namespace FindThrowPlatformType {
+  class Program {
+    static void Main(string[] args) {
+      if (args == null || args.Length == 0) {
+        Console.WriteLine("usage: FindThrowArgumentNull [path]fileName.ext");
         return;
       }
 
-      HostEnvironment host = new HostEnvironment();
-      IModule/*?*/ assembly = host.LoadUnitFrom(args[0]) as IModule;
+      var host = new PeReader.DefaultHost();
+      var module = host.LoadUnitFrom(args[0]) as IModule;
 
-      if (assembly == null || assembly == Dummy.Module || assembly == Dummy.Assembly)
-      {
+      if (module == null) {
         Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
         return;
       }
 
-      MyPlatformType platformType = new MyPlatformType(host);
-      // create a reference to System.ArgumentNullException
+      var platformType = new MyPlatformType(host);
       INamespaceTypeReference systemArgumentNullException = platformType.SystemArgumentNullException;
+      IName ctor = host.NameTable.Ctor;
 
-      foreach (INamedTypeDefinition type in assembly.GetAllTypes())
-      {
-        foreach (IMethodDefinition methodDefinition in type.Methods)
-        {
-          foreach (IOperation operation in methodDefinition.Body.Operations)
-          {
-            // before a System.ArgumentNullException is thrown, 
-            // an object of that type has to be constructed with newobj instruction
-            if (operation.OperationCode == OperationCode.Newobj)
-            {
-              // identify a call to System.ArgumentNullException's constructor
-              IMethodReference consRef = operation.Value as IMethodReference;
-              if (consRef != null && consRef.Name.Value.Equals(".ctor") &&
-                  consRef.ContainingType.InternedKey == systemArgumentNullException.InternedKey)
-              {
-                Console.WriteLine(methodDefinition);
+      //write out the signature of every method that contains the IL equivalent of "throw new System.ArgumentNullException();"
+      foreach (var type in module.GetAllTypes()) {
+        foreach (var methodDefinition in type.Methods) {
+          var lastInstructionWasNewObjSystemArgumentNull = false;
+          foreach (var operation in methodDefinition.Body.Operations) {
+            if (operation.OperationCode == OperationCode.Newobj) {
+              var consRef = operation.Value as IMethodReference;
+              if (consRef != null && consRef.Name == ctor &&
+                  TypeHelper.TypesAreEquivalent(consRef.ContainingType, systemArgumentNullException)) {
+                lastInstructionWasNewObjSystemArgumentNull = true;
               }
+            } else if (lastInstructionWasNewObjSystemArgumentNull && operation.OperationCode == OperationCode.Throw) {
+              Console.WriteLine(MemberHelper.GetMethodSignature(methodDefinition, 
+                NameFormattingOptions.ReturnType|NameFormattingOptions.TypeParameters|NameFormattingOptions.Signature));
+              break;
+            } else {
+              lastInstructionWasNewObjSystemArgumentNull = false;
             }
           }
         }
@@ -56,19 +50,27 @@ namespace FindThrowPlatformType
     }
   }
 
-  internal class MyPlatformType : PlatformType
-  {
-    public MyPlatformType(IMetadataHost host)
-      : base(host)
-    {
+  /// <summary>
+  /// A collection of references to types from the core platform, such as System.Object and System.SystemArgumentNullException.
+  /// </summary>
+  internal class MyPlatformType : PlatformType {
+
+    /// <summary>
+    /// Allocates an object that is a collection of references to types from the core platform, such as System.Object and System.SystemArgumentNullException.
+    /// </summary>
+    /// <param name="host">
+    /// An object that provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
+    /// </param>
+    internal MyPlatformType(IMetadataHost host)
+      : base(host) {
     }
 
-    public INamespaceTypeReference SystemArgumentNullException
-    {
-      get
-      {
-        if (this.systemArgumentNullException == null)
-        {
+    /// <summary>
+    /// A reference to the System.ArgumentNullException from the core system assembly.
+    /// </summary>
+    internal INamespaceTypeReference SystemArgumentNullException {
+      get {
+        if (this.systemArgumentNullException == null) {
           this.systemArgumentNullException = this.CreateReference(
             this.CoreAssemblyRef, "System", "ArgumentNullException");
         }
@@ -78,21 +80,4 @@ namespace FindThrowPlatformType
     INamespaceTypeReference systemArgumentNullException;
   }
 
-  internal class HostEnvironment : MetadataReaderHost
-  {
-    PeReader peReader;
-
-    internal HostEnvironment()
-    {
-      this.peReader = new PeReader(this);
-    }
-    
-    public override IUnit LoadUnitFrom(string location)
-    {
-      IUnit result = this.peReader.OpenModule(
-        BinaryDocument.GetBinaryDocumentForFile(location, this));
-      this.RegisterAsLatest(result);
-      return result;
-    }
-  }
 }

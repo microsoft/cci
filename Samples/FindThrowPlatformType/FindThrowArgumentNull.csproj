@@ -8,8 +8,8 @@
     <ProjectGuid>{271E4173-B938-430F-988E-910EBF22B7B5}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FindThrowPlatformType</RootNamespace>
-    <AssemblyName>FindThrowPlatformType</AssemblyName>
+    <RootNamespace>FindThrowArgumentNull</RootNamespace>
+    <AssemblyName>FindThrowArgumentNull</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
