@@ -177,12 +177,21 @@ namespace Microsoft.Cci {
     /// without resolving the interface references to their definitions.
     /// </remarks>
     public static IEnumerable<IMethodDefinition> GetImplicitlyImplementedInterfaceMethods(IMethodDefinition implementingMethod) {
+      if (!implementingMethod.IsVirtual) yield break;
+      List<uint> explicitImplementations = null;
+      foreach (IMethodImplementation methodImplementation in implementingMethod.ContainingTypeDefinition.ExplicitImplementationOverrides) {
+        if (explicitImplementations == null) explicitImplementations = new List<uint>();
+        explicitImplementations.Add(methodImplementation.ImplementedMethod.InternedKey);
+      }
+      if (explicitImplementations != null) explicitImplementations.Sort();
       foreach (ITypeReference interfaceReference in implementingMethod.ContainingTypeDefinition.Interfaces) {
         foreach (ITypeDefinitionMember interfaceMember in interfaceReference.ResolvedType.GetMembersNamed(implementingMethod.Name, false)) {
           IMethodDefinition/*?*/ interfaceMethod = interfaceMember as IMethodDefinition;
           if (interfaceMethod == null) continue;
-          if (implementingMethod.IsVirtual && MethodsAreEquivalent(implementingMethod, interfaceMethod))
-            yield return interfaceMethod;
+          if (MethodsAreEquivalent(implementingMethod, interfaceMethod)) {
+            if (explicitImplementations == null || explicitImplementations.BinarySearch(interfaceMethod.InternedKey) < 0)
+              yield return interfaceMethod;
+          }
         }
       }
     }
