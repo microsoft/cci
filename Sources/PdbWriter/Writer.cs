@@ -32,7 +32,8 @@ namespace Microsoft.Cci {
     }
 
     private void Close() {
-      this.SymWriter.Close();
+      if (this.symWriter != null)
+        this.symWriter.Close();
     }
 
     public void CloseMethod(uint offset) {
