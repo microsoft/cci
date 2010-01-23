@@ -363,7 +363,20 @@ namespace Microsoft.Cci {
         if (gt != null) t = gt.GenericType;
       } else
         t = this.writer.typeDefList[(int)(td & 0xFFFFFF)-1];
-      string tName = TypeHelper.GetTypeName(t);
+      string tName;
+      uint parentToken = 0;
+      if (this.lastTd == td) {
+        tName = this.lastTName;
+        parentToken = this.lastParentToken;
+      } else {
+        tName = TypeHelper.GetTypeName(t, NameFormattingOptions.UseGenericTypeNameSuffix|NameFormattingOptions.OmitContainingType);
+        this.lastTd = td;
+        this.lastTName = tName;
+        ITypeReference bc = null;
+        foreach (ITypeReference baseClassRef in t.ResolvedType.BaseClasses) bc = baseClassRef;
+        if (bc != null) parentToken = (uint)this.writer.GetTypeToken(bc);
+        this.lastParentToken = parentToken;
+      }
       pchTypeDef = (uint)tName.Length;
       if (pchTypeDef >= cchTypeDef) pchTypeDef = cchTypeDef-1;
       char* pTypeDef = (char*)szTypeDef.ToPointer();
@@ -371,11 +384,12 @@ namespace Microsoft.Cci {
       *(pTypeDef+pchTypeDef) = (char)0;
       uint* pFlags = (uint*)pdwTypeDefFlags.ToPointer();
       *(pFlags) = PeWriter.GetTypeDefFlags(t.ResolvedType);
-      ITypeReference bc = null;
-      foreach (ITypeReference baseClassRef in t.ResolvedType.BaseClasses) bc = baseClassRef;
-      if (bc == null) return 0;
-      return (uint)this.writer.GetTypeToken(bc);
+      return parentToken;
     }
+    uint lastTd;
+    string lastTName;
+    uint lastParentToken;
+
     uint IMetaDataImport.GetInterfaceImplProps(uint iiImpl, out uint pClass) {
       throw new NotImplementedException();
     }
