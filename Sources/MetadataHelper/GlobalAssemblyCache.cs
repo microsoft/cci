@@ -14,12 +14,13 @@ using System.Text;
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci {
-#if !COMPACTFX
   /// <summary>
   /// Contains helper routines to query the GAC for the presence and locations of assemblies.
   /// </summary>
   public static class GlobalAssemblyCache {
+#if !COMPACTFX
     private static bool FusionLoaded;
+#endif
 
     /// <summary>
     /// Determines whether the GAC contains the specified code base URI.
@@ -28,6 +29,18 @@ namespace Microsoft.Cci {
     public static bool Contains(Uri codeBaseUri) {
       if (codeBaseUri == null) { Debug.Fail("codeBaseUri == null"); return false; }
       lock (GlobalLock.LockingObject) {
+#if COMPACTFX
+        var gacKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"\Software\Microsoft\.NETCompactFramework\Installer\Assemblies\Global");
+        if (gacKey == null) return false;
+        var codeBase = codeBaseUri.AbsoluteUri;
+        foreach (var gacName in gacKey.GetValueNames()) {
+          var values = gacKey.GetValue(gacName) as string[];
+          if (values == null || values.Length == 0) continue;
+          if (string.Equals(values[0], codeBase, StringComparison.OrdinalIgnoreCase)) return true;
+          if (values.Length > 1 && string.Equals(values[1], codeBase, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+#else
         if (!GlobalAssemblyCache.FusionLoaded) {
           GlobalAssemblyCache.FusionLoaded = true;
           System.Reflection.Assembly systemAssembly = typeof(object).Assembly;
@@ -57,6 +70,7 @@ namespace Microsoft.Cci {
           }
         }
         return false;
+#endif
       }
     }
 
@@ -66,6 +80,17 @@ namespace Microsoft.Cci {
     /// </summary>
     public static string/*?*/ GetLocation(AssemblyIdentity assemblyIdentity, IMetadataHost metadataHost) {
       lock (GlobalLock.LockingObject) {
+#if COMPACTFX
+        var gacKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"\Software\Microsoft\.NETCompactFramework\Installer\Assemblies\Global");
+        foreach (var gacName in gacKey.GetValueNames()) {
+          if (IdentityMatchesString(assemblyIdentity, gacName)) {
+            var values = gacKey.GetValue(gacName) as string[];
+            if (values == null || values.Length == 0) continue;
+            return values[0];
+          }
+        }
+        return null;
+#else
         if (!GlobalAssemblyCache.FusionLoaded) {
           GlobalAssemblyCache.FusionLoaded = true;
           System.Reflection.Assembly systemAssembly = typeof(object).Assembly;
@@ -94,9 +119,97 @@ namespace Microsoft.Cci {
           }
         }
         return null;
+#endif
       }
     }
 
+#if COMPACTX
+    private static bool IdentityMatchesString(AssemblyIdentity assemblyIdentity, string gacName) {
+      int n = gacName.Length;
+      var i = 0;
+      if (!MatchIgnoringCase(assemblyIdentity.Name.Value, ',', gacName, ref i, n)) return false;
+      while (i < n) {
+        char ch = gacName[i];
+        switch (ch) {
+          case 'v':
+          case 'V':
+            if (!MatchIgnoringCase("Version", '=', gacName, ref i, n)) return false;
+            if (!MatchDecimal(assemblyIdentity.Version.Major, '.', gacName, ref i, n)) return false;
+            if (!MatchDecimal(assemblyIdentity.Version.MajorRevision, '.', gacName, ref i, n)) return false;
+            if (!MatchDecimal(assemblyIdentity.Version.Minor, '.', gacName, ref i, n)) return false;
+            if (!MatchDecimal(assemblyIdentity.Version.MinorRevision, ',', gacName, ref i, n)) return false;
+            break;
+          case 'C':
+          case 'c':
+            if (!MatchIgnoringCase("Culture", '=', gacName, ref i, n)) return false;
+            var culture = assemblyIdentity.Culture;
+            if (culture.Length == 0) culture = "neutral";
+            if (!MatchIgnoringCase(culture, ',', gacName, ref i, n)) return false;
+            break;
+          case 'P':
+          case 'p':
+            if (!MatchIgnoringCase("PublicKeyToken", '=', gacName, ref i, n)) return false;
+            if (!MatchHex(assemblyIdentity.PublicKeyToken, ',', gacName, ref i, n)) return false;
+            break;
+          default:
+            return false;
+        }
+      }
+      return true;
+    }
+
+    private static bool MatchHex(IEnumerable<byte> bytes, char delimiter, string gacName, ref int i, int n) {
+      foreach (byte b in bytes) {
+        if (i >= n-1) return false;
+        var b1 = b >> 8;
+        var b2 = b & 0xF;
+        char c1 = b1 < 10 ? (char)(b1+'0') : (char)((b1-10)+'A');
+        char c2 = b2 < 10 ? (char)(b2+'0') : (char)((b2-10)+'A');
+        if (gacName[i++] != c1) return false;
+        if (gacName[i++] != c2) return false;
+      }
+      SkipBlanks(gacName, ref i, n);
+      if (i >= n) return true;
+      if (gacName[i++] != delimiter) return false;
+      SkipBlanks(gacName, ref i, n);
+      return true;
+    }
+
+    private static void SkipBlanks(string gacName, ref int i, int n) {
+      while (i < n && gacName[i] == ' ') i++;
+    }
+
+    private static bool MatchDecimal(int val, char delimiter, string gacName, ref int i, int n) {
+      int num = 0;
+      for (char ch = gacName[i++]; i < n; ) {
+        int d = ch - '0';
+        if (d < 0 || d > 9) return false;
+        num = num*10 + d;
+      }
+      if (num != val) return false;
+      SkipBlanks(gacName, ref i, n);
+      if (i >= n) return true;
+      if (gacName[i++] != delimiter) return false;
+      SkipBlanks(gacName, ref i, n);
+      return true;
+    }
+
+    private static bool MatchIgnoringCase(string str, char delimiter, string gacName, ref int i, int n) {
+      var m = str.Length;
+      int j = 0;
+      while (j < m && i < n) {
+        if (Char.ToLowerInvariant(str[j++]) != Char.ToLowerInvariant(gacName[i++])) return false;
+      }
+      if (j != m) return false;
+      SkipBlanks(gacName, ref i, n);
+      if (i >= n) return delimiter == ',';
+      if (gacName[i++] != delimiter) return false;
+      SkipBlanks(gacName, ref i, n);
+      return true;
+    }
+#endif
+
+#if !COMPACTFX
     [DllImport("kernel32.dll", CharSet=CharSet.Ansi)]
     private static extern IntPtr LoadLibrary(string lpFileName);
     [DllImport("fusion.dll", CharSet=CharSet.Auto)]
@@ -107,8 +220,10 @@ namespace Microsoft.Cci {
       public const uint GAC = 2;
       public const uint DOWNLOAD = 4;
     }
+#endif
   }
 
+#if !COMPACTFX
   internal class AssemblyName {
     IAssemblyName assemblyName;
 
