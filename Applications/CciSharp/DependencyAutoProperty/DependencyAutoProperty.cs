@@ -211,7 +211,7 @@ namespace CciSharp.Mutators
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute attribute;
-                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "DependencyPropertyAttribute", out attribute))
+                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "DependencyAutoPropertyAttribute", out attribute))
                     return propertyDefinition;
 
                 if (setter == null)
@@ -527,7 +527,7 @@ namespace CciSharp.Mutators
                 {
                     if (value.Type.InternedKey != this.booleanType.InternedKey)
                     {
-                        this.Host.Event(CcsEventLevel.Error, "DependencyPropertyAttribute.Validate must be a boolean type");
+                        this.Host.Event(CcsEventLevel.Error, "DependencyAutoPropertyAttribute.Validate must be a boolean type");
                         return false;
                     }
 
