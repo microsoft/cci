@@ -11647,13 +11647,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(ILogicalOr) method.
-    /// </summary>
-    public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
     /// Calls the visitor.Visit(LogicalOr) method.
     /// </summary>
     public override void Dispatch(SourceVisitor visitor) {
