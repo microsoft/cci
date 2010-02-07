@@ -201,7 +201,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       BoundField/*?*/ capturedThis;
       if (this.closureLocals.Count == 0 && this.FieldForCapturedLocalOrParameter.TryGetValue(this.method.ContainingTypeDefinition, out capturedThis)) {
         result.Fields.Add(capturedThis.Field);
-        capturedThis.Field.ContainingType = result;
+        capturedThis.Field.ContainingTypeDefinition = result;
         capturedThis.Field.Type = this.Visit(capturedThis.Field.Type);
       }
       return result;
@@ -217,7 +217,7 @@ namespace Microsoft.Cci.MutableCodeModel {
             captureOuterClosure = this.CaptureOuterClosure(closureClass);
         }
         FieldDefinition correspondingField = bf.Field;
-        correspondingField.ContainingType = closureClass;
+        correspondingField.ContainingTypeDefinition = closureClass;
         closureClass.Fields.Add(correspondingField);
         //this.cache.Add(correspondingField, correspondingField);
       }
@@ -238,7 +238,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       var outerClosureField = new FieldDefinition();
       closureClass.Fields.Add(outerClosureField);
       this.outerClosures.Insert(0, outerClosureField);
-      outerClosureField.ContainingType = closureClass;
+      outerClosureField.ContainingTypeDefinition = closureClass;
       outerClosureField.Name = this.host.NameTable.GetNameFor("__outerClosure " + (this.privateHelperTypes.Count - 1));
       outerClosureField.Type = outerClosureLocal.Type;
       outerClosureField.Visibility = TypeMemberVisibility.Public;
@@ -277,7 +277,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       result.Body = body;
       body.MethodDefinition = result;
       result.CallingConvention = CallingConvention.HasThis;
-      result.ContainingType = closureClass;
+      result.ContainingTypeDefinition = closureClass;
       result.IsCil = true;
       result.IsHiddenBySignature = true;
       result.IsRuntimeSpecial = true;
@@ -504,7 +504,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       var method = new MethodDefinition();
       this.CurrentClosureClass.Methods.Add(method);
       method.CallingConvention = anonymousDelegate.CallingConvention;
-      method.ContainingType = this.CurrentClosureClass;
+      method.ContainingTypeDefinition = this.CurrentClosureClass;
       method.IsCil = true;
       method.IsHiddenBySignature = true;
       if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) == 0)
@@ -1069,7 +1069,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       body.MethodDefinition = constructor;
       // Metadata of the constructor
       constructor.CallingConvention = CallingConvention.HasThis;
-      constructor.ContainingType = iteratorClosure.ClosureDefinition;
+      constructor.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       constructor.IsCil = true;
       constructor.IsHiddenBySignature = true;
       constructor.IsRuntimeSpecial = true;
@@ -1104,7 +1104,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       MethodDefinition moveNext = new MethodDefinition() {
         Name = this.host.NameTable.GetNameFor("MoveNext")
       };
-      moveNext.ContainingType = iteratorClosure.ClosureDefinition;
+      moveNext.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       moveNext.Visibility = TypeMemberVisibility.Private;
       moveNext.CallingConvention |= CallingConvention.HasThis;
       moveNext.Type = this.host.PlatformType.SystemBoolean;
@@ -1203,7 +1203,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       reset.Attributes.Add(debuggerHiddenAttribute);
       reset.CallingConvention |= CallingConvention.HasThis;
       reset.Visibility = TypeMemberVisibility.Private;
-      reset.ContainingType = iteratorClosure.ClosureDefinition;
+      reset.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       reset.Type = this.host.PlatformType.SystemVoid;
       reset.IsVirtual = true; 
       reset.IsNewSlot = true; 
@@ -1250,7 +1250,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       disposeMethod.Attributes.Add(new CustomAttribute() { Constructor = this.debuggerHiddenCtor });
       disposeMethod.CallingConvention |= CallingConvention.HasThis;
       disposeMethod.Visibility = TypeMemberVisibility.Public;
-      disposeMethod.ContainingType = iteratorClosure.ClosureDefinition;
+      disposeMethod.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       disposeMethod.Type = this.host.PlatformType.SystemVoid;
       disposeMethod.IsVirtual = true; 
       disposeMethod.IsNewSlot = true; 
@@ -1346,7 +1346,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute() { Constructor = this.DebuggerHiddenCtor };
       genericGetEnumerator.Attributes.Add(debuggerHiddenAttribute);
       genericGetEnumerator.CallingConvention |= CallingConvention.HasThis;
-      genericGetEnumerator.ContainingType = iteratorClosure.ClosureDefinition;
+      genericGetEnumerator.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       genericGetEnumerator.Visibility = TypeMemberVisibility.Public;
       genericGetEnumerator.Type = iteratorClosure.GenericIEnumeratorInterface;
       genericGetEnumerator.IsVirtual = true;
@@ -1498,7 +1498,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         new CustomAttribute() { Constructor = this.DebuggerHiddenCtor }
         );
       nongenericGetEnumerator.CallingConvention |= CallingConvention.HasThis;
-      nongenericGetEnumerator.ContainingType = iteratorClosure.ClosureDefinition;
+      nongenericGetEnumerator.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       nongenericGetEnumerator.Visibility = TypeMemberVisibility.Public;
       nongenericGetEnumerator.Type = iteratorClosure.NonGenericIEnumeratorInterface;
       nongenericGetEnumerator.IsVirtual = true;
@@ -1553,7 +1553,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       getterNonGenericCurrent.Attributes.Add(debuggerHiddenAttribute);
       getterNonGenericCurrent.CallingConvention |= CallingConvention.HasThis;
       getterNonGenericCurrent.Visibility |= TypeMemberVisibility.Public;
-      getterNonGenericCurrent.ContainingType = iteratorClosure.ClosureDefinition;
+      getterNonGenericCurrent.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       getterNonGenericCurrent.Type = this.host.PlatformType.SystemObject;
       getterNonGenericCurrent.IsSpecialName = true;
       getterNonGenericCurrent.IsVirtual = true;
@@ -1614,7 +1614,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       getterGenericCurrent.CallingConvention |= CallingConvention.HasThis;
       getterGenericCurrent.Visibility |= TypeMemberVisibility.Public;
-      getterGenericCurrent.ContainingType = iteratorClosure.ClosureDefinition;
+      getterGenericCurrent.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       getterGenericCurrent.Type = iteratorClosure.ElementType;
       getterGenericCurrent.IsSpecialName = true;
       getterGenericCurrent.IsVirtual = true;
@@ -1669,7 +1669,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         //  field.Type = method.ContainingTypeDefinition;
         field.Type = TypeDefinition.SelfInstance(method.ContainingTypeDefinition, this.host.InternFactory);
         field.Visibility = TypeMemberVisibility.Public;
-        field.ContainingType = iteratorClosure.ClosureDefinition;
+        field.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
         iteratorClosure.ThisField = field;
         BoundField boundField = new BoundField(field, iteratorClosure.ThisFieldReference.Type);
         this.FieldForCapturedLocalOrParameter.Add(new ThisReference(), boundField);
@@ -1678,7 +1678,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         FieldDefinition field = new FieldDefinition();
         field.Name = parameter.Name;
         field.Type = this.copyTypeToClosure.Visit(parameter.Type);
-        field.ContainingType = iteratorClosure.ClosureDefinition;
+        field.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
         field.Visibility = TypeMemberVisibility.Public;
         iteratorClosure.AddField(field);
         BoundField boundField = new BoundField(field, field.Type);
@@ -1690,7 +1690,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         field.Name = this.host.NameTable.GetNameFor("<>__" + local.Name.Value + this.privateHelperTypes.Count);
         field.Type = this.copyTypeToClosure.Visit(local.Type);
         field.Visibility = TypeMemberVisibility.Public;
-        field.ContainingType = iteratorClosure.ClosureDefinition;
+        field.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
         iteratorClosure.AddField(field);
         BoundField boundField = new BoundField(field, field.Type);
         this.FieldForCapturedLocalOrParameter.Add(local, boundField);
@@ -1700,21 +1700,21 @@ namespace Microsoft.Cci.MutableCodeModel {
       current.Name = this.host.NameTable.GetNameFor("<>__" + "current");
       current.Type = iteratorClosure.ElementType;
       current.Visibility = TypeMemberVisibility.Private;
-      current.ContainingType = iteratorClosure.ClosureDefinition;
+      current.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       iteratorClosure.CurrentField = current;
 
       FieldDefinition state = new FieldDefinition();
       state.Name = this.host.NameTable.GetNameFor("<>__" + "state");
       state.Type = this.host.PlatformType.SystemInt32;
       state.Visibility = TypeMemberVisibility.Private;
-      state.ContainingType = iteratorClosure.ClosureDefinition;
+      state.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       iteratorClosure.StateField = state;
 
       FieldDefinition initialThreadId = new FieldDefinition();
       initialThreadId.Name = this.host.NameTable.GetNameFor("<>__" + "l_initialThreadId");
       initialThreadId.Type = this.host.PlatformType.SystemInt32;
       initialThreadId.Visibility = TypeMemberVisibility.Private;
-      initialThreadId.ContainingType = iteratorClosure.ClosureDefinition;
+      initialThreadId.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       iteratorClosure.InitialThreadId = initialThreadId;
     }
 
