@@ -177,8 +177,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.underlyingContractProvider = new ContractProvider(contractMethods, unit);
       string pdbFile = Path.ChangeExtension(unit.Location, "pdb");
       if (File.Exists(pdbFile)) {
-        Stream pdbStream = File.OpenRead(pdbFile);
-        this.pdbReader = new PdbReader(pdbStream, host);
+        using (var pdbStream = File.OpenRead(pdbFile)) {
+          this.pdbReader = new PdbReader(pdbStream, host);
+        }
       }
       this.unit = unit;
     }
@@ -187,6 +188,18 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Disposes the PdbReader object, if any, that is used to obtain the source text locations corresponding to contracts.
     /// </summary>
     public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes the PdbReader object, if any, that is used to obtain the source text locations corresponding to contracts.
+    /// </summary>
+    ~LazyContractProvider() {
+      this.Close();
+    }
+
+    private void Close() {
       if (this.pdbReader != null)
         this.pdbReader.Dispose();
     }
@@ -479,6 +492,18 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Disposes any constituent contract providers that implement the IDisposable interface.
     /// </summary>
     public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes any constituent contract providers that implement the IDisposable interface. 
+    /// </summary>
+    ~AggregatingContractProvider() {
+      this.Close();
+    }
+
+    private void Close() {
       var primaryDisposable = this.primaryProvider as IDisposable;
       if (primaryDisposable != null) primaryDisposable.Dispose();
       foreach (var oobProvider in this.oobProviders) {
