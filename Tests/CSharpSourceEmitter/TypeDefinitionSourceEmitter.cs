@@ -69,7 +69,6 @@ namespace CSharpSourceEmitter {
       Visit(invokeMethod.Parameters);
 
       PrintToken(CSharpToken.Semicolon);
-      PrintToken(CSharpToken.NewLine);
     }
 
     public virtual void PrintTypeDefinitionAttributes(ITypeDefinition typeDefinition) {
@@ -107,8 +106,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeDefinitionModifiers(ITypeDefinition typeDefinition) {
-      // If it's abstract and sealed and has no ctors, then consider it to be a static class
-      // Perhaps we should check for the presense of CompilerServices.ExtensionAttribute instead
+      // If it's abstract and sealed and has no ctors, then it's a static class
       if (typeDefinition.IsStatic) {
         PrintKeywordStatic();
       } else {

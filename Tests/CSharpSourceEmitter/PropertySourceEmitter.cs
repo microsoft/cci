@@ -71,24 +71,27 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.LeftCurly);
       if (propertyDefinition.Getter != null) {
         PrintToken(CSharpToken.Indent);
-        PrintToken(CSharpToken.Get);
         var getMeth = propertyDefinition.Getter.ResolvedMethod;
-        if (getMeth.IsAbstract)
+        if (getMeth.Visibility != propertyDefinition.Visibility)
+          PrintTypeMemberVisibility(getMeth.Visibility);
+        PrintToken(CSharpToken.Get);
+        if (getMeth.IsAbstract || getMeth.IsExternal)
           PrintToken(CSharpToken.Semicolon);
         else
           Visit(getMeth.Body);
       }
       if (propertyDefinition.Setter != null) {
         PrintToken(CSharpToken.Indent);
-        PrintToken(CSharpToken.Set);
         var setMeth = propertyDefinition.Setter.ResolvedMethod;
-        if (setMeth.IsAbstract)
+        if (setMeth.Visibility != propertyDefinition.Visibility)
+          PrintTypeMemberVisibility(setMeth.Visibility);
+        PrintToken(CSharpToken.Set);
+        if (setMeth.IsAbstract || setMeth.IsExternal)
           PrintToken(CSharpToken.Semicolon);
         else
           Visit(setMeth.Body);
       }
       PrintToken(CSharpToken.RightCurly);
-      PrintToken(CSharpToken.NewLine);
     }
 
     public virtual void PrintPropertyDefinitionVisibility(IPropertyDefinition propertyDefinition) {

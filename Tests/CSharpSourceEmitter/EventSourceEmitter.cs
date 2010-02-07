@@ -26,7 +26,6 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.Space);
       PrintEventDefinitionName(eventDefinition);
       PrintToken(CSharpToken.Semicolon);
-      PrintToken(CSharpToken.NewLine);
     }
 
     public virtual void PrintEventDefinitionVisibility(IEventDefinition eventDefinition) {
