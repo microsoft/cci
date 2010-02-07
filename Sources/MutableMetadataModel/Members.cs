@@ -2866,7 +2866,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal TypeDefinitionMember() {
       this.attributes = new List<ICustomAttribute>();
-      this.containingType = Dummy.TypeReference;
+      this.containingTypeDefinition = Dummy.Type;
       this.locations = new List<ILocation>();
       this.name = Dummy.Name;
       this.flags = 0;
@@ -2879,7 +2879,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(ITypeDefinitionMember typeDefinitionMember, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(typeDefinitionMember.Attributes);
-      this.containingType = typeDefinitionMember.ContainingType;
+      this.containingTypeDefinition = typeDefinitionMember.ContainingTypeDefinition;
       this.locations = new List<ILocation>(typeDefinitionMember.Locations);
       this.name = typeDefinitionMember.Name;
       this.flags = (int)typeDefinitionMember.Visibility;
@@ -2899,11 +2899,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A reference to the containing type of the referenced type member.
     /// </summary>
     /// <value></value>
-    public ITypeReference ContainingType {
-      get { return this.containingType; }
-      set { this.containingType = value; }
+    public ITypeDefinition ContainingTypeDefinition {
+      get { return this.containingTypeDefinition; }
+      set { this.containingTypeDefinition = value; }
     }
-    ITypeReference containingType;
+    ITypeDefinition containingTypeDefinition;
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -2963,8 +2963,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The type definition that contains this member.
     /// </summary>
     /// <value></value>
-    public ITypeDefinition ContainingTypeDefinition {
-      get { return this.ContainingType.ResolvedType; }
+    ITypeReference ITypeMemberReference.ContainingType {
+      get {
+        if (this.ContainingTypeDefinition == Dummy.Type) return Dummy.TypeReference;
+        return this.ContainingTypeDefinition;
+      }
     }
 
     /// <summary>

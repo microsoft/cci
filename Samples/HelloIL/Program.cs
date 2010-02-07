@@ -43,7 +43,7 @@ namespace HelloCodeModel {
       testClass.BaseClasses.Add(host.PlatformType.SystemObject);
 
       var mainMethod = new MethodDefinition() {
-        ContainingType = testClass,
+        ContainingTypeDefinition = testClass,
         InternFactory = host.InternFactory,
         IsCil = true,
         IsStatic = true,

@@ -1687,7 +1687,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual GlobalFieldDefinition Visit(GlobalFieldDefinition globalFieldDefinition) {
       if (this.stopTraversal) return globalFieldDefinition;
-      this.path.Push(this.Visit(globalFieldDefinition.ContainingType));
+      this.path.Push(this.Visit(globalFieldDefinition.ContainingTypeDefinition));
       this.Visit((FieldDefinition)globalFieldDefinition);
       this.path.Pop();
       globalFieldDefinition.ContainingNamespace = this.GetCurrentNamespace();
@@ -1701,7 +1701,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual GlobalMethodDefinition Visit(GlobalMethodDefinition globalMethodDefinition) {
       if (this.stopTraversal) return globalMethodDefinition;
-      this.path.Push(this.Visit(globalMethodDefinition.ContainingType));
+      this.path.Push(this.Visit(globalMethodDefinition.ContainingTypeDefinition));
       this.Visit((MethodDefinition)globalMethodDefinition);
       this.path.Pop();
       globalMethodDefinition.ContainingNamespace = this.GetCurrentNamespace();
@@ -3106,7 +3106,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.stopTraversal) return typeDefinitionMember;
       this.path.Push(typeDefinitionMember);
       typeDefinitionMember.Attributes = this.Visit(typeDefinitionMember.Attributes);
-      typeDefinitionMember.ContainingType = this.GetCurrentType();
+      typeDefinitionMember.ContainingTypeDefinition = this.GetCurrentType();
       typeDefinitionMember.Locations = this.Visit(typeDefinitionMember.Locations);
       this.path.Pop();
       return typeDefinitionMember;
