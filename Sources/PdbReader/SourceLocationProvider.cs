@@ -37,6 +37,18 @@ namespace Microsoft.Cci {
     /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
     /// </summary>
     public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
+    /// </summary>
+    ~PdbReader() {
+      this.Close();
+    }
+
+    private void Close() {
       foreach (var source in this.sourceFilesOpenedByReader)
         source.Dispose();
     }
