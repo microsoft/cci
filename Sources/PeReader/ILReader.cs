@@ -615,12 +615,16 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               if (arrayType != null) {
                 if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
                   cilOpCode = OperationCode.Array_Set;
+                  value = arrayType;
                 } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Get.UniqueKey) {
                   cilOpCode = OperationCode.Array_Get;
+                  value = arrayType;
                 } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Address.UniqueKey) {
                   cilOpCode = OperationCode.Array_Addr;
+                  value = arrayType;
+                } else {
+                  value = methodReference;
                 }
-                value = arrayType;
               } else {
                 value = methodReference;
               }
@@ -733,12 +737,16 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               if (arrayType != null) {
                 if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
                   cilOpCode = OperationCode.Array_Set;
+                  value = arrayType;
                 } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Get.UniqueKey) {
                   cilOpCode = OperationCode.Array_Get;
+                  value = arrayType;
                 } else if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Address.UniqueKey) {
                   cilOpCode = OperationCode.Array_Addr;
+                  value = arrayType;
+                } else {
+                  value = methodReference;
                 }
-                value = arrayType;
               } else {
                 value = methodReference;
               }
