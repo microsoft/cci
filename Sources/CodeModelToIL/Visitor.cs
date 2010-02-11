@@ -857,45 +857,98 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="createArray">The create array.</param>
     public override void Visit(ICreateArray createArray) {
+      IEnumerator<int> bounds = createArray.LowerBounds.GetEnumerator();
+      bool hasOneOrMoreBounds = bounds.MoveNext();
+      bool hasMoreBounds = hasOneOrMoreBounds;
+      uint boundsEmitted = 0;
+      //
+      // For the case of rank > 1 the lower bounds and sizes are interleaved on the stack
+      //
       foreach (IExpression size in createArray.Sizes) {
+        // First the lower bound, if any
+        if (hasOneOrMoreBounds) {
+          if (hasMoreBounds) {
+            this.EmitConstant(bounds.Current);
+            hasMoreBounds = bounds.MoveNext();
+          }
+          else {
+            this.generator.Emit(OperationCode.Ldc_I4_0);
+            this.StackSize++;
+          }
+          boundsEmitted++;
+        }
         this.Visit(size);
         if (size.Type.TypeCode == PrimitiveTypeCode.Int64 || size.Type.TypeCode == PrimitiveTypeCode.UInt64)
           this.generator.Emit(OperationCode.Conv_Ovf_U);
       }
-      uint numLowerBounds = 0;
-      foreach (int lowerBound in createArray.LowerBounds) {
-        this.EmitConstant(lowerBound);
-        numLowerBounds++;
-      }
-      if (numLowerBounds > 0) {
-        while (numLowerBounds < createArray.Rank) {
-          this.generator.Emit(OperationCode.Ldc_I4_0);
-          numLowerBounds++;
-        }
-      }
+      //
+      // Now create the array
+      //
       IArrayTypeReference arrayType;
       OperationCode create;
-      if (numLowerBounds > 0) {
+      if (hasOneOrMoreBounds) {
         create = OperationCode.Array_Create_WithLowerBound;
         arrayType = Matrix.GetMatrix(createArray.ElementType, createArray.Rank, createArray.LowerBounds, ((IMetadataCreateArray)createArray).Sizes, this.host.InternFactory);
-      } else if (createArray.Rank > 1) {
+      }
+      else if (createArray.Rank > 1) {
         create = OperationCode.Array_Create;
         arrayType = Matrix.GetMatrix(createArray.ElementType, createArray.Rank, this.host.InternFactory);
-      } else {
+      }
+      else {
         create = OperationCode.Newarr;
         arrayType = Vector.GetVector(createArray.ElementType, this.host.InternFactory);
       }
       this.generator.Emit(create, arrayType);
-      this.StackSize -= (ushort)(createArray.Rank+numLowerBounds-1);
-      int i = 0;
-      foreach (IExpression elemValue in createArray.Initializers) {
-        this.generator.Emit(OperationCode.Dup);
-        this.StackSize++;
-        this.EmitConstant(i++);
-        this.Visit(elemValue);
-        this.StoreVectorElement(createArray.ElementType);
+      this.StackSize -= (ushort)(createArray.Rank + boundsEmitted - 1);
+      //
+      // Here we specialize according to rank == 1 or not.
+      //
+      if (createArray.Rank == 1) {
+        int i = 0;
+        foreach (IExpression elemValue in createArray.Initializers) {
+          this.generator.Emit(OperationCode.Dup);
+          this.StackSize++;
+          this.EmitConstant(i++);
+          this.Visit(elemValue);
+          this.StoreVectorElement(createArray.ElementType);
+        }
       }
-      //TODO: initialization of non vectors and initialization from compile time constant
+      else {
+        // Recurse over rank dimensions ...
+        int count = 0;
+        int[] indices = new int[createArray.Rank - 1];
+        foreach (IExpression element in createArray.Initializers) {
+          indices[0] = count++;
+          SetElements(element as ICreateArray, 1, indices, arrayType);
+        }
+      }
+    }
+
+    // Recurse over nested ICreateArray elements until the leaves are reached.
+    // At the leaf elements call Set() on the element [x, y, ... , N] where N 
+    // varies over the final IEnumerable<ElementType> object.  The indexing
+    // prefix [x, y, ... ] is accumulated during the incoming recursion.
+    private void SetElements(ICreateArray array, int depth, int[] indices, IArrayTypeReference type) {
+      if (depth == indices.Length) {
+        int count = 0;
+        foreach (IExpression elemValue in array.Initializers) {
+          this.generator.Emit(OperationCode.Dup);
+          this.StackSize++;
+          for (int i = 0; i < indices.Length; i++)
+            this.EmitConstant(indices[i]);
+          this.EmitConstant(count++);
+          this.Visit(elemValue);
+          this.generator.Emit(OperationCode.Array_Set, type);
+          this.StackSize -= (ushort)(depth + 3); // ArrayRef, (depth + 1), elem-value 
+        }
+      }
+      else { // Recurse deeper ...
+        int count = 0;
+        foreach (IExpression element in array.Initializers) {
+          indices[depth] = count++;
+          SetElements(element as ICreateArray, depth + 1, indices, type);
+        }
+      }
     }
 
     /// <summary>

@@ -126,10 +126,10 @@
   <data name="AssignmentLeftHandValueExpected" xml:space="preserve">
     <value>The left-hand side of an assignment must be a variable, property or indexer.</value>
   </data>
-  <data name="BadArgumentTypes">
+  <data name="BadArgumentTypes" xml:space="preserve">
     <value>The best overloaded method match for '{0}' has some invalid arguments.</value>
   </data>
-  <data name="BadArgumentType">
+  <data name="BadArgumentType" xml:space="preserve">
     <value>Argument '{0}': cannot convert from '{1}' to '{2}'.</value>
   </data>
   <data name="BadBinaryOperation" xml:space="preserve">
@@ -183,7 +183,7 @@
   <data name="ConstOutOfRange" xml:space="preserve">
     <value>Constant value '{0}' cannot be converted to a '{1}'.</value>
   </data>
-  <data name="ConstOutOfRangeChecked">
+  <data name="ConstOutOfRangeChecked" xml:space="preserve">
     <value>Constant value '{0}' cannot be converted to a '{1}' (use 'unchecked' syntax to override).</value>
   </data>
   <data name="ExpressionHasSideEffect" xml:space="preserve">
@@ -273,5 +273,14 @@
   </data>
   <data name="ExtensionMethodsOnlyInStaticClass" xml:space="preserve">
     <value>Extension methods must be defined in a top-level static class.</value>
+  </data>
+  <data name="ExplicitSizeDoesNotMatchInitializer" xml:space="preserve">
+    <value>Explicit array size {0} does not match array initializer dimension {1}.</value>
+  </data>
+  <data name="InitializerCountInconsistent" xml:space="preserve">
+    <value>This initializer element count {1} is different from count {0} in first element.</value>
+  </data>
+  <data name="MustBeConstInt" xml:space="preserve">
+    <value>Array sizes must be int32 constants if an initializer is supplied.</value>
   </data>
 </root>

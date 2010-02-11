@@ -2388,7 +2388,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Target.HasErrors || this.ConvertedSourceExpression is DummyExpression;
+      return this.Target.HasErrors || this.ConvertedSourceExpression is DummyExpression || this.ConvertedSourceExpression.HasErrors;
     }
 
     /// <summary>
@@ -6631,7 +6631,11 @@ namespace Microsoft.Cci.Ast {
       this.initializers = initializers;
       this.lowerBounds = new Expression[0];
       this.rank = 1;
-      this.sizes = new Expression[] { new CompileTimeConstant(IteratorHelper.EnumerableCount(initializers), SourceDummy.SourceLocation) };
+      // Note:
+      // The C# V3 spec only requires that if both sizes AND an initializer are given the sizes must match the initializers and be constant.
+      // However CSC rejects cases where the size expressions are not "int", but gives a "not constant" error message.
+      // Thus, to avoid failure of the CSC-compatible test, the EnumerableCount must be cast to int type.
+      this.sizes = new Expression[] { new CompileTimeConstant((int)IteratorHelper.EnumerableCount(initializers), SourceDummy.SourceLocation) };
     }
 
     /// <summary>
@@ -6656,13 +6660,169 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool result = this.Type == Dummy.Type;
-      if (!result && IteratorHelper.EnumerableCount(this.Initializers) > 0) {
-        // Need to check initializers define rectangular arrays if rank > 1.
-        // If Sizes is set then these must be constant and consistent with initializers.
-        // Elsewhere(?), compatibility of all values to the declared element type must be checked.
+      bool failed = this.Type == Dummy.Type;
+      if (!failed) {
+        uint sizeCount = IteratorHelper.EnumerableCount(this.Sizes);
+        uint initCount = IteratorHelper.EnumerableCount(this.Initializers);
+        ITypeDefinition elemType = this.ElementType.ResolvedType;
+
+        if (sizeCount > 0)
+          foreach (Expression size in this.Sizes)
+            failed |= size.HasErrors;
+        if (failed) return true;
+
+        if (initCount > 0) {
+          foreach (Expression init in this.Initializers)
+            failed |= init.HasErrors;
+          if (failed) return true;
+
+          foreach (Expression init in this.ConvertedInitializers)
+            failed |= init.HasErrors;
+          if (failed) return true;
+        }
+
+        AstErrorMessage message = null;
+        if (initCount > 0) {
+          // Check correctness of initializers.
+          if (this.Rank == 1) {
+            //   sizes must be 1 or zero. 
+            //   if size is one, that size must be constant and equal to the initializer count;
+            //   each intializer type must be compatible with array element type.
+            if (sizeCount != 0) {
+              Expression size0 = IteratorHelper.First<Expression>(this.Sizes);
+              object sizeValue = size0.Value;
+              if (sizeValue == null || !(sizeValue is int)) {
+                this.Helper.ReportError(new AstErrorMessage(size0, Error.MustBeConstInt)); // Size must be constant int
+                return true;
+              }
+              int size = (int)sizeValue;
+              if (size != (int)initCount) {
+                this.Helper.ReportError(new AstErrorMessage(size0, Error.ExplicitSizeDoesNotMatchInitializer, size.ToString(), initCount.ToString())); 
+                return true;
+              }
+            }
+          }
+          else if (this.rank > 1) {
+            //   each initializer must define an array of the same shape
+            //   if sizes is not empty, sizes must be constant and compatible with shape
+            //   each initializer leaf element must be compatible with element type.
+            IEnumerator<Expression> initializerEnumerator = this.Initializers.GetEnumerator();
+            initializerEnumerator.MoveNext(); // Guaranteed by if predicate "initCount > 0"
+            Expression elementZero = initializerEnumerator.Current;
+            while (initializerEnumerator.MoveNext()) {
+              Expression otherElement = initializerEnumerator.Current;
+              if (!CreateArray.SameShape(elementZero, otherElement, ref message)) {
+                this.Helper.ReportError(message); 
+                return true;
+              }
+            }
+            if (sizeCount != 0 && !this.SameStaticShape(ref message)) {
+              this.Helper.ReportError(message);
+              return true;
+            }
+          }
+        }
       }
-      return result;
+      return failed;
+    }
+
+    private void ConvertInitializers() {
+      ITypeDefinition elemType = this.ElementType.ResolvedType;
+      if (this.Rank == 1) {
+        List<Expression> convertedList = new List<Expression>();
+        foreach (Expression exp in this.Initializers) {
+          Expression convertedInit = this.Helper.ImplicitConversionInAssignmentContext(exp, elemType);
+          convertedList.Add(convertedInit);
+          if (convertedInit.HasErrors) {
+            this.Helper.ReportFailedImplicitConversion(exp, elemType);
+            this.hasErrors = true;
+          }
+        }
+        this.convertedInitializers = convertedList;
+      }
+      else {
+        CreateArray nestedCreate = null;
+        foreach (Expression exp in this.Initializers) {
+          if ((nestedCreate = exp as CreateArray) != null)
+            nestedCreate.ConvertInitializers();
+          else
+            nestedCreate.hasErrors = true;
+        }
+        this.convertedInitializers = this.Initializers;
+      }
+    }
+
+    /// <summary>
+    /// Compares the shape of the first element of the initializer against
+    /// another element of the initializer.  Called recursively to whatever
+    /// depth the initializer is nested.
+    /// </summary>
+    /// <param name="first">First element of initializer</param>
+    /// <param name="other">Other element of initializer</param>
+    /// <param name="message">Error object, if returning false</param>
+    /// <returns></returns>
+    private static bool SameShape(Expression first, Expression other, ref AstErrorMessage message) {
+      CreateArray sample = first as CreateArray;
+      CreateArray example = other as CreateArray;
+      if (sample == null && example == null)
+        return true;
+      int sampleCount = (sample == null ? 0 : (int)IteratorHelper.EnumerableCount(sample.Initializers));
+      int exampleCount = (example == null ? 0 : (int)IteratorHelper.EnumerableCount(example.Initializers));
+      if (sampleCount != exampleCount) {
+        message = new AstErrorMessage(other, Error.InitializerCountInconsistent, sampleCount.ToString(), exampleCount.ToString());
+        return false;
+      }
+      else {
+        IEnumerator<Expression> enumerator = sample.Initializers.GetEnumerator();
+        if (enumerator.MoveNext()) {
+          Expression elementZero = enumerator.Current;
+          while (enumerator.MoveNext())
+            if (!CreateArray.SameShape(elementZero, enumerator.Current, ref message))
+              return false;
+        }
+      }
+      return true;
+    }
+
+    /// <summary>
+    /// Recursively checks that each size expression is a compile time constant
+    /// matching the number of elements at the corresponding level in the initializer.
+    /// Also checks that size expressions are of int32 type.
+    /// </summary>
+    /// <returns>True if sizes match correctly</returns>
+    private bool SameStaticShape(ref AstErrorMessage message) {
+      IEnumerator<Expression> sizeEnumerator = this.Sizes.GetEnumerator();
+      return CreateArray.LengthMatches(1, this, sizeEnumerator, ref message);
+    }
+
+    private static bool LengthMatches(int depth, Expression expr, IEnumerator<Expression> sizes, ref AstErrorMessage message) {
+      // A match is achieved if the enumerator runs out at the same recursion level
+      // as expr is an ordinary expression rather than a nested CreateArray object.
+      CreateArray create = expr as CreateArray;
+      if (sizes.MoveNext()) {
+        object sizeValue;
+        Expression size = sizes.Current; // Size at this dimension.
+        CompileTimeConstant sizeConst = size as CompileTimeConstant;
+        if ((sizeConst == null) ||
+          ((sizeValue = sizeConst.Value) == null) ||
+          !(sizeValue is int)) {
+          message = new AstErrorMessage(size, Error.MustBeConstInt);
+          return false;
+        }
+        if (create == null) // Mismatching rank is detected and reported elsewhere.
+          return true;
+
+        int initCount = (int)IteratorHelper.EnumerableCount(create.Initializers);
+        int sizeCount = (int)sizeValue;
+        if (sizeCount != initCount) {
+          message = new AstErrorMessage(size, Error.ExplicitSizeDoesNotMatchInitializer, sizeCount.ToString(), initCount.ToString());
+          return false;
+        }
+        else
+          return CreateArray.LengthMatches(depth + 1, IteratorHelper.First(create.Initializers), sizes, ref message);
+      }
+      else 
+        return true;
     }
 
     /// <summary>
@@ -6825,6 +6985,20 @@ namespace Microsoft.Cci.Ast {
     readonly IEnumerable<Expression> initializers;
 
     /// <summary>
+    /// Returns the initializers, modified by any required implicit conversion
+    /// </summary>
+    public IEnumerable<Expression> ConvertedInitializers {
+      get { 
+        if (convertedInitializers == null)
+          this.ConvertInitializers();
+        return this.convertedInitializers;
+      }
+    }
+    private IEnumerable<Expression> convertedInitializers = null; 
+
+
+
+    /// <summary>
     /// A potentially empty list of expressions that supply lower bounds for the dimensions of the array instance.
     /// </summary>
     public IEnumerable<Expression> LowerBounds {
@@ -6908,9 +7082,9 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    //  Issue: Refactor this into seperate method for ProjectAsIExpression.
     IEnumerable<IExpression> ICreateArray.Initializers {
-      get { foreach (Expression initializer in this.Initializers) yield return initializer.ProjectAsIExpression(); }
+      // Return the converted initializers rather than initializers as parsed.
+      get { foreach (Expression initializer in this.ConvertedInitializers) yield return initializer.ProjectAsIExpression(); }
     }
 
     IEnumerable<int> ICreateArray.LowerBounds {

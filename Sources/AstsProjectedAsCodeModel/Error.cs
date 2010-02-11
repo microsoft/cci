@@ -217,6 +217,11 @@ namespace Microsoft.Cci.Ast {
     DuplicateResponseFile,
 
     /// <summary>
+    /// Explicit array size {0} does not match array initializer dimension {1}.
+    /// </summary>
+    ExplicitSizeDoesNotMatchInitializer,
+
+    /// <summary>
     /// Evaluating this expression has the side effect of modifying memory, which is not permitted in this context.
     /// </summary>
     ExpressionHasSideEffect,
@@ -240,6 +245,11 @@ namespace Microsoft.Cci.Ast {
     /// '{0}' is inaccessible due to its protection level.
     /// </summary>
     InaccessibleTypeMember,
+
+    /// <summary>
+    /// This initializer element count {1} is different from count {0} in first element.
+    /// </summary>
+    InitializerCountInconsistent,
   
     /// <summary>
     /// Code page '{0}' is invalid or not installed.
@@ -265,6 +275,11 @@ namespace Microsoft.Cci.Ast {
     /// Label '{0}' can not be found within the scope of the goto statement.
     /// </summary>
     LabelNotFound,
+
+    /// <summary>
+    /// Array sizes must be int32 constants if an initializer is supplied.
+    /// </summary>
+    MustBeConstInt,
 
     /// <summary>
     /// The name '{0}' does not exist in the current context.
