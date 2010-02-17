@@ -1126,7 +1126,7 @@ namespace Microsoft.Cci.Ast {
             }
           }
           //The constant cannot be converted to the target type without a loss of information
-          if (expression.ContainingBlock.UseCheckedArithmetic)
+          if (expression.ContainingBlock.UseCheckedArithmetic && TypeHelper.IsPrimitiveInteger(tt))
             //TODO: this should be !expression.ContainingBlock.UseUncheckedArithmetic, the latter being true only if an explicit unchecked expression is encountered
             return new DummyExpression(expression.SourceLocation);
         }
