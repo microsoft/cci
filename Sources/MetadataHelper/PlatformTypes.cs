@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -611,7 +611,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="assemblyReference">A reference to the assembly that contains the type for which a reference is desired.</param>
     /// <param name="names">The last entry of this array is the name of the type, the others are the names of the containing namespaces.</param>
-    protected INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, params string[] names) {
+    public INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, params string[] names) {
       return this.CreateReference(assemblyReference, false, 0, PrimitiveTypeCode.NotPrimitive, names);
     }
 
@@ -622,7 +622,7 @@ namespace Microsoft.Cci {
     /// <param name="assemblyReference">A reference to the assembly that contains the type for which a reference is desired.</param>
     /// <param name="isValueType">True if the referenced type is known to be a value type.</param>
     /// <param name="names">The last entry of this array is the name of the type, the others are the names of the containing namespaces.</param>
-    protected INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, bool isValueType, params string[] names) {
+    public INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, bool isValueType, params string[] names) {
       return this.CreateReference(assemblyReference, isValueType, 0, PrimitiveTypeCode.NotPrimitive, names);
     }
 
@@ -633,7 +633,7 @@ namespace Microsoft.Cci {
     /// <param name="assemblyReference">A reference to the assembly that contains the type for which a reference is desired.</param>
     /// <param name="typeCode">A code that identifies what kind of type is being referenced.</param>
     /// <param name="names">The last entry of this array is the name of the type, the others are the names of the containing namespaces.</param>
-    protected INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, PrimitiveTypeCode typeCode, params string[] names) {
+    public INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, PrimitiveTypeCode typeCode, params string[] names) {
       return this.CreateReference(assemblyReference, true, 0, typeCode, names);
     }
 
@@ -644,7 +644,7 @@ namespace Microsoft.Cci {
     /// <param name="assemblyReference">A reference to the assembly that contains the type for which a reference is desired.</param>
     /// <param name="genericParameterCount">The number of generic parameters, if any, that the type has must. Must be zero or more.</param>
     /// <param name="names">The last entry of this array is the name of the type, the others are the names of the containing namespaces.</param>
-    protected INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, ushort genericParameterCount, params string[] names) {
+    public INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, ushort genericParameterCount, params string[] names) {
       return this.CreateReference(assemblyReference, false, genericParameterCount, PrimitiveTypeCode.NotPrimitive, names);
     }
 
@@ -657,7 +657,7 @@ namespace Microsoft.Cci {
     /// <param name="genericParameterCount">The number of generic parameters, if any, that the type has must. Must be zero or more.</param>
     /// <param name="typeCode">A code that identifies what kind of type is being referenced.</param>
     /// <param name="names">The last entry of this array is the name of the type, the others are the names of the containing namespaces.</param>
-    protected INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, bool isValueType, ushort genericParameterCount, PrimitiveTypeCode typeCode, params string[] names) {
+    public INamespaceTypeReference CreateReference(IAssemblyReference assemblyReference, bool isValueType, ushort genericParameterCount, PrimitiveTypeCode typeCode, params string[] names) {
       IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
       for (int i = 0, n = names.Length-1; i < n; i++)
         ns = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor(names[i]));
@@ -667,7 +667,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A reference to the assembly that contains the types and methods used to encode information about code contracts.
     /// </summary>
-    protected IAssemblyReference ContractAssemblyRef {
+    public IAssemblyReference ContractAssemblyRef {
       get {
         if (this.contractAssemblyRef == null)
           this.contractAssemblyRef = new AssemblyReference(this.host, this.host.ContractAssemblySymbolicIdentity);
@@ -680,7 +680,7 @@ namespace Microsoft.Cci {
     /// A reference to the assembly that contains the system types that have special encodings in metadata. Usually mscorlib, but
     /// can be a different assembly on other non CLR based systems.
     /// </summary>
-    protected IAssemblyReference CoreAssemblyRef {
+    public IAssemblyReference CoreAssemblyRef {
       get {
         if (this.coreAssemblyRef == null)
           this.coreAssemblyRef = new AssemblyReference(this.host, this.host.CoreAssemblySymbolicIdentity);
@@ -692,7 +692,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A reference to the System.Core assembly.
     /// </summary>
-    protected IAssemblyReference SystemCoreAssemblyRef {
+    public IAssemblyReference SystemCoreAssemblyRef {
       get {
         if (this.systemCoreAssemblyRef == null)
           this.systemCoreAssemblyRef = new AssemblyReference(this.host, this.host.SystemCoreAssemblySymbolicIdentity);
