@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -42,10 +42,33 @@ namespace Microsoft.Cci {
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
     protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize)
+      : this(nameTable, new InternFactory(), pointerSize)
+      //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
+    {
+    }
+
+    /// <summary>
+    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// </summary>
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
+    /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
+    /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
+    /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
+    /// TypeHelper.TypeAlignment. If the host application does not care about the pointer size it can provide 0 as the value
+    /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
+    /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
+    /// </param>
+    /// <param name="factory">The intern factory to use when generating keys. When comparing two or more assemblies using
+    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.</param>
+    protected MetadataHostEnvironment(INameTable nameTable, IInternFactory factory, byte pointerSize)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
       this.nameTable = nameTable;
-      this.internFactory = new InternFactory();
+      this.internFactory = factory;
       this.pointerSize = pointerSize;
     }
 
@@ -231,7 +254,7 @@ namespace Microsoft.Cci {
     public IInternFactory InternFactory {
       get { return this.internFactory; }
     }
-    InternFactory internFactory;
+    IInternFactory internFactory;
 
     /// <summary>
     /// The assembly that matches the given reference, or a dummy assembly if no matching assembly can be found.
@@ -620,6 +643,29 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// </summary>
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
+    /// This is a provided as a parameter to the host environment in order to allow more than one host
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
+    /// <param name="factory">The intern factory to use when generating keys. When comparing two or more assemblies using
+    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.</param>
+    /// /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
+    /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
+    /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
+    /// TypeHelper.TypeAlignment. If the host application does not care about the pointer size it can provide 0 as the value
+    /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
+    /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
+    /// </param>
+    protected MetadataReaderHost(INameTable nameTable, IInternFactory factory, byte pointerSize)
+      : base(nameTable, factory, pointerSize)
+      //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
+    {
+    }
+
+    /// <summary>
     /// Adds a new directory (path) to the list of search paths for which
     /// to look in when searching for a unit to load.
     /// </summary>
@@ -684,11 +730,6 @@ namespace Microsoft.Cci {
         if (result != null) return result;
       }
 
-      // Check platform location
-      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
-      result = this.Probe(platformDir, referencedAssembly);
-      if (result != null) return result;
-
       // Check GAC
 #if !COMPACTFX
       if (this.SearchInGAC) {
@@ -698,6 +739,11 @@ namespace Microsoft.Cci {
         }
       }
 #endif
+
+      // Check platform location
+      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
+      result = this.Probe(platformDir, referencedAssembly);
+      if (result != null) return result;
 
       // Give up
       return new AssemblyIdentity(referencedAssembly, "unknown://location");
@@ -784,7 +830,8 @@ namespace Microsoft.Cci {
     public bool TryNextPermutation() {
       bool allPermutationsHaveBeenTried = true;
       if (this.currentWildGuesses != null) {
-        foreach (var key in this.currentWildGuesses.Keys) {
+        var keys = new List<uint>(this.currentWildGuesses.Keys);
+        foreach (var key in keys) {
           var oldValue = this.currentWildGuesses[key];
           if (oldValue == 4)
             this.currentWildGuesses[key] = 1;
