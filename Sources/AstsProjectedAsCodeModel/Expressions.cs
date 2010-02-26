@@ -4776,7 +4776,7 @@ namespace Microsoft.Cci.Ast {
       IMethodDefinition resolvedMethod = Dummy.Method;
       IEnumerable<IMethodDefinition> candidateMethods = this.GetCandidateMethods(false);
 
-      if (IteratorHelper.EnumerableCount(candidateMethods) > 0)
+      if (IteratorHelper.EnumerableIsNotEmpty(candidateMethods))
         resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, false);
       if (resolvedMethod == Dummy.Method &&
         (methodCall = this as MethodCall) != null && 
@@ -10120,7 +10120,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns a collection of methods that represents the overloads for ptr + index.
     /// </summary>
-    protected IEnumerable<IMethodDefinition> GetPointerAdditionMethods(ITypeDefinition indexedObjectElementType) {
+    protected virtual IEnumerable<IMethodDefinition> GetPointerAdditionMethods(ITypeDefinition indexedObjectElementType) {
       BuiltinMethods dummyMethods = this.Compilation.BuiltinMethods;
       yield return dummyMethods.GetDummyIndexerOp(indexedObjectElementType, this.PlatformType.SystemInt32.ResolvedType);
       yield return dummyMethods.GetDummyIndexerOp(indexedObjectElementType, this.PlatformType.SystemUInt32.ResolvedType);
