@@ -3311,7 +3311,9 @@ namespace Microsoft.Cci.Ast {
         }
         if (parameterType == null || parameterType == Dummy.Type) continue; //Not a valid conversion
         if (!this.ImplicitStandardConversionExists(sourceType, parameterType)) continue;
-        if (mostSpecificSourceType == null || TypeHelper.Type1DerivesFromType2(parameterType, mostSpecificSourceType)) {
+        if (mostSpecificSourceType == null || 
+            TypeHelper.Type1DerivesFromType2(parameterType, mostSpecificSourceType) ||
+            (this.ImplicitStandardConversionExists(parameterType, mostSpecificSourceType) && !this.ImplicitStandardConversionExists(mostSpecificSourceType, parameterType))) {
           mostSpecificSourceType = parameterType;
           mostSpecificTargetType = targetType;
           mostSpecificConversion = conversion;
