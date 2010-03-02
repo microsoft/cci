@@ -85,6 +85,59 @@ public class CodeModelRoundTripTests {
     RoundTripWithCodeMutator("System.Core.dll", "System.Core.pdb");
   }
 
+  [Fact]
+  public void MutableCopyModule() {
+    ExtractAndCompile("MutableCopyTest.cs");
+    RoundTripWithMetadataCopier("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  }
+
+  [Fact]
+  public void MutableCopyModuleIter() {
+    ExtractAndCompile("IteratorRoundTripTest.cs");
+    RoundTripWithMetadataCopier("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
+  }
+  [Fact]
+  public void MoreMutableCopies() {
+    Assert.True(File.Exists("QuickGraph.dll"));
+    this.RoundTripMutableCopyAndAddGenericParameter2("QuickGraph.dll");
+  }
+
+  [Fact]
+  public void AddGenericParameterMutableCopy() {
+    ExtractAndCompile("MutableCopyTest.cs");
+    this.RoundTripMutableCopyAndAddGenericParameter("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  }
+
+  [Fact]
+  public void AddGenericMethodParameterMutableCopy() {
+    ExtractAndCompile("GenericMethods.cs");
+    this.RoundTripAddGenericMethodParameter("GenericMethods.dll", "GenericMethods.pdb");
+  }
+
+  //[Fact]
+  //public void MutableCopyModuleIso() {
+  //  ExtractAndCompile("MutableCopyTest.cs");
+  //  RoundTripWithMetadataCopierIso("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  //}
+
+  //[Fact]
+  //public void MutableCopyModuleIterIso() {
+  //  ExtractAndCompile("IteratorRoundTripTest.cs");
+  //  RoundTripWithMetadataCopierIso("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
+  //}
+
+  [Fact]
+  public void AddGenericParameterMutableCopyIso() {
+    ExtractAndCompile("MutableCopyTest.cs");
+    this.RoundTripMutableCopyAndAddGenericParameterIso("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  }
+
+  [Fact]
+  public void CopyMarkedNodes() {
+    ExtractAndCompile("MutableCopyTest.cs");
+    this.RoundTripMutableCopyMarkedNodes("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  }
+
   CodeAndContractMutator CreateCodeMutator(IAssembly assembly, string pdbName) {
     return new CodeAndContractMutator(host, pdbReader, null);
   }
@@ -194,6 +247,99 @@ public class CodeModelRoundTripTests {
     Assert.True(File.Exists(assemblyName), string.Format("Failed to compile {0} from {1}", assemblyName, sourceFile));
   }
 
+  void RoundTripWithMetadataCopier(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        List<INamedTypeDefinition> list;
+        MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
+        codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+      }
+    }
+  }
+
+  void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly, PdbReader pdbReader) {
+    using (var rewrittenFile = File.Create(assembly.Location)) {
+      using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
+        PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
+      }
+    }
+    Assert.True(File.Exists(assembly.Location));
+    PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
+  }
+
+  void RoundTripMutableCopyAndAddGenericParameter2(string assemblyName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+    List<INamedTypeDefinition> list;
+    MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
+    codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
+    for (int i = 0; i < 30; i++) {
+      AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, i);
+      codeAssembly = (Assembly)adder.Visit(codeAssembly);
+    }
+    AssertWriteToPeFile(expectedResult, codeAssembly, null);
+  }
+
+  void RoundTripMutableCopyAndAddGenericParameter(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        List<INamedTypeDefinition> list;
+        MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
+        codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
+        AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, 0);
+        codeAssembly = (Assembly)adder.Visit(codeAssembly);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+      }
+    }
+  }
+
+  void RoundTripAddGenericMethodParameter(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        var adder = new AddGenericMethodParameters(host);
+        codeAssembly = (Assembly)adder.Visit(codeAssembly);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+      }
+    }
+  }
+
+  void RoundTripMutableCopyAndAddGenericParameterIso(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        //MetadataCopier copier1 = new MetadataCopier(host, codeAssembly);
+        //codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
+        AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, 0);
+        codeAssembly = (Assembly)adder.Visit(codeAssembly);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+      }
+    }
+  }
+
+  void RoundTripMutableCopyMarkedNodes(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var adder = new CopyMarkedNodes(host);
+        var codeAssembly = adder.Visit(assembly);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+      }
+    }
+  }
 } // class
 
 internal class HostEnvironment : MetadataReaderHost {
@@ -230,3 +376,711 @@ internal class HostEnvironment : MetadataReaderHost {
   }
 }
 
+/// <summary>
+/// Add a generic parameter to a selected type. 
+/// </summary>
+internal class AddGenericParameters : MutatingVisitor {
+  internal AddGenericParameters(IMetadataHost host, List<INamedTypeDefinition> alltypes, int number)
+    : base(host) {
+    this.allTypes = alltypes;
+    this.number = number;
+  }
+  List<INamedTypeDefinition> allTypes;
+  int number;
+  bool once = false;
+
+  protected List<INamedTypeDefinition> WithMoreGenericParameters(List<INamedTypeDefinition> ssc) {
+    Helper helper = new Helper(this.host);
+    foreach (var member in ssc) {
+      List<INamedTypeDefinition> list;
+      helper.AddDefinition(member, out list);
+      foreach (var t in list) this.allTypes.Add(t);
+      helper.AddGenericParamInPlace(member);
+    }
+    List<INamedTypeDefinition> result = new List<INamedTypeDefinition>();
+    foreach (var member in ssc) {
+      INamedTypeDefinition copy;
+      INestedTypeDefinition nested = member as INestedTypeDefinition;
+      if (nested != null) {
+        copy = helper.Substitute(nested);
+        // Change the references
+        var fixer = new ReferenceFixer(this.host, member, copy);
+        fixer.Visit((INestedTypeDefinition)copy);
+      } else {
+        INamespaceTypeDefinition nType = member as INamespaceTypeDefinition;
+        copy = helper.Substitute(nType);
+        // Change the references
+        var fixer = new ReferenceFixer(this.host, member, copy);
+        fixer.Visit((INamespaceTypeDefinition)copy);
+      }
+      result.Add(copy);
+    }
+    return result;
+  }
+
+  internal class Helper : MetadataCopier {
+    internal Helper(IMetadataHost host)
+      : base(host) {
+    }
+    public Dictionary<uint, IName> nameMapping = new Dictionary<uint, IName>();
+    public void AddGenericParamInPlace(INamedTypeDefinition old) {
+      if (old.IsGeneric) {
+        INamedTypeDefinition copy = null;
+        INestedTypeDefinition nested = old as INestedTypeDefinition;
+        if (nested != null) {
+          var nestedCopy = (NestedTypeDefinition)this.cache[old];
+          var oneMoreGP = new List<IGenericTypeParameter>();
+          var gp1 = new GenericTypeParameter() {
+            Name = this.host.NameTable.GetNameFor("_SX_"),
+            DefiningType = nestedCopy,
+            Index = 0
+          };
+          oneMoreGP.Add(gp1);
+          this.cache.Add(gp1, gp1);
+          foreach (var gp in old.GenericParameters) {
+            var newgp = new GenericTypeParameter();
+            newgp.Copy(gp, this.host.InternFactory);
+            newgp.Index = (ushort)(gp.Index + 1);
+            this.cache[gp] = newgp;
+            this.cache.Add(newgp, newgp);
+            oneMoreGP.Add(newgp);
+          }
+          nestedCopy.GenericParameters = oneMoreGP;
+          nestedCopy.Name = this.host.NameTable.GetNameFor(old.Name.Value + "<<>>");
+          copy = nestedCopy;
+        } else {
+          INamespaceTypeDefinition nType = old as INamespaceTypeDefinition;
+          if (nType != null) {
+            var nscopy = (NamespaceTypeDefinition)this.cache[old];
+            var oneMoreGP = new List<IGenericTypeParameter>();
+            var gp1 = new GenericTypeParameter() {
+              Name = this.host.NameTable.GetNameFor("_SX_"),
+              DefiningType = nscopy,
+              Index = 0
+            };
+            oneMoreGP.Add(gp1);
+            this.cache.Add(gp1, gp1);
+            foreach (var gp in old.GenericParameters) {
+              var newgp = new GenericTypeParameter();
+              newgp.Copy(gp, this.host.InternFactory);
+              newgp.Index = (ushort)(gp.Index + 1);
+              this.cache[gp] = newgp;
+              this.cache.Add(newgp, newgp);
+              oneMoreGP.Add(newgp);
+            }
+            nscopy.GenericParameters = oneMoreGP;
+            nscopy.Name = this.host.NameTable.GetNameFor(old.Name.Value + "<<>>");
+            copy = nscopy;
+          }
+        }
+        if (copy == null) throw new Exception();
+        this.nameMapping.Add(old.InternedKey, copy.Name);
+      }
+    }
+  }
+  internal class ReferenceFixer : MutatingVisitor {
+    internal ReferenceFixer(IMetadataHost host, INamedTypeDefinition root, INamedTypeDefinition newRoot)
+      : base(host) {
+      this.root = root;
+      this.newRoot = newRoot;
+    }
+    Dictionary<object, object> alreadyAdded = new Dictionary<object, object>();
+    INamedTypeDefinition root;
+    INamedTypeDefinition newRoot;
+
+    public override IGenericTypeInstanceReference Mutate(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      genericTypeInstanceReference = base.Mutate(genericTypeInstanceReference);
+      INamedTypeReference nestedTypeReference = genericTypeInstanceReference.GenericType as INamedTypeReference;
+      if (nestedTypeReference != null && nestedTypeReference.InternedKey == this.newRoot.InternedKey) {
+        if (!alreadyAdded.ContainsKey(genericTypeInstanceReference)) {
+          var newArgs = new List<ITypeReference>();
+          IGenericTypeParameter gtp = null;
+          foreach (var gp in this.newRoot.GenericParameters) {
+            gtp = gp; break;
+          }
+          newArgs.Add(gtp);
+          foreach (var arg in genericTypeInstanceReference.GenericArguments) {
+            newArgs.Add(arg);
+          }
+          var result = MutableModelHelper.GetGenericTypeInstanceReference(newArgs, genericTypeInstanceReference.GenericType, this.host.InternFactory, genericTypeInstanceReference);
+          alreadyAdded.Add(result, result);
+          return result;
+        }
+      }
+      return genericTypeInstanceReference;
+    }
+
+    public override IGenericTypeParameterReference Mutate(IGenericTypeParameterReference genericTypeParameterReference) {
+      genericTypeParameterReference = base.Mutate(genericTypeParameterReference);
+      INamedTypeReference nested = genericTypeParameterReference.DefiningType as INamedTypeReference;
+      if (nested != null && nested.InternedKey == this.newRoot.InternedKey) {
+        foreach (var gp in this.newRoot.GenericParameters) {
+          if (genericTypeParameterReference.Name == gp.Name) {
+            var result = MutableModelHelper.GetGenericTypeParameterReference(nested, genericTypeParameterReference.Name, gp.Index, this.host.InternFactory, genericTypeParameterReference);
+            return result;
+          }
+        }
+      }
+      return genericTypeParameterReference;
+    }
+
+    public override INestedTypeReference Mutate(INestedTypeReference nestedTypeReference) {
+      nestedTypeReference = base.Mutate(nestedTypeReference);
+      if (this.root.InternedKey == nestedTypeReference.InternedKey) {
+        var result = MutableModelHelper.GetNestedTypeReference(nestedTypeReference.ContainingType, this.newRoot.GenericParameterCount, nestedTypeReference.MangleName, this.newRoot.Name, this.host.InternFactory, nestedTypeReference);
+        return result;
+      }
+      return nestedTypeReference;
+    }
+
+    public override INamespaceTypeReference Mutate(INamespaceTypeReference namespaceTypeReference) {
+      namespaceTypeReference = base.Mutate(namespaceTypeReference);
+      if (this.root.InternedKey == namespaceTypeReference.InternedKey) {
+        var result = MutableModelHelper.GetNamespaceTypeReference(namespaceTypeReference.ContainingUnitNamespace, this.newRoot.GenericParameterCount, namespaceTypeReference.MangleName, this.newRoot.Name,
+          this.host.InternFactory, namespaceTypeReference);
+        return result;
+      }
+      return namespaceTypeReference;
+    }
+
+    public override ISpecializedNestedTypeReference Mutate(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      specializedNestedTypeReference = base.Mutate(specializedNestedTypeReference);
+      if (specializedNestedTypeReference.Name.UniqueKey != specializedNestedTypeReference.UnspecializedVersion.Name.UniqueKey) {
+        var result = MutableModelHelper.GetSpecializedNestedTypeReference(specializedNestedTypeReference.ContainingType, specializedNestedTypeReference.UnspecializedVersion.GenericParameterCount, specializedNestedTypeReference.MangleName,
+          specializedNestedTypeReference.UnspecializedVersion.Name, specializedNestedTypeReference.UnspecializedVersion, this.host.InternFactory, specializedNestedTypeReference);
+        return result;
+      }
+      return specializedNestedTypeReference;
+    }
+    public override IEventDefinition Visit(IEventDefinition eventDefinition) {
+      return base.Visit(eventDefinition);
+    }
+  }
+  public override NestedUnitNamespace Mutate(NestedUnitNamespace unitNamespace) {
+    if (!once) {
+      var newMembers = new List<INamedTypeDefinition>();
+      List<INamedTypeDefinition> ssc = new List<INamedTypeDefinition>();
+      int count = 0;
+      for (int i = 0, n = unitNamespace.Members.Count; i < n; i++) {
+        INamespaceTypeDefinition typ = unitNamespace.Members[i] as INamespaceTypeDefinition;
+        if (typ != null && typ.IsGeneric && !typ.Name.Value.Contains("<<>>")) {
+          once = true;
+          if (count == this.number) {
+            ssc.Add(typ);
+            break;
+          }
+          count++;
+        }
+      }
+      if (ssc.Count > 0) {
+        newMembers.AddRange(this.WithMoreGenericParameters(ssc));
+        foreach (var m in newMembers) {
+          unitNamespace.Members.Add((INamespaceTypeDefinition)m);
+        }
+      }
+    }
+    return base.Mutate(unitNamespace);
+  }
+}
+
+/// <summary>
+/// A simple test: add one generic parameter to generic methods.
+/// 
+/// B {
+///   f1[T] {
+///     call f1[T];
+///     call f2[T, T];
+///   }
+///   f2[T1, T2] {}
+/// } 
+/// 
+/// will become:
+/// 
+/// B {
+///   f1[T]... //unchanged
+///   new_f1[_SX, T] {
+///      call new_f1[_SX, T];
+///      call new_f2[_SX, T, T];
+///   }
+///   f2[T1, T2]// unchanged;
+///   new_f2[_SX, T1, T2] {}
+/// }
+/// </summary>
+internal class AddGenericMethodParameters : MutatingVisitor {
+  internal AddGenericMethodParameters(IMetadataHost host)
+    : base(host) {
+  }
+
+  public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition) {
+    NamespaceTypeDefinition mutableType = namespaceTypeDefinition;
+    var newMembers = new System.Collections.Generic.List<IMethodDefinition>();
+    List<IMethodDefinition> ssc = new List<IMethodDefinition>();
+    for (int i = 0, n = mutableType.Methods.Count; i < n; i++) {
+      var member = mutableType.Methods[i];
+      if (member.IsGeneric) {
+        ssc.Add(member);
+      }
+    }
+    this.WithMoreGenericParameters(ssc, mutableType.Methods);
+    foreach (var m in newMembers) {
+      mutableType.Methods.Add(m);
+    }
+    return base.Mutate(mutableType);
+  }
+
+  public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition) {
+    NestedTypeDefinition mutableType = nestedTypeDefinition;
+    var newMembers = new System.Collections.Generic.List<IMethodDefinition>();
+    List<IMethodDefinition> ssc = new List<IMethodDefinition>();
+    for (int i = 0, n = mutableType.Methods.Count; i < n; i++) {
+      var member = mutableType.Methods[i];
+      if (member.IsGeneric) {
+        ssc.Add(member);
+      }
+    }
+    this.WithMoreGenericParameters(ssc, mutableType.Methods);
+    foreach (var m in newMembers) {
+      mutableType.Methods.Add(m);
+    }
+    return base.Mutate(mutableType);
+  }
+
+  private void WithMoreGenericParameters(List<IMethodDefinition> ssc, List<IMethodDefinition> result) {
+    Helper helper = new Helper(this.host);
+    foreach (var member in ssc) {
+      List<INamedTypeDefinition> l;
+      helper.AddDefinition(member, out l);
+      helper.PopulateCache(member);
+    }
+    var list = new List<IMethodDefinition>();
+    foreach (var member in ssc) {
+      var copy = helper.Substitute(member);
+      result.Add(copy);
+      list.Add(copy);
+    }
+    foreach (var copy in list) {
+      var fixer = new ReferenceFixer(this.host, copy, helper.nameMapping, helper.methodCopies);
+      fixer.Visit(copy);
+    }
+  }
+
+  internal class Helper : MetadataCopier {
+    internal Helper(IMetadataHost host)
+      : base(host) {
+    }
+    public Dictionary<int, IMethodDefinition> methodCopies = new Dictionary<int, IMethodDefinition>();
+    public Dictionary<int, int> nameMapping = new Dictionary<int, int>();
+    public MethodDefinition PopulateCache(IMethodDefinition old) {
+      if (old.IsGeneric) {
+        var copy = new MethodDefinition();
+        copy.Copy(old, this.host.InternFactory);
+        var oneMoreGP = new List<IGenericMethodParameter>();
+        var gp1 = new GenericMethodParameter();
+        gp1.Name = this.host.NameTable.GetNameFor("_SX_");
+        gp1.DefiningMethod = copy;
+        gp1.Index = 0;
+        gp1.InternFactory = this.host.InternFactory;
+        oneMoreGP.Add(gp1);
+        this.cache.Add(gp1, gp1);
+        foreach (var gp in old.GenericParameters) {
+          var newgp = new GenericMethodParameter();
+          newgp.Copy(gp, this.host.InternFactory);
+          newgp.Index = (ushort)(gp.Index + 1);
+          this.cache[gp] = newgp;
+          this.cache.Add(newgp, newgp);
+          oneMoreGP.Add(newgp);
+        }
+        copy.GenericParameters = oneMoreGP;
+        copy.Name = this.host.NameTable.GetNameFor(old.Name.Value + "<<>>");
+        this.methodCopies.Add(copy.Name.UniqueKey, copy);
+        this.nameMapping.Add(old.Name.UniqueKey, copy.Name.UniqueKey);
+        this.cache[old] = copy;
+        this.cache.Add(copy, copy);
+        return copy;
+      }
+      return null;
+    }
+  }
+  class ReferenceFixer : MutatingVisitor {
+    internal ReferenceFixer(IMetadataHost host, IMethodDefinition root, Dictionary<int, int> nameMapping, Dictionary<int, IMethodDefinition> newMethods)
+      : base(host) {
+      this.root = root;
+      this.nameMapping = nameMapping;
+      this.newMethods = newMethods;
+    }
+    Dictionary<object, object> alreadyAdded = new Dictionary<object, object>();
+    Dictionary<int, IMethodDefinition> newMethods;
+    Dictionary<int, int> nameMapping;
+    IMethodDefinition root;
+
+    public override Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference Mutate(Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference genericMethodInstanceReference) {
+      genericMethodInstanceReference = base.Mutate(genericMethodInstanceReference);
+      if (genericMethodInstanceReference.Name.UniqueKey != genericMethodInstanceReference.GenericMethod.Name.UniqueKey) {
+        genericMethodInstanceReference.Name = genericMethodInstanceReference.GenericMethod.Name;
+      }
+      if (genericMethodInstanceReference.Name.Value.EndsWith("<<>>")) {
+        if (!alreadyAdded.ContainsKey(genericMethodInstanceReference)) {
+          var newArgs = new List<ITypeReference>();
+          // add the first generic parameter of the current method.
+          foreach (var gmpr in root.GenericParameters) {
+            newArgs.Add(gmpr);
+            break;
+          }
+          foreach (var arg in genericMethodInstanceReference.GenericArguments) {
+            newArgs.Add(arg);
+          }
+          genericMethodInstanceReference.GenericArguments = newArgs;
+          alreadyAdded.Add(genericMethodInstanceReference, genericMethodInstanceReference);
+        }
+      }
+      return genericMethodInstanceReference;
+    }
+
+    public override Microsoft.Cci.MutableCodeModel.MethodReference Mutate(Microsoft.Cci.MutableCodeModel.MethodReference methodReference) {
+      methodReference = base.Mutate(methodReference);
+      if (this.nameMapping.ContainsKey(methodReference.Name.UniqueKey)) {
+        int newMethodNameKey = this.nameMapping[methodReference.Name.UniqueKey];
+        methodReference.Name = this.newMethods[newMethodNameKey].Name;
+      }
+      return methodReference;
+    }
+
+    public override SpecializedMethodReference Mutate(SpecializedMethodReference specializedMethodReference) {
+      specializedMethodReference = base.Mutate(specializedMethodReference);
+      if (specializedMethodReference.Name.UniqueKey != specializedMethodReference.UnspecializedVersion.Name.UniqueKey) {
+        specializedMethodReference.Name = specializedMethodReference.UnspecializedVersion.Name;
+      }
+      return specializedMethodReference;
+    }
+
+    public override Microsoft.Cci.MutableCodeModel.GenericMethodParameterReference Mutate(Microsoft.Cci.MutableCodeModel.GenericMethodParameterReference genericMethodParameterReference) {
+      var result = base.Mutate(genericMethodParameterReference);
+      if (result.DefiningMethod.Name.Value.Contains("<<>>")) {
+        var definingMethodDef = this.newMethods[result.DefiningMethod.Name.UniqueKey];
+        foreach (var gpm in definingMethodDef.GenericParameters) {
+          if (gpm.Name.UniqueKey == genericMethodParameterReference.Name.UniqueKey) {
+            genericMethodParameterReference.Index = gpm.Index;
+            break;
+          }
+        }
+      }
+      return result;
+    }
+  }
+}
+
+
+/// <summary>
+/// To test mutable duplication of type definition members. 
+/// 
+/// Copy marked nodes: 
+///   C {
+///     [MarkedForCopy]
+///     f1;
+///     f2;
+///     [MarkedForCopy]
+///     m1();
+///     m2();
+///   }
+/// 
+/// We will have:
+/// 
+///   C {
+///     f1;
+///     f1's new copy;
+///     m1;
+///     m1's new copy;
+///     f2;
+///     m2;
+///   }
+/// 
+/// 
+/// 
+/// </summary>
+internal class CopyMarkedNodes : MutatingVisitor {
+  internal CopyMarkedNodes(IMetadataHost host)
+    : base(host) {
+  }
+
+  bool Marked(ITypeDefinitionMember definition) {
+    if (definition.Attributes != null) {
+      foreach (var attr in definition.Attributes) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition) {
+    var mutableType = namespaceTypeDefinition;
+    List<IMethodDefinition> methodsToDuplicate = new List<IMethodDefinition>();
+    List<IMethodDefinition> newMethods = new List<IMethodDefinition>();
+    for (int i = 0, n = mutableType.Methods.Count; i < n; i++) {
+      var member = mutableType.Methods[i];
+      if (Marked(member)) {
+        methodsToDuplicate.Add(member);
+      } else {
+        newMethods.Add(member);
+      }
+    }
+    MetadataCopier helper = new MetadataCopier(this.host);
+    foreach (var m in methodsToDuplicate) {
+      List<INamedTypeDefinition> list;
+      helper.AddDefinition(m, out list);
+    }
+    foreach (var m in methodsToDuplicate) {
+      var newm = helper.Substitute(m);
+      newMethods.Add(newm);
+    }
+    mutableType.Methods = newMethods;
+    List<IFieldDefinition> fieldsToDuplicate = new List<IFieldDefinition>();
+    var newFields = new List<IFieldDefinition>();
+    for (int i = 0, n = mutableType.Fields.Count; i < n; i++) {
+      var member = mutableType.Fields[i];
+      if (Marked(member)) {
+        fieldsToDuplicate.Add(member);
+      } else
+        newFields.Add(member);
+    }
+    helper = new MetadataCopier(this.host);
+    foreach (var f in fieldsToDuplicate) {
+      List<INamedTypeDefinition> list;
+      helper.AddDefinition(f, out list);
+    }
+    foreach (var f in fieldsToDuplicate) {
+      var newf = helper.Substitute(f);
+      newFields.Add(newf);
+    }
+    mutableType.Fields = newFields;
+    List<IPropertyDefinition> propertiesToDuplicate = new List<IPropertyDefinition>();
+    var newProperties = new List<IPropertyDefinition>();
+    for (int i = 0, n = mutableType.Properties.Count; i < n; i++) {
+      var member = mutableType.Properties[i];
+      if (Marked(member)) {
+        propertiesToDuplicate.Add(member);
+      } else newProperties.Add(member);
+    }
+    helper = new MetadataCopier(this.host);
+    foreach (var p in propertiesToDuplicate) {
+      List<INamedTypeDefinition> list;
+      helper.AddDefinition(p, out list);
+    }
+    foreach (var p in propertiesToDuplicate) {
+      var newp = helper.Substitute(p);
+      newProperties.Add(newp);
+    }
+    mutableType.Properties = newProperties;
+    return base.Mutate(mutableType);
+  }
+
+  public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition) {
+    NestedTypeDefinition mutableType = nestedTypeDefinition;
+    List<IMethodDefinition> methodsToDuplicate = new List<IMethodDefinition>();
+    List<IMethodDefinition> newMethods = new List<IMethodDefinition>();
+    for (int i = 0, n = mutableType.Methods.Count; i < n; i++) {
+      var member = mutableType.Methods[i];
+      if (Marked(member)) {
+        methodsToDuplicate.Add(member);
+      } else {
+        newMethods.Add(member);
+      }
+    }
+    MetadataCopier helper = new MetadataCopier(this.host);
+    foreach (var m in methodsToDuplicate) {
+      List<INamedTypeDefinition> list;
+      helper.AddDefinition(m, out list);
+    }
+    foreach (var m in methodsToDuplicate) {
+      var newm = helper.Substitute(m);
+      newMethods.Add(newm);
+    }
+    mutableType.Methods = newMethods;
+    List<IFieldDefinition> fieldsToDuplicate = new List<IFieldDefinition>();
+    var newFields = new List<IFieldDefinition>();
+    for (int i = 0, n = mutableType.Fields.Count; i < n; i++) {
+      var member = mutableType.Fields[i];
+      if (Marked(member)) {
+        fieldsToDuplicate.Add(member);
+      } else
+        newFields.Add(member);
+    }
+    helper = new MetadataCopier(this.host);
+    foreach (var f in fieldsToDuplicate) {
+      List<INamedTypeDefinition> ignore;
+      helper.AddDefinition(f, out ignore);
+    }
+    foreach (var f in fieldsToDuplicate) {
+      var newf = helper.Substitute(f);
+      newFields.Add(newf);
+    }
+    mutableType.Fields = newFields;
+    List<IPropertyDefinition> propertiesToDuplicate = new List<IPropertyDefinition>();
+    var newProperties = new List<IPropertyDefinition>();
+    for (int i = 0, n = mutableType.Properties.Count; i < n; i++) {
+      var member = mutableType.Properties[i];
+      if (Marked(member)) {
+        propertiesToDuplicate.Add(member);
+      } else newProperties.Add(member);
+    }
+    helper = new MetadataCopier(this.host);
+    foreach (var p in propertiesToDuplicate) {
+      List<INamedTypeDefinition> list;
+      helper.AddDefinition(p, out list);
+    }
+    foreach (var p in propertiesToDuplicate) {
+      var newp = helper.Substitute(p);
+      newProperties.Add(newp);
+    }
+    mutableType.Properties = newProperties;
+    return base.Mutate(mutableType);
+  }
+}
+
+// Ideally will use metadatatraverser. Use mutatingvisitor here to test it. 
+internal class FindItemsToCopy : MutatingVisitor {
+  IAssembly assembly;
+  internal FindItemsToCopy(IMetadataHost host, IAssembly assembly)
+    : base(host, true) {
+    this.assembly = assembly;
+  }
+  enum CopiableNode {
+    Module, GenericTypeParameter, GenericMethodParameter, ParameterDefinition, GlobalMethodDefinition,
+    GlobalFieldDefinition, RootUnitNamespace, NestedUnitNamespace
+  }
+  CopiableNode target;
+  internal void FindModuleToCopy() {
+    this.target = CopiableNode.Module;
+    this.copier = new MetadataCopier(this.host);
+    this.Visit((IModule)assembly);
+  }
+  internal void FindGenericTypeParameterToCopy() {
+    this.target = CopiableNode.GenericTypeParameter;
+    this.Visit(assembly);
+  }
+  internal void FindGenericMethodParameterToCopy() {
+    this.target = CopiableNode.GenericMethodParameter;
+    this.Visit(assembly);
+  }
+  internal void FindParameterDefinitionToCopy() {
+    this.target = CopiableNode.ParameterDefinition;
+    this.Visit(assembly);
+  }
+  internal void FindGlobalFieldDefinitionToCopy() {
+    this.target = CopiableNode.GlobalFieldDefinition;
+    this.Visit(assembly);
+  }
+  internal void FindGlobalMethodDefinitionToCopy() {
+    this.target = CopiableNode.GlobalMethodDefinition;
+    this.Visit(assembly);
+  }
+  internal void FindRootUnitNamespaceToCopy() {
+    this.target = CopiableNode.RootUnitNamespace;
+    this.Visit(assembly);
+  }
+  internal void FindNestedUnitNamespaceToCopy() {
+    this.target = CopiableNode.NestedUnitNamespace;
+    this.Visit(assembly);
+  }
+
+  MetadataCopier copier;
+
+  public override IModule Visit(IModule module) {
+    if (this.target == CopiableNode.Module) {
+      List<INamedTypeDefinition> list;
+      this.copier.AddDefinition(module, out list);
+      copier.Substitute(module);
+    }
+    return base.Visit(module);
+  }
+
+  public override INestedUnitNamespace Visit(INestedUnitNamespace nestedUnitNamespace) {
+    if (this.target == CopiableNode.NestedUnitNamespace) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, nestedUnitNamespace, out list);
+      return copier.Substitute(nestedUnitNamespace);
+    }
+    return base.Visit(nestedUnitNamespace);
+  }
+
+  public override IRootUnitNamespace Visit(IRootUnitNamespace rootUnitNamespace) {
+    if (this.target == CopiableNode.RootUnitNamespace) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, rootUnitNamespace, out list);
+      return copier.Substitute(rootUnitNamespace);
+    }
+    return base.Visit(rootUnitNamespace);
+  }
+
+  public override IGlobalFieldDefinition Visit(IGlobalFieldDefinition globalFieldDefinition) {
+    if (this.target == CopiableNode.GlobalFieldDefinition) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, globalFieldDefinition, out list);
+      return copier.Substitute(globalFieldDefinition);
+    }
+    return base.Visit(globalFieldDefinition);
+  }
+
+  public override IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
+    if (this.target == CopiableNode.GlobalMethodDefinition) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, globalMethodDefinition, out list);
+      return copier.Substitute(globalMethodDefinition);
+    }
+    return base.Visit(globalMethodDefinition);
+  }
+
+  public override IParameterDefinition Visit(IParameterDefinition parameterDefinition) {
+    if (this.target == CopiableNode.ParameterDefinition) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, parameterDefinition, out list);
+      return copier.Substitute(parameterDefinition);
+    }
+    return base.Visit(parameterDefinition);
+  }
+
+  public override IGenericMethodParameter Visit(IGenericMethodParameter genericMethodParameter) {
+    if (this.target == CopiableNode.GenericMethodParameter) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, genericMethodParameter, out list);
+      return copier.Substitute(genericMethodParameter);
+    }
+    return base.Visit(genericMethodParameter);
+  }
+
+  public override IGenericTypeParameter Visit(IGenericTypeParameter genericTypeParameter) {
+    if (this.target == CopiableNode.GenericTypeParameter) {
+      List<INamedTypeDefinition> list;
+      MetadataCopier copier = new MetadataCopier(host, genericTypeParameter, out list);
+      return copier.Substitute(genericTypeParameter);
+    }
+    return base.Visit(genericTypeParameter);
+  }
+
+  public override ITypeReference Visit(ITypeReference typeReference) {
+    if (this.target == CopiableNode.Module) {
+      this.copier.Substitute(typeReference);
+    }
+    return base.Visit(typeReference);
+  }
+
+  public override IAssemblyReference Visit(IAssemblyReference assemblyReference) {
+    if (this.target == CopiableNode.Module) {
+      this.copier.Substitute(assemblyReference);
+    }
+    return base.Visit(assemblyReference);
+  }
+
+  public override IFieldReference Visit(IFieldReference fieldReference) {
+    if (this.target == CopiableNode.Module) {
+      this.copier.Substitute(fieldReference);
+    }
+    return base.Visit(fieldReference);
+  }
+
+  public override IMethodReference Visit(IMethodReference methodReference) {
+    if (this.target == CopiableNode.Module) {
+      this.copier.Substitute(methodReference);
+    }
+    return base.Visit(methodReference);
+  }
+}
