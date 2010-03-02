@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -21,18 +21,6 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// Helper class for performing common tasks on mutable contracts
   /// </summary>
   public class ContractHelper {
-    /// <summary>
-    /// Accumulates all elements from <paramref name="sourceContract"/> into <paramref name="targetContract"/>
-    /// </summary>
-    /// <param name="targetContract">Contract which is target of accumulator</param>
-    /// <param name="sourceContract">Contract which is source of accumulator</param>
-    public static void AddMethodContract(MethodContract targetContract, IMethodContract sourceContract) {
-      targetContract.Preconditions.AddRange(sourceContract.Preconditions);
-      targetContract.Postconditions.AddRange(sourceContract.Postconditions);
-      targetContract.ThrownExceptions.AddRange(sourceContract.ThrownExceptions);
-      targetContract.IsPure |= sourceContract.IsPure; // need the disjunction
-      return;
-    }
     /// <summary>
     /// Accumulates all elements from <paramref name="sourceContract"/> into <paramref name="targetContract"/>
     /// </summary>
@@ -202,38 +190,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   }
 
-  /// <summary>
-  /// A mutator that substitutes parameters defined in one method with those from another method.
-  /// </summary>
-  public sealed class SubstituteParameters : MethodBodyCodeAndContractMutator {
-    private IMethodDefinition targetMethod;
-    private IMethodDefinition sourceMethod;
-    /// <summary>
-    /// Creates a mutator that replaces all occurrences of parameters from the target method with those from the source method.
-    /// </summary>
-    public SubstituteParameters(IMetadataHost host, IMethodDefinition targetMethodDefinition, IMethodDefinition sourceMethodDefinition)
-      : base(host, false) { // NB: Important to pass "false": this mutator needs to make a copy of the entire contract!
-      this.targetMethod = targetMethodDefinition;
-      this.sourceMethod = sourceMethodDefinition;
-    }
-
-    /// <summary>
-    /// Visits the specified bound expression.
-    /// </summary>
-    /// <param name="boundExpression">The bound expression.</param>
-    /// <returns></returns>
-    public override IExpression Visit(BoundExpression boundExpression) {
-      ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
-      if (par != null && par.ContainingSignature == this.sourceMethod) {
-        List<IParameterDefinition> parameters = new List<IParameterDefinition>(targetMethod.Parameters);
-        boundExpression.Definition = parameters[par.Index];
-        return boundExpression;
-      } else {
-        return base.Visit(boundExpression);
-      }
-    }
-  }
-
   internal class SimpleHostEnvironment : MetadataReaderHost {
     PeReader peReader;
     public SimpleHostEnvironment(INameTable nameTable)
@@ -250,13 +206,14 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   /// <summary>
-  /// An IMetadataHost which automatically loads reference assemblies and attaches
+  /// An IContractAwareHost which automatically loads reference assemblies and attaches
   /// a (code-contract aware, aggregating) lazy contract provider to each unit it loads.
   /// </summary>
-  public class CodeContractAwareHostEnvironment : MetadataReaderHost, IMetadataReaderHost {
+  public class CodeContractAwareHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
     readonly List<string> libPaths = new List<string>();
-    internal Dictionary<UnitIdentity, IContractProvider> unit2ContractProvider = new Dictionary<UnitIdentity, IContractProvider>();
+    internal Dictionary<UnitIdentity, IContractExtractor> unit2ContractProvider = new Dictionary<UnitIdentity, IContractExtractor>();
+    List<IContractProviderCallback> callbacks = new List<IContractProviderCallback>();
 
     #region Constructors
     /// <summary>
@@ -333,13 +290,21 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// If a unit has been loaded with this host, then it will have attached a (lazy) contract provider to that unit.
     /// This method returns that contract provider. If the unit has not been loaded by this host, then null is returned.
     /// </summary>
-    public IContractProvider/*?*/ GetContractProvider(UnitIdentity unitIdentity) {
-      IContractProvider cp;
+    public IContractExtractor/*?*/ GetContractProvider(UnitIdentity unitIdentity) {
+      IContractExtractor cp;
       if (this.unit2ContractProvider.TryGetValue(unitIdentity, out cp)) {
         return cp;
       } else {
         return null;
       }
+    }
+
+    /// <summary>
+    /// The host will register this callback with each contract provider it creates.
+    /// </summary>
+    /// <param name="contractProviderCallback"></param>
+    public void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback) {
+      this.callbacks.Add(contractProviderCallback);
     }
 
     /// <summary>
@@ -397,8 +362,8 @@ namespace Microsoft.Cci.ILToCodeModel {
               if (referenceUnit != null && referenceUnit != Dummy.Unit) {
                 IAssembly referenceAssembly = referenceUnit as IAssembly;
                 if (referenceAssembly != null) {
-                  IContractProvider referenceAssemblyContractProvider = new LazyContractProvider(hostForReferenceAssembly, referenceAssembly, contractMethods);
-                  referenceAssemblyContractProvider = new CodeContractsContractProvider(hostForReferenceAssembly, referenceAssemblyContractProvider);
+                  var referenceAssemblyContractProvider = new CodeContractsContractProvider(hostForReferenceAssembly,
+                    new LazyContractProvider(hostForReferenceAssembly, referenceAssembly, contractMethods));
                   oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
                 }
               }
@@ -408,6 +373,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           var aggregateContractProvider = new AggregatingContractProvider(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
           this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
           #endregion Load any reference assemblies for the loaded unit
+        }
+        foreach (var c in this.callbacks) {
+          contractProviderForLoadedUnit.RegisterContractProviderCallback(c);
         }
       }
     }

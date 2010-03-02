@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -520,6 +520,65 @@ namespace Microsoft.Cci.Contracts {
 
   }
 
+  /// <summary>
+  /// An object implements this interface so that it can be notified
+  /// by a contract extractor when a contract has been extracted. The
+  /// notification consists of a method's residual body (which includes
+  /// its operations) after the portion representing the contracts has
+  /// been extracted.
+  /// </summary>
+  public interface IContractProviderCallback {
+
+    /// <summary>
+    /// When a contract is extracted, the extractor calls this method
+    /// (if a callback object has been registered) with the part of the
+    /// method body that is left over after the contract has been removed.
+    /// </summary>
+    void ProvideResidualMethodBody(IMethodDefinition methodDefinition, ISourceMethodBody/*?*/ sourceMethodBody);
+
+  }
+
+  /// <summary>
+  /// A contract provider that, when asked for a method contract, extracts
+  /// it from the method and uses a callback to notify clients with
+  /// the remaining method body.
+  /// </summary>
+  public interface IContractExtractor : IContractProvider {
+
+    /// <summary>
+    /// After the callback has been registered, when a contract is extracted
+    /// from a method, the callback will be notified.
+    /// </summary>
+    void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback);
+  
+  }
+
+  /// <summary>
+  /// A host that automatically attaches a contract extractor to each unit that it loads.
+  /// </summary>
+  public interface IContractAwareHost : IMetadataHost {
+
+    /// <summary>
+    /// Adds a new directory (path) to the list of search paths for which
+    /// to look in when searching for a unit to load.
+    /// </summary>
+    void AddLibPath(string path);
+
+    /// <summary>
+    /// If the unit with the specified identity has been loaded with this host,
+    /// then it will have attached a contract provider to that unit.
+    /// This method returns that contract provider.
+    /// If the unit has not been loaded by this host, then null is returned.
+    /// </summary>
+    IContractExtractor/*?*/ GetContractProvider(UnitIdentity unitIdentity);
+
+    /// <summary>
+    /// The host will register this callback with each contract provider it creates.
+    /// </summary>
+    void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback);
+
+  }
+
 #pragma warning disable 1591
 
   public static class ContractDummy {
@@ -670,7 +729,7 @@ namespace Microsoft.Cci.Contracts {
 
     public bool HasErrors {
       get {
-        return true;
+        return false;
       }
     }
 
