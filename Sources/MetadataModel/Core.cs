@@ -589,6 +589,10 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface IMetadataVisitor {
     /// <summary>
+    /// Performs some computation with the alias for type.
+    /// </summary>
+    void Visit(IAliasForType aliasForType);
+    /// <summary>
     /// Performs some computation with the given array type reference.
     /// </summary>
     void Visit(IArrayTypeReference arrayTypeReference);

@@ -1570,6 +1570,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="aliasForType">Type of the alias for.</param>
     public virtual void Visit(IAliasForType aliasForType) {
+      //IAliasForType is a base interface that should never be implemented directly.
+      //Get aliasForType to call the most type specific visitor.
       aliasForType.Dispatch(this);
     }
 
@@ -1732,6 +1734,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="expression"></param>
     public virtual void Visit(IMetadataExpression expression) {
+      //IMetadataExpression is a base interface that should never be implemented directly.
+      //Get expression to call the most type specific visitor.
       expression.Dispatch(this);
     }
 
@@ -1810,6 +1814,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="namespaceDefinition">The namespace definition.</param>
     public virtual void Visit(INamespaceDefinition namespaceDefinition) {
+      //INamespaceDefinition is a base interface that should never be implemented directly.
+      //Get namespaceDefinition to call the most type specific visitor.
       namespaceDefinition.Dispatch(this);
     }
 
@@ -1818,6 +1824,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="namespaceMember">The namespace member.</param>
     public virtual void Visit(INamespaceMember namespaceMember) {
+      //INamespaceMember is a base interface that should never be implemented directly.
+      //Get namespaceMember to call the most type specific visitor.
       namespaceMember.Dispatch(this);
     }
 
@@ -1945,6 +1953,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="typeMember">The type member.</param>
     public virtual void Visit(ITypeDefinitionMember typeMember) {
+      //ITypeDefinitionMember is a base interface that should never be implemented directly.
+      //Get typeMember to call the most type specific visitor.
       typeMember.Dispatch(this);
     }
 
@@ -1953,6 +1963,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="typeReference">The type reference.</param>
     public virtual void Visit(ITypeReference typeReference) {
+      //ITypeReference is a base interface that should never be implemented directly.
+      //Get typeReference to call the most type specific visitor.
       typeReference.Dispatch(this);
     }
 
@@ -1961,6 +1973,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unit">The unit.</param>
     public virtual void Visit(IUnit unit) {
+      //IUnit is a base interface that should never be implemented directly.
+      //Get unit to call the most type specific visitor.
       unit.Dispatch(this);
     }
 
@@ -1969,6 +1983,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unitReference">The unit reference.</param>
     public virtual void Visit(IUnitReference unitReference) {
+      //IUnitReference is a base interface that should never be implemented directly.
+      //Get unitReference to call the most type specific visitor.
       unitReference.Dispatch(this);
     }
 
@@ -1977,6 +1993,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unitNamespaceReference">The unit namespace reference.</param>
     public virtual void Visit(IUnitNamespaceReference unitNamespaceReference) {
+      //IUnitNamespaceReference is a base interface that should never be implemented directly.
+      //Get unitNamespaceReference to call the most type specific visitor.
       unitNamespaceReference.Dispatch(this);
     }
 
@@ -1992,6 +2010,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unitSetNamespace">The unit set namespace.</param>
     public virtual void Visit(IUnitSetNamespace unitSetNamespace) {
+      //IUnitSetNamespace is a base interface that should never be implemented directly.
+      //Get unitSetNamespace to call the most type specific visitor.
       unitSetNamespace.Dispatch(this);
     }
 

@@ -89,6 +89,7 @@
     <Compile Include="..\common\include\version.cs">
       <Link>Build\version.cs</Link>
     </Compile>
+    <Compile Include="Copier.cs" />
     <Compile Include="Expressions.cs" />
     <Compile Include="Members.cs" />
     <Compile Include="Miscellaneous.cs" />
