@@ -466,6 +466,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IGenericTypeParameterReference Visit(IGenericTypeParameterReference genericTypeParameterReference) {
       return this.Visit(this.GetMutableCopy(genericTypeParameterReference));
     }
+    public override IGenericMethodParameterReference Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+      return this.Visit(this.GetMutableCopy(genericMethodParameterReference));
+    }
     #endregion Types
 
     #region Methods
