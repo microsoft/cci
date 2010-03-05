@@ -187,6 +187,27 @@ namespace Microsoft.Cci.ILToCodeModel {
       return new NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, PrimitiveTypeCode.NotPrimitive);
     }
 
+    /// <summary>
+    /// Returns true iff the type definition is a contract class for an interface or abstract class.
+    /// </summary>
+    public static bool IsContractClass(IMetadataHost host, ITypeDefinition typeDefinition) {
+      if (contractClassFor == null) {
+        contractClassFor = CreateTypeReference(host, new AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractClassForAttribute");
+      }
+      return AttributeHelper.Contains(typeDefinition.Attributes, contractClassFor);
+    }
+    private static INamespaceTypeReference contractClassFor = null;
+
+    /// <summary>
+    /// Returns true iff the method definition is an invariant method.
+    /// </summary>
+    public static bool IsInvariantMethod(IMetadataHost host, IMethodDefinition methodDefinition) {
+      if (contractInvariantMethod == null) {
+        contractInvariantMethod = CreateTypeReference(host, new AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
+      }
+      return AttributeHelper.Contains(methodDefinition.Attributes, contractInvariantMethod);
+    }
+    private static INamespaceTypeReference contractInvariantMethod = null;
 
   }
 
