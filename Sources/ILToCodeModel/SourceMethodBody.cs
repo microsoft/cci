@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -858,7 +858,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       switch (currentOperation.OperationCode) {
         case OperationCode.Box:
-          result.TypeAfterConversion = this.platformType.SystemObject; break;
+          ((Expression)result.ValueToConvert).Type = (ITypeReference)currentOperation.Value;
+          result.TypeAfterConversion = this.platformType.SystemObject;
+          break;
         case OperationCode.Castclass:
           result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
         case OperationCode.Conv_I:
@@ -972,7 +974,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression ParseMakeTypedReference(IOperation currentOperation) {
       MakeTypedReference result = new MakeTypedReference();
       Expression operand  = this.PopOperandStack();
-      operand.Type = ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory);
+      var type = (ITypeReference)currentOperation.Value;
+      if (type.IsValueType)
+        type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+      operand.Type = type;
       result.Operand = operand;
       return result;
     }
@@ -1643,4 +1648,5 @@ namespace Microsoft.Cci.ILToCodeModel {
       return MoveNextToIteratorBlockTransformer.Transform(iteratorMethodBody.MethodDefinition, this.ilMethodBody.MethodDefinition, rootBlock, this.host);
     }
   }
+
 }

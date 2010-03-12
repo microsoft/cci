@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -88,8 +88,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
 
       if (this.isNormalized) {
-        var converter = new CodeModelToILConverter(this.host, this.sourceLocationProvider, this.contractProvider, this.iteratorLocalCount);
-        converter.ConvertToIL(this.MethodDefinition, this.Block);
+        var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.contractProvider, this.iteratorLocalCount);
+        converter.ConvertToIL(this.Block);
         iteratorScopes = converter.GetIteratorScopes();
         localVariables = converter.GetLocalVariables();
         maxStack = converter.MaximumStackSizeNeeded;

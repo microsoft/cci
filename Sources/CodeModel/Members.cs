@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -42,10 +42,11 @@ namespace Microsoft.Cci {
     /// types (for example closure classes) that represent the semantics of the given block of statements.
     /// The results of the traversal can be retrieved via the GetOperations, GetOperationExceptionInformation
     /// and GetPrivateHelperTypes methods.
+    /// It is assumed that any implementation of this interface will already have a reference to the method the body is
+    /// contained in before this method is called.
     /// </summary>
-    /// <param name="method">A method that provides the context for a block of statments that are to be converted to IL.</param>
     /// <param name="body">A block of statements that are to be converted to IL.</param>
-    void ConvertToIL(IMethodDefinition method, IBlockStatement body);
+    void ConvertToIL(IBlockStatement body);
 
     /// <summary>
     /// Returns all of the local variables (including compiler generated temporary variables) that are local to the block

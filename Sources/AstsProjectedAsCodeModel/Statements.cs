@@ -3474,6 +3474,14 @@ namespace Microsoft.Cci.Ast {
     readonly LocalDeclaration localDeclaration;
 
     /// <summary>
+    /// The definition of the method in which this local is defined.
+    /// </summary>
+    public IMethodDefinition MethodDefinition {
+      get { return this.LocalDeclaration.LocalVariable.MethodDefinition; }
+    }
+    IMethodDefinition methodDefinition;
+
+    /// <summary>
     /// The name of the local.
     /// </summary>
     public IName Name {

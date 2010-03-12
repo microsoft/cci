@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -16,8 +16,9 @@ using Microsoft.Cci;
 namespace Microsoft.Cci {
   internal sealed class TemporaryVariable : ILocalDefinition {
 
-    internal TemporaryVariable(ITypeReference type) {
+    internal TemporaryVariable(ITypeReference type, IMethodDefinition containingMethod) {
       this.type = type;
+      this.methodDefinition = containingMethod;
     }
 
     public IMetadataConstant CompileTimeValue {
@@ -51,6 +52,12 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.methodDefinition; }
+    }
+    IMethodDefinition methodDefinition;
+
 
     public ITypeReference Type {
       get { return this.type; }

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -28,13 +28,15 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider)
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider)
       : base(contractProvider) {
-      this.generator = new ILGenerator(host);
+      this.generator = new ILGenerator(host, method);
       this.host = host;
+      this.method = method;
       this.sourceLocationProvider = sourceLocationProvider;
       this.minizeCodeSize = true;
     }
@@ -45,14 +47,16 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount)
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount)
       : base(contractProvider) {
-      this.generator = new ILGenerator(host);
+      this.generator = new ILGenerator(host, method);
       this.host = host;
+      this.method = method;
       this.sourceLocationProvider = sourceLocationProvider;
       this.minizeCodeSize = true;
       this.iteratorLocalCount = iteratorLocalCount;
@@ -74,7 +78,7 @@ namespace Microsoft.Cci {
     Dictionary<int, ILGeneratorLabel> labelFor = new Dictionary<int, ILGeneratorLabel>();
     bool lastStatementWasUnconditionalTransfer;
     Dictionary<ILocalDefinition, ushort> localIndex = new Dictionary<ILocalDefinition, ushort>();
-    IMethodDefinition method = Dummy.Method;
+    IMethodDefinition method;
     bool minizeCodeSize;
     Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor = new Dictionary<object, ITryCatchFinallyStatement>();
     ILocalDefinition/*?*/ returnLocal;
@@ -171,9 +175,14 @@ namespace Microsoft.Cci {
         this.LoadAddressOf(targetExpression.Definition, targetExpression.Instance);
         return;
       }
+      IAddressOf addressOfExpression = container as IAddressOf;
+      if (addressOfExpression != null) {
+        this.LoadAddressOf(addressOfExpression.Expression, addressOfExpression);
+        return;
+      }
       IExpression/*?*/ expression = container as IExpression;
       if (expression != null) {
-        TemporaryVariable temp = new TemporaryVariable(expression.Type);
+        TemporaryVariable temp = new TemporaryVariable(expression.Type, this.method);
         this.Visit(expression);
         this.VisitAssignmentTo(temp);
         this.LoadAddressOf(temp, null);
@@ -182,13 +191,13 @@ namespace Microsoft.Cci {
       Debug.Assert(false);
     }
 
-    private void LoadField(byte alignment, bool isVolatile, IExpression/*?*/ instance, IFieldReference field) {
+    private void LoadField(byte alignment, bool isVolatile, IExpression/*?*/ instance, IFieldReference field, bool fieldIsStatic) {
       if (alignment != 0)
         this.generator.Emit(OperationCode.Unaligned_, alignment);
       if (isVolatile)
         this.generator.Emit(OperationCode.Volatile_);
       if (instance == null) {
-        if (field.ResolvedField.IsStatic) {
+        if (fieldIsStatic) {
           this.generator.Emit(OperationCode.Ldsfld, field);
           this.StackSize++;
         } else
@@ -291,7 +300,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt32: opcode = OperationCode.Ldind_U4; break;
         case PrimitiveTypeCode.UInt64: opcode = OperationCode.Ldind_I8; break;
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Ldind_U1; break;
-        case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Ldind_I8; break;
+        case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Ldind_I; break;
         default:
           if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, addressDereference.Type.PlatformType.SystemObject)) {
             this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
@@ -363,7 +372,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Ldelem_I1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Ldelem_I; break;
         default:
-          if (typeReference.IsValueType || typeReference is IGenericTypeParameterReference) {
+          if (typeReference.IsValueType || typeReference is IGenericParameterReference) {
             this.generator.Emit(OperationCode.Ldelem, typeReference);
             return;
           }
@@ -483,7 +492,7 @@ namespace Microsoft.Cci {
             this.StackSize-=2;
           }
           if (!treatAsStatement)
-            this.LoadField(assignment.Target.IsUnaligned ? assignment.Target.Alignment : (byte)0, assignment.Target.IsVolatile, null, field);
+            this.LoadField(assignment.Target.IsUnaligned ? assignment.Target.Alignment : (byte)0, assignment.Target.IsVolatile, null, field, assignment.Target.Instance == null);
         }
         return;
       }
@@ -506,7 +515,7 @@ namespace Microsoft.Cci {
           this.Visit(assignment.Source);
           ILocalDefinition/*?*/ temp = null;
           if (!treatAsStatement) {
-            temp = new TemporaryVariable(assignment.Source.Type);
+            temp = new TemporaryVariable(assignment.Source.Type, this.method);
             this.VisitAssignmentTo(temp);
             this.LoadLocal(temp);
           }
@@ -547,7 +556,7 @@ namespace Microsoft.Cci {
           this.Visit(assignment.Source);
           ILocalDefinition/*?*/ temp = null;
           if (!treatAsStatement) {
-            temp = new TemporaryVariable(assignment.Source.Type);
+            temp = new TemporaryVariable(assignment.Source.Type, this.method);
             this.VisitAssignmentTo(temp);
             this.LoadLocal(temp);
           }
@@ -578,7 +587,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Stelem_I1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Stelem_I; break;
         default:
-          if (elementTypeReference.IsValueType || elementTypeReference is IGenericTypeParameterReference) {
+          if (elementTypeReference.IsValueType || elementTypeReference is IGenericParameterReference) {
             this.generator.Emit(OperationCode.Stelem, elementTypeReference);
             return;
           }
@@ -610,7 +619,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Stind_I1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Stind_I; break;
         default:
-          if (addressDereference.Type.IsValueType || addressDereference.Type is IGenericTypeParameterReference) {
+          if (addressDereference.Type.IsValueType || addressDereference.Type is IGenericParameterReference) {
             this.generator.Emit(OperationCode.Stobj, addressDereference.Type);
             this.StackSize-=2;
             return;
@@ -714,7 +723,7 @@ namespace Microsoft.Cci {
       }
       IFieldReference/*?*/ field = container as IFieldReference;
       if (field != null) {
-        this.LoadField(boundExpression.IsUnaligned ? boundExpression.Alignment : (byte)0, boundExpression.IsVolatile, boundExpression.Instance, field);
+        this.LoadField(boundExpression.IsUnaligned ? boundExpression.Alignment : (byte)0, boundExpression.IsVolatile, boundExpression.Instance, field, boundExpression.Instance == null);
         return;
       }
       Debug.Assert(false);
@@ -755,7 +764,10 @@ namespace Microsoft.Cci {
         this.generator.BeginCatchBlock(catchClause.ExceptionType);
       }
       this.StackSize++;
-      this.VisitAssignmentTo(catchClause.ExceptionContainer);
+      if (catchClause.ExceptionContainer == Dummy.LocalVariable)
+        this.generator.Emit(OperationCode.Pop);
+      else
+        this.VisitAssignmentTo(catchClause.ExceptionContainer);
       base.Visit(catchClause);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
@@ -1015,7 +1027,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="defaultValue">The default value.</param>
     public override void Visit(IDefaultValue defaultValue) {
-      ILocalDefinition temp = new TemporaryVariable(defaultValue.Type);
+      ILocalDefinition temp = new TemporaryVariable(defaultValue.Type, this.method);
       this.LoadAddressOf(temp, null);
       this.generator.Emit(OperationCode.Initobj, defaultValue.Type);
       this.StackSize--;
@@ -1153,13 +1165,13 @@ namespace Microsoft.Cci {
       this.EmitSequencePoint(forEachStatement.Variable.Locations);
       this.Visit(forEachStatement.Collection);
       this.generator.Emit(OperationCode.Dup);
-      var array = new TemporaryVariable(arrayType);
+      var array = new TemporaryVariable(arrayType, this.method);
       this.VisitAssignmentTo(array);
-      var length = new TemporaryVariable(this.host.PlatformType.SystemInt32);
+      var length = new TemporaryVariable(this.host.PlatformType.SystemInt32, this.method);
       this.generator.Emit(OperationCode.Ldlen);
       this.generator.Emit(OperationCode.Conv_I4);
       this.VisitAssignmentTo(length);
-      var counter = new TemporaryVariable(this.host.PlatformType.SystemInt32);
+      var counter = new TemporaryVariable(this.host.PlatformType.SystemInt32, this.method);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.VisitAssignmentTo(counter);
       this.generator.Emit(OperationCode.Br, conditionCheck);
@@ -1579,6 +1591,7 @@ namespace Microsoft.Cci {
     /// <param name="rethrowStatement">The rethrow statement.</param>
     public override void Visit(IRethrowStatement rethrowStatement) {
       this.generator.Emit(OperationCode.Rethrow);
+      this.lastStatementWasUnconditionalTransfer = true;
     }
 
     /// <summary>
@@ -1590,7 +1603,7 @@ namespace Microsoft.Cci {
         this.Visit(returnStatement.Expression);
         if (!this.minizeCodeSize || this.currentTryCatch != null) {
           if (this.returnLocal == null)
-            this.returnLocal = new TemporaryVariable(this.method.Type);
+            this.returnLocal = new TemporaryVariable(this.method.Type, this.method);
           this.VisitAssignmentTo(this.returnLocal);
         } else
           this.StackSize--;
@@ -3579,12 +3592,9 @@ namespace Microsoft.Cci {
           break;
 
         default:
-          if (sourceType.IsValueType) {
+          if (TypeHelper.TypesAreEquivalent(targetType, this.host.PlatformType.SystemObject)) {
             this.generator.Emit(OperationCode.Box, sourceType);
             break;
-          }
-          if (sourceType is IGenericParameter && !sourceType.ResolvedType.IsReferenceType) {
-            this.generator.Emit(OperationCode.Box, sourceType);
           }
           //TODO: conversion from method to (function) pointer
           if (!sourceType.IsValueType && targetType.TypeCode == PrimitiveTypeCode.IntPtr)
@@ -3932,10 +3942,8 @@ namespace Microsoft.Cci {
     /// The results of the traversal can be retrieved via the GetOperations, GetOperationExceptionInformation
     /// and GetPrivateHelperTypes methods.
     /// </summary>
-    /// <param name="method">A method that provides the context for a block of statments that are to be converted to IL.</param>
     /// <param name="body">A block of statements that are to be converted to IL.</param>
-    public virtual void ConvertToIL(IMethodDefinition method, IBlockStatement body) {
-      this.method = method;
+    public virtual void ConvertToIL(IBlockStatement body) {
       ITypeReference returnType = method.Type;
       new LabelAndTryBlockAssociater(this.mostNestedTryCatchFor).Visit(body);
       this.Visit(body);

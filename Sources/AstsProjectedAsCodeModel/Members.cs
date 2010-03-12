@@ -2655,8 +2655,9 @@ namespace Microsoft.Cci.Ast {
       this.isIteratorBody = normalizer.IsIteratorBody;
 
       CodeModelToILConverter converter = new CodeModelToILConverter(this.Block.Compilation.HostEnvironment,
+        this.MethodDefinition,
         this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
-      converter.ConvertToIL(this.MethodDefinition, normalizedBody.Block);
+      converter.ConvertToIL(normalizedBody.Block);
 
       this.localScopes = converter.GetLocalScopes();
       this.localVariables = converter.GetLocalVariables();

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -169,7 +169,7 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IRethrowStatement rethrowStatement) {
-      base.Visit(rethrowStatement);
+      this.sourceEmitterOutput.WriteLine("throw;", true);
     }
 
     public override void Visit(IReturnStatement returnStatement) {
@@ -207,7 +207,7 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.IncreaseIndent();
       this.Visit(switchStatement.Cases);
       this.sourceEmitterOutput.DecreaseIndent();
-
+      
       this.sourceEmitterOutput.WriteLine("}", true);
     }
 
