@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -165,6 +165,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
         MethodBodyLocation mbLoc = new MethodBodyLocation(new MethodBodyDocument(this.MethodBody.MethodDefinition), this.Index);
         return IteratorHelper.GetSingletonEnumerable<ILocation>(mbLoc);
       }
+    }
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.MethodBody.MethodDefinition; }
     }
 
     public ITypeReference Type {
@@ -618,6 +622,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               IMethodReference methodReference = this.GetMethod(memReader.ReadUInt32());
               IArrayTypeReference/*?*/ arrayType = methodReference.ContainingType as IArrayTypeReference;
               if (arrayType != null) {
+                // For Get(), Set() and Address() on arrays, the runtime provides method implementations.
+                // Hence, CCI2 replaces these with pseudo instrcutions Array_Set, Array_Get and Array_Addr.
+                // All other methods on arrays will not use pseudo instruction and will have methodReference as their operand. 
                 if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
                   cilOpCode = OperationCode.Array_Set;
                   value = arrayType;
@@ -740,6 +747,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               IMethodReference methodReference = this.GetMethod(memReader.ReadUInt32());
               IArrayTypeReference/*?*/ arrayType = methodReference.ContainingType as IArrayTypeReference;
               if (arrayType != null) {
+                // For Get(), Set() and Address() on arrays, the runtime provides method implementations.
+                // Hence, CCI2 replaces these with pseudo instrcutions Array_Set, Array_Get and Array_Addr.
+                // All other methods on arrays will not use pseudo instruction and will have methodReference as their operand. 
                 if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
                   cilOpCode = OperationCode.Array_Set;
                   value = arrayType;

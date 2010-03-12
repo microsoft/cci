@@ -27,6 +27,7 @@ namespace Microsoft.Cci {
 
     List<ExceptionHandler> handlers = new List<ExceptionHandler>();
     IMetadataHost host;
+    IMethodDefinition method;
     ILocation location = Dummy.Location;
     uint offset;
     List<Operation> operations = new List<Operation>();
@@ -39,8 +40,9 @@ namespace Microsoft.Cci {
     /// Allocates an object that helps with the generation of Microsoft intermediate language (MSIL) instructions corresponding to a method body.
     /// </summary>
     /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
-    public ILGenerator(IMetadataHost host) {
+    public ILGenerator(IMetadataHost host, IMethodDefinition methodDefinition) {
       this.host = host;
+      this.method = methodDefinition;
     }
 
     /// <summary>
@@ -48,6 +50,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="local">The local constant to add to the current scope.</param>
     public void AddConstantToCurrentScope(ILocalDefinition local) {
+      //^ requires local.MethodDefinition == this.method;
       if (this.scopeStack.Count == 0) this.BeginScope();
       this.scopeStack.Peek().constants.Add(local);
     }
@@ -57,6 +60,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="local">The local variable to add to the current scope.</param>
     public void AddVariableToCurrentScope(ILocalDefinition local) {
+      //^ requires local.MethodDefinition == this.method;
       if (this.scopeStack.Count == 0) this.BeginScope();
       this.scopeStack.Peek().locals.Add(local);
     }
@@ -203,7 +207,7 @@ namespace Microsoft.Cci {
     /// Begins a lexical scope.
     /// </summary>
     public void BeginScope() {
-      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable);
+      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable, this.method);
       this.scopeStack.Push(scope);
       this.scopes.Add(scope);
     }
@@ -212,7 +216,7 @@ namespace Microsoft.Cci {
     /// Begins a lexical scope.
     /// </summary>
     public void BeginScope(uint numberOfIteratorLocalsInScope) {
-      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable);
+      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable, this.method);
       this.scopeStack.Push(scope);
       this.scopes.Add(scope);
       if (numberOfIteratorLocalsInScope == 0) return;
@@ -715,6 +719,7 @@ namespace Microsoft.Cci {
       this.isReference = false;
       this.locations = new List<ILocation>();
       this.name = Dummy.Name;
+      this.methodDefinition = Dummy.Method;
       this.type = Dummy.TypeReference;
     }
 
@@ -807,6 +812,15 @@ namespace Microsoft.Cci {
     List<ILocation> locations;
 
     /// <summary>
+    /// The definition of the method in which this local is defined.
+    /// </summary>
+    public IMethodDefinition MethodDefinition {
+      get { return this.methodDefinition; }
+      set { this.MethodDefinition = value; }
+    }
+    IMethodDefinition methodDefinition;
+
+    /// <summary>
     /// The type of the local.
     /// </summary>
     /// <value></value>
@@ -836,16 +850,17 @@ namespace Microsoft.Cci {
   /// </summary>
   public class ILGeneratorScope : ILocalScope, INamespaceScope {
 
-    internal ILGeneratorScope(uint offset, INameTable nameTable) {
+    internal ILGeneratorScope(uint offset, INameTable nameTable, IMethodDefinition containingMethod) {
       this.offset = offset;
       this.nameTable = nameTable;
+      this.methodDefinition = containingMethod;
     }
 
     internal void CloseScope(uint offset) {
       this.length = offset - this.offset;
     }
 
-
+    
     /// <summary>
     /// The local definitions (constants) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
     /// point that falls inside this scope.)
@@ -874,6 +889,11 @@ namespace Microsoft.Cci {
     internal readonly List<ILocalDefinition> locals = new List<ILocalDefinition>();
 
     readonly INameTable nameTable;
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.methodDefinition; }
+    }
+    readonly IMethodDefinition methodDefinition;
 
     /// <summary>
     /// The offset of the first operation in the scope.

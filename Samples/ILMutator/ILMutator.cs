@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -36,8 +36,9 @@ namespace ILMutator {
       PdbReader/*?*/ pdbReader = null;
       string pdbFile = Path.ChangeExtension(module.Location, "pdb");
       if (File.Exists(pdbFile)) {
-        Stream pdbStream = File.OpenRead(pdbFile);
-        pdbReader = new PdbReader(pdbStream, host);
+        using (var pdbStream = File.OpenRead(pdbFile)) {
+          pdbReader = new PdbReader(pdbStream, host);
+        }
       } else {
         Console.WriteLine("Could not load the PDB file for '" + module.Name.Value + "' . Proceeding anyway.");
       }
@@ -121,7 +122,7 @@ namespace ILMutator {
       List<IOperation> operations = methodBody.Operations;
       int count = methodBody.Operations.Count;
 
-      ILGenerator generator = new ILGenerator(this.host);
+      ILGenerator generator = new ILGenerator(this.host, methodBody.MethodDefinition);
 
       var methodName = MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName);
 

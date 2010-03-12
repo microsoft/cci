@@ -66,6 +66,7 @@
     <Compile Include="Implementations.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SourceModelHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MetadataHelper\MetadataHelper.csproj">

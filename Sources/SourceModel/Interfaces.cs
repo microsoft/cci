@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -636,6 +636,14 @@ namespace Microsoft.Cci {
     /// The length of the scope. Offset+Length equals the offset of the first operation outside the scope, or equals the method body length.
     /// </summary>
     uint Length { get; }
+
+    /// <summary>
+    /// The definition of the method in which this local scope is defined.
+    /// </summary>
+    IMethodDefinition MethodDefinition {
+      get;
+    }
+
   }
 
   /// <summary>

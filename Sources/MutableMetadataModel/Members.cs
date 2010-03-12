@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -799,6 +799,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.isPinned = false;
       this.isReference = false;
       this.locations = new List<ILocation>();
+      this.methodDefinition = Dummy.Method;
       this.name = Dummy.Name;
       this.type = Dummy.TypeReference;
     }
@@ -821,6 +822,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.isPinned = localVariableDefinition.IsPinned;
       this.isReference = localVariableDefinition.IsReference;
       this.locations = new List<ILocation>(localVariableDefinition.Locations);
+      this.methodDefinition = localVariableDefinition.MethodDefinition;
       this.name = localVariableDefinition.Name;
       this.type = localVariableDefinition.Type;
     }
@@ -902,6 +904,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.locations = value; }
     }
     List<ILocation> locations;
+
+    /// <summary>
+    /// The definition of the method in which this local is defined.
+    /// </summary>
+    public IMethodDefinition MethodDefinition {
+      get { return this.methodDefinition; }
+      set { this.methodDefinition = value; }
+    }
+    IMethodDefinition methodDefinition;
 
     /// <summary>
     /// The type of the local.

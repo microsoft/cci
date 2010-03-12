@@ -1,14 +1,4 @@
-﻿//-----------------------------------------------------------------------------
-//
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
-// This code is licensed under the Microsoft Public License.
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//-----------------------------------------------------------------------------
-using System;
+﻿using System;
 using System.IO;
 using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
@@ -18,7 +8,6 @@ namespace HelloCodeModel {
     static void Main(string[] args) {
       var host = new PeReader.DefaultHost();
       var nameTable = host.NameTable;
-
       var coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
 
       var assembly = new Assembly() {
@@ -64,7 +53,7 @@ namespace HelloCodeModel {
       assembly.EntryPoint = mainMethod;
       testClass.Methods.Add(mainMethod);
 
-      var ilGenerator = new ILGenerator(host);
+      var ilGenerator = new ILGenerator(host, mainMethod);
       var body = new ILGeneratorMethodBody(ilGenerator, true, 1);
       body.MethodDefinition = mainMethod;
       mainMethod.Body = body;

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -50,7 +50,7 @@ namespace Microsoft.Cci {
     /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
     /// </summary>
     ~PdbReader() {
-      this.Close();
+       this.Close();
     }
 
     private void Close() {
@@ -161,6 +161,11 @@ namespace Microsoft.Cci {
       PdbFunction/*?*/ pdbFunction = this.GetPdbFunctionFor(methodBody);
       if (pdbFunction == null || pdbFunction.iteratorScopes == null)
         return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+      foreach (var i in pdbFunction.iteratorScopes) {
+        PdbIteratorScope pis = i as PdbIteratorScope;
+        if (pis != null)
+          pis.MethodDefinition = methodBody.MethodDefinition;
+      }
       return pdbFunction.iteratorScopes.AsReadOnly();
     }
 
@@ -719,6 +724,10 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); } //TODO: return a method body location or some such thing
     }
 
+    public IMethodDefinition MethodDefinition {
+      get { return this.methodDefinition; }
+    }
+
     public ITypeReference Type {
       get {
         if (this.type == null)
@@ -790,6 +799,11 @@ namespace Microsoft.Cci {
     }
     uint length;
 
+    public IMethodDefinition MethodDefinition {
+      get { return this.methodDefinition; }
+      set { this.methodDefinition = value; }
+    }
+    IMethodDefinition methodDefinition;
   }
 
   /// <summary>
@@ -822,6 +836,11 @@ namespace Microsoft.Cci {
     public uint Length {
       get { return this.pdbScope.length; }
     }
+
+    /// <summary>
+    /// The definition of the method in which this local scope is defined.
+    /// </summary>
+    public IMethodDefinition MethodDefinition { get { return this.methodBody.MethodDefinition; } }
 
   }
 
