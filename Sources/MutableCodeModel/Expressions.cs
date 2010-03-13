@@ -1519,14 +1519,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// True if the expression has no observable side effects.
-    /// </summary>
-    /// <value></value>
-    public bool IsPure {
-      get { return false; }
-    }
-
-    /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
