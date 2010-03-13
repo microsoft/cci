@@ -315,15 +315,6 @@ namespace Microsoft.Cci.Ast {
         get { return this.addition.Type; }
       }
 
-      /// <summary>
-      /// True if the expression has no observable side effects.
-      /// </summary>
-      /// <value></value>
-      public bool IsPure {
-        get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
-      }
-
-
       #region IExpression Members
 
       ITypeReference IExpression.Type {
@@ -18549,14 +18540,6 @@ namespace Microsoft.Cci.Ast {
 
       public ITypeDefinition Type {
         get { return this.subtraction.Type; }
-      }
-
-      /// <summary>
-      /// True if the expression has no observable side effects.
-      /// </summary>
-      /// <value></value>
-      public bool IsPure {
-        get { return this.LeftOperand.IsPure && this.RightOperand.IsPure; }
       }
 
       #region IExpression Members

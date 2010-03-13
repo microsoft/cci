@@ -55,8 +55,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="RoundTripTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestData\source\GenericMethods.cs" />
-    <Compile Include="TestData\source\MutableCopyTest.cs" />
+    <EmbeddedResource Include="TestData\source\GenericMethods.cs" />
+    <EmbeddedResource Include="TestData\source\MutableCopyTest.cs" />
     <EmbeddedResource Include="TestData\source\IteratorRoundTripTest.cs" />
     <EmbeddedResource Include="TestData\source\Repro6.cs" />
     <EmbeddedResource Include="TestData\source\Repro5.cs" />

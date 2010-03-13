@@ -3479,7 +3479,6 @@ namespace Microsoft.Cci.Ast {
     public IMethodDefinition MethodDefinition {
       get { return this.LocalDeclaration.LocalVariable.MethodDefinition; }
     }
-    IMethodDefinition methodDefinition;
 
     /// <summary>
     /// The name of the local.
