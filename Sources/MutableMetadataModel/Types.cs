@@ -2007,7 +2007,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (namespaceTypeDefinition != null) {
         if (typeDefinition.IsGeneric)
           return typeDefinition.InstanceType;
-        else 
+        else
           return typeDefinition;
       }
       INestedTypeDefinition nestedTypeDefinition = typeDefinition as INestedTypeDefinition;

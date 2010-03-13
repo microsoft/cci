@@ -73,7 +73,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="rootOfCone">An definition that defines one (of the possibly many) root of the cone.</param>
     /// <param name="newTypes">Copies of the the type definitions in the cone under rootOfCone. This collection of type defs will be useful
     /// for the computation of all the types in the module. </param>
-    public MetadataCopier(IMetadataHost host, IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes) : this(host) {
+    public MetadataCopier(IMetadataHost host, IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes)
+      : this(host) {
       this.AddDefinition(rootOfCone, out newTypes);
       this.coneAlreadyFixed = true;
     }
@@ -917,8 +918,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       result = cachedValue as RootUnitNamespaceReference;
       if (result != null) return result;
       result = new RootUnitNamespaceReference();
-        this.cache.Add(rootUnitNamespaceReference, result);
-        this.cache.Add(result, result);
+      this.cache.Add(rootUnitNamespaceReference, result);
+      this.cache.Add(result, result);
       result.Copy(rootUnitNamespaceReference, this.host.InternFactory);
       return result;
     }
@@ -2617,9 +2618,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (propertyDefinition.HasDefaultValue)
         propertyDefinition.DefaultValue = this.DeepCopy(this.GetMutableShallowCopy(propertyDefinition.DefaultValue));
       if (propertyDefinition.Getter != null) {
-        if (getterIndex != -1) 
+        if (getterIndex != -1)
           propertyDefinition.Getter = propertyDefinition.Accessors[getterIndex];
-        else 
+        else
           propertyDefinition.Getter = this.DeepCopy(propertyDefinition.Getter);
       }
       propertyDefinition.Parameters = this.DeepCopy(propertyDefinition.Parameters);
@@ -2857,7 +2858,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected IParameterDefinition GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
       object/*?*/ cachedValue;
       this.cache.TryGetValue(parameterDefinition, out cachedValue);
-      return (IParameterDefinition) cachedValue;
+      return (IParameterDefinition)cachedValue;
     }
 
     private ISignature GetMutableCopyIfItExists(ISignature signature) {
