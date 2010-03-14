@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -402,7 +402,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Do not include optional and required custom modifiers.
     /// </summary>
-    OmitCustomModifiers = OmitContainingType << 1,
+    OmitCustomModifiers=OmitContainingType << 1,
 
     /// <summary>
     /// If the type member explicitly implements an interface, do not include the name of the interface in the name of the member.
@@ -1627,6 +1627,20 @@ namespace Microsoft.Cci {
       return false;
     }
 
+    /// <summary>
+    /// If the given type is a signed integer type, return the equivalent unsigned integer type.
+    /// Otherwise return the given type.
+    /// </summary>
+    /// <param name="typeReference">A reference to a type.</param>
+    public static ITypeReference UnsignedEquivalent(ITypeReference typeReference) {
+      switch (typeReference.TypeCode) {
+        case PrimitiveTypeCode.Int8: return typeReference.PlatformType.SystemUInt8;
+        case PrimitiveTypeCode.Int16: return typeReference.PlatformType.SystemUInt16;
+        case PrimitiveTypeCode.Int32: return typeReference.PlatformType.SystemUInt32;
+        case PrimitiveTypeCode.Int64: return typeReference.PlatformType.SystemUInt64;
+        default: return typeReference;
+      }
+    }
   }
 
   /// <summary>
