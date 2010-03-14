@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -50,6 +50,11 @@ namespace Microsoft.Cci.ILToCodeModel {
             while (bbb != null) {
               if (bbb.ExceptionInformation != null) {
                 if (firstHandler == null) firstHandler = bbb;
+                if (firstHandler.ExceptionInformation.TryEndOffset < bbb.ExceptionInformation.TryEndOffset) {
+                  DecompileTryBody(b, firstHandler, tryStatement);
+                  tryStatement = new TryCatchFinallyStatement();
+                  firstHandler = bbb;
+                }
                 DecompileHandler(bb, bbb, tryStatement);
                 break;
               }
@@ -59,19 +64,23 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           }
         }
-        tryStatement.TryBody = this.GetBasicBlockUpto(b, firstHandler.StartOffset);
-        BasicBlock tryBody = tryStatement.TryBody as BasicBlock;
-        int startPoint = 0;
-        if (tryBody != null && tryBody.Statements.Count >0) {
-          ILabeledStatement labeledStatement = tryBody.Statements[0] as ILabeledStatement;
-          if (labeledStatement != null) {
-            tryBody.Statements.RemoveAt(0);
-            b.Statements.Insert(startPoint, labeledStatement);
-            startPoint++;
-          }
-        }
-        b.Statements.Insert(startPoint, tryStatement);
+        DecompileTryBody(b, firstHandler, tryStatement);
       }
+    }
+
+    private void DecompileTryBody(BasicBlock b, BasicBlock firstHandler, TryCatchFinallyStatement tryStatement) {
+      tryStatement.TryBody = this.GetBasicBlockUpto(b, firstHandler.StartOffset);
+      BasicBlock tryBody = tryStatement.TryBody as BasicBlock;
+      int startPoint = 0;
+      if (tryBody != null && tryBody.Statements.Count > 0) {
+        ILabeledStatement labeledStatement = tryBody.Statements[0] as ILabeledStatement;
+        if (labeledStatement != null) {
+          tryBody.Statements.RemoveAt(0);
+          b.Statements.Insert(startPoint, labeledStatement);
+          startPoint++;
+        }
+      }
+      b.Statements.Insert(startPoint, tryStatement);
     }
 
     private BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
@@ -95,6 +104,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     private static void DecompileHandler(BasicBlock containingBlock, BasicBlock handlerBlock, TryCatchFinallyStatement tryStatement) {
       if (handlerBlock.ExceptionInformation.HandlerKind == HandlerKind.Finally) {
         tryStatement.FinallyBody = handlerBlock;
+      } else if (handlerBlock.ExceptionInformation.HandlerKind == HandlerKind.Fault) {
+        tryStatement.FaultBody = handlerBlock;
       } else {
         CatchClause catchClause = new CatchClause();
         catchClause.Body = handlerBlock;

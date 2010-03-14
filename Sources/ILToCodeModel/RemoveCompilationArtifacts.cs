@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -110,15 +110,14 @@ namespace Microsoft.Cci.ILToCodeModel {
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                 Name = closureField.ResolvedField.Name, Type = closureField.Type
+                Name = closureField.ResolvedField.Name, Type = closureField.Type
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
                 LocalVariable = localDefinition, InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
-            }
-            else continue;
+            } else continue;
           }
         } else {
           this.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
@@ -152,7 +151,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (thisReference != null) return thisReference;
           boundExpression.Definition = localOrParameter;
           boundExpression.Instance = null;
-          return boundExpression; 
+          return boundExpression;
         }
       }
       IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
@@ -196,7 +195,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host, 
+      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
         this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.contractProvider).Block;
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
@@ -222,7 +221,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(Equality equality) {
-      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean){
+      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         if (ExpressionHelper.IsIntegralZero(equality.RightOperand))
           return InvertCondition(this.Visit(equality.LeftOperand));
       }
@@ -234,9 +233,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (castIfPossible != null) {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
-          return this.Visit(new CheckIfInstance() { 
+          return this.Visit(new CheckIfInstance() {
             Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations });
+            Type = greaterThan.Type, Locations = greaterThan.Locations
+          });
         }
       }
       castIfPossible = greaterThan.RightOperand as ICastIfPossible;
@@ -272,10 +272,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.sourceMethodBody.sourceLocationProvider.GetSourceNameFor(local, out isCompilerGenerated);
         if (!isCompilerGenerated) return localDeclarationStatement;
       }
-      if (localDeclarationStatement.InitialValue != null && numReferences > 0) {
-        //REVIEW: this seems wrong when the expression can reference memory locations that are updated between the declaration
-        //statement and the reference.
-        this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.Add(local, localDeclarationStatement.InitialValue);
+      var val = localDeclarationStatement.InitialValue;
+      if (numReferences > 0 && (val is CompileTimeConstant || val is TypeOf || val is ThisReference)) {
+        this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.Add(local, val);
         return CodeDummy.Block; //Causes the caller to omit this statement from the containing statement list.
       }
       if (numReferences == 0) return CodeDummy.Block; //unused declaration
@@ -435,7 +434,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                 info.Label = gotoStatement.TargetStatement.Label;
                 info.State = 1;
               }
-              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) 
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
                 this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
               statements.RemoveAt(i--);
               continue;

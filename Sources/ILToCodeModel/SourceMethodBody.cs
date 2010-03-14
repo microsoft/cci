@@ -49,7 +49,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, 
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
@@ -76,7 +76,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
     /// embedded in the given method body.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, 
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
       : this(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
       this.contractsOnly = contractsOnly;
@@ -158,7 +158,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
-        return this.ilMethodBody.PrivateHelperTypes; 
+        return this.ilMethodBody.PrivateHelperTypes;
       }
     }
 
@@ -357,8 +357,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
         if (closureTypeAsNestedTypeReference == null) return Dummy.MethodBody;
         ITypeReference unspecializedClosureContainingType = GetUnspecializedType(closureTypeAsNestedTypeReference.ContainingType);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType))
-        {
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)) {
           IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
           foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
             IMethodDefinition moveNext = member as IMethodDefinition;
@@ -1573,7 +1572,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, 
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider)
       : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
       this.iteratorMethodBody = iteratorMethodBody;
@@ -1594,7 +1593,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
     /// embedded in the given method body.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, 
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
       : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider, contractsOnly) {
       this.iteratorMethodBody = iteratorMethodBody;
@@ -1630,7 +1629,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DecompileMoveNext(block);
         BasicBlock rootBlock = GetOrCreateBlock(0, false);
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
-        
+
         block = this.AddLocalDeclarationIfNecessary(block);
         new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
         return block;

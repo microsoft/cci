@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -143,9 +143,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (pop.Type != Dummy.TypeReference)
             local.Type = pop.Type;
           this.body.numberOfReferences[local]++;
-          var result = new BoundExpression() { Definition = local, Type = local.Type };
-          //if (pop is PopAsUnsigned)
-          //  result = new Conversion(){ ValueToConvert = result, TypeAfterConversion = TypeHelper.UnsignedEquivalent(local.Type) }
+          IExpression result = new BoundExpression() { Definition = local, Type = local.Type };
+          if (pop is PopAsUnsigned)
+            result = new Conversion() { ValueToConvert = result, TypeAfterConversion = TypeHelper.UnsignedEquivalent(local.Type) };
           return result;
         } else {
           // popping the unnamed exception in a catch block.

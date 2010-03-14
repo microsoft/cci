@@ -507,6 +507,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       ((LessThanOrEqual)lessThanOrEqual).Type = this.platformType.SystemBoolean;
     }
 
+    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      base.Visit(localDeclarationStatement);
+      if (localDeclarationStatement.InitialValue != null && localDeclarationStatement.LocalVariable.Type == Dummy.TypeReference) {
+        var temp = (TempVariable)localDeclarationStatement.LocalVariable;
+        temp.Type = localDeclarationStatement.InitialValue.Type;
+      }
+    }
+
     public override void Visit(ILogicalNot logicalNot) {
       base.Visit(logicalNot);
       ((LogicalNot)logicalNot).Type = this.platformType.SystemBoolean;

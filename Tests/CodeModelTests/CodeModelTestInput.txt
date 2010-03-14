@@ -75,10 +75,12 @@ namespace CodeModelTestInput
 
         private bool Method4(int[] xs, int x)
         {
-            return Microsoft.Contracts.Contract.ForAll<int>(xs, delegate (int i) {
-                return (i < x);
+            bool local_1 = Microsoft.Contracts.Contract.ForAll<int>(xs, delegate (int i) {
+                bool local_0 = (i < x);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
@@ -169,7 +171,8 @@ namespace CodeModelTestInput
 
         private static bool Method12(int x)
         {
-            switch((x - 1)){
+            int local_1 = x;
+            switch((local_1 - 1)){
                 case 0:
                     goto IL_001d;
                 case 1:
@@ -307,8 +310,10 @@ namespace CodeModelTestInput
         private int[] Method16(int[] xs)
         {
             int& __temp_1 = &xs[0];
-            __temp_1 = (__temp_1 + 1);
-            return xs;
+            int& __temp_2 = __temp_1;
+            __temp_1 = (__temp_2 + 1);
+            int[] local_0 = xs;
+            return local_0;
 
         }
 
@@ -323,7 +328,8 @@ namespace CodeModelTestInput
             {
                 __temp_1 = 1;
             }
-            return __temp_1;
+            bool local_0 = __temp_1;
+            return local_0;
 
         }
 
@@ -346,7 +352,8 @@ namespace CodeModelTestInput
                 }
             IL_002b:
             }
-            return midVal;
+            int local_1 = midVal;
+            return local_1;
 
         }
 
@@ -455,7 +462,8 @@ namespace CodeModelTestInput
 
             public int Value()
             {
-                return this.s.Length.get();
+                int local_0 = this.s.Length.get();
+                return local_0;
 
             }
 
@@ -476,7 +484,8 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Ensures((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>() != null));
                 __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<string>(__temp_2, delegate (string s1) {
-                    return (s1 != null);
+                    bool local_0 = (s1 != null);
+                    return local_0;
 
                 }));
                 yield return "hello";
@@ -489,12 +498,13 @@ namespace CodeModelTestInput
             {
                 {
                     local_2 = default(T);
-                    if (t.Equals(((object)local_2)))
+                    if (__temp_4.Equals(((object)local_2)))
                     {
                         throw new System.ArgumentException("");
                     }
                     Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(ts, delegate (T t1) {
-                        return t1.Equals(((object)t));
+                        bool local_0 = t1.Equals(((object)t));
+                        return local_0;
 
                     }));
                     yield return t;
@@ -508,11 +518,13 @@ namespace CodeModelTestInput
             {
                 Microsoft.Contracts.Contract.Requires((input != null));
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T s1) {
-                    return (((object)s1) != null);
+                    bool local_0 = (((object)s1) != null);
+                    return local_0;
 
                 }));
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), delegate (T s1) {
-                    return (((object)s1) != null);
+                    bool local_0 = (((object)s1) != null);
+                    return local_0;
 
                 }));
                 <>7__wrapf = input.GetEnumerator();
@@ -533,7 +545,8 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T> Test1e<T>(System.Collections.Generic.IEnumerable<T> input)
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T s) {
-                    return (((object)s) != null);
+                    bool local_0 = (((object)s) != null);
+                    return local_0;
 
                 }));
                 <>7__wrap16 = input.GetEnumerator();
@@ -554,12 +567,14 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<int> Test1f(System.Collections.Generic.IEnumerable<int> inputArray, int max)
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<int>(inputArray, delegate (int x) {
-                    return (x < max);
+                    bool local_0 = (x < max);
+                    return local_0;
 
                 }));
                 __temp_3 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<int>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<int>(__temp_3, delegate (int y) {
-                    return (y > 0);
+                    bool local_0 = (y > 0);
+                    return local_0;
 
                 }));
                 <>7__wrap21 = inputArray.GetEnumerator();
@@ -580,7 +595,8 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T> Test1g<T>(System.Collections.Generic.IEnumerable<T> ts, T x)
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(ts, delegate (T y) {
-                    return this.foo(((object)y), ((object)x));
+                    bool local_0 = this.foo(((object)y), ((object)x));
+                    return local_0;
 
                 }));
                 yield return x;
@@ -591,18 +607,21 @@ namespace CodeModelTestInput
 
             private bool foo(object y, object x)
             {
-                return (y == x);
+                bool local_0 = (y == x);
+                return local_0;
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1h<T>(System.Collections.Generic.IEnumerable<T> input, int x, int y)
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T t) {
-                    return (t.Value() > x);
+                    bool local_0 = (t.Value() > x);
+                    return local_0;
 
                 }));
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), delegate (T t) {
-                    return (t.Value() > (x + y));
+                    bool local_0 = (t.Value() > (x + y));
+                    return local_0;
 
                 }));
                 <>7__wrap31 = input.GetEnumerator();
@@ -647,7 +666,8 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Ensures((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>() != null));
                 __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_2, delegate (T s1) {
-                    return (((object)s1) != null);
+                    bool local_0 = (((object)s1) != null);
+                    return local_0;
 
                 }));
                 yield return t;
@@ -673,12 +693,14 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Requires((input != null));
                 __temp_3 = input;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(__temp_3, delegate (T s1) {
-                    return (((object)s1) != null);
+                    bool local_0 = (((object)s1) != null);
+                    return local_0;
 
                 }));
                 __temp_4 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_4, delegate (T s1) {
-                    return (((object)s1) != null);
+                    bool local_0 = (((object)s1) != null);
+                    return local_0;
 
                 }));
                 <>7__wrap43 = input.GetEnumerator();
@@ -699,7 +721,8 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T1> Test1e<T1>(System.Collections.Generic.IEnumerable<T> input, T1 t)
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T s) {
-                    return (s.Value() == t.Value());
+                    bool local_0 = (s.Value() == t.Value());
+                    return local_0;
 
                 }));
                 yield return t;
@@ -711,7 +734,8 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T1> Test1g<T1>(System.Collections.Generic.IEnumerable<T1> ts, T x)
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T1>(ts, delegate (T1 y) {
-                    return this.foo<T1>(((object)y), x);
+                    bool local_0 = this.foo<T1>(((object)y), x);
+                    return local_0;
 
                 }));
                 <>7__wrap52 = ts.GetEnumerator();
@@ -731,7 +755,8 @@ namespace CodeModelTestInput
 
             private bool foo<S>(CodeModelTestInput.Class2.IIncrementable<S> y, T x)
             {
-                return (y.Value() == x.Value());
+                bool local_0 = (y.Value() == x.Value());
+                return local_0;
 
             }
 
@@ -739,7 +764,8 @@ namespace CodeModelTestInput
             {
                 get
                 {
-                    return this.tfield;
+                    T local_0 = this.tfield;
+                    return local_0;
 
                 }
             }
@@ -755,30 +781,36 @@ namespace CodeModelTestInput
             System.Collections.Generic.List<T> list = new System.Collections.Generic.List<T>();
             T tmp;
             tmp = p1;
-            return list.TrueForAll(delegate (T t) {
-                return t.Equals(((object)tmp));
+            bool local_2 = list.TrueForAll(delegate (T t) {
+                bool local_0 = t.Equals(((object)tmp));
+                return local_0;
 
             });
+            return local_2;
 
         }
 
         public static bool Method3_2<T>(T p1)
         {
             System.Collections.Generic.List<T> list = new System.Collections.Generic.List<T>();
-            return list.TrueForAll(delegate (T t) {
-                return t.Equals(((object)p1));
+            bool local_2 = list.TrueForAll(delegate (T t) {
+                bool local_0 = t.Equals(((object)p1));
+                return local_0;
 
             });
+            return local_2;
 
         }
 
         public static bool Method3_3<T1>(T1 p1)
         {
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                return (((object)t) == null);
+            bool local_1 = list.TrueForAll(delegate (T1 t) {
+                bool local_0 = (((object)t) == null);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
@@ -786,40 +818,48 @@ namespace CodeModelTestInput
         {
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
+            bool local_2 = list.TrueForAll(delegate (T1 t) {
+                bool local_0 = (t.GetHashCode() == (p1.GetHashCode() + j));
+                return local_0;
 
             });
+            return local_2;
 
         }
 
         public bool Method3_5<T1>(T1 p1)
         {
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                return t.Equals(((object)p1));
+            bool local_2 = list.TrueForAll(delegate (T1 t) {
+                bool local_0 = t.Equals(((object)p1));
+                return local_0;
 
             });
+            return local_2;
 
         }
 
         public bool Method3_6<T1>(T1 p1)
         {
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                return (t.GetHashCode() == p1.GetHashCode());
+            bool local_2 = list.TrueForAll(delegate (T1 t) {
+                bool local_0 = (t.GetHashCode() == p1.GetHashCode());
+                return local_0;
 
             });
+            return local_2;
 
         }
 
         public bool Method3_7<T1>(T1 p1)
         {
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                return (((object)t) == null);
+            bool local_1 = list.TrueForAll(delegate (T1 t) {
+                bool local_0 = (((object)t) == null);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
@@ -827,10 +867,12 @@ namespace CodeModelTestInput
         {
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
+            bool local_2 = list.TrueForAll(delegate (T1 t) {
+                bool local_0 = (t.GetHashCode() == (p1.GetHashCode() + j));
+                return local_0;
 
             });
+            return local_2;
 
         }
 
@@ -839,16 +881,19 @@ namespace CodeModelTestInput
             int j = 1;
             System.Collections.Generic.List<T1> list;
             list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
+            bool local_1 = list.TrueForAll(delegate (T1 t) {
                 System.Collections.Generic.List<T1> newList = list;
                 int k;
                 k = 12;
-                return newList.TrueForAll(delegate (T1 t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                bool local_2 = newList.TrueForAll(delegate (T1 t1) {
+                    bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    return local_0;
 
                 });
+                return local_2;
 
             });
+            return local_1;
 
         }
 
@@ -857,106 +902,127 @@ namespace CodeModelTestInput
             int j = 1;
             System.Collections.Generic.List<T1> list;
             list = new System.Collections.Generic.List<T1>();
-            return list.TrueForAll(delegate (T1 t) {
+            bool local_1 = list.TrueForAll(delegate (T1 t) {
                 System.Collections.Generic.List<T1> newList = list;
                 int k;
                 k = 12;
                 bool b1 = newList.TrueForAll(delegate (T1 t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    return local_0;
 
                 });
                 bool b2 = list.TrueForAll(delegate (T1 t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    bool local_0 = (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    return local_0;
 
                 });
-                return (b1 && b2);
+                bool local_4 = (b1 && b2);
+                return local_4;
 
             });
+            return local_1;
 
         }
 
         public bool Method3_17(int p1)
         {
             int local = 3;
-            return this.list.TrueForAll(delegate (int t) {
-                return (t.GetHashCode() == local);
+            bool local_1 = this.list.TrueForAll(delegate (int t) {
+                bool local_0 = (t.GetHashCode() == local);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method3_18(int p1)
         {
-            return this.list.TrueForAll(delegate (int t) {
-                return (t.GetHashCode() == p1);
+            bool local_1 = this.list.TrueForAll(delegate (int t) {
+                bool local_0 = (t.GetHashCode() == p1);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method3_19(int p1)
         {
-            return this.list.TrueForAll(delegate (int t) {
-                return (t == 10);
+            System.Collections.Generic.List<int> __temp_1 = this.list;
+            bool local_0 = __temp_1.TrueForAll(delegate (int t) {
+                bool local_0 = (t == 10);
+                return local_0;
 
             });
+            return local_0;
 
         }
 
         public bool Method3_20(int p1)
         {
             int j = 1;
-            return this.list.TrueForAll(delegate (int t) {
-                return (t == (p1 + j));
+            bool local_1 = this.list.TrueForAll(delegate (int t) {
+                bool local_0 = (t == (p1 + j));
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method3_21(int p1)
         {
             int j = 1;
-            return this.list.TrueForAll(delegate (int t) {
+            bool local_1 = this.list.TrueForAll(delegate (int t) {
                 System.Collections.Generic.List<int> newList = this.list;
                 int k;
                 k = 12;
-                return newList.TrueForAll(delegate (int t1) {
-                    return (t == (((t1 + p1) + j) + k));
+                bool local_2 = newList.TrueForAll(delegate (int t1) {
+                    bool local_0 = (t == (((t1 + p1) + j) + k));
+                    return local_0;
 
                 });
+                return local_2;
 
             });
+            return local_1;
 
         }
 
         public bool Method3_22(int p1)
         {
             int j = 1;
-            return this.list.TrueForAll(delegate (int t) {
+            bool local_1 = this.list.TrueForAll(delegate (int t) {
                 System.Collections.Generic.List<int> newList = this.list;
                 int k;
                 k = 12;
                 bool b1 = newList.TrueForAll(delegate (int t1) {
-                    return (t.GetHashCode() == (((t1 + p1) + j) + k));
+                    bool local_0 = (t.GetHashCode() == (((t1 + p1) + j) + k));
+                    return local_0;
 
                 });
                 bool b2 = this.list.TrueForAll(delegate (int t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    bool local_0 = (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    return local_0;
 
                 });
-                return (b1 && b2);
+                bool local_4 = (b1 && b2);
+                return local_4;
 
             });
+            return local_1;
 
         }
 
         public bool Method3_25(int i)
         {
-            return this.list.TrueForAll(delegate (int t) {
+            bool local_0 = this.list.TrueForAll(delegate (int t) {
                 System.Collections.Generic.List<int> newList = this.list;
                 return true;
 
             });
+            return local_0;
 
         }
 
@@ -975,37 +1041,44 @@ namespace CodeModelTestInput
             public bool Method3_11(int i)
             {
                 int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
+                bool local_1 = this.list_inner.TrueForAll(delegate (T2 t) {
                     System.Collections.Generic.List<T2> newList = this.list_inner;
                     int k;
                     k = 12;
-                    return newList.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                    bool local_2 = newList.TrueForAll(delegate (T2 t1) {
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
+                    return local_2;
 
                 });
+                return local_1;
 
             }
 
             public bool Method3_12(int i)
             {
                 int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
+                bool local_1 = this.list_inner.TrueForAll(delegate (T2 t) {
                     System.Collections.Generic.List<T2> newList = this.list_inner;
                     int k;
                     k = 12;
                     bool b1 = newList.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
                     bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
-                    return (b1 && b2);
+                    bool local_4 = (b1 && b2);
+                    return local_4;
 
                 });
+                return local_1;
 
             }
 
@@ -1025,37 +1098,44 @@ namespace CodeModelTestInput
             public bool Method3_13(int i)
             {
                 int j = 1;
-                return this.list_inner.TrueForAll(delegate (int t) {
+                bool local_1 = this.list_inner.TrueForAll(delegate (int t) {
                     System.Collections.Generic.List<int> newList = this.list_inner;
                     int k;
                     k = 12;
-                    return newList.TrueForAll(delegate (int t1) {
-                        return (t == (((t1 + i) + j) + k));
+                    bool local_2 = newList.TrueForAll(delegate (int t1) {
+                        bool local_0 = (t == (((t1 + i) + j) + k));
+                        return local_0;
 
                     });
+                    return local_2;
 
                 });
+                return local_1;
 
             }
 
             public bool Method3_14(int i)
             {
                 int j = 1;
-                return this.list_inner.TrueForAll(delegate (int t) {
+                bool local_1 = this.list_inner.TrueForAll(delegate (int t) {
                     System.Collections.Generic.List<int> newList = this.list_inner;
                     int k;
                     k = 12;
                     bool b1 = newList.TrueForAll(delegate (int t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
                     bool b2 = this.list_inner.TrueForAll(delegate (int t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
-                    return (b1 && b2);
+                    bool local_4 = (b1 && b2);
+                    return local_4;
 
                 });
+                return local_1;
 
             }
 
@@ -1075,37 +1155,44 @@ namespace CodeModelTestInput
             public bool Method3_23(int i)
             {
                 int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
+                bool local_1 = this.list_inner.TrueForAll(delegate (T2 t) {
                     System.Collections.Generic.List<T2> newList = this.list_inner;
                     int k;
                     k = 12;
-                    return newList.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                    bool local_2 = newList.TrueForAll(delegate (T2 t1) {
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
+                    return local_2;
 
                 });
+                return local_1;
 
             }
 
             public bool Method3_24(int i)
             {
                 int j = 1;
-                return this.list_inner.TrueForAll(delegate (T2 t) {
+                bool local_1 = this.list_inner.TrueForAll(delegate (T2 t) {
                     System.Collections.Generic.List<T2> newList = this.list_inner;
                     int k;
                     k = 12;
                     bool b1 = newList.TrueForAll(delegate (T2 t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
                     bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
-                    return (b1 && b2);
+                    bool local_4 = (b1 && b2);
+                    return local_4;
 
                 });
+                return local_1;
 
             }
 
@@ -1125,225 +1212,273 @@ namespace CodeModelTestInput
     {
         public static bool Method4_1<T1>(T1 p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == p1.GetHashCode());
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public static bool Method4_2<T1>(T1 p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == p1.GetHashCode());
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public static bool Method4_3<T1>(T1 p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (((object)t) == null);
+            bool local_0 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (((object)t) == null);
+                return local_0;
 
             });
+            return local_0;
 
         }
 
         public static bool Method4_4<T1>(T1 p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == (p1.GetHashCode() + j));
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_5<T1>(T1 p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == p1.GetHashCode());
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_6<T1>(T1 p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1.GetHashCode());
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == p1.GetHashCode());
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_7<T1>(T1 p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (((object)t) == null);
+            bool local_0 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (((object)t) == null);
+                return local_0;
 
             });
+            return local_0;
 
         }
 
         public bool Method4_8<T1>(T1 p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1.GetHashCode() + j));
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == (p1.GetHashCode() + j));
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_9<T1>(T1 p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                 System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                 int k;
                 k = 12;
-                return newList.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                bool local_2 = newList.TrueForAll(delegate (T t1) {
+                    bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    return local_0;
 
                 });
+                return local_2;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_10<T1>(T1 p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                 System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                 int k;
                 k = 12;
                 bool b1 = newList.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    return local_0;
 
                 });
                 bool b2 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    bool local_0 = (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    return local_0;
 
                 });
-                return (b1 && b2);
+                bool local_4 = (b1 && b2);
+                return local_4;
 
             });
+            return local_1;
 
         }
 
         public static bool Method4_13()
         {
             int local = 3;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == local);
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == local);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public static bool Method4_14(int p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1);
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == p1);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public static bool Method4_15(int p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (((object)t) == null);
+            System.Collections.Generic.List<T> __temp_1 = CodeModelTestInput.Class4<T>.list;
+            bool local_0 = __temp_1.TrueForAll(delegate (T t) {
+                bool local_0 = (((object)t) == null);
+                return local_0;
 
             });
+            return local_0;
 
         }
 
         public static bool Method4_16(int p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1 + j));
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == (p1 + j));
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_17(int p1)
         {
             int local = 3;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == local);
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == local);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_18(int p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == p1);
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == p1);
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_19(int p1)
         {
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (((object)t) == null);
+            System.Collections.Generic.List<T> __temp_1 = CodeModelTestInput.Class4<T>.list;
+            bool local_0 = __temp_1.TrueForAll(delegate (T t) {
+                bool local_0 = (((object)t) == null);
+                return local_0;
 
             });
+            return local_0;
 
         }
 
         public bool Method4_20(int p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                return (t.GetHashCode() == (p1 + j));
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_0 = (t.GetHashCode() == (p1 + j));
+                return local_0;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_21(int p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                 System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                 int k;
                 k = 12;
-                return newList.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1) + j) + k));
+                bool local_2 = newList.TrueForAll(delegate (T t1) {
+                    bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + p1) + j) + k));
+                    return local_0;
 
                 });
+                return local_2;
 
             });
+            return local_1;
 
         }
 
         public bool Method4_22(int p1)
         {
             int j = 1;
-            return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+            bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                 System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                 int k;
                 k = 12;
                 bool b1 = newList.TrueForAll(delegate (T t1) {
-                    return (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + p1.GetHashCode()) + j) + k));
+                    return local_0;
 
                 });
                 bool b2 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t1) {
-                    return (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    bool local_0 = (t1.GetHashCode() == ((t.GetHashCode() + j) + k));
+                    return local_0;
 
                 });
-                return (b1 && b2);
+                bool local_4 = (b1 && b2);
+                return local_4;
 
             });
+            return local_1;
 
         }
 
@@ -1361,37 +1496,44 @@ namespace CodeModelTestInput
             public bool Method4_11(int i)
             {
                 int j = 1;
-                return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                     System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                     int k;
                     k = 12;
-                    return newList.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                    bool local_2 = newList.TrueForAll(delegate (T t1) {
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
+                    return local_2;
 
                 });
+                return local_1;
 
             }
 
             public bool Method4_12(int i)
             {
                 int j = 1;
-                return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                     System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                     int k;
                     k = 12;
                     bool b1 = newList.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
                     bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
-                    return (b1 && b2);
+                    bool local_4 = (b1 && b2);
+                    return local_4;
 
                 });
+                return local_1;
 
             }
 
@@ -1411,37 +1553,44 @@ namespace CodeModelTestInput
             public bool Method4_11(int i)
             {
                 int j = 1;
-                return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                     System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                     int k;
                     k = 12;
-                    return newList.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                    bool local_2 = newList.TrueForAll(delegate (T t1) {
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
+                    return local_2;
 
                 });
+                return local_1;
 
             }
 
             public bool Method4_12(int i)
             {
                 int j = 1;
-                return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                     System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                     int k;
                     k = 12;
                     bool b1 = newList.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
                     bool b2 = this.list_inner.TrueForAll(delegate (T t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
-                    return (b1 && b2);
+                    bool local_4 = (b1 && b2);
+                    return local_4;
 
                 });
+                return local_1;
 
             }
 
@@ -1461,37 +1610,44 @@ namespace CodeModelTestInput
             public bool Method4_23(int i)
             {
                 int j = 1;
-                return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                     System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                     int k;
                     k = 12;
-                    return newList.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                    bool local_2 = newList.TrueForAll(delegate (T t1) {
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
+                    return local_2;
 
                 });
+                return local_1;
 
             }
 
             public bool Method4_24(int i)
             {
                 int j = 1;
-                return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
+                bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
                     System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
                     int k;
                     k = 12;
                     bool b1 = newList.TrueForAll(delegate (T t1) {
-                        return (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t.GetHashCode() == (((t1.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
                     bool b2 = this.list_inner.TrueForAll(delegate (T2 t1) {
-                        return (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        bool local_0 = (t1.GetHashCode() == (((t.GetHashCode() + i) + j) + k));
+                        return local_0;
 
                     });
-                    return (b1 && b2);
+                    bool local_4 = (b1 && b2);
+                    return local_4;
 
                 });
+                return local_1;
 
             }
 

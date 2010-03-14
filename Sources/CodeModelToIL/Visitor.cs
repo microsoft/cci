@@ -1406,7 +1406,16 @@ namespace Microsoft.Cci {
     /// <param name="makeTypedReference">The make typed reference.</param>
     public override void Visit(IMakeTypedReference makeTypedReference) {
       this.LoadAddressOf(makeTypedReference.Operand, null);
-      this.generator.Emit(OperationCode.Mkrefany, makeTypedReference.Operand.Type);
+      var type = makeTypedReference.Operand.Type;
+      var mptr = type as IManagedPointerTypeReference;
+      if (mptr != null)
+        type = mptr.TargetType;
+      else {
+        var ptr = type as IPointerTypeReference;
+        if (ptr != null)
+          type = ptr.TargetType;
+      }
+      this.generator.Emit(OperationCode.Mkrefany, type);
     }
 
     /// <summary>
