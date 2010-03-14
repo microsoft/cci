@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -2481,7 +2481,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public ITypeReference UnderlyingType {
-      get { return Dummy.TypeReference; }
+      get { return this.UnspecializedVersion.UnderlyingType; }
     }
 
     /// <summary>
