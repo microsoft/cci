@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -898,9 +898,8 @@ namespace Microsoft.Cci {
       get {
         IMethodDefinition definingMethodDef = this.DefiningMethod.ResolvedMethod;
         if (!definingMethodDef.IsGeneric) return Dummy.GenericMethodParameter;
-        ushort i = 0;
         foreach (IGenericMethodParameter genericParameter in definingMethodDef.GenericParameters) {
-          if (i++ == this.index) return genericParameter;
+          if (genericParameter.Index == this.index) return genericParameter;
         }
         return Dummy.GenericMethodParameter;
       }
@@ -1169,7 +1168,7 @@ namespace Microsoft.Cci {
     /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
     private ITypeReference SpecializeIfConstructed(ITypeReference partiallySpecializedTypeReference) {
       SpecializedNestedTypeDefinition specializedParent = this.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
-      if (specializedParent != null) 
+      if (specializedParent != null)
         partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReference(partiallySpecializedTypeReference, specializedParent, this.ContainingGenericTypeInstance.InternFactory);
       return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
     }
@@ -1661,7 +1660,7 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) 
+        if (this.type == null)
           this.type = this.CopyAndSpecialize(this.partiallySpecializedVersion.Type);
         return this.type;
       }

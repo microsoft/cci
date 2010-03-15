@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -441,9 +441,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     private IGenericMethodParameter Resolve() {
       IMethodDefinition definingMethod = this.definingMethod.ResolvedMethod;
       if (definingMethod.IsGeneric && definingMethod.GenericParameterCount > this.index) {
-        ushort i = 0;
         foreach (IGenericMethodParameter par in definingMethod.GenericParameters) {
-          if (par.Index == i++) return par;
+          if (par.Index == this.index) return par;
         }
       }
       return Dummy.GenericMethodParameter;
@@ -851,9 +850,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     private IGenericTypeParameter Resolve() {
       ITypeDefinition definingType = this.definingType.ResolvedType;
       if (definingType.IsGeneric && definingType.GenericParameterCount > this.index) {
-        ushort i = 0;
         foreach (IGenericTypeParameter par in definingType.GenericParameters) {
-          if (par.Index == i++) return par;
+          if (par.Index == this.index) return par;
         }
       }
       return Dummy.GenericTypeParameter;
