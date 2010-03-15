@@ -816,7 +816,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
-      set { this.MethodDefinition = value; }
+      set { this.methodDefinition = value; }
     }
     IMethodDefinition methodDefinition;
 
