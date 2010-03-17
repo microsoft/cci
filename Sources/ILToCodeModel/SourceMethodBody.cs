@@ -263,8 +263,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         bb.NumberOfTryBlocksStartingHere++;
         bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
         bb.ExceptionInformation = exinfo;
-        if (exinfo.HandlerKind == HandlerKind.Filter)
+        if (exinfo.HandlerKind == HandlerKind.Filter) {
           this.GetOrCreateBlock(exinfo.FilterDecisionStartOffset, false);
+          bb.Statements.Add(new Push() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
+        } else if (exinfo.HandlerKind == HandlerKind.Catch) {
+          bb.Statements.Add(new Push() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
+        }
       }
     }
 

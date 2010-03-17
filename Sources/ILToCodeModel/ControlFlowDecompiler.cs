@@ -141,6 +141,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!(assign.Target.Definition is ILocalDefinition)) return result;
       result = (ILocalDefinition)assign.Target.Definition;
       bb.Statements.RemoveAt(0);
+      if (bb.LocalVariables != null && bb.LocalVariables.Remove(result))
+        return result;
       if (bb.Statements.Count > 0) {
         BasicBlock nbb = bb.Statements[0] as BasicBlock;
         if (nbb != null && nbb.LocalVariables != null)
