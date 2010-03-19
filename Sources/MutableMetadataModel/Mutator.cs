@@ -4430,6 +4430,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeOf;
     }
 
+    /// <summary>
+    /// Visit a metadata named argument.
+    /// </summary>
+    /// <param name="namedArgument"></param>
+    /// <returns></returns>
     public virtual IMetadataNamedArgument Visit(IMetadataNamedArgument namedArgument) {
       if (this.stopTraversal) return namedArgument;
       var mutable = namedArgument as MetadataNamedArgument;
@@ -5428,6 +5433,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeDefinitionMember;
     }
 
+    /// <summary>
+    /// Visit the common members of a type definition member. 
+    /// </summary>
+    /// <param name="typeDefinitionMember"></param>
+    /// <returns></returns>
     public ITypeDefinitionMember VisitITypeDefinitionMember(ITypeDefinitionMember typeDefinitionMember) {
       this.Visit(typeDefinitionMember.Attributes);
       this.Visit(typeDefinitionMember.Locations);
@@ -5550,6 +5560,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return genericMethodParameterReference;
     }
 
+    /// <summary>
+    /// Visit a generic method parameter reference. 
+    /// </summary>
+    /// <param name="genericMethodParameterReference"></param>
+    /// <returns></returns>
     public virtual GenericMethodParameterReference Mutate(GenericMethodParameterReference genericMethodParameterReference) {
       if (this.stopTraversal) return genericMethodParameterReference;
       Debug.Assert(!this.referenceCache.ContainsKey(genericMethodParameterReference));
@@ -5557,6 +5572,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (definingMethod != genericMethodParameterReference.DefiningMethod) {
         var copy = new GenericMethodParameterReference();
         copy.Copy(genericMethodParameterReference, this.host.InternFactory);
+        copy.DefiningMethod = definingMethod;
         return copy;
       }
       return genericMethodParameterReference;
@@ -6108,6 +6124,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Mutate(nestedUnitNamespaceReference);
     }
 
+    /// <summary>
+    /// Visit a nested unit namespace reference. 
+    /// </summary>
+    /// <param name="nestedUnitNamespaceReference"></param>
+    /// <returns></returns>
     public virtual INestedUnitNamespaceReference Mutate(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
       if (this.stopTraversal) return nestedUnitNamespaceReference;
       var t = this.Visit(nestedUnitNamespaceReference.ContainingUnitNamespace);
@@ -6166,6 +6187,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterDefinitions;
     }
 
+    /// <summary>
+    /// Visit a parameter definition. 
+    /// </summary>
+    /// <param name="parameterDefinition"></param>
+    /// <returns></returns>
     public virtual IParameterDefinition Visit(IParameterDefinition parameterDefinition) {
       if (this.stopTraversal) return parameterDefinition;
       var mutable = parameterDefinition as ParameterDefinition;
@@ -6223,6 +6249,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterTypeInformationList;
     }
 
+    /// <summary>
+    /// Visit a parameter type information.
+    /// </summary>
+    /// <param name="parameterTypeInformation"></param>
+    /// <returns></returns>
     public virtual IParameterTypeInformation Visit(IParameterTypeInformation parameterTypeInformation) {
       if (this.stopTraversal) return parameterTypeInformation;
       var mutable = parameterTypeInformation as ParameterTypeInformation;
@@ -6253,6 +6284,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return parameterTypeInformation;
     }
 
+    /// <summary>
+    /// Visit p/invoke information.
+    /// </summary>
+    /// <param name="platformInvokeInformation"></param>
+    /// <returns></returns>
     public virtual IPlatformInvokeInformation Visit(IPlatformInvokeInformation platformInvokeInformation) {
       if (this.stopTraversal) return platformInvokeInformation;
       var mutable = platformInvokeInformation as PlatformInvokeInformation;
@@ -6361,6 +6397,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       return resourceReferences;
     }
 
+    /// <summary>
+    /// Visit resource reference. 
+    /// </summary>
+    /// <param name="resourceReference"></param>
+    /// <returns></returns>
     public virtual IResourceReference Visit(IResourceReference resourceReference) {
       if (this.stopTraversal) return resourceReference;
       var mutable = resourceReference as ResourceReference;
@@ -6539,6 +6580,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeReference;
     }
 
+    /// <summary>
+    /// Visit the common part of a type reference. 
+    /// </summary>
+    /// <param name="typeReference"></param>
     public virtual void VisitTypeReference(ITypeReference typeReference) {
       if (this.stopTraversal) return;
       this.path.Push(typeReference);
@@ -6744,6 +6789,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
   }
 
+  /// <summary>
+  /// A helper class that provides functional versions of creating different type references. 
+  /// </summary>
   public class MutableModelHelper {
     /// <summary>
     /// Functional version of creating a generic type instance reference. 
@@ -6874,7 +6922,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       //^ ensures result is PointerTypeReference;
       var result = new PointerTypeReference();
       if (original != null)
-        result.Copy(null, internFactory);
+        result.Copy(original, internFactory);
       result.InternFactory = internFactory;
       result.TargetType = targetType;
       return result;
