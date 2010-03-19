@@ -711,22 +711,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Visits the specified method body.
     /// </summary>
     /// <param name="methodBody">The method body.</param>
+    /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
-      bool hadLocals = IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables);
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
         SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
-        if (hadLocals)
-          // If the method had locals before the CodeMutator morphed it, then we retain the original initialization flag.
-          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
-        else if (IteratorHelper.EnumerableIsNotEmpty(mutableSourceMethodBody.LocalVariables))
-          // if CodeMutator introduced locals, then let us make sure they are initialized so that verification is not affected. 
-          mutableSourceMethodBody.LocalsAreZeroed = true;
-        else
-          // If there were no locals and none introduced by the CodeMutator we will just retain the original initialization flag. 
-          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         return mutableSourceMethodBody;
       }
       return base.Visit(methodBody);
@@ -2678,5 +2670,2339 @@ namespace Microsoft.Cci.MutableCodeModel {
       return typeReference;
     }
     #endregion All code mutators that are not mutating an entire assembly need to *not* modify certain references
+  }
+
+  /// <summary>
+  /// Uses the inherited methods from MetadataMutatingVisitor to walk everything down to the method body level,
+  /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+  /// </summary>
+  public class CodeMutatingVisitor : MutatingVisitor {
+
+    /// <summary>
+    /// A helper ICodeVisitor for IExpression and IStatement dispatch.
+    /// </summary>
+    private CreateMutableType createMutableType;
+
+    /// <summary>
+    /// An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.
+    /// </summary>
+    protected readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
+
+    /// <summary>
+    /// Allocates a mutator that uses the inherited methods from MetadataMutatingVisitor to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public CodeMutatingVisitor(IMetadataHost host)
+      : base(host) {
+      createMutableType = new CreateMutableType(this);
+    }
+
+    /// <summary>
+    /// Allocates a mutator that uses the inherited methods from MetadataMutatingVisitor to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    public CodeMutatingVisitor(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host) {
+      this.sourceLocationProvider = sourceLocationProvider;
+      createMutableType = new CreateMutableType(this);
+    }
+
+    #region Virtual methods for subtypes to override, one per type in MutableCodeModel
+
+    /// <summary>
+    /// Visits the specified addition.
+    /// </summary>
+    /// <param name="addition">The addition.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Addition addition) {
+      return this.Visit((BinaryOperation)addition);
+    }
+
+    /// <summary>
+    /// Visits the specified addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression">The addressable expression.</param>
+    /// <returns></returns>
+    public virtual IAddressableExpression Visit(AddressableExpression addressableExpression) {
+      object def = addressableExpression.Definition;
+      ILocalDefinition/*?*/ loc = def as ILocalDefinition;
+      if (loc != null)
+        addressableExpression.Definition = this.Visit(loc);
+      else {
+        IParameterDefinition/*?*/ par = def as IParameterDefinition;
+        if (par != null)
+          addressableExpression.Definition = this.Visit(par);
+        else {
+          IFieldReference/*?*/ field = def as IFieldReference;
+          if (field != null)
+            addressableExpression.Definition = this.Visit(field);
+          else {
+            IArrayIndexer/*?*/ indexer = def as IArrayIndexer;
+            if (indexer != null)
+              addressableExpression.Definition = this.Visit(indexer);
+            else {
+              IAddressDereference/*?*/ adr = def as IAddressDereference;
+              if (adr != null)
+                addressableExpression.Definition = this.Visit(adr);
+              else {
+                IMethodReference/*?*/ meth = def as IMethodReference;
+                if (meth != null)
+                  addressableExpression.Definition = this.Visit(meth);
+                else {
+                  IThisReference thisRef = (IThisReference)def;
+                  addressableExpression.Definition = this.Visit(thisRef);
+                }
+              }
+            }
+          }
+        }
+      }
+      if (addressableExpression.Instance != null)
+        addressableExpression.Instance = this.Visit(addressableExpression.Instance);
+      addressableExpression.Type = this.Visit(addressableExpression.Type);
+      return addressableExpression;
+    }
+
+    /// <summary>
+    /// Visits the specified address dereference.
+    /// </summary>
+    /// <param name="addressDereference">The address dereference.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(AddressDereference addressDereference) {
+      addressDereference.Address = this.Visit(addressDereference.Address);
+      addressDereference.Type = this.Visit(addressDereference.Type);
+      return addressDereference;
+    }
+
+    /// <summary>
+    /// Visits the specified address of.
+    /// </summary>
+    /// <param name="addressOf">The address of.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(AddressOf addressOf) {
+      addressOf.Expression = this.Visit(addressOf.Expression);
+      addressOf.Type = this.Visit(addressOf.Type);
+      return addressOf;
+    }
+
+    /// <summary>
+    /// Visits the specified anonymous delegate.
+    /// </summary>
+    /// <param name="anonymousDelegate">The anonymous delegate.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(AnonymousDelegate anonymousDelegate) {
+      this.path.Push(anonymousDelegate);
+      for (int i = 0, n = anonymousDelegate.Parameters.Count; i < n; i++) 
+        anonymousDelegate.Parameters[i] = this.Visit(anonymousDelegate.Parameters[i]);
+      anonymousDelegate.Body = this.Visit(anonymousDelegate.Body);
+      this.path.Pop();
+      return anonymousDelegate;
+    }
+
+    /// <summary>
+    /// Visits the specified array indexer.
+    /// </summary>
+    /// <param name="arrayIndexer">The array indexer.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(ArrayIndexer arrayIndexer) {
+      arrayIndexer.IndexedObject = this.Visit(arrayIndexer.IndexedObject);
+      arrayIndexer.Indices = this.Visit(arrayIndexer.Indices);
+      arrayIndexer.Type = this.Visit(arrayIndexer.Type);
+      return arrayIndexer;
+    }
+
+    /// <summary>
+    /// Visits the specified assert statement.
+    /// </summary>
+    /// <param name="assertStatement">The assert statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(AssertStatement assertStatement) {
+      assertStatement.Condition = this.Visit(assertStatement.Condition);
+      return assertStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified assignment.
+    /// </summary>
+    /// <param name="assignment">The assignment.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Assignment assignment) {
+      assignment.Target = this.Visit(assignment.Target);
+      assignment.Source = this.Visit(assignment.Source);
+      assignment.Type = this.Visit(assignment.Type);
+      return assignment;
+    }
+
+    /// <summary>
+    /// Visits the specified assume statement.
+    /// </summary>
+    /// <param name="assumeStatement">The assume statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(AssumeStatement assumeStatement) {
+      assumeStatement.Condition = this.Visit(assumeStatement.Condition);
+      return assumeStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified base class reference.
+    /// </summary>
+    /// <param name="baseClassReference">The base class reference.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(BaseClassReference baseClassReference) {
+      baseClassReference.Type = this.Visit(baseClassReference.Type);
+      return baseClassReference;
+    }
+
+    /// <summary>
+    /// Visits the specified bitwise and.
+    /// </summary>
+    /// <param name="bitwiseAnd">The bitwise and.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(BitwiseAnd bitwiseAnd) {
+      return this.Visit((BinaryOperation)bitwiseAnd);
+    }
+
+    /// <summary>
+    /// Visits the specified bitwise or.
+    /// </summary>
+    /// <param name="bitwiseOr">The bitwise or.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(BitwiseOr bitwiseOr) {
+      return this.Visit((BinaryOperation)bitwiseOr);
+    }
+
+    /// <summary>
+    /// Visits the specified binary operation.
+    /// </summary>
+    /// <param name="binaryOperation">The binary operation.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(BinaryOperation binaryOperation) {
+      binaryOperation.LeftOperand = this.Visit(binaryOperation.LeftOperand);
+      binaryOperation.RightOperand = this.Visit(binaryOperation.RightOperand);
+      binaryOperation.Type = this.Visit(binaryOperation.Type);
+      return binaryOperation;
+    }
+
+    /// <summary>
+    /// Visits the specified block expression.
+    /// </summary>
+    /// <param name="blockExpression">The block expression.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(BlockExpression blockExpression) {
+      blockExpression.BlockStatement = this.Visit(blockExpression.BlockStatement);
+      blockExpression.Expression = Visit(blockExpression.Expression);
+      blockExpression.Type = this.Visit(blockExpression.Type);
+      return blockExpression;
+    }
+
+    /// <summary>
+    /// Visits the specified block statement.
+    /// </summary>
+    /// <param name="blockStatement">The block statement.</param>
+    /// <returns></returns>
+    public virtual IBlockStatement Visit(BlockStatement blockStatement) {
+      blockStatement.Statements = Visit(blockStatement.Statements);
+      return blockStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified bound expression.
+    /// </summary>
+    /// <param name="boundExpression">The bound expression.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(BoundExpression boundExpression) {
+      if (boundExpression.Instance != null)
+        boundExpression.Instance = Visit(boundExpression.Instance);
+      ILocalDefinition/*?*/ loc = boundExpression.Definition as ILocalDefinition;
+      if (loc != null)
+        boundExpression.Definition = this.Visit(loc);
+      else {
+        IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
+        if (par != null)
+          boundExpression.Definition = this.Visit(par);
+        else {
+          IFieldReference/*?*/ field = boundExpression.Definition as IFieldReference;
+          boundExpression.Definition = this.Visit(field);
+        }
+      }
+      boundExpression.Type = this.Visit(boundExpression.Type);
+      return boundExpression;
+    }
+
+    /// <summary>
+    /// Visits the specified break statement.
+    /// </summary>
+    /// <param name="breakStatement">The break statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(BreakStatement breakStatement) {
+      return breakStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified cast if possible.
+    /// </summary>
+    /// <param name="castIfPossible">The cast if possible.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(CastIfPossible castIfPossible) {
+      castIfPossible.TargetType = Visit(castIfPossible.TargetType);
+      castIfPossible.ValueToCast = Visit(castIfPossible.ValueToCast);
+      castIfPossible.Type = this.Visit(castIfPossible.Type);
+      return castIfPossible;
+    }
+
+    /// <summary>
+    /// Visits the specified catch clauses.
+    /// </summary>
+    /// <param name="catchClauses">The catch clauses.</param>
+    /// <returns></returns>
+    public virtual List<ICatchClause> Visit(List<CatchClause> catchClauses) {
+      List<ICatchClause> newList = new List<ICatchClause>();
+      foreach (var catchClause in catchClauses) {
+        newList.Add(Visit(catchClause));
+      }
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified catch clause.
+    /// </summary>
+    /// <param name="catchClause">The catch clause.</param>
+    /// <returns></returns>
+    public virtual ICatchClause Visit(CatchClause catchClause) {
+      if (catchClause.FilterCondition != null)
+        catchClause.FilterCondition = Visit(catchClause.FilterCondition);
+      catchClause.Body = Visit(catchClause.Body);
+      return catchClause;
+    }
+
+    /// <summary>
+    /// Visits the specified check if instance.
+    /// </summary>
+    /// <param name="checkIfInstance">The check if instance.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(CheckIfInstance checkIfInstance) {
+      checkIfInstance.Operand = Visit(checkIfInstance.Operand);
+      checkIfInstance.TypeToCheck = Visit(checkIfInstance.TypeToCheck);
+      checkIfInstance.Type = this.Visit(checkIfInstance.Type);
+      return checkIfInstance;
+    }
+
+    /// <summary>
+    /// Visits the specified constant.
+    /// </summary>
+    /// <param name="constant">The constant.</param>
+    /// <returns></returns>
+    public virtual ICompileTimeConstant Visit(CompileTimeConstant constant) {
+      constant.Type = this.Visit(constant.Type);
+      return constant;
+    }
+
+    /// <summary>
+    /// Visits the specified conversion.
+    /// </summary>
+    /// <param name="conversion">The conversion.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Conversion conversion) {
+      conversion.ValueToConvert = Visit(conversion.ValueToConvert);
+      conversion.Type = this.Visit(conversion.Type);
+      return conversion;
+    }
+
+    /// <summary>
+    /// Visits the specified conditional.
+    /// </summary>
+    /// <param name="conditional">The conditional.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Conditional conditional) {
+      conditional.Condition = Visit(conditional.Condition);
+      conditional.ResultIfTrue = Visit(conditional.ResultIfTrue);
+      conditional.ResultIfFalse = Visit(conditional.ResultIfFalse);
+      conditional.Type = this.Visit(conditional.Type);
+      return conditional;
+    }
+
+    /// <summary>
+    /// Visits the specified conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement">The conditional statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ConditionalStatement conditionalStatement) {
+      conditionalStatement.Condition = Visit(conditionalStatement.Condition);
+      conditionalStatement.TrueBranch = Visit(conditionalStatement.TrueBranch);
+      conditionalStatement.FalseBranch = Visit(conditionalStatement.FalseBranch);
+      return conditionalStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified continue statement.
+    /// </summary>
+    /// <param name="continueStatement">The continue statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ContinueStatement continueStatement) {
+      return continueStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified create array.
+    /// </summary>
+    /// <param name="createArray">The create array.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(CreateArray createArray) {
+      createArray.ElementType = this.Visit(createArray.ElementType);
+      createArray.Sizes = this.Visit(createArray.Sizes);
+      createArray.Initializers = this.Visit(createArray.Initializers);
+      createArray.Type = this.Visit(createArray.Type);
+      return createArray;
+    }
+
+    /// <summary>
+    /// Visits the specified create object instance.
+    /// </summary>
+    /// <param name="createObjectInstance">The create object instance.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(CreateObjectInstance createObjectInstance) {
+      createObjectInstance.MethodToCall = this.Visit(createObjectInstance.MethodToCall);
+      createObjectInstance.Arguments = Visit(createObjectInstance.Arguments);
+      createObjectInstance.Type = this.Visit(createObjectInstance.Type);
+      return createObjectInstance;
+    }
+
+    /// <summary>
+    /// Visits the specified create delegate instance.
+    /// </summary>
+    /// <param name="createDelegateInstance">The create delegate instance.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(CreateDelegateInstance createDelegateInstance) {
+      createDelegateInstance.MethodToCallViaDelegate = this.Visit(createDelegateInstance.MethodToCallViaDelegate);
+      if (createDelegateInstance.Instance != null)
+        createDelegateInstance.Instance = Visit(createDelegateInstance.Instance);
+      createDelegateInstance.Type = this.Visit(createDelegateInstance.Type);
+      return createDelegateInstance;
+    }
+
+    /// <summary>
+    /// Visits the specified default value.
+    /// </summary>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(DefaultValue defaultValue) {
+      defaultValue.DefaultValueType = Visit(defaultValue.DefaultValueType);
+      defaultValue.Type = this.Visit(defaultValue.Type);
+      return defaultValue;
+    }
+
+    /// <summary>
+    /// Visits the specified debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement">The debugger break statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(DebuggerBreakStatement debuggerBreakStatement) {
+      return debuggerBreakStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified division.
+    /// </summary>
+    /// <param name="division">The division.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Division division) {
+      return this.Visit((BinaryOperation)division);
+    }
+
+    /// <summary>
+    /// Visits the specified do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement">The do until statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(DoUntilStatement doUntilStatement) {
+      doUntilStatement.Body = Visit(doUntilStatement.Body);
+      doUntilStatement.Condition = Visit(doUntilStatement.Condition);
+      return doUntilStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified empty statement.
+    /// </summary>
+    /// <param name="emptyStatement">The empty statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(EmptyStatement emptyStatement) {
+      return emptyStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified equality.
+    /// </summary>
+    /// <param name="equality">The equality.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Equality equality) {
+      return this.Visit((BinaryOperation)equality);
+    }
+
+    /// <summary>
+    /// Visits the specified exclusive or.
+    /// </summary>
+    /// <param name="exclusiveOr">The exclusive or.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(ExclusiveOr exclusiveOr) {
+      return this.Visit((BinaryOperation)exclusiveOr);
+    }
+
+    /// <summary>
+    /// Visits the specified expressions.
+    /// </summary>
+    /// <param name="expressions">The expressions.</param>
+    /// <returns></returns>
+    public virtual List<IExpression> Visit(List<IExpression> expressions) {
+      List<IExpression> newList = new List<IExpression>();
+      foreach (var expression in expressions)
+        newList.Add(this.Visit(expression));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified expression statement.
+    /// </summary>
+    /// <param name="expressionStatement">The expression statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ExpressionStatement expressionStatement) {
+      expressionStatement.Expression = Visit(expressionStatement.Expression);
+      return expressionStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified for each statement.
+    /// </summary>
+    /// <param name="forEachStatement">For each statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ForEachStatement forEachStatement) {
+      forEachStatement.Collection = Visit(forEachStatement.Collection);
+      forEachStatement.Body = Visit(forEachStatement.Body);
+      return forEachStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified for statement.
+    /// </summary>
+    /// <param name="forStatement">For statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ForStatement forStatement) {
+      forStatement.InitStatements = Visit(forStatement.InitStatements);
+      forStatement.Condition = Visit(forStatement.Condition);
+      forStatement.IncrementStatements = Visit(forStatement.IncrementStatements);
+      forStatement.Body = Visit(forStatement.Body);
+      return forStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified get type of typed reference.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference">The get type of typed reference.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(GetTypeOfTypedReference getTypeOfTypedReference) {
+      getTypeOfTypedReference.TypedReference = Visit(getTypeOfTypedReference.TypedReference);
+      getTypeOfTypedReference.Type = this.Visit(getTypeOfTypedReference.Type);
+      return getTypeOfTypedReference;
+    }
+
+    /// <summary>
+    /// Visits the specified get value of typed reference.
+    /// </summary>
+    /// <param name="getValueOfTypedReference">The get value of typed reference.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(GetValueOfTypedReference getValueOfTypedReference) {
+      getValueOfTypedReference.TypedReference = Visit(getValueOfTypedReference.TypedReference);
+      getValueOfTypedReference.TargetType = Visit(getValueOfTypedReference.TargetType);
+      getValueOfTypedReference.Type = this.Visit(getValueOfTypedReference.Type);
+      return getValueOfTypedReference;
+    }
+
+    /// <summary>
+    /// Visits the specified goto statement.
+    /// </summary>
+    /// <param name="gotoStatement">The goto statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(GotoStatement gotoStatement) {
+      return gotoStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement">The goto switch case statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(GotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      return gotoSwitchCaseStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified greater than.
+    /// </summary>
+    /// <param name="greaterThan">The greater than.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(GreaterThan greaterThan) {
+      return this.Visit((BinaryOperation)greaterThan);
+    }
+
+    /// <summary>
+    /// Visits the specified greater than or equal.
+    /// </summary>
+    /// <param name="greaterThanOrEqual">The greater than or equal.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(GreaterThanOrEqual greaterThanOrEqual) {
+      return this.Visit((BinaryOperation)greaterThanOrEqual);
+    }
+
+    /// <summary>
+    /// Visits the specified labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement">The labeled statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(LabeledStatement labeledStatement) {
+      labeledStatement.Statement = Visit(labeledStatement.Statement);
+      return labeledStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified left shift.
+    /// </summary>
+    /// <param name="leftShift">The left shift.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(LeftShift leftShift) {
+      return this.Visit((BinaryOperation)leftShift);
+    }
+
+    /// <summary>
+    /// Visits the specified less than.
+    /// </summary>
+    /// <param name="lessThan">The less than.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(LessThan lessThan) {
+      return this.Visit((BinaryOperation)lessThan);
+    }
+
+    /// <summary>
+    /// Visits the specified less than or equal.
+    /// </summary>
+    /// <param name="lessThanOrEqual">The less than or equal.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(LessThanOrEqual lessThanOrEqual) {
+      return this.Visit((BinaryOperation)lessThanOrEqual);
+    }
+
+    /// <summary>
+    /// Visits the specified local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement">The local declaration statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
+      localDeclarationStatement.LocalVariable = this.Visit(localDeclarationStatement.LocalVariable);
+      if (localDeclarationStatement.InitialValue != null)
+        localDeclarationStatement.InitialValue = Visit(localDeclarationStatement.InitialValue);
+      return localDeclarationStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified lock statement.
+    /// </summary>
+    /// <param name="lockStatement">The lock statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(LockStatement lockStatement) {
+      lockStatement.Guard = Visit(lockStatement.Guard);
+      lockStatement.Body = Visit(lockStatement.Body);
+      return lockStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified logical not.
+    /// </summary>
+    /// <param name="logicalNot">The logical not.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(LogicalNot logicalNot) {
+      return this.Visit((UnaryOperation)logicalNot);
+    }
+
+    /// <summary>
+    /// Visits the specified make typed reference.
+    /// </summary>
+    /// <param name="makeTypedReference">The make typed reference.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(MakeTypedReference makeTypedReference) {
+      makeTypedReference.Operand = Visit(makeTypedReference.Operand);
+      makeTypedReference.Type = this.Visit(makeTypedReference.Type);
+      return makeTypedReference;
+    }
+
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
+    /// <returns></returns>
+    public override IMethodBody Visit(IMethodBody methodBody) {
+      ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
+      if (sourceMethodBody != null) {
+        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
+        mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
+        mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
+        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        return mutableSourceMethodBody;
+      }
+      return base.Visit(methodBody);
+    }
+
+    /// <summary>
+    /// Visits the specified method call.
+    /// </summary>
+    /// <param name="methodCall">The method call.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(MethodCall methodCall) {
+      if (!methodCall.IsStaticCall)
+        methodCall.ThisArgument = this.Visit(methodCall.ThisArgument);
+      methodCall.Arguments = this.Visit(methodCall.Arguments);
+      methodCall.MethodToCall = this.Visit(methodCall.MethodToCall);
+      methodCall.Type = this.Visit(methodCall.Type);
+      return methodCall;
+    }
+
+    /// <summary>
+    /// Visits the specified modulus.
+    /// </summary>
+    /// <param name="modulus">The modulus.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Modulus modulus) {
+      return this.Visit((BinaryOperation)modulus);
+    }
+
+    /// <summary>
+    /// Visits the specified multiplication.
+    /// </summary>
+    /// <param name="multiplication">The multiplication.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Multiplication multiplication) {
+      return this.Visit((BinaryOperation)multiplication);
+    }
+
+    /// <summary>
+    /// Visits the specified named argument.
+    /// </summary>
+    /// <param name="namedArgument">The named argument.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(NamedArgument namedArgument) {
+      namedArgument.ArgumentValue = namedArgument.ArgumentValue;
+      namedArgument.Type = this.Visit(namedArgument.Type);
+      return namedArgument;
+    }
+
+    /// <summary>
+    /// Visits the specified not equality.
+    /// </summary>
+    /// <param name="notEquality">The not equality.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(NotEquality notEquality) {
+      return this.Visit((BinaryOperation)notEquality);
+    }
+
+    /// <summary>
+    /// Visits the specified old value.
+    /// </summary>
+    /// <param name="oldValue">The old value.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(OldValue oldValue) {
+      oldValue.Expression = Visit(oldValue.Expression);
+      oldValue.Type = this.Visit(oldValue.Type);
+      return oldValue;
+    }
+
+    /// <summary>
+    /// Visits the specified ones complement.
+    /// </summary>
+    /// <param name="onesComplement">The ones complement.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(OnesComplement onesComplement) {
+      return this.Visit((UnaryOperation)onesComplement);
+    }
+
+    /// <summary>
+    /// Visits the specified unary operation.
+    /// </summary>
+    /// <param name="unaryOperation">The unary operation.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(UnaryOperation unaryOperation) {
+      unaryOperation.Operand = Visit(unaryOperation.Operand);
+      unaryOperation.Type = this.Visit(unaryOperation.Type);
+      return unaryOperation;
+    }
+
+    /// <summary>
+    /// Visits the specified out argument.
+    /// </summary>
+    /// <param name="outArgument">The out argument.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(OutArgument outArgument) {
+      outArgument.Expression = Visit(outArgument.Expression);
+      outArgument.Type = this.Visit(outArgument.Type);
+      return outArgument;
+    }
+
+    /// <summary>
+    /// Visits the specified pointer call.
+    /// </summary>
+    /// <param name="pointerCall">The pointer call.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(PointerCall pointerCall) {
+      pointerCall.Pointer = this.Visit(pointerCall.Pointer);
+      pointerCall.Arguments = Visit(pointerCall.Arguments);
+      pointerCall.Type = this.Visit(pointerCall.Type);
+      return pointerCall;
+    }
+
+    /// <summary>
+    /// Visits the specified ref argument.
+    /// </summary>
+    /// <param name="refArgument">The ref argument.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(RefArgument refArgument) {
+      refArgument.Expression = Visit(refArgument.Expression);
+      refArgument.Type = this.Visit(refArgument.Type);
+      return refArgument;
+    }
+
+    /// <summary>
+    /// Visits the specified resource use statement.
+    /// </summary>
+    /// <param name="resourceUseStatement">The resource use statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ResourceUseStatement resourceUseStatement) {
+      resourceUseStatement.ResourceAcquisitions = Visit(resourceUseStatement.ResourceAcquisitions);
+      resourceUseStatement.Body = Visit(resourceUseStatement.Body);
+      return resourceUseStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement">The rethrow statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(RethrowStatement rethrowStatement) {
+      return rethrowStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified return statement.
+    /// </summary>
+    /// <param name="returnStatement">The return statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ReturnStatement returnStatement) {
+      if (returnStatement.Expression != null)
+        returnStatement.Expression = Visit(returnStatement.Expression);
+      return returnStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified return value.
+    /// </summary>
+    /// <param name="returnValue">The return value.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(ReturnValue returnValue) {
+      returnValue.Type = this.Visit(returnValue.Type);
+      return returnValue;
+    }
+
+    /// <summary>
+    /// Visits the specified right shift.
+    /// </summary>
+    /// <param name="rightShift">The right shift.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(RightShift rightShift) {
+      return this.Visit((BinaryOperation)rightShift);
+    }
+
+    /// <summary>
+    /// Visits the specified runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression">The runtime argument handle expression.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(RuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      runtimeArgumentHandleExpression.Type = this.Visit(runtimeArgumentHandleExpression.Type);
+      return runtimeArgumentHandleExpression;
+    }
+
+    /// <summary>
+    /// Visits the specified size of.
+    /// </summary>
+    /// <param name="sizeOf">The size of.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(SizeOf sizeOf) {
+      sizeOf.TypeToSize = Visit(sizeOf.TypeToSize);
+      sizeOf.Type = this.Visit(sizeOf.Type);
+      return sizeOf;
+    }
+
+    /// <summary>
+    /// Visits the specified stack array create.
+    /// </summary>
+    /// <param name="stackArrayCreate">The stack array create.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(StackArrayCreate stackArrayCreate) {
+      stackArrayCreate.ElementType = Visit(stackArrayCreate.ElementType);
+      stackArrayCreate.Size = Visit(stackArrayCreate.Size);
+      stackArrayCreate.Type = this.Visit(stackArrayCreate.Type);
+      return stackArrayCreate;
+    }
+
+    /// <summary>
+    /// Visits the specified subtraction.
+    /// </summary>
+    /// <param name="subtraction">The subtraction.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(Subtraction subtraction) {
+      return this.Visit((BinaryOperation)subtraction);
+    }
+
+    /// <summary>
+    /// Visits the specified switch cases.
+    /// </summary>
+    /// <param name="switchCases">The switch cases.</param>
+    /// <returns></returns>
+    public virtual List<ISwitchCase> Visit(List<SwitchCase> switchCases) {
+      List<ISwitchCase> newList = new List<ISwitchCase>();
+      foreach (var switchCase in switchCases)
+        newList.Add(Visit(switchCase));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified switch case.
+    /// </summary>
+    /// <param name="switchCase">The switch case.</param>
+    /// <returns></returns>
+    public virtual ISwitchCase Visit(SwitchCase switchCase) {
+      if (!switchCase.IsDefault)
+        switchCase.Expression = Visit(switchCase.Expression);
+      switchCase.Body = Visit(switchCase.Body);
+      return switchCase;
+    }
+
+    /// <summary>
+    /// Visits the specified switch statement.
+    /// </summary>
+    /// <param name="switchStatement">The switch statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(SwitchStatement switchStatement) {
+      switchStatement.Expression = Visit(switchStatement.Expression);
+      switchStatement.Cases = Visit(switchStatement.Cases);
+      return switchStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified target expression.
+    /// </summary>
+    /// <param name="targetExpression">The target expression.</param>
+    /// <returns></returns>
+    public virtual ITargetExpression Visit(TargetExpression targetExpression) {
+      object def = targetExpression.Definition;
+      ILocalDefinition/*?*/ loc = def as ILocalDefinition;
+      if (loc != null)
+        targetExpression.Definition = this.Visit(loc);
+      else {
+        IParameterDefinition/*?*/ par = targetExpression.Definition as IParameterDefinition;
+        if (par != null)
+          targetExpression.Definition = this.Visit(par);
+        else {
+          IFieldReference/*?*/ field = targetExpression.Definition as IFieldReference;
+          if (field != null) {
+            if (targetExpression.Instance != null)
+              targetExpression.Instance = this.Visit(targetExpression.Instance);
+            targetExpression.Definition = this.Visit(field);
+          } else {
+            IArrayIndexer/*?*/ indexer = def as IArrayIndexer;
+            if (indexer != null) {
+              targetExpression.Definition = this.Visit(indexer);
+              indexer = targetExpression.Definition as IArrayIndexer;
+              if (indexer != null) {
+                targetExpression.Instance = indexer.IndexedObject;
+                targetExpression.Type = indexer.Type;
+                return targetExpression;
+              }
+            } else {
+              IAddressDereference/*?*/ adr = def as IAddressDereference;
+              if (adr != null)
+                targetExpression.Definition = this.Visit(adr);
+              else {
+                IPropertyDefinition/*?*/ prop = def as IPropertyDefinition;
+                if (prop != null) {
+                  if (targetExpression.Instance != null)
+                    targetExpression.Instance = this.Visit(targetExpression.Instance);
+                  targetExpression.Definition = this.Visit(prop);
+                }
+              }
+            }
+          }
+        }
+      }
+      targetExpression.Type = this.Visit(targetExpression.Type);
+      return targetExpression;
+    }
+
+    /// <summary>
+    /// Visits the specified this reference.
+    /// </summary>
+    /// <param name="thisReference">The this reference.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(ThisReference thisReference) {
+      thisReference.Type = this.Visit(thisReference.Type);
+      return thisReference;
+    }
+
+    /// <summary>
+    /// Visits the specified throw statement.
+    /// </summary>
+    /// <param name="throwStatement">The throw statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(ThrowStatement throwStatement) {
+      if (throwStatement.Exception != null)
+        throwStatement.Exception = Visit(throwStatement.Exception);
+      return throwStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified try catch filter finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement">The try catch filter finally statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(TryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      tryCatchFilterFinallyStatement.TryBody = Visit(tryCatchFilterFinallyStatement.TryBody);
+      tryCatchFilterFinallyStatement.CatchClauses = Visit(tryCatchFilterFinallyStatement.CatchClauses);
+      if (tryCatchFilterFinallyStatement.FinallyBody != null)
+        tryCatchFilterFinallyStatement.FinallyBody = Visit(tryCatchFilterFinallyStatement.FinallyBody);
+      return tryCatchFilterFinallyStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified token of.
+    /// </summary>
+    /// <param name="tokenOf">The token of.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(TokenOf tokenOf) {
+      IFieldReference/*?*/ fieldReference = tokenOf.Definition as IFieldReference;
+      if (fieldReference != null)
+        tokenOf.Definition = this.Visit(fieldReference);
+      else {
+        IMethodReference/*?*/ methodReference = tokenOf.Definition as IMethodReference;
+        if (methodReference != null)
+          tokenOf.Definition = this.Visit(methodReference);
+        else
+          tokenOf.Definition = this.Visit((ITypeReference)tokenOf.Definition);
+      }
+      tokenOf.Type = this.Visit(tokenOf.Type);
+      return tokenOf;
+    }
+
+    /// <summary>
+    /// Visits the specified type of.
+    /// </summary>
+    /// <param name="typeOf">The type of.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(TypeOf typeOf) {
+      typeOf.TypeToGet = Visit(typeOf.TypeToGet);
+      typeOf.Type = this.Visit(typeOf.Type);
+      return typeOf;
+    }
+
+    /// <summary>
+    /// Visits the specified unary negation.
+    /// </summary>
+    /// <param name="unaryNegation">The unary negation.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(UnaryNegation unaryNegation) {
+      return this.Visit((UnaryOperation)unaryNegation);
+    }
+
+    /// <summary>
+    /// Visits the specified unary plus.
+    /// </summary>
+    /// <param name="unaryPlus">The unary plus.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(UnaryPlus unaryPlus) {
+      return this.Visit((UnaryOperation)unaryPlus);
+    }
+
+    /// <summary>
+    /// Visits the specified vector length.
+    /// </summary>
+    /// <param name="vectorLength">Length of the vector.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(VectorLength vectorLength) {
+      vectorLength.Vector = Visit(vectorLength.Vector);
+      vectorLength.Type = this.Visit(vectorLength.Type);
+      return vectorLength;
+    }
+
+    /// <summary>
+    /// Visits the specified while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement">The while do statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(WhileDoStatement whileDoStatement) {
+      whileDoStatement.Condition = Visit(whileDoStatement.Condition);
+      whileDoStatement.Body = Visit(whileDoStatement.Body);
+      return whileDoStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement">The yield break statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(YieldBreakStatement yieldBreakStatement) {
+      return yieldBreakStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement">The yield return statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(YieldReturnStatement yieldReturnStatement) {
+      yieldReturnStatement.Expression = Visit(yieldReturnStatement.Expression);
+      return yieldReturnStatement;
+    }
+
+    #endregion Virtual methods for subtypes to override, one per type in MutableCodeModel
+
+    #region Methods that take an immutable type and return a type-specific mutable object, either by using the internal visitor, or else directly
+
+    /// <summary>
+    /// Visits the specified addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression">The addressable expression.</param>
+    /// <returns></returns>
+    public virtual IAddressableExpression Visit(IAddressableExpression addressableExpression) {
+      AddressableExpression mutableAddressableExpression = addressableExpression as AddressableExpression;
+      if (mutableAddressableExpression == null)
+        return addressableExpression;
+      return Visit(mutableAddressableExpression);
+    }
+
+    /// <summary>
+    /// Visits the specified block statement.
+    /// </summary>
+    /// <param name="blockStatement">The block statement.</param>
+    /// <returns></returns>
+    public virtual IBlockStatement Visit(IBlockStatement blockStatement) {
+      BlockStatement mutableBlockStatement = blockStatement as BlockStatement;
+      if (mutableBlockStatement == null)
+        return blockStatement;
+      return Visit(mutableBlockStatement);
+    }
+
+    /// <summary>
+    /// Visits the specified catch clause.
+    /// </summary>
+    /// <param name="catchClause">The catch clause.</param>
+    /// <returns></returns>
+    public virtual ICatchClause Visit(ICatchClause catchClause) {
+      CatchClause mutableCatchClause = catchClause as CatchClause;
+      if (mutableCatchClause == null)
+        return catchClause;
+      return Visit(mutableCatchClause);
+    }
+
+    /// <summary>
+    /// Visits the specified catch clauses.
+    /// </summary>
+    /// <param name="catchClauses">The catch clauses.</param>
+    /// <returns></returns>
+    public virtual List<ICatchClause> Visit(List<ICatchClause> catchClauses) {
+      List<ICatchClause> newList = new List<ICatchClause>();
+      foreach (var catchClause in catchClauses) {
+        ICatchClause mcc = this.Visit(catchClause);
+        newList.Add(mcc);
+      }
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified compile time constant.
+    /// </summary>
+    /// <param name="compileTimeConstant">The compile time constant.</param>
+    /// <returns></returns>
+    public virtual ICompileTimeConstant Visit(ICompileTimeConstant compileTimeConstant) {
+      CompileTimeConstant mutableCompileTimeConstant = compileTimeConstant as CompileTimeConstant;
+      if (mutableCompileTimeConstant == null)
+        return compileTimeConstant;
+      return this.Visit(mutableCompileTimeConstant);
+    }
+
+    /// <summary>
+    /// Visits the specified expression.
+    /// </summary>
+    /// <param name="expression">The expression.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(IExpression expression) {
+      expression.Dispatch(this.createMutableType);
+      return this.createMutableType.resultExpression;
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(IStatement statement) {
+      statement.Dispatch(this.createMutableType);
+      return this.createMutableType.resultStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified statements.
+    /// </summary>
+    /// <param name="statements">The statements.</param>
+    /// <returns></returns>
+    public virtual List<IStatement> Visit(List<IStatement> statements) {
+      List<IStatement> newList = new List<IStatement>();
+      foreach (var statement in statements) {
+        IStatement newStatement = this.Visit(statement);
+        if (newStatement != CodeDummy.Block)
+          newList.Add(newStatement);
+      }
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified switch case.
+    /// </summary>
+    /// <param name="switchCase">The switch case.</param>
+    /// <returns></returns>
+    public virtual ISwitchCase Visit(ISwitchCase switchCase) {
+      SwitchCase mutableSwitchCase = switchCase as SwitchCase;
+      if (mutableSwitchCase == null)
+        return switchCase;
+      return Visit(mutableSwitchCase);
+    }
+
+    /// <summary>
+    /// Visits the specified switch cases.
+    /// </summary>
+    /// <param name="switchCases">The switch cases.</param>
+    /// <returns></returns>
+    public virtual List<ISwitchCase> Visit(List<ISwitchCase> switchCases) {
+      List<ISwitchCase> newList = new List<ISwitchCase>();
+      foreach (var switchCase in switchCases) {
+        ISwitchCase swc = this.Visit(switchCase);
+        if (swc != CodeDummy.SwitchCase)
+          newList.Add(swc);
+      }
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified target expression.
+    /// </summary>
+    /// <param name="targetExpression">The target expression.</param>
+    /// <returns></returns>
+    public virtual ITargetExpression Visit(ITargetExpression targetExpression) {
+      TargetExpression mutableTargetExpression = targetExpression as TargetExpression;
+      if (mutableTargetExpression == null)
+        return targetExpression;
+      return Visit(mutableTargetExpression);
+    }
+
+    #endregion Methods that take an immutable type and return a type-specific mutable object, either by using the internal visitor, or else directly
+
+    /// <summary>
+    /// This type implements the ICodeVisitor interface so that an IExpression or an IStatement
+    /// can dispatch the visits automatically. The result of a visit is either an IExprssion or
+    /// an IStatement stored in the resultExpression or resultStatement fields. 
+    /// </summary>
+    private class CreateMutableType : BaseCodeVisitor, ICodeVisitor {
+
+      /// <summary>
+      /// Code mutator to be called back. 
+      /// </summary>
+      internal CodeMutatingVisitor myCodeMutator;
+
+      /// <summary>
+      /// Results of visits.
+      /// </summary>
+      internal IExpression resultExpression = CodeDummy.Expression;
+      internal IStatement resultStatement = CodeDummy.Block;
+
+      /// <summary>
+      /// This type implements the ICodeVisitor interface so that an IExpression or an IStatement
+      /// can dispatch the visits automatically. 
+      /// </summary>
+      internal CreateMutableType(CodeMutatingVisitor codeMutator) {
+        this.myCodeMutator = codeMutator;
+      }
+
+      #region overriding implementations of ICodeVisitor Members
+
+      /// <summary>
+      /// Visits the specified addition.
+      /// </summary>
+      /// <param name="addition">The addition.</param>
+      public override void Visit(IAddition addition) {
+        Addition/*?*/ mutableAddition = addition as Addition;
+        if (mutableAddition != null)
+          this.resultExpression = this.myCodeMutator.Visit(mutableAddition);
+        else
+          this.resultExpression = addition;
+      }
+
+      /// <summary>
+      /// Visits the specified addressable expression.
+      /// </summary>
+      /// <param name="addressableExpression">The addressable expression.</param>
+      public override void Visit(IAddressableExpression addressableExpression) {
+        AddressableExpression mutableAddressableExpression = addressableExpression as AddressableExpression;
+        if (mutableAddressableExpression == null) {
+          this.resultExpression = addressableExpression;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableAddressableExpression);
+      }
+
+      /// <summary>
+      /// Visits the specified address dereference.
+      /// </summary>
+      /// <param name="addressDereference">The address dereference.</param>
+      public override void Visit(IAddressDereference addressDereference) {
+        AddressDereference mutableAddressDereference = addressDereference as AddressDereference;
+        if (mutableAddressDereference == null) {
+          this.resultExpression = addressDereference;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableAddressDereference);
+      }
+
+      /// <summary>
+      /// Visits the specified address of.
+      /// </summary>
+      /// <param name="addressOf">The address of.</param>
+      public override void Visit(IAddressOf addressOf) {
+        AddressOf mutableAddressOf = addressOf as AddressOf;
+        if (mutableAddressOf == null) {
+          this.resultExpression = addressOf;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableAddressOf);
+      }
+
+      /// <summary>
+      /// Visits the specified anonymous method.
+      /// </summary>
+      /// <param name="anonymousMethod">The anonymous method.</param>
+      public override void Visit(IAnonymousDelegate anonymousMethod) {
+        AnonymousDelegate mutableAnonymousDelegate = anonymousMethod as AnonymousDelegate;
+        if (mutableAnonymousDelegate == null) {
+          this.resultExpression = anonymousMethod;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableAnonymousDelegate);
+      }
+
+      /// <summary>
+      /// Visits the specified array indexer.
+      /// </summary>
+      /// <param name="arrayIndexer">The array indexer.</param>
+      public override void Visit(IArrayIndexer arrayIndexer) {
+        ArrayIndexer mutableArrayIndexer = arrayIndexer as ArrayIndexer;
+        if (mutableArrayIndexer == null) return;
+        this.resultExpression = this.myCodeMutator.Visit(mutableArrayIndexer);
+      }
+
+      /// <summary>
+      /// Visits the specified assert statement.
+      /// </summary>
+      /// <param name="assertStatement">The assert statement.</param>
+      public override void Visit(IAssertStatement assertStatement) {
+        AssertStatement mutableAssertStatement = assertStatement as AssertStatement;
+        if ( mutableAssertStatement == null) {
+          this.resultStatement = assertStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableAssertStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified assignment.
+      /// </summary>
+      /// <param name="assignment">The assignment.</param>
+      public override void Visit(IAssignment assignment) {
+        Assignment mutableAssignment = assignment as Assignment;
+        if (mutableAssignment == null) {
+          this.resultExpression = assignment;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableAssignment);
+      }
+
+      /// <summary>
+      /// Visits the specified assume statement.
+      /// </summary>
+      /// <param name="assumeStatement">The assume statement.</param>
+      public override void Visit(IAssumeStatement assumeStatement) {
+        AssumeStatement mutableAssumeStatement = assumeStatement as AssumeStatement;
+        if (mutableAssumeStatement == null) {
+          this.resultStatement = assumeStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableAssumeStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified base class reference.
+      /// </summary>
+      /// <param name="baseClassReference">The base class reference.</param>
+      public override void Visit(IBaseClassReference baseClassReference) {
+        BaseClassReference mutableBaseClassReference = baseClassReference as BaseClassReference;
+        if (mutableBaseClassReference == null) {
+          this.resultExpression = baseClassReference;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableBaseClassReference);
+      }
+
+      /// <summary>
+      /// Visits the specified bitwise and.
+      /// </summary>
+      /// <param name="bitwiseAnd">The bitwise and.</param>
+      public override void Visit(IBitwiseAnd bitwiseAnd) {
+        BitwiseAnd mutableBitwiseAnd = bitwiseAnd as BitwiseAnd;
+        if (mutableBitwiseAnd == null) {
+          this.resultExpression = bitwiseAnd;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableBitwiseAnd);
+      }
+
+      /// <summary>
+      /// Visits the specified bitwise or.
+      /// </summary>
+      /// <param name="bitwiseOr">The bitwise or.</param>
+      public override void Visit(IBitwiseOr bitwiseOr) {
+        BitwiseOr mutableBitwiseOr = bitwiseOr as BitwiseOr;
+        if (mutableBitwiseOr == null) {
+          this.resultExpression = bitwiseOr;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableBitwiseOr);
+      }
+
+      /// <summary>
+      /// Visits the specified block expression.
+      /// </summary>
+      /// <param name="blockExpression">The block expression.</param>
+      public override void Visit(IBlockExpression blockExpression) {
+        BlockExpression mutableBlockExpression = blockExpression as BlockExpression;
+        if (mutableBlockExpression == null) {
+          this.resultExpression = blockExpression;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableBlockExpression);
+      }
+
+      /// <summary>
+      /// Visits the specified block.
+      /// </summary>
+      /// <param name="block">The block.</param>
+      public override void Visit(IBlockStatement block) {
+        BlockStatement mutableBlockStatement = block as BlockStatement;
+        if (mutableBlockStatement == null) {
+          this.resultStatement = block;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableBlockStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified break statement.
+      /// </summary>
+      /// <param name="breakStatement">The break statement.</param>
+      public override void Visit(IBreakStatement breakStatement) {
+        BreakStatement mutableBreakStatement = breakStatement as BreakStatement;
+        if (mutableBreakStatement == null) {
+          this.resultStatement = breakStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableBreakStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified bound expression.
+      /// </summary>
+      /// <param name="boundExpression">The bound expression.</param>
+      public override void Visit(IBoundExpression boundExpression) {
+        BoundExpression mutableBoundExpression = boundExpression as BoundExpression;
+        if (mutableBoundExpression == null) {
+          this.resultExpression = boundExpression;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableBoundExpression);
+      }
+
+      /// <summary>
+      /// Visits the specified cast if possible.
+      /// </summary>
+      /// <param name="castIfPossible">The cast if possible.</param>
+      public override void Visit(ICastIfPossible castIfPossible) {
+        CastIfPossible mutableCastIfPossible = castIfPossible as CastIfPossible;
+        if (mutableCastIfPossible == null) {
+          this.resultExpression = castIfPossible;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableCastIfPossible);
+      }
+
+      /// <summary>
+      /// Visits the specified check if instance.
+      /// </summary>
+      /// <param name="checkIfInstance">The check if instance.</param>
+      public override void Visit(ICheckIfInstance checkIfInstance) {
+        CheckIfInstance mutableCheckIfInstance = checkIfInstance as CheckIfInstance;
+        if (mutableCheckIfInstance == null) {
+          this.resultExpression = checkIfInstance;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableCheckIfInstance);
+      }
+
+      /// <summary>
+      /// Visits the specified constant.
+      /// </summary>
+      /// <param name="constant">The constant.</param>
+      public override void Visit(ICompileTimeConstant constant) {
+        CompileTimeConstant mutableCompileTimeConstant = constant as CompileTimeConstant;
+        if (mutableCompileTimeConstant == null) {
+          this.resultExpression = constant;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableCompileTimeConstant);
+      }
+
+      /// <summary>
+      /// Visits the specified conversion.
+      /// </summary>
+      /// <param name="conversion">The conversion.</param>
+      public override void Visit(IConversion conversion) {
+        Conversion mutableConversion = conversion as Conversion;
+        if (mutableConversion == null) {
+          this.resultExpression = conversion;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableConversion);
+      }
+
+      /// <summary>
+      /// Visits the specified conditional.
+      /// </summary>
+      /// <param name="conditional">The conditional.</param>
+      public override void Visit(IConditional conditional) {
+        Conditional mutableConditional = conditional as Conditional;
+        if (mutableConditional == null) {
+          this.resultExpression = conditional;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableConditional);
+      }
+
+      /// <summary>
+      /// Visits the specified conditional statement.
+      /// </summary>
+      /// <param name="conditionalStatement">The conditional statement.</param>
+      public override void Visit(IConditionalStatement conditionalStatement) {
+        ConditionalStatement mutableConditionalStatement = conditionalStatement as ConditionalStatement;
+        if (mutableConditionalStatement == null) {
+          this.resultStatement = conditionalStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableConditionalStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified continue statement.
+      /// </summary>
+      /// <param name="continueStatement">The continue statement.</param>
+      public override void Visit(IContinueStatement continueStatement) {
+        ContinueStatement mutableContinueStatement = continueStatement as ContinueStatement;
+        if (mutableContinueStatement == null) {
+          this.resultStatement = continueStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableContinueStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified create array.
+      /// </summary>
+      /// <param name="createArray">The create array.</param>
+      public override void Visit(ICreateArray createArray) {
+        CreateArray mutableCreateArray = createArray as CreateArray;
+        if (mutableCreateArray == null) {
+          this.resultExpression = createArray;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableCreateArray);
+      }
+
+      /// <summary>
+      /// Visits the specified create delegate instance.
+      /// </summary>
+      /// <param name="createDelegateInstance">The create delegate instance.</param>
+      public override void Visit(ICreateDelegateInstance createDelegateInstance) {
+        CreateDelegateInstance mutableCreateDelegateInstance = createDelegateInstance as CreateDelegateInstance;
+        if (mutableCreateDelegateInstance == null) {
+          this.resultExpression = createDelegateInstance;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableCreateDelegateInstance);
+      }
+
+      /// <summary>
+      /// Visits the specified create object instance.
+      /// </summary>
+      /// <param name="createObjectInstance">The create object instance.</param>
+      public override void Visit(ICreateObjectInstance createObjectInstance) {
+        CreateObjectInstance mutableCreateObjectInstance = createObjectInstance as CreateObjectInstance;
+        if (mutableCreateObjectInstance == null) {
+          this.resultExpression = createObjectInstance;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableCreateObjectInstance);
+      }
+
+      /// <summary>
+      /// Visits the specified debugger break statement.
+      /// </summary>
+      /// <param name="debuggerBreakStatement">The debugger break statement.</param>
+      public override void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+        DebuggerBreakStatement mutableDebuggerBreakStatement = debuggerBreakStatement as DebuggerBreakStatement;
+        if (mutableDebuggerBreakStatement == null) {
+          this.resultStatement = debuggerBreakStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableDebuggerBreakStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified default value.
+      /// </summary>
+      /// <param name="defaultValue">The default value.</param>
+      public override void Visit(IDefaultValue defaultValue) {
+        DefaultValue mutableDefaultValue = defaultValue as DefaultValue;
+        if (mutableDefaultValue == null) {
+          this.resultExpression = defaultValue;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableDefaultValue);
+      }
+
+      /// <summary>
+      /// Visits the specified division.
+      /// </summary>
+      /// <param name="division">The division.</param>
+      public override void Visit(IDivision division) {
+        Division mutableDivision = division as Division;
+        if (mutableDivision == null) {
+          this.resultExpression = division;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableDivision);
+      }
+
+      /// <summary>
+      /// Visits the specified do until statement.
+      /// </summary>
+      /// <param name="doUntilStatement">The do until statement.</param>
+      public override void Visit(IDoUntilStatement doUntilStatement) {
+        DoUntilStatement mutableDoUntilStatement = doUntilStatement as DoUntilStatement;
+        if (mutableDoUntilStatement == null) {
+          this.resultStatement = doUntilStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableDoUntilStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified empty statement.
+      /// </summary>
+      /// <param name="emptyStatement">The empty statement.</param>
+      public override void Visit(IEmptyStatement emptyStatement) {
+        EmptyStatement mutableEmptyStatement = emptyStatement as EmptyStatement;
+        if (mutableEmptyStatement == null) {
+          this.resultStatement = emptyStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableEmptyStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified equality.
+      /// </summary>
+      /// <param name="equality">The equality.</param>
+      public override void Visit(IEquality equality) {
+        Equality mutableEquality = equality as Equality;
+        if (mutableEquality == null) {
+          this.resultExpression = equality;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableEquality);
+      }
+
+      /// <summary>
+      /// Visits the specified exclusive or.
+      /// </summary>
+      /// <param name="exclusiveOr">The exclusive or.</param>
+      public override void Visit(IExclusiveOr exclusiveOr) {
+        ExclusiveOr mutableExclusiveOr = exclusiveOr as ExclusiveOr;
+        if (mutableExclusiveOr == null) {
+          this.resultExpression = exclusiveOr;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableExclusiveOr);
+      }
+
+      /// <summary>
+      /// Visits the specified expression.
+      /// </summary>
+      /// <param name="expression">The expression.</param>
+      public override void Visit(IExpression expression) {
+        Debug.Assert(false); //Should never get here
+      }
+
+      /// <summary>
+      /// Visits the specified expression statement.
+      /// </summary>
+      /// <param name="expressionStatement">The expression statement.</param>
+      public override void Visit(IExpressionStatement expressionStatement) {
+        ExpressionStatement mutableExpressionStatement = expressionStatement as ExpressionStatement;
+        if (mutableExpressionStatement == null) {
+          this.resultStatement = expressionStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableExpressionStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified for each statement.
+      /// </summary>
+      /// <param name="forEachStatement">For each statement.</param>
+      public override void Visit(IForEachStatement forEachStatement) {
+        ForEachStatement mutableForEachStatement = forEachStatement as ForEachStatement;
+        if (mutableForEachStatement == null) {
+          this.resultStatement = forEachStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableForEachStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified for statement.
+      /// </summary>
+      /// <param name="forStatement">For statement.</param>
+      public override void Visit(IForStatement forStatement) {
+        ForStatement mutableForStatement = forStatement as ForStatement;
+        if (mutableForStatement == null) {
+          this.resultStatement = forStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableForStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified goto statement.
+      /// </summary>
+      /// <param name="gotoStatement">The goto statement.</param>
+      public override void Visit(IGotoStatement gotoStatement) {
+        GotoStatement mutableGotoStatement = gotoStatement as GotoStatement;
+        if (mutableGotoStatement == null) {
+          this.resultStatement = gotoStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableGotoStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified goto switch case statement.
+      /// </summary>
+      /// <param name="gotoSwitchCaseStatement">The goto switch case statement.</param>
+      public override void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+        GotoSwitchCaseStatement mutableGotoSwitchCaseStatement = gotoSwitchCaseStatement as GotoSwitchCaseStatement;
+        if (mutableGotoSwitchCaseStatement == null) {
+          this.resultStatement = gotoSwitchCaseStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableGotoSwitchCaseStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified get type of typed reference.
+      /// </summary>
+      /// <param name="getTypeOfTypedReference">The get type of typed reference.</param>
+      public override void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+        GetTypeOfTypedReference mutableGetTypeOfTypedReference = getTypeOfTypedReference as GetTypeOfTypedReference;
+        if (mutableGetTypeOfTypedReference == null) {
+          this.resultExpression = getTypeOfTypedReference;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableGetTypeOfTypedReference);
+      }
+
+      /// <summary>
+      /// Visits the specified get value of typed reference.
+      /// </summary>
+      /// <param name="getValueOfTypedReference">The get value of typed reference.</param>
+      public override void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+        GetValueOfTypedReference mutableGetValueOfTypedReference = getValueOfTypedReference as GetValueOfTypedReference;
+        if (mutableGetValueOfTypedReference == null) {
+          this.resultExpression = getValueOfTypedReference;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableGetValueOfTypedReference);
+      }
+
+      /// <summary>
+      /// Visits the specified greater than.
+      /// </summary>
+      /// <param name="greaterThan">The greater than.</param>
+      public override void Visit(IGreaterThan greaterThan) {
+        GreaterThan mutableGreaterThan = greaterThan as GreaterThan;
+        if (mutableGreaterThan == null) {
+          this.resultExpression = greaterThan;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableGreaterThan);
+      }
+
+      /// <summary>
+      /// Visits the specified greater than or equal.
+      /// </summary>
+      /// <param name="greaterThanOrEqual">The greater than or equal.</param>
+      public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+        GreaterThanOrEqual mutableGreaterThanOrEqual = greaterThanOrEqual as GreaterThanOrEqual;
+        if (mutableGreaterThanOrEqual == null) {
+          this.resultExpression = greaterThanOrEqual;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableGreaterThanOrEqual);
+      }
+
+      /// <summary>
+      /// Visits the specified labeled statement.
+      /// </summary>
+      /// <param name="labeledStatement">The labeled statement.</param>
+      public override void Visit(ILabeledStatement labeledStatement) {
+        LabeledStatement mutableLabeledStatement = labeledStatement as LabeledStatement;
+        if (mutableLabeledStatement == null) {
+          this.resultStatement = labeledStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableLabeledStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified left shift.
+      /// </summary>
+      /// <param name="leftShift">The left shift.</param>
+      public override void Visit(ILeftShift leftShift) {
+        LeftShift mutableLeftShift = leftShift as LeftShift;
+        if (mutableLeftShift == null) {
+          this.resultExpression = leftShift;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableLeftShift);
+      }
+
+      /// <summary>
+      /// Visits the specified less than.
+      /// </summary>
+      /// <param name="lessThan">The less than.</param>
+      public override void Visit(ILessThan lessThan) {
+        LessThan mutableLessThan = lessThan as LessThan;
+        if (mutableLessThan == null) {
+          this.resultExpression = lessThan;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableLessThan);
+      }
+
+      /// <summary>
+      /// Visits the specified less than or equal.
+      /// </summary>
+      /// <param name="lessThanOrEqual">The less than or equal.</param>
+      public override void Visit(ILessThanOrEqual lessThanOrEqual) {
+        LessThanOrEqual mutableLessThanOrEqual = lessThanOrEqual as LessThanOrEqual;
+        if (mutableLessThanOrEqual == null) {
+          this.resultExpression = lessThanOrEqual;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableLessThanOrEqual);
+      }
+
+      /// <summary>
+      /// Visits the specified local declaration statement.
+      /// </summary>
+      /// <param name="localDeclarationStatement">The local declaration statement.</param>
+      public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+        LocalDeclarationStatement mutableLocalDeclarationStatement = localDeclarationStatement as LocalDeclarationStatement;
+        if (mutableLocalDeclarationStatement == null) {
+          this.resultStatement = localDeclarationStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableLocalDeclarationStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified lock statement.
+      /// </summary>
+      /// <param name="lockStatement">The lock statement.</param>
+      public override void Visit(ILockStatement lockStatement) {
+        LockStatement mutableLockStatement = lockStatement as LockStatement;
+        if (mutableLockStatement == null) {
+          this.resultStatement = lockStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableLockStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified logical not.
+      /// </summary>
+      /// <param name="logicalNot">The logical not.</param>
+      public override void Visit(ILogicalNot logicalNot) {
+        LogicalNot mutableLogicalNot = logicalNot as LogicalNot;
+        if (mutableLogicalNot == null) {
+          this.resultExpression = logicalNot;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableLogicalNot);
+      }
+
+      /// <summary>
+      /// Visits the specified make typed reference.
+      /// </summary>
+      /// <param name="makeTypedReference">The make typed reference.</param>
+      public override void Visit(IMakeTypedReference makeTypedReference) {
+        MakeTypedReference mutableMakeTypedReference = makeTypedReference as MakeTypedReference;
+        if (mutableMakeTypedReference == null) {
+          this.resultExpression = makeTypedReference;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableMakeTypedReference);
+      }
+
+      /// <summary>
+      /// Visits the specified method call.
+      /// </summary>
+      /// <param name="methodCall">The method call.</param>
+      public override void Visit(IMethodCall methodCall) {
+        MethodCall mutableMethodCall = methodCall as MethodCall;
+        if (mutableMethodCall == null) {
+          this.resultExpression = methodCall; return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableMethodCall);
+      }
+
+      /// <summary>
+      /// Visits the specified modulus.
+      /// </summary>
+      /// <param name="modulus">The modulus.</param>
+      public override void Visit(IModulus modulus) {
+        Modulus mutableModulus = modulus as Modulus;
+        if (mutableModulus == null) { this.resultExpression = modulus; return; }
+        this.resultExpression = this.myCodeMutator.Visit(mutableModulus);
+      }
+
+      /// <summary>
+      /// Visits the specified multiplication.
+      /// </summary>
+      /// <param name="multiplication">The multiplication.</param>
+      public override void Visit(IMultiplication multiplication) {
+        Multiplication mutableMultiplication = multiplication as Multiplication;
+        if (mutableMultiplication == null) {
+          this.resultExpression = multiplication;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableMultiplication);
+      }
+
+      /// <summary>
+      /// Visits the specified named argument.
+      /// </summary>
+      /// <param name="namedArgument">The named argument.</param>
+      public override void Visit(INamedArgument namedArgument) {
+        NamedArgument mutableNamedArgument = namedArgument as NamedArgument;
+        if (mutableNamedArgument == null) {
+          this.resultExpression = namedArgument;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableNamedArgument);
+      }
+
+      /// <summary>
+      /// Visits the specified not equality.
+      /// </summary>
+      /// <param name="notEquality">The not equality.</param>
+      public override void Visit(INotEquality notEquality) {
+        NotEquality mutableNotEquality = notEquality as NotEquality;
+        if (mutableNotEquality == null) {
+          this.resultExpression = notEquality;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableNotEquality);
+      }
+
+      /// <summary>
+      /// Visits the specified old value.
+      /// </summary>
+      /// <param name="oldValue">The old value.</param>
+      public override void Visit(IOldValue oldValue) {
+        OldValue mutableOldValue = oldValue as OldValue;
+        if (mutableOldValue == null) {
+          this.resultExpression = oldValue;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableOldValue);
+      }
+
+      /// <summary>
+      /// Visits the specified ones complement.
+      /// </summary>
+      /// <param name="onesComplement">The ones complement.</param>
+      public override void Visit(IOnesComplement onesComplement) {
+        OnesComplement mutableOnesComplement = onesComplement as OnesComplement;
+        if (mutableOnesComplement == null) {
+          this.resultExpression = onesComplement;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableOnesComplement);
+      }
+
+      /// <summary>
+      /// Visits the specified out argument.
+      /// </summary>
+      /// <param name="outArgument">The out argument.</param>
+      public override void Visit(IOutArgument outArgument) {
+        OutArgument mutableOutArgument = outArgument as OutArgument;
+        if ( mutableOutArgument == null) mutableOutArgument = new OutArgument(outArgument);
+        this.resultExpression = this.myCodeMutator.Visit(mutableOutArgument);
+      }
+
+      /// <summary>
+      /// Visits the specified pointer call.
+      /// </summary>
+      /// <param name="pointerCall">The pointer call.</param>
+      public override void Visit(IPointerCall pointerCall) {
+        PointerCall mutablePointerCall = pointerCall as PointerCall;
+        if ( mutablePointerCall == null) mutablePointerCall = new PointerCall(pointerCall);
+        this.resultExpression = this.myCodeMutator.Visit(mutablePointerCall);
+      }
+
+      /// <summary>
+      /// Visits the specified ref argument.
+      /// </summary>
+      /// <param name="refArgument">The ref argument.</param>
+      public override void Visit(IRefArgument refArgument) {
+        RefArgument mutableRefArgument = refArgument as RefArgument;
+        if (mutableRefArgument == null) {
+          this.resultExpression = refArgument;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableRefArgument);
+      }
+
+      /// <summary>
+      /// Visits the specified resource use statement.
+      /// </summary>
+      /// <param name="resourceUseStatement">The resource use statement.</param>
+      public override void Visit(IResourceUseStatement resourceUseStatement) {
+        ResourceUseStatement mutableResourceUseStatement = resourceUseStatement as ResourceUseStatement;
+        if (mutableResourceUseStatement == null) {
+          this.resultStatement = resourceUseStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableResourceUseStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified return value.
+      /// </summary>
+      /// <param name="returnValue">The return value.</param>
+      public override void Visit(IReturnValue returnValue) {
+        ReturnValue mutableReturnValue = returnValue as ReturnValue;
+        if (mutableReturnValue == null) {
+          this.resultExpression = returnValue;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableReturnValue);
+      }
+
+      /// <summary>
+      /// Visits the specified rethrow statement.
+      /// </summary>
+      /// <param name="rethrowStatement">The rethrow statement.</param>
+      public override void Visit(IRethrowStatement rethrowStatement) {
+        RethrowStatement mutableRethrowStatement = rethrowStatement as RethrowStatement;
+        if (mutableRethrowStatement == null) {
+          this.resultStatement = rethrowStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableRethrowStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified return statement.
+      /// </summary>
+      /// <param name="returnStatement">The return statement.</param>
+      public override void Visit(IReturnStatement returnStatement) {
+        ReturnStatement mutableReturnStatement = returnStatement as ReturnStatement;
+        if (mutableReturnStatement == null) {
+          this.resultStatement = returnStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableReturnStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified right shift.
+      /// </summary>
+      /// <param name="rightShift">The right shift.</param>
+      public override void Visit(IRightShift rightShift) {
+        RightShift mutableRightShift = rightShift as RightShift;
+        if (mutableRightShift == null) {
+          this.resultExpression = rightShift;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableRightShift);
+      }
+
+      /// <summary>
+      /// Visits the specified runtime argument handle expression.
+      /// </summary>
+      /// <param name="runtimeArgumentHandleExpression">The runtime argument handle expression.</param>
+      public override void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+        RuntimeArgumentHandleExpression mutableRuntimeArgumentHandleExpression = runtimeArgumentHandleExpression as RuntimeArgumentHandleExpression;
+        if (mutableRuntimeArgumentHandleExpression == null) {
+          this.resultExpression = runtimeArgumentHandleExpression;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableRuntimeArgumentHandleExpression);
+      }
+
+      /// <summary>
+      /// Visits the specified size of.
+      /// </summary>
+      /// <param name="sizeOf">The size of.</param>
+      public override void Visit(ISizeOf sizeOf) {
+        SizeOf mutableSizeOf = sizeOf as SizeOf;
+        if (mutableSizeOf == null) {
+          this.resultExpression = sizeOf;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableSizeOf);
+      }
+
+      /// <summary>
+      /// Visits the specified stack array create.
+      /// </summary>
+      /// <param name="stackArrayCreate">The stack array create.</param>
+      public override void Visit(IStackArrayCreate stackArrayCreate) {
+        StackArrayCreate mutableStackArrayCreate = stackArrayCreate as StackArrayCreate;
+        if (mutableStackArrayCreate == null) {
+          this.resultExpression = stackArrayCreate;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableStackArrayCreate);
+      }
+
+      /// <summary>
+      /// Visits the specified subtraction.
+      /// </summary>
+      /// <param name="subtraction">The subtraction.</param>
+      public override void Visit(ISubtraction subtraction) {
+        Subtraction mutableSubtraction = subtraction as Subtraction;
+        if (mutableSubtraction == null) {
+          this.resultExpression = subtraction;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableSubtraction);
+      }
+
+      /// <summary>
+      /// Visits the specified switch statement.
+      /// </summary>
+      /// <param name="switchStatement">The switch statement.</param>
+      public override void Visit(ISwitchStatement switchStatement) {
+        SwitchStatement mutableSwitchStatement = switchStatement as SwitchStatement;
+        if (mutableSwitchStatement == null) {
+          this.resultStatement = switchStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableSwitchStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified target expression.
+      /// </summary>
+      /// <param name="targetExpression">The target expression.</param>
+      public override void Visit(ITargetExpression targetExpression) {
+        TargetExpression mutableTargetExpression = targetExpression as TargetExpression;
+        if (mutableTargetExpression == null) {
+          this.resultExpression = targetExpression;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableTargetExpression);
+      }
+
+      /// <summary>
+      /// Visits the specified this reference.
+      /// </summary>
+      /// <param name="thisReference">The this reference.</param>
+      public override void Visit(IThisReference thisReference) {
+        ThisReference mutableThisReference = thisReference as ThisReference;
+        if (mutableThisReference == null) {
+          this.resultExpression = thisReference;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableThisReference);
+      }
+
+      /// <summary>
+      /// Visits the specified throw statement.
+      /// </summary>
+      /// <param name="throwStatement">The throw statement.</param>
+      public override void Visit(IThrowStatement throwStatement) {
+        ThrowStatement mutableThrowStatement = throwStatement as ThrowStatement;
+        if (mutableThrowStatement == null) {
+          this.resultStatement = throwStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableThrowStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified try catch filter finally statement.
+      /// </summary>
+      /// <param name="tryCatchFilterFinallyStatement">The try catch filter finally statement.</param>
+      public override void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+        TryCatchFinallyStatement mutableTryCatchFinallyStatement = tryCatchFilterFinallyStatement as TryCatchFinallyStatement;
+        if (mutableTryCatchFinallyStatement == null) {
+          this.resultStatement = tryCatchFilterFinallyStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableTryCatchFinallyStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified token of.
+      /// </summary>
+      /// <param name="tokenOf">The token of.</param>
+      public override void Visit(ITokenOf tokenOf) {
+        TokenOf mutableTokenOf = tokenOf as TokenOf;
+        if (mutableTokenOf == null) {
+          this.resultExpression = tokenOf;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableTokenOf);
+      }
+
+      /// <summary>
+      /// Visits the specified type of.
+      /// </summary>
+      /// <param name="typeOf">The type of.</param>
+      public override void Visit(ITypeOf typeOf) {
+        TypeOf mutableTypeOf = typeOf as TypeOf;
+        if (mutableTypeOf == null) {
+          this.resultExpression = typeOf;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableTypeOf);
+      }
+
+      /// <summary>
+      /// Visits the specified unary negation.
+      /// </summary>
+      /// <param name="unaryNegation">The unary negation.</param>
+      public override void Visit(IUnaryNegation unaryNegation) {
+        UnaryNegation mutableUnaryNegation = unaryNegation as UnaryNegation;
+        if (mutableUnaryNegation == null) {
+          this.resultExpression = unaryNegation;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableUnaryNegation);
+      }
+
+      /// <summary>
+      /// Visits the specified unary plus.
+      /// </summary>
+      /// <param name="unaryPlus">The unary plus.</param>
+      public override void Visit(IUnaryPlus unaryPlus) {
+        UnaryPlus mutableUnaryPlus = unaryPlus as UnaryPlus;
+        if (mutableUnaryPlus == null) {
+          this.resultExpression = unaryPlus;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableUnaryPlus);
+      }
+
+      /// <summary>
+      /// Visits the specified vector length.
+      /// </summary>
+      /// <param name="vectorLength">Length of the vector.</param>
+      public override void Visit(IVectorLength vectorLength) {
+        VectorLength mutableVectorLength = vectorLength as VectorLength;
+        if (mutableVectorLength == null) {
+          this.resultExpression = vectorLength;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableVectorLength);
+      }
+
+      /// <summary>
+      /// Visits the specified while do statement.
+      /// </summary>
+      /// <param name="whileDoStatement">The while do statement.</param>
+      public override void Visit(IWhileDoStatement whileDoStatement) {
+        WhileDoStatement mutableWhileDoStatement = whileDoStatement as WhileDoStatement;
+        if (mutableWhileDoStatement == null) {
+          this.resultStatement = whileDoStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableWhileDoStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified yield break statement.
+      /// </summary>
+      /// <param name="yieldBreakStatement">The yield break statement.</param>
+      public override void Visit(IYieldBreakStatement yieldBreakStatement) {
+        YieldBreakStatement mutableYieldBreakStatement = yieldBreakStatement as YieldBreakStatement;
+        if (mutableYieldBreakStatement == null) {
+          this.resultStatement = yieldBreakStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableYieldBreakStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified yield return statement.
+      /// </summary>
+      /// <param name="yieldReturnStatement">The yield return statement.</param>
+      public override void Visit(IYieldReturnStatement yieldReturnStatement) {
+        YieldReturnStatement mutableYieldReturnStatement = yieldReturnStatement as YieldReturnStatement;
+        if (mutableYieldReturnStatement == null) {
+          this.resultStatement = yieldReturnStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableYieldReturnStatement);
+      }
+
+      #endregion overriding implementations of ICodeVisitor Members
+    }
   }
 }

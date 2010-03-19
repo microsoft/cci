@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -86,56 +87,84 @@ public class CodeModelRoundTripTests {
   }
 
   [Fact]
-  public void MutableCopyModule() {
+  public void MutableCopy1() {
     ExtractAndCompile("MutableCopyTest.cs");
     RoundTripWithMetadataCopier("MutableCopyTest.dll", "MutableCopyTest.pdb");
   }
 
   [Fact]
-  public void MutableCopyModuleIter() {
+  public void MutableCopy2() {
     ExtractAndCompile("IteratorRoundTripTest.cs");
     RoundTripWithMetadataCopier("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
   }
   [Fact]
-  public void MoreMutableCopies() {
+  public void LargeAddGenericParameter() {
     Assert.True(File.Exists("QuickGraph.dll"));
     this.RoundTripMutableCopyAndAddGenericParameter2("QuickGraph.dll");
   }
 
   [Fact]
-  public void AddGenericParameterMutableCopy() {
+  public void AddGenericParameter1() {
     ExtractAndCompile("MutableCopyTest.cs");
     this.RoundTripMutableCopyAndAddGenericParameter("MutableCopyTest.dll", "MutableCopyTest.pdb");
   }
 
   [Fact]
-  public void AddGenericMethodParameterMutableCopy() {
+  public void AddGenericMethod() {
     ExtractAndCompile("GenericMethods.cs");
     this.RoundTripAddGenericMethodParameter("GenericMethods.dll", "GenericMethods.pdb");
   }
 
   //[Fact]
-  //public void MutableCopyModuleIso() {
+  //public void DecompilationTest1() {
   //  ExtractAndCompile("MutableCopyTest.cs");
-  //  RoundTripWithMetadataCopierIso("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  //  RoundTripNoCopyTestDecompilation("MutableCopyTest.dll", "MutableCopyTest.pdb");
   //}
 
   //[Fact]
-  //public void MutableCopyModuleIterIso() {
+  //public void DecompilationTest2() {
   //  ExtractAndCompile("IteratorRoundTripTest.cs");
-  //  RoundTripWithMetadataCopierIso("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
+  //  RoundTripNoCopyTestDecompilation("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
   //}
 
   [Fact]
-  public void AddGenericParameterMutableCopyIso() {
+  public void AddGenericParameterNoCopy() {
     ExtractAndCompile("MutableCopyTest.cs");
-    this.RoundTripMutableCopyAndAddGenericParameterIso("MutableCopyTest.dll", "MutableCopyTest.pdb");
+    this.RoundTripAddGenericParameterNoCopyTestDecompilation("MutableCopyTest.dll", "MutableCopyTest.pdb");
   }
 
   [Fact]
   public void CopyMarkedNodes() {
     ExtractAndCompile("MutableCopyTest.cs");
     this.RoundTripMutableCopyMarkedNodes("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  }
+
+  [Fact]
+  public void CodeCopierTest1() {
+    ExtractAndCompile("MutableCopyTest.cs");
+    this.RoundTripCodeCopier("MutableCopyTest.dll", "MutableCopyTest.pdb", false);
+  }
+
+  /// <summary>
+  /// Quickgraph has an anonymous delegate node that is not recompiled correctly. 
+  /// </summary>
+  //[Ignore]
+  //[TestMethod]
+  //public void LargeCodeCopierTest() {
+  //  Debug.Assert(File.Exists("QuickGraph.dll"));
+  //  this.RoundTripCodeCopier("QuickGraph.dll", null, true);
+  //}
+
+  [Fact]
+  public void CodeCopyAndExecute1() {
+    ExtractAndCompileExe("TestClass1.cs");
+    this.RoundTripCopyAndExecute("TestClass1.exe", "TestClass1.pdb");
+  }
+
+  [Fact]
+  public void CodeCopyRewriteAndExecute1() {
+    ExtractAndCompileExe("TestClass1.cs");
+    this.RoundTripCopyRewriteAndExecute("TestClass1.exe", "TestClass1.pdb");
   }
 
   CodeAndContractMutator CreateCodeMutator(IAssembly assembly, string pdbName) {
@@ -220,7 +249,15 @@ public class CodeModelRoundTripTests {
   }
 
   static void ExtractAndCompile(string sourceFile) {
-    string assemblyName = Path.ChangeExtension(sourceFile, ".dll");
+    ExtractAndCompile(sourceFile, ".dll");
+  }
+
+  static void ExtractAndCompileExe(string sourceFile) {
+    ExtractAndCompile(sourceFile, ".exe");
+  }
+
+  static void ExtractAndCompile(string sourceFile, string extension) {
+    string assemblyName = Path.ChangeExtension(sourceFile, extension);
 
     ExtractResource("CodeModelRoundtripTests.TestData.source." + sourceFile, sourceFile);
 
@@ -228,6 +265,7 @@ public class CodeModelRoundTripTests {
     parameters.GenerateExecutable = Path.GetExtension(assemblyName) == ".exe";
     parameters.IncludeDebugInformation = true;
     parameters.OutputAssembly = assemblyName;
+    parameters.CompilerOptions += " -unsafe";
 
     string tempFile = Path.GetRandomFileName();
     File.Move(sourceFile, Path.Combine(Path.GetDirectoryName(sourceFile), tempFile));
@@ -256,6 +294,9 @@ public class CodeModelRoundTripTests {
         List<INamedTypeDefinition> list;
         MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
         codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Assert.True(checker.Errors.Count == 0);
         AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
       }
     }
@@ -296,6 +337,9 @@ public class CodeModelRoundTripTests {
         codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
         AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, 0);
         codeAssembly = (Assembly)adder.Visit(codeAssembly);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Assert.True(checker.Errors.Count == 0);
         AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
       }
     }
@@ -309,21 +353,25 @@ public class CodeModelRoundTripTests {
         var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
         var adder = new AddGenericMethodParameters(host);
         codeAssembly = (Assembly)adder.Visit(codeAssembly);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Assert.True(checker.Errors.Count == 0);
         AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
       }
     }
   }
 
-  void RoundTripMutableCopyAndAddGenericParameterIso(string assemblyName, string pdbName) {
+  void RoundTripAddGenericParameterNoCopyTestDecompilation(string assemblyName, string pdbName) {
     PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
     IAssembly assembly = LoadAssembly(assemblyName);
     using (var f = File.OpenRead(pdbName)) {
       using (var pdbReader = new PdbReader(f, host)) {
         var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
-        //MetadataCopier copier1 = new MetadataCopier(host, codeAssembly);
-        //codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
         AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, 0);
         codeAssembly = (Assembly)adder.Visit(codeAssembly);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Assert.True(checker.Errors.Count == 0);
         AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
       }
     }
@@ -339,6 +387,103 @@ public class CodeModelRoundTripTests {
         AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
       }
     }
+  }
+
+  void RoundTripCodeCopier(string assemblyName, string pdbName, bool allowCheckerFail) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    if (pdbName != null) {
+      using (var f = File.OpenRead(pdbName)) {
+        using (var pdbReader = new PdbReader(f, host)) {
+          var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+          CodeCopier copier = new CodeCopier(host, null);
+          List<INamedTypeDefinition> ignore;
+          copier.AddDefinition(codeAssembly, out ignore);
+          codeAssembly.AllTypes = ignore;
+          codeAssembly = (Assembly)copier.Substitute(codeAssembly);
+          Checker checker = new Checker(this.host);
+          checker.Visit(codeAssembly);
+          Assert.True(checker.Errors.Count == 0);
+          AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+        }
+      }
+    } else {
+      var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, null);
+      CodeCopier copier = new CodeCopier(host, null);
+      List<INamedTypeDefinition> ignore;
+      copier.AddDefinition(codeAssembly, out ignore);
+      codeAssembly.AllTypes = ignore;
+      codeAssembly = (Assembly)copier.Substitute(codeAssembly);
+      Checker checker = new Checker(this.host);
+      checker.Visit(codeAssembly);
+      Assert.True(allowCheckerFail || checker.Errors.Count == 0);
+      AssertWriteToPeFile(expectedResult, codeAssembly, null);
+    }
+  }
+
+  void RoundTripCopyAndExecute(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    string expectedOutput = Execute(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        CodeCopier copier = new CodeCopier(host, null);
+        List<INamedTypeDefinition> ignore;
+        copier.AddDefinition(codeAssembly, out ignore);
+        codeAssembly.AllTypes = ignore;
+        codeAssembly = (Assembly)copier.Substitute(codeAssembly);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Assert.True(checker.Errors.Count == 0);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+        AssertExecute(expectedOutput, assemblyName);
+      }
+    }
+  }
+
+  void RoundTripCopyRewriteAndExecute(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    string expectedOutput = Execute(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        CodeCopier copier = new CodeCopier(host, null);
+        List<INamedTypeDefinition> ignore;
+        copier.AddDefinition(codeAssembly, out ignore);
+        codeAssembly.AllTypes = ignore;
+        codeAssembly = (Assembly)copier.Substitute(codeAssembly);
+        NameChanger namechanger = new NameChanger(this.host, new Regex("[A-Za-z0-9_]*"), new MatchEvaluator(this.eval));
+        codeAssembly = namechanger.Change(codeAssembly);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Assert.True(checker.Errors.Count == 0);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+        AssertExecute(expectedOutput, assemblyName);
+      }
+    }
+  }
+
+  string eval(Match match) {
+    return ("AA" + match.Value);
+  }
+
+  public static void AssertExecute(string expectedOutput, string assemblyName) {
+    string result = Execute(assemblyName);
+    Debug.Assert(result == expectedOutput);
+  }
+
+  public static string Execute(string assemblyName) {
+    Process p = new Process();
+    p.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+    p.StartInfo.FileName = assemblyName;
+    p.StartInfo.CreateNoWindow = true;
+    p.StartInfo.RedirectStandardOutput = true;
+    p.StartInfo.UseShellExecute = false;
+    p.Start();
+    p.WaitForExit();
+    return p.StandardOutput.ReadToEnd();
   }
 } // class
 
@@ -1084,3 +1229,53 @@ internal class FindItemsToCopy : MutatingVisitor {
     return base.Visit(methodReference);
   }
 }
+class NameChanger : CodeMutatingVisitor {
+  MatchEvaluator evaluator;
+  Regex pattern;
+  Dictionary<uint, uint> InternedKeysOfChangedTypeDef = new Dictionary<uint, uint>();
+  public NameChanger(IMetadataHost host, Regex pattern, MatchEvaluator matchEvaluator)
+    : base(host) {
+    this.evaluator = matchEvaluator;
+    this.pattern = pattern;
+  }
+
+  public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition) {
+    if (!this.InternedKeysOfChangedTypeDef.ContainsKey(namespaceTypeDefinition.InternedKey)) {
+      this.InternedKeysOfChangedTypeDef.Add(namespaceTypeDefinition.InternedKey, namespaceTypeDefinition.InternedKey);
+      namespaceTypeDefinition.Name = this.host.NameTable.GetNameFor(this.pattern.Replace(namespaceTypeDefinition.Name.Value, this.evaluator));
+    } else {
+      // we changed one name to another?
+    }
+    return base.Mutate(namespaceTypeDefinition);
+  }
+
+  public Assembly Change(IAssembly assembly) {
+    var result = (Assembly)this.Visit(assembly);
+    ReferenceNameFixer fixer = new ReferenceNameFixer(this.host, this.pattern, this.evaluator, this.InternedKeysOfChangedTypeDef);
+    result = (Assembly)fixer.Visit(result);
+    return result;
+  }
+
+  class ReferenceNameFixer : CodeMutatingVisitor {
+    readonly MatchEvaluator evaluator;
+    readonly Regex pattern;
+    readonly Dictionary<uint, uint> InternedKeysOfChangedTypeDef = new Dictionary<uint, uint>();
+    public ReferenceNameFixer(IMetadataHost host, Regex pattern, MatchEvaluator matchEvaluator, Dictionary<uint, uint> InternedKeysOfChangedTypeDef)
+      : base(host) {
+      this.evaluator = matchEvaluator;
+      this.pattern = pattern;
+      this.InternedKeysOfChangedTypeDef = InternedKeysOfChangedTypeDef;
+    }
+    public override INamespaceTypeReference Mutate(INamespaceTypeReference namespaceTypeReference) {
+      var result = base.Mutate(namespaceTypeReference);
+      if (this.InternedKeysOfChangedTypeDef.ContainsKey(result.InternedKey)) {
+        var name = this.host.NameTable.GetNameFor(this.pattern.Replace(namespaceTypeReference.Name.Value, this.evaluator));
+        if (name != namespaceTypeReference.Name) {
+          return MutableModelHelper.GetNamespaceTypeReference(result.ContainingUnitNamespace, result.GenericParameterCount, result.MangleName, result.Name, this.host.InternFactory, result);
+        }
+      }
+      return result;
+    }
+  }
+}
+

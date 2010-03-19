@@ -1,4 +1,6 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+
 class MarkedForCopyAttribute : System.Attribute {
 }
 
@@ -370,25 +372,46 @@ namespace Resolution {
     }
   }
 
-  //namespace Nested1 {
-  //  [MarkedForCopy]
-  //  class D {
-  //    Resolution.Nested2.D d;
-  //    void foo() {
-  //      unsafe {
-  //        char* foo;
-  //      }
-  //    }
-  //  }
-  //}
-  //namespace Nested2 {
-  //  [MarkedForCopy]
-  //  [Named(Name = "hello")]
-  //  class D {
-  //  }
-
-  //}
-
+  namespace Nested1 {
+    [MarkedForCopy]
+    class D {
+      Resolution.Nested2.D d;
+      void foo() {
+        unsafe {
+          char* foo;
+        }
+      }
+    }
+  }
+  namespace Nested2 {
+    [MarkedForCopy]
+    [Named(Name = "hello")]
+    class D {
+    }
+  }
 }
 
+namespace N {
 
+  class A<T> {
+    T f<T>(T[] ts) {
+      return ts[0];
+    }
+
+    void g<T1>(T1 t) {
+      A<T> a = new A<T>();
+      a.f(new T1[1] { t });
+    }
+  }
+}
+
+//namespace Test1 {
+//  class A<T> {
+//    private void AnonymousDelegateTest1(int t) {
+//      List<int> list = new List<int>();
+//      list.Add(t);
+//      var b = list.TrueForAll((int t1) => t1 == t);
+//      Console.WriteLine("Test anonymous delegate, b = {0}.", b);
+//    }
+//  }
+//}
