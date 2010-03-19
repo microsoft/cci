@@ -1391,7 +1391,7 @@ namespace Microsoft.Cci {
         //The type should be a primitive integer, a boolean or an enum.
         this.Visit(logicalNot.Operand);
         var opsize = TypeHelper.SizeOfType(logicalNot.Operand.Type);
-        if (opsize == 4) {
+        if (opsize == 1 || opsize == 2 || opsize == 4) {
           this.generator.Emit(OperationCode.Ldc_I4_0);
           this.generator.Emit(OperationCode.Ceq);
         } else if (opsize == 8) {
