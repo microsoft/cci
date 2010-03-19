@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -711,14 +711,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Visits the specified method body.
     /// </summary>
     /// <param name="methodBody">The method body.</param>
-    /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
+      bool hadLocals = IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables);
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
         SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
-        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        if (hadLocals)
+          // If the method had locals before the CodeMutator morphed it, then we retain the original initialization flag.
+          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        else if (IteratorHelper.EnumerableIsNotEmpty(mutableSourceMethodBody.LocalVariables))
+          // if CodeMutator introduced locals, then let us make sure they are initialized so that verification is not affected. 
+          mutableSourceMethodBody.LocalsAreZeroed = true;
+        else
+          // If there were no locals and none introduced by the CodeMutator we will just retain the original initialization flag. 
+          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         return mutableSourceMethodBody;
       }
       return base.Visit(methodBody);
