@@ -1387,10 +1387,29 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="logicalNot">The logical not.</param>
     public override void Visit(ILogicalNot logicalNot) {
-      if (TypeHelper.IsPrimitiveInteger(logicalNot.Operand.Type) || logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+      if (logicalNot.Operand.Type.IsValueType) {
+        //The type should be a primitive integer, a boolean or an enum.
         this.Visit(logicalNot.Operand);
-        this.generator.Emit(OperationCode.Ldc_I4_0);
-        this.generator.Emit(OperationCode.Ceq);
+        var opsize = TypeHelper.SizeOfType(logicalNot.Operand.Type);
+        if (opsize == 4) {
+          this.generator.Emit(OperationCode.Ldc_I4_0);
+          this.generator.Emit(OperationCode.Ceq);
+        } else if (opsize == 8) {
+          this.generator.Emit(OperationCode.Ldc_I4_0);
+          this.generator.Emit(OperationCode.Conv_I8);
+          this.generator.Emit(OperationCode.Ceq);
+        } else {
+          Debug.Assert(opsize == 0); //If not, the CodeModel is invalid.
+          //the type is an unresolved reference, typically an enum, so we just don't know what size it is (at compile time, that is).
+          var trueCase = new ILGeneratorLabel();
+          var done = new ILGeneratorLabel();
+          this.generator.Emit(OperationCode.Brtrue_S, trueCase);
+          this.generator.Emit(OperationCode.Ldc_I4_0);
+          this.generator.Emit(OperationCode.Br_S, done);
+          this.generator.MarkLabel(trueCase);
+          this.generator.Emit(OperationCode.Ldc_I4_1);
+          this.generator.MarkLabel(done);
+        }
       } else {
         Debug.Assert(!logicalNot.Operand.Type.IsValueType);
         //pointer non null test
