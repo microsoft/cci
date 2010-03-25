@@ -2470,7 +2470,7 @@ namespace Microsoft.Cci.Ast {
           List<Expression> arguments = new List<Expression>(1);
           Indexer/*?*/ idx = this.Target.Expression as Indexer;
           if (idx != null)
-            arguments.AddRange(idx.OriginalArguments);
+            arguments.AddRange(idx.ConvertedArguments);
           arguments.Add(this.ConvertedSourceExpression);
           if (setter.ResolvedMethod.IsStatic) {
             return this.cachedProjection = new ResolvedMethodCall(setter.ResolvedMethod, arguments, this.SourceLocation);
