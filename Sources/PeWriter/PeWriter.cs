@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -2036,7 +2036,7 @@ namespace Microsoft.Cci {
         INestedTypeReference/*?*/ neRef = null;
         INamespaceTypeReference/*?*/ nsRef = null;
         ExportedTypeRow r = new ExportedTypeRow();
-        r.TypeDefId = 0; //TODO: if the aliased type can be resolved, store its index in the type list here.
+        r.TypeDefId = this.GetExternalTypeToken(exportedType as ITypeDefinition);
         if ((nsRef = exportedType as INamespaceTypeReference) != null) {
           r.Flags = TypeFlags.PublicAccess;
           r.TypeName = this.GetStringIndex(GetMangledName(nsRef));
@@ -2064,6 +2064,30 @@ namespace Microsoft.Cci {
         this.exportedTypeTable.Add(r);
       }
       this.tableSizes[(uint)TableIndices.ExportedType] = (uint)this.exportedTypeTable.Count;
+    }
+
+    private uint GetExternalTypeToken(ITypeDefinition/*?*/ typeDefinition) {
+      if (typeDefinition == null) return 0;
+      var module = TypeHelper.GetDefiningUnit(typeDefinition) as IModule;
+      if (module == null) return 0;
+      if (this.moduleToMap == null)
+        this.moduleToMap = new Dictionary<object, Dictionary<uint, uint>>();
+      Dictionary<uint, uint> typeToToken;
+      if (!this.moduleToMap.TryGetValue(module, out typeToToken)) {
+        typeToToken = GetTypeTokenMapFor(module);
+        this.moduleToMap.Add(module, typeToToken);
+      }
+      uint result = 0;
+      typeToToken.TryGetValue(typeDefinition.InternedKey, out result);
+      return result;
+    }
+    Dictionary<object, Dictionary<uint, uint>>/*?*/ moduleToMap;
+
+    private Dictionary<uint, uint> GetTypeTokenMapFor(IModule module) {
+      var map = new Dictionary<uint, uint>();
+      var i = 0x02000001u;
+      foreach (var type in module.GetAllTypes()) map.Add(type.InternedKey, i++);
+      return map;
     }
 
     struct ExportedTypeRow { public TypeFlags Flags; public uint TypeDefId; public StringIdx TypeName; public StringIdx TypeNamespace; public uint Implementation; }
