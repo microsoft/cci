@@ -16038,16 +16038,6 @@ namespace Microsoft.Cci.Ast {
       foreach (ITypeDefinitionMember member in qualifyingType.GetMembersNamed(this.SimpleName.Name, this.SimpleName.IgnoreCase)) {
         if (ignoreAccessibility || this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) return member;
       }
-      ITypeContract/*?*/ contract = this.Compilation.ContractProvider.GetTypeContractFor(qualifyingType);
-      if (contract != null) {
-        foreach (IFieldDefinition contractField in contract.ContractFields) {
-          if (this.SimpleName.IgnoreCase) {
-            if (contractField.Name.UniqueKeyIgnoringCase == this.SimpleName.Name.UniqueKeyIgnoringCase) return contractField;
-          } else {
-            if (contractField.Name.UniqueKey == this.SimpleName.Name.UniqueKey) return contractField;
-          }
-        }
-      }
       foreach (ITypeReference baseClass in qualifyingType.BaseClasses) {
         ITypeDefinitionMember/*?*/ result = this.ResolveTypeMember(baseClass.ResolvedType, ignoreAccessibility);
         if (result != null) return result;

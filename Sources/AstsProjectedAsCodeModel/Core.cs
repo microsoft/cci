@@ -1501,7 +1501,16 @@ namespace Microsoft.Cci.Ast {
     /// type during lookup. For example, extension methods in C#.
     /// </summary>
     public virtual IEnumerable<ITypeDefinitionMember> GetExtensionMembers(ITypeDefinition type, IName memberName, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); //TODO: implement C# extension method lookup rules
+      ITypeContract/*?*/ contract = this.Compilation.ContractProvider.GetTypeContractFor(type);
+      if (contract != null) {
+        foreach (IFieldDefinition contractField in contract.ContractFields) {
+          if (ignoreCase) {
+            if (contractField.Name.UniqueKeyIgnoringCase == memberName.UniqueKeyIgnoringCase) yield return contractField;
+          } else {
+            if (contractField.Name.UniqueKey == memberName.UniqueKey) yield return contractField;
+          }
+        }
+      }
     }
 
     /// <summary>
