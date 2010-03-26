@@ -18,7 +18,7 @@ namespace PeToText {
   class Program {
     static void Main(string[] args) {
       if (args == null || args.Length == 0) {
-        Console.WriteLine("usage: pe2pe [path]fileName.ext");
+        Console.WriteLine("usage: peToText [path]fileName.ext");
         return;
       }
       bool noIL = args.Length == 2;
