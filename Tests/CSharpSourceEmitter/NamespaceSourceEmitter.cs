@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -47,6 +47,7 @@ namespace CSharpSourceEmitter {
         else {
           ITypeDefinitionMember/*?*/ globalFieldOrMethod = namespaceMember as ITypeDefinitionMember;
           if (globalFieldOrMethod != null) {
+            this.Visit(globalFieldOrMethod);
           } else {
             INamespaceAliasForType/*?*/ namespaceAlias = namespaceMember as INamespaceAliasForType;
             if (namespaceAlias != null)
