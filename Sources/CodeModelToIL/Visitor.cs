@@ -3627,8 +3627,14 @@ namespace Microsoft.Cci {
           //TODO: conversion from method to (function) pointer
           if (!sourceType.IsValueType && targetType.TypeCode == PrimitiveTypeCode.IntPtr)
             this.generator.Emit(OperationCode.Conv_I);
-          else
-            this.generator.Emit(OperationCode.Unbox_Any, targetType);
+          else {
+            //TODO: assume TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject);
+            var mptr = targetType as IManagedPointerTypeReference;
+            if (mptr != null)
+              this.generator.Emit(OperationCode.Unbox, mptr.TargetType);
+            else
+              this.generator.Emit(OperationCode.Unbox_Any, targetType);
+          }
           break;
       }
     }

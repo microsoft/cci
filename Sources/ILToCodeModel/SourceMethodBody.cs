@@ -913,7 +913,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Conv_R8:
           result.TypeAfterConversion = this.platformType.SystemFloat64; break;
         case OperationCode.Unbox:
-          result.TypeAfterConversion = ManagedPointerType.GetManagedPointerType(valueToConvert.Type, this.host.InternFactory); break;
+          result.TypeAfterConversion = ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory); break;
         case OperationCode.Unbox_Any:
           result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
       }
