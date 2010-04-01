@@ -1282,7 +1282,7 @@ namespace Microsoft.Cci {
     public override void Visit(IGreaterThan greaterThan) {
       this.Visit(greaterThan.LeftOperand);
       this.Visit(greaterThan.RightOperand);
-      if (TypeHelper.IsUnsignedPrimitiveInteger(greaterThan.LeftOperand.Type))
+      if (TypeHelper.IsUnsignedPrimitive(greaterThan.LeftOperand.Type))
         this.generator.Emit(OperationCode.Cgt_Un); //unsigned
       else
         this.generator.Emit(OperationCode.Cgt);
@@ -1296,7 +1296,7 @@ namespace Microsoft.Cci {
     public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
       this.Visit(greaterThanOrEqual.LeftOperand);
       this.Visit(greaterThanOrEqual.RightOperand);
-      if (TypeHelper.IsSignedPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type))
+      if (TypeHelper.IsSignedPrimitive(greaterThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Clt);
       else
         this.generator.Emit(OperationCode.Clt_Un); //unsigned or unordered
@@ -1337,7 +1337,7 @@ namespace Microsoft.Cci {
     public override void Visit(ILessThan lessThan) {
       this.Visit(lessThan.LeftOperand);
       this.Visit(lessThan.RightOperand);
-      if (TypeHelper.IsUnsignedPrimitiveInteger(lessThan.LeftOperand.Type))
+      if (TypeHelper.IsUnsignedPrimitive(lessThan.LeftOperand.Type))
         this.generator.Emit(OperationCode.Clt_Un); //unsigned
       else
         this.generator.Emit(OperationCode.Clt);
@@ -1351,7 +1351,7 @@ namespace Microsoft.Cci {
     public override void Visit(ILessThanOrEqual lessThanOrEqual) {
       this.Visit(lessThanOrEqual.LeftOperand);
       this.Visit(lessThanOrEqual.RightOperand);
-      if (TypeHelper.IsSignedPrimitiveInteger(lessThanOrEqual.LeftOperand.Type))
+      if (TypeHelper.IsSignedPrimitive(lessThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Cgt);
       else
         this.generator.Emit(OperationCode.Cgt_Un); //unsigned or unordered
@@ -3541,12 +3541,9 @@ namespace Microsoft.Cci {
               break;
 
             case PrimitiveTypeCode.IntPtr:
-              break;
-
             case PrimitiveTypeCode.UIntPtr:
             case PrimitiveTypeCode.Pointer:
             case PrimitiveTypeCode.Reference:
-              this.generator.Emit(OperationCode.Conv_U);
               break;
 
             default:
@@ -3609,9 +3606,6 @@ namespace Microsoft.Cci {
               break;
 
             case PrimitiveTypeCode.IntPtr:
-              this.generator.Emit(OperationCode.Conv_I);
-              break;
-
             case PrimitiveTypeCode.UIntPtr:
             case PrimitiveTypeCode.Pointer:
             case PrimitiveTypeCode.Reference:
@@ -3646,7 +3640,7 @@ namespace Microsoft.Cci {
     private void VisitBranchIfFalse(IExpression expression, ILGeneratorLabel targetLabel) {
       OperationCode branchOp = OperationCode.Brfalse;
       IBinaryOperation/*?*/ binaryOperation = expression as IBinaryOperation;
-      bool signedInteger = binaryOperation != null && TypeHelper.IsSignedPrimitiveInteger(binaryOperation.LeftOperand.Type);
+      bool signedInteger = binaryOperation != null && TypeHelper.IsSignedPrimitive(binaryOperation.LeftOperand.Type);
       if (binaryOperation is IEquality) {
         branchOp = OperationCode.Bne_Un;
         if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || binaryOperation.LeftOperand is IDefaultValue) {
@@ -3726,7 +3720,7 @@ namespace Microsoft.Cci {
     private void VisitBranchIfTrue(IExpression expression, ILGeneratorLabel targetLabel) {
       OperationCode branchOp = OperationCode.Brtrue;
       IBinaryOperation/*?*/ binaryOperation = expression as IBinaryOperation;
-      bool signedInteger = binaryOperation != null && TypeHelper.IsSignedPrimitiveInteger(binaryOperation.LeftOperand.Type);
+      bool signedInteger = binaryOperation != null && TypeHelper.IsSignedPrimitive(binaryOperation.LeftOperand.Type);
       if (binaryOperation is IEquality) {
         branchOp = OperationCode.Beq;
         if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || binaryOperation.LeftOperand is IDefaultValue) {

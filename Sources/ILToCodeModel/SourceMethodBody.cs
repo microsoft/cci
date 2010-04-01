@@ -200,7 +200,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
       if (cc == null) return expression;
       IConvertible/*?*/ ic = cc.Value as IConvertible;
-      if (ic == null) return expression;
+      if (ic == null) {
+        if (cc.Value is System.IntPtr) {
+          cc.Value = (System.UIntPtr)(ulong)(System.IntPtr)cc.Value;
+          cc.Type = this.platformType.SystemUIntPtr;
+        }
+        return expression;
+      }
       switch (ic.GetTypeCode()) {
         case TypeCode.SByte:
           cc.Value = (byte)ic.ToSByte(null); cc.Type = this.platformType.SystemUInt8; break;
