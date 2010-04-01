@@ -630,6 +630,22 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true if the CLR allows signed comparison operators to be applied to values of the given type.
+    /// </summary>
+    public static bool IsSignedPrimitive(ITypeReference type) {
+      switch (type.TypeCode) {
+        case PrimitiveTypeCode.Int16:
+        case PrimitiveTypeCode.Int32:
+        case PrimitiveTypeCode.Int64:
+        case PrimitiveTypeCode.Int8:
+        case PrimitiveTypeCode.IntPtr:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    /// <summary>
     /// Returns true if the CLR allows unsigned integer operators to be applied to values of the given type.
     /// </summary>
     public static bool IsUnsignedPrimitiveInteger(ITypeReference type) {
@@ -639,6 +655,23 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt32:
         case PrimitiveTypeCode.UInt64:
         case PrimitiveTypeCode.UInt8:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    /// <summary>
+    /// Returns true if the CLR allows unsigned comparison operators to be applied to values of the given type.
+    /// </summary>
+    public static bool IsUnsignedPrimitive(ITypeReference type) {
+      switch (type.TypeCode) {
+        case PrimitiveTypeCode.Char:
+        case PrimitiveTypeCode.UInt16:
+        case PrimitiveTypeCode.UInt32:
+        case PrimitiveTypeCode.UInt64:
+        case PrimitiveTypeCode.UInt8:
+        case PrimitiveTypeCode.UIntPtr:
           return true;
         default:
           return false;
@@ -1638,6 +1671,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.Int16: return typeReference.PlatformType.SystemUInt16;
         case PrimitiveTypeCode.Int32: return typeReference.PlatformType.SystemUInt32;
         case PrimitiveTypeCode.Int64: return typeReference.PlatformType.SystemUInt64;
+        case PrimitiveTypeCode.IntPtr: return typeReference.PlatformType.SystemUIntPtr;
         default: return typeReference;
       }
     }
