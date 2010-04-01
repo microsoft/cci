@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -25,12 +25,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal abstract IModuleTypeReference/*?*/ ModuleTypeReference { get; }
 
     #region IExpression Members
-
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
 
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }

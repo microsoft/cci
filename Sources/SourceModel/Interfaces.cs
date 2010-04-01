@@ -98,17 +98,6 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// An object that can be checked for errors
-  /// </summary>
-  public interface IErrorCheckable {
-
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    bool HasErrors { get; }
-  }
-
-  /// <summary>
   /// Describes an edit to a compilation as being either the addition, deletion or modification of a definition.
   /// </summary>
   public interface IEditDescriptor {
