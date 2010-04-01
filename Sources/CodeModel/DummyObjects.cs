@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -160,12 +160,6 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
-
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -200,12 +194,6 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
-
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -236,12 +224,6 @@ namespace Microsoft.Cci {
     #endregion
 
     #region IStatement Members
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
 
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
@@ -280,12 +262,6 @@ namespace Microsoft.Cci {
     #endregion
 
     #region IExpression Members
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
 
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
@@ -329,12 +305,6 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
-
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -353,12 +323,6 @@ namespace Microsoft.Cci {
   internal sealed class DummyExpression : IExpression {
 
     #region IExpression Members
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
 
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
@@ -394,12 +358,6 @@ namespace Microsoft.Cci {
     #region IStatement Members
 
     public void Dispatch(ICodeVisitor visitor) {
-    }
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -441,12 +399,6 @@ namespace Microsoft.Cci {
     #region IExpression Members
 
     public void Dispatch(ICodeVisitor visitor) {
-    }
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -504,12 +456,6 @@ namespace Microsoft.Cci {
     public void Dispatch(ICodeVisitor visitor) {
     }
 
-    public bool HasErrors {
-      get {
-        return true;
-      }
-    }
-
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
@@ -533,12 +479,6 @@ namespace Microsoft.Cci {
     #region IStatement Members
 
     public void Dispatch(ICodeVisitor visitor) {
-    }
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
     }
 
     public IEnumerable<ILocation> Locations {
@@ -577,12 +517,6 @@ namespace Microsoft.Cci {
     #region IExpression Members
 
     public void Dispatch(ICodeVisitor visitor) {
-    }
-
-    public bool HasErrors {
-      get {
-        return true;
-      }
     }
 
     public IEnumerable<ILocation> Locations {

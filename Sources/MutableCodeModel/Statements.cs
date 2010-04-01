@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -1084,15 +1084,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
     public abstract void Dispatch(ICodeVisitor visitor);
-
-    /// <summary>
-    /// Checks the statement for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.

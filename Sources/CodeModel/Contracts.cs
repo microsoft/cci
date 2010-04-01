@@ -317,7 +317,7 @@ namespace Microsoft.Cci.Contracts {
   /// A common supertype for contracts like preconditions, postconditions,
   /// object invariants, and loop invariants.
   /// </summary>
-  public interface IContractElement : IErrorCheckable, IObjectWithLocations {
+  public interface IContractElement : IObjectWithLocations {
     /// <summary>
     /// The condition associated with this particular contract element.
     /// 
@@ -360,7 +360,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A collection of collections of objects that describe a loop.
   /// </summary>
-  public interface ILoopContract : IErrorCheckable, IObjectWithLocations {
+  public interface ILoopContract : IObjectWithLocations {
     /// <summary>
     /// A possibly empty list of loop invariants.
     /// </summary>
@@ -383,7 +383,7 @@ namespace Microsoft.Cci.Contracts {
   /// A collection of collections of objects that augment the type signature of a method with additional information
   /// that describe the contract between calling method and called method.
   /// </summary>
-  public interface IMethodContract : IErrorCheckable, IObjectWithLocations {
+  public interface IMethodContract : IObjectWithLocations {
 
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that are newly allocated by a call to the method.
@@ -484,7 +484,7 @@ namespace Microsoft.Cci.Contracts {
   /// A collection of collections of objects that augment the signature of a type with additional information
   /// that describe invariants, model variables and functions, as well as axioms.
   /// </summary>
-  public interface ITypeContract : IErrorCheckable, IObjectWithLocations {
+  public interface ITypeContract : IObjectWithLocations {
 
     /// <summary>
     /// A possibly empty list of contract fields. Contract fields can only be used inside contracts and are not available at runtime.
@@ -550,7 +550,7 @@ namespace Microsoft.Cci.Contracts {
     /// from a method, the callback will be notified.
     /// </summary>
     void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback);
-  
+
   }
 
   /// <summary>
@@ -655,16 +655,6 @@ namespace Microsoft.Cci.Contracts {
 
     #endregion
 
-    #region IErrorCheckable Members
-
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
-
-    #endregion
-
     #region IObjectWithLocations Members
 
     public IEnumerable<ILocation> Locations {
@@ -690,16 +680,6 @@ namespace Microsoft.Cci.Contracts {
 
     #endregion
 
-    #region IErrorCheckable Members
-
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
-
-    #endregion
-
     #region IObjectWithLocations Members
 
     public IEnumerable<ILocation> Locations {
@@ -721,16 +701,6 @@ namespace Microsoft.Cci.Contracts {
 
     public string OriginalSource {
       get { return null; }
-    }
-
-    #endregion
-
-    #region IErrorCheckable Members
-
-    public bool HasErrors {
-      get {
-        return false;
-      }
     }
 
     #endregion

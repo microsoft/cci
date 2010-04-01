@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -221,15 +221,6 @@ namespace Microsoft.Cci.Contracts {
       get { return this.Writes == null ? null : this.Writes.AsReadOnly(); }
     }
 
-    /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
-
     #endregion
 
     #region IObjectWithLocations Members
@@ -404,16 +395,6 @@ namespace Microsoft.Cci.Contracts {
     bool isPure;
 
     #region IMethodContract Members
-
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    /// <returns></returns>
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
 
     IEnumerable<IExpression> IMethodContract.Allocates {
       get { return this.Allocates.AsReadOnly(); }
@@ -633,16 +614,6 @@ namespace Microsoft.Cci.Contracts {
 
     #region ITypeContract Members
 
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    /// <returns></returns>
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
-
     IEnumerable<IFieldDefinition> ITypeContract.ContractFields {
       get { return this.ContractFields.AsReadOnly(); }
     }
@@ -782,19 +753,6 @@ namespace Microsoft.Cci.Contracts {
       set { this.conditionAsText = value; }
     }
     string conditionAsText;
-
-    #endregion
-
-    #region IErrorCheckable Members
-
-    /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    public virtual bool HasErrors {
-      get {
-        return false;
-      }
-    }
 
     #endregion
 

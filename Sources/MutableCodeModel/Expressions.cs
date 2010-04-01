@@ -1510,15 +1510,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     public abstract void Dispatch(ICodeVisitor visitor);
 
     /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        return false;
-      }
-    }
-
-    /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>

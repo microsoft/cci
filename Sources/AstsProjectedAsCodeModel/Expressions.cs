@@ -977,7 +977,7 @@ namespace Microsoft.Cci.Ast {
             }
           }
         } else {
-          IAddressDereference/*?*/ addrDeref = resolvedTarget as IAddressDereference;
+          AddressDereference/*?*/ addrDeref = resolvedTarget as AddressDereference;
           if (addrDeref != null) {
             if (addrDeref.HasErrors)
               return true;
@@ -1671,7 +1671,7 @@ namespace Microsoft.Cci.Ast {
     /// A block of statements providing the implementation of the anonymous method that is called by the delegate that is the result of this expression.
     /// </summary>
     /// <value></value>
-    public IBlockStatement Body {
+    public BlockStatement Body {
       get {
         return this.body = (BlockStatement)this.body.MakeCopyFor(this.DummyBlock);
       }
@@ -1836,6 +1836,14 @@ namespace Microsoft.Cci.Ast {
 
     ISignature ISignatureDeclaration.SignatureDefinition {
       get { return this; }
+    }
+
+    #endregion
+
+    #region IAnonymousDelegate Members
+
+    IBlockStatement IAnonymousDelegate.Body {
+      get { return this.Body; }
     }
 
     #endregion
@@ -3155,7 +3163,9 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ProjectAsIExpression().HasErrors;
+      if (this.LeftOperand.HasErrors || this.RightOperand.HasErrors) return true;
+      var projectedExpression = this.ProjectAsIExpression();
+      return projectedExpression is DummyExpression || projectedExpression == CodeDummy.Expression;
     }
 
     /// <summary>
@@ -9798,6 +9808,17 @@ namespace Microsoft.Cci.Ast {
       return new GreaterThanOrEqual(containingBlock, this);
     }
 
+  }
+
+  /// <summary>
+  /// An object that can be checked for errors
+  /// </summary>
+  public interface IErrorCheckable {
+
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found
+    /// </summary>
+    bool HasErrors { get; }
   }
 
   /// <summary>

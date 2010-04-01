@@ -457,7 +457,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression results in a value of some type.
   /// </summary>
-  public interface IExpression : IErrorCheckable, IObjectWithLocations {
+  public interface IExpression : IObjectWithLocations {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type

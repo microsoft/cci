@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -309,7 +309,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An executable statement.
   /// </summary>
-  public interface IStatement : IErrorCheckable, IObjectWithLocations {
+  public interface IStatement : IObjectWithLocations {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
