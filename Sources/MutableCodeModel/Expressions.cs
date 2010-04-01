@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -2580,6 +2580,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public TargetExpression() {
       this.definition = Dummy.LocalVariable;
       this.instance = null;
+      this.alignment = 0;
+      this.isVolatile = false;
     }
 
     /// <summary>
@@ -2590,6 +2592,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       : base(targetExpression) {
       this.definition = targetExpression.Definition;
       this.instance = targetExpression.Instance;
+      if (targetExpression.IsUnaligned)
+        this.alignment = targetExpression.Alignment;
+      else
+        this.alignment = 0;
+      this.isVolatile = targetExpression.IsVolatile;
     }
 
     /// <summary>
