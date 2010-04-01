@@ -192,11 +192,11 @@ namespace Microsoft.Cci {
     }
 
     private void LoadField(byte alignment, bool isVolatile, IExpression/*?*/ instance, IFieldReference field, bool fieldIsStatic) {
-      if (alignment != 0)
-        this.generator.Emit(OperationCode.Unaligned_, alignment);
-      if (isVolatile)
-        this.generator.Emit(OperationCode.Volatile_);
       if (instance == null) {
+        if (alignment != 0)
+          this.generator.Emit(OperationCode.Unaligned_, alignment);
+        if (isVolatile)
+          this.generator.Emit(OperationCode.Volatile_);
         if (fieldIsStatic) {
           this.generator.Emit(OperationCode.Ldsfld, field);
           this.StackSize++;
@@ -205,6 +205,10 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Ldfld, field);
       } else {
         this.Visit(instance);
+        if (alignment != 0)
+          this.generator.Emit(OperationCode.Unaligned_, alignment);
+        if (isVolatile)
+          this.generator.Emit(OperationCode.Volatile_);
         this.generator.Emit(OperationCode.Ldfld, field);
       }
     }
