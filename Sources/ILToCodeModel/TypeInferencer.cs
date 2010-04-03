@@ -655,7 +655,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void Visit(IThisReference thisReference) {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
-      ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
+      if (typeForThis.IsValueType)
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
+      else
+        ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }
 
     public override void Visit(ITokenOf tokenOf) {
