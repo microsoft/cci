@@ -785,7 +785,9 @@ namespace Microsoft.Cci {
       this.Visit(checkIfInstance.Operand);
       this.generator.Emit(OperationCode.Isinst, checkIfInstance.TypeToCheck);
       this.generator.Emit(OperationCode.Ldnull);
+      this.StackSize++;
       this.generator.Emit(OperationCode.Cgt_Un);
+      this.StackSize--;
     }
 
     /// <summary>
