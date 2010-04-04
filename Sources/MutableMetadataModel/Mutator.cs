@@ -3062,7 +3062,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IResourceReference Visit(ResourceReference resourceReference) {
       if (this.stopTraversal) return resourceReference;
       resourceReference.Attributes = this.Visit(resourceReference.Attributes);
-      resourceReference.DefiningAssembly = this.Visit(this.GetMutableCopy(resourceReference.DefiningAssembly));
+      resourceReference.DefiningAssembly = this.Visit(resourceReference.DefiningAssembly);
       return resourceReference;
     }
 
