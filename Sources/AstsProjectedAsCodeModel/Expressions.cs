@@ -273,7 +273,7 @@ namespace Microsoft.Cci.Ast {
       return indexPlusPointer;
     }
 
-    class PointerAddition : IAddition {
+    class PointerAddition : IAddition, IErrorCheckable {
 
       internal PointerAddition(Addition addition, Expression leftOperand, Expression rightOperand) {
         this.addition = addition;
@@ -18511,7 +18511,7 @@ namespace Microsoft.Cci.Ast {
       return pointerMinusIndex;
     }
 
-    class PointerSubtraction : ISubtraction {
+    class PointerSubtraction : ISubtraction, IErrorCheckable {
 
       internal PointerSubtraction(Subtraction subtraction, Expression leftOperand, Expression rightOperand) {
         this.subtraction = subtraction;
