@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -21,7 +21,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       get {
         if (this.currentMethodContract == null) {
           this.currentMethodContract = new MethodContract();
-          this.contractProvider.AssociateMethodWithContract(this.sourceMethodBody.MethodDefinition, this.currentMethodContract);
         }
         return this.currentMethodContract;
       }
@@ -31,22 +30,23 @@ namespace Microsoft.Cci.ILToCodeModel {
       get {
         if (this.currentTypeContract == null) {
           this.currentTypeContract = new TypeContract();
-          this.contractProvider.AssociateTypeWithContract(this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition, this.currentTypeContract);
         }
         return this.currentTypeContract;
       }
     }
 
-    ContractProvider contractProvider;
-    SourceMethodBody sourceMethodBody;
+    ISourceMethodBody sourceMethodBody;
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
-    private bool extractingTypeContract;
     private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
 
     private ITypeReference contractClass;
     private ITypeReference contractClassDefinedInReferenceAssembly;
 
+    private IUnit definingUnit;
+    private IContractAwareHost contractAwareHost;
+
+    private bool methodIsInReferenceAssembly;
 
     private static ITypeReference/*?*/ TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
       foreach (ICustomAttribute attribute in attributes) {
@@ -63,16 +63,22 @@ namespace Microsoft.Cci.ILToCodeModel {
         (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
     }
 
-    internal ContractExtractor(SourceMethodBody sourceMethodBody, ContractProvider contractProvider, ISourceLocationProvider/*?*/ sourceLocationProvider)
-      : base(sourceMethodBody.host, true, sourceLocationProvider) {
+    internal ContractExtractor(
+      ISourceMethodBody sourceMethodBody,
+      IContractAwareHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host, true, sourceLocationProvider) {
       this.sourceMethodBody = sourceMethodBody;
-      this.contractProvider = contractProvider;
+      this.contractAwareHost = host;
+
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
-      NamespaceTypeReference contractTypeAsSeenByThisUnit;
-      AssemblyReference contractAssemblyReference = new AssemblyReference(host, contractProvider.Unit.ContractAssemblySymbolicIdentity);
-      contractTypeAsSeenByThisUnit = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
-      this.contractClass = contractTypeAsSeenByThisUnit;
+      this.definingUnit = TypeHelper.GetDefiningUnit(sourceMethodBody.MethodDefinition.ContainingType.ResolvedType);
+
+      this.methodIsInReferenceAssembly = ContractHelper.IsContractReferenceAssembly(this.host, this.definingUnit);
+
+      AssemblyReference contractAssemblyReference = new AssemblyReference(host, this.definingUnit.ContractAssemblySymbolicIdentity);
+      this.contractClass = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
 
       IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
       IAssemblyReference ar = ur as IAssemblyReference;
@@ -83,14 +89,14 @@ namespace Microsoft.Cci.ILToCodeModel {
           // then we're extracting contracts from a reference assembly
           var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
           this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
-        }
-        // If that fails, check for the attribute which is defined in the assembly itself
-        refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
-        if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute))
-        {
-          // then we're extracting contracts from a reference assembly
-          var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
-          this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
+        } else {
+          // If that fails, check for the attribute which is defined in the assembly itself
+          refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
+          if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
+            // then we're extracting contracts from a reference assembly
+            var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
+            this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
+          }
         }
 
       }
@@ -102,15 +108,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       #endregion Set contract purity based on whether the method definition has the pure attribute
 
-      this.oldAndResultExtractor = new OldAndResultExtractor(sourceMethodBody, this.cache, this.referenceCache, contractTypeAsSeenByThisUnit);
+      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.cache, this.referenceCache, this.contractClass);
 
       this.extractingFromACtorInAClass = 
         sourceMethodBody.MethodDefinition.IsConstructor
         &&
         !sourceMethodBody.MethodDefinition.ContainingType.IsValueType;
-      // TODO: this field makes sense only if extracting a type contract and not a method contract
-      // TODO: Need the type loaded so don't have to use a string comparison
-      this.extractingTypeContract = TemporaryKludge(sourceMethodBody.MethodDefinition.Attributes, "System.Diagnostics.Contracts.ContractInvariantMethodAttribute") != null;
 
       // TODO: this should be true only if it is a contract class for an interface
       this.extractingFromAMethodInAContractClass =
@@ -118,51 +121,66 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     }
 
-    //private static NamespaceTypeReference CreateTypeReference(IMetadataHost host, AssemblyIdentity assemblyIdentity, string typeName) {
-    //  var assemblyReference = new AssemblyReference(host, assemblyIdentity);
-    //  return CreateTypeReference(host, assemblyReference, typeName);
-    //}
+    public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
+      // Don't start with an empty contract because the ctor may have set some things in it
+      var bs = this.Visit(blockStatement);
+      return new MethodContractAndMethodBody(this.currentMethodContract, bs);
+    }
+
+    public ITypeContract/*?*/ ExtractObjectInvariant(IBlockStatement blockStatement) {
+      var stmts = new List<IStatement>(blockStatement.Statements);
+      List<IStatement> newStmts = new List<IStatement>();
+      var i = 0;
+      // Zero or more local declarations, as long as they don't have initial values
+      // REVIEW: If the decompiler was better at finding the first use of a local, then there wouldn't be any of these here
+      // REVIEW: But this is an invariant method, so what does it mean to leave these out of the invariants?
+      while (i < stmts.Count && IsLocalDeclarationWithoutInitializer(stmts[i])) {
+        newStmts.Add(stmts[i]);
+        i++;
+      }
+      List<ITypeInvariant> invariants = new List<ITypeInvariant>();
+      TypeContract typeContract = new TypeContract();
+      // One or more calls to Contract.Invariant
+      while (i < stmts.Count && IsInvariant(stmts[i])) {
+        ExpressionStatement expressionStatement = stmts[i] as ExpressionStatement;
+        IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
+        IMethodReference methodToCall = methodCall.MethodToCall;
+        List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
+        List<ILocation> locations = new List<ILocation>(methodCall.Locations);
+        int numArgs = arguments.Count;
+
+        string/*?*/ origSource = null;
+        if (this.methodIsInReferenceAssembly) {
+          origSource = GetStringFromArgument(arguments[2]);
+        } else {
+          TryGetConditionText(locations, numArgs, out origSource);
+        }
+
+        TypeInvariant invariant = new TypeInvariant() {
+          Condition = this.Visit(arguments[0]), // REVIEW: Does this need to be visited?
+          Description = numArgs >= 2 ? arguments[1] : null,
+          OriginalSource = origSource,
+          Locations = locations
+        };
+        invariants.Add(invariant);
+        i++;
+      }
+      while (i < stmts.Count) { // This should be at most just a return statement
+        newStmts.Add(stmts[i]);
+        i++;
+      }
+      if (0 < invariants.Count)
+        return new TypeContract() {
+          Invariants = invariants,
+        };
+      else
+        return null;
+    }
+
     public override IBlockStatement Visit(BlockStatement blockStatement) {
       if (blockStatement == null) return blockStatement;
       var stmts = blockStatement.Statements;
       List<IStatement> newStmts = new List<IStatement>();
-      if (this.extractingTypeContract) {
-        var i = 0;
-        // Zero or more local declarations, as long as they don't have initial values
-        // REVIEW: If the decompiler was better at finding the first use of a local, then there wouldn't be any of these here
-        // REVIEW: But this is an invariant method, so what does it mean to leave these out of the invariants?
-        while (i < stmts.Count && IsLocalDeclarationWithoutInitializer(stmts[i])) {
-          newStmts.Add(stmts[i]);
-          i++;
-        }
-        // One or more calls to Contract.Invariant
-        while (i < stmts.Count && IsInvariant(stmts[i])) {
-          ExpressionStatement expressionStatement = stmts[i] as ExpressionStatement;
-          IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
-          IMethodReference methodToCall = methodCall.MethodToCall;
-          List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
-          List<ILocation> locations = new List<ILocation>(methodCall.Locations);
-          int numArgs = arguments.Count;
-
-          string origSource;
-          TryGetConditionText(locations, numArgs, out origSource);
-
-          TypeInvariant invariant = new TypeInvariant() {
-            Condition = this.Visit(arguments[0]), // REVIEW: Does this need to be visited?
-            Description = numArgs >= 2 ? arguments[1] : null,
-            OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
-            Locations = locations
-          };
-          this.CurrentTypeContract.Invariants.Add(invariant);
-          i++;
-        }
-        while (i < stmts.Count) { // This should be at most just a return statement
-          newStmts.Add(stmts[i]);
-          i++;
-        }
-        blockStatement.Statements = newStmts;
-        return blockStatement;
-      }
       int indexOfLastContractCall = IndexOfLastContractCall(stmts);
       if (indexOfLastContractCall == -1) return blockStatement;
       var beginning = 0;
@@ -213,12 +231,24 @@ namespace Microsoft.Cci.ILToCodeModel {
             ConditionalStatement conditionalStatement = stmts[j] as ConditionalStatement;
             if (conditionalStatement != null && IsLegacyRequires(conditionalStatement)) {
               ExtractLegacyRequires(conditionalStatement);
+              // NB: legacy preconditions stay in the code, but the contracts they
+              // represent are still placed into the method's contract
+              for (int k = i; k <= j; k++)
+                newStmts.Add(stmts[k]);
               i = j;
               break;
             }
             ExpressionStatement exprStmt = stmts[j] as ExpressionStatement;
             if (exprStmt != null && IsPreconditionOrPostcondition(exprStmt)) {
               ExtractContractCall(stmts, i, j);
+              i = j;
+              break;
+            } else if (exprStmt != null && IsValidatorOrAbbreviator(exprStmt)) {
+              ExtractValidatorOrAbbreviator(exprStmt);
+              // NB: validators stay in the code, but the contracts they
+              // represent are still placed into the method's contract
+              for (int k = i; k <= j; k++)
+                newStmts.Add(stmts[k]);
               i = j;
               break;
             }
@@ -242,6 +272,48 @@ namespace Microsoft.Cci.ILToCodeModel {
         newStmts.Add(stmts[j]);
       blockStatement.Statements = newStmts;
       return blockStatement;
+    }
+
+    private List<IStatement> ExtractObjectInvariant(List<IStatement> stmts) {
+      List<IStatement> newStmts = new List<IStatement>();
+      var i = 0;
+      // Zero or more local declarations, as long as they don't have initial values
+      // REVIEW: If the decompiler was better at finding the first use of a local, then there wouldn't be any of these here
+      // REVIEW: But this is an invariant method, so what does it mean to leave these out of the invariants?
+      while (i < stmts.Count && IsLocalDeclarationWithoutInitializer(stmts[i])) {
+        newStmts.Add(stmts[i]);
+        i++;
+      }
+      // One or more calls to Contract.Invariant
+      while (i < stmts.Count && IsInvariant(stmts[i])) {
+        ExpressionStatement expressionStatement = stmts[i] as ExpressionStatement;
+        IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
+        IMethodReference methodToCall = methodCall.MethodToCall;
+        List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
+        List<ILocation> locations = new List<ILocation>(methodCall.Locations);
+        int numArgs = arguments.Count;
+
+        string/*?*/ origSource = null;
+        if (this.methodIsInReferenceAssembly) {
+          origSource = GetStringFromArgument(arguments[2]);
+        } else {
+          TryGetConditionText(locations, numArgs, out origSource);
+        }
+
+        TypeInvariant invariant = new TypeInvariant() {
+          Condition = this.Visit(arguments[0]), // REVIEW: Does this need to be visited?
+          Description = numArgs >= 2 ? arguments[1] : null,
+          OriginalSource = origSource,
+          Locations = locations
+        };
+        this.CurrentTypeContract.Invariants.Add(invariant);
+        i++;
+      }
+      while (i < stmts.Count) { // This should be at most just a return statement
+        newStmts.Add(stmts[i]);
+        i++;
+      }
+      return newStmts;
     }
 
     private class ContractLocalToThis : CodeAndContractMutator {
@@ -300,14 +372,30 @@ namespace Microsoft.Cci.ILToCodeModel {
         IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
         if (methodCall == null) continue;
         IMethodReference methodToCall = methodCall.MethodToCall;
-        if (!IsContractMethod(methodToCall))
-          continue;
+        if (ContractHelper.IsValidatorOrAbbreviator(methodToCall)) return i;
+        if (!IsContractMethod(methodToCall)) continue;
         string mname = methodToCall.Name.Value;
         if (mname == "EndContractBlock") return i;
         if (IsPreconditionOrPostcondition(expressionStatement)) return i;
       }
       return -1;
     }
+    internal int OffsetOfLastContractCallOrNegativeOne() {
+      List<IOperation> instrs = new List<IOperation>(this.sourceMethodBody.Operations);
+      for (int i = instrs.Count - 1; 0 <= i; i--) {
+        IOperation op = instrs[i];
+        if (op.OperationCode != OperationCode.Call) continue;
+        IMethodReference method = op.Value as IMethodReference;
+        if (method == null) continue;
+        var methodName = method.Name.Value;
+        if (
+          (this.IsContractMethod(method) && !(methodName.Equals("Assert") || methodName.Equals("Assume")))
+          || ContractHelper.IsValidatorOrAbbreviator(method)
+          ) return (int)op.Offset;
+      }
+      return -1; // not found
+    }
+
 
     private static bool IsLocalDeclarationWithoutInitializer(IStatement statement) {
       ILocalDeclarationStatement localDeclarationStatement = statement as ILocalDeclarationStatement;
@@ -330,7 +418,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return mname == "Requires" || mname == "Ensures";
     }
-
+    private static bool IsValidatorOrAbbreviator(IStatement statement){
+      IExpressionStatement expressionStatement = statement as IExpressionStatement;
+      if (expressionStatement == null) return false;
+      IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
+      if (methodCall == null) return false;
+      IMethodReference methodToCall = methodCall.MethodToCall;
+      return ContractHelper.IsValidatorOrAbbreviator(methodToCall);
+    }
     private static bool IsLegacyRequires(IStatement statement) {
       ConditionalStatement conditional = statement as ConditionalStatement;
       if (conditional == null) return false;
@@ -408,7 +503,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private void ExtractContractCall(List<IStatement> statements, int lo, int hi) {
       //^ requires lo <= hi;
-      //^ requires IsPreconditionOrPostCondition(statements[hi]);
+      //^ requires IsPreconditionOrPostCondition(statements[hi])
 
       BlockExpression be = null;
       if (lo < hi) {
@@ -453,12 +548,18 @@ namespace Microsoft.Cci.ILToCodeModel {
                 arg = be;
                 locations.AddRange(be.BlockStatement.Locations);
               }
-              string origSource;
-              TryGetConditionText(locations, numArgs, out origSource);
+
+              string/*?*/ origSource = null;
+              if (this.methodIsInReferenceAssembly) {
+                origSource = GetStringFromArgument(arguments[2]);
+              } else {
+                TryGetConditionText(locations, numArgs, out origSource);
+              }
+
               PostCondition postcondition = new PostCondition() {
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                 Description = numArgs >=2 ? arguments[1] : null,
-                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
+                OriginalSource = origSource,
                 Locations = locations
               };
 
@@ -473,14 +574,20 @@ namespace Microsoft.Cci.ILToCodeModel {
                 arg = be;
                 locations.AddRange(be.BlockStatement.Locations);
               }
-              string origSource;
-              TryGetConditionText(locations, numArgs, out origSource);
+
+              string/*?*/ origSource = null;
+              if (this.methodIsInReferenceAssembly) {
+                origSource = GetStringFromArgument(arguments[2]);
+              } else {
+                TryGetConditionText(locations, numArgs, out origSource);
+              }
+
               ThrownException exceptionalPostcondition = new ThrownException() {
                 ExceptionType = genericArgs[0],
                 Postcondition = new PostCondition() {
                   Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                   Description = numArgs >= 2 ? arguments[1] : null,
-                  OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
+                  OriginalSource = origSource,
                   Locations = locations
                 }
               };
@@ -499,21 +606,26 @@ namespace Microsoft.Cci.ILToCodeModel {
               if (genericMethodInstance != null && 0 < genericMethodInstance.GenericParameterCount) {
                 foreach (var a in genericMethodInstance.GenericArguments) {
                   thrownException = new TypeOf() {
-                    Type = this.sourceMethodBody.platformType.SystemType,
+                    Type = this.host.PlatformType.SystemType,
                     TypeToGet = a,
                     Locations = new List<ILocation>(a.Locations),
                   };
                   break;
                 }
               }
-              string origSource;
-              TryGetConditionText(locations, numArgs, out origSource);
+
+              string/*?*/ origSource = null;
+              if (this.methodIsInReferenceAssembly) {
+                origSource = GetStringFromArgument(arguments[2]);
+              } else {
+                TryGetConditionText(locations, numArgs, out origSource);
+              }
 
               Precondition precondition = new Precondition() {
                 AlwaysCheckedAtRuntime = false,
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
                 Description = numArgs >= 2 ? arguments[1] : null,
-                OriginalSource = numArgs == 3 ? GetStringFromArgument(arguments[2]) : origSource,
+                OriginalSource = origSource,
                 Locations = locations,
                 ExceptionToThrow = thrownException,
               };
@@ -660,13 +772,17 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         IExpressionStatement es = statement as IExpressionStatement;
         IMethodCall methodCall = es.Expression as IMethodCall;
-        failureBehavior = methodCall; // REVIEW: Does this need to be visited?
+        failureBehavior = methodCall;
         locations.AddRange(es.Locations);
       }
 
       Precondition precondition = new Precondition() {
         AlwaysCheckedAtRuntime = true,
-        Condition = new LogicalNot() { Operand = conditional.Condition }, // REVIEW: Does this need to be visited?
+        Condition = new LogicalNot() {
+          Locations = new List<ILocation>(locations),
+          Operand = conditional.Condition,
+          Type = this.host.PlatformType.SystemBoolean,
+        },
         ExceptionToThrow = failureBehavior,
         Locations = new List<ILocation>(locations),
         OriginalSource = origSource,
@@ -675,11 +791,27 @@ namespace Microsoft.Cci.ILToCodeModel {
       return;
     }
 
+    private void ExtractValidatorOrAbbreviator(ExpressionStatement expressionStatement) {
+      //^ requires expressionStatement.Expression is IMethodCall;
+      IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
+      IMethodReference methodToCall = methodCall.MethodToCall;
+      IMethodDefinition methodDefinition = methodToCall.ResolvedMethod;
+      IMethodContract/*?*/ validatorContract = null;
+      IContractAwareHost caw = this.host as IContractAwareHost;
+      if (caw != null)
+        validatorContract = ContractHelper.GetMethodContractFor(caw, methodDefinition);
+      if (validatorContract != null) {
+        var bpta = new ReplaceParametersWithArguments(this.host, methodDefinition, methodCall);
+        validatorContract = bpta.Visit(validatorContract);
+        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(this.CurrentMethodContract, validatorContract);
+      }
+    }
+
     private class OldAndResultExtractor : MethodBodyCodeMutator {
-      SourceMethodBody sourceMethodBody;
+      ISourceMethodBody sourceMethodBody;
       ITypeReference contractClass;
-      internal OldAndResultExtractor(SourceMethodBody sourceMethodBody, Dictionary<object, object> cache, Dictionary<object, object> referenceCache, ITypeReference contractClass)
-        : base(sourceMethodBody.host, true) {
+      internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<object, object> cache, Dictionary<object, object> referenceCache, ITypeReference contractClass)
+        : base(host, true) {
         this.sourceMethodBody = sourceMethodBody;
         this.cache = cache;
         this.referenceCache = referenceCache;
@@ -876,6 +1008,39 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       #endregion Code from BrianGru to negate predicates coming from if-then-throw preconditions
     }
+
+    /// <summary>
+    /// A mutator that replaces the parameters of a method with the arguments from a method call.
+    /// </summary>
+    private sealed class ReplaceParametersWithArguments : MethodBodyCodeAndContractMutator {
+      private IMethodDefinition methodDefinition;
+      private IMethodCall methodCall;
+      private List<IExpression> arguments;
+      /// <summary>
+      /// Creates a mutator that replaces all occurrences of parameters from the target method with those from the source method.
+      /// </summary>
+      public ReplaceParametersWithArguments(IMetadataHost host, IMethodDefinition methodDefinition, IMethodCall methodCall)
+        : base(host, false) { // NB: Important to pass "false": this mutator needs to make a copy of the entire expression!
+        this.methodDefinition = methodDefinition;
+        this.methodCall = methodCall;
+        this.arguments = new List<IExpression>(methodCall.Arguments);
+      }
+
+      /// <summary>
+      /// Visits the specified bound expression.
+      /// </summary>
+      /// <param name="boundExpression">The bound expression.</param>
+      /// <returns></returns>
+      public override IExpression Visit(BoundExpression boundExpression) {
+        ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
+        if (par != null && par.ContainingSignature == this.methodDefinition) {
+          return this.arguments[par.Index];
+        } else {
+          return base.Visit(boundExpression);
+        }
+      }
+    }
+
   }
 
 

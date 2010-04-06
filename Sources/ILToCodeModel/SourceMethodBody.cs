@@ -21,8 +21,12 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// </summary>
   public class SourceMethodBody : ISourceMethodBody {
 
-    internal readonly ContractProvider/*?*/ contractProvider;
     internal readonly IMetadataHost host;
+
+    internal readonly IContractAwareHost/*?*/ contractAwareHost;
+    private DecompilerCallback/*?*/ alreadyDecompiledBodyProvider;
+    //^ invariant (this.contractAwareHost == null) == (this.alreadyDecompiledBodies == null);
+
     internal readonly IMethodBody ilMethodBody;
     internal readonly INameTable nameTable;
     internal readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
@@ -35,8 +39,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     bool sawTailCall;
     bool sawVolatile;
     byte alignment;
-    private readonly bool contractsOnly;
-    internal ContractExtractor/*?*/ contractExtractor; // invariant: !contractsOnly || contractExtractor != null
 
     /// <summary>
     /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
@@ -47,13 +49,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider) {
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, 
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
-      this.contractProvider = contractProvider;
       this.nameTable = host.NameTable;
       this.sourceLocationProvider = sourceLocationProvider;
       this.pdbReader = sourceLocationProvider as PdbReader;
@@ -69,18 +68,17 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
     /// result of the Block property of the resulting source method body.</param>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// objects and services such as the shared name table, the table for interning references, and contracts from other methods/types.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
-    /// embedded in the given method body.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
-      : this(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
-      this.contractsOnly = contractsOnly;
-      this.contractExtractor = new ContractExtractor(this, this.contractProvider, this.pdbReader);
+    /// <param name="alreadyDecompiledBodyProvider">An object that holds already decompiled bodies put there by the callback mechanism for IContractAwareHosts</param>
+    public SourceMethodBody(IMethodBody ilMethodBody, IContractAwareHost host, 
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider,
+      DecompilerCallback alreadyDecompiledBodyProvider)
+      : this(ilMethodBody, (IMetadataHost)host, sourceLocationProvider, localScopeProvider) {
+      this.contractAwareHost = host;
+      this.alreadyDecompiledBodyProvider = alreadyDecompiledBodyProvider;
+      var definingUnit = TypeHelper.GetDefiningUnit(ilMethodBody.MethodDefinition.ContainingTypeDefinition);
     }
 
     /// <summary>
@@ -89,8 +87,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IBlockStatement Block {
       get {
-        if (this.block == null)
-          this.block = this.CreateDecompiledBlock();
+        if (this.block == null) {
+          if (this.alreadyDecompiledBodyProvider != null) {
+            var bs = this.alreadyDecompiledBodyProvider.GetAlreadyDecompiledBody(this.MethodDefinition);
+            if (bs != null)
+              this.block = bs;
+          } else {
+            this.block = this.CreateDecompiledBlock();
+          }
+        }
         return this.block;
       }
     }
@@ -294,14 +299,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.CreateBlocksForExceptionHandlers();
       BasicBlock result = this.GetOrCreateBlock(0, false);
       BasicBlock currentBlock = result;
-      int lastContractOffset = 0; // dummy value
-      if (this.contractsOnly) {
-        lastContractOffset = OffsetOfLastContractCallOrNegativeOne();
-        if (lastContractOffset == -1) return result;
-      }
       while (this.operationEnumerator.MoveNext()) {
         IOperation currentOperation = this.operationEnumerator.Current;
-        if (this.contractsOnly && currentOperation.Offset > (uint)lastContractOffset) break;
         if (currentOperation.Offset > 0 && this.blockFor.ContainsKey(currentOperation.Offset)) {
           this.TurnOperandStackIntoPushStatements(currentBlock);
           BasicBlock newBlock = this.GetOrCreateBlock(currentOperation.Offset, false);
@@ -312,21 +311,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       this.TurnOperandStackIntoPushStatements(currentBlock);
       return this.Transform(result);
-    }
-
-    private int OffsetOfLastContractCallOrNegativeOne() {
-      List<IOperation> instrs = new List<IOperation>(this.ilMethodBody.Operations);
-      for (int i = instrs.Count - 1; 0 <= i; i--) {
-        IOperation op = instrs[i];
-        if (op.OperationCode != OperationCode.Call) continue;
-        IMethodReference method = op.Value as IMethodReference;
-        if (method == null) continue;
-        var methodName = method.Name.Value;
-        if (this.contractExtractor != null &&
-          this.contractExtractor.IsContractMethod(method) && !(methodName.Equals("Assert") || methodName.Equals("Assume"))
-          ) return (int)op.Offset;
-      }
-      return -1; // not found
     }
 
     ICreateObjectInstance/*?*/ GetICreateObjectInstance(IStatement statement) {
@@ -416,7 +400,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
         this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
-        var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider, this.contractProvider);
+        MoveNextSourceMethodBody moveNextBody;
+        if (this.contractAwareHost != null) {
+          moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.contractAwareHost, this.sourceLocationProvider, this.localScopeProvider);
+        } else {
+          moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
+        }
         result = moveNextBody.TransformedBlock;
       }
       result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);
@@ -425,12 +414,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         new UnreferencedLabelRemover().Visit(bb);
       }
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      if (this.contractProvider != null) {
-        if (this.contractExtractor == null) {
-          this.contractExtractor = new ContractExtractor(this, this.contractProvider, this.pdbReader);
-        }
-        result = this.contractExtractor.Visit(result);
-      }
       result = new AssertAssumeExtractor(this).Visit(result);
       return result;
     }
@@ -1580,11 +1563,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider)
-      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider) {
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
+      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider) {
       this.iteratorMethodBody = iteratorMethodBody;
     }
 
@@ -1599,13 +1580,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    /// <param name="contractsOnly">True if the new method body should only contain any contracts (pre or post conditions) that are
-    /// embedded in the given method body.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider/*?*/ contractProvider, bool contractsOnly)
-      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, contractProvider, contractsOnly) {
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IContractAwareHost host, 
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
+      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider) {
       this.iteratorMethodBody = iteratorMethodBody;
     }
 

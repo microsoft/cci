@@ -28,7 +28,6 @@ namespace PeToText {
         Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
         return;
       }
-      ContractProvider contractProvider = null;// new ContractProvider(new ContractMethods(host), module);
 
       PdbReader/*?*/ pdbReader = null;
       string pdbFile = Path.ChangeExtension(module.Location, "pdb");
@@ -38,7 +37,7 @@ namespace PeToText {
       }
       using (pdbReader) {
         SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
-        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, noIL);
+        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, noIL);
         csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
         string txtFile = Path.ChangeExtension(pdbFile, "txt");
         File.WriteAllText(txtFile, sourceEmitterOutput.Data);

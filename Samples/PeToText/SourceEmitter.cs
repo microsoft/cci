@@ -20,15 +20,13 @@ using Microsoft.Cci.Contracts;
 namespace PeToText {
   public class SourceEmitter : CSharpSourceEmitter.SourceEmitter {
 
-    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, ContractProvider/*?*/ contractProvider, PdbReader/*?*/ pdbReader, bool noIL)
+    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, bool noIL)
       : base(sourceEmitterOutput) {
       this.host = host;
-      this.contractProvider = contractProvider;
       this.pdbReader = pdbReader;
       this.noIL = noIL;
     }
 
-    ContractProvider/*?*/ contractProvider;
     IMetadataHost host;
     PdbReader/*?*/ pdbReader;
     bool noIL;
@@ -38,7 +36,7 @@ namespace PeToText {
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null)
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, this.contractProvider);
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
       if (this.noIL)
         this.Visit(sourceMethodBody.Block.Statements);
       else {

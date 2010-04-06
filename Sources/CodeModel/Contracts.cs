@@ -534,8 +534,32 @@ namespace Microsoft.Cci.Contracts {
     /// (if a callback object has been registered) with the part of the
     /// method body that is left over after the contract has been removed.
     /// </summary>
-    void ProvideResidualMethodBody(IMethodDefinition methodDefinition, ISourceMethodBody/*?*/ sourceMethodBody);
+    void ProvideResidualMethodBody(IMethodDefinition methodDefinition, IBlockStatement/*?*/ blockStatement);
 
+  }
+
+  /// <summary>
+  /// Since this project isn't using the 3.5 platform, just needed a quick
+  /// 2-tuple.
+  /// </summary>
+  public struct MethodContractAndMethodBody {
+    IMethodContract/*?*/ methodContract;
+    IBlockStatement/*?*/ blockStatement;
+    /// <summary>
+    /// Constructs a pair from the arguments.
+    /// </summary>
+    public MethodContractAndMethodBody(IMethodContract/*?*/ methodContract, IBlockStatement/*?*/ blockStatement) {
+      this.methodContract = methodContract;
+      this.blockStatement = blockStatement;
+    }
+    /// <summary>
+    /// Returns the method contract of the pair.
+    /// </summary>
+    public IMethodContract/*?*/  MethodContract { get { return this.methodContract; } set { this.methodContract = value; } }
+    /// <summary>
+    /// Returns the method body of the pair.
+    /// </summary>
+    public IBlockStatement/*?*/ BlockStatement { get { return this.blockStatement; } set { this.blockStatement = value; } }
   }
 
   /// <summary>
@@ -546,11 +570,20 @@ namespace Microsoft.Cci.Contracts {
   public interface IContractExtractor : IContractProvider {
 
     /// <summary>
-    /// After the callback has been registered, when a contract is extracted
-    /// from a method, the callback will be notified.
+    /// When a contract is extracted from a method, all registered callbacks will be notified.
     /// </summary>
     void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback);
 
+    /// <summary>
+    /// For a client (e.g., a decompiler or a binary rewriter) that has a source method body and wants to have its
+    /// contract extracted. In addition to being returned, the contract is added to the contract provider.
+    /// The residual method body is returned in the second element of the pair and is *not* retained
+    /// by the contract provider.
+    /// REVIEW: When this method is called, should the callback be called? Should it take an extra argument
+    /// that identifies the caller and the event won't be triggered for that client?
+    /// </summary>
+    MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody);
+  
   }
 
   /// <summary>
@@ -559,23 +592,12 @@ namespace Microsoft.Cci.Contracts {
   public interface IContractAwareHost : IMetadataHost {
 
     /// <summary>
-    /// Adds a new directory (path) to the list of search paths for which
-    /// to look in when searching for a unit to load.
-    /// </summary>
-    void AddLibPath(string path);
-
-    /// <summary>
     /// If the unit with the specified identity has been loaded with this host,
-    /// then it will have attached a contract provider to that unit.
-    /// This method returns that contract provider.
+    /// then it will have attached a contract extractor to that unit.
+    /// This method returns that contract extractor.
     /// If the unit has not been loaded by this host, then null is returned.
     /// </summary>
-    IContractExtractor/*?*/ GetContractProvider(UnitIdentity unitIdentity);
-
-    /// <summary>
-    /// The host will register this callback with each contract provider it creates.
-    /// </summary>
-    void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback);
+    IContractExtractor/*?*/ GetContractExtractor(UnitIdentity unitIdentity);
 
   }
 

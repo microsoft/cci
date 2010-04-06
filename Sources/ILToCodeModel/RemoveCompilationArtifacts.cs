@@ -195,8 +195,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
-        this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.contractProvider).Block;
+      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host, 
+        this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider).Block;
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);

@@ -165,14 +165,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="typeDefinition">The type whose members will be searched</param>
     /// <returns>May return null if not found</returns>
-    public static IMethodDefinition/*?*/ GetInvariantMethod(ITypeDefinition typeDefinition) {
+    public static IEnumerable<IMethodDefinition> GetInvariantMethods(ITypeDefinition typeDefinition) {
       foreach (IMethodDefinition methodDef in typeDefinition.Methods)
         foreach (var attr in methodDef.Attributes) {
           INamespaceTypeReference ntr = attr.Type as INamespaceTypeReference;
           if (ntr != null && ntr.Name.Value == "ContractInvariantMethodAttribute")
-            return methodDef;
+            yield return methodDef;
         }
-      return null;
     }
 
     /// <summary>
@@ -209,9 +208,116 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
     private static INamespaceTypeReference contractInvariantMethod = null;
 
+    /// <summary>
+    /// Returns true iff the method resolves to a definition which is decorated
+    /// with an attribute named either "ContractArgumentValidatorAttribute"
+    /// or "ContractAbbreviatorAttribute".
+    /// The namespace the attribute belongs to is ignored.
+    /// </summary>
+    public static bool IsValidatorOrAbbreviator(IMethodReference method) {
+      IMethodDefinition methodDefinition = method.ResolvedMethod;
+      if (methodDefinition == Dummy.Method) return false;
+      foreach (var a in methodDefinition.Attributes) {
+        string name = TypeHelper.GetTypeName(a.Type, NameFormattingOptions.None);
+        if (name.EndsWith("ContractArgumentValidatorAttribute")
+          || name.EndsWith("ContractAbbreviatorAttribute")
+          )
+          return true;
+      }
+      return false;
+    }
+
+    /// <summary>
+    /// Indicates when the unit is marked with the assembly-level attribute
+    /// [System.Diagnostics.Contracts.ContractReferenceAssembly]
+    /// where that attribute type is defined in the unit itself.
+    /// </summary>
+    public static bool IsContractReferenceAssembly(IMetadataHost host, IUnit unit) {
+      IAssemblyReference ar = unit as IAssemblyReference;
+      if (ar == null) return false;
+      var declAttr = CreateTypeReference(host, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
+      return AttributeHelper.Contains(unit.Attributes, declAttr);
+    }
+
+    /// <summary>
+    /// Returns a (possibly-null) method contract relative to a contract-aware host.
+    /// If you already know which unit the method is defined in and/or already have
+    /// the contract provider for the unit in which the method is defined, then you
+    /// would do just as well to directly query that contract provider.
+    /// </summary>
+    public static IMethodContract GetMethodContractFor(IContractAwareHost host, IMethodDefinition methodDefinition) {
+
+      IUnit/*?*/ unit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingType.ResolvedType);
+      if (unit == null) return null;
+      IContractProvider/*?*/ cp = host.GetContractExtractor(unit.UnitIdentity);
+      if (cp == null) return null;
+      var methodContract = cp.GetMethodContractFor(methodDefinition);
+      return methodContract;
+    }
+
+    /// <summary>
+    /// Returns a method contract containing the 'effective' contract for the given
+    /// method definition. The effective contract contains all contracts for the method:
+    /// any that it has on its own, as well as all those inherited from any methods
+    /// that it overrides or interface methods that it implements (either implicitly
+    /// or explicitly).
+    /// All parameters in inherited contracts are substituted for by
+    /// the method's own parameters.
+    /// If there are no contracts, then it returns null.
+    /// </summary>
+    public static IMethodContract GetMethodContractForIncludingInheritedContracts(IContractAwareHost host, IMethodDefinition methodDefinition) {
+      MethodContract cumulativeContract = new MethodContract();
+      bool atLeastOneContract = false;
+      IMethodContract/*?*/ mc = ContractHelper.GetMethodContractFor(host, methodDefinition);
+      if (mc != null) {
+        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, mc);
+        atLeastOneContract = true;
+      }
+      #region Overrides of base class methods
+      if (!methodDefinition.IsNewSlot) { // REVIEW: Is there a better test?
+        IMethodDefinition overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition) as IMethodDefinition;
+        while (overriddenMethod != null && overriddenMethod != Dummy.Method) {
+          IMethodContract/*?*/ overriddenContract = ContractHelper.GetMethodContractFor(host, overriddenMethod);
+          if (overriddenContract != null) {
+            SubstituteParameters sps = new SubstituteParameters(host, methodDefinition, overriddenMethod);
+            MethodContract newContract = sps.Visit(overriddenContract) as MethodContract;
+            Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+            atLeastOneContract = true;
+          }
+          overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(overriddenMethod) as IMethodDefinition;
+        }
+      }
+      #endregion Overrides of base class methods
+      #region Implicit interface implementations
+      foreach (IMethodDefinition ifaceMethod in MemberHelper.GetImplicitlyImplementedInterfaceMethods(methodDefinition)) {
+        IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
+        if (ifaceContract == null) continue;
+        SubstituteParameters sps = new SubstituteParameters(host, methodDefinition, ifaceMethod);
+        MethodContract newContract = sps.Visit(ifaceContract) as MethodContract;
+        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+        atLeastOneContract = true;
+      }
+      #endregion Implicit interface implementations
+      #region Explicit interface implementations and explicit method overrides
+      foreach (IMethodReference ifaceMethodRef in MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)) {
+        IMethodDefinition/*?*/ ifaceMethod = ifaceMethodRef.ResolvedMethod;
+        if (ifaceMethod == null) continue;
+        IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
+        if (ifaceContract == null) continue;
+        SubstituteParameters sps = new SubstituteParameters(host, methodDefinition, ifaceMethod);
+        MethodContract newContract = sps.Visit(ifaceContract) as MethodContract;
+        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+        atLeastOneContract = true;
+      }
+      #endregion Explicit interface implementations and explicit method overrides
+      return atLeastOneContract ? cumulativeContract : null;
+    }
+
+
+
   }
 
-  internal class SimpleHostEnvironment : MetadataReaderHost {
+  internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
     public SimpleHostEnvironment(INameTable nameTable)
       : base(nameTable, 4) {
@@ -224,6 +330,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
+
+    #region IContractAwareHost Members
+
+    public IContractExtractor GetContractExtractor(UnitIdentity unitIdentity) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
   }
 
   /// <summary>
@@ -233,8 +347,9 @@ namespace Microsoft.Cci.ILToCodeModel {
   public class CodeContractAwareHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
     readonly List<string> libPaths = new List<string>();
-    internal Dictionary<UnitIdentity, IContractExtractor> unit2ContractProvider = new Dictionary<UnitIdentity, IContractExtractor>();
+    internal Dictionary<UnitIdentity, IContractExtractor> unit2ContractExtractor = new Dictionary<UnitIdentity, IContractExtractor>();
     List<IContractProviderCallback> callbacks = new List<IContractProviderCallback>();
+    private List<IMethodDefinition> methodsBeingExtracted = new List<IMethodDefinition>();
 
     #region Constructors
     /// <summary>
@@ -242,7 +357,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// a (lazy) contract provider to each unit it loads.
     /// </summary>
     public CodeContractAwareHostEnvironment()
-      : this(new NameTable(), 0) {
+      : this(new NameTable(), 0, true) {
+    }
+
+    /// <summary>
+    /// Allocates an object that can be used as an IMetadataHost which automatically loads reference assemblies and attaches
+    /// a (lazy) contract provider to each unit it loads.
+    /// </summary>
+    /// <param name="loadPDBs">Whether PDB files should be loaded by the extractors attached to each unit.</param>
+    public CodeContractAwareHostEnvironment(bool loadPDBs)
+      : this(new NameTable(), 0, loadPDBs) {
     }
 
     /// <summary>
@@ -253,8 +377,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Initial value for the set of search paths to use.
     /// </param>
     public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths)
-      : base(searchPaths) {
-      this.peReader = new PeReader(this);
+      : this(searchPaths, false, true) {
     }
 
     /// <summary>
@@ -268,8 +391,24 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
     /// </param>
     public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths, bool searchInGAC)
+      : this(searchPaths, searchInGAC, true) {
+    }
+
+    /// <summary>
+    /// Allocates an object that can be used as an IMetadataHost which automatically loads reference assemblies and attaches
+    /// a (lazy) contract provider to each unit it loads.
+    /// </summary>
+    /// <param name="searchPaths">
+    /// Initial value for the set of search paths to use.
+    /// </param>
+    /// <param name="searchInGAC">
+    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
+    /// </param>
+    /// <param name="loadPDBs">Whether PDB files should be loaded by the extractors attached to each unit.</param>
+    public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths, bool searchInGAC, bool loadPDBs)
       : base(searchPaths, searchInGAC) {
       this.peReader = new PeReader(this);
+      this.AllowExtractorsToUsePdbs = loadPDBs;
     }
 
     /// <summary>
@@ -281,7 +420,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// environment to co-exist while agreeing on how to map strings to IName instances.
     /// </param>
     public CodeContractAwareHostEnvironment(INameTable nameTable)
-      : this(nameTable, 0) {
+      : this(nameTable, 0, true) {
     }
 
     /// <summary>
@@ -299,34 +438,22 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    public CodeContractAwareHostEnvironment(INameTable nameTable, byte pointerSize)
+    /// <param name="loadPDBs">Whether PDB files should be loaded by the extractors attached to each unit.</param>
+    public CodeContractAwareHostEnvironment(INameTable nameTable, byte pointerSize, bool loadPDBs)
       : base(nameTable, pointerSize)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
       this.peReader = new PeReader(this);
+      this.AllowExtractorsToUsePdbs = loadPDBs;
     }
     #endregion Constructors
 
     /// <summary>
-    /// If a unit has been loaded with this host, then it will have attached a (lazy) contract provider to that unit.
-    /// This method returns that contract provider. If the unit has not been loaded by this host, then null is returned.
+    /// Set this before loading any units with this host. Default is true.
+    /// Note that extractors may use PDB file to open source files.
+    /// Both PDB and source files may be opened with exclusive access.
     /// </summary>
-    public IContractExtractor/*?*/ GetContractProvider(UnitIdentity unitIdentity) {
-      IContractExtractor cp;
-      if (this.unit2ContractProvider.TryGetValue(unitIdentity, out cp)) {
-        return cp;
-      } else {
-        return null;
-      }
-    }
-
-    /// <summary>
-    /// The host will register this callback with each contract provider it creates.
-    /// </summary>
-    /// <param name="contractProviderCallback"></param>
-    public void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback) {
-      this.callbacks.Add(contractProviderCallback);
-    }
+    public virtual bool AllowExtractorsToUsePdbs { get; protected set; }
 
     /// <summary>
     /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
@@ -342,23 +469,30 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(Path.GetFullPath(location), this));
       this.RegisterAsLatest(result);
-      this.AttachContractProviderAndLoadReferenceAssembliesFor(result);
+      this.AttachContractExtractorAndLoadReferenceAssembliesFor(result);
       return result;
     }
 
-    private void AttachContractProviderAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
+    /// <summary>
+    /// If the unit is a reference assembly, then just attach a contract extractor to it.
+    /// Otherwise, create an aggregating extractor that encapsulates the unit and any
+    /// reference assemblies that are found on the search path.
+    /// Each contract extractor is actually a composite comprising a code-contracts
+    /// extractor layered on top of a lazy extractor.
+    /// </summary>
+    private void AttachContractExtractorAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
 
       // Because of unification, the "alreadyLoadedUnit" might have actually already been loaded previously
       // and gone through here (and so already has a contract provider attached to it).
-      if (this.unit2ContractProvider.ContainsKey(alreadyLoadedUnit.UnitIdentity)) return;
+      if (this.unit2ContractExtractor.ContainsKey(alreadyLoadedUnit.UnitIdentity)) return;
 
       var contractMethods = new ContractMethods(this);
-      using (var lazyContractProviderForLoadedUnit = new LazyContractProvider(this, alreadyLoadedUnit, contractMethods)) {
-        var contractProviderForLoadedUnit = new CodeContractsContractProvider(this, lazyContractProviderForLoadedUnit);
-        if (this.IsContractReferenceAssembly(alreadyLoadedUnit)) {
+      using (var lazyContractProviderForLoadedUnit = new LazyContractExtractor(this, alreadyLoadedUnit, contractMethods, this.AllowExtractorsToUsePdbs)) {
+        var contractProviderForLoadedUnit = new CodeContractsContractExtractor(this, lazyContractProviderForLoadedUnit);
+        if (ContractHelper.IsContractReferenceAssembly(this, alreadyLoadedUnit)) {
           // If we're asked to explicitly load a reference assembly, then go ahead and attach a contract provider to it,
           // but *don't* look for reference assemblies for *it*.
-          this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, contractProviderForLoadedUnit);
+          this.unit2ContractExtractor.Add(alreadyLoadedUnit.UnitIdentity, contractProviderForLoadedUnit);
         } else {
           #region Load any reference assemblies for the loaded unit
           var oobProvidersAndHosts = new List<KeyValuePair<IContractProvider, IMetadataHost>>();
@@ -368,7 +502,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             var referenceAssemblyIdentity = this.ProbeAssemblyReference(alreadyLoadedUnit, refAssemWithoutLocation);
             if (referenceAssemblyIdentity.Location != "unknown://location") {
               #region Load reference assembly and attach a contract provider to it
-              IMetadataHost hostForReferenceAssembly = this; // default
+              IContractAwareHost hostForReferenceAssembly = this; // default
               IUnit referenceUnit = null;
               if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
@@ -383,16 +517,16 @@ namespace Microsoft.Cci.ILToCodeModel {
               if (referenceUnit != null && referenceUnit != Dummy.Unit) {
                 IAssembly referenceAssembly = referenceUnit as IAssembly;
                 if (referenceAssembly != null) {
-                  var referenceAssemblyContractProvider = new CodeContractsContractProvider(hostForReferenceAssembly,
-                    new LazyContractProvider(hostForReferenceAssembly, referenceAssembly, contractMethods));
+                  var referenceAssemblyContractProvider = new CodeContractsContractExtractor(hostForReferenceAssembly,
+                    new LazyContractExtractor(hostForReferenceAssembly, referenceAssembly, contractMethods, this.AllowExtractorsToUsePdbs));
                   oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
                 }
               }
               #endregion Load reference assembly and attach a contract provider to it
             }
           }
-          var aggregateContractProvider = new AggregatingContractProvider(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
-          this.unit2ContractProvider.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
+          var aggregateContractProvider = new AggregatingContractExtractor(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
+          this.unit2ContractExtractor.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
           #endregion Load any reference assemblies for the loaded unit
         }
         foreach (var c in this.callbacks) {
@@ -401,17 +535,29 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    #region IContractAwareHost Members
+
     /// <summary>
-    /// Indicates when the unit is marked with the assembly-level attribute [System.Diagnostics.Contracts.ContractReferenceAssembly]
-    /// where that attribute type is defined in the unit itself.
+    /// If a unit has been loaded with this host, then it will have attached a (lazy) contract provider to that unit.
+    /// This method returns that contract provider. If the unit has not been loaded by this host, then null is returned.
     /// </summary>
-    /// <param name="unit"></param>
-    /// <returns></returns>
-    private bool IsContractReferenceAssembly(IUnit unit) {
-      IAssemblyReference ar = unit as IAssemblyReference;
-      if (ar == null) return false;
-      var declAttr = ContractHelper.CreateTypeReference(this, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
-      return AttributeHelper.Contains(unit.Attributes, declAttr);
+    public IContractExtractor/*?*/ GetContractExtractor(UnitIdentity unitIdentity) {
+      IContractExtractor cp;
+      if (this.unit2ContractExtractor.TryGetValue(unitIdentity, out cp)) {
+        return cp;
+      } else {
+        return null;
+      }
     }
+
+    /// <summary>
+    /// The host will register this callback with each contract provider it creates.
+    /// </summary>
+    /// <param name="contractProviderCallback"></param>
+    public void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback) {
+      this.callbacks.Add(contractProviderCallback);
+    }
+
+    #endregion
   }
 }

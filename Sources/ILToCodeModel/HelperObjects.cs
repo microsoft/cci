@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -196,11 +196,4 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
   }
 
-  internal struct Pair<T1, T2> {
-    public T1 One;
-    public T2 Two;
-    public Pair(T1 one, T2 two) {
-      One = one; Two = two;
-    }
-  }
 }

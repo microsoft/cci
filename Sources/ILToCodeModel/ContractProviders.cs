@@ -25,7 +25,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// This provider wraps an existing non-code-contracts-aware provider and caches to avoid recomputing
   /// whether a contract exists or not.
   /// </summary>
-  public class CodeContractsContractProvider : IContractExtractor {
+  public class CodeContractsContractExtractor : IContractExtractor {
 
     /// <summary>
     /// needed to be able to map the contracts from a contract class proxy method to an abstract method
@@ -51,7 +51,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="underlyingContractProvider">
     /// The (non-aware) provider that was used to extract the contracts from the IL.
     /// </param>
-    public CodeContractsContractProvider(IMetadataHost host, IContractExtractor underlyingContractProvider) {
+    public CodeContractsContractExtractor(IMetadataHost host, IContractExtractor underlyingContractProvider) {
       this.host = host;
       this.underlyingContractProvider = underlyingContractProvider;
       this.contractProviderCache = new ContractProvider(underlyingContractProvider.ContractMethods, underlyingContractProvider.Unit);
@@ -158,6 +158,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.underlyingContractProvider.RegisterContractProviderCallback(contractProviderCallback);
     }
 
+    /// <summary>
+    /// For a client (e.g., the decompiler) that has a source method body and wants to have its
+    /// contract extracted and added to the contract provider.
+    /// </summary>
+    public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody) {
+      return this.underlyingContractProvider.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
+    }
+
     #endregion
   }
 
@@ -165,7 +173,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// A contract provider that can be used to get contracts from a unit by querying in
   /// a random-access manner. That is, the unit is *not* traversed eagerly.
   /// </summary>
-  public class LazyContractProvider : IContractExtractor, IDisposable {
+  public class LazyContractExtractor : IContractExtractor, IDisposable {
 
     /// <summary>
     /// Needed because the decompiler requires the concrete class ContractProvider
@@ -174,11 +182,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// needed to pass to decompiler
     /// </summary>
-    IMetadataHost host;
+    IContractAwareHost host;
     /// <summary>
     /// needed to pass to decompiler
     /// </summary>
-    private PdbReader pdbReader;
+    private PdbReader/*?*/ pdbReader;
     /// <summary>
     /// Objects interested in getting the method body after extraction.
     /// </summary>
@@ -192,13 +200,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="host">The host that loaded the unit for which this is to be a contract provider.</param>
     /// <param name="unit">The unit to retrieve the contracts from.</param>
     /// <param name="contractMethods">A collection of methods that can be called in a way that provides tools with information about contracts.</param>
-    public LazyContractProvider(IMetadataHost host, IUnit unit, IContractMethods contractMethods) {
+    /// <param name="usePdb">Whether to use the PDB file (and possibly the source files if available) during extraction.</param>
+    public LazyContractExtractor(IContractAwareHost host, IUnit unit, IContractMethods contractMethods, bool usePdb) {
       this.host = host;
       this.underlyingContractProvider = new ContractProvider(contractMethods, unit);
-      string pdbFile = Path.ChangeExtension(unit.Location, "pdb");
-      if (File.Exists(pdbFile)) {
-        using (var pdbStream = File.OpenRead(pdbFile)) {
-          this.pdbReader = new PdbReader(pdbStream, host);
+      if (usePdb) {
+        string pdbFile = Path.ChangeExtension(unit.Location, "pdb");
+        if (File.Exists(pdbFile)) {
+          using (var pdbStream = File.OpenRead(pdbFile)) {
+            this.pdbReader = new PdbReader(pdbStream, host);
+          }
         }
       }
       this.unit = unit;
@@ -215,7 +226,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// Disposes the PdbReader object, if any, that is used to obtain the source text locations corresponding to contracts.
     /// </summary>
-    ~LazyContractProvider() {
+    ~LazyContractExtractor() {
        this.Close();
     }
 
@@ -278,27 +289,20 @@ namespace Microsoft.Cci.ILToCodeModel {
       IMethodBody methodBody = methodDefinition.Body;
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null) {
-        sourceMethodBody = new SourceMethodBody(
-          methodBody,
-          this.host,
-          this.pdbReader,
-          this.pdbReader,
-          this.underlyingContractProvider,
-          this.callbacks.Count == 0
-          );
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
       }
-      // Evaluating the Block causes the decompilation to happen
-      var dummyJustToGetDecompilationAndContractExtraction = sourceMethodBody.Block;
 
-      // Now ask for the contract
-      var methodContract = this.underlyingContractProvider.GetMethodContractFor(methodDefinition);
+      MethodContractAndMethodBody result = this.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
+      var methodContract = result.MethodContract;
       if (methodContract == null) {
         this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract); // so we don't try to extract more than once
+      } else {
+        this.underlyingContractProvider.AssociateMethodWithContract(method, methodContract);
       }
 
       // Notify all interested parties
       foreach (var c in this.callbacks) {
-        c.ProvideResidualMethodBody(methodDefinition, sourceMethodBody);
+        c.ProvideResidualMethodBody(methodDefinition, result.BlockStatement);
       }
 
       return methodContract;
@@ -335,24 +339,27 @@ namespace Microsoft.Cci.ILToCodeModel {
         return null;
       }
 
-      IMethodDefinition/*?*/ invariantMethod = ContractHelper.GetInvariantMethod(typeDefinition);
-      if (invariantMethod == null) {
-        this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract);
-        return null;
+      TypeContract cumulativeContract = new TypeContract();
+      foreach (var invariantMethod in ContractHelper.GetInvariantMethods(typeDefinition)) {
+        IMethodBody methodBody = invariantMethod.Body;
+        ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
+        if (sourceMethodBody == null) {
+          sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
+        }
+        var e = new ContractExtractor(sourceMethodBody, this.host, this.pdbReader);
+        var tc = e.ExtractObjectInvariant(sourceMethodBody.Block);
+        if (tc != null) {
+          cumulativeContract.Invariants.AddRange(tc.Invariants);
+        }
       }
-      IMethodBody methodBody = invariantMethod.Body;
-      ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody == null) {
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, this.underlyingContractProvider, true);
-      }
-      var dummyJustToGetDecompilationAndContractExtraction = sourceMethodBody.Block;
 
-      // Now ask for the contract
-      typeContract = this.underlyingContractProvider.GetTypeContractFor(typeDefinition);
-      if (typeContract == null) {
+      if (cumulativeContract.Invariants.Count == 0) {
         this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract); // so we don't try to extract more than once
+        return null;
+      } else {
+        this.underlyingContractProvider.AssociateTypeWithContract(type, cumulativeContract);
+        return cumulativeContract;
       }
-      return typeContract;
     }
 
     /// <summary>
@@ -365,7 +372,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     #endregion
 
-
     #region IContractExtractor Members
 
     /// <summary>
@@ -374,6 +380,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback) {
       this.callbacks.Add(contractProviderCallback);
+    }
+
+    /// <summary>
+    /// For a client (e.g., the decompiler) that has a source method body and wants to have its
+    /// contract extracted and added to the contract provider.
+    /// </summary>
+    public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody) {
+      var e = new ContractExtractor(sourceMethodBody, this.host, this.pdbReader);
+      return e.SplitMethodBodyIntoContractAndCode(sourceMethodBody.Block);
     }
 
     #endregion
@@ -486,50 +501,52 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   /// <summary>
-  /// A contract provider that serves up the union of the contracts found from a set of contract providers.
-  /// One provider is the primary provider: all contracts retrieved from this contract provider are expressed
-  /// in terms of the types/members as defined by that provider. Optionally, a set of secondary providers
+  /// A contract extractor that serves up the union of the contracts found from a set of contract extractors.
+  /// One extractor is the primary extractor: all contracts retrieved from this contract extractor are expressed
+  /// in terms of the types/members as defined by that extractor's unit. Optionally, a set of secondary extractors
   /// are used to query for contracts on equivalent methods/types: any contracts found are transformed into
   /// being contracts expressed over the types/members as defined by the primary provider and additively
-  /// merged into the contracts from the primary provider.
+  /// merged into the contracts from the primary extractor.
   /// </summary>
-  public class AggregatingContractProvider : IContractExtractor, IDisposable {
+  public class AggregatingContractExtractor : IContractExtractor, IDisposable {
 
     private IUnit unit;
-    private IContractExtractor primaryProvider;
-    private List<IContractProvider> oobProviders;
+    private IContractExtractor primaryExtractor;
+    private List<IContractProvider> oobExtractors;
     ContractProvider underlyingContractProvider; // used just because it provides a store so this provider can cache its results
     IMetadataHost host;
     private Dictionary<IContractProvider, MappingMutator> mapperForOobToPrimary = new Dictionary<IContractProvider, MappingMutator>();
     private Dictionary<IContractProvider, MappingMutator> mapperForPrimaryToOob = new Dictionary<IContractProvider, MappingMutator>();
 
+    private List<object> methodsBeingExtracted = new List<object>();
+
     /// <summary>
-    /// The constructor for creating an aggregating provider.
+    /// The constructor for creating an aggregating extractor.
     /// </summary>
     /// <param name="host">This is the host that loaded the unit for which the <paramref name="primaryProvider"/> is
-    /// the provider for.
+    /// the extractor for.
     /// </param>
-    /// <param name="primaryProvider">
-    /// The provider that will be used to define the types/members of things referred to in contracts.
+    /// <param name="primaryExtractor">
+    /// The extractor that will be used to define the types/members of things referred to in contracts.
     /// </param>
-    /// <param name="oobProvidersAndHosts">
-    /// These are optional. If non-null, then it must be a finite sequence of pairs: each pair is a contract provider
-    /// and the host that loaded the unit for which it is a provider.
+    /// <param name="oobExtractorsAndHosts">
+    /// These are optional. If non-null, then it must be a finite sequence of pairs: each pair is a contract extractor
+    /// and the host that loaded the unit for which it is a extractor.
     /// </param>
-    public AggregatingContractProvider(IMetadataHost host, IContractExtractor primaryProvider, IEnumerable<KeyValuePair<IContractProvider, IMetadataHost>>/*?*/ oobProvidersAndHosts) {
-      var primaryUnit = primaryProvider.Unit;
+    public AggregatingContractExtractor(IMetadataHost host, IContractExtractor primaryExtractor, IEnumerable<KeyValuePair<IContractProvider, IMetadataHost>>/*?*/ oobExtractorsAndHosts) {
+      var primaryUnit = primaryExtractor.Unit;
       this.unit = primaryUnit;
-      this.primaryProvider = primaryProvider;
+      this.primaryExtractor = primaryExtractor;
 
-      this.underlyingContractProvider = new ContractProvider(primaryProvider.ContractMethods, primaryUnit);
+      this.underlyingContractProvider = new ContractProvider(primaryExtractor.ContractMethods, primaryUnit);
       this.host = host;
 
-      if (oobProvidersAndHosts != null) {
-        this.oobProviders = new List<IContractProvider>();
-        foreach (var oobProviderAndHost in oobProvidersAndHosts) {
+      if (oobExtractorsAndHosts != null) {
+        this.oobExtractors = new List<IContractProvider>();
+        foreach (var oobProviderAndHost in oobExtractorsAndHosts) {
           var oobProvider = oobProviderAndHost.Key;
           var oobHost = oobProviderAndHost.Value;
-          this.oobProviders.Add(oobProvider);
+          this.oobExtractors.Add(oobProvider);
           IUnit oobUnit = oobProvider.Unit;
           this.mapperForOobToPrimary.Add(oobProvider, new MappingMutator(host, primaryUnit, oobUnit));
           this.mapperForPrimaryToOob.Add(oobProvider, new MappingMutator(oobHost, oobUnit, primaryUnit));
@@ -548,14 +565,14 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// Disposes any constituent contract providers that implement the IDisposable interface. 
     /// </summary>
-    ~AggregatingContractProvider() {
+    ~AggregatingContractExtractor() {
        this.Close();
     }
 
     private void Close() {
-      var primaryDisposable = this.primaryProvider as IDisposable;
+      var primaryDisposable = this.primaryExtractor as IDisposable;
       if (primaryDisposable != null) primaryDisposable.Dispose();
-      foreach (var oobProvider in this.oobProviders) {
+      foreach (var oobProvider in this.oobExtractors) {
         var oobDisposable = oobProvider as IDisposable;
         if (oobDisposable != null)
           oobDisposable.Dispose();
@@ -580,48 +597,60 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <returns></returns>
     public IMethodContract/*?*/ GetMethodContractFor(object method) {
 
-      IMethodContract contract = this.underlyingContractProvider.GetMethodContractFor(method);
-      if (contract != null) return contract == ContractDummy.MethodContract ? null : contract;
-
-      MethodContract result = new MethodContract();
-      IMethodContract primaryContract = this.primaryProvider.GetMethodContractFor(method);
-      bool found = false;
-      if (primaryContract != null) {
-        found = true;
-        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(result, primaryContract);
-      }
-      if (this.oobProviders != null) {
-        foreach (var oobProvider in this.oobProviders) {
-
-          IMethodReference methodReference = method as IMethodReference;
-          if (methodReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
-
-          MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-          var oobMethod = primaryToOobMapper.Visit(methodReference);
-
-          if (oobMethod == null) continue;
-
-          var oobContract = oobProvider.GetMethodContractFor(oobMethod);
-
-          if (oobContract == null) continue;
-
-          MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
-          oobContract = oobToPrimaryMapper.Visit(oobContract);
-          Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(result, oobContract);
-          found = true;
-
-        }
-      }
-
-      // always cache so we don't try to extract more than once
-      if (found) {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, result);
-        return result;
-      } else {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+      if (this.methodsBeingExtracted.Contains(method)) {
+        // hit a cycle while chasing validators/abbreviators
+        // TODO: signal error
         return null;
+      } else {
+        this.methodsBeingExtracted.Add(method);
       }
 
+      try {
+
+        IMethodContract contract = this.underlyingContractProvider.GetMethodContractFor(method);
+        if (contract != null) return contract == ContractDummy.MethodContract ? null : contract;
+
+        MethodContract result = new MethodContract();
+        IMethodContract primaryContract = this.primaryExtractor.GetMethodContractFor(method);
+        bool found = false;
+        if (primaryContract != null) {
+          found = true;
+          Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(result, primaryContract);
+        }
+        if (this.oobExtractors != null) {
+          foreach (var oobProvider in this.oobExtractors) {
+
+            IMethodReference methodReference = method as IMethodReference;
+            if (methodReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
+
+            MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
+            var oobMethod = primaryToOobMapper.Visit(methodReference);
+
+            if (oobMethod == null) continue;
+
+            var oobContract = oobProvider.GetMethodContractFor(oobMethod);
+
+            if (oobContract == null) continue;
+
+            MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
+            oobContract = oobToPrimaryMapper.Visit(oobContract);
+            Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(result, oobContract);
+            found = true;
+
+          }
+        }
+
+        // always cache so we don't try to extract more than once
+        if (found) {
+          this.underlyingContractProvider.AssociateMethodWithContract(method, result);
+        } else {
+          this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+          result = null;
+        }
+        return result;
+      } finally {
+        this.methodsBeingExtracted.RemoveAt(this.methodsBeingExtracted.Count - 1);
+      }
     }
 
     /// <summary>
@@ -644,14 +673,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (contract != null) return contract == ContractDummy.TypeContract ? null : contract;
 
       TypeContract result = new TypeContract();
-      ITypeContract primaryContract = this.primaryProvider.GetTypeContractFor(type);
+      ITypeContract primaryContract = this.primaryExtractor.GetTypeContractFor(type);
       bool found = false;
       if (primaryContract != null) {
         found = true;
         ContractHelper.AddTypeContract(result, primaryContract);
       }
-      if (this.oobProviders != null) {
-        foreach (var oobProvider in this.oobProviders) {
+      if (this.oobExtractors != null) {
+        foreach (var oobProvider in this.oobExtractors) {
           var oobUnit = oobProvider.Unit;
 
           ITypeReference typeReference = type as ITypeReference;
@@ -704,7 +733,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     #endregion
 
-
     #region IContractExtractor Members
 
     /// <summary>
@@ -712,7 +740,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="contractProviderCallback"></param>
     public void RegisterContractProviderCallback(IContractProviderCallback contractProviderCallback) {
-      this.primaryProvider.RegisterContractProviderCallback(contractProviderCallback);
+      this.primaryExtractor.RegisterContractProviderCallback(contractProviderCallback);
+    }
+
+    /// <summary>
+    /// For a client (e.g., the decompiler) that has a source method body and wants to have its
+    /// contract extracted and added to the contract provider.
+    /// </summary>
+    public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody) {
+      return this.primaryExtractor.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
     }
 
     #endregion

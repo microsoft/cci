@@ -37,9 +37,8 @@ namespace CodeModelTests {
         }
       }
       using (pdbReader) {
-        ContractProvider contractProvider = new ContractProvider(new ContractMethods(host), assembly);
         SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
-        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, contractProvider, pdbReader, true);
+        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, true);
         csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
         string result = sourceEmitterOutput.Data;
         string expected;
