@@ -94,7 +94,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A condition that must be maintained during the execution of a program
   /// </summary>
-  public abstract class Invariant : SourceItem, IErrorCheckable {
+  public abstract class Invariant : CheckableSourceItem {
 
     /// <summary>
     /// 
@@ -159,7 +159,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the condition.
     /// </summary>
-    public virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = this.Condition.HasErrors;
       if (this.Condition.ContainingBlock.Helper.ImplicitConversionInAssignmentContext(this.Condition, this.Condition.PlatformType.SystemBoolean.ResolvedType) is DummyExpression) {
         this.Condition.ContainingBlock.Helper.ReportFailedImplicitConversion(this.Condition, this.Condition.PlatformType.SystemBoolean.ResolvedType);
@@ -168,18 +168,6 @@ namespace Microsoft.Cci.Ast {
       result |= this.Condition.HasSideEffect(true);
       return result;
     }
-
-    /// <summary>
-    /// Checks the precondition for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
   }
 
   /// <summary>
@@ -704,7 +692,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A condition that must be true at the start or end of a method
   /// </summary>
-  public abstract class MethodContractItem : SourceItem, IErrorCheckable {
+  public abstract class MethodContractItem : CheckableSourceItem {
 
     /// <summary>
     /// Allocates a condition that must be true at the start or end of a method
@@ -729,7 +717,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.ConvertedCondition.HasErrors || this.ConvertedCondition.HasSideEffect(true);
     }
 
@@ -772,18 +760,6 @@ namespace Microsoft.Cci.Ast {
     }
     //^ [Once]
     Expression/*?*/ convertedCondition;
-
-    /// <summary>
-    /// Checks the condition for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
 
     /// <summary>
     /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
@@ -961,7 +937,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.
   /// </summary>
-  public class ThrownException : SourceItem, IThrownException, IErrorCheckable {
+  public class ThrownException : CheckableSourceItem, IThrownException {
 
     /// <summary>
     /// Allocates an exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.
@@ -989,7 +965,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = this.ExceptionType.HasErrors;
       //TODO: check that ExceptionType really is an exception.
       result |= this.Postcondition.HasErrors;
@@ -1017,18 +993,6 @@ namespace Microsoft.Cci.Ast {
       get { return this.exceptionType; }
     }
     readonly TypeExpression exceptionType;
-
-    /// <summary>
-    /// Checks the precondition for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
 
     /// <summary>
     /// Makes a copy of this thrown exception, changing the containing block to the given block.

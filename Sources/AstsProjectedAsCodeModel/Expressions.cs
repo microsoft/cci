@@ -273,9 +273,11 @@ namespace Microsoft.Cci.Ast {
       return indexPlusPointer;
     }
 
-    class PointerAddition : IAddition, IErrorCheckable {
+    class PointerAddition : CheckableSourceItem, IAddition {
 
-      internal PointerAddition(Addition addition, Expression leftOperand, Expression rightOperand) {
+      internal PointerAddition(Addition addition, Expression leftOperand, Expression rightOperand) 
+        : base(addition.SourceLocation)
+      {
         this.addition = addition;
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -287,24 +289,18 @@ namespace Microsoft.Cci.Ast {
         get { return this.addition.CheckOverflow; }
       }
 
-      public void Dispatch(ICodeVisitor visitor) {
+      public override void Dispatch(ICodeVisitor visitor) {
         visitor.Visit(this);
       }
 
-      public bool HasErrors {
-        get {
-          return this.addition.HasErrors;
-        }
+      protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+        return this.addition.HasErrors;
       }
 
       public IExpression LeftOperand {
         get { return this.leftOperand.ProjectAsIExpression(); }
       }
       readonly Expression leftOperand;
-
-      public IEnumerable<ILocation> Locations {
-        get { return this.addition.Locations; }
-      }
 
       public IExpression RightOperand {
         get { return this.rightOperand.ProjectAsIExpression(); }
@@ -8712,7 +8708,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An expression results in a value of some type.
   /// </summary>
-  public abstract class Expression : SourceItem, IErrorCheckable {
+  public abstract class Expression : CheckableSourceItem {
 
     /// <summary>
     /// Use this constructor when allocating a new expression. Do not give out the resulting instance to client code before
@@ -8771,9 +8767,9 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
+    /// Performs any error checks still needed and returns true if any errors were found in the item or a constituent part of the item.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.Type == Dummy.Type;
     }
 
@@ -8903,21 +8899,7 @@ namespace Microsoft.Cci.Ast {
       return null;
     }
 
-    /// <summary>
-    /// Checks the expression for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    /// <summary>
-    /// Non null and true if this expression has errors. Visible to derived classes so that it can be set during construction.
-    /// When non null, the expression has been checked and need not be checked again.
-    /// </summary>
-    protected bool? hasErrors;
+    
 
     /// <summary>
     /// Checks if the expression has a side effect and reports an error unless told otherwise.
@@ -9808,17 +9790,6 @@ namespace Microsoft.Cci.Ast {
       return new GreaterThanOrEqual(containingBlock, this);
     }
 
-  }
-
-  /// <summary>
-  /// An object that can be checked for errors
-  /// </summary>
-  public interface IErrorCheckable {
-
-    /// <summary>
-    /// Checks the object for errors and returns true if any have been found
-    /// </summary>
-    bool HasErrors { get; }
   }
 
   /// <summary>
@@ -18511,9 +18482,11 @@ namespace Microsoft.Cci.Ast {
       return pointerMinusIndex;
     }
 
-    class PointerSubtraction : ISubtraction, IErrorCheckable {
+    class PointerSubtraction : CheckableSourceItem, ISubtraction {
 
-      internal PointerSubtraction(Subtraction subtraction, Expression leftOperand, Expression rightOperand) {
+      internal PointerSubtraction(Subtraction subtraction, Expression leftOperand, Expression rightOperand) 
+        : base(subtraction.SourceLocation)
+      {
         this.subtraction = subtraction;
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -18525,24 +18498,18 @@ namespace Microsoft.Cci.Ast {
         get { return this.subtraction.CheckOverflow; }
       }
 
-      public void Dispatch(ICodeVisitor visitor) {
+      public override void Dispatch(ICodeVisitor visitor) {
         visitor.Visit(this);
       }
 
-      public bool HasErrors {
-        get {
-          return this.subtraction.HasErrors;
-        }
+      protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+        return this.subtraction.HasErrors;
       }
 
       public IExpression LeftOperand {
         get { return this.leftOperand.ProjectAsIExpression(); }
       }
       readonly Expression leftOperand;
-
-      public IEnumerable<ILocation> Locations {
-        get { return this.subtraction.Locations; }
-      }
 
       public IExpression RightOperand {
         get { return this.rightOperand.ProjectAsIExpression(); }

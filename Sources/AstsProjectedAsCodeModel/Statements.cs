@@ -2766,7 +2766,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A type and name pair to be used as a bound variable in a quantifier expression.
   /// </summary>
-  public class QuantifierVariable : SourceItem, IErrorCheckable {
+  public class QuantifierVariable : CheckableSourceItem {
     /// <summary>
     /// Allocates local declaration that appears as part of a statement containing a collection of local declarations, all with the same type.
     /// </summary>
@@ -2810,13 +2810,10 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Checks the declaration for errors and returns true if any were found.
+    /// Performs any error checks still needed and returns true if any errors were found in the item or a constituent part of the item.
     /// </summary>
-    public bool HasErrors {
-      get {
-        //TODO: check for duplicate name
-        return this.Type.HasErrors;
-      }
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return this.Type.HasErrors;
     }
 
     /// <summary>
@@ -2930,7 +2927,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A local declaration that appears as part of a statement containing a collection of local declarations, all with the same type.
   /// </summary>
-  public class LocalDeclaration : SourceItem, IScopeMember<IScope<LocalDeclaration>>, ILocalDeclarationStatement, IErrorCheckable {
+  public class LocalDeclaration : CheckableSourceItem, IScopeMember<IScope<LocalDeclaration>>, ILocalDeclarationStatement {
 
     /// <summary>
     /// Allocates local declaration that appears as part of a statement containing a collection of local declarations, all with the same type.
@@ -2995,7 +2992,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       return this.DeclarationNameIsInUse() || (this.InitialValue != null && this.ConvertedInitialValue.HasErrors);
     }
 
@@ -3082,17 +3079,6 @@ namespace Microsoft.Cci.Ast {
         result = new DummyConstant(sourceLocation);
       }
       return result;
-    }
-
-    /// <summary>
-    /// Checks the declaration for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if ((this.flags & 4) == 0)
-          this.flags |= this.CheckForErrorsAndReturnTrueIfAnyAreFound() ? 8 : 0;
-        return (this.flags & 8) != 0;
-      }
     }
 
     /// <summary>
@@ -4378,7 +4364,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An executable statement.
   /// </summary>
-  public abstract class Statement : SourceItem, IStatement, IErrorCheckable {
+  public abstract class Statement : CheckableSourceItem, IStatement {
 
     /// <summary>
     /// Initializes an executable statement.
@@ -4417,12 +4403,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
-    /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
-    /// </summary>
-    protected abstract bool CheckForErrorsAndReturnTrueIfAnyAreFound();
-
-    /// <summary>
     /// The block in which this statement is nested. If the statement is the outer most block of a method, then the containing block is itself.
     /// </summary>
     public BlockStatement ContainingBlock {
@@ -4433,18 +4413,6 @@ namespace Microsoft.Cci.Ast {
     }
     //^ [SpecPublic]
     BlockStatement/*?*/ containingBlock;
-
-    /// <summary>
-    /// Checks the statement for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
 
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 
@@ -4529,7 +4497,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An object representing a switch case.
   /// </summary>
-  public class SwitchCase : SourceItem, ISwitchCase, IErrorCheckable {
+  public class SwitchCase : CheckableSourceItem, ISwitchCase {
 
     /// <summary>
     /// Allocates an object representing a switch case.
@@ -4576,7 +4544,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// Do not call this method directly, but call the HasErrors method. The latter will cache the return value.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       //TODO: check that expression is a constant
       bool result = false;
       if (!this.IsDefault) {
@@ -4648,18 +4616,6 @@ namespace Microsoft.Cci.Ast {
       }
     }
     readonly Expression/*?*/ expression;
-
-    /// <summary>
-    /// Checks the switch case for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
 
     /// <summary>
     /// True if this case will be branched to for all values where no other case is applicable. Only of of these is legal per switch statement.

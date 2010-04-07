@@ -688,7 +688,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A custom attribute as it appears in source code. This may have special meaning to the compiler and might not be translated to a metadata custom attribute.
   /// </summary>
-  public class SourceCustomAttribute : SourceItem, IErrorCheckable {
+  public class SourceCustomAttribute : CheckableSourceItem {
 
     /// <summary>
     /// Allocates a custom attribute as it appears in source code. This may have special meaning to the compiler and might not be translated to a metadata custom attribute.
@@ -744,7 +744,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the member or a constituent part of the member.
     /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = this.Type.HasErrors;
       foreach (var argument in this.Arguments)
         result |= argument.HasErrors;
@@ -870,18 +870,6 @@ namespace Microsoft.Cci.Ast {
     /// AllowMultiple is true, a bit (0x10000000) that indicates that Inherited is true and stores the value of ValidOn in the lower order bits.
     /// </summary>
     int flags;
-
-    /// <summary>
-    /// Checks the class for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
 
     /// <summary>
     /// Specifies whether this attribute applies to derived types and/or overridden methods. This information is obtained from an attribute on the attribute type definition.

@@ -410,7 +410,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A part of a compilation that has been derived from a single source document. 
   /// </summary>
-  public abstract class CompilationPart : SourceItem, IErrorCheckable {
+  public abstract class CompilationPart : CheckableSourceItem, IErrorCheckable {
 
     /// <summary>
     /// Initializes a part of a compilation that has been derived from a single source document. 
@@ -452,7 +452,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the compilation part.
     /// Do not call this method directly, but evaluate the HasErrors property. The latter will cache the return value.
     /// </summary>
-    protected virtual bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       result |= this.GlobalDeclarationContainer.HasErrors;
       result |= this.RootNamespace.HasErrors;
@@ -480,18 +480,6 @@ namespace Microsoft.Cci.Ast {
       get { return this.globalDeclarationContainer; }
     }
     readonly GlobalDeclarationContainerClass globalDeclarationContainer;
-
-    /// <summary>
-    /// Checks the compilation part for errors and returns true if any were found.
-    /// </summary>
-    public bool HasErrors {
-      get {
-        if (this.hasErrors == null)
-          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
-        return this.hasErrors.Value;
-      }
-    }
-    bool? hasErrors;
 
     /// <summary>
     /// An instance of a language specific class containing methods that are of general utility. 
@@ -3554,6 +3542,54 @@ namespace Microsoft.Cci.Ast {
     protected ISourceLocation sourceLocation;
 
   }
+
+  /// <summary>
+  /// An object that can be checked for errors.
+  /// </summary>
+  public interface IErrorCheckable
+  {
+
+    /// <summary>
+    /// Checks the object for errors and returns true if any have been found.
+    /// </summary>
+    bool HasErrors { get; }
+  }
+
+  /// <summary>
+  /// An object that has been derived from a portion of a source document and can be checked for semantic errors.
+  /// </summary>
+  public abstract class CheckableSourceItem : SourceItem, IErrorCheckable {
+
+    /// <summary>
+    /// Initializes an object that has been derived from a portion of a source document and can be checked for semantic errors.
+    /// </summary>
+    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
+    public CheckableSourceItem(ISourceLocation sourceLocation)
+      : base(sourceLocation) {
+    }
+
+    /// <summary>
+    /// Checks the source item for errors and returns true if any were found.
+    /// </summary>
+    public bool HasErrors {
+      get {
+        if (this.hasErrors == null)
+          this.hasErrors = this.CheckForErrorsAndReturnTrueIfAnyAreFound();
+        return this.hasErrors.Value;
+      }
+    }
+    /// <summary>
+    /// Non null and true if this item has errors. Visible to derived classes so that it can be set during construction.
+    /// When non null, the item has been checked and need not be checked again.
+    /// </summary>
+    protected bool? hasErrors;
+
+    /// <summary>
+    /// Performs any error checks still needed and returns true if any errors were found in the item or a constituent part of the item.
+    /// </summary>
+    protected abstract bool CheckForErrorsAndReturnTrueIfAnyAreFound();
+  }
+
 
   /// <summary>
   /// An object that has been derived from a portion of a source document and that can have custom attributes
