@@ -18,7 +18,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Implemented by constructs that can be nested inside namespaces, such as types, nested namespaces, alias declarations, and so on.
   /// </summary>
-  public interface INamespaceDeclarationMember : IContainerMember<NamespaceDeclaration>, ISourceItem {
+  public interface INamespaceDeclarationMember : IContainerMember<NamespaceDeclaration>, ISourceItem, IErrorCheckable {
 
     /// <summary>
     /// The namespace declaration in which this nested namespace declaration is nested.
@@ -34,11 +34,6 @@ namespace Microsoft.Cci.Ast {
     ///// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     ///// </summary>
     //void Dispatch(IMetadataVisitor visitor);
-
-    /// <summary>
-    /// Checks the member for errors and returns true if any were found.
-    /// </summary>
-    bool HasErrors { get; }
 
     /// <summary>
     /// Makes a shallow copy of this member that can be added to the member list of the given target namespace declaration.

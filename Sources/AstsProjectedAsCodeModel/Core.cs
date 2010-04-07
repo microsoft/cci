@@ -47,7 +47,7 @@ namespace Microsoft.Cci.Ast {
   /// Calling the constructor is phase one. Setting the parent node is phase two (and is delayed in order to allow for bottom up AST construction).
   /// A compilation does not have a second phase initialization method since it has no parent.
   /// </summary>
-  public abstract class Compilation : ICompilation {
+  public abstract class Compilation : ICompilation, IErrorCheckable {
 
     /// <summary>
     /// Use this constructor to construct an entirely new Compilation. A compilation is a list of source files, compiler options and references to other compilations.
@@ -410,7 +410,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A part of a compilation that has been derived from a single source document. 
   /// </summary>
-  public abstract class CompilationPart : SourceItem {
+  public abstract class CompilationPart : SourceItem, IErrorCheckable {
 
     /// <summary>
     /// Initializes a part of a compilation that has been derived from a single source document. 

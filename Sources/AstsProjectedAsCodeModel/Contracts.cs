@@ -961,7 +961,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.
   /// </summary>
-  public class ThrownException : SourceItem, IThrownException {
+  public class ThrownException : SourceItem, IThrownException, IErrorCheckable {
 
     /// <summary>
     /// Allocates an exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.

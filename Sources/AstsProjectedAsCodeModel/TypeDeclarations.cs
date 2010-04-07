@@ -2054,7 +2054,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Corresponds to a source language type declaration, such as a C# partial class. One of more of these make up a type definition. 
   /// </summary>
-  public abstract class TypeDeclaration : SourceItemWithAttributes, IContainer<IAggregatableTypeDeclarationMember>, IContainer<ITypeDeclarationMember>, IDeclaration, INamedEntity {
+  public abstract class TypeDeclaration : SourceItemWithAttributes, IContainer<IAggregatableTypeDeclarationMember>, IContainer<ITypeDeclarationMember>, IDeclaration, INamedEntity, IErrorCheckable {
     /// <summary>
     /// A collection of flags that correspond to modifiers such as public and abstract.
     /// </summary>

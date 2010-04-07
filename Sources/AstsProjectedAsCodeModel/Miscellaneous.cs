@@ -688,7 +688,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A custom attribute as it appears in source code. This may have special meaning to the compiler and might not be translated to a metadata custom attribute.
   /// </summary>
-  public class SourceCustomAttribute : SourceItem {
+  public class SourceCustomAttribute : SourceItem, IErrorCheckable {
 
     /// <summary>
     /// Allocates a custom attribute as it appears in source code. This may have special meaning to the compiler and might not be translated to a metadata custom attribute.

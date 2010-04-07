@@ -179,7 +179,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// Represents a namespace construct as found in the source code.
   /// </summary>
-  public abstract class NamespaceDeclaration : SourceItemWithAttributes, IContainer<IAggregatableNamespaceDeclarationMember>, INamespaceScope {
+  public abstract class NamespaceDeclaration : SourceItemWithAttributes, IContainer<IAggregatableNamespaceDeclarationMember>, INamespaceScope, IErrorCheckable {
 
     /// <summary>
     /// 

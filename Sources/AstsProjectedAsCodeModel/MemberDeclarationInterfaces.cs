@@ -38,7 +38,7 @@ namespace Microsoft.Cci.Ast {
   /// A member of a type declaration, such as a field or a method.
   /// This interface models the source representation of a type member.
   /// </summary>
-  public interface ITypeDeclarationMember : IContainerMember<TypeDeclaration>, IDeclaration {
+  public interface ITypeDeclarationMember : IContainerMember<TypeDeclaration>, IDeclaration, IErrorCheckable {
 
     /// <summary>
     /// The type declaration that contains this member.
@@ -56,11 +56,6 @@ namespace Microsoft.Cci.Ast {
     /// Returns the visibility that applies by default to this member if no visibility was supplied in the source code.
     /// </summary>
     TypeMemberVisibility GetDefaultVisibility();
-
-    /// <summary>
-    /// Checks the member for errors and returns true if any were found.
-    /// </summary>
-    bool HasErrors { get; }
 
     /// <summary>
     /// Indicates that this member is intended to hide the name of an inherited member.

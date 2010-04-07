@@ -8712,7 +8712,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An expression results in a value of some type.
   /// </summary>
-  public abstract class Expression : SourceItem {
+  public abstract class Expression : SourceItem, IErrorCheckable {
 
     /// <summary>
     /// Use this constructor when allocating a new expression. Do not give out the resulting instance to client code before

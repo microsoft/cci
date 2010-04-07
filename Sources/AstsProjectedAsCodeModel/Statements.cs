@@ -2766,7 +2766,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A type and name pair to be used as a bound variable in a quantifier expression.
   /// </summary>
-  public class QuantifierVariable : SourceItem {
+  public class QuantifierVariable : SourceItem, IErrorCheckable {
     /// <summary>
     /// Allocates local declaration that appears as part of a statement containing a collection of local declarations, all with the same type.
     /// </summary>
@@ -2930,7 +2930,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A local declaration that appears as part of a statement containing a collection of local declarations, all with the same type.
   /// </summary>
-  public class LocalDeclaration : SourceItem, IScopeMember<IScope<LocalDeclaration>>, ILocalDeclarationStatement {
+  public class LocalDeclaration : SourceItem, IScopeMember<IScope<LocalDeclaration>>, ILocalDeclarationStatement, IErrorCheckable {
 
     /// <summary>
     /// Allocates local declaration that appears as part of a statement containing a collection of local declarations, all with the same type.
@@ -4378,7 +4378,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An executable statement.
   /// </summary>
-  public abstract class Statement : SourceItem, IStatement {
+  public abstract class Statement : SourceItem, IStatement, IErrorCheckable {
 
     /// <summary>
     /// Initializes an executable statement.
@@ -4529,7 +4529,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// An object representing a switch case.
   /// </summary>
-  public class SwitchCase : SourceItem, ISwitchCase {
+  public class SwitchCase : SourceItem, ISwitchCase, IErrorCheckable {
 
     /// <summary>
     /// Allocates an object representing a switch case.
