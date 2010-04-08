@@ -241,12 +241,18 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     /// <summary>
     /// Returns a (possibly-null) method contract relative to a contract-aware host.
-    /// If you already know which unit the method is defined in and/or already have
-    /// the contract provider for the unit in which the method is defined, then you
-    /// would do just as well to directly query that contract provider.
+    /// If the method is instantiated or specialized, then the contract is looked
+    /// for on the uninstantiated and unspecialized method.
+    /// Note that this behavior is *not* necessarily present in any individual
+    /// contract provider.
+    /// However, if you already know which unit the method is defined in and/or
+    /// already have the contract provider for the unit in which the method is
+    /// defined, and you know the method is uninstantiated and unspecialized,
+    /// then you would do just as well to directly query that contract provider.
     /// </summary>
     public static IMethodContract GetMethodContractFor(IContractAwareHost host, IMethodDefinition methodDefinition) {
 
+      methodDefinition = UninstantiateAndUnspecialize(methodDefinition).ResolvedMethod;
       IUnit/*?*/ unit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingType.ResolvedType);
       if (unit == null) return null;
       IContractProvider/*?*/ cp = host.GetContractExtractor(unit.UnitIdentity);
