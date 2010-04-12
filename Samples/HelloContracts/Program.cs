@@ -17,6 +17,7 @@ using System.IO;
 using Microsoft.Cci.ILToCodeModel;
 using System.Diagnostics;
 using CSharpSourceEmitter;
+using ContractHelper=Microsoft.Cci.ILToCodeModel.ContractHelper;
 
 namespace HelloContracts {
 
@@ -140,15 +141,15 @@ namespace HelloContracts {
 
     public override void Visit(ITypeDefinition typeDefinition) {
       if (AttributeHelper.Contains(typeDefinition.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return;
-      if (Microsoft.Cci.ILToCodeModel.ContractHelper.IsContractClass(this.host, typeDefinition)) return;
+      if (ContractHelper.IsContractClass(this.host, typeDefinition)) return;
       if (typeDefinition.IsEnum) return;
       Console.WriteLine(TypeHelper.GetTypeName(typeDefinition, NameFormattingOptions.TypeParameters));
       this.indentLevel++;
       var unit = TypeHelper.GetDefiningUnit(typeDefinition);
       if (unit != null) {
-        var cp = this.host.GetContractProvider(unit.UnitIdentity);
-        if (cp != null)
-          PrintTypeContract(cp.GetTypeContractFor(typeDefinition));
+        var ce = this.host.GetContractExtractor(unit.UnitIdentity);
+        if (ce != null)
+          PrintTypeContract(ce.GetTypeContractFor(typeDefinition));
       }
       base.Visit(typeDefinition);
       this.indentLevel--;
@@ -161,11 +162,11 @@ namespace HelloContracts {
       this.indentLevel++;
       if (propertyDefinition.Getter != null) {
         var getterMethod = propertyDefinition.Getter.ResolvedMethod;
-        var getterContract = this.showInherited
-          ?
-          Microsoft.Cci.Contracts.ContractHelper.GetMethodContractForIncludingInheritedContracts(this.host, getterMethod)
-          :
-          Microsoft.Cci.Contracts.ContractHelper.GetMethodContractFor(this.host, getterMethod);
+        IMethodContract getterContract;
+        if (this.showInherited)
+          getterContract = ContractHelper.GetMethodContractForIncludingInheritedContracts(this.host, getterMethod);
+        else
+          getterContract = ContractHelper.GetMethodContractFor(this.host, getterMethod);
         Indent();
         Console.WriteLine("get");
         this.indentLevel++;
@@ -174,11 +175,11 @@ namespace HelloContracts {
       }
       if (propertyDefinition.Setter != null) {
         var setterMethod = propertyDefinition.Setter.ResolvedMethod;
-        var setterContract = this.showInherited
-          ?
-          Microsoft.Cci.Contracts.ContractHelper.GetMethodContractForIncludingInheritedContracts(this.host, setterMethod)
-          :
-          Microsoft.Cci.Contracts.ContractHelper.GetMethodContractFor(this.host, setterMethod);
+        IMethodContract setterContract;
+        if (this.showInherited)
+          setterContract = ContractHelper.GetMethodContractForIncludingInheritedContracts(this.host, setterMethod);
+        else
+          setterContract = ContractHelper.GetMethodContractFor(this.host, setterMethod);
         Indent();
         Console.WriteLine("set");
         this.indentLevel++;
@@ -192,11 +193,11 @@ namespace HelloContracts {
       if (AttributeHelper.Contains(methodDefinition.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return;
       if (Microsoft.Cci.ILToCodeModel.ContractHelper.IsInvariantMethod(this.host, methodDefinition)) return;
       if (IsGetter(methodDefinition) || IsSetter(methodDefinition)) return;
-      var methodContract = this.showInherited
-        ?
-        Microsoft.Cci.Contracts.ContractHelper.GetMethodContractForIncludingInheritedContracts(this.host, methodDefinition)
-        :
-        Microsoft.Cci.Contracts.ContractHelper.GetMethodContractFor(this.host, methodDefinition);
+      IMethodContract methodContract;
+      if (this.showInherited)
+        methodContract = ContractHelper.GetMethodContractForIncludingInheritedContracts(this.host, methodDefinition);
+      else
+        methodContract = ContractHelper.GetMethodContractFor(this.host, methodDefinition);
       Indent();
       var methodSig = MemberHelper.GetMethodSignature(methodDefinition, NameFormattingOptions.Signature | NameFormattingOptions.ParameterName | NameFormattingOptions.ParameterModifiers);
       Console.WriteLine(methodSig);
