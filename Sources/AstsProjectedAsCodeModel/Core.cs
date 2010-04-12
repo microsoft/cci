@@ -1085,7 +1085,7 @@ namespace Microsoft.Cci.Ast {
     /// If conversion is not possible an instance of DummyExpression is returned.
     /// </summary>
     //^ [Pure]
-    protected virtual Expression Conversion(Expression expression, ITypeDefinition targetType, bool isExplicitConversion) {
+    protected virtual Expression Conversion(Expression expression, ITypeDefinition targetType, bool isExplicitConversion, ISourceLocation sourceLocation) {
       if (TypeHelper.TypesAreEquivalent(expression.Type, targetType)) return expression;
       CompileTimeConstant/*?*/ cconst = expression as CompileTimeConstant;
       if (cconst != null) {
@@ -1107,7 +1107,7 @@ namespace Microsoft.Cci.Ast {
           CompileTimeConstant convertedConst = cconst.ConvertToTargetTypeIfIntegerInRangeOf(tt, isExplicitConversion);
           if (convertedConst != cconst) {
             if (cconst.ValueIsPolymorphicCompileTimeConstant || this.ImplicitConversionExists(cconst.Type, targetType) || cconst.IntegerConversionIsLossless(targetType)) {
-              if (tType.IsEnum) return this.ConversionExpression(expression, targetType);
+              if (tType.IsEnum) return this.ConversionExpression(expression, targetType, sourceLocation);
               //^ assume tType == this.RemoveNullableWrapper(targetType);
               if (!targetIsNullable) return convertedConst;
               return this.AddNullableWrapperIfNeeded(convertedConst, tType, targetType);
@@ -1124,7 +1124,7 @@ namespace Microsoft.Cci.Ast {
           if (!isExplicitConversion && targetType.IsEnum && TypeHelper.TypesAreEquivalent(expression.Type, targetType))
             isExplicitConversion = true;
           cconst = expression.GetAsConstant();
-          return this.Conversion(cconst, targetType, isExplicitConversion);
+          return this.Conversion(cconst, targetType, isExplicitConversion, sourceLocation);
         }
       }
       if (expression.Type == Dummy.Type) {
@@ -1219,8 +1219,20 @@ namespace Microsoft.Cci.Ast {
     /// a type parameter, or a value type, will get translated to a box IL instruction.
     /// </summary>
     //^ [Pure]
-    protected virtual Expression ConversionExpression(Expression expression, ITypeDefinition targetType) {
-      return new Conversion(expression, targetType, expression.SourceLocation);
+    protected Expression ConversionExpression(Expression expression, ITypeDefinition targetType) {
+      return ConversionExpression(expression, targetType, expression.SourceLocation);
+    }
+
+    /// <summary>
+    /// Returns an instance of Conversion that converts the given expression to the given target type.
+    /// This method should only be called if expression results in a type of value for which a well known built-in conversion
+    /// exists. For example, if the expression results in a value of a reference type, then the resulting expression
+    /// will get translated to the castclass IL instruction, whereas an expression that results in a value whose compile time type is
+    /// a type parameter, or a value type, will get translated to a box IL instruction.
+    /// </summary>
+    //^ [Pure]
+    protected virtual Expression ConversionExpression(Expression expression, ITypeDefinition targetType, ISourceLocation sourceLocation) {
+      return new Conversion(expression, targetType, sourceLocation);    
     }
 
     /// <summary>
@@ -1392,8 +1404,17 @@ namespace Microsoft.Cci.Ast {
     /// If no explicit conversion exists, a DummyExpression is returned.
     /// </summary>
     //^ [Pure]
-    public virtual Expression ExplicitConversion(Expression expression, ITypeDefinition targetType) {
-      return this.Conversion(expression, targetType, true);
+    public Expression ExplicitConversion(Expression expression, ITypeDefinition targetType) {
+      return this.ExplicitConversion(expression, targetType, expression.SourceLocation);
+    }
+
+    /// <summary>
+    /// Returns an expression that will convert the value of the given expression to a value of the given type.
+    /// If no explicit conversion exists, a DummyExpression is returned.
+    /// </summary>
+    //^ [Pure]
+    public virtual Expression ExplicitConversion(Expression expression, ITypeDefinition targetType, ISourceLocation sourceLocation) {
+      return this.Conversion(expression, targetType, true, sourceLocation);
     }
 
     /// <summary>
@@ -1707,7 +1728,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     public virtual Expression ImplicitConversion(Expression expression, ITypeDefinition targetType) {
-      return this.Conversion(expression, targetType, false);
+      return this.Conversion(expression, targetType, false, expression.SourceLocation);
     }
 
     /// <summary>
@@ -2180,7 +2201,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires unwrappedTargetType != targetType && unwrappedTargetType == this.RemoveNullableWrapper(targetType);
     {
       Expression unboxedNullable = this.UnboxedNullable(expression, unwrappedSourceType, sourceType);
-      Expression unliftedConversion = this.Conversion(unboxedNullable, unwrappedTargetType, isExplicitConversion);
+      Expression unliftedConversion = this.Conversion(unboxedNullable, unwrappedTargetType, isExplicitConversion, unboxedNullable.SourceLocation);
       if (unliftedConversion is DummyExpression) return unliftedConversion;
       IMethodDefinition/*?*/ userDefinedUnliftedConversion = null;
       MethodCall/*?*/ mcall = unliftedConversion as MethodCall;

@@ -4047,7 +4047,7 @@ namespace Microsoft.Cci.Ast {
         if (this.ValueToCast.HasErrors || this.TargetType.HasErrors)
           this.conversion = new DummyExpression(this.SourceLocation);
         else {
-          this.conversion = this.Helper.ExplicitConversion(this.ValueToCast, this.TargetType.ResolvedType);
+          this.conversion = this.Helper.ExplicitConversion(this.ValueToCast, this.TargetType.ResolvedType, this.SourceLocation);
           if (!this.ValueToCast.HasErrors && !this.TargetType.HasErrors && this.conversion.HasErrors) {
             string sourceTypeName = this.Helper.GetTypeName(this.ValueToCast.Type);
             string targetTypeName = this.Helper.GetTypeName(this.TargetType.ResolvedType);
