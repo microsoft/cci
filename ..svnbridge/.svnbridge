@@ -3,4 +3,7 @@
 Metadata.suo
 </Value></Property><Property><Name>svn:ignore</Name><Value>Bin
 Metadata.suo
+</Value></Property><Property><Name>svn:ignore</Name><Value>Bin
+Metadata.suo
+*.cache
 </Value></Property></Properties></ItemProperties>
