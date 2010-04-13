@@ -1,25 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{54C22B9F-7DD4-44F0-9B36-449DCD40C6CC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{F7A60C29-D16A-457E-A554-AC1078718BBC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metadata", "Metadata", "{1B359551-AFB6-4EE2-A779-2F2071CCB451}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5795EBEE-7F94-4E25-B9C9-4E0238514B1B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2886EC15-51EC-4BE2-B65A-FE8A0875C9DC}"
-	ProjectSection(SolutionItems) = preProject
-		Ast.vsmdi = Ast.vsmdi
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{C89F78BA-178F-4747-B78A-EC7567619FA2}"
-	ProjectSection(SolutionItems) = preProject
-		Build\cciast.build = Build\cciast.build
-		Build\ccnet.config = Build\ccnet.config
-	EndProjectSection
-EndProject
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModel", "Sources\CodeModel\CodeModel.csproj", "{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssertionAdder", "Sources\AssertionAdder\AssertionAdder.csproj", "{402F6E0A-9762-400D-94F9-BA5D48A538CD}"
@@ -30,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelToIL", "Sources\Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILToCodeModel", "Sources\ILToCodeModel\ILToCodeModel.csproj", "{27F2A417-B6ED-43AD-A38E-A0B6142216F6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{54C22B9F-7DD4-44F0-9B36-449DCD40C6CC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{F7A60C29-D16A-457E-A554-AC1078718BBC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToText", "Samples\PeToText\PeToText.csproj", "{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelTests", "Tests\CodeModelTests\CodeModelTests.csproj", "{98966A5A-CCE7-4E94-B6D9-34B1B45A19B9}"
@@ -37,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelTestInput", "Tests\CodeModelTestInput\CodeModelTestInput.csproj", "{965AF57D-DCE4-4112-BDC5-64CD63ACA88C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpSourceEmitter", "Tests\CSharpSourceEmitter\CSharpSourceEmitter.csproj", "{A9103DDA-3A93-441A-8326-6EB20518C251}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metadata", "Metadata", "{1B359551-AFB6-4EE2-A779-2F2071CCB451}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetadataModel", "Metadata\Sources\MetadataModel\MetadataModel.csproj", "{33CAB640-0D03-43DF-81BD-22CDC6C0A597}"
 EndProject
@@ -58,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILGenerator", "Metadata\Sou
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableCodeModel", "Sources\MutableCodeModel\MutableCodeModel.csproj", "{319E150C-8F33-49E7-81CA-30F02F9BA90A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5795EBEE-7F94-4E25-B9C9-4E0238514B1B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoundtripTests", "Metadata\Tests\RoundtripTests\RoundtripTests.csproj", "{71B89CE8-CD33-4BC1-A411-4002D367F38D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToPeViaCodeModel", "Samples\PeToPe\PeToPeViaCodeModel.csproj", "{47D44A88-A9EE-46E9-8781-5B42A503A493}"
@@ -66,7 +55,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeModelRoundtripTests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PEReaderTests", "Metadata\Tests\PEReaderTests\PEReaderTests.csproj", "{A6BABD10-C384-4F9F-93D7-99B935A41719}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2886EC15-51EC-4BE2-B65A-FE8A0875C9DC}"
+	ProjectSection(SolutionItems) = preProject
+		Ast.vsmdi = Ast.vsmdi
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToPe", "Metadata\Samples\PeToPe\PeToPe.csproj", "{47D44A88-A9EE-46E9-8780-5B42A503A493}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{C89F78BA-178F-4747-B78A-EC7567619FA2}"
+	ProjectSection(SolutionItems) = preProject
+		Build\cciast.build = Build\cciast.build
+		Build\ccnet.config = Build\ccnet.config
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ast.All", "Build\Ast.All\Ast.All.csproj", "{00E3C2BD-5642-4AAC-B125-6B33BE8BB9A9}"
 EndProject
@@ -333,7 +333,6 @@ Global
 		{DA095D70-B99F-4703-BCDF-A1E133DF685D} = {F7A60C29-D16A-457E-A554-AC1078718BBC}
 		{DA095D70-B99F-4704-BCDF-A1E133DF685D} = {F7A60C29-D16A-457E-A554-AC1078718BBC}
 		{ADD09DE8-1D22-4DF6-8C35-F91C1FCD3236} = {F7A60C29-D16A-457E-A554-AC1078718BBC}
-		{5795EBEE-7F94-4E25-B9C9-4E0238514B1B} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
 		{33CAB640-0D03-43DF-81BD-22CDC6C0A597} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
 		{4A34A3C5-6176-49D7-A4C5-B2B671247F8F} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
 		{319E151C-8F33-49E7-81C9-30F02F9BA90A} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
@@ -343,6 +342,7 @@ Global
 		{4B0054FD-124A-4037-9965-BDB55E6BF389} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
 		{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
 		{08156C78-403A-4112-AD81-8646AC51CD2F} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
+		{5795EBEE-7F94-4E25-B9C9-4E0238514B1B} = {1B359551-AFB6-4EE2-A779-2F2071CCB451}
 		{71B89CE8-CD33-4BC1-A411-4002D367F38D} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
 		{A6BABD10-C384-4F9F-93D7-99B935A41719} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
 		{47D44A88-A9EE-46E9-8780-5B42A503A493} = {5795EBEE-7F94-4E25-B9C9-4E0238514B1B}
