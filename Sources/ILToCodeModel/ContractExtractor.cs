@@ -62,6 +62,22 @@ namespace Microsoft.Cci.ILToCodeModel {
       return this.contractClassDefinedInReferenceAssembly != null &&
         (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
     }
+    private bool IsOverridingOrImplementingMethod(IMethodDefinition methodDefinition)
+    {
+      return (
+        // method was marked "override" in source
+        (methodDefinition.IsVirtual && !methodDefinition.IsNewSlot)
+        ||
+        // method is *not* in a contract class and it is an implementation of an interface method
+        (this.extractingFromAMethodInAContractClass == null
+          &&
+          // method is being used as an implementation of an interface method
+          (IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetImplicitlyImplementedInterfaceMethods(methodDefinition))
+          // method is an explicit implementation of an interface method
+          || IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition))
+          ))
+        );
+    }
 
     internal ContractExtractor(
       ISourceMethodBody sourceMethodBody,
@@ -183,6 +199,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       List<IStatement> newStmts = new List<IStatement>();
       int indexOfLastContractCall = IndexOfLastContractCall(stmts);
       if (indexOfLastContractCall == -1) return blockStatement;
+
+      var isOverrideOrImplementation = IsOverridingOrImplementingMethod(this.sourceMethodBody.MethodDefinition);
+
       var beginning = 0;
       if (this.extractingFromACtorInAClass) {
         beginning = 1;
@@ -228,9 +247,12 @@ namespace Microsoft.Cci.ILToCodeModel {
             j++;
 
           while (j <= indexOfLastContractCall) {
+            #region stmts[j] is a legacy-requires
             ConditionalStatement conditionalStatement = stmts[j] as ConditionalStatement;
             if (conditionalStatement != null && IsLegacyRequires(conditionalStatement)) {
-              ExtractLegacyRequires(conditionalStatement);
+              // overrides don't populate their method contract with legacy requires
+              if (!isOverrideOrImplementation)
+                ExtractLegacyRequires(conditionalStatement);
               // NB: legacy preconditions stay in the code, but the contracts they
               // represent are still placed into the method's contract
               for (int k = i; k <= j; k++)
@@ -238,13 +260,17 @@ namespace Microsoft.Cci.ILToCodeModel {
               i = j;
               break;
             }
+            #endregion
+            #region stmts[j] is a call to a method
             ExpressionStatement exprStmt = stmts[j] as ExpressionStatement;
             if (exprStmt != null && IsPreconditionOrPostcondition(exprStmt)) {
               ExtractContractCall(stmts, i, j);
               i = j;
               break;
             } else if (exprStmt != null && IsValidatorOrAbbreviator(exprStmt)) {
-              ExtractValidatorOrAbbreviator(exprStmt);
+              // overrides don't populate their method contract with validators/abbreviators
+              if (!isOverrideOrImplementation)
+                ExtractValidatorOrAbbreviator(exprStmt);
               // NB: validators stay in the code, but the contracts they
               // represent are still placed into the method's contract
               for (int k = i; k <= j; k++)
@@ -252,6 +278,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               i = j;
               break;
             }
+            #endregion
             j++;
           }
           i++;
