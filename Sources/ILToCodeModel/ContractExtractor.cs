@@ -204,8 +204,16 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       var beginning = 0;
       if (this.extractingFromACtorInAClass) {
-        beginning = 1;
-        newStmts.Add(stmts[0]);
+        // Walk stmts until we see an expression statement that is a call to a ctor with its
+        // ThisArgument being either "this" or "base"
+        IMethodCall/*?*/ mc = null;
+        do {
+          mc = IsMethodCall(stmts[beginning]);
+          newStmts.Add(stmts[beginning]);
+          beginning++;
+        } while (beginning < indexOfLastContractCall &&
+        !(mc != null && mc.MethodToCall.ResolvedMethod.IsConstructor && mc.ThisArgument is IThisReference)
+        );
       }
 
       ILocalDefinition/*?*/ contractLocalAliasingThis = null;
@@ -428,6 +436,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       ILocalDeclarationStatement localDeclarationStatement = statement as ILocalDeclarationStatement;
       if (localDeclarationStatement == null) return false;
       return localDeclarationStatement.InitialValue == null;
+    }
+
+    private IMethodCall/*?*/ IsMethodCall(IStatement statement){
+      IExpressionStatement expressionStatement = statement as IExpressionStatement;
+      if (expressionStatement == null) return null;
+      return expressionStatement.Expression as IMethodCall;
     }
 
     private bool IsPreconditionOrPostcondition(IStatement statement) {
