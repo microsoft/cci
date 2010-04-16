@@ -37,6 +37,10 @@ namespace Microsoft.Cci {
 
     #region ISourceLocationProvider Members
 
+    /// <summary>
+    /// Return zero or more locations in primary source documents that correspond to one or more of the given derived (non primary) document locations.
+    /// </summary>
+    /// <param name="locations">Zero or more locations in documents that have been derived from one or more source documents.</param>
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsFor(IEnumerable<ILocation> locations) {
       foreach (ILocation location in locations) {
         foreach (var psloc in this.MapLocationToSourceLocations(location))
@@ -44,6 +48,10 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Return zero or more locations in primary source documents that correspond to the given derived (non primary) document location.
+    /// </summary>
+    /// <param name="location">A location in a document that have been derived from one or more source documents.</param>
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsFor(ILocation location) {
       var psloc = location as IPrimarySourceLocation;
       if (psloc != null)
@@ -53,6 +61,9 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Return zero or more locations in primary source documents that correspond to the definition of the given local.
+    /// </summary>
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsForDefinitionOf(ILocalDefinition localDefinition) {
       ISourceLocationProvider/*?*/ provider = this.GetProvider(localDefinition);
       if (provider == null)
@@ -61,6 +72,10 @@ namespace Microsoft.Cci {
         return provider.GetPrimarySourceLocationsForDefinitionOf(localDefinition);
     }
 
+    /// <summary>
+    /// Returns the source name of the given local definition, if this is available.
+    /// Otherwise returns the value of the Name property and sets isCompilerGenerated to true.
+    /// </summary>
     public string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {
       ISourceLocationProvider/*?*/ provider = this.GetProvider(localDefinition);
       if (provider == null) {
@@ -75,6 +90,9 @@ namespace Microsoft.Cci {
 
     #region IDisposable Members
 
+    /// <summary>
+    /// Disposes all aggregated providers.
+    /// </summary>
     public void Dispose() {
       this.Close();
       GC.SuppressFinalize(this);
@@ -82,6 +100,9 @@ namespace Microsoft.Cci {
 
     #endregion
 
+    /// <summary>
+    /// Disposes all aggregated providers that implement the IDisposable interface. 
+    /// </summary>
     ~AggregatingSourceLocationProvider() {
       this.Close();
     }
@@ -150,6 +171,13 @@ namespace Microsoft.Cci {
 
     #region ILocalScopeProvider Members
 
+    /// <summary>
+    /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
+    /// The scopes are returned by the MoveNext method of the object returned by the iterator method.
+    /// The index of the scope corresponds to the index of the local. Specifically local scope i corresponds
+    /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
+    /// calls to MoveNext.
+    /// </summary>
     public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) {
@@ -159,6 +187,9 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Returns zero or more local (block) scopes into which the CLR IL operations in the given method body is organized.
+    /// </summary>
     public IEnumerable<ILocalScope> GetLocalScopes(IMethodBody methodBody) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) {
@@ -168,6 +199,12 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+    /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+    /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+    /// is for the y.
+    /// </summary>
     public IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) {
@@ -177,6 +214,9 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Returns zero or more local constant definitions that are local to the given scope.
+    /// </summary>
     public IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(scope.MethodDefinition);
       if (provider == null) {
@@ -186,6 +226,9 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Returns zero or more local variable definitions that are local to the given scope.
+    /// </summary>
     public IEnumerable<ILocalDefinition> GetVariablesInScope(ILocalScope scope) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(scope.MethodDefinition);
       if (provider == null) {
@@ -195,6 +238,9 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Returns true if the method body is an iterator.
+    /// </summary>
     public bool IsIterator(IMethodBody methodBody) {
       var provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) return false;
@@ -205,6 +251,9 @@ namespace Microsoft.Cci {
 
     #region IDisposable Members
 
+    /// <summary>
+    /// Calls Dispose on all aggregated providers.
+    /// </summary>
     public void Dispose() {
       this.Close();
       GC.SuppressFinalize(this);
@@ -212,6 +261,10 @@ namespace Microsoft.Cci {
 
     #endregion
 
+    /// <summary>
+    /// Finalizer for the aggregrating local scope provider. Calls Dispose on
+    /// all aggregated providers.
+    /// </summary>
     ~AggregatingLocalScopeProvider() {
       this.Close();
     }
