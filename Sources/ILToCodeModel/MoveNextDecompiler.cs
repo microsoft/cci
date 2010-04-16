@@ -779,8 +779,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private IGotoStatement gotoFromSwitchCase;
 
     /// <summary>
-    /// The main entry point of the class. It adds to input list <paramref name="toBeRemoved"/> the goto(s) in the goto chain. 
-    /// The list is returned to highlight the side effect. 
+    /// The main entry point of the class.
     /// 
     /// Currently we assume there is always one intermediate goto in the goto chain for a continuing state, and none
     /// for the default case.

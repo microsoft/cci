@@ -524,7 +524,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// The constructor for creating an aggregating extractor.
     /// </summary>
-    /// <param name="host">This is the host that loaded the unit for which the <paramref name="primaryProvider"/> is
+    /// <param name="host">This is the host that loaded the unit for which the <paramref name="primaryExtractor"/> is
     /// the extractor for.
     /// </param>
     /// <param name="primaryExtractor">
