@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -148,6 +148,7 @@ namespace Microsoft.Cci {
     /// Begins the part of a filter handler that is invoked on the second pass if the filter condition returns true on the first pass.
     /// </summary>
     public void BeginFilterBody() {
+      this.Emit(OperationCode.Endfilter);
       ILGeneratorLabel handlerStart = new ILGeneratorLabel(false);
       this.MarkLabel(handlerStart);
       this.handlers[handlers.Count-1].HandlerStart = handlerStart;

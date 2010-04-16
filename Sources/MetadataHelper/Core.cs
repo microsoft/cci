@@ -41,12 +41,12 @@ namespace Microsoft.Cci {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize)
-      : this(nameTable, new InternFactory(), pointerSize)
+    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize) 
+      :this(nameTable, new InternFactory(), pointerSize)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
     }
-
+      
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
@@ -398,6 +398,16 @@ namespace Microsoft.Cci {
     protected void RegisterAsLatest(IUnit unit) {
       lock (GlobalLock.LockingObject) {
         this.unitCache[unit.UnitIdentity] = unit;
+      }
+    }
+
+    /// <summary>
+    /// Removes the unit with the given identity.
+    /// Returns true iff the unitIdentity is found in the loaded units.
+    /// </summary>
+    protected bool RemoveUnit(UnitIdentity unitIdentity) {
+      lock (GlobalLock.LockingObject) {
+        return this.unitCache.Remove(unitIdentity);
       }
     }
 

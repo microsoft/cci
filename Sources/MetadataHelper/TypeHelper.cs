@@ -402,7 +402,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Do not include optional and required custom modifiers.
     /// </summary>
-    OmitCustomModifiers=OmitContainingType << 1,
+    OmitCustomModifiers = OmitContainingType << 1,
 
     /// <summary>
     /// If the type member explicitly implements an interface, do not include the name of the interface in the name of the member.
@@ -639,6 +639,8 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.Int64:
         case PrimitiveTypeCode.Int8:
         case PrimitiveTypeCode.IntPtr:
+        case PrimitiveTypeCode.Float32:
+        case PrimitiveTypeCode.Float64:
           return true;
         default:
           return false;
