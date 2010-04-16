@@ -44,6 +44,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     /// <summary>
+    /// Do not copy private 
+    /// </summary>
+    /// <param name="typeDefinitions"></param>
+    protected override void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
+      return;
+    }
+
+    /// <summary>
     /// A dispatcher method that calls the type-specific Substitute for <paramref name="expression"/>.
     /// </summary>
     /// <param name="expression"></param>
@@ -527,6 +535,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified dup value expression.
+    /// </summary>
+    /// <param name="dupValue">The dup value expression.</param>
+    /// <returns></returns>
+    protected virtual IExpression DeepCopy(DupValue dupValue) {
+      dupValue.Type = this.Substitute(dupValue.Type);
+      return dupValue;
+    }
+
+    /// <summary>
     /// Visits the specified empty statement.
     /// </summary>
     /// <param name="emptyStatement">The empty statement.</param>
@@ -708,7 +726,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Substitute a local definition.
+    /// Visit local definition.
     /// </summary>
     /// <param name="localDefinition"></param>
     /// <returns></returns>
@@ -717,7 +735,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Deep copy a local definition.
+    /// Deep copy a local definition. 
     /// </summary>
     /// <param name="localDefinition"></param>
     /// <returns></returns>
@@ -882,12 +900,32 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified pop value expression.
+    /// </summary>
+    /// <param name="popValue">The pop value expression.</param>
+    /// <returns></returns>
+    protected virtual IExpression DeepCopy(PopValue popValue) {
+      popValue.Type = this.Substitute(popValue.Type);
+      return popValue;
+    }
+
+    /// <summary>
+    /// Visits the specified push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    /// <returns></returns>
+    protected virtual IStatement DeepCopy(PushStatement pushStatement) {
+      pushStatement.ValueToPush = this.Substitute(pushStatement.ValueToPush);
+      return pushStatement;
+    }
+
+    /// <summary>
     /// Visits the specified ref argument.
     /// </summary>
     /// <param name="refArgument">The ref argument.</param>
     /// <returns></returns>
     protected virtual IExpression DeepCopy(RefArgument refArgument) {
-      refArgument.Expression = (IAddressableExpression) Substitute(refArgument.Expression);
+      refArgument.Expression = (IAddressableExpression)this.Substitute(refArgument.Expression);
       refArgument.Type = this.Substitute(refArgument.Type);
       return refArgument;
     }
@@ -898,8 +936,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="resourceUseStatement">The resource use statement.</param>
     /// <returns></returns>
     protected virtual IStatement DeepCopy(ResourceUseStatement resourceUseStatement) {
-      resourceUseStatement.ResourceAcquisitions = Substitute(resourceUseStatement.ResourceAcquisitions);
-      resourceUseStatement.Body = Substitute(resourceUseStatement.Body);
+      resourceUseStatement.ResourceAcquisitions = this.Substitute(resourceUseStatement.ResourceAcquisitions);
+      resourceUseStatement.Body = this.Substitute(resourceUseStatement.Body);
       return resourceUseStatement;
     }
 
@@ -1551,6 +1589,14 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       /// <summary>
+      /// Performs some computation with the given dup value expression.
+      /// </summary>
+      public override void Visit(IDupValue dupValue) {
+        DupValue mutableDupValue = new DupValue(dupValue);
+        this.resultExpression = this.myCodeCopier.DeepCopy(mutableDupValue);
+      }
+
+      /// <summary>
       /// Visits the specified empty statement.
       /// </summary>
       /// <param name="emptyStatement">The empty statement.</param>
@@ -1817,6 +1863,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IPointerCall pointerCall) {
         PointerCall mutablePointerCall = new PointerCall(pointerCall);
         this.resultExpression = this.myCodeCopier.DeepCopy(mutablePointerCall);
+      }
+
+      /// <summary>
+      /// Performs some computation with the given pop value expression.
+      /// </summary>
+      public override void Visit(IPopValue popValue) {
+        PopValue mutablePopValue = new PopValue(popValue);
+        this.resultExpression = this.myCodeCopier.DeepCopy(mutablePopValue);
+      }
+
+      /// <summary>
+      /// Performs some computation with the given push statement.
+      /// </summary>
+      public override void Visit(IPushStatement pushStatement) {
+        PushStatement mutablePushStatement = new PushStatement(pushStatement);
+        this.resultStatement = this.myCodeCopier.DeepCopy(mutablePushStatement);
       }
 
       /// <summary>

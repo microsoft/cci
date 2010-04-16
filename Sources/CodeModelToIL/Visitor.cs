@@ -261,10 +261,18 @@ namespace Microsoft.Cci {
       this.Visit(addition.RightOperand);
       OperationCode operationCode = OperationCode.Add;
       if (addition.CheckOverflow) {
-        if (TypeHelper.IsSignedPrimitiveInteger(addition.Type))
+        if (TypeHelper.IsSignedPrimitive(addition.Type))
           operationCode = OperationCode.Add_Ovf;
-        else if (TypeHelper.IsUnsignedPrimitiveInteger(addition.Type))
+        else if (TypeHelper.IsUnsignedPrimitive(addition.Type))
           operationCode = OperationCode.Add_Ovf_Un;
+        else if (addition.Type.TypeCode == PrimitiveTypeCode.Pointer
+          || addition.Type.TypeCode == PrimitiveTypeCode.Reference) {
+          if (TypeHelper.IsSignedPrimitive(addition.LeftOperand.Type) ||
+            TypeHelper.IsSignedPrimitive(addition.RightOperand.Type))
+            operationCode = OperationCode.Add_Ovf;
+          else
+            operationCode = OperationCode.Add_Ovf_Un;
+        }
       }
       this.generator.Emit(operationCode);
       this.StackSize--;
@@ -306,6 +314,14 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Ldind_U1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Ldind_I; break;
         default:
+          var ptr = addressDereference.Type as IPointerTypeReference;
+          if (ptr != null) {
+            opcode = OperationCode.Ldind_I; break;
+          }
+          var mgdPtr = addressDereference.Type as IManagedPointerTypeReference;
+          if (mgdPtr != null) {
+            opcode = OperationCode.Ldind_I; break;
+          }
           if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, addressDereference.Type.PlatformType.SystemObject)) {
             this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
             return;
@@ -768,11 +784,9 @@ namespace Microsoft.Cci {
         this.generator.BeginCatchBlock(catchClause.ExceptionType);
       }
       this.StackSize++;
-      if (catchClause.ExceptionContainer == Dummy.LocalVariable)
-        this.generator.Emit(OperationCode.Pop);
-      else
+      if (catchClause.ExceptionContainer != Dummy.LocalVariable)
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
-      base.Visit(catchClause);
+      this.Visit(catchClause.Body);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
     }
@@ -795,7 +809,20 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="constant">The constant.</param>
     public override void Visit(ICompileTimeConstant constant) {
-      this.EmitConstant(constant.Value as IConvertible);
+      var ic = constant.Value as IConvertible;
+      if (ic != null)
+        this.EmitConstant(ic);
+      else {
+        var tc = constant.Type.TypeCode;
+        if (tc == PrimitiveTypeCode.IntPtr) {
+          this.EmitConstant(((IntPtr)constant.Value).ToInt64());
+          this.generator.Emit(OperationCode.Conv_Ovf_I);
+        } else if (tc == PrimitiveTypeCode.UIntPtr) {
+          this.EmitConstant(((UIntPtr)constant.Value).ToUInt64());
+          this.generator.Emit(OperationCode.Conv_Ovf_U);
+        } else
+          this.generator.Emit(OperationCode.Ldnull);
+      }
     }
 
     /// <summary>
@@ -893,8 +920,7 @@ namespace Microsoft.Cci {
           if (hasMoreBounds) {
             this.EmitConstant(bounds.Current);
             hasMoreBounds = bounds.MoveNext();
-          }
-          else {
+          } else {
             this.generator.Emit(OperationCode.Ldc_I4_0);
             this.StackSize++;
           }
@@ -912,12 +938,10 @@ namespace Microsoft.Cci {
       if (hasOneOrMoreBounds) {
         create = OperationCode.Array_Create_WithLowerBound;
         arrayType = Matrix.GetMatrix(createArray.ElementType, createArray.Rank, createArray.LowerBounds, ((IMetadataCreateArray)createArray).Sizes, this.host.InternFactory);
-      }
-      else if (createArray.Rank > 1) {
+      } else if (createArray.Rank > 1) {
         create = OperationCode.Array_Create;
         arrayType = Matrix.GetMatrix(createArray.ElementType, createArray.Rank, this.host.InternFactory);
-      }
-      else {
+      } else {
         create = OperationCode.Newarr;
         arrayType = Vector.GetVector(createArray.ElementType, this.host.InternFactory);
       }
@@ -935,8 +959,7 @@ namespace Microsoft.Cci {
           this.Visit(elemValue);
           this.StoreVectorElement(createArray.ElementType);
         }
-      }
-      else {
+      } else {
         // Recurse over rank dimensions ...
         int count = 0;
         int[] indices = new int[createArray.Rank - 1];
@@ -964,8 +987,7 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Array_Set, type);
           this.StackSize -= (ushort)(depth + 3); // ArrayRef, (depth + 1), elem-value 
         }
-      }
-      else { // Recurse deeper ...
+      } else { // Recurse deeper ...
         int count = 0;
         foreach (IExpression element in array.Initializers) {
           indices[depth] = count++;
@@ -1083,6 +1105,14 @@ namespace Microsoft.Cci {
 
       this.currentBreakTarget = savedCurrentBreakTarget;
       this.currentContinueTarget = savedCurrentContinueTarget;
+    }
+
+    /// <summary>
+    /// Performs some computation with the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public override void Visit(IDupValue dupValue) {
+      this.generator.Emit(OperationCode.Dup);
     }
 
     /// <summary>
@@ -1417,7 +1447,6 @@ namespace Microsoft.Cci {
           this.generator.MarkLabel(done);
         }
       } else {
-        Debug.Assert(!logicalNot.Operand.Type.IsValueType);
         //pointer non null test
         this.Visit(logicalNot.Operand);
         this.generator.Emit(OperationCode.Ldnull);
@@ -1604,6 +1633,22 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some computation with the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public override void Visit(IPopValue popValue) {
+      //Do nothing. The containing expression or statement will consume the value.
+    }
+
+    /// <summary>
+    /// Performs some computation with the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public override void Visit(IPushStatement pushStatement) {
+      this.Visit(pushStatement.ValueToPush);
+    }
+
+    /// <summary>
     /// Visits the specified ref argument.
     /// </summary>
     /// <param name="refArgument">The ref argument.</param>
@@ -1732,10 +1777,18 @@ namespace Microsoft.Cci {
       this.Visit(subtraction.RightOperand);
       OperationCode operationCode = OperationCode.Sub;
       if (subtraction.CheckOverflow) {
-        if (TypeHelper.IsSignedPrimitiveInteger(subtraction.Type))
+        if (TypeHelper.IsSignedPrimitive(subtraction.Type))
           operationCode = OperationCode.Sub_Ovf;
-        else if (TypeHelper.IsUnsignedPrimitiveInteger(subtraction.Type))
+        else if (TypeHelper.IsUnsignedPrimitive(subtraction.Type))
           operationCode = OperationCode.Sub_Ovf_Un;
+        else if (subtraction.Type.TypeCode == PrimitiveTypeCode.Pointer
+          || subtraction.Type.TypeCode == PrimitiveTypeCode.Reference) {
+          if (TypeHelper.IsSignedPrimitive(subtraction.LeftOperand.Type) ||
+            TypeHelper.IsSignedPrimitive(subtraction.RightOperand.Type))
+            operationCode = OperationCode.Sub_Ovf;
+          else
+            operationCode = OperationCode.Sub_Ovf_Un;
+        }
       }
       this.generator.Emit(operationCode);
       this.StackSize--;
@@ -3272,10 +3325,7 @@ namespace Microsoft.Cci {
               break;
 
             case PrimitiveTypeCode.Int64:
-              break;
-
             case PrimitiveTypeCode.UInt64:
-              this.generator.Emit(OperationCode.Conv_U8);
               break;
 
             case PrimitiveTypeCode.Float32:
@@ -3642,29 +3692,33 @@ namespace Microsoft.Cci {
     private void VisitBranchIfFalse(IExpression expression, ILGeneratorLabel targetLabel) {
       OperationCode branchOp = OperationCode.Brfalse;
       IBinaryOperation/*?*/ binaryOperation = expression as IBinaryOperation;
-      bool signedInteger = binaryOperation != null && TypeHelper.IsSignedPrimitive(binaryOperation.LeftOperand.Type);
+      bool signedPrimitive = binaryOperation != null && TypeHelper.IsSignedPrimitive(binaryOperation.LeftOperand.Type);
       if (binaryOperation is IEquality) {
         branchOp = OperationCode.Bne_Un;
-        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || binaryOperation.LeftOperand is IDefaultValue) {
+        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || 
+          binaryOperation.LeftOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.LeftOperand)) {
           branchOp = OperationCode.Brtrue;
           expression = binaryOperation.RightOperand;
-        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || binaryOperation.LeftOperand is IDefaultValue) {
+        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || 
+          binaryOperation.RightOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.RightOperand)) {
           branchOp = OperationCode.Brtrue;
           expression = binaryOperation.LeftOperand;
         }
       } else if (binaryOperation is INotEquality) {
         branchOp = OperationCode.Beq;
-        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || binaryOperation.LeftOperand is IDefaultValue) {
+        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || 
+          binaryOperation.LeftOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.LeftOperand)) {
           branchOp = OperationCode.Brfalse;
           expression = binaryOperation.RightOperand;
-        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || binaryOperation.RightOperand is IDefaultValue) {
+        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || 
+          binaryOperation.RightOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.RightOperand)) {
           branchOp = OperationCode.Brfalse;
           expression = binaryOperation.LeftOperand;
         }
-      } else if (binaryOperation is ILessThan) branchOp = signedInteger ? OperationCode.Bge : OperationCode.Bge_Un;
-      else if (binaryOperation is ILessThanOrEqual) branchOp = signedInteger ? OperationCode.Bgt : OperationCode.Bgt_Un;
-      else if (binaryOperation is IGreaterThan) branchOp = signedInteger ? OperationCode.Ble : OperationCode.Ble_Un;
-      else if (binaryOperation is IGreaterThanOrEqual) branchOp = signedInteger ? OperationCode.Blt : OperationCode.Blt_Un;
+      } else if (binaryOperation is ILessThan) branchOp = signedPrimitive ? OperationCode.Bge : OperationCode.Bge_Un;
+      else if (binaryOperation is ILessThanOrEqual) branchOp = signedPrimitive ? OperationCode.Bgt : OperationCode.Bgt_Un;
+      else if (binaryOperation is IGreaterThan) branchOp = signedPrimitive ? OperationCode.Ble : OperationCode.Ble_Un;
+      else if (binaryOperation is IGreaterThanOrEqual) branchOp = signedPrimitive ? OperationCode.Blt : OperationCode.Blt_Un;
       else {
         IConditional/*?*/ conditional = expression as IConditional;
         if (conditional != null) {
@@ -3704,6 +3758,10 @@ namespace Microsoft.Cci {
           ILogicalNot/*?*/ logicalNot = expression as ILogicalNot;
           if (logicalNot != null) {
             expression = logicalNot.Operand;
+            if (expression is IBinaryOperation) {
+              this.VisitBranchIfTrue(expression, targetLabel);
+              return;
+            }
             branchOp = OperationCode.Brtrue;
           }
         }
@@ -3722,29 +3780,33 @@ namespace Microsoft.Cci {
     private void VisitBranchIfTrue(IExpression expression, ILGeneratorLabel targetLabel) {
       OperationCode branchOp = OperationCode.Brtrue;
       IBinaryOperation/*?*/ binaryOperation = expression as IBinaryOperation;
-      bool signedInteger = binaryOperation != null && TypeHelper.IsSignedPrimitive(binaryOperation.LeftOperand.Type);
+      bool signedPrimitive = binaryOperation != null && TypeHelper.IsSignedPrimitive(binaryOperation.LeftOperand.Type);
       if (binaryOperation is IEquality) {
         branchOp = OperationCode.Beq;
-        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || binaryOperation.LeftOperand is IDefaultValue) {
+        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) ||
+          binaryOperation.LeftOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.LeftOperand)) {
           branchOp = OperationCode.Brfalse;
           expression = binaryOperation.RightOperand;
-        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || binaryOperation.RightOperand is IDefaultValue) {
+        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || 
+          binaryOperation.RightOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.RightOperand)) {
           branchOp = OperationCode.Brfalse;
           expression = binaryOperation.LeftOperand;
         }
       } else if (binaryOperation is INotEquality) {
         branchOp = OperationCode.Bne_Un;
-        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || binaryOperation.LeftOperand is IDefaultValue) {
+        if (ExpressionHelper.IsIntegralZero(binaryOperation.LeftOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.LeftOperand) || 
+          binaryOperation.LeftOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.LeftOperand)) {
           branchOp = OperationCode.Brtrue;
           expression = binaryOperation.RightOperand;
-        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || binaryOperation.RightOperand is IDefaultValue) {
+        } else if (ExpressionHelper.IsIntegralZero(binaryOperation.RightOperand) || ExpressionHelper.IsNullLiteral(binaryOperation.RightOperand) || 
+          binaryOperation.RightOperand is IDefaultValue || ExpressionHelper.IsZeroIntPtr(binaryOperation.RightOperand)) {
           branchOp = OperationCode.Brtrue;
           expression = binaryOperation.LeftOperand;
         }
-      } else if (binaryOperation is ILessThan) branchOp = signedInteger ? OperationCode.Blt : OperationCode.Blt_Un;
-      else if (binaryOperation is ILessThanOrEqual) branchOp = signedInteger ? OperationCode.Ble : OperationCode.Ble_Un;
-      else if (binaryOperation is IGreaterThan) branchOp = signedInteger ? OperationCode.Bgt : OperationCode.Bgt_Un;
-      else if (binaryOperation is IGreaterThanOrEqual) branchOp = signedInteger ? OperationCode.Bge : OperationCode.Bge_Un;
+      } else if (binaryOperation is ILessThan) branchOp = signedPrimitive ? OperationCode.Blt : OperationCode.Blt_Un;
+      else if (binaryOperation is ILessThanOrEqual) branchOp = signedPrimitive ? OperationCode.Ble : OperationCode.Ble_Un;
+      else if (binaryOperation is IGreaterThan) branchOp = signedPrimitive ? OperationCode.Bgt : OperationCode.Bgt_Un;
+      else if (binaryOperation is IGreaterThanOrEqual) branchOp = signedPrimitive ? OperationCode.Bge : OperationCode.Bge_Un;
       else {
         IConditional/*?*/ conditional = expression as IConditional;
         if (conditional != null) {
@@ -3780,6 +3842,16 @@ namespace Microsoft.Cci {
                 branchOp = methodCall.MethodToCall.Name.UniqueKey == this.host.NameTable.OpEquality.UniqueKey ? OperationCode.Brfalse : OperationCode.Brtrue;
             }
           }
+        } else {
+          ILogicalNot/*?*/ logicalNot = expression as ILogicalNot;
+          if (logicalNot != null) {
+            expression = logicalNot.Operand;
+            if (expression is IBinaryOperation) {
+              this.VisitBranchIfFalse(expression, targetLabel);
+              return;
+            }
+            branchOp = OperationCode.Brfalse;
+          }
         }
       }
       if (branchOp == OperationCode.Brfalse || branchOp == OperationCode.Brtrue) {
@@ -3807,84 +3879,80 @@ namespace Microsoft.Cci {
 
     private void EmitConstant(IConvertible ic) {
       this.StackSize++;
-      if (ic == null)
-        this.generator.Emit(OperationCode.Ldnull);
-      else {
-        TypeCode tc = ic.GetTypeCode();
-        switch (tc) {
-          case TypeCode.Boolean:
-          case TypeCode.SByte:
-          case TypeCode.Byte:
-          case TypeCode.Char:
-          case TypeCode.Int16:
-          case TypeCode.UInt16:
-          case TypeCode.Int32:
-          case TypeCode.UInt32:
-          case TypeCode.Int64:
-            long n = ic.ToInt64(null);
-            switch (n) {
-              case -1: this.generator.Emit(OperationCode.Ldc_I4_M1); break;
-              case 0: this.generator.Emit(OperationCode.Ldc_I4_0); break;
-              case 1: this.generator.Emit(OperationCode.Ldc_I4_1); break;
-              case 2: this.generator.Emit(OperationCode.Ldc_I4_2); break;
-              case 3: this.generator.Emit(OperationCode.Ldc_I4_3); break;
-              case 4: this.generator.Emit(OperationCode.Ldc_I4_4); break;
-              case 5: this.generator.Emit(OperationCode.Ldc_I4_5); break;
-              case 6: this.generator.Emit(OperationCode.Ldc_I4_6); break;
-              case 7: this.generator.Emit(OperationCode.Ldc_I4_7); break;
-              case 8: this.generator.Emit(OperationCode.Ldc_I4_8); break;
-              default:
-                if (sbyte.MinValue <= n && n <= sbyte.MaxValue) {
-                  this.generator.Emit(OperationCode.Ldc_I4_S, (sbyte)n);
-                } else if (int.MinValue <= n && n <= int.MaxValue ||
+      TypeCode tc = ic.GetTypeCode();
+      switch (tc) {
+        case TypeCode.Boolean:
+        case TypeCode.SByte:
+        case TypeCode.Byte:
+        case TypeCode.Char:
+        case TypeCode.Int16:
+        case TypeCode.UInt16:
+        case TypeCode.Int32:
+        case TypeCode.UInt32:
+        case TypeCode.Int64:
+          long n = ic.ToInt64(null);
+          switch (n) {
+            case -1: this.generator.Emit(OperationCode.Ldc_I4_M1); break;
+            case 0: this.generator.Emit(OperationCode.Ldc_I4_0); break;
+            case 1: this.generator.Emit(OperationCode.Ldc_I4_1); break;
+            case 2: this.generator.Emit(OperationCode.Ldc_I4_2); break;
+            case 3: this.generator.Emit(OperationCode.Ldc_I4_3); break;
+            case 4: this.generator.Emit(OperationCode.Ldc_I4_4); break;
+            case 5: this.generator.Emit(OperationCode.Ldc_I4_5); break;
+            case 6: this.generator.Emit(OperationCode.Ldc_I4_6); break;
+            case 7: this.generator.Emit(OperationCode.Ldc_I4_7); break;
+            case 8: this.generator.Emit(OperationCode.Ldc_I4_8); break;
+            default:
+              if (sbyte.MinValue <= n && n <= sbyte.MaxValue) {
+                this.generator.Emit(OperationCode.Ldc_I4_S, (sbyte)n);
+              } else if (int.MinValue <= n && n <= int.MaxValue ||
                 n <= uint.MaxValue && (tc == TypeCode.Char || tc == TypeCode.UInt16 || tc == TypeCode.UInt32)) {
-                  if (n == uint.MaxValue)
-                    this.generator.Emit(OperationCode.Ldc_I4_M1);
-                  else
-                    this.generator.Emit(OperationCode.Ldc_I4, (int)n);
-                } else {
-                  this.generator.Emit(OperationCode.Ldc_I8, n);
-                  tc = TypeCode.Empty; //Suppress conversion to long
-                }
-                break;
-            }
-            if (tc == TypeCode.Int64)
-              this.generator.Emit(OperationCode.Conv_I8);
-            return;
+                if (n == uint.MaxValue)
+                  this.generator.Emit(OperationCode.Ldc_I4_M1);
+                else
+                  this.generator.Emit(OperationCode.Ldc_I4, (int)n);
+              } else {
+                this.generator.Emit(OperationCode.Ldc_I8, n);
+                tc = TypeCode.Empty; //Suppress conversion to long
+              }
+              break;
+          }
+          if (tc == TypeCode.Int64)
+            this.generator.Emit(OperationCode.Conv_I8);
+          return;
 
-          case TypeCode.UInt64:
-            this.generator.Emit(OperationCode.Ldc_I8, (long)ic.ToUInt64(null));
-            return;
+        case TypeCode.UInt64:
+          this.generator.Emit(OperationCode.Ldc_I8, (long)ic.ToUInt64(null));
+          return;
 
-          case TypeCode.Single:
-            this.generator.Emit(OperationCode.Ldc_R4, ic.ToSingle(null));
-            return;
+        case TypeCode.Single:
+          this.generator.Emit(OperationCode.Ldc_R4, ic.ToSingle(null));
+          return;
 
-          case TypeCode.Double:
-            this.generator.Emit(OperationCode.Ldc_R8, ic.ToDouble(null));
-            return;
+        case TypeCode.Double:
+          this.generator.Emit(OperationCode.Ldc_R8, ic.ToDouble(null));
+          return;
 
-          case TypeCode.String:
-            this.generator.Emit(OperationCode.Ldstr, ic.ToString(null));
-            return;
+        case TypeCode.String:
+          this.generator.Emit(OperationCode.Ldstr, ic.ToString(null));
+          return;
 
-          case TypeCode.Decimal:
-            var bits = Decimal.GetBits(ic.ToDecimal(null));
-            this.generator.Emit(OperationCode.Ldc_I4, bits[0]);
-            this.generator.Emit(OperationCode.Ldc_I4, bits[1]); this.StackSize++;
-            this.generator.Emit(OperationCode.Ldc_I4, bits[2]); this.StackSize++;
-            if (bits[3] >= 0)
-              this.generator.Emit(OperationCode.Ldc_I4_0);
-            else
-              this.generator.Emit(OperationCode.Ldc_I4_1);
-            this.StackSize++;
-            int scale = (bits[3]&0x7FFFFF)>>16;
-            if (scale > 28) scale = 28;
-            this.generator.Emit(OperationCode.Ldc_I4_S, scale); this.StackSize++;
-            this.generator.Emit(OperationCode.Newobj, this.DecimalConstructor);
-            this.StackSize -= 4;
-            return;
-        }
+        case TypeCode.Decimal:
+          var bits = Decimal.GetBits(ic.ToDecimal(null));
+          this.generator.Emit(OperationCode.Ldc_I4, bits[0]);
+          this.generator.Emit(OperationCode.Ldc_I4, bits[1]); this.StackSize++;
+          this.generator.Emit(OperationCode.Ldc_I4, bits[2]); this.StackSize++;
+          if (bits[3] >= 0)
+            this.generator.Emit(OperationCode.Ldc_I4_0);
+          else
+            this.generator.Emit(OperationCode.Ldc_I4_1);
+          this.StackSize++;
+          int scale = (bits[3]&0x7FFFFF)>>16;
+          if (scale > 28) scale = 28;
+          this.generator.Emit(OperationCode.Ldc_I4_S, scale); this.StackSize++;
+          this.generator.Emit(OperationCode.Newobj, this.DecimalConstructor);
+          this.StackSize -= 4;
+          return;
       }
     }
 

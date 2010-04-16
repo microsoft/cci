@@ -1425,6 +1425,34 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
+  /// An expression that results in the value on top of the implicit operand stack.
+  /// </summary>
+  public sealed class DupValue : Expression, IDupValue {
+
+    /// <summary>
+    /// Allocates an expression that results in the value on top of the implicit operand stack.
+    /// </summary>
+    public DupValue()
+      : base() {
+    }
+
+    /// <summary>
+    /// Allocates a shallow copy of an expression that results in the value on top of the implicit operand stack.
+    /// </summary>
+    public DupValue(IDupValue dupValue)
+      : base(dupValue) {
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit((IDupValue)this).
+    /// </summary>
+    public override void Dispatch(ICodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public sealed class Equality : BinaryOperation, IEquality {
@@ -2307,6 +2335,34 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+  }
+
+  /// <summary>
+  /// An expression that results in the value on top of the implicit operand stack and that also pops that value from the stack.
+  /// </summary>
+  public sealed class PopValue : Expression, IPopValue {
+
+    /// <summary>
+    /// Allocates an expression that results in the value on top of the implicit operand stack and that also pops that value from the stack.
+    /// </summary>
+    public PopValue()
+      : base() {
+    }
+
+    /// <summary>
+    /// Allocates a shallow copy of an expression that results in the value on top of the implicit operand stack and that also pops that value from the stack.
+    /// </summary>
+    public PopValue(IPopValue popValue)
+      : base(popValue) {
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit((IPopValue)this).
+    /// </summary>
+    public override void Dispatch(ICodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
   }
 
   /// <summary>

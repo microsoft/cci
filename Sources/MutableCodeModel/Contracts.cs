@@ -10,10 +10,11 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using Microsoft.Cci.Contracts;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci.Contracts {
+namespace Microsoft.Cci.MutableContracts {
 
   /// <summary>
   /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops. 

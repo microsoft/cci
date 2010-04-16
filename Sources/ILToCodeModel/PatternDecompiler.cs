@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -529,7 +529,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       Pop pop = expression as Pop;
       if (pop != null) {
         Push push = (Push)this.statements[this.i++];
-        return push.ValueToPush;
+        if (pop is PopAsUnsigned)
+          return new ConvertToUnsigned(push.ValueToPush);
+        else
+          return push.ValueToPush;
       }
       return base.Visit(expression);
     }
@@ -537,6 +540,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   internal class TempVariable : LocalDefinition {
+    internal bool turnIntoPopValueExpression;
     internal TempVariable() {
     }
 

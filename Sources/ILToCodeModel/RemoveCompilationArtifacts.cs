@@ -110,14 +110,15 @@ namespace Microsoft.Cci.ILToCodeModel {
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                Name = closureField.ResolvedField.Name, Type = closureField.Type
+                 Name = closureField.ResolvedField.Name, Type = closureField.Type
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
                 LocalVariable = localDefinition, InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
-            } else continue;
+            }
+            else continue;
           }
         } else {
           this.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
@@ -151,7 +152,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (thisReference != null) return thisReference;
           boundExpression.Definition = localOrParameter;
           boundExpression.Instance = null;
-          return boundExpression;
+          return boundExpression; 
         }
       }
       IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
@@ -188,7 +189,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       anonDel.CallingConvention = closureMethod.CallingConvention;
       anonDel.Parameters = new List<IParameterDefinition>(closureMethod.Parameters);
       for (int i = 0, n = anonDel.Parameters.Count; i < n; i++) {
-        IParameterDefinition closureMethodPar = anonDel.Parameters[i];
+        IParameterDefinition closureMethodPar = UnspecializedParameterDefinition(anonDel.Parameters[i]);
         ParameterDefinition par = new ParameterDefinition();
         this.parameterMap.Add(closureMethodPar, par);
         par.Copy(closureMethodPar, this.host.InternFactory);
@@ -203,6 +204,22 @@ namespace Microsoft.Cci.ILToCodeModel {
       anonDel.ReturnType = closureMethod.Type;
       anonDel.Type = createDelegateInstance.Type;
       return this.Visit(anonDel);
+    }
+
+    /// <summary>
+    /// Given a parameter definition, if it is a specialized parameter definition, get the unspecialized version, or
+    /// otherwise return the parameter itself. 
+    /// </summary>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    internal static IParameterDefinition UnspecializedParameterDefinition(IParameterDefinition parameter)
+    {
+        SpecializedParameterDefinition specializedParameter = parameter as SpecializedParameterDefinition;
+        if (specializedParameter != null)
+        {
+            return UnspecializedParameterDefinition(specializedParameter.PartiallySpecializedParameter);
+        }
+        return parameter;
     }
 
     public override IExpression Visit(CreateObjectInstance createObjectInstance) {
@@ -221,7 +238,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(Equality equality) {
-      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean){
         if (ExpressionHelper.IsIntegralZero(equality.RightOperand))
           return InvertCondition(this.Visit(equality.LeftOperand));
       }
@@ -233,10 +250,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (castIfPossible != null) {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
-          return this.Visit(new CheckIfInstance() {
+          return this.Visit(new CheckIfInstance() { 
             Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
-          });
+            Type = greaterThan.Type, Locations = greaterThan.Locations });
         }
       }
       castIfPossible = greaterThan.RightOperand as ICastIfPossible;
@@ -434,7 +450,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                 info.Label = gotoStatement.TargetStatement.Label;
                 info.State = 1;
               }
-              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) 
                 this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
               statements.RemoveAt(i--);
               continue;

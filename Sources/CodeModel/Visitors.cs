@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -147,6 +147,11 @@ namespace Microsoft.Cci {
     /// </summary>
     void Visit(IDoUntilStatement doUntilStatement);
     /// <summary>
+    /// Performs some compuation with the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    void Visit(IDupValue dupValue);
+    /// <summary>
     /// Performs some computation with the given empty statement.
     /// </summary>
     void Visit(IEmptyStatement emptyStatement);
@@ -266,6 +271,15 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given pointer call.
     /// </summary>
     void Visit(IPointerCall pointerCall);
+    /// <summary>
+    /// Performs some compuation with the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    void Visit(IPopValue popValue);
+    /// <summary>
+    /// Performs some computation with the given push statement.
+    /// </summary>
+    void Visit(IPushStatement pushStatement);
     /// <summary>
     /// Performs some computation with the given ref argument expression.
     /// </summary>
@@ -924,6 +938,16 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some computation with the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public virtual void Visit(IDupValue popValue)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+    }
+
+    /// <summary>
     /// Performs some computation with the given empty statement.
     /// </summary>
     /// <param name="emptyStatement"></param>
@@ -1288,7 +1312,7 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given method definition.
     /// </summary>
     /// <param name="method"></param>
-    public override void Visit(IMethodDefinition method)
+    public override void Visit(IMethodDefinition method) 
       //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
@@ -1482,6 +1506,31 @@ namespace Microsoft.Cci {
       this.path.Push(pointerCall);
       this.Visit(pointerCall.Arguments);
       this.Visit(pointerCall.Pointer);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
+    /// Performs some computation with the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public virtual void Visit(IPopValue popValue)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+    }
+
+    /// <summary>
+    /// Performs some computation with the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public virtual void Visit(IPushStatement pushStatement)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(pushStatement);
+      this.Visit(pushStatement.ValueToPush);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -2172,6 +2221,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some computation with the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public virtual void Visit(IDupValue dupValue) {
+    }
+
+    /// <summary>
     /// Performs some computation with the given empty statement.
     /// </summary>
     /// <param name="emptyStatement"></param>
@@ -2400,6 +2456,20 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="pointerCall"></param>
     public virtual void Visit(IPointerCall pointerCall) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public virtual void Visit(IPopValue popValue) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public virtual void Visit(IPushStatement pushStatement) {
     }
 
     /// <summary>

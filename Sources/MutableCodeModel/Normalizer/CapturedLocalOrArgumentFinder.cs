@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -29,10 +29,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.nameTable = nameTable;
     }
 
+    /// <summary>
+    /// If a definition should be captured, capture it. Otherwise noop. 
+    /// 
+    /// The act of capturing means mapping the definition (or its type's interned id if the definition is a reference to THIS) to
+    /// a new BoundField object that represents a field in the closure class. 
+    /// </summary>
+    /// <param name="definition"></param>
     private void CaptureDefinition(object definition) {
       IThisReference/*?*/ thisRef = definition as IThisReference;
-      if (thisRef != null)
-        definition = thisRef.Type.ResolvedType;
+      if (thisRef != null) {
+        definition = thisRef.Type.ResolvedType.InternedKey;        
+      }
       if (this.fieldForCapturedLocalOrParameter.ContainsKey(definition)) return;
       IName/*?*/ name = null;
       ITypeReference/*?*/ type = null;
@@ -48,9 +56,10 @@ namespace Microsoft.Cci.MutableCodeModel {
           name = par.Name;
           type = par.Type;
         } else {
-          type = definition as ITypeDefinition;
-          if (type == null) return;
-          name = this.nameTable.GetNameFor("__this value");
+          if (definition is uint) {
+            type = thisRef.Type;
+            name = this.nameTable.GetNameFor("__this value");
+          } else return;
         }
       }
       if (name == null) return;

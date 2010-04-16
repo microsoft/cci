@@ -443,6 +443,12 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// An expression that results in the value on top of the implicit operand stack.
+  /// </summary>
+  public interface IDupValue : IExpression {
+  }
+
+  /// <summary>
   /// An expression that results in true if both operands represent the same value or object.
   /// </summary>
   public interface IEquality : IBinaryOperation {
@@ -697,6 +703,12 @@ namespace Microsoft.Cci {
       //^ ensures result.Type is IFunctionPointer;
     }
 
+  }
+
+  /// <summary>
+  /// An expression that results in the value on top of the implicit operand stack and that also pops that value from the stack.
+  /// </summary>
+  public interface IPopValue : IExpression {
   }
 
   /// <summary>

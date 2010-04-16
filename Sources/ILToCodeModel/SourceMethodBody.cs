@@ -60,6 +60,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
       this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
       this.localVariables = new List<ILocalDefinition>(ilMethodBody.LocalVariables);
+      if (IteratorHelper.EnumerableIsNotEmpty(ilMethodBody.LocalVariables))
+        this.localsAreZeroed = ilMethodBody.LocalsAreZeroed;
+      else
+        this.localsAreZeroed = true;
     }
 
     /// <summary>
@@ -123,8 +127,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// True if the locals are initialized by zeroeing the stack upon method entry.
     /// </summary>
     public bool LocalsAreZeroed {
-      get { return this.ilMethodBody.LocalsAreZeroed; }
+      get { return this.localsAreZeroed; }
     }
+    bool localsAreZeroed;
 
     /// <summary>
     /// The local variables of the method.
@@ -163,7 +168,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
-        return this.ilMethodBody.PrivateHelperTypes;
+        return this.ilMethodBody.PrivateHelperTypes; 
       }
     }
 
@@ -272,14 +277,18 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (IOperationExceptionInformation exinfo in this.ilMethodBody.OperationExceptionInformation) {
         BasicBlock bb = this.GetOrCreateBlock(exinfo.TryStartOffset, false);
         bb.NumberOfTryBlocksStartingHere++;
-        bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
-        bb.ExceptionInformation = exinfo;
         if (exinfo.HandlerKind == HandlerKind.Filter) {
-          this.GetOrCreateBlock(exinfo.FilterDecisionStartOffset, false);
+          bb = this.GetOrCreateBlock(exinfo.FilterDecisionStartOffset, false);
+          this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
           bb.Statements.Add(new Push() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
         } else if (exinfo.HandlerKind == HandlerKind.Catch) {
+          bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
           bb.Statements.Add(new Push() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
+        } else {
+          bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
         }
+        bb.ExceptionInformation = exinfo;
+        bb = this.GetOrCreateBlock(exinfo.HandlerEndOffset, false);
       }
     }
 
@@ -351,7 +360,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
         if (closureTypeAsNestedTypeReference == null) return Dummy.MethodBody;
         ITypeReference unspecializedClosureContainingType = GetUnspecializedType(closureTypeAsNestedTypeReference.ContainingType);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)) {
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType))
+        {
           IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
           foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
             IMethodDefinition moveNext = member as IMethodDefinition;
@@ -565,6 +575,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Statement ParseAssignment(IOperation currentOperation) {
       TargetExpression target = new TargetExpression();
+      ITypeReference/*?*/ elementType = null;
       target.Alignment = this.alignment;
       target.Definition = currentOperation.Value;
       target.IsVolatile = this.sawVolatile;
@@ -591,16 +602,42 @@ namespace Microsoft.Cci.ILToCodeModel {
           target.Instance = indexer.IndexedObject;
           break;
         case OperationCode.Stind_I:
+          elementType = this.platformType.SystemIntPtr;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_I1:
+          elementType = this.platformType.SystemInt8;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_I2:
+          elementType = this.platformType.SystemInt16;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_I4:
+          elementType = this.platformType.SystemInt32;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_I8:
+          elementType = this.platformType.SystemInt64;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_R4:
+          elementType = this.platformType.SystemFloat32;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_R8:
+          elementType = this.platformType.SystemFloat64;
+          goto case OperationCode.Stind_Ref;
         case OperationCode.Stind_Ref:
         case OperationCode.Stobj:
           AddressDereference addressDereference = new AddressDereference();
           addressDereference.Address = this.PopOperandStack();
+          if (elementType != null) {
+            var addressType = addressDereference.Address.Type;
+            var addressTypePtr = addressType as IPointerTypeReference;
+            var addressTypeMPtr = addressType as IManagedPointerTypeReference;
+            if ((addressTypePtr == null || !TypeHelper.TypesAreEquivalent(addressTypePtr.TargetType, elementType)) &&
+              (addressTypeMPtr == null || !TypeHelper.TypesAreEquivalent(addressTypeMPtr.TargetType, elementType))) {
+              addressDereference.Address = new Conversion() {
+                ValueToConvert = addressDereference.Address,
+                TypeAfterConversion = PointerType.GetPointerType(elementType, this.host.InternFactory)
+              };
+            }
+          }
           addressDereference.Alignment = this.alignment;
           addressDereference.IsVolatile = this.sawVolatile;
           target.Definition = addressDereference;
@@ -854,7 +891,12 @@ namespace Microsoft.Cci.ILToCodeModel {
           result.TypeAfterConversion = this.platformType.SystemObject;
           break;
         case OperationCode.Castclass:
-          result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
+          result.TypeAfterConversion = (ITypeReference)currentOperation.Value;
+          if (result.TypeAfterConversion.IsValueType)
+            //This is not legal IL according to ECMA, but the CLR accepts it if the value to convert is a boxed value type.
+            //Moreover, the CLR seems to leave the boxed object on the stack if the cast succeeds.
+            result = new Conversion() { ValueToConvert = result, TypeAfterConversion = this.platformType.SystemObject };
+          break;
         case OperationCode.Conv_I:
         case OperationCode.Conv_Ovf_I:
         case OperationCode.Conv_Ovf_I_Un:
@@ -1533,7 +1575,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         return new PopAsUnsigned();
       else
         result = this.operandStack.Pop();
-      return this.ConvertToUnsigned(result);
+      return result; //TODO: need an expression that represents a conversion, but that does not know the target type until after inference is done.
     }
 
     private Dictionary<uint, LabeledStatement> targetStatementFor = new Dictionary<uint, LabeledStatement>();
@@ -1616,7 +1658,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DecompileMoveNext(block);
         BasicBlock rootBlock = GetOrCreateBlock(0, false);
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
-
+        
         block = this.AddLocalDeclarationIfNecessary(block);
         new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
         return block;

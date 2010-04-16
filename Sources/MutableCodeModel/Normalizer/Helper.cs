@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -517,5 +517,79 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       throw new NotImplementedException();
     }
+  }
+
+  /// <summary>
+  /// A type reference to a private helper type, which is a nested. This type reference resolves itself
+  /// in a different way than a nested type reference, that is, without looking up itself in containing 
+  /// type's member list, which will not work with private helper types. 
+  /// </summary>
+  public class NestedTypeReferencePrivateHelper : NestedTypeReference {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public NestedTypeReferencePrivateHelper() {
+      this.privateHelperTypeDefinition = Dummy.NestedType;
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nestedTypeReference"></param>
+    /// <param name="internFactory"></param>
+    public new void Copy(INestedTypeReference nestedTypeReference, IInternFactory internFactory) {
+      base.Copy(nestedTypeReference, internFactory);
+      this.privateHelperTypeDefinition = nestedTypeReference.ResolvedType;
+      Debug.Assert(this.InternedKey == nestedTypeReference.InternedKey);
+    }
+    /// <summary>
+    /// The type definition being referred to.
+    /// In case this type was alias, this is also the type of the aliased type
+    /// </summary>
+    /// <value></value>
+    public override ITypeDefinition ResolvedType {
+      get { return this.privateHelperTypeDefinition; }
+    }
+
+    protected INestedTypeDefinition privateHelperTypeDefinition;
+  }
+
+  /// <summary>
+  /// A specialized nested type reference to a private helper type. This reference resolves itself
+  /// in a different way than other references in that it doesnt look up in the member list of its containing
+  /// type, which will not work with private helper types. 
+  /// </summary>
+  public sealed class SpecializedNestedTypeReferencePrivateHelper : NestedTypeReferencePrivateHelper, ISpecializedNestedTypeReference, ICopyFrom<ISpecializedNestedTypeReference> {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public SpecializedNestedTypeReferencePrivateHelper() {
+      this.unspecializedVersion = Dummy.NestedType;
+      this.privateHelperTypeDefinition = Dummy.SpecializedNestedTypeDefinition;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedNestedTypeReference"></param>
+    /// <param name="internFactory"></param>
+    public void Copy(ISpecializedNestedTypeReference specializedNestedTypeReference, IInternFactory internFactory) {
+      ((ICopyFrom<INestedTypeReference>)this).Copy(specializedNestedTypeReference, internFactory);
+      this.unspecializedVersion = specializedNestedTypeReference.UnspecializedVersion;
+      this.privateHelperTypeDefinition = specializedNestedTypeReference.ResolvedType;
+    }
+
+    /// <summary>
+    /// A reference to the nested type that has been specialized to obtain this nested type reference. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
+    /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
+    /// corresponds to a definition that is not obtained via specialization.)
+    /// </summary>
+    /// <value></value>
+    public INestedTypeReference UnspecializedVersion {
+      get { return this.unspecializedVersion; }
+      set { this.unspecializedVersion = value; }
+    }
+    INestedTypeReference unspecializedVersion;
   }
 }

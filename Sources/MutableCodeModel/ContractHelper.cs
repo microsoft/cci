@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 //
 // Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
@@ -15,7 +15,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
 
-namespace Microsoft.Cci.Contracts {
+namespace Microsoft.Cci.MutableContracts {
 
   /// <summary>
   /// Helper class for performing common tasks on mutable contracts

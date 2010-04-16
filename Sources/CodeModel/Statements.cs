@@ -274,6 +274,16 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// Pushes a value onto an implicit operand stack.
+  /// </summary>
+  public interface IPushStatement : IStatement {
+    /// <summary>
+    /// A value that is to be pushed onto the implicit operand stack.
+    /// </summary>
+    IExpression ValueToPush { get; }
+  }
+
+  /// <summary>
   /// Represents a using statement block (of one or more IDisposable resources).
   /// </summary>
   public interface IResourceUseStatement : IStatement {

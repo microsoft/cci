@@ -15,6 +15,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 //^ using Microsoft.Contracts;
 
@@ -81,6 +82,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       : base(host, copyOnlyIfNotAlreadyMutable) {
       this.sourceLocationProvider = sourceLocationProvider;
       createMutableType = new CreateMutableType(this, !copyOnlyIfNotAlreadyMutable);
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="typeDefinitions"></param>
+    public override void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
+      return;
     }
 
     #region Virtual methods for subtypes to override, one per type in MutableCodeModel
@@ -496,6 +504,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified dup value.
+    /// </summary>
+    /// <param name="dupValue">The dup value.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(DupValue dupValue) {
+      dupValue.Type = this.Visit(dupValue.Type);
+      return dupValue;
+    }
+
+    /// <summary>
     /// Visits the specified empty statement.
     /// </summary>
     /// <param name="emptyStatement">The empty statement.</param>
@@ -711,14 +729,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Visits the specified method body.
     /// </summary>
     /// <param name="methodBody">The method body.</param>
-    /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
+      bool hadLocals = IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables);
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
         SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
-        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        if (hadLocals)
+          // If the method had locals before the CodeMutator morphed it, then we retain the original initialization flag.
+          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        else if (IteratorHelper.EnumerableIsNotEmpty(mutableSourceMethodBody.LocalVariables))
+          // if CodeMutator introduced locals, then let us make sure they are initialized so that verification is not affected. 
+          mutableSourceMethodBody.LocalsAreZeroed = true;
+        else
+          // If there were no locals and none introduced by the CodeMutator we will just retain the original initialization flag. 
+          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         return mutableSourceMethodBody;
       }
       return base.Visit(methodBody);
@@ -828,6 +854,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       pointerCall.Arguments = Visit(pointerCall.Arguments);
       pointerCall.Type = this.Visit(pointerCall.Type);
       return pointerCall;
+    }
+
+    /// <summary>
+    /// Visits the specified pop value.
+    /// </summary>
+    /// <param name="popValue">The pop value.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(PopValue popValue) {
+      popValue.Type = this.Visit(popValue.Type);
+      return popValue;
+    }
+
+    /// <summary>
+    /// Visits the specified push statement.
+    /// </summary>
+    /// <param name="pushStatement">The push statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(PushStatement pushStatement) {
+      pushStatement.ValueToPush = this.Visit(pushStatement.ValueToPush);
+      return pushStatement;
     }
 
     /// <summary>
@@ -1601,6 +1647,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       /// <summary>
+      /// Performs some computation with the given dup value expression.
+      /// </summary>
+      /// <param name="dupValue"></param>
+      public override void Visit(IDupValue dupValue) {
+        DupValue mutableDupValue = dupValue as DupValue;
+        if (alwaysMakeACopy || mutableDupValue == null) mutableDupValue = new DupValue(dupValue);
+        this.resultExpression = this.myCodeMutator.Visit(mutableDupValue);
+      }
+
+      /// <summary>
       /// Visits the specified empty statement.
       /// </summary>
       /// <param name="emptyStatement">The empty statement.</param>
@@ -1896,6 +1952,26 @@ namespace Microsoft.Cci.MutableCodeModel {
         PointerCall mutablePointerCall = pointerCall as PointerCall;
         if (alwaysMakeACopy || mutablePointerCall == null) mutablePointerCall = new PointerCall(pointerCall);
         this.resultExpression = this.myCodeMutator.Visit(mutablePointerCall);
+      }
+
+      /// <summary>
+      /// Performs some computation with the given pop value expression.
+      /// </summary>
+      /// <param name="popValue"></param>
+      public override void Visit(IPopValue popValue) {
+        PopValue mutablePopValue = popValue as PopValue;
+        if (alwaysMakeACopy || mutablePopValue == null) mutablePopValue = new PopValue(popValue);
+        this.resultExpression = this.myCodeMutator.Visit(mutablePopValue);
+      }
+
+      /// <summary>
+      /// Performs some computation with the given push statement.
+      /// </summary>
+      /// <param name="pushStatement"></param>
+      public override void Visit(IPushStatement pushStatement) {
+        PushStatement mutablePushStatement = pushStatement as PushStatement;
+        if (alwaysMakeACopy || mutablePushStatement == null) mutablePushStatement = new PushStatement(pushStatement);
+        this.resultStatement = this.myCodeMutator.Visit(mutablePushStatement);
       }
 
       /// <summary>

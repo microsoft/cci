@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -126,7 +126,23 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.mapping = mapping;
     }
 
+    /// <summary>
+    /// Visit a type reference. 
+    /// </summary>
+    /// <param name="typeReference"></param>
+    /// <returns></returns>
     public override ITypeReference Visit(ITypeReference typeReference) {
+      SpecializedNestedTypeReferencePrivateHelper specializedNestedTypeReferencePrivateHelper = typeReference as SpecializedNestedTypeReferencePrivateHelper;
+      if (specializedNestedTypeReferencePrivateHelper != null) {
+        specializedNestedTypeReferencePrivateHelper.ContainingType = this.Visit(specializedNestedTypeReferencePrivateHelper.ContainingType);
+        // No need to change the resolved type, as it cannot contain a generic method parameter. 
+        return specializedNestedTypeReferencePrivateHelper;
+      }
+      NestedTypeReferencePrivateHelper nestedTypeReferencePrivateHelper = typeReference as NestedTypeReferencePrivateHelper;
+      if (nestedTypeReferencePrivateHelper != null) {
+        nestedTypeReferencePrivateHelper.ContainingType = this.Visit(nestedTypeReferencePrivateHelper.ContainingType);
+        return nestedTypeReferencePrivateHelper;
+      }
       IGenericMethodParameterReference genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
       if (genericMethodParameterReference != null) {
         var genericMethodParameter = genericMethodParameterReference.ResolvedType;
@@ -197,8 +213,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Visit a namespacetype definition.
     /// </summary>
+    /// <param name="namespaceTypeDefinition"></param>
+    /// <returns></returns>
     public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
       return namespaceTypeDefinition;
     }

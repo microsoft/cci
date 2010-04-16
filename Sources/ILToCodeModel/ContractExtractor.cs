@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -844,7 +845,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (validatorContract != null) {
         var bpta = new ReplaceParametersWithArguments(this.host, methodDefinition, methodCall);
         validatorContract = bpta.Visit(validatorContract);
-        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(this.CurrentMethodContract, validatorContract);
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(this.CurrentMethodContract, validatorContract);
       }
     }
 

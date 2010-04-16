@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -12,6 +12,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
@@ -170,16 +171,40 @@ namespace Microsoft.Cci.MutableCodeModel {
       boundExpression.Definition = result;
       this.closureInstanceFor.Add(closureClass, boundExpression);
       result.Name = this.host.NameTable.GetNameFor("__closure " + this.privateHelperTypes.Count);
-      result.Type = closureClass;
+      result.Type = this.GetSelfReferenceForPrivateHelperTypes(closureClass);
       return result;
     }
 
     private IStatement ConstructClosureInstance(ILocalDefinition closureTemp, NestedTypeDefinition closureClass) {
       var target = new TargetExpression() { Definition = closureTemp, Type = closureTemp.Type };
       var constructor = this.CreateDefaultConstructorFor(closureClass);
-      var construct = new CreateObjectInstance() { MethodToCall = constructor, Type = closureClass };
-      var assignment = new Assignment() { Target = target, Source = construct, Type = closureClass };
+      var constructorReference = this.GetSelfReference(constructor);
+      var construct = new CreateObjectInstance() { MethodToCall = constructorReference, Type = 
+        this.GetSelfReferenceForPrivateHelperTypes(closureClass) };
+      var assignment = new Assignment() { Target = target, Source = construct, 
+        Type = this.GetSelfReferenceForPrivateHelperTypes(closureClass) };
       return new ExpressionStatement() { Expression = assignment };
+    }
+
+    /// <summary>
+    /// Get a method reference to a method definition in a private helper type, to be used in the body of a method
+    /// in the same type. 
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <returns></returns>
+    private IMethodReference GetSelfReference(IMethodDefinition methodDefinition) {
+      ITypeReference containingType = this.GetSelfReferenceForPrivateHelperTypes(methodDefinition.ContainingTypeDefinition);
+      if (containingType is IGenericTypeInstanceReference || containingType is ISpecializedNestedTypeReference) {
+        var result = new SpecializedMethodReference();
+        ((MethodReference)result).Copy(methodDefinition, this.host.InternFactory);
+        result.UnspecializedVersion = methodDefinition;
+        result.ContainingType = containingType;
+        return result;
+      }
+      var result1 = new MethodReference();
+      result1.Copy(methodDefinition, this.host.InternFactory);
+      result1.ContainingType = containingType;
+      return result1;
     }
 
     private NestedTypeDefinition CreateClosureClass() {
@@ -204,7 +229,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       result.Visibility = TypeMemberVisibility.Private;
 
       BoundField/*?*/ capturedThis;
-      if (this.closureLocals.Count == 0 && this.FieldForCapturedLocalOrParameter.TryGetValue(this.method.ContainingTypeDefinition, out capturedThis)) {
+      var thisTypeReference = TypeDefinition.SelfInstance(this.method.ContainingTypeDefinition, this.host.InternFactory);
+      if (this.closureLocals.Count == 0 && this.FieldForCapturedLocalOrParameter.TryGetValue(thisTypeReference.InternedKey, out capturedThis)) {
         result.Fields.Add(capturedThis.Field);
         capturedThis.Field.ContainingTypeDefinition = result;
         capturedThis.Field.Type = this.Visit(capturedThis.Field.Type);
@@ -213,6 +239,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     private void AddToClosureIfCaptured(ref NestedTypeDefinition closureClass, ref ILocalDefinition closureTemp, ref IStatement captureOuterClosure, object localOrParameter) {
+      //^ requires localOrParameter is ILocalDefinition || localOrParameter is IParameterDefinition;
       BoundField/*?*/ bf = null;
       if (this.FieldForCapturedLocalOrParameter.TryGetValue(localOrParameter, out bf)) {
         if (closureClass == null) {
@@ -231,10 +258,61 @@ namespace Microsoft.Cci.MutableCodeModel {
     private IStatement CaptureThisArgument(NestedTypeDefinition closureClass) {
       var currentClosureLocal = this.closureLocals[0];
       var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
-      var thisArgumentField = closureClass.Fields[0];
+      var thisArgumentField = this.GetSelfReference(closureClass.Fields[0]);
       var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = thisArgumentField, Type = thisArgumentField.Type };
       var assignment = new Assignment() { Target = target, Source = new ThisReference(), Type = thisArgumentField.Type };
       return new ExpressionStatement() { Expression = assignment };
+    }
+
+    /// <summary>
+    /// Create a field reference for a field definition of a private helper type. 
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
+    /// <returns></returns>
+    private IFieldReference GetSelfReference(IFieldDefinition fieldDefinition) {
+      var containingType = this.GetSelfReferenceForPrivateHelperTypes(fieldDefinition.ContainingTypeDefinition);
+      if (containingType is IGenericTypeInstanceReference || containingType is ISpecializedNestedTypeReference) {
+        var sFieldReference = new SpecializedFieldReference();
+        ((FieldReference)sFieldReference).Copy(fieldDefinition, this.host.InternFactory);
+        sFieldReference.ContainingType = containingType;
+        sFieldReference.UnspecializedVersion = fieldDefinition;
+        return sFieldReference;
+      }
+      var result = new FieldReference();
+      result.Copy(fieldDefinition, this.host.InternFactory);
+      result.ContainingType = containingType;
+      return result;
+    }
+
+    /// <summary>
+    /// Given a private helper type, that is, a closure type generated for compiling anonymous delegate or an iterator
+    /// method, generate a type reference that can resolve itself without looking itself up from its containing type's
+    /// members. 
+    /// </summary>
+    private ITypeReference GetSelfReferenceForPrivateHelperTypes(ITypeDefinition privateHelperType) {
+      //^ requires privateHelperType is INestedTypeDefinition;
+      var nested = privateHelperType as INestedTypeDefinition;
+      if (nested == null) {
+        Debug.Assert(false);
+      } 
+      var containingType = TypeDefinition.SelfInstance(nested.ContainingTypeDefinition, this.host.InternFactory);
+      SpecializedNestedTypeDefinition specializedContainingType = containingType as SpecializedNestedTypeDefinition;
+      GenericTypeInstance genericTypeInstance = containingType as GenericTypeInstance;
+      if (specializedContainingType != null || genericTypeInstance != null) {
+        var resolved = Dummy.SpecializedNestedTypeDefinition;
+        if (specializedContainingType != null)
+          resolved = (ISpecializedNestedTypeDefinition)specializedContainingType.SpecializeMember(nested, this.host.InternFactory);
+        else
+          resolved = (ISpecializedNestedTypeDefinition)genericTypeInstance.SpecializeMember(nested, this.host.InternFactory);
+        var specailizedResult = new SpecializedNestedTypeReferencePrivateHelper();
+        specailizedResult.Copy(resolved, this.host.InternFactory);
+        if (specailizedResult.ResolvedType == null) {
+        }
+        return specailizedResult;
+      }
+      var result = new NestedTypeReferencePrivateHelper();
+      result.Copy(nested, this.host.InternFactory);
+      return result;
     }
 
     private IStatement CaptureOuterClosure(NestedTypeDefinition closureClass) {
@@ -258,7 +336,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     private IStatement InitializeBoundFieldFromParameter(BoundField boundField, IParameterDefinition parameter) {
       var currentClosureLocal = this.closureLocals[0];
       var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
-      var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = boundField.Field, Type = parameter.Type };
+      var fieldDef = boundField.Field;
+      var fieldRef = this.GetSelfReference(fieldDef);
+      var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = fieldRef, Type = parameter.Type };
       var boundParameter = new BoundExpression() { Definition = parameter, Type = parameter.Type };
       var assignment = new Assignment() { Target = target, Source = boundParameter, Type = parameter.Type };
       return new ExpressionStatement() { Expression = assignment };
@@ -302,8 +382,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         IStatement/*?*/ captureOuterClosure = null;
         if (this.closureLocals.Count == 0) {
           foreach (object capturedLocalOrParameter in this.FieldForCapturedLocalOrParameter.Keys) {
-            ITypeDefinition/*?*/ typeDef = capturedLocalOrParameter as ITypeDefinition;
-            if (typeDef != null) {
+            if (capturedLocalOrParameter is uint) {
+              // if "this" is captured, we store its type's interned key in the table. 
               captureThis = true;
               if (closureClass == null) {
                 closureClass = this.CreateClosureClass();
@@ -522,7 +602,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       method.Type = anonymousDelegate.ReturnType;
       method.Visibility = TypeMemberVisibility.Public;
       method.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, method);
-
+      if (this.method.IsGeneric) {
+        method.GenericParameters = new List<IGenericMethodParameter>();
+        foreach (var gmpar in this.method.GenericParameters) {
+          var newpar = new GenericMethodParameter();
+          newpar.Copy(gmpar, this.host.InternFactory);
+          newpar.DefiningMethod = method;
+          method.GenericParameters.Add(gmpar);
+        }
+      }
       var boundCurrentClosureLocal = new BoundExpression();
       if (this.closureLocals.Count == 0)
         boundCurrentClosureLocal.Definition = this.CreateClosureTemp(this.CurrentClosureClass);
@@ -532,7 +620,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       var createDelegateInstance = new CreateDelegateInstance();
       if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) != 0)
         createDelegateInstance.Instance = boundCurrentClosureLocal;
-      createDelegateInstance.MethodToCallViaDelegate = method;
+      createDelegateInstance.MethodToCallViaDelegate = this.GetSelfReference(method);
       createDelegateInstance.Type = this.Visit(anonymousDelegate.Type);
 
       return createDelegateInstance;
@@ -569,7 +657,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       BoundField/*?*/ boundField;
       if (this.FieldForCapturedLocalOrParameter.TryGetValue(targetExpression.Definition, out boundField)) {
         targetExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        targetExpression.Definition = boundField.Field;
+        targetExpression.Definition = this.GetSelfReference(boundField.Field);
         targetExpression.Type = this.Visit(targetExpression.Type);
         return targetExpression;
       }
@@ -585,7 +673,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       BoundField/*?*/ boundField;
       if (this.FieldForCapturedLocalOrParameter.TryGetValue(addressableExpression.Definition, out boundField)) {
         addressableExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        addressableExpression.Definition = boundField.Field;
+        addressableExpression.Definition = this.GetSelfReference(boundField.Field);
         addressableExpression.Type = this.Visit(addressableExpression.Type);
         return addressableExpression;
       }
@@ -604,7 +692,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.capturedParameters.Add(boundParameter, true);
         } else {
           boundExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-          boundExpression.Definition = boundField.Field;
+          boundExpression.Definition = this.GetSelfReference(boundField.Field);
           boundExpression.Type = this.Visit(boundExpression.Type);
           return boundExpression;
         }
@@ -618,7 +706,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.host, this.sourceLocationProvider);
       block = bodyFixer.Visit(block);
       var result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
-      result.Block = block;
+      result.Block = this.Visit(block, method, null);
       result.IsNormalized = true;
       result.LocalsAreZeroed = true;
       result.MethodDefinition = method;
@@ -820,8 +908,16 @@ namespace Microsoft.Cci.MutableCodeModel {
         ITypeReference localOrParameterType = GetLocalOrParameterType(capturedLocalOrParameter);
         if (capturedLocalOrParameter is ILocalDefinition) continue;
         if (capturedLocalOrParameter is IThisReference) {
+          var thisR = new ThisReference();
+          IExpression thisValue = thisR;
+          if (!this.method.ContainingTypeDefinition.IsClass) {
+            thisValue = new AddressDereference() {
+              Address = thisR,
+              Type = this.method.ContainingType
+            };
+          }
           assignment = new Assignment {
-            Source = new ThisReference(),
+            Source = thisValue,
             Type = this.method.ContainingType,
             Target = new TargetExpression() {
               Definition = GetFieldReference(iteratorClosure, boundField.Field),
@@ -1731,7 +1827,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns>An enumeration of ITypeReference of length 1. </returns>
     private IEnumerable<ITypeReference> GetClosureEnumeratorTypeArguments(ITypeReference /*!*/ methodTypeReference) {
       IGenericTypeInstanceReference genericTypeInstance = methodTypeReference as IGenericTypeInstanceReference;
-      if (genericTypeInstance != null && TypeHelper.TypesAreEquivalent(genericTypeInstance.GenericType, methodTypeReference.PlatformType.SystemCollectionsGenericIEnumerable)) {
+      if (genericTypeInstance != null && 
+        (TypeHelper.TypesAreEquivalent(genericTypeInstance.GenericType, methodTypeReference.PlatformType.SystemCollectionsGenericIEnumerable)
+        || TypeHelper.TypesAreEquivalent(genericTypeInstance.GenericType, methodTypeReference.PlatformType.SystemCollectionsGenericIEnumerator))) {
         return genericTypeInstance.GenericArguments;
       }
       var result = new List<ITypeReference>();

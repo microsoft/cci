@@ -143,7 +143,11 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (pop.Type != Dummy.TypeReference)
             local.Type = pop.Type;
           this.body.numberOfReferences[local]++;
-          IExpression result = new BoundExpression() { Definition = local, Type = local.Type };
+          IExpression result;
+          if (local.turnIntoPopValueExpression)
+            result = new PopValue() { Type = local.Type };
+          else
+            result = new BoundExpression() { Definition = local, Type = local.Type };
           if (pop is PopAsUnsigned)
             result = new Conversion() { ValueToConvert = result, TypeAfterConversion = TypeHelper.UnsignedEquivalent(local.Type) };
           return result;
@@ -157,8 +161,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.operandStack.Count > 0) {
           var local = this.operandStack.Peek();
           this.body.numberOfReferences[local]++;
-          return new BoundExpression() { Definition = local, Type = local.Type };
+          IExpression result;
+          if (local.turnIntoPopValueExpression)
+            result = new DupValue() { Type = local.Type };
+          else
+            result = new BoundExpression() { Definition = local, Type = local.Type };
           //TODO: what about unsigned dup?
+          return result;
         }
         return CodeDummy.Expression;
       }
@@ -187,15 +196,19 @@ namespace Microsoft.Cci.ILToCodeModel {
       Push/*?*/ push = statement as Push;
       if (push != null) {
         push.ValueToPush = this.Visit(push.ValueToPush);
-        LocalDefinition temp = new TempVariable() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.body.localVariables.Count) };
+        var temp = new TempVariable() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.body.localVariables.Count) };
         temp.Type = push.ValueToPush.Type;
         this.operandStack.Push(temp);
+        this.body.numberOfReferences.Add(temp, 0);
+        if (push.ValueToPush.Type is IManagedPointerTypeReference) {
+          temp.turnIntoPopValueExpression = true;
+          return statement;
+        }
         this.body.localVariables.Add(temp);
         if (this.block.LocalVariables == null) this.block.LocalVariables = new List<ILocalDefinition>();
         this.block.LocalVariables.Add(temp);
-        this.body.numberOfReferences.Add(temp, 0);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() {
+        return new ExpressionStatement() { 
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -232,9 +245,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         IStatement newStatement;
-
+        
         newStatement = this.Visit(statement);
-
+        
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else
@@ -271,7 +284,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal class StackOfLocals {
     private SourceMethodBody body;
-    private LocalDefinition[]/*?*/ elements;
+    private TempVariable[]/*?*/ elements;
     private int top = -1;
 
     internal StackOfLocals(SourceMethodBody body) {
@@ -280,7 +293,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private StackOfLocals(StackOfLocals template) {
       if (template.elements != null)
-        this.elements = (LocalDefinition[])template.elements.Clone();
+        this.elements = (TempVariable[])template.elements.Clone();
       this.top = template.top;
       this.body = template.body;
     }
@@ -299,17 +312,17 @@ namespace Microsoft.Cci.ILToCodeModel {
       get { return this.top+1; }
     }
 
-    internal LocalDefinition Peek() {
+    internal TempVariable Peek() {
       return this.elements[this.top];
     }
 
-    internal LocalDefinition Pop() {
+    internal TempVariable Pop() {
       return this.elements[this.top--];
     }
 
-    internal void Push(LocalDefinition local) {
+    internal void Push(TempVariable local) {
       if (this.elements == null)
-        this.elements = new LocalDefinition[8];
+        this.elements = new TempVariable[8];
       else if (this.top >= this.elements.Length-1)
         Array.Resize(ref this.elements, this.elements.Length*2);
       this.elements[++this.top] = local;
@@ -317,8 +330,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     internal void TransferTo(StackOfLocals targetStack, List<IStatement> list) {
       for (int i = 0; i <= this.top && i <= targetStack.top; i++) {
-        LocalDefinition sourceLocal = this.elements[i];
-        LocalDefinition targetLocal = targetStack.elements[i];
+        var sourceLocal = this.elements[i];
+        var targetLocal = targetStack.elements[i];
         if (sourceLocal == targetLocal) continue;
         this.body.numberOfReferences[sourceLocal]++;
         this.body.numberOfAssignments[targetLocal]++;

@@ -14,6 +14,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -276,7 +277,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       bool atLeastOneContract = false;
       IMethodContract/*?*/ mc = ContractHelper.GetMethodContractFor(host, methodDefinition);
       if (mc != null) {
-        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, mc);
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, mc);
         atLeastOneContract = true;
       }
       #region Overrides of base class methods
@@ -287,7 +288,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (overriddenContract != null) {
             SubstituteParameters sps = new SubstituteParameters(host, methodDefinition, overriddenMethod);
             MethodContract newContract = sps.Visit(overriddenContract) as MethodContract;
-            Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+            Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
             atLeastOneContract = true;
           }
           overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(overriddenMethod) as IMethodDefinition;
@@ -300,7 +301,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (ifaceContract == null) continue;
         SubstituteParameters sps = new SubstituteParameters(host, methodDefinition, ifaceMethod);
         MethodContract newContract = sps.Visit(ifaceContract) as MethodContract;
-        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
         atLeastOneContract = true;
       }
       #endregion Implicit interface implementations
@@ -312,7 +313,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (ifaceContract == null) continue;
         SubstituteParameters sps = new SubstituteParameters(host, methodDefinition, ifaceMethod);
         MethodContract newContract = sps.Visit(ifaceContract) as MethodContract;
-        Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
         atLeastOneContract = true;
       }
       #endregion Explicit interface implementations and explicit method overrides
@@ -349,6 +350,9 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// An IContractAwareHost which automatically loads reference assemblies and attaches
   /// a (code-contract aware, aggregating) lazy contract provider to each unit it loads.
+  /// This host supports re-loading units that have been updated: it reloads any units
+  /// that had been dependent on the updated unit. Clients must re-resolve references
+  /// in order to see the updated contents of the units.
   /// </summary>
   public class CodeContractAwareHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
@@ -356,6 +360,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal Dictionary<UnitIdentity, IContractExtractor> unit2ContractExtractor = new Dictionary<UnitIdentity, IContractExtractor>();
     List<IContractProviderCallback> callbacks = new List<IContractProviderCallback>();
     private List<IMethodDefinition> methodsBeingExtracted = new List<IMethodDefinition>();
+
+    // These next two tables must be kept in sync.
+    private Dictionary<string, DateTime> location2LastModificationTime = new Dictionary<string, DateTime>();
+    private Dictionary<string, IUnit> location2Unit = new Dictionary<string, IUnit>();
+
+    // A table that maps each unit, U, to all of the units that have a reference to U.
+    private Dictionary<IUnitReference, List<IUnitReference>> unit2DependentUnits = new Dictionary<IUnitReference, List<IUnitReference>>();
+    // A table that maps each unit, U, to all of the reference assemblies for U.
+    private Dictionary<IUnitReference, List<IUnitReference>> unit2ReferenceAssemblies = new Dictionary<IUnitReference, List<IUnitReference>>();
 
     #region Constructors
     /// <summary>
@@ -473,10 +486,73 @@ namespace Microsoft.Cci.ILToCodeModel {
           return Dummy.Unit;
         }
       }
+
+      var timeOfLastModification = UnloadPreviouslyLoadedUnitIfLocationIsNewer(location);
       IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(Path.GetFullPath(location), this));
+
       this.RegisterAsLatest(result);
+
+      foreach (var d in result.UnitReferences) {
+        if (!this.unit2DependentUnits.ContainsKey(d)) {
+          this.unit2DependentUnits[d] = new List<IUnitReference>();
+        }
+        this.unit2DependentUnits[d].Add(result);
+      }
+
       this.AttachContractExtractorAndLoadReferenceAssembliesFor(result);
+      this.location2LastModificationTime[location] = timeOfLastModification;
+      this.location2Unit[location] = result;
       return result;
+    }
+
+    /// <summary>
+    /// Checks the location against all previously loaded locations. If a unit
+    /// had been loaded from it before and if the last write time is newer, then
+    /// the previously loaded unit, all units dependent on it, and all reference
+    /// assemblies for it are deleted from the cache and a new PeReader is created
+    /// for reading in all future units.
+    /// </summary>
+    /// <returns>
+    /// the last write time of the file found at location.
+    /// </returns>
+    private DateTime UnloadPreviouslyLoadedUnitIfLocationIsNewer(string location) {
+      var timeOfLastModification = File.GetLastWriteTime(location);
+      DateTime previousTime;
+      if (this.location2LastModificationTime.TryGetValue(location, out previousTime)) {
+        if (previousTime.CompareTo(timeOfLastModification) < 0) {
+          // file has been modified. Need to throw away PeReader because it caches based on identity and
+          // won't actually read in and construct an object model from the file. Even though at this
+          // point we don't even know what assembly is at this location. Maybe it isn't even an updated
+          // version, but instead some completely different assembly?
+          this.peReader = new PeReader(this);
+
+          var unit = this.location2Unit[location];
+
+          // Need to dump all units that depended on this one because their reference is now stale.
+          List<IUnitReference> referencesToDependentUnits;
+          if (this.unit2DependentUnits.TryGetValue(unit, out referencesToDependentUnits)) {
+            foreach (var d in referencesToDependentUnits) {
+              this.RemoveUnit(d.UnitIdentity);
+            }
+          }
+
+          // Need to remove unit from the list of dependent units for each unit
+          // it *was* dependent on in case the newer version has a changed list of
+          // dependencies.
+          foreach (var d in unit.UnitReferences) {
+            this.unit2DependentUnits[d].Remove(unit);
+          }
+
+          // Dump all reference assemblies for this unit.
+          foreach (var d in this.unit2ReferenceAssemblies[unit]) {
+            this.RemoveUnit(d.UnitIdentity);
+          }
+
+          // Dump stale version from cache
+          this.RemoveUnit(unit.UnitIdentity);
+        }
+      }
+      return timeOfLastModification;
     }
 
     /// <summary>
@@ -490,7 +566,9 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       // Because of unification, the "alreadyLoadedUnit" might have actually already been loaded previously
       // and gone through here (and so already has a contract provider attached to it).
-      if (this.unit2ContractExtractor.ContainsKey(alreadyLoadedUnit.UnitIdentity)) return;
+      if (this.unit2ContractExtractor.ContainsKey(alreadyLoadedUnit.UnitIdentity))
+        this.unit2ContractExtractor.Remove(alreadyLoadedUnit.UnitIdentity);
+        //return;
 
       var contractMethods = new ContractMethods(this);
       using (var lazyContractProviderForLoadedUnit = new LazyContractExtractor(this, alreadyLoadedUnit, contractMethods, this.AllowExtractorsToUsePdbs)) {
@@ -526,6 +604,12 @@ namespace Microsoft.Cci.ILToCodeModel {
                   var referenceAssemblyContractProvider = new CodeContractsContractExtractor(hostForReferenceAssembly,
                     new LazyContractExtractor(hostForReferenceAssembly, referenceAssembly, contractMethods, this.AllowExtractorsToUsePdbs));
                   oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
+                  if (!this.unit2ReferenceAssemblies.ContainsKey(alreadyLoadedUnit)) {
+                    this.unit2ReferenceAssemblies[alreadyLoadedUnit] = new List<IUnitReference>();
+                  }
+                  // Reference assemblies don't have references to the real assembly but they are "dependent"
+                  // on them in that they should be dumped and reloaded if the real assembly changes.
+                  this.unit2ReferenceAssemblies[alreadyLoadedUnit].Add(referenceAssembly);
                 }
               }
               #endregion Load reference assembly and attach a contract provider to it

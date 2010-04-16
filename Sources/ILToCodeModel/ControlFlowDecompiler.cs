@@ -69,7 +69,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void DecompileTryBody(BasicBlock b, BasicBlock firstHandler, TryCatchFinallyStatement tryStatement) {
-      tryStatement.TryBody = this.GetBasicBlockUpto(b, firstHandler.StartOffset);
+      tryStatement.TryBody = GetBasicBlockUpto(b, firstHandler.StartOffset);
       BasicBlock tryBody = tryStatement.TryBody as BasicBlock;
       int startPoint = 0;
       if (tryBody != null && tryBody.Statements.Count > 0) {
@@ -83,7 +83,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       b.Statements.Insert(startPoint, tryStatement);
     }
 
-    private BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
+    private static BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
       BasicBlock result = new BasicBlock(b.StartOffset);
       result.EndOffset = endOffset;
       int n = b.Statements.Count;
@@ -96,7 +96,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         b.Statements.RemoveRange(0, n-1);
         BasicBlock bb = (BasicBlock)b.Statements[0];
         if (bb.StartOffset < endOffset)
-          result.Statements.Add(this.GetBasicBlockUpto(bb, endOffset));
+          result.Statements.Add(GetBasicBlockUpto(bb, endOffset));
       }
       return result;
     }
@@ -112,6 +112,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         catchClause.ExceptionType = handlerBlock.ExceptionInformation.ExceptionType;
         if (handlerBlock.ExceptionInformation.HandlerKind == HandlerKind.Catch) {
           catchClause.ExceptionContainer = ExtractExceptionContainer(handlerBlock);
+        } else if (handlerBlock.ExceptionInformation.HandlerKind == HandlerKind.Filter) {
+          catchClause.FilterCondition = ExtractFilterCondition(handlerBlock);
         }
         tryStatement.CatchClauses.Add(catchClause);
       }
@@ -124,6 +126,30 @@ namespace Microsoft.Cci.ILToCodeModel {
       int i = handlerBlock.Statements.Count-1;
       if (i >= 0 && handlerBlock.Statements[i] is EndFinally)
         handlerBlock.Statements.RemoveAt(i);
+    }
+
+    private static IExpression ExtractFilterCondition(BasicBlock handlerBlock) {
+      int endFilterIndex = -1;
+      IExpression result = CodeDummy.Expression;
+      for (int i = 0; i < handlerBlock.Statements.Count; i++) {
+        var endFilter = handlerBlock.Statements[i] as EndFilter;
+        if (endFilter != null) {
+          result = endFilter.FilterResult;
+          endFilterIndex = i;
+          break;
+        }
+      }
+      if (endFilterIndex < 0) return result;
+      if (endFilterIndex == 0) {
+        handlerBlock.Statements.RemoveAt(0);
+        return result;
+      }
+      var blockExpression = new BlockExpression();
+      blockExpression.BlockStatement = ExtractAsBasicBlock(handlerBlock, 0, endFilterIndex);
+      blockExpression.Expression = result;
+      blockExpression.Type = result.Type;
+      handlerBlock.Statements.RemoveRange(0, endFilterIndex+1);
+      return blockExpression;
     }
 
     private static ILocalDefinition ExtractExceptionContainer(BasicBlock bb) {
@@ -141,7 +167,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!(assign.Target.Definition is ILocalDefinition)) return result;
       result = (ILocalDefinition)assign.Target.Definition;
       bb.Statements.RemoveAt(0);
-      if (bb.LocalVariables != null && bb.LocalVariables.Remove(result))
+      if (bb.LocalVariables != null && bb.LocalVariables.Remove(result)) 
         return result;
       if (bb.Statements.Count > 0) {
         BasicBlock nbb = bb.Statements[0] as BasicBlock;
@@ -280,7 +306,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (j < n-1 && currentCaseBody == switchInstruction.switchCases[j+1]) continue;
         ExtractCaseBody(currentCaseBody, currentCase.Body);
       }
-      SwitchCase defaultCase = new SwitchCase() { }; // Default case is represented by a dummy Expression.
+      SwitchCase defaultCase = new SwitchCase() {}; // Default case is represented by a dummy Expression.
       defaultCase.Body.Add(statements[i + 1]);
       statements.RemoveAt(i + 1);
       result.Cases.Add(defaultCase);

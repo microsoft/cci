@@ -937,6 +937,44 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
+  /// Pushes a value onto an implicit operand stack.
+  /// </summary>
+  public sealed class PushStatement : Statement, IPushStatement {
+
+    /// <summary>
+    /// Allocates a statement that pushes a value onto an implicit operand stack.
+    /// </summary>
+    public PushStatement() {
+      this.valueToPush = CodeDummy.Expression;
+    }
+
+    /// <summary>
+    /// Allocates a shallow copy of a statement that pushes a value onto an implicit operand stack.
+    /// </summary>
+    public PushStatement(IPushStatement pushStatement)
+      : base(pushStatement) {
+      this.valueToPush = pushStatement.ValueToPush;
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit((IPushStatement)this).
+    /// </summary>
+    public override void Dispatch(ICodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// A value that is to be pushed onto the implicit operand stack.
+    /// </summary>
+    public IExpression ValueToPush {
+      get { return this.valueToPush; }
+      set { this.valueToPush = value; }
+    }
+    IExpression valueToPush;
+
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public sealed class ResourceUseStatement : Statement, IResourceUseStatement {

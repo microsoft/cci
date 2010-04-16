@@ -11,7 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 //^ using Microsoft.Contracts;
 

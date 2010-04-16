@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -264,6 +264,36 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// True if the given expression is a compile time constant with a value that is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// </summary>
+    //^ [Pure]
+    public static bool IsIntegralOne(IExpression expression) {
+      ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
+      if (constExpression == null) return false;
+      return ExpressionHelper.IsIntegralOne(constExpression);
+    }
+
+    /// <summary>
+    /// True if the value is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// </summary>
+    //^ [Pure]
+    public static bool IsIntegralOne(ICompileTimeConstant constExpression) {
+      IConvertible/*?*/ ic = constExpression.Value as IConvertible;
+      if (ic == null) return false;
+      switch (ic.GetTypeCode()) {
+        case System.TypeCode.SByte: return ic.ToSByte(null) == 1;
+        case System.TypeCode.Int16: return ic.ToInt16(null) == 1;
+        case System.TypeCode.Int32: return ic.ToInt32(null) == 1;
+        case System.TypeCode.Int64: return ic.ToInt64(null) == 1;
+        case System.TypeCode.Byte: return ic.ToByte(null) == 1;
+        case System.TypeCode.UInt16: return ic.ToUInt16(null) == 1;
+        case System.TypeCode.UInt32: return ic.ToUInt32(null) == 1;
+        case System.TypeCode.UInt64: return ic.ToUInt64(null) == 1;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// True if the given expression is a compile time constant with a value that is a boxed zero of type byte, int, long, sbyte, short, uint, ulong or ushort.
     /// </summary>
     //^ [Pure]
@@ -300,6 +330,19 @@ namespace Microsoft.Cci {
     public static bool IsNullLiteral(IExpression expression) {
       ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
       return constExpression != null && constExpression.Value == null;
+    }
+
+    /// <summary>
+    /// True if the given expression is a compile time constant with a value that is equal to IntPtr.Zero or UIntPtr.Zero.
+    /// </summary>
+    public static bool IsZeroIntPtr(IExpression expression) {
+      ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
+      if (constExpression == null) return false;
+      var value = constExpression.Value;
+      var tc = constExpression.Type.TypeCode;
+      if (tc == PrimitiveTypeCode.IntPtr) return ((IntPtr)value) == IntPtr.Zero;
+      else if (tc == PrimitiveTypeCode.UIntPtr) return ((UIntPtr)value) == UIntPtr.Zero;
+      else return false;
     }
   }
 }

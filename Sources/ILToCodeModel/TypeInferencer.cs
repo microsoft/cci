@@ -250,9 +250,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         type = local.Type;
       else {
         IParameterDefinition/*?*/ parameter = addressableExpression.Definition as IParameterDefinition;
-        if (parameter != null)
+        if (parameter != null) {
           type = parameter.Type;
-        else {
+          if (parameter.IsByReference)
+            type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+        } else {
           IFieldReference/*?*/ field = addressableExpression.Definition as IFieldReference;
           if (field != null)
             type = field.Type;
@@ -367,14 +369,16 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IConversion conversion) {
       base.Visit(conversion);
-      Conversion conv = (Conversion)conversion;
-      if (conv.TypeAfterConversion.TypeCode == PrimitiveTypeCode.IntPtr || conv.Type.TypeCode == PrimitiveTypeCode.UIntPtr) {
-        if (conv.ValueToConvert.Type is IPointerTypeReference || conv.ValueToConvert.Type is IManagedPointerTypeReference) {
-          conv.Type = conv.ValueToConvert.Type;
-          return;
+      Conversion/*?*/ conv = conversion as Conversion;
+      if (conv != null) {
+        if (conv.TypeAfterConversion.TypeCode == PrimitiveTypeCode.IntPtr || conv.Type.TypeCode == PrimitiveTypeCode.UIntPtr) {
+          if (conv.ValueToConvert.Type is IPointerTypeReference || conv.ValueToConvert.Type is IManagedPointerTypeReference) {
+            conv.Type = conv.ValueToConvert.Type;
+            return;
+          }
         }
+        conv.Type = conversion.TypeAfterConversion;
       }
-      conv.Type = conversion.TypeAfterConversion;
     }
 
     public override void Visit(ICompileTimeConstant constant) {
@@ -494,7 +498,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(ILeftShift leftShift) {
       base.Visit(leftShift);
-      ((LeftShift)leftShift).Type = this.GetBinaryNumericOperationType(leftShift);
+      ((LeftShift)leftShift).Type = leftShift.LeftOperand.Type;
     }
 
     public override void Visit(ILessThan lessThan) {
@@ -600,7 +604,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IRightShift rightShift) {
       base.Visit(rightShift);
-      ((RightShift)rightShift).Type = this.GetBinaryNumericOperationType(rightShift);
+      ((RightShift)rightShift).Type = rightShift.LeftOperand.Type;
     }
 
     public override void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
@@ -656,7 +660,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

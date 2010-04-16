@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.MutableContracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -615,7 +616,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         bool found = false;
         if (primaryContract != null) {
           found = true;
-          Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(result, primaryContract);
+          Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(result, primaryContract);
         }
         if (this.oobExtractors != null) {
           foreach (var oobProvider in this.oobExtractors) {
@@ -634,7 +635,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
             MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
             oobContract = oobToPrimaryMapper.Visit(oobContract);
-            Microsoft.Cci.Contracts.ContractHelper.AddMethodContract(result, oobContract);
+            Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(result, oobContract);
             found = true;
 
           }

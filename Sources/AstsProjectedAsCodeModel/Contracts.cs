@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 using System.Diagnostics;
 
 //^ using Microsoft.Contracts;

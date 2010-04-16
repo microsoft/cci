@@ -164,6 +164,12 @@ namespace CSharpSourceEmitter {
       base.Visit(lockStatement);
     }
 
+    public override void Visit(IPushStatement pushStatement) {
+      this.sourceEmitterOutput.Write("push ", true);
+      this.Visit(pushStatement.ValueToPush);
+      this.sourceEmitterOutput.WriteLine(";");
+    }
+
     public override void Visit(IResourceUseStatement resourceUseStatement) {
       base.Visit(resourceUseStatement);
     }
@@ -234,7 +240,21 @@ namespace CSharpSourceEmitter {
           this.PrintLocalName(clause.ExceptionContainer);
           this.sourceEmitterOutput.Write(")");
         }
+        if (clause.FilterCondition != null) {
+          this.sourceEmitterOutput.WriteLine("{");
+          this.sourceEmitterOutput.IncreaseIndent();
+          this.sourceEmitterOutput.Write("if (", true);
+          this.Visit(clause.FilterCondition);
+          this.sourceEmitterOutput.WriteLine(" == 1)");
+          this.Visit(clause.Body);
+          this.sourceEmitterOutput.DecreaseIndent();
+          this.sourceEmitterOutput.WriteLine("}", true);
+        }
         this.Visit(clause.Body);
+      }
+      if (tryCatchFilterFinallyStatement.FaultBody != null) {
+        this.sourceEmitterOutput.Write("fault", true);
+        this.Visit(tryCatchFilterFinallyStatement.FaultBody);
       }
       if (tryCatchFilterFinallyStatement.FinallyBody != null) {
         this.sourceEmitterOutput.Write("finally", true);

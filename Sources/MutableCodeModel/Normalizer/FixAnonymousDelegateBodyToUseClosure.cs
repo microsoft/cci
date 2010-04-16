@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -46,15 +46,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.outerClosures = outerClosures;
     }
 
+    /// <summary>
+    /// Given a closure type that we created, return an expression that is of the form this[.f]*. The [.f] repeats 
+    /// more than zero times if the closure is embedded. 
+    /// </summary>
+    /// <param name="closure">The closure class</param>
+    /// <returns></returns>
     private IExpression ClosureInstanceFor(ITypeDefinition closure) {
       ThisReference thisRef = new ThisReference();
-      thisRef.Type = closure;
-      if (closure == this.closure) return thisRef;
+      thisRef.Type = this.GetSelfReferenceForPrivateHelperTypes(closure);
+      if (closure.InternedKey == this.closure.InternedKey) {
+        return thisRef;
+      }
       var boundExpression = new BoundExpression();
       boundExpression.Instance = thisRef;
       foreach (var closureField in this.outerClosures) {
         boundExpression.Definition = closureField;
-        if (closureField.Type == closure) return boundExpression;
+        if (closureField.Type.InternedKey == closure.InternedKey) {
+          boundExpression.Type = this.GetSelfReferenceForPrivateHelperTypes(closure);
+          return boundExpression;
+        }
         var be = new BoundExpression();
         be.Instance = boundExpression;
         boundExpression = be;
@@ -66,8 +77,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(addressableExpression.Definition, out boundField)) {
-        addressableExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        addressableExpression.Definition = boundField.Field;
+        var selfReference = boundField.Field.ContainingTypeDefinition;
+        addressableExpression.Instance = this.ClosureInstanceFor(selfReference);
+        addressableExpression.Definition = this.GetSelfReference(boundField.Field);
         return addressableExpression;
       }
       return base.Visit(addressableExpression);
@@ -76,8 +88,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override IExpression Visit(BoundExpression boundExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
-        boundExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        boundExpression.Definition = boundField.Field;
+        var selfReference = boundField.Field.ContainingTypeDefinition;
+        boundExpression.Instance = this.ClosureInstanceFor(selfReference);
+        boundExpression.Definition = this.GetSelfReference(boundField.Field);
         return boundExpression;
       }
       return base.Visit(boundExpression);
@@ -86,8 +99,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override ITargetExpression Visit(TargetExpression targetExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(targetExpression.Definition, out boundField)) {
-        targetExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        targetExpression.Definition = boundField.Field;
+        var selfReference = boundField.Field.ContainingTypeDefinition;
+        targetExpression.Instance = this.ClosureInstanceFor(selfReference);
+        targetExpression.Definition = this.GetSelfReference(boundField.Field);
         return targetExpression;
       }
       return base.Visit(targetExpression);
@@ -97,15 +111,75 @@ namespace Microsoft.Cci.MutableCodeModel {
       TypeDefinition closure = this.closure;
       var boundExpression = new BoundExpression();
       boundExpression.Instance = thisReference;
+      // Code Review: thisReference.Type is not the closure type yet... Set it? 
       foreach (var closureField in this.outerClosures) {
-        boundExpression.Definition = closureField;
+        boundExpression.Definition = this.GetSelfReference(closureField);
         closure = (TypeDefinition)closureField.Type;
         var be = new BoundExpression();
         be.Instance = boundExpression;
         boundExpression = be;
       }
-      boundExpression.Definition = closure.Fields[0];
+      boundExpression.Definition = this.GetSelfReference(closure.Fields[0]);
       return boundExpression;
+    }
+
+   /// <summary>
+   /// Get a reference to private helper type of which resolution is possible. 
+   /// </summary>
+   /// <param name="privateHelperType"></param>
+   /// <returns></returns>
+    private ITypeReference GetSelfReferenceForPrivateHelperTypes(ITypeDefinition privateHelperType) {
+      var nested = privateHelperType as INestedTypeDefinition;
+      if (nested == null) return TypeDefinition.SelfInstance(privateHelperType, this.host.InternFactory);
+      var containingType = TypeDefinition.SelfInstance(nested.ContainingTypeDefinition, this.host.InternFactory);
+      SpecializedNestedTypeDefinition specializedContainingType = containingType as SpecializedNestedTypeDefinition;
+      GenericTypeInstance genericTypeInstance = containingType as GenericTypeInstance;
+      if (specializedContainingType != null || genericTypeInstance != null) {
+        var resolved = Dummy.SpecializedNestedTypeDefinition;
+        if (specializedContainingType != null)
+          resolved = (ISpecializedNestedTypeDefinition)specializedContainingType.SpecializeMember(nested, this.host.InternFactory);
+        else
+          resolved = (ISpecializedNestedTypeDefinition)genericTypeInstance.SpecializeMember(nested, this.host.InternFactory);
+        var specailizedResult = new SpecializedNestedTypeReferencePrivateHelper();
+        specailizedResult.Copy(resolved, this.host.InternFactory);
+        if (specailizedResult.ResolvedType == null) {
+        }
+        return specailizedResult;
+      } else {
+        SpecializedNestedTypeReference specializedContainingTypeReference = containingType as SpecializedNestedTypeReference;
+        if (specializedContainingTypeReference != null) {
+          // assert^ specializedContainingTypeReference.ResolvedType != Dummy.Type;
+          var resolved = specializedContainingTypeReference.ResolvedType;
+          if (resolved != Dummy.Type) {
+            var specailizedResult = new SpecializedNestedTypeReferencePrivateHelper();
+            specailizedResult.Copy(resolved, this.host.InternFactory);
+            return specailizedResult;
+          }
+        }
+      }
+      var result = new NestedTypeReferencePrivateHelper();
+      result.Copy(nested, this.host.InternFactory);
+      result.ContainingType = containingType;
+      return result;
+    }
+    /// <summary>
+    /// Get a reference to a field of a private helper type of which resolution is possible. 
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
+    /// <returns></returns>
+    private IFieldReference GetSelfReference(IFieldDefinition fieldDefinition) {
+      var containingType = this.GetSelfReferenceForPrivateHelperTypes(fieldDefinition.ContainingTypeDefinition);
+      if (containingType is IGenericTypeInstanceReference || containingType is ISpecializedNestedTypeReference) {
+        var sFieldReference = new SpecializedFieldReference();
+        ((FieldReference)sFieldReference).Copy(fieldDefinition, this.closure.InternFactory);
+        sFieldReference.ContainingType = containingType;
+        sFieldReference.UnspecializedVersion = fieldDefinition;
+        return sFieldReference;
+      }
+      var result = new FieldReference();
+      result.Copy(fieldDefinition, this.host.InternFactory);
+      result.ContainingType = containingType;
+      return result;
     }
   }
 }
