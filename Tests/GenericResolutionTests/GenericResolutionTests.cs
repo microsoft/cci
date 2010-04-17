@@ -50,7 +50,7 @@ namespace ResolutionTests {
       parameters.OutputAssembly = assemblyName;
 
       CompilerResults results;
-      using (CodeDomProvider icc = new CSharpCodeProvider(new Dictionary<string, string>() { { "CompilerVersion", "v3.5" } })) {
+      using (CodeDomProvider icc = new CSharpCodeProvider()) {
         results = icc.CompileAssemblyFromFile(parameters, tempFile);
       }
 

@@ -96,6 +96,8 @@ namespace Microsoft.Cci.ILToCodeModel {
             var bs = this.alreadyDecompiledBodyProvider.GetAlreadyDecompiledBody(this.MethodDefinition);
             if (bs != null)
               this.block = bs;
+            else
+              this.block = this.CreateDecompiledBlock();
           } else {
             this.block = this.CreateDecompiledBlock();
           }
