@@ -49,7 +49,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, 
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
@@ -76,7 +76,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="alreadyDecompiledBodyProvider">An object that holds already decompiled bodies put there by the callback mechanism for IContractAwareHosts</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IContractAwareHost host, 
+    public SourceMethodBody(IMethodBody ilMethodBody, IContractAwareHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider,
       DecompilerCallback alreadyDecompiledBodyProvider)
       : this(ilMethodBody, (IMetadataHost)host, sourceLocationProvider, localScopeProvider) {
@@ -170,7 +170,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
-        return this.ilMethodBody.PrivateHelperTypes; 
+        return this.ilMethodBody.PrivateHelperTypes;
       }
     }
 
@@ -362,8 +362,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
         if (closureTypeAsNestedTypeReference == null) return Dummy.MethodBody;
         ITypeReference unspecializedClosureContainingType = GetUnspecializedType(closureTypeAsNestedTypeReference.ContainingType);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType))
-        {
+        if (closureType != null && TypeHelper.TypesAreEquivalent(this.ilMethodBody.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)) {
           IName MoveNextName = this.nameTable.GetNameFor("MoveNext");
           foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
             IMethodDefinition moveNext = member as IMethodDefinition;
@@ -400,6 +399,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new Unstacker(this).Visit(rootBlock);
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(this, rootBlock);
@@ -1624,7 +1624,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IContractAwareHost host, 
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IContractAwareHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
       : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider) {
       this.iteratorMethodBody = iteratorMethodBody;
@@ -1660,7 +1660,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DecompileMoveNext(block);
         BasicBlock rootBlock = GetOrCreateBlock(0, false);
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
-        
+
         block = this.AddLocalDeclarationIfNecessary(block);
         new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
         return block;

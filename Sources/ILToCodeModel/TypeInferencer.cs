@@ -306,6 +306,13 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IAssignment assignment) {
       base.Visit(assignment);
+      if (assignment.Target.Type == Dummy.TypeReference) {
+        var temp = assignment.Target.Definition as TempVariable;
+        if (temp != null) {
+          temp.Type = assignment.Source.Type;
+          ((TargetExpression)assignment.Target).Type = assignment.Source.Type;
+        }
+      }
       ((Assignment)assignment).Type = assignment.Target.Type;
     }
 
@@ -660,7 +667,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

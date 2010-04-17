@@ -63,6 +63,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       get { return TypeHelper.UnsignedEquivalent(this.ValueToConvert.Type); }
     }
 
+    ITypeReference IExpression.Type {
+      get { return this.TypeAfterConversion; }
+    }
+
   }
 
   internal sealed class Dup : Expression {
@@ -141,25 +145,25 @@ namespace Microsoft.Cci.ILToCodeModel {
         return specializedMethodDefinition.UnspecializedVersion;
       return methodDefinition;
     }
-      
-      /// <summary>
-      /// Get the unspecialized field definition of the given field definition, if it is specialized. Or the field 
-      /// definition itself, otherwise.
-      /// </summary>
-      /// <param name="fieldDefinition"></param>
-      /// <returns></returns>
+
+    /// <summary>
+    /// Get the unspecialized field definition of the given field definition, if it is specialized. Or the field 
+    /// definition itself, otherwise.
+    /// </summary>
+    /// <param name="fieldDefinition"></param>
+    /// <returns></returns>
     internal static IFieldDefinition UnSpecializedFieldDefinition(IFieldDefinition fieldDefinition) {
       ISpecializedFieldDefinition specializedFieldDefinition = fieldDefinition as ISpecializedFieldDefinition;
       if (specializedFieldDefinition != null) return specializedFieldDefinition.UnspecializedVersion;
       return fieldDefinition;
     }
 
-      /// <summary>
-      /// A specialized method definition or generic method instance does not have a body. Given a method definition,
-      /// find the unspecialized version of the definition and fetch the body. 
-      /// </summary>
-      /// <param name="methodDefinition"></param>
-      /// <returns></returns>
+    /// <summary>
+    /// A specialized method definition or generic method instance does not have a body. Given a method definition,
+    /// find the unspecialized version of the definition and fetch the body. 
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <returns></returns>
     internal static IMethodBody GetMethodBodyFromUnspecializedVersion(IMethodDefinition methodDefinition) {
       if (!methodDefinition.Body.Equals(Dummy.MethodBody)) return methodDefinition.Body;
       IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
@@ -171,11 +175,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       return methodDefinition.Body;
     }
 
-      /// <summary>
-      /// See if a type reference refers to a type definition that is compiler generated. 
-      /// </summary>
-      /// <param name="typeReference"></param>
-      /// <returns></returns>
+    /// <summary>
+    /// See if a type reference refers to a type definition that is compiler generated. 
+    /// </summary>
+    /// <param name="typeReference"></param>
+    /// <returns></returns>
     public static bool IsCompilerGenerated(ITypeReference/*!*/ typeReference) {
       if (AttributeHelper.Contains(typeReference.ResolvedType.Attributes, typeReference.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return true;
@@ -195,11 +199,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       return false;
     }
 
-      /// <summary>
-      /// See if a method definition is compiler generated, or is inside a compiler generated type.
-      /// </summary>
-      /// <param name="methodDefinition"></param>
-      /// <returns></returns>
+    /// <summary>
+    /// See if a method definition is compiler generated, or is inside a compiler generated type.
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <returns></returns>
     public static bool IsCompilerGenerated(IMethodDefinition/*!*/ methodDefinition) {
       if (AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return true;
@@ -209,12 +213,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       return IsCompilerGenerated(methodDefinition.ContainingType);
     }
 
-      /// <summary>
-      /// See if a field reference refers to a field definition that is compiler generated, or is inside a compiler generated
-      /// type.
-      /// </summary>
-      /// <param name="fieldReference"></param>
-      /// <returns></returns>
+    /// <summary>
+    /// See if a field reference refers to a field definition that is compiler generated, or is inside a compiler generated
+    /// type.
+    /// </summary>
+    /// <param name="fieldReference"></param>
+    /// <returns></returns>
     public static bool IsCompilerGenerated(IFieldReference/*!*/ fieldReference) {
       if (AttributeHelper.Contains(fieldReference.ResolvedField.Attributes, fieldReference.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return true;
