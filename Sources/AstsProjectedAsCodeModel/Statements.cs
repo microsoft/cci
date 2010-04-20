@@ -17,7 +17,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// A statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#.
   /// </summary>
-  public sealed class AssertStatement : Statement, IAssertStatement {
+  public class AssertStatement : Statement, IAssertStatement {
 
     /// <summary>
     /// 
