@@ -940,7 +940,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Performs some computation with the given dup value expression.
     /// </summary>
-    /// <param name="dupValue"></param>
+    /// <param name="popValue"></param>
     public virtual void Visit(IDupValue popValue)
       //^ ensures this.path.Count == old(this.path.Count);
     {
@@ -2684,10 +2684,20 @@ namespace Microsoft.Cci.Contracts {
     void Visit(ILoopInvariant loopInvariant);
 
     /// <summary>
+    /// Performs some computation with the given loop invariant.
+    /// </summary>
+    void Visit(ILoopVariant loopVariant);
+
+    /// <summary>
     /// Performs some computation with the given method contract.
     /// </summary>
     void Visit(IMethodContract methodContract);
 
+    /// <summary>
+    /// Performs some computation with the given method contract.
+    /// </summary>
+    void Visit(IMethodVariant methodVariant);
+    
     /// <summary>
     /// Performs some computation with the given postCondition.
     /// </summary>
@@ -2791,6 +2801,7 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(loopContract);
       this.Visit(loopContract.Invariants);
+      this.Visit(loopContract.Variants);
       this.Visit(loopContract.Writes);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
@@ -2823,6 +2834,35 @@ namespace Microsoft.Cci.Contracts {
       this.Visit(loopInvariant.Condition);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
+    }
+
+    /// <summary>
+    /// Traverses the given list of loop variants.
+    /// </summary>
+    public virtual void Visit(IEnumerable<ILoopVariant> loopVariants)
+    //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(loopVariants);
+      foreach (var loopVariant in loopVariants)
+        this.Visit(loopVariant);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
+    }
+    
+    /// <summary>
+    /// Traverses the given loop variant.
+    /// </summary>
+    public virtual void Visit(ILoopVariant loopVariant)
+    //^ ensures this.path.Count == old(this.path.Count);
+    {
+        if (this.stopTraversal) return;
+        //^ int oldCount = this.path.Count;
+        this.path.Push(loopVariant);
+        this.Visit(loopVariant.Condition);
+        //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+        this.path.Pop();
     }
 
     /// <summary>
@@ -2871,6 +2911,35 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(postCondition);
       this.Visit(postCondition.Condition);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
+    /// Traverses the given list of post conditions.
+    /// </summary>
+    public virtual void Visit(IEnumerable<IMethodVariant> variants)
+    //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(variants);
+      foreach (var variant in variants)
+        this.Visit(variant);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
+    /// Traverses the given variant.
+    /// </summary>
+    public virtual void Visit(IMethodVariant variant)
+    //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(variant);
+      this.Visit(variant.Condition);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -3067,11 +3136,25 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
+    /// Visits the given loop variant.
+    /// </summary>
+    public virtual void Visit(ILoopVariant loopVariant)
+    {
+    }
+    
+    /// <summary>
     /// Visits the given method contract.
     /// </summary>
     public virtual void Visit(IMethodContract methodContract) {
     }
 
+    /// <summary>
+    /// Visits the given variant.
+    /// </summary>
+    public virtual void Visit(IMethodVariant variant)
+    {
+    }
+    
     /// <summary>
     /// Visits the given postCondition.
     /// </summary>

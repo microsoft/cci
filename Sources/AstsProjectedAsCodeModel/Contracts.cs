@@ -93,32 +93,32 @@ namespace Microsoft.Cci.Ast {
   }
 
   /// <summary>
-  /// A condition that must be maintained during the execution of a program
+  /// A condition that must be maintained or changed during the execution of a program.
   /// </summary>
-  public abstract class Invariant : CheckableSourceItem {
+  public abstract class Ariant : CheckableSourceItem {
 
     /// <summary>
-    /// 
+    /// Make a copy of template, changing the containing block
     /// </summary>
-    /// <param name="condition"></param>
-    /// <param name="sourceLocation"></param>
-    protected Invariant(Expression condition, ISourceLocation sourceLocation)
-      : base(sourceLocation) {
-      this.condition = condition;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="containingBlock"></param>
-    /// <param name="template"></param>
-    protected Invariant(BlockStatement containingBlock, Invariant template)
+    /// <param name="containingBlock"> the new containing block</param>
+    /// <param name="template">the Ariant to be copied</param>
+    protected Ariant(BlockStatement containingBlock, Ariant template)
       : base(template.SourceLocation) {
       this.condition = template.condition.MakeCopyFor(containingBlock);
     }
 
     /// <summary>
-    /// The condition that must be maintained.
+    /// Construct an ariant with the given condition and source location.
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="sourceLocation"></param>
+    protected Ariant(Expression condition, ISourceLocation sourceLocation)
+      : base(sourceLocation) {
+      this.condition = condition;
+    }
+
+    /// <summary>
+    /// The condition that must be maintained or changed.
     /// </summary>
     public Expression Condition {
       get { return this.condition; }
@@ -172,6 +172,54 @@ namespace Microsoft.Cci.Ast {
   }
 
   /// <summary>
+  /// A condition that must be maintained during the execution of a program.
+  /// </summary>
+  public abstract class Invariant : Ariant 
+  {
+      /// <summary>
+      /// Make a copy of an Invariant, changing the containing block.
+      /// </summary>
+      /// <param name="containingBlock">The new containing block.</param>
+      /// <param name="template">The Invariant to be copied.</param>
+      protected Invariant(BlockStatement containingBlock, Invariant template) : base(containingBlock, template) 
+      { 
+      }
+
+      /// <summary>
+      /// Construct an invariant with the given condition and source location.
+      /// </summary>
+      /// <param name="condition"></param>
+      /// <param name="sourceLocation"></param>
+      protected Invariant(Expression condition, ISourceLocation sourceLocation) : base(condition,sourceLocation) 
+      {
+      }
+  }
+
+  /// <summary>
+  /// A measure that must be changed during the execution of a program.
+  /// </summary>
+  public abstract class Variant : Ariant 
+  { 
+      /// <summary>
+      /// Copy a Variant, changing its containing block.
+      /// </summary>
+      /// <param name="containingBlock">The new containing block.</param>
+      /// <param name="template">The Variant to be copied.</param>
+      protected Variant(BlockStatement containingBlock, Variant template) : base(containingBlock, template)
+      { 
+      }
+
+      /// <summary>
+      /// Construct an variant with the given measure and source location.
+      /// </summary>
+      /// <param name="measure"></param>
+      /// <param name="sourceLocation"></param>
+      protected Variant(Expression measure, ISourceLocation sourceLocation) : base(measure,sourceLocation) 
+      {
+      }
+  }
+
+  /// <summary>
   /// A collection of collections of objects that describe a loop.
   /// </summary>
   public class LoopContract : Contract, ILoopContract {
@@ -180,9 +228,21 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="invariants">A possibly empty or null list of loop invariants.</param>
     /// <param name="writes">A possibly empty list of expressions that each represents a set of memory locations that may be written to by the body of the loop.</param>
-    public LoopContract(IEnumerable<LoopInvariant>/*?*/ invariants, IEnumerable<Expression>/*?*/ writes) {
-      this.invariants = invariants == null ? EmptyListOfInvariants : invariants;
-      this.writes = writes;
+    public LoopContract(IEnumerable<LoopInvariant>/*?*/ invariants, IEnumerable<Expression>/*?*/ writes) : this(invariants, writes, null)
+    {     
+    }
+
+    /// <summary>
+    /// Allocates a collection of collections of objects that describe a loop.
+    /// </summary>
+    /// <param name="invariants">A possibly empty or null list of loop invariants.</param>
+    /// <param name="writes">A possibly empty list of expressions that each represents a set of memory locations that may be written to by the body of the loop.</param>
+    /// <param name="variants">A possibly empty list or null list of loop variants.</param>
+    public LoopContract(IEnumerable<LoopInvariant>/*?*/ invariants, IEnumerable<Expression>/*?*/ writes, IEnumerable<LoopVariant>/*?*/ variants)
+    {
+        this.invariants = invariants == null ? EmptyListOfInvariants : invariants;
+        this.writes = writes;
+        this.variants = variants == null ? EmptyListOfVariants : variants;
     }
 
     /// <summary>
@@ -228,6 +288,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     private static readonly IEnumerable<LoopInvariant> EmptyListOfInvariants = IteratorHelper.GetEmptyEnumerable<LoopInvariant>();
+    private static readonly IEnumerable<LoopVariant> EmptyListOfVariants = IteratorHelper.GetEmptyEnumerable<LoopVariant>();
 
     /// <summary>
     /// Makes a copy of this contract, changing the containing block to the given block.
@@ -269,6 +330,14 @@ namespace Microsoft.Cci.Ast {
     }
     readonly IEnumerable<Expression>/*?*/ writes;
 
+      /// <summary>
+    /// A possibly empty list of loop variants.
+    /// </summary>
+    public IEnumerable<ILoopVariant> Variants {
+      get { return IteratorHelper.GetConversionEnumerable<LoopVariant, ILoopVariant>(this.variants); }
+    }
+    readonly IEnumerable<LoopVariant> variants;
+
     #region IObjectWithLocations Members
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
@@ -279,6 +348,8 @@ namespace Microsoft.Cci.Ast {
           foreach (var write in this.writes)
             foreach (var loc in write.Locations) yield return loc;
         }
+        foreach (var inv in this.variants)
+            foreach (var loc in inv.Locations) yield return loc;
       }
     }
 
@@ -350,6 +421,70 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+    /// <summary>
+  /// A condition that must be true at the start of every iteration of a loop.
+  /// </summary>
+  public class LoopVariant : Variant, ILoopVariant {
+    /// <summary>
+    /// Allocates a measure that must decrease in every nonterminal iteration of a loop.
+    /// </summary>
+    /// <param name="measure">The measure that must decrease.</param>
+    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
+    public LoopVariant(Expression measure, ISourceLocation sourceLocation)
+      : base(measure, sourceLocation) {
+    }
+
+    /// <summary>
+    /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
+    /// </summary>
+    /// <param name="containingBlock">The containing block of the copied variant. This should be different from the containing block of the template variant.</param>
+    /// <param name="template">The statement to copy.</param>
+    private LoopVariant(BlockStatement containingBlock, LoopVariant template)
+      : base(containingBlock, template) {
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ILoopInvariant).
+    /// </summary>
+    public virtual void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(LoopInvariant).
+    /// </summary>
+    public override void Dispatch(SourceVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Makes a copy of this invariant, changing the Condition.ContainingBlock to the given block.
+    /// </summary>
+    public LoopVariant MakeCopyFor(BlockStatement containingBlock)
+      //^^ ensures result.GetType() == this.GetType();
+    {
+      if (this.Condition.ContainingBlock == containingBlock) return this;
+      return new LoopVariant(containingBlock, this);
+    }
+
+    /// <summary>
+    /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
+    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
+    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
+    /// </summary>
+    public void SetContainingExpression(Expression containingExpression) {
+      this.Condition.SetContainingExpression(containingExpression);
+    }
+
+    #region ILoopVariant Members
+
+    IExpression IContractElement.Condition {
+      get { return this.ConvertedCondition.ProjectAsIExpression(); }
+    }
+
+    #endregion
+
+  }
   /// <summary>
   /// A collection of collections of objects that augment the type signature of a method with additional information
   /// that describes the contract between calling method and called method.
@@ -358,7 +493,8 @@ namespace Microsoft.Cci.Ast {
 
     /// <summary>
     /// Allocates a collection of collections of objects that augment the type signature of a method with additional information
-    /// that describes the contract between calling method and called method.
+    /// that describes the contract between calling method and called method. This constructor omits termination checking, for backwards compatability,
+    /// but should probably be depricated.
     /// </summary>
     /// <param name="allocates">A possibly empty list of expressions that each represents a set of memory locations that are newly allocated by a call to the method.</param>
     /// <param name="frees">A possibly empty list of expressions that each represents a set of memory locations that are freed by a call to the method.</param>
@@ -380,12 +516,45 @@ namespace Microsoft.Cci.Ast {
       this.preconditions = preconditions==null ? EmptyListOfPreconditions:preconditions;
       this.reads = reads==null ? EmptyListOfExpressions:reads;
       this.thrownExceptions = thrownExceptions==null ? EmptyListOfThrownExceptions:thrownExceptions;
+      this.variants = EmptyListOfVariants;
       this.writes = writes==null ? EmptyListOfExpressions:writes;
       this.isPure = isPure;
     }
 
     /// <summary>
-    /// Allocates a method contract that indicates that the method body must be inlined.
+    /// Allocates a collection of collections of objects that augment the type signature of a method with additional information
+    /// that describes the contract between calling method and called method. This constructor omits termination checking, for backwards compatability,
+    /// but should probably be depricated.
+    /// </summary>
+    /// <param name="allocates">A possibly empty list of expressions that each represents a set of memory locations that are newly allocated by a call to the method.</param>
+    /// <param name="frees">A possibly empty list of expressions that each represents a set of memory locations that are freed by a call to the method.</param>
+    /// <param name="modifiedVariables">A possibly empty or null list of target expressions (variables) that are modified by the called method.</param>
+    /// <param name="postconditions">A possibly empty or null list of postconditions that are established by the called method.</param>
+    /// <param name="preconditions">A possibly empty list of preconditions that must be established by the calling method.</param>
+    /// <param name="reads">A possibly empty list of expressions that each represents a set of memory locations that may be read by the called method.</param>
+    /// <param name="thrownExceptions">A possibly empty or null list of exceptions that may be thrown (or passed on) by the called method.</param>
+    /// <param name="writes">A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.</param>
+    /// <param name="isPure">True if the method has no observable side-effect on program state and hence this method is safe to use in a contract, which may or may not be executed, depending on how the program has been compiled.</param>
+    /// <param name="variants">A possibly empty list of variants, each of which is decreased in each call from the method.</param>
+    public MethodContract(IEnumerable<Expression>/*?*/ allocates, IEnumerable<Expression>/*?*/ frees, IEnumerable<AddressableExpression>/*?*/ modifiedVariables,
+      IEnumerable<Postcondition>/*?*/ postconditions, IEnumerable<Precondition>/*?*/ preconditions, IEnumerable<Expression>/*?*/ reads,
+      IEnumerable<ThrownException>/*?*/ thrownExceptions, IEnumerable<Expression>/*?*/ writes, bool isPure, IEnumerable<MethodVariant>/*?*/ variants)
+    {
+        this.allocates = allocates == null ? EmptyListOfExpressions : allocates;
+        this.frees = frees == null ? EmptyListOfExpressions : frees;
+        this.modifiedVariables = modifiedVariables == null ? EmptyListOfTargetExpressions : modifiedVariables;
+        this.mustInline = false;
+        this.postconditions = postconditions == null ? EmptyListOfPostconditions : postconditions;
+        this.preconditions = preconditions == null ? EmptyListOfPreconditions : preconditions;
+        this.reads = reads == null ? EmptyListOfExpressions : reads;
+        this.thrownExceptions = thrownExceptions == null ? EmptyListOfThrownExceptions : thrownExceptions;
+        this.variants = variants == null ? EmptyListOfVariants : variants;
+        this.writes = writes == null ? EmptyListOfExpressions : writes;
+        this.isPure = isPure;
+    }
+      
+    /// <summary>
+    /// Allocates an empty method contract that indicates that the method body must be inlined.
     /// </summary>
     public MethodContract() {
       this.allocates = EmptyListOfExpressions;
@@ -397,6 +566,7 @@ namespace Microsoft.Cci.Ast {
       this.reads = EmptyListOfExpressions;
       this.thrownExceptions = EmptyListOfThrownExceptions;
       this.writes = EmptyListOfExpressions;
+      this.variants = EmptyListOfVariants;
       this.isPure = false;
     }
 
@@ -438,6 +608,10 @@ namespace Microsoft.Cci.Ast {
         this.writes = new List<Expression>(template.writes);
       else
         this.writes = template.writes;
+      if (template.variants != EmptyListOfVariants)
+          this.variants = new List<MethodVariant>(template.variants);
+      else
+          this.variants = template.variants;
       this.isPure = template.isPure;
     }
 
@@ -548,6 +722,19 @@ namespace Microsoft.Cci.Ast {
     readonly IEnumerable<ThrownException> thrownExceptions;
 
     /// <summary>
+    /// A possibly empty list of postconditions that are established by the called method.
+    /// </summary>
+    public IEnumerable<IMethodVariant> Variants
+    {
+        get
+        {
+            foreach (IMethodVariant variant in this.variants)
+                yield return variant;
+        }
+    }
+    readonly IEnumerable<MethodVariant> variants;
+    
+      /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
     public IEnumerable<IExpression> Writes {
@@ -598,6 +785,7 @@ namespace Microsoft.Cci.Ast {
     private static readonly IEnumerable<Postcondition> EmptyListOfPostconditions = IteratorHelper.GetEmptyEnumerable<Postcondition>();
     private static readonly IEnumerable<AddressableExpression> EmptyListOfTargetExpressions = IteratorHelper.GetEmptyEnumerable<AddressableExpression>();
     private static readonly IEnumerable<ThrownException> EmptyListOfThrownExceptions = IteratorHelper.GetEmptyEnumerable<ThrownException>();
+    private static readonly IEnumerable<MethodVariant> EmptyListOfVariants = IteratorHelper.GetEmptyEnumerable<MethodVariant>();
 
     /// <summary>
     /// Makes a copy of this contract, changing the containing block to the given block.
@@ -772,6 +960,68 @@ namespace Microsoft.Cci.Ast {
     }
   }
 
+  /// <summary>
+  /// A measure which is decreased in calls from the method.
+  /// </summary>
+  public sealed class MethodVariant : MethodContractItem, IMethodVariant
+  {
+
+    /// <summary>
+    /// Allocates a method variant.
+    /// </summary>
+    /// <param name="condition">The condition that must be true at the end of the method that is associated with this Postcondition instance.</param>
+    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
+    public MethodVariant(Expression condition, ISourceLocation sourceLocation)
+      : base(condition, sourceLocation)
+    {
+    }
+
+    /// <summary>
+    /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
+    /// </summary>
+    /// <param name="containingBlock">The containing block of the copied postcondition. This should be different from the containing block of the template postcondition.</param>
+    /// <param name="template">The statement to copy.</param>
+    private MethodVariant(BlockStatement containingBlock, MethodVariant template)
+      : base(containingBlock, template)
+    {
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IPostcondition).
+    /// </summary>
+    public void Dispatch(ICodeAndContractVisitor visitor)
+    {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(Postcondition).
+    /// </summary>
+    public override void Dispatch(SourceVisitor visitor)
+    {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Makes a copy of this post condition, changing the containing block to the given block.
+    /// </summary>
+    public MethodVariant MakeCopyFor(BlockStatement containingBlock)
+    //^^ ensures result.GetType() == this.GetType();
+    {
+      if (this.Condition.ContainingBlock == containingBlock) return this;
+      return new MethodVariant(containingBlock, this);
+    }
+
+    #region IPostcondition Members
+
+    IExpression IContractElement.Condition
+    {
+      get { return this.ConvertedCondition.ProjectAsIExpression(); }
+    }
+
+    #endregion
+
+  }
 
   /// <summary>
   /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.

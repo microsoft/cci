@@ -170,6 +170,7 @@ namespace Microsoft.Cci.MutableContracts {
     public LoopContract() {
       this.invariants = new List<ILoopInvariant>();
       this.locations = new List<ILocation>(1);
+      this.variants = new List<ILoopVariant>();
     }
 
     /// <summary>
@@ -181,6 +182,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.locations = new List<ILocation>(loopContract.Locations);
       if (loopContract.Writes != null)
         this.writes = new List<IExpression>(loopContract.Writes);
+      this.variants = new List<ILoopVariant>(loopContract.Variants);
     }
 
     /// <summary>
@@ -203,6 +205,16 @@ namespace Microsoft.Cci.MutableContracts {
     List<ILocation> locations;
 
     /// <summary>
+    /// A possibly empty list of loop variants.
+    /// </summary>
+    public List<ILoopVariant> Variants
+    {
+        get { return this.variants; }
+        set { this.variants = value; }
+    }
+    List<ILoopVariant> variants;
+
+    /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the loop.
     /// Is null when no writes clause was specified.
     /// </summary>
@@ -211,6 +223,8 @@ namespace Microsoft.Cci.MutableContracts {
       set { this.writes = value; }
     }
     List<IExpression>/*?*/ writes;
+
+
 
     #region ILoopContract Members
 
@@ -222,6 +236,10 @@ namespace Microsoft.Cci.MutableContracts {
       get { return this.Writes == null ? null : this.Writes.AsReadOnly(); }
     }
 
+    IEnumerable<ILoopVariant> ILoopContract.Variants
+    {
+        get { return this.Variants.AsReadOnly(); }
+    }
     #endregion
 
     #region IObjectWithLocations Members
@@ -274,6 +292,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.reads = new List<IExpression>();
       this.thrownExceptions = new List<IThrownException>();
       this.writes = new List<IExpression>();
+      this.variants = new List<IMethodVariant>();
       this.isPure = false;
     }
 
@@ -291,6 +310,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.preconditions = new List<IPrecondition>(methodContract.Preconditions);
       this.reads = new List<IExpression>(methodContract.Reads);
       this.thrownExceptions = new List<IThrownException>(methodContract.ThrownExceptions);
+      this.variants = new List<IMethodVariant>(methodContract.Variants);
       this.writes = new List<IExpression>(methodContract.Writes);
       this.isPure = methodContract.IsPure;
     }
@@ -379,6 +399,16 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
+    public List<IMethodVariant> Variants
+    {
+        get { return this.variants; }
+        set { this.variants = value; }
+    }
+    List<IMethodVariant> variants;
+      
+      /// <summary>
+    /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
+    /// </summary>
     public List<IExpression> Writes {
       get { return this.writes; }
       set { this.writes = value; }
@@ -423,6 +453,10 @@ namespace Microsoft.Cci.MutableContracts {
 
     IEnumerable<IThrownException> IMethodContract.ThrownExceptions {
       get { return this.ThrownExceptions.AsReadOnly(); }
+    }
+
+    IEnumerable<IMethodVariant> IMethodContract.Variants {
+      get { return this.Variants.AsReadOnly(); }
     }
 
     IEnumerable<IExpression> IMethodContract.Writes {
