@@ -40,6 +40,7 @@ namespace Microsoft.Cci {
     /// Allocates an object that helps with the generation of Microsoft intermediate language (MSIL) instructions corresponding to a method body.
     /// </summary>
     /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
+    /// <param name="methodDefinition">The method to generate MSIL for.</param>
     public ILGenerator(IMetadataHost host, IMethodDefinition methodDefinition) {
       this.host = host;
       this.method = methodDefinition;
@@ -891,6 +892,9 @@ namespace Microsoft.Cci {
 
     readonly INameTable nameTable;
 
+    /// <summary>
+    /// The method definition.
+    /// </summary>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
     }
