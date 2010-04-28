@@ -520,7 +520,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// A type reference to a private helper type, which is a nested. This type reference resolves itself
+  /// A type reference to a private helper type, which is nested. This type reference resolves itself
   /// in a different way than a nested type reference, that is, without looking up itself in containing 
   /// type's member list, which will not work with private helper types. 
   /// </summary>
@@ -551,6 +551,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.privateHelperTypeDefinition; }
     }
 
+    /// <summary>
+    /// For internal use.
+    /// </summary>
     protected INestedTypeDefinition privateHelperTypeDefinition;
   }
 
