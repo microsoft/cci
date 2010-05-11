@@ -5152,6 +5152,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns true if no information is lost if the integer value of this expression is converted to the target integer type.
+    /// </summary>
+    public override bool IntegerConversionIsLossless(ITypeDefinition targetType) {
+      return this.RightOperand.IntegerConversionIsLossless(targetType);
+    }
+
+    /// <summary>
     /// Makes a copy of this expression, changing the ContainingBlock to the given block.
     /// </summary>
     //^ [MustOverride]
