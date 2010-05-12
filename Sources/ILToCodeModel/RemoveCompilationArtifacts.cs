@@ -88,8 +88,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (this.sourceMethodBody.privateHelperTypesToRemove == null) this.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
       this.sourceMethodBody.privateHelperTypesToRemove.Add(closureType.ResolvedType);
       this.currentClosureLocal = locDecl.LocalVariable;
-      statements.RemoveAt(i-1);
-      for (int j = i-1; j < statements.Count; j++) {
+      statements.RemoveAt(i - 1);
+      for (int j = i - 1; j < statements.Count; j++) {
         IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
         if (es == null) break;
         IAssignment/*?*/ assignment = es.Expression as IAssignment;
@@ -110,15 +110,16 @@ namespace Microsoft.Cci.ILToCodeModel {
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                 Name = closureField.ResolvedField.Name, Type = closureField.Type
+                Name = closureField.ResolvedField.Name,
+                Type = closureField.Type
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
-                LocalVariable = localDefinition, InitialValue = ctc
+                LocalVariable = localDefinition,
+                InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
-            }
-            else continue;
+            } else continue;
           }
         } else {
           this.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
@@ -129,7 +130,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.capturedLocalOrParameter.ContainsKey(field.Name.Value)) continue;
         var newLocal = new LocalDefinition() { Name = field.Name, Type = field.Type };
         var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
-        statements.Insert(i, newLocalDecl);
+        statements.Insert(i - 1, newLocalDecl);
         this.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
       }
     }
@@ -152,7 +153,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (thisReference != null) return thisReference;
           boundExpression.Definition = localOrParameter;
           boundExpression.Instance = null;
-          return boundExpression; 
+          return boundExpression;
         }
       }
       IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
@@ -196,7 +197,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host, 
+      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
         this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider).Block;
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
@@ -212,14 +213,12 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="parameter"></param>
     /// <returns></returns>
-    internal static IParameterDefinition UnspecializedParameterDefinition(IParameterDefinition parameter)
-    {
-        SpecializedParameterDefinition specializedParameter = parameter as SpecializedParameterDefinition;
-        if (specializedParameter != null)
-        {
-            return UnspecializedParameterDefinition(specializedParameter.PartiallySpecializedParameter);
-        }
-        return parameter;
+    internal static IParameterDefinition UnspecializedParameterDefinition(IParameterDefinition parameter) {
+      SpecializedParameterDefinition specializedParameter = parameter as SpecializedParameterDefinition;
+      if (specializedParameter != null) {
+        return UnspecializedParameterDefinition(specializedParameter.PartiallySpecializedParameter);
+      }
+      return parameter;
     }
 
     public override IExpression Visit(CreateObjectInstance createObjectInstance) {
@@ -238,7 +237,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(Equality equality) {
-      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean){
+      if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         if (ExpressionHelper.IsIntegralZero(equality.RightOperand))
           return InvertCondition(this.Visit(equality.LeftOperand));
       }
@@ -250,9 +249,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (castIfPossible != null) {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
-          return this.Visit(new CheckIfInstance() { 
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations });
+          return this.Visit(new CheckIfInstance() {
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
+          });
         }
       }
       castIfPossible = greaterThan.RightOperand as ICastIfPossible;
@@ -260,8 +262,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }
@@ -394,7 +398,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             cc.Value = false;
           else
             cc.Value = true;
-          cc.Type =  this.containingType.PlatformType.SystemBoolean;
+          cc.Type = this.containingType.PlatformType.SystemBoolean;
         }
       }
       return returnStatement;
@@ -450,7 +454,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                 info.Label = gotoStatement.TargetStatement.Label;
                 info.State = 1;
               }
-              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) 
+              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
                 this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
               statements.RemoveAt(i--);
               continue;
