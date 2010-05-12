@@ -329,7 +329,17 @@ namespace Microsoft.Cci {
         Module/*?*/ module = this.InternedIdToModuleMap.Find(internedModuleId);
         if (module == null && referringModule != null) {
           this.metadataReaderHost.ResolvingAssemblyReference(referringModule, unifiedAssemblyIdentity);
+          // See if the host loaded the assembly using this PeReader (loading indirectly causes the map to be updated)
           module = this.InternedIdToModuleMap.Find(internedModuleId);
+          if (module == null) {
+            // One last chance, it might have been already loaded by a different instance of PeReader
+            var a = this.metadataReaderHost.FindAssembly(unifiedAssemblyIdentity);
+            Module m = a as Module;
+            if (m != null) {
+              this.LoadedModule(m);
+              module = m;
+            }
+          }
         }
         return module as Assembly;
       }
