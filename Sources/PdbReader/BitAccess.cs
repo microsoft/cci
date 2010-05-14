@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -179,7 +179,7 @@ namespace Microsoft.Cci.Pdb {
     internal decimal ReadDecimal() {
       int[] bits = new int[4];
       this.ReadInt32(bits);
-      return new decimal(bits);
+      return new decimal(bits[2], bits[3], bits[1], bits[0] < 0, (byte)((bits[0] & 0x00FF0000) >> 16));
     }
 
     internal void ReadBString(out string value) {
