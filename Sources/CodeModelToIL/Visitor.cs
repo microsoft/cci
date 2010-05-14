@@ -368,9 +368,10 @@ namespace Microsoft.Cci {
       IArrayTypeReference arrayType = (IArrayTypeReference)arrayIndexer.IndexedObject.Type;
       if (arrayType.IsVector)
         this.LoadVectorElement(arrayType.ElementType);
-      else
+      else {
         this.generator.Emit(OperationCode.Array_Get, arrayIndexer.IndexedObject.Type);
-      this.StackSize -= (ushort)IteratorHelper.EnumerableCount(arrayIndexer.Indices);
+        this.StackSize -= (ushort)IteratorHelper.EnumerableCount(arrayIndexer.Indices);
+      }
     }
 
     private void LoadVectorElement(ITypeReference typeReference) {
@@ -394,11 +395,13 @@ namespace Microsoft.Cci {
         default:
           if (typeReference.IsValueType || typeReference is IGenericParameterReference) {
             this.generator.Emit(OperationCode.Ldelem, typeReference);
+            this.StackSize--;
             return;
           }
           opcode = OperationCode.Ldelem_Ref; break;
       }
       this.generator.Emit(opcode);
+      this.StackSize--;
     }
 
     /// <summary>
@@ -820,8 +823,10 @@ namespace Microsoft.Cci {
         } else if (tc == PrimitiveTypeCode.UIntPtr) {
           this.EmitConstant(((UIntPtr)constant.Value).ToUInt64());
           this.generator.Emit(OperationCode.Conv_Ovf_U);
-        } else
+        } else {
           this.generator.Emit(OperationCode.Ldnull);
+          this.StackSize++;
+        }
       }
     }
 
@@ -905,7 +910,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Visits the specified create array.
     /// </summary>
-    /// <param name="createArray">The create array.</param>
+    /// <param name="createArray">The create array instance to visit.</param>
     public override void Visit(ICreateArray createArray) {
       IEnumerator<int> bounds = createArray.LowerBounds.GetEnumerator();
       bool hasOneOrMoreBounds = bounds.MoveNext();
@@ -1209,6 +1214,7 @@ namespace Microsoft.Cci {
       this.VisitAssignmentTo(length);
       var counter = new TemporaryVariable(this.host.PlatformType.SystemInt32, this.method);
       this.generator.Emit(OperationCode.Ldc_I4_0);
+      this.StackSize++;
       this.VisitAssignmentTo(counter);
       this.generator.Emit(OperationCode.Br, conditionCheck);
       this.generator.MarkLabel(loopStart);
@@ -1220,7 +1226,9 @@ namespace Microsoft.Cci {
       this.generator.MarkLabel(this.currentContinueTarget);
       this.LoadLocal(counter);
       this.generator.Emit(OperationCode.Ldc_I4_1);
+      this.StackSize++;
       this.generator.Emit(OperationCode.Add);
+      this.StackSize--;
       this.VisitAssignmentTo(counter);
       this.generator.MarkLabel(conditionCheck);
       this.EmitSequencePoint(forEachStatement.Collection.Locations);
@@ -1429,11 +1437,15 @@ namespace Microsoft.Cci {
         var opsize = TypeHelper.SizeOfType(logicalNot.Operand.Type);
         if (opsize == 1 || opsize == 2 || opsize == 4) {
           this.generator.Emit(OperationCode.Ldc_I4_0);
+          this.StackSize++;
           this.generator.Emit(OperationCode.Ceq);
+          this.StackSize--;
         } else if (opsize == 8) {
           this.generator.Emit(OperationCode.Ldc_I4_0);
+          this.StackSize++;
           this.generator.Emit(OperationCode.Conv_I8);
           this.generator.Emit(OperationCode.Ceq);
+          this.StackSize--;
         } else {
           Debug.Assert(opsize == 0); //If not, the CodeModel is invalid.
           //the type is an unresolved reference, typically an enum, so we just don't know what size it is (at compile time, that is).
@@ -1450,7 +1462,9 @@ namespace Microsoft.Cci {
         //pointer non null test
         this.Visit(logicalNot.Operand);
         this.generator.Emit(OperationCode.Ldnull);
+        this.StackSize++;
         this.generator.Emit(OperationCode.Ceq);
+        this.StackSize--;
       }
     }
 
@@ -1553,6 +1567,7 @@ namespace Microsoft.Cci {
       if (compileTimeConstant != null) {
         if (compileTimeConstant.Value == null) {
           this.generator.Emit(OperationCode.Clt_Un);
+          this.StackSize--;
           return;
         }
       }
@@ -1560,12 +1575,14 @@ namespace Microsoft.Cci {
       if (compileTimeConstant != null) {
         if (compileTimeConstant.Value == null) {
           this.generator.Emit(OperationCode.Cgt_Un);
+          this.StackSize--;
           return;
         }
       }
       this.generator.Emit(OperationCode.Ceq);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.generator.Emit(OperationCode.Ceq);
+      this.StackSize--;
     }
 
     /// <summary>
@@ -2024,8 +2041,10 @@ namespace Microsoft.Cci {
     public override void Visit(IUnaryNegation unaryNegation) {
       if (unaryNegation.CheckOverflow && TypeHelper.IsSignedPrimitiveInteger(unaryNegation.Type)) {
         this.generator.Emit(OperationCode.Ldc_I4_0);
+        this.StackSize++;
         this.Visit(unaryNegation.Operand);
         this.generator.Emit(OperationCode.Sub_Ovf);
+        this.StackSize--;
         return;
       }
       this.Visit(unaryNegation.Operand);
@@ -2140,7 +2159,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.UInt8:
@@ -2197,7 +2218,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2250,7 +2273,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2314,7 +2339,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2373,7 +2400,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2436,7 +2465,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2501,8 +2532,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_I8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2565,8 +2598,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_U8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2631,8 +2666,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_R4);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2695,8 +2732,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_R8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2759,8 +2798,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_I);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2825,8 +2866,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_U8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -2943,7 +2986,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.UInt8:
@@ -3000,7 +3045,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3047,7 +3094,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3111,7 +3160,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3170,7 +3221,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3233,7 +3286,9 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3295,8 +3350,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_I8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3356,8 +3413,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_U8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3419,8 +3478,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_R4);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3483,8 +3544,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_R8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3547,8 +3610,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_I);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
@@ -3610,8 +3675,10 @@ namespace Microsoft.Cci {
           switch (targetType.TypeCode) {
             case PrimitiveTypeCode.Boolean:
               this.generator.Emit(OperationCode.Ldc_I4_1);
+              this.StackSize++;
               this.generator.Emit(OperationCode.Conv_U8);
               this.generator.Emit(OperationCode.Ceq);
+              this.StackSize--;
               break;
 
             case PrimitiveTypeCode.Int8:
