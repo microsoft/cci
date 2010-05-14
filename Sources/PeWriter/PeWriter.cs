@@ -182,7 +182,7 @@ namespace Microsoft.Cci {
       // Find strings that can be folded
       string prev = String.Empty;
       foreach (KeyValuePair<string, uint> cur in sorted) {
-        if (prev.EndsWith(cur.Key)) {
+        if (prev.EndsWith(cur.Key, StringComparison.Ordinal)) {
           // Map over the tail of prev string. Watch for null-terminator of prev string.
           this.stringIndexMap.Add(cur.Value, this.stringWriter.BaseStream.Position - (uint)(Encoding.UTF8.GetBytes(cur.Key).Length + 1));
         } else {
@@ -4644,7 +4644,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsOut {
-      get { return true; }
+      get { return false; }
     }
 
     public bool IsParameterArray {
