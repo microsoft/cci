@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -474,10 +474,20 @@ namespace Microsoft.Cci {
     public abstract override bool Equals(object/*?*/ obj);
 
     /// <summary>
+    /// Computes a hashcode based on the information in the identifier.
+    /// </summary>
+    internal abstract int ComputeHashCode();
+
+    /// <summary>
     /// Returns a hashcode based on the information in the identifier.
     /// </summary>
-    //^ [Confined]
-    public abstract override int GetHashCode();
+    public override int GetHashCode() {
+      if (this.hashCode == null)
+        this.hashCode = this.ComputeHashCode();
+      return (int)this.hashCode;
+    }
+    int? hashCode = null;
+
 
     /// <summary>
     /// An indication of the location where the unit is or will be stored. Can be the empty string if the location is not known. This need not be a file system path. 
@@ -575,22 +585,24 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a hashcode based on the information in the identifier.
+    /// Computes a hashcode from the name, version, culture and public key token of the assembly identifier.
     /// </summary>
-    //^ [Confined]
-    public sealed override int GetHashCode() {
-      if (this.hashCode == null) {
-        int hash = this.Name.UniqueKeyIgnoringCase;
-        hash = (hash << 8) ^ (this.version.Major << 6) ^ (this.version.Minor << 4) ^ (this.version.MajorRevision << 2) ^ this.version.MinorRevision;
-        if (this.Culture.Length > 0)
-          hash = (hash << 4) ^ ObjectModelHelper.CaseInsensitiveStringHash(this.Culture);
-        foreach (byte b in this.PublicKeyToken)
-          hash = (hash << 1) ^ b;
-        this.hashCode = hash;
-      }
-      return (int)this.hashCode;
+    internal sealed override int ComputeHashCode() {
+      int hash = this.Name.UniqueKeyIgnoringCase;
+      hash = (hash << 8) ^ (this.version.Major << 6) ^ (this.version.Minor << 4) ^ (this.version.MajorRevision << 2) ^ this.version.MinorRevision;
+      if (this.Culture.Length > 0)
+        hash = (hash << 4) ^ ObjectModelHelper.CaseInsensitiveStringHash(this.Culture);
+      foreach (byte b in this.PublicKeyToken)
+        hash = (hash << 1) ^ b;
+      return hash;
     }
-    int? hashCode = null;
+
+    /// <summary>
+    /// Returns a hashcode based on the information in the assembly identity.
+    /// </summary>
+    public sealed override int GetHashCode() {
+      return base.GetHashCode();
+    }
 
     /// <summary>
     /// The public part of the key used to sign the referenced assembly. Empty if not specified.
@@ -692,11 +704,22 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a hashcode based on the module name.
+    /// Computes a hashcode from the name of the modules and the containing assembly (if applicable) or the location (if specified).
     /// </summary>
-    //^ [Confined]
+    internal override int ComputeHashCode() {
+      int hash = this.Name.UniqueKeyIgnoringCase;
+      if (this.ContainingAssembly != null)
+        hash = (hash << 4) ^ this.ContainingAssembly.GetHashCode();
+      else if (this.Location.Length > 0)
+        hash = (hash << 4) ^ ObjectModelHelper.CaseInsensitiveStringHash(this.Location);
+      return hash;
+    }
+
+    /// <summary>
+    /// Returns a hashcode based on the information in the module identity.
+    /// </summary>
     public override int GetHashCode() {
-      return ObjectModelHelper.CaseInsensitiveStringHash(this.ToString());
+      return base.GetHashCode();
     }
 
     /// <summary>
