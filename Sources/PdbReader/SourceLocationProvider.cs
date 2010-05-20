@@ -50,7 +50,7 @@ namespace Microsoft.Cci {
     /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
     /// </summary>
     ~PdbReader() {
-       this.Close();
+      this.Close();
     }
 
     private void Close() {
@@ -322,6 +322,7 @@ namespace Microsoft.Cci {
       if (pdbFunction.lines == null) return null;
       foreach (PdbLines pdbLines in pdbFunction.lines) {
         PdbSource pdbSourceFile = pdbLines.file;
+        if (pdbSourceFile == null) return null;
 
         PdbLine[] array = pdbLines.lines;
         int minIndex = 0;
