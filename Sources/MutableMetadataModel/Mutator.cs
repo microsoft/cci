@@ -31,21 +31,22 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
+  /// This class is obsolete because it is too hard to use correctly. Please use MutatingVisitor and MetadataCopier instead.
   /// A visitor that produces a mutable copy a given metadata model. Derived classes can override the visit methods
   /// to intervene in the copying process, usually resulting in a copy that is not equivalent to the original model.
   /// For instance, the new copy might have additional types and methods, or additional calls to instrumentation routines.
   /// </summary>
   /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
   /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
-  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.</remarks>
+  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
+  /// The new classes MetadataCopier and MutatingVisitor are meant to facilitate such scenarios.
+  /// </remarks>
   public class MetadataMutator {
 
-    //TODO: perhaps have three classes: MetadataCopier, MetadataMutator and MetadataCopyingMutator?
-    //TODO: MetadataCopier is already written. This MetadataMutator will become the metadata copying mutator. A seperate class
-    // mutatingvisitor below is the metadatamutator. 
-
     /// <summary>
-    /// 
+    /// Allocates a visitor that produces a mutable copy a given metadata model. Derived classes can override the visit methods
+    /// to intervene in the copying process, usually resulting in a copy that is not equivalent to the original model.
+    /// For instance, the new copy might have additional types and methods, or additional calls to instrumentation routines.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
@@ -54,7 +55,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Allocates a visitor that produces a mutable copy a given metadata model. Derived classes can override the visit methods
+    /// to intervene in the copying process, usually resulting in a copy that is not equivalent to the original model.
+    /// For instance, the new copy might have additional types and methods, or additional calls to instrumentation routines.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
@@ -3298,9 +3301,6 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// </remarks>
   /// 
   public class MutatingVisitor {
-
-    //TODO: perhaps have three classes: MetadataCopier, MetadataMutator and MetadataCopyingMutator?
-    // This is the new metadatamutator. The old one above would be changed/renamed soon. 
 
     /// <summary>
     /// A visitor that visits a mutable metadata model. Derived classes can override the visit methods
