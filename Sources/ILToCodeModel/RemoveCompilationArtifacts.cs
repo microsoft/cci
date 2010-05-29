@@ -39,6 +39,14 @@ namespace Microsoft.Cci.ILToCodeModel {
           return addressableExpression;
         }
       }
+      var parameter = addressableExpression.Definition as IParameterDefinition;
+      if (parameter != null) {
+        IParameterDefinition parToSubstitute;
+        if (this.parameterMap.TryGetValue(parameter, out parToSubstitute)) {
+          addressableExpression.Definition = parToSubstitute;
+          return addressableExpression;
+        }
+      }
       return base.Visit(addressableExpression);
     }
 
