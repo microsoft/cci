@@ -1029,24 +1029,21 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetMemberRefParentCodedIndex(ITypeMemberReference memberRef) {
-      ITypeDefinition/*?*/ parentTypeDef = memberRef.ContainingType as ITypeDefinition;
-      if (parentTypeDef != null) {
-        uint parentTypeDefIndex = 0;
-        this.typeDefIndex.TryGetValue(parentTypeDef.InternedKey, out parentTypeDefIndex);
-        if (parentTypeDefIndex > 0) {
-          IFieldReference/*?*/ fieldRef = memberRef as IFieldReference;
-          if (fieldRef != null) return parentTypeDefIndex << 3;
-          IMethodReference/*?*/ methodRef = memberRef as IMethodReference;
-          if (methodRef != null) {
-            if (methodRef.AcceptsExtraArguments) {
-              uint methodIndex = 0;
-              if (this.methodDefIndex.TryGetValue(methodRef.ResolvedMethod, out methodIndex))
-                return (methodIndex << 3)|3;
-            }
-            return parentTypeDefIndex << 3;
+      uint parentTypeDefIndex = 0;
+      this.typeDefIndex.TryGetValue(memberRef.ContainingType.InternedKey, out parentTypeDefIndex);
+      if (parentTypeDefIndex > 0) {
+        IFieldReference/*?*/ fieldRef = memberRef as IFieldReference;
+        if (fieldRef != null) return parentTypeDefIndex << 3;
+        IMethodReference/*?*/ methodRef = memberRef as IMethodReference;
+        if (methodRef != null) {
+          if (methodRef.AcceptsExtraArguments) {
+            uint methodIndex = 0;
+            if (this.methodDefIndex.TryGetValue(methodRef.ResolvedMethod, out methodIndex))
+              return (methodIndex << 3)|3;
           }
-          //TODO: error
+          return parentTypeDefIndex << 3;
         }
+        //TODO: error
       }
       //TODO: special treatment for global fields and methods. Object model support would be nice.
       if (!IsTypeSpecification(memberRef.ContainingType))
