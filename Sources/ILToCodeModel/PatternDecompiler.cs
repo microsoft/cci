@@ -59,6 +59,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private void ReplacePushPopPattern(List<IStatement> statements, int i) {
       if (i > statements.Count - 2) return;
+      //First identify count consecutive push statements
       int count = 0;
       while (i+count < statements.Count-1 && statements[i+count] is Push) count++;
       while (i > 1 && statements[i-1] is Push) { i--; count++; }
@@ -66,13 +67,36 @@ namespace Microsoft.Cci.ILToCodeModel {
       for (int j = 0; j < count; j++) {
         if (((Push)statements[j+i]).ValueToPush is Dup) return;
       }
+      //If any of the push statements (other than the first one) contains pop expressions, replace them with the corresponding push values and remove the pushes.
+      int pushcount = 1; //the number of push statements that are eligble for removal at this point.
+      for (int j = i + 1; j < i + count; j++) {
+        Push st = (Push)statements[j];
+        PopCounter pcc = new PopCounter();
+        pcc.Visit(st.ValueToPush);
+        int numberOfPushesToRemove = pushcount;
+        if (pcc.count > 0) {
+          if (pcc.count < numberOfPushesToRemove) numberOfPushesToRemove = pcc.count;
+          int firstPushToRemove = j - numberOfPushesToRemove;
+          PopReplacer prr = new PopReplacer(this.sourceMethodBody.host, statements, firstPushToRemove, pcc.count-numberOfPushesToRemove);
+          st.ValueToPush = prr.Visit(st.ValueToPush);
+          statements.RemoveRange(firstPushToRemove, numberOfPushesToRemove);
+          j = j - pcc.count;
+          count = count - pcc.count;
+          pushcount = pushcount - pcc.count;
+        } 
+        pushcount++;
+      }
+      //If the next statement is an expression statement that pops some of the just pushed values, replace those pops with the pushed values and remove the pushes.
       ExpressionStatement/*?*/ expressionStatement = statements[i + count] as ExpressionStatement;
       if (expressionStatement == null) return;
       PopCounter pc = new PopCounter();
       pc.Visit(expressionStatement.Expression);
-      if (pc.count > count || pc.count == 0) return;
-      i += count-pc.count;
-      PopReplacer pr = new PopReplacer(this.sourceMethodBody.host, statements, i);
+      if (pc.count == 0) return;
+      if (pc.count < count) {
+        i += count-pc.count; //adjust i to point to the first push statement to remove because of subsequent pops.
+        count = pc.count;
+      }
+      PopReplacer pr = new PopReplacer(this.sourceMethodBody.host, statements, i, pc.count-count);
       expressionStatement.Expression = pr.Visit(expressionStatement.Expression);
       statements.RemoveRange(i, count);
     }
@@ -518,16 +542,19 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class PopReplacer : MethodBodyCodeMutator {
     List<IStatement> statements;
     int i;
+    internal int numberOfPopsToIgnore;
 
-    internal PopReplacer(IMetadataHost host, List<IStatement> statements, int i)
+    internal PopReplacer(IMetadataHost host, List<IStatement> statements, int i, int numberOfPopsToIgnore)
       : base(host) {
       this.statements = statements;
       this.i = i;
+      this.numberOfPopsToIgnore = numberOfPopsToIgnore;
     }
 
     public override IExpression Visit(IExpression expression) {
       Pop pop = expression as Pop;
       if (pop != null) {
+        if (this.numberOfPopsToIgnore-- > 0) return expression;
         Push push = (Push)this.statements[this.i++];
         if (pop is PopAsUnsigned)
           return new ConvertToUnsigned(push.ValueToPush);
