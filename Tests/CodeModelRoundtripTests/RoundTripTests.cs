@@ -89,13 +89,13 @@ public class CodeModelRoundTripTests {
   [Fact]
   public void MutableCopy1() {
     ExtractAndCompile("MutableCopyTest.cs");
-    RoundTripWithMetadataCopier("MutableCopyTest.dll", "MutableCopyTest.pdb");
+    RoundTripWithCodeCopier("MutableCopyTest.dll", "MutableCopyTest.pdb");
   }
 
   [Fact]
   public void MutableCopy2() {
     ExtractAndCompile("IteratorRoundTripTest.cs");
-    RoundTripWithMetadataCopier("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
+    RoundTripWithCodeCopier("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
   }
   [Fact]
   public void LargeAddGenericParameter() {
@@ -285,14 +285,14 @@ public class CodeModelRoundTripTests {
     Assert.True(File.Exists(assemblyName), string.Format("Failed to compile {0} from {1}", assemblyName, sourceFile));
   }
 
-  void RoundTripWithMetadataCopier(string assemblyName, string pdbName) {
+  void RoundTripWithCodeCopier(string assemblyName, string pdbName) {
     PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
     IAssembly assembly = LoadAssembly(assemblyName);
     using (var f = File.OpenRead(pdbName)) {
       using (var pdbReader = new PdbReader(f, host)) {
         var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
         List<INamedTypeDefinition> list;
-        MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
+        var copier1 = new CodeCopier(host, pdbReader, codeAssembly, out list);
         codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
         Checker checker = new Checker(this.host);
         checker.Visit(codeAssembly);
@@ -315,10 +315,9 @@ public class CodeModelRoundTripTests {
   void RoundTripMutableCopyAndAddGenericParameter2(string assemblyName) {
     PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
     IAssembly assembly = LoadAssembly(assemblyName);
-    var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
     List<INamedTypeDefinition> list;
-    MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
-    codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
+    var copier1 = new MetadataCopier(host, assembly, out list);
+    var codeAssembly = (Assembly)copier1.Substitute(assembly);
     for (int i = 0; i < 30; i++) {
       AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, i);
       codeAssembly = (Assembly)adder.Visit(codeAssembly);
@@ -333,7 +332,7 @@ public class CodeModelRoundTripTests {
       using (var pdbReader = new PdbReader(f, host)) {
         var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
         List<INamedTypeDefinition> list;
-        MetadataCopier copier1 = new MetadataCopier(host, codeAssembly, out list);
+        var copier1 = new CodeCopier(host, pdbReader, codeAssembly, out list);
         codeAssembly = (Assembly)copier1.Substitute(codeAssembly);
         AddGenericParameters adder = new AddGenericParameters(host, codeAssembly.AllTypes, 0);
         codeAssembly = (Assembly)adder.Visit(codeAssembly);
@@ -452,7 +451,6 @@ public class CodeModelRoundTripTests {
         CodeCopier copier = new CodeCopier(host, null);
         List<INamedTypeDefinition> ignore;
         copier.AddDefinition(codeAssembly, out ignore);
-        codeAssembly.AllTypes = ignore;
         codeAssembly = (Assembly)copier.Substitute(codeAssembly);
         NameChanger namechanger = new NameChanger(this.host, new Regex("[A-Za-z0-9_]*"), new MatchEvaluator(this.eval));
         codeAssembly = namechanger.Change(codeAssembly);

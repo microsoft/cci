@@ -270,6 +270,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="methodBody"></param>
     public override void Visit(IMethodBody methodBody) {
       var mutableBody = (SourceMethodBody)methodBody;
+      var block = mutableBody.Block; //force decompilation
       if (mutableBody.privateHelperTypesToRemove == null) return;
       foreach (var helperType in mutableBody.privateHelperTypesToRemove)
         this.helperTypes.Add(helperType.InternedKey, helperType);
@@ -317,8 +318,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           mutableTypeDefinition.NestedTypes.RemoveAt(i);
           i--;
         } else
-          this.Visit(nestedType);
-      }  
+          this.Visit((ITypeDefinition)nestedType);
+      }
     }
 
   }
