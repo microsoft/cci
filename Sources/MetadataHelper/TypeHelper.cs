@@ -1167,6 +1167,34 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true if two parameters are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
+    /// </summary>
+    //^ [Pure]
+    public static bool ParametersAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IParameterTypeInformation param1, IParameterTypeInformation param2) {
+      if (
+        param1.IsByReference != param2.IsByReference
+        || !TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(param1.Type, param2.Type)
+        || param1.IsModified != param1.IsModified
+      ) {
+        return false;
+      }
+      if (param1.IsModified) {
+        if (!param2.IsModified) return false;
+        IEnumerator<ICustomModifier> customModifier2enumerator = param2.CustomModifiers.GetEnumerator();
+        foreach (ICustomModifier customModifier1 in param1.CustomModifiers) {
+          if (!customModifier2enumerator.MoveNext())
+            return false;
+          ICustomModifier customModifier2 = customModifier2enumerator.Current;
+          if (!TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(customModifier1.Modifier, customModifier2.Modifier))
+            return false;
+          if (customModifier1.IsOptional != customModifier2.IsOptional)
+            return false;
+        }
+      }
+      return true;
+    }
+
+    /// <summary>
     /// Returns true if two parameter lists are equivalent.
     /// </summary>
     //^ [Pure]
@@ -1186,7 +1214,26 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns true if two parameter lists of type IParameterDefinition are equivalent.
+    /// Returns true if two parameter lists are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
+    /// </summary>
+    //^ [Pure]
+    public static bool ParameterListsAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2) {
+      IEnumerator<IParameterTypeInformation> parameterEnumerator2 = paramList2.GetEnumerator();
+      foreach (IParameterTypeInformation parameter1 in paramList1) {
+        if (!parameterEnumerator2.MoveNext()) {
+          return false;
+        }
+        IParameterTypeInformation parameter2 = parameterEnumerator2.Current;
+        if (!TypeHelper.ParametersAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(parameter1, parameter2))
+          return false;
+      }
+      if (parameterEnumerator2.MoveNext())
+        return false;
+      return true;
+    }
+
+    /// <summary>
+    /// Returns true if two parameter lists of type IParameterDefinition are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
     //^ [Pure]
     public static bool ParameterListsAreEquivalent(IEnumerable<IParameterDefinition> paramList1, IEnumerable<IParameterDefinition> paramList2) {
@@ -1503,6 +1550,28 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on,
+    /// assuming that the type parameters of generic methods are equivalent if their indices match.
+    /// </summary>
+    //^ [Pure]
+    public static bool FunctionPointerTypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(
+      IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2) {
+      if (functionPointer1 == null || functionPointer2 == null)
+        return false;
+      if (functionPointer1 == functionPointer2)
+        return true;
+      if (functionPointer1.CallingConvention != functionPointer2.CallingConvention)
+        return false;
+      if (functionPointer1.ReturnValueIsByRef != functionPointer2.ReturnValueIsByRef)
+        return false;
+      if (!TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(functionPointer1.Type, functionPointer2.Type))
+        return false;
+      if (!TypeHelper.ParameterListsAreEquivalent(functionPointer1.Parameters, functionPointer2.Parameters))
+        return false;
+      return TypeHelper.ParameterListsAreEquivalent(functionPointer1.ExtraArgumentTypes, functionPointer2.ExtraArgumentTypes);
+    }
+
+    /// <summary>
     /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     //^ [Pure]
@@ -1550,15 +1619,50 @@ namespace Microsoft.Cci {
       if (type1 == null || type2 == null) return false;
       if (type1 == type2) return true;
       if (type1.InternedKey == type2.InternedKey) return true;
+
       var genMethPar1 = type1 as IGenericMethodParameter;
       var genMethPar2 = type2 as IGenericMethodParameter;
-      if (genMethPar1 != null && genMethPar2 != null) return genMethPar1.Index == genMethPar2.Index;
+      if (genMethPar1 != null || genMethPar2 != null) {
+        if (genMethPar1 == null || genMethPar2 == null) return false;
+        return genMethPar1.Index == genMethPar2.Index;
+      }
+
       var inst1 = type1 as IGenericTypeInstanceReference;
-      if (inst1 == null) return false;
       var inst2 = type2 as IGenericTypeInstanceReference;
-      if (inst2 == null) return false;
-      if (inst1.GenericType.InternedKey != inst2.GenericType.InternedKey) return false;
-      return IteratorHelper.EnumerablesAreEqual<ITypeReference>(inst1.GenericArguments, inst2.GenericArguments, RelaxedTypeEquivalenceComparer.instance);
+      if (inst1 != null || inst2 != null) {
+        if (inst1 == null || inst2 == null) return false;
+        if (!TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(inst1.GenericType, inst2.GenericType)) return false;
+        return IteratorHelper.EnumerablesAreEqual<ITypeReference>(inst1.GenericArguments, inst2.GenericArguments, RelaxedTypeEquivalenceComparer.instance);
+      }
+
+      var array1 = type1 as IArrayTypeReference;
+      var array2 = type2 as IArrayTypeReference;
+      if (array1 != null || array2 != null) {
+        if (array1 == null || array2 == null) return false;
+        return TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(array1.ElementType, array2.ElementType);
+      }
+
+      var pointer1 = type1 as IPointerTypeReference;
+      var pointer2 = type2 as IPointerTypeReference;
+      if (pointer1 != null || pointer2 != null) {
+        if (pointer1 == null || pointer2 == null) return false;
+        return TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(pointer1.TargetType, pointer2.TargetType);
+      }
+
+      var mpointer1 = type1 as IManagedPointerTypeReference;
+      var mpointer2 = type2 as IManagedPointerTypeReference;
+      if (mpointer1 != null || mpointer2 != null) {
+        if (mpointer1 == null || mpointer2 == null) return false;
+        return TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(mpointer1.TargetType, mpointer2.TargetType);
+      }
+
+      var fpointer1 = type1 as IFunctionPointerTypeReference;
+      var fpointer2 = type2 as IFunctionPointerTypeReference;
+      if (fpointer1 != null || fpointer2 != null) {
+        return TypeHelper.FunctionPointerTypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(fpointer1, fpointer2);
+      }
+
+      return false;
     }
 
     /// <summary>
