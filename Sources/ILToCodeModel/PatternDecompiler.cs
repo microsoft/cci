@@ -83,7 +83,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           j = j - pcc.count;
           count = count - pcc.count;
           pushcount = pushcount - pcc.count;
-        } 
+        }
         pushcount++;
       }
       //If the next statement is an expression statement that pops some of the just pushed values, replace those pops with the pushed values and remove the pushes.
@@ -114,7 +114,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     /// <summary>
     /// Finds the following pattern:
-    /// i   :  c ? A : B; // either A or B must be an empty statement and the other is "goto L1;"
+    /// i   :  if (c) A else B; // either A or B must be an empty statement and the other is "goto L1;"
     /// i+1 :  push x;
     /// i+2 :  goto L2;
     /// i+3 :  Block1
@@ -125,8 +125,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     ///             1 : (rest of statements in Block2)
     ///             
     /// Transforms it into:
-    /// i   : push d ? X : Y;
-    /// i+1 : (rest of statements in Block2)
+    /// i   : push (d ? X : Y);
+    /// i+1 : (rest of statements in Block2, preceded by L2 if there are more branches to L2 than just the one that was at i+2)
     /// 
     /// Where if A is the empty statement, then
     ///   d == c, X == x, Y == y
@@ -141,42 +141,43 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (conditionalStatement == null) return false;
       if (statements[i+1] is ConditionalStatement)
         return this.ReplaceChainedShortCircuitBooleanPattern(statements, i);
+      GotoStatement/*?*/ gotoL1 = null;
+      if (conditionalStatement.TrueBranch is EmptyStatement)
+        gotoL1 = conditionalStatement.FalseBranch as GotoStatement;
+      else if (conditionalStatement.FalseBranch is EmptyStatement)
+        gotoL1 = conditionalStatement.TrueBranch as GotoStatement;
+      if (gotoL1 == null) return false;
+
       Push/*?*/ push = statements[i+1] as Push;
       if (push == null) return false;
-      GotoStatement/*?*/ Goto = statements[i+2] as GotoStatement;
-      if (Goto == null) return false;
+      GotoStatement/*?*/ gotoL2 = statements[i+2] as GotoStatement;
+      if (gotoL2 == null) return false;
+
       BasicBlock/*?*/ block = statements[i+3] as BasicBlock;
       if (block == null) return false;
       if (block.Statements.Count < 3) return false;
-      LabeledStatement/*?*/ label = block.Statements[0] as LabeledStatement;
-      if (label == null) return false;
+      LabeledStatement/*?*/ l1 = block.Statements[0] as LabeledStatement;
+      if (l1 == null) return false;
+      if (l1 != gotoL1.TargetStatement) return false;
       List<IGotoStatement> branchesToThisLabel;
-      if (this.predecessors.TryGetValue(label, out branchesToThisLabel)) {
-        if (1 < branchesToThisLabel.Count) return false;
+      if (this.predecessors.TryGetValue(l1, out branchesToThisLabel)) {
+        if (branchesToThisLabel.Count > 1) return false;
       }
       Push/*?*/ push2 = block.Statements[1] as Push;
       if (push2 == null) return false;
+
       BasicBlock/*?*/ block2 = block.Statements[2] as BasicBlock;
-      if (block2 == null || block2.Statements.Count < 1 || block2.Statements[0] != Goto.TargetStatement) return false;
+      if (block2 == null || block2.Statements.Count < 1 || block2.Statements[0] != gotoL2.TargetStatement) return false;
+
+      Conditional conditional = new Conditional();
+      this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
+      this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
+      this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfFalse.Locations);
       if (conditionalStatement.TrueBranch is EmptyStatement) {
-        Conditional conditional = new Conditional();
         conditional.Condition = conditionalStatement.Condition;
         conditional.ResultIfTrue = push.ValueToPush;
         conditional.ResultIfFalse = push2.ValueToPush;
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfFalse.Locations);
-        push.ValueToPush = conditional;
-        push.Locations = conditional.Locations;
-        statements[i] = push;
-        statements.RemoveRange(i+1, 3);
-        block2.Statements.RemoveAt(0);
-        statements.InsertRange(i+1, block2.Statements);
-
-        return true;
-      }
-      if (conditionalStatement.FalseBranch is EmptyStatement) {
-        Conditional conditional = new Conditional();
+      } else if (conditionalStatement.FalseBranch is EmptyStatement) {
         if (ExpressionHelper.IsIntegralZero(push2.ValueToPush)) {
           conditional.Condition = InvertCondition(conditionalStatement.Condition);
           conditional.ResultIfTrue = push.ValueToPush;
@@ -186,19 +187,20 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfTrue = push2.ValueToPush;
           conditional.ResultIfFalse = push.ValueToPush;
         }
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
-        this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfFalse.Locations);
-        push.ValueToPush = conditional;
-        push.Locations = conditional.Locations;
-        statements[i] = push;
-        statements.RemoveRange(i+1, 3);
-        block2.Statements.RemoveAt(0);
-        statements.InsertRange(i+1, block2.Statements);
-
-        return true;
       }
-      return false;
+
+      push.ValueToPush = conditional;
+      push.Locations = conditional.Locations;
+      statements[i] = push;
+      statements.RemoveRange(i+1, 3);
+      var l2 = gotoL2.TargetStatement;
+      this.predecessors.TryGetValue(l2, out branchesToThisLabel);
+      branchesToThisLabel.Remove(gotoL2);
+      if (branchesToThisLabel.Count == 0)
+        block2.Statements.RemoveAt(0);
+      statements.InsertRange(i+1, block2.Statements);
+
+      return true;
     }
 
     private bool ReplaceShortCircuitPattern2(List<IStatement> statements, int i) {
