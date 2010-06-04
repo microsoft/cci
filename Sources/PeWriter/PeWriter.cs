@@ -2933,6 +2933,12 @@ namespace Microsoft.Cci {
           if (method.IsAbstract || method.IsExternal) continue;
           this.SerializeMethodBody(method.Body, writer);
         }
+        foreach (var mem in typeDef.PrivateHelperMembers) {
+          var method = mem as IMethodDefinition;
+          if (method != null && !method.IsAbstract && !method.IsExternal) {
+            this.SerializeMethodBody(method.Body, writer);
+          }
+        }
       }
     }
 
