@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -103,7 +103,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal MoveNextDecompiler(ITypeDefinition iteratorClosureType, IMetadataHost host) {
       this.host = host;
       this.containingType = iteratorClosureType;
-      this.unspecializedContainingType = UnSpecializedMethods.AsUnSpecializedTypeReference(this.containingType);
+      this.unspecializedContainingType = UnspecializedMethods.AsUnspecializedTypeReference(this.containingType);
     }
 
     internal const string stateFieldPostfix = "__state";
@@ -208,7 +208,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Test whether a field is the state field of the iterator closure.
     /// </summary>
     internal bool IsClosureStateField(IFieldReference closureField) {
-      ITypeReference closure = UnSpecializedMethods.AsUnSpecializedTypeReference(closureField.ContainingType);
+      ITypeReference closure = UnspecializedMethods.AsUnspecializedTypeReference(closureField.ContainingType);
       if (!TypeHelper.TypesAreEquivalent(closure, this.unspecializedContainingType))
         return false;
       return (closureField != null && closureField.Name.Value.StartsWith(closureFieldPrefix, System.StringComparison.Ordinal) && closureField.Name.Value.EndsWith(stateFieldPostfix, System.StringComparison.Ordinal));
@@ -218,7 +218,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Test whether a field is the current field of the iterator closure.
     /// </summary>
     internal bool IsClosureCurrentField(IFieldReference closureField) {
-      ITypeReference closure = UnSpecializedMethods.AsUnSpecializedTypeReference(closureField.ContainingType);
+      ITypeReference closure = UnspecializedMethods.AsUnspecializedTypeReference(closureField.ContainingType);
       if (!TypeHelper.TypesAreEquivalent(closure, this.unspecializedContainingType)) return false;
       return (closureField != null && closureField.Name.Value.StartsWith(closureFieldPrefix, System.StringComparison.Ordinal) && closureField.Name.Value.EndsWith(currentFieldPostfix, System.StringComparison.Ordinal));
     }
@@ -267,7 +267,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       : base(host) {
       this.fieldMapping = fieldMapping;
       this.typeParameterMapping = typeParameterMapping;
-      this.unspecializedClosureType = UnSpecializedMethods.AsUnSpecializedTypeReference(closureType);
+      this.unspecializedClosureType = UnspecializedMethods.AsUnspecializedTypeReference(closureType);
     }
 
     /// <summary>
@@ -288,7 +288,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Whether (the unspecialized version of) a type reference is equivalent to the (unspecialized version of) closure class. 
     /// </summary>
     private bool IsClosureType(ITypeReference typeReference) {
-      typeReference = UnSpecializedMethods.AsUnSpecializedTypeReference(typeReference);
+      typeReference = UnspecializedMethods.AsUnspecializedTypeReference(typeReference);
       return TypeHelper.TypesAreEquivalent(typeReference, this.unspecializedClosureType);
     }
 
@@ -486,7 +486,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Test to see if the type reference is to a compiler generated class. 
     /// </summary>
     private bool IsCompilerGeneratedClass(ITypeReference typeReference) {
-      typeReference = UnSpecializedMethods.AsUnSpecializedTypeReference(typeReference);
+      typeReference = UnspecializedMethods.AsUnspecializedTypeReference(typeReference);
       ITypeDefinition typeDefinition = typeReference.ResolvedType;
       if (AttributeHelper.Contains(typeDefinition.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return true;
@@ -779,7 +779,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private IGotoStatement gotoFromSwitchCase;
 
     /// <summary>
-    /// The main entry point of the class.
+    /// Traverse method body to collect gotos in a goto chain left after a switch statement has been deleted. 
     /// 
     /// Currently we assume there is always one intermediate goto in the goto chain for a continuing state, and none
     /// for the default case.

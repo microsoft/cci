@@ -128,14 +128,14 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
   }
 
-  internal class UnSpecializedMethods {
+  internal class UnspecializedMethods {
     /// <summary>
     /// Get the unspecialized method definition is <paramref name="methodDefinition"/> is a specialized
     /// version, or itself otherwise. 
     /// </summary>
     /// <param name="methodDefinition"></param>
     /// <returns></returns>
-    internal static IMethodDefinition UnSpecializedMethodDefinition(IMethodDefinition methodDefinition) {
+    internal static IMethodDefinition UnspecializedMethodDefinition(IMethodDefinition methodDefinition) {
       IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
       if (genericMethodInstance != null) {
         return genericMethodInstance.GenericMethod.ResolvedMethod;
@@ -152,7 +152,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="fieldDefinition"></param>
     /// <returns></returns>
-    internal static IFieldDefinition UnSpecializedFieldDefinition(IFieldDefinition fieldDefinition) {
+    internal static IFieldDefinition UnspecializedFieldDefinition(IFieldDefinition fieldDefinition) {
       ISpecializedFieldDefinition specializedFieldDefinition = fieldDefinition as ISpecializedFieldDefinition;
       if (specializedFieldDefinition != null) return specializedFieldDefinition.UnspecializedVersion;
       return fieldDefinition;
@@ -180,7 +180,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="typeReference"></param>
     /// <returns></returns>
-    public static bool IsCompilerGenerated(ITypeReference/*!*/ typeReference) {
+    internal static bool IsCompilerGenerated(ITypeReference/*!*/ typeReference) {
       if (AttributeHelper.Contains(typeReference.ResolvedType.Attributes, typeReference.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return true;
       IGenericTypeInstanceReference genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
@@ -194,7 +194,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ISpecializedNestedTypeDefinition specializedNestedTypeDefinition = typeReference as ISpecializedNestedTypeDefinition;
       if (specializedNestedTypeDefinition != null && IsCompilerGenerated(specializedNestedTypeDefinition.UnspecializedVersion))
         return true;
-      INestedTypeReference nestedTypeReference = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(typeReference);
+      INestedTypeReference nestedTypeReference = UnspecializedMethods.AsUnspecializedNestedTypeReference(typeReference);
       if (nestedTypeReference != null) return IsCompilerGenerated(nestedTypeReference.ContainingType);
       return false;
     }
@@ -204,7 +204,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="methodDefinition"></param>
     /// <returns></returns>
-    public static bool IsCompilerGenerated(IMethodDefinition/*!*/ methodDefinition) {
+    internal static bool IsCompilerGenerated(IMethodDefinition/*!*/ methodDefinition) {
       if (AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return true;
       IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
@@ -214,51 +214,39 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// See if a field reference refers to a field definition that is compiler generated, or is inside a compiler generated
-    /// type.
+    /// Returns true if the given field reference refers to a field that is compiler generated.
     /// </summary>
-    /// <param name="fieldReference"></param>
-    /// <returns></returns>
     public static bool IsCompilerGenerated(IFieldReference/*!*/ fieldReference) {
-      if (AttributeHelper.Contains(fieldReference.ResolvedField.Attributes, fieldReference.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-        return true;
-      ISpecializedFieldReference specializedFieldReference = fieldReference as ISpecializedFieldReference;
-      if (specializedFieldReference != null)
-        return IsCompilerGenerated(specializedFieldReference.UnspecializedVersion);
-      return IsCompilerGenerated(fieldReference.ContainingType);
+      var specializedFieldReference = fieldReference as ISpecializedFieldReference;
+      if (specializedFieldReference != null) return IsCompilerGenerated(specializedFieldReference.UnspecializedVersion);
+      if (IsCompilerGenerated(fieldReference.ContainingType)) return true;
+      var field = fieldReference.ResolvedField; //This is unfortunate, but in the case of a (specialized) field reference where the containing type is a generic type instance
+      //the unspecialized field is not a definition even if the generic type template is defined in the same assembly. Resolving seems to be the only way to tell.
+      return AttributeHelper.Contains(field.Attributes, field.ContainingType.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute);
     }
 
     /// <summary>
-    /// Given a type reference <paramref name="typeReference"/>, convert it to an INestedTypeReference object if
-    /// it is one, or if its unspecialized version is a INestedTypeReference. Otherwise return null. 
+    /// If the type reference refers to a nested type, return a reference to the uninstantiated and/or unspecialized version 
+    /// of the nested type. Otherwise return null. 
     /// </summary>
-    /// <param name="typeReference"></param>
-    /// <returns></returns>
-    internal static INestedTypeReference/*?*/ AsUnSpecializedNestedTypeReference(ITypeReference typeReference) {
-      INestedTypeReference nestedTypeReference = typeReference as INestedTypeReference;
-      if (nestedTypeReference != null) return nestedTypeReference;
-      IGenericTypeInstanceReference genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
-      if (genericTypeInstanceReference != null) {
-        return genericTypeInstanceReference.GenericType as INestedTypeReference;
-      }
-      return null;
+    internal static INestedTypeReference/*?*/ AsUnspecializedNestedTypeReference(ITypeReference typeReference) {
+      var genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstanceReference != null) return AsUnspecializedNestedTypeReference(genericTypeInstanceReference.GenericType);
+      var specializedNestedTypeReference = typeReference as ISpecializedNestedTypeReference;
+      if (specializedNestedTypeReference != null) return specializedNestedTypeReference.UnspecializedVersion;
+      return typeReference as INestedTypeReference;
     }
 
     /// <summary>
     /// Given a type, if it is a specialized type, return its generic type. Otherwise return itself.
+    /// If the type reference refers to a nested type, return a reference to the uninstantiated and/or unspecialized version 
+    /// of the nested type. Otherwise return the given type reference. 
     /// </summary>
-    /// <param name="typeReference"></param>
-    /// <returns></returns>
-    internal static ITypeReference/*!*/ AsUnSpecializedTypeReference(ITypeReference/*!*/ typeReference) {
+    internal static ITypeReference/*!*/ AsUnspecializedTypeReference(ITypeReference/*!*/ typeReference) {
       IGenericTypeInstanceReference genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
-      if (genericTypeInstanceReference != null)
-        return AsUnSpecializedTypeReference(genericTypeInstanceReference.GenericType);
-      ISpecializedNestedTypeReference specializedNestedTypeReference = typeReference as ISpecializedNestedTypeReference;
-      if (specializedNestedTypeReference != null)
-        return specializedNestedTypeReference.UnspecializedVersion;
-      ISpecializedNestedTypeDefinition specializedNestedTypeDefinition = typeReference.ResolvedType as ISpecializedNestedTypeDefinition;
-      if (specializedNestedTypeDefinition != null)
-        return specializedNestedTypeDefinition.UnspecializedVersion;
+      if (genericTypeInstanceReference != null) return AsUnspecializedTypeReference(genericTypeInstanceReference.GenericType);
+      var specializedNestedTypeReference = typeReference as ISpecializedNestedTypeReference;
+      if (specializedNestedTypeReference != null) return specializedNestedTypeReference.UnspecializedVersion;
       return typeReference;
     }
   }

@@ -85,26 +85,26 @@ namespace Microsoft.Cci.ILToCodeModel {
         var statement = statements[i++];
         locDecl = statement as LocalDeclarationStatement;
         if (locDecl == null || !(locDecl.InitialValue is ICreateObjectInstance)) continue;
-        closureType = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(locDecl.LocalVariable.Type);
+        closureType = UnspecializedMethods.AsUnspecializedNestedTypeReference(locDecl.LocalVariable.Type);
       }
       if (closureType == null) return;
       //REVIEW: need to avoid resolving types that are not defined in the module we are analyzing.
-      ITypeReference t1 = UnSpecializedMethods.AsUnSpecializedTypeReference(closureType.ContainingType.ResolvedType);
-      ITypeReference t2 = UnSpecializedMethods.AsUnSpecializedTypeReference(this.containingType);
+      ITypeReference t1 = UnspecializedMethods.AsUnspecializedTypeReference(closureType.ContainingType.ResolvedType);
+      ITypeReference t2 = UnspecializedMethods.AsUnspecializedTypeReference(this.containingType);
       if (t1 != t2) return;
-      if (!UnSpecializedMethods.IsCompilerGenerated(closureType.ResolvedType)) return;
+      if (!UnspecializedMethods.IsCompilerGenerated(closureType.ResolvedType)) return;
       if (this.sourceMethodBody.privateHelperTypesToRemove == null) this.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
       this.sourceMethodBody.privateHelperTypesToRemove.Add(closureType.ResolvedType);
       this.currentClosureLocal = locDecl.LocalVariable;
-      statements.RemoveAt(i - 1);
-      for (int j = i - 1; j < statements.Count; j++) {
+      statements.RemoveAt(i-1);
+      for (int j = i-1; j < statements.Count; j++) {
         IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
         if (es == null) break;
         IAssignment/*?*/ assignment = es.Expression as IAssignment;
         if (assignment == null) break;
         IFieldReference/*?*/ closureField = assignment.Target.Definition as IFieldReference;
         if (closureField == null) break;
-        ITypeReference closureFieldContainingType = UnSpecializedMethods.AsUnSpecializedNestedTypeReference(assignment.Target.Instance.Type);
+        ITypeReference closureFieldContainingType = UnspecializedMethods.AsUnspecializedNestedTypeReference(assignment.Target.Instance.Type);
         if (closureFieldContainingType == null) break;
         if (!TypeHelper.TypesAreEquivalent(closureFieldContainingType, closureType)) break;
         IThisReference thisReference = assignment.Source as IThisReference;
@@ -118,12 +118,10 @@ namespace Microsoft.Cci.ILToCodeModel {
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                Name = closureField.ResolvedField.Name,
-                Type = closureField.Type
+                Name = closureField.ResolvedField.Name, Type = closureField.Type
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
-                LocalVariable = localDefinition,
-                InitialValue = ctc
+                LocalVariable = localDefinition, InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
@@ -138,7 +136,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.capturedLocalOrParameter.ContainsKey(field.Name.Value)) continue;
         var newLocal = new LocalDefinition() { Name = field.Name, Type = field.Type };
         var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
-        statements.Insert(i - 1, newLocalDecl);
+        statements.Insert(i-1, newLocalDecl);
         this.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
       }
     }
@@ -181,19 +179,19 @@ namespace Microsoft.Cci.ILToCodeModel {
         return ConvertToAnonymousDelegate(createDelegateInstance);
       CompileTimeConstant/*?*/ cc = createDelegateInstance.Instance as CompileTimeConstant;
       IMethodDefinition delegateMethodDefinition = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
-      delegateMethodDefinition = UnSpecializedMethods.UnSpecializedMethodDefinition(delegateMethodDefinition);
+      delegateMethodDefinition = UnspecializedMethods.UnspecializedMethodDefinition(delegateMethodDefinition);
       ITypeReference delegateContainingType = createDelegateInstance.MethodToCallViaDelegate.ContainingType;
-      delegateContainingType = UnSpecializedMethods.AsUnSpecializedTypeReference(delegateContainingType);
+      delegateContainingType = UnspecializedMethods.AsUnspecializedTypeReference(delegateContainingType);
       bool IsNullInstanceOrThis = (cc != null && cc.Value == null) || createDelegateInstance.Instance is IThisReference;
       if (IsNullInstanceOrThis && TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) &&
-        UnSpecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
+        UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
         return ConvertToAnonymousDelegate(createDelegateInstance);
       return base.Visit(createDelegateInstance);
     }
 
     private IExpression ConvertToAnonymousDelegate(CreateDelegateInstance createDelegateInstance) {
       IMethodDefinition closureMethod = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
-      IMethodBody closureMethodBody = UnSpecializedMethods.GetMethodBodyFromUnspecializedVersion(closureMethod);
+      IMethodBody closureMethodBody = UnspecializedMethods.GetMethodBodyFromUnspecializedVersion(closureMethod);
       AnonymousDelegate anonDel = new AnonymousDelegate();
       anonDel.CallingConvention = closureMethod.CallingConvention;
       anonDel.Parameters = new List<IParameterDefinition>(closureMethod.Parameters);
@@ -258,10 +256,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast,
-            TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type,
-            Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type, Locations = greaterThan.Locations
           });
         }
       }
@@ -270,10 +266,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast,
-            TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type,
-            Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type, Locations = greaterThan.Locations
           });
         }
       }
@@ -453,8 +447,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (conditionalStatement != null) {
           IBoundExpression boundExpression = conditionalStatement.Condition as IBoundExpression;
           if (boundExpression != null) {
-            IFieldReference fieldReference = boundExpression.Definition as IFieldReference;
-            if (fieldReference != null && UnSpecializedMethods.IsCompilerGenerated(fieldReference) && fieldReference.Name.Value.Contains(CachedDelegateId)) {
+            var fieldReference = boundExpression.Definition as IFieldReference;
+            if (fieldReference != null && UnspecializedMethods.IsCompilerGenerated(fieldReference) && fieldReference.Name.Value.Contains(CachedDelegateId)) {
               CachedDelegateInfo info = new CachedDelegateInfo(fieldReference.Name.Value);
               IGotoStatement gotoStatement = conditionalStatement.TrueBranch as IGotoStatement;
               if (gotoStatement == null) gotoStatement = conditionalStatement.FalseBranch as IGotoStatement;
