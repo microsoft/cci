@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -3267,7 +3267,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
             break;
           default:
             this.ErrorContainer.AddDirectoryError(Directories.Cor20HeaderMetaData, streamHeader.Offset, MetadataReaderErrorKind.UnknownMetadataStream);
-            return false;
+            break;
         }
       }
       return true;
