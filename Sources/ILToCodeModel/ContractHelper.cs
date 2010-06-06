@@ -124,6 +124,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           tdm => {
             IMethodDefinition md = tdm as IMethodDefinition;
             if (md == null) return false;
+            if (md.Name != methodDefinition.Name) return false;
             return MemberHelper.MethodsAreEquivalent(md, methodDefinition);
           });
         if (IteratorHelper.EnumerableIsNotEmpty(implicitImplementations))
@@ -544,8 +545,11 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
 
           // Dump all reference assemblies for this unit.
-          foreach (var d in this.unit2ReferenceAssemblies[unit]) {
-            this.RemoveUnit(d.UnitIdentity);
+          List<IUnitReference> referenceAssemblies;
+          if (this.unit2ReferenceAssemblies.TryGetValue(unit, out referenceAssemblies)) {
+            foreach (var d in referenceAssemblies) {
+              this.RemoveUnit(d.UnitIdentity);
+            }
           }
 
           // Dump stale version from cache
