@@ -1675,6 +1675,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="greaterThan"></param>
     public GreaterThan(IGreaterThan greaterThan)
       : base(greaterThan) {
+      this.unsignedOrUnordered = greaterThan.IsUnsignedOrUnordered;
     }
 
     /// <summary>
@@ -1683,6 +1684,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    /// <value></value>
+    public bool IsUnsignedOrUnordered {
+      get { return this.unsignedOrUnordered; }
+      set { this.unsignedOrUnordered = value; }
+    }
+    bool unsignedOrUnordered;
 
   }
 
@@ -1703,6 +1714,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="greaterThanOrEqual"></param>
     public GreaterThanOrEqual(IGreaterThanOrEqual greaterThanOrEqual)
       : base(greaterThanOrEqual) {
+      this.unsignedOrUnordered = greaterThanOrEqual.IsUnsignedOrUnordered;
     }
 
     /// <summary>
@@ -1711,6 +1723,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    /// <value></value>
+    public bool IsUnsignedOrUnordered {
+      get { return this.unsignedOrUnordered; }
+      set { this.unsignedOrUnordered = value; }
+    }
+    bool unsignedOrUnordered;
 
   }
 
@@ -1759,6 +1781,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="lessThan"></param>
     public LessThan(ILessThan lessThan)
       : base(lessThan) {
+      this.unsignedOrUnordered = lessThan.IsUnsignedOrUnordered;
     }
 
     /// <summary>
@@ -1767,6 +1790,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    /// <value></value>
+    public bool IsUnsignedOrUnordered {
+      get { return this.unsignedOrUnordered; }
+      set { this.unsignedOrUnordered = value; }
+    }
+    bool unsignedOrUnordered;
 
   }
 
@@ -1787,6 +1820,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="lessThanOrEqual"></param>
     public LessThanOrEqual(ILessThanOrEqual lessThanOrEqual)
       : base(lessThanOrEqual) {
+      this.unsignedOrUnordered = lessThanOrEqual.IsUnsignedOrUnordered;
     }
 
     /// <summary>
@@ -1795,6 +1829,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    /// <value></value>
+    public bool IsUnsignedOrUnordered {
+      get { return this.unsignedOrUnordered; }
+      set { this.unsignedOrUnordered = value; }
+    }
+    bool unsignedOrUnordered;
 
   }
 

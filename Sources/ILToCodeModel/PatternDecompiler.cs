@@ -296,9 +296,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       return false;
     }
 
-    private static IExpression InvertCondition(IExpression expression) {
+    internal static IExpression InvertCondition(IExpression expression) {
       IBinaryOperation/*?*/ binOp = expression as IBinaryOperation;
       if (binOp != null) return InvertBinaryOperation(binOp);
+      ILogicalNot/*?*/ logNot = expression as ILogicalNot;
+      if (logNot != null) return logNot.Operand;
       LogicalNot logicalNot = new LogicalNot();
       logicalNot.Operand = expression;
       logicalNot.Locations.AddRange(expression.Locations);
@@ -307,18 +309,18 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private static IExpression InvertBinaryOperation(IBinaryOperation binOp) {
       BinaryOperation/*?*/ result = null;
-      if (binOp is IEquality)
+      if (binOp is IEquality && binOp.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float32 && binOp.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float64)
         result = new NotEquality();
-      else if (binOp is INotEquality)
+      else if (binOp is INotEquality && binOp.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float32 && binOp.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float64)
         result = new Equality();
       else if (binOp is ILessThan)
-        result = new GreaterThanOrEqual();
+        result = new GreaterThanOrEqual() { IsUnsignedOrUnordered = KeepUnsignedButInvertUnordered(((ILessThan)binOp).IsUnsignedOrUnordered, binOp) };
       else if (binOp is ILessThanOrEqual)
-        result = new GreaterThan();
+        result = new GreaterThan() { IsUnsignedOrUnordered = KeepUnsignedButInvertUnordered(((ILessThanOrEqual)binOp).IsUnsignedOrUnordered, binOp) };
       else if (binOp is IGreaterThan)
-        result = new LessThanOrEqual();
+        result = new LessThanOrEqual() { IsUnsignedOrUnordered = KeepUnsignedButInvertUnordered(((IGreaterThan)binOp).IsUnsignedOrUnordered, binOp) };
       else if (binOp is IGreaterThanOrEqual)
-        result = new LessThan();
+        result = new LessThan() { IsUnsignedOrUnordered = KeepUnsignedButInvertUnordered(((IGreaterThanOrEqual)binOp).IsUnsignedOrUnordered, binOp) };
       if (result != null) {
         result.LeftOperand = binOp.LeftOperand;
         result.RightOperand = binOp.RightOperand;
@@ -329,6 +331,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       logicalNot.Operand = binOp;
       logicalNot.Locations.AddRange(binOp.Locations);
       return logicalNot;
+    }
+
+    private static bool KeepUnsignedButInvertUnordered(bool usignedOrUnordered, IBinaryOperation binOp) {
+      var isIntegerOperation = TypeHelper.IsPrimitiveInteger(binOp.LeftOperand.Type);
+      if (usignedOrUnordered) return isIntegerOperation;
+      return !isIntegerOperation; //i.e. !(x < y) is the same as (x >= y) only if first comparison returns the opposite result than the second for the unordered case.
     }
 
     private bool ReplaceChainedShortCircuitBooleanPattern(List<IStatement> statements, int i) {

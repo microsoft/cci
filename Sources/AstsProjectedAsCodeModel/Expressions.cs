@@ -5982,6 +5982,15 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    public bool IsUnsignedOrUnordered {
+      get {
+        return TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedLeftOperand.Type);
+      }
+    }
+
+    /// <summary>
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     /// <returns></returns>

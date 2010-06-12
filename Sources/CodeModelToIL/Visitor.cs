@@ -1322,8 +1322,8 @@ namespace Microsoft.Cci {
     public override void Visit(IGreaterThan greaterThan) {
       this.Visit(greaterThan.LeftOperand);
       this.Visit(greaterThan.RightOperand);
-      if (TypeHelper.IsUnsignedPrimitive(greaterThan.LeftOperand.Type))
-        this.generator.Emit(OperationCode.Cgt_Un); //unsigned
+      if (greaterThan.IsUnsignedOrUnordered)
+        this.generator.Emit(OperationCode.Cgt_Un);
       else
         this.generator.Emit(OperationCode.Cgt);
       this.StackSize--;
@@ -1336,10 +1336,10 @@ namespace Microsoft.Cci {
     public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
       this.Visit(greaterThanOrEqual.LeftOperand);
       this.Visit(greaterThanOrEqual.RightOperand);
-      if (TypeHelper.IsSignedPrimitive(greaterThanOrEqual.LeftOperand.Type))
+      if (greaterThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Clt);
       else
-        this.generator.Emit(OperationCode.Clt_Un); //unsigned or unordered
+        this.generator.Emit(OperationCode.Clt_Un);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.generator.Emit(OperationCode.Ceq);
       this.StackSize--;
@@ -1377,8 +1377,8 @@ namespace Microsoft.Cci {
     public override void Visit(ILessThan lessThan) {
       this.Visit(lessThan.LeftOperand);
       this.Visit(lessThan.RightOperand);
-      if (TypeHelper.IsUnsignedPrimitive(lessThan.LeftOperand.Type))
-        this.generator.Emit(OperationCode.Clt_Un); //unsigned
+      if (lessThan.IsUnsignedOrUnordered)
+        this.generator.Emit(OperationCode.Clt_Un);
       else
         this.generator.Emit(OperationCode.Clt);
       this.StackSize--;
@@ -1391,10 +1391,10 @@ namespace Microsoft.Cci {
     public override void Visit(ILessThanOrEqual lessThanOrEqual) {
       this.Visit(lessThanOrEqual.LeftOperand);
       this.Visit(lessThanOrEqual.RightOperand);
-      if (TypeHelper.IsSignedPrimitive(lessThanOrEqual.LeftOperand.Type))
+      if (lessThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Cgt);
       else
-        this.generator.Emit(OperationCode.Cgt_Un); //unsigned or unordered
+        this.generator.Emit(OperationCode.Cgt_Un);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.generator.Emit(OperationCode.Ceq);
       this.StackSize--;
@@ -3782,10 +3782,10 @@ namespace Microsoft.Cci {
           branchOp = OperationCode.Brfalse;
           expression = binaryOperation.LeftOperand;
         }
-      } else if (binaryOperation is ILessThan) branchOp = signedPrimitive ? OperationCode.Bge : OperationCode.Bge_Un;
-      else if (binaryOperation is ILessThanOrEqual) branchOp = signedPrimitive ? OperationCode.Bgt : OperationCode.Bgt_Un;
-      else if (binaryOperation is IGreaterThan) branchOp = signedPrimitive ? OperationCode.Ble : OperationCode.Ble_Un;
-      else if (binaryOperation is IGreaterThanOrEqual) branchOp = signedPrimitive ? OperationCode.Blt : OperationCode.Blt_Un;
+      } else if (binaryOperation is ILessThan) branchOp = KeepUnsignedButInvertUnordered(((ILessThan)binaryOperation).IsUnsignedOrUnordered, binaryOperation) ? OperationCode.Bge_Un : OperationCode.Bge;
+      else if (binaryOperation is ILessThanOrEqual) branchOp = KeepUnsignedButInvertUnordered(((ILessThanOrEqual)binaryOperation).IsUnsignedOrUnordered, binaryOperation) ? OperationCode.Bgt_Un : OperationCode.Bgt;
+      else if (binaryOperation is IGreaterThan) branchOp = KeepUnsignedButInvertUnordered(((IGreaterThan)binaryOperation).IsUnsignedOrUnordered, binaryOperation) ? OperationCode.Ble_Un : OperationCode.Ble;
+      else if (binaryOperation is IGreaterThanOrEqual) branchOp = KeepUnsignedButInvertUnordered(((IGreaterThanOrEqual)binaryOperation).IsUnsignedOrUnordered, binaryOperation) ? OperationCode.Blt_Un : OperationCode.Blt;
       else {
         IConditional/*?*/ conditional = expression as IConditional;
         if (conditional != null) {
@@ -3844,6 +3844,12 @@ namespace Microsoft.Cci {
       this.generator.Emit(branchOp, targetLabel);
     }
 
+    private static bool KeepUnsignedButInvertUnordered(bool usignedOrUnordered, IBinaryOperation binOp) {
+      var isIntegerOperation = TypeHelper.IsPrimitiveInteger(binOp.LeftOperand.Type);
+      if (usignedOrUnordered) return isIntegerOperation;
+      return !isIntegerOperation; //i.e. !(x < y) is the same as (x >= y) only if first comparison returns the opposite result than the second for the unordered case.
+    }
+
     private void VisitBranchIfTrue(IExpression expression, ILGeneratorLabel targetLabel) {
       OperationCode branchOp = OperationCode.Brtrue;
       IBinaryOperation/*?*/ binaryOperation = expression as IBinaryOperation;
@@ -3870,10 +3876,10 @@ namespace Microsoft.Cci {
           branchOp = OperationCode.Brtrue;
           expression = binaryOperation.LeftOperand;
         }
-      } else if (binaryOperation is ILessThan) branchOp = signedPrimitive ? OperationCode.Blt : OperationCode.Blt_Un;
-      else if (binaryOperation is ILessThanOrEqual) branchOp = signedPrimitive ? OperationCode.Ble : OperationCode.Ble_Un;
-      else if (binaryOperation is IGreaterThan) branchOp = signedPrimitive ? OperationCode.Bgt : OperationCode.Bgt_Un;
-      else if (binaryOperation is IGreaterThanOrEqual) branchOp = signedPrimitive ? OperationCode.Bge : OperationCode.Bge_Un;
+      } else if (binaryOperation is ILessThan) branchOp = ((ILessThan)binaryOperation).IsUnsignedOrUnordered ? OperationCode.Blt_Un : OperationCode.Blt;
+      else if (binaryOperation is ILessThanOrEqual) branchOp = ((ILessThanOrEqual)binaryOperation).IsUnsignedOrUnordered ? OperationCode.Ble_Un : OperationCode.Ble;
+      else if (binaryOperation is IGreaterThan) branchOp = ((IGreaterThan)binaryOperation).IsUnsignedOrUnordered ? OperationCode.Bgt_Un : OperationCode.Bgt;
+      else if (binaryOperation is IGreaterThanOrEqual) branchOp = ((IGreaterThanOrEqual)binaryOperation).IsUnsignedOrUnordered ? OperationCode.Bge_Un : OperationCode.Bge;
       else {
         IConditional/*?*/ conditional = expression as IConditional;
         if (conditional != null) {

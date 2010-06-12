@@ -392,17 +392,57 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(IGreaterThan greaterThan) {
+      if (greaterThan.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThan.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("!(");
+        this.Visit(greaterThan.LeftOperand);
+        this.sourceEmitterOutput.Write(" <= ");
+        this.Visit(greaterThan.RightOperand);
+        this.sourceEmitterOutput.Write(")");
+        return;
+      }
       this.sourceEmitterOutput.Write("(");
+      if (greaterThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThan.LeftOperand.Type) && 
+        greaterThan.LeftOperand.Type != TypeHelper.UnsignedEquivalent(greaterThan.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThan.LeftOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(greaterThan.LeftOperand);
       this.sourceEmitterOutput.Write(" > ");
+      if (greaterThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThan.RightOperand.Type) && 
+        greaterThan.RightOperand.Type != TypeHelper.UnsignedEquivalent(greaterThan.RightOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThan.RightOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(greaterThan.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
     public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+      if (greaterThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("!(");
+        this.Visit(greaterThanOrEqual.LeftOperand);
+        this.sourceEmitterOutput.Write(" < ");
+        this.Visit(greaterThanOrEqual.RightOperand);
+        this.sourceEmitterOutput.Write(")");
+        return;
+      }
       this.sourceEmitterOutput.Write("(");
+      if (greaterThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type) && 
+        greaterThanOrEqual.LeftOperand.Type != TypeHelper.UnsignedEquivalent(greaterThanOrEqual.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThanOrEqual.LeftOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(greaterThanOrEqual.LeftOperand);
       this.sourceEmitterOutput.Write(" >= ");
+      if (greaterThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.RightOperand.Type) && 
+        greaterThanOrEqual.RightOperand.Type != TypeHelper.UnsignedEquivalent(greaterThanOrEqual.RightOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThanOrEqual.RightOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(greaterThanOrEqual.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -416,17 +456,57 @@ namespace CSharpSourceEmitter {
     }
 
     public override void Visit(ILessThan lessThan) {
+      if (lessThan.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThan.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("!(");
+        this.Visit(lessThan.LeftOperand);
+        this.sourceEmitterOutput.Write(" >= ");
+        this.Visit(lessThan.RightOperand);
+        this.sourceEmitterOutput.Write(")");
+        return;
+      }
       this.sourceEmitterOutput.Write("(");
+      if (lessThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThan.LeftOperand.Type) && 
+        lessThan.LeftOperand.Type != TypeHelper.UnsignedEquivalent(lessThan.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThan.LeftOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(lessThan.LeftOperand);
       this.sourceEmitterOutput.Write(" < ");
+      if (lessThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThan.RightOperand.Type) && 
+        lessThan.RightOperand.Type != TypeHelper.UnsignedEquivalent(lessThan.RightOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThan.RightOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(lessThan.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
     public override void Visit(ILessThanOrEqual lessThanOrEqual) {
+      if (lessThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("!(");
+        this.Visit(lessThanOrEqual.LeftOperand);
+        this.sourceEmitterOutput.Write(" > ");
+        this.Visit(lessThanOrEqual.RightOperand);
+        this.sourceEmitterOutput.Write(")");
+        return;
+      }
       this.sourceEmitterOutput.Write("(");
+      if (lessThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type) && 
+        lessThanOrEqual.LeftOperand.Type != TypeHelper.UnsignedEquivalent(lessThanOrEqual.LeftOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThanOrEqual.LeftOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(lessThanOrEqual.LeftOperand);
       this.sourceEmitterOutput.Write(" <= ");
+      if (lessThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThanOrEqual.RightOperand.Type) && 
+        lessThanOrEqual.RightOperand.Type != TypeHelper.UnsignedEquivalent(lessThanOrEqual.RightOperand.Type)) {
+        this.sourceEmitterOutput.Write("(");
+        this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThanOrEqual.RightOperand.Type));
+        this.sourceEmitterOutput.Write(")");
+      }
       this.Visit(lessThanOrEqual.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -548,7 +628,7 @@ namespace CSharpSourceEmitter {
 
     public virtual void PrintEnumValue(ITypeDefinition enumType, object valObj) {
       bool flags = (Utils.FindAttribute(enumType.Attributes, SpecialAttribute.Flags) != null);
-    
+
       // Loop through all the enum constants looking for a match
       ulong value = UnboxToULong(valObj);
       bool success = false;
@@ -568,15 +648,13 @@ namespace CSharpSourceEmitter {
       bool negate = false;
       int nBits = Marshal.SizeOf(valObj)*8;
       ulong highBit = 1ul << (nBits - 1);
-      if (flags && (value & highBit) == highBit && constants.Count > 0 && (UnboxToULong(constants[0].CompileTimeValue.Value) & highBit) == 0)
-      {
+      if (flags && (value & highBit) == highBit && constants.Count > 0 && (UnboxToULong(constants[0].CompileTimeValue.Value) & highBit) == 0) {
         value = (~value) & ((1UL << nBits) - 1);
         negate = true;
         sourceEmitterOutput.Write("~(");
       }
       ulong valLeft = value;
-      foreach (var c in constants)
-      {
+      foreach (var c in constants) {
         ulong fv = UnboxToULong(c.CompileTimeValue.Value);
         if (valLeft == fv || (flags && (fv != 0) && ((valLeft & fv) == fv))) {
           if (valLeft != value)
@@ -601,28 +679,26 @@ namespace CSharpSourceEmitter {
         sourceEmitterOutput.Write(")");
     }
 
-    private static ulong UnboxToULong(object obj)
-    {
+    private static ulong UnboxToULong(object obj) {
       // Can't just cast - must unbox to specific type.
       // Can't use Convert.ToUInt64 - it'll throw for negative numbers
-      switch (Convert.GetTypeCode(obj))
-      {
-          case TypeCode.Byte:
-              return (ulong)(Byte)obj;
-          case TypeCode.SByte:
-              return (ulong)(Byte)(SByte)obj;
-          case TypeCode.UInt16:
-              return (ulong)(UInt16)obj;
-          case TypeCode.Int16:
-              return (ulong)(UInt16)(Int16)obj;
-          case TypeCode.UInt32:
-              return (ulong)(UInt32)obj;
-          case TypeCode.Int32:
-              return (ulong)(UInt32)(Int32)obj;
-          case TypeCode.UInt64:
-              return (ulong)obj;
-          case TypeCode.Int64:
-              return (ulong)(Int64)obj;
+      switch (Convert.GetTypeCode(obj)) {
+        case TypeCode.Byte:
+          return (ulong)(Byte)obj;
+        case TypeCode.SByte:
+          return (ulong)(Byte)(SByte)obj;
+        case TypeCode.UInt16:
+          return (ulong)(UInt16)obj;
+        case TypeCode.Int16:
+          return (ulong)(UInt16)(Int16)obj;
+        case TypeCode.UInt32:
+          return (ulong)(UInt32)obj;
+        case TypeCode.Int32:
+          return (ulong)(UInt32)(Int32)obj;
+        case TypeCode.UInt64:
+          return (ulong)obj;
+        case TypeCode.Int64:
+          return (ulong)(Int64)obj;
       }
       // Argument must be of integral type (not in message becaseu we don't want english strings in CCI)
       throw new ArgumentException();

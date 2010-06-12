@@ -510,12 +510,20 @@ namespace Microsoft.Cci {
   /// An expression that results in true if the value of the left operand is greater than the value of the right operand.
   /// </summary>
   public interface IGreaterThan : IBinaryOperation {
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    bool IsUnsignedOrUnordered { get; }
   }
 
   /// <summary>
   /// An expression that results in true if the value of the left operand is greater than or equal to the value of the right operand.
   /// </summary>
   public interface IGreaterThanOrEqual : IBinaryOperation {
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    bool IsUnsignedOrUnordered { get; }
   }
 
   /// <summary>
@@ -528,12 +536,20 @@ namespace Microsoft.Cci {
   /// An expression that results in true if the value of the left operand is less than the value of the right operand.
   /// </summary>
   public interface ILessThan : IBinaryOperation {
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    bool IsUnsignedOrUnordered { get; }
   }
 
   /// <summary>
   /// An expression that results in true if the value of the left operand is less than or equal to the value of the right operand.
   /// </summary>
   public interface ILessThanOrEqual : IBinaryOperation {
+    /// <summary>
+    /// If the operands are integers, use unsigned comparison. If the operands are floating point numbers, return true if the operands are unordered.
+    /// </summary>
+    bool IsUnsignedOrUnordered { get; }
   }
 
   /// <summary>

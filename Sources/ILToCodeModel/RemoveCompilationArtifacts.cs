@@ -284,7 +284,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IExpression Visit(Equality equality) {
       if (equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         if (ExpressionHelper.IsIntegralZero(equality.RightOperand))
-          return InvertCondition(this.Visit(equality.LeftOperand));
+          return PatternDecompiler.InvertCondition(this.Visit(equality.LeftOperand));
       }
       return base.Visit(equality);
     }
@@ -344,7 +344,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(LogicalNot logicalNot) {
       if (logicalNot.Type == Dummy.TypeReference)
-        return InvertCondition(this.Visit(logicalNot.Operand));
+        return PatternDecompiler.InvertCondition(this.Visit(logicalNot.Operand));
       else if (logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Int32)
         return new Equality() {
           LeftOperand = logicalNot.Operand,
@@ -354,50 +354,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         };
       else
         return base.Visit(logicalNot);
-    }
-
-    private static IExpression InvertCondition(IExpression condition) {
-      var equality = condition as Equality;
-      if (equality != null) {
-        if (equality.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float32 && equality.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float64)
-          return new NotEquality() { LeftOperand = equality.LeftOperand, Locations = equality.Locations, RightOperand = equality.RightOperand, Type = equality.Type };
-      } else {
-        var greaterThan = condition as GreaterThan;
-        if (greaterThan != null) {
-          if (TypeHelper.IsPrimitiveInteger(greaterThan.LeftOperand.Type))
-            return new LessThanOrEqual() { LeftOperand = greaterThan.LeftOperand, Locations = greaterThan.Locations, RightOperand = greaterThan.RightOperand, Type = greaterThan.Type };
-        } else {
-          var greaterThanOrEqual = condition as GreaterThanOrEqual;
-          if (greaterThanOrEqual != null) {
-            if (TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type))
-              return new LessThan() { LeftOperand = greaterThanOrEqual.LeftOperand, Locations = greaterThanOrEqual.Locations, RightOperand = greaterThanOrEqual.RightOperand, Type = greaterThanOrEqual.Type };
-          } else {
-            var lessThan = condition as LessThan;
-            if (lessThan != null) {
-              if (TypeHelper.IsPrimitiveInteger(lessThan.LeftOperand.Type))
-                return new GreaterThanOrEqual() { LeftOperand = lessThan.LeftOperand, Locations = lessThan.Locations, RightOperand = lessThan.RightOperand, Type = lessThan.Type };
-            } else {
-              var lessThanOrEqual = condition as LessThanOrEqual;
-              if (lessThanOrEqual != null) {
-                if (TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type))
-                  return new GreaterThan() { LeftOperand = lessThanOrEqual.LeftOperand, Locations = lessThanOrEqual.Locations, RightOperand = lessThanOrEqual.RightOperand, Type = lessThanOrEqual.Type };
-              } else {
-                var logicalNot = condition as LogicalNot;
-                if (logicalNot != null)
-                  return logicalNot.Operand;
-                else {
-                  var notEquality = condition as NotEquality;
-                  if (notEquality != null) {
-                    if (notEquality.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float32 && notEquality.LeftOperand.Type.TypeCode != PrimitiveTypeCode.Float64)
-                      return new Equality() { LeftOperand = notEquality.LeftOperand, Locations = new List<ILocation>(notEquality.Locations), RightOperand = notEquality.RightOperand, Type = notEquality.Type };
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      return new LogicalNot() { Locations = new List<ILocation>(condition.Locations), Operand = condition, Type = condition.Type };
     }
 
     public override IExpression Visit(MethodCall methodCall) {

@@ -687,11 +687,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Cgt:
           return this.ParseBinaryOperation(new GreaterThan());
         case OperationCode.Cgt_Un:
-          return this.ParseUnsignedBinaryOperation(new GreaterThan());
+          return this.ParseBinaryOperation(new GreaterThan() { IsUnsignedOrUnordered = true });
         case OperationCode.Clt:
           return this.ParseBinaryOperation(new LessThan());
         case OperationCode.Clt_Un:
-          return this.ParseUnsignedBinaryOperation(new LessThan());
+          return this.ParseBinaryOperation(new LessThan() { IsUnsignedOrUnordered = true });
         case OperationCode.Div:
           return this.ParseBinaryOperation(new Division());
         case OperationCode.Div_Un:
