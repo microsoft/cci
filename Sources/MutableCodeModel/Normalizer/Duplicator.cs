@@ -18,7 +18,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// in the iterator closure. Replace parameters and locals with closure fields. Replace occurrences of the generic
   /// method parameter with generic type parameter of the closure class. 
   /// </summary>
-  internal class CopyToIteratorClosure : CopyTypeFromIteratorToClosure {
+  internal class CopyToIteratorClosure : TypeReferenceSubstitutor {
 
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
     Dictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
@@ -35,7 +35,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods.</param>
-    internal CopyToIteratorClosure(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount, Dictionary<IGenericMethodParameter, IGenericTypeParameter> genericParameterMapping,
+    internal CopyToIteratorClosure(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount, Dictionary<uint, IGenericTypeParameter> genericParameterMapping,
       IteratorClosureInformation closure, IMetadataHost host)
       : base(host, genericParameterMapping) {
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
@@ -113,6 +113,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       return base.Visit(localDeclarationStatement);
     }
+
   }
 
   /// <summary>
@@ -120,8 +121,8 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// occurences of the generic method parameters with corresponding generic method parameters. 
   /// </summary>
   internal class CopyTypeFromIteratorToClosure : MethodBodyMappingMutator {
-    protected Dictionary<IGenericMethodParameter, IGenericTypeParameter> mapping;
-    internal CopyTypeFromIteratorToClosure(IMetadataHost host, Dictionary<IGenericMethodParameter, IGenericTypeParameter> mapping)
+    protected Dictionary<uint, IGenericTypeParameter> mapping;
+    internal CopyTypeFromIteratorToClosure(IMetadataHost host, Dictionary<uint, IGenericTypeParameter> mapping)
       : base(host) {
       this.mapping = mapping;
     }
@@ -132,26 +133,67 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="typeReference"></param>
     /// <returns></returns>
     public override ITypeReference Visit(ITypeReference typeReference) {
-      SpecializedNestedTypeReferencePrivateHelper specializedNestedTypeReferencePrivateHelper = typeReference as SpecializedNestedTypeReferencePrivateHelper;
-      if (specializedNestedTypeReferencePrivateHelper != null) {
-        specializedNestedTypeReferencePrivateHelper.ContainingType = this.Visit(specializedNestedTypeReferencePrivateHelper.ContainingType);
-        // No need to change the resolved type, as it cannot contain a generic method parameter. 
-        return specializedNestedTypeReferencePrivateHelper;
-      }
-      NestedTypeReferencePrivateHelper nestedTypeReferencePrivateHelper = typeReference as NestedTypeReferencePrivateHelper;
-      if (nestedTypeReferencePrivateHelper != null) {
-        nestedTypeReferencePrivateHelper.ContainingType = this.Visit(nestedTypeReferencePrivateHelper.ContainingType);
-        return nestedTypeReferencePrivateHelper;
-      }
       IGenericMethodParameterReference genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
       if (genericMethodParameterReference != null) {
         var genericMethodParameter = genericMethodParameterReference.ResolvedType;
-        if (this.mapping.ContainsKey(genericMethodParameter))
-          return this.mapping[genericMethodParameter];
+        if (this.mapping.ContainsKey(genericMethodParameter.InternedKey))
+          return this.mapping[genericMethodParameter.InternedKey];
       }
+      IGenericMethodParameter gmp = typeReference as IGenericMethodParameter;
+      if (gmp != null) {
+        IGenericTypeParameter targetType;
+        if (this.mapping.TryGetValue(gmp.InternedKey, out targetType))
+          return targetType;
+      }
+
       return base.Visit(typeReference);
     }
   }
+
+  /// <summary>
+  /// Substitute type references as mapped through a provided table of corresponding
+  /// type references.
+  /// </summary>
+  internal class TypeReferenceSubstitutor : MethodBodyMappingMutator {
+    protected Dictionary<uint, ITypeReference> typeMap;
+    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<uint, ITypeReference> internedKey2typeReference)
+      : base(host) {
+      this.typeMap = internedKey2typeReference;
+    }
+    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<uint, IGenericTypeParameter> internedKey2typeReference)
+      : base(host) {
+      this.typeMap = new Dictionary<uint, ITypeReference>(internedKey2typeReference.Count);
+      foreach (var e in internedKey2typeReference) {
+        this.typeMap.Add(e.Key, e.Value);
+      }
+    }
+    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<ITypeReference, ITypeReference> typeReference2typeReference)
+      : base(host) {
+      this.typeMap = new Dictionary<uint, ITypeReference>(typeReference2typeReference.Count);
+      foreach (var e in typeReference2typeReference) {
+        this.typeMap.Add(e.Key.InternedKey, e.Value);
+      }
+    }
+    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<IGenericMethodParameter, IGenericTypeParameter> genericParameterMapping)
+      : base(host) {
+      this.typeMap = new Dictionary<uint, ITypeReference>(genericParameterMapping.Count);
+      foreach (var e in genericParameterMapping) {
+        this.typeMap.Add(e.Key.InternedKey, e.Value);
+      }
+    }
+
+    /// <summary>
+    /// If the interned key of the <paramref name="typeReference"/> is in the domain of the substitution
+    /// table, return the type reference that it is mapped to. Otherwise, do a base visit on it.
+    /// </summary>
+    public override ITypeReference Visit(ITypeReference typeReference) {
+      ITypeReference targetType;
+      if (this.typeMap.TryGetValue(typeReference.InternedKey, out targetType))
+        return targetType;
+      return base.Visit(typeReference);
+    }
+  }
+
 
   /// <summary>
   /// Use this as a base class when you try to mutate the method body of method M1 in class C1
@@ -205,6 +247,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="nestedTypeReference">The nested type reference.</param>
     public override INestedTypeReference Visit(INestedTypeReference nestedTypeReference) {
+      INestedTypeDefinition/*?*/ nestedTypeDefinition = nestedTypeReference as INestedTypeDefinition;
+      if (nestedTypeDefinition != null)
+        return nestedTypeDefinition;
       ISpecializedNestedTypeReference/*?*/ specializedNestedTypeReference = nestedTypeReference as ISpecializedNestedTypeReference;
       if (specializedNestedTypeReference != null) {
         return this.Visit(this.GetMutableCopy(specializedNestedTypeReference));
@@ -220,7 +265,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
       return namespaceTypeDefinition;
     }
-  
+
     /// <summary>
     /// Visits the specified field reference. Do not copy field definitions.
     /// </summary>

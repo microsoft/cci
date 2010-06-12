@@ -39,6 +39,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     ISourceMethodBody sourceMethodBody;
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
+    /// <summary>
+    /// When not null, this is the abstract type for which the contract class
+    /// is holding the contracts for.
+    /// </summary>
     private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
 
     private ITypeReference contractClass;
@@ -51,7 +55,17 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private static ITypeReference/*?*/ TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
       foreach (ICustomAttribute attribute in attributes) {
-        if (TypeHelper.GetTypeName(attribute.Type) == attributeTypeName) return attribute.Type;
+        if (TypeHelper.GetTypeName(attribute.Type) == attributeTypeName) {
+
+          List<IMetadataExpression> args = new List<IMetadataExpression>(attribute.Arguments);
+          if (args.Count < 1) continue;
+          IMetadataTypeOf abstractTypeMD = args[0] as IMetadataTypeOf;
+          if (abstractTypeMD == null) continue;
+          ITypeReference referencedTypeReference = ContractHelper.Unspecialized(abstractTypeMD.TypeToGet);
+          ITypeDefinition referencedTypeDefinition = referencedTypeReference.ResolvedType;
+          return referencedTypeDefinition;
+
+        }
       }
       return null;
     }
@@ -63,8 +77,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return this.contractClassDefinedInReferenceAssembly != null &&
         (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
     }
-    private bool IsOverridingOrImplementingMethod(IMethodDefinition methodDefinition)
-    {
+    private bool IsOverridingOrImplementingMethod(IMethodDefinition methodDefinition) {
       return (
         // method was marked "override" in source
         (methodDefinition.IsVirtual && !methodDefinition.IsNewSlot)
@@ -300,7 +313,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
 
       if (this.extractingFromAMethodInAContractClass != null) {
-        var scc = new ScrubContractClass(this.host, this.sourceMethodBody.MethodDefinition.ContainingType);
+        var scc = new ScrubContractClass(this.host, this.extractingFromAMethodInAContractClass, this.sourceMethodBody.MethodDefinition.ContainingType);
         scc.Visit(this.CurrentMethodContract);
       }
 
@@ -381,21 +394,28 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// differently than it was in the original assembly!!
     /// </summary>
     private sealed class ScrubContractClass : CodeAndContractMutator {
+      ITypeReference abstractType;
       ITypeReference contractClass;
 
-      public ScrubContractClass(IMetadataHost host, ITypeReference contractClass) :
+      public ScrubContractClass(IMetadataHost host, ITypeReference abstractType, ITypeReference contractClass) :
         base(host, true) {
+        this.abstractType = abstractType;
         this.contractClass = contractClass;
       }
       public override IExpression Visit(MethodCall methodCall) {
         if (methodCall.MethodToCall.ContainingType == this.contractClass) {
           var md = methodCall.MethodToCall.ResolvedMethod;
-          if (md != null && md != Dummy.Method){
+          if (md != null && md != Dummy.Method) {
             var ifaceMethods = MemberHelper.GetImplicitlyImplementedInterfaceMethods(md);
             methodCall.MethodToCall = IteratorHelper.Single(ifaceMethods);
           }
         }
         return base.Visit(methodCall);
+      }
+      public override IExpression Visit(ThisReference thisReference) {
+        return new ThisReference() {
+          Type = this.abstractType,
+        };
       }
     }
 
@@ -439,7 +459,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return localDeclarationStatement.InitialValue == null;
     }
 
-    private IMethodCall/*?*/ IsMethodCall(IStatement statement){
+    private IMethodCall/*?*/ IsMethodCall(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return null;
       return expressionStatement.Expression as IMethodCall;
@@ -452,7 +472,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (methodCall == null) return false;
       IMethodReference methodToCall = methodCall.MethodToCall;
       if (!IsContractMethod(methodToCall))
-          return false;
+        return false;
       string mname = methodToCall.Name.Value;
       if (mname == "EnsuresOnThrow") {
         IGenericMethodInstanceReference/*?*/ genericMethodToCall = methodToCall as IGenericMethodInstanceReference;
@@ -460,7 +480,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return mname == "Requires" || mname == "Ensures";
     }
-    private static bool IsValidatorOrAbbreviator(IStatement statement){
+    private static bool IsValidatorOrAbbreviator(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false;
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
@@ -739,8 +759,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           var prefix = currentLine.Substring(0, trimLength);
           bool allBlank = true;
           for (int j = 0, m = prefix.Length; j < m; j++)
-          if (prefix[j] != ' ')
-            allBlank = false;
+            if (prefix[j] != ' ')
+              allBlank = false;
           if (allBlank)
             lines[i] = currentLine.Substring(trimLength);
         }
@@ -793,14 +813,14 @@ namespace Microsoft.Cci.ILToCodeModel {
           origSource = BrianGru.NegatePredicate(origSource);
         }
       }
-      
+
       var locations = new List<ILocation>();
       if (throwStatement != null) {
         if (statements.Count == 1) {
           failureBehavior = throwStatement.Exception;
         } else {
           var localAssignments = new List<IStatement>();
-          for (int i = 0; i < statements.Count -1; i++){
+          for (int i = 0; i < statements.Count -1; i++) {
             localAssignments.Add(statements[i]);
           }
           failureBehavior = new BlockExpression() {
@@ -863,7 +883,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       public override IExpression Visit(MethodCall methodCall) {
         IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
         if (methodToCall != null) {
-          if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey){
+          if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey) {
             //TODO: exists, forall
             if (methodToCall.GenericMethod.Name.Value == "Result") {
               ReturnValue returnValue = new ReturnValue() {

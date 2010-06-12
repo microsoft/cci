@@ -20,8 +20,11 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// This visitor takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
   /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
   /// </summary>
-  public class MethodBodyNormalizer : MethodBodyCodeAndContractMutator {
+  public class MethodBodyNormalizer {
 
+    IMetadataHost host;
+    ContractProvider/*?*/ contractProvider;
+    ISourceLocationProvider/*?*/ sourceLocationProvider;
     /// <summary>
     /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
     /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
@@ -31,18 +34,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider, contractProvider) {
+    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider) {
+      this.host = host;
+      this.sourceLocationProvider = sourceLocationProvider;
+      this.contractProvider = contractProvider;
     }
 
-    Dictionary<IParameterDefinition, bool> capturedParameters = new Dictionary<IParameterDefinition, bool>();
-    Dictionary<IMethodDefinition, bool> isAlreadyNormalized = new Dictionary<IMethodDefinition, bool>();
-    Dictionary<object, BoundField> FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-    NestedTypeDefinition CurrentClosureClass = new NestedTypeDefinition();
-    IMethodDefinition method = Dummy.Method;
-    List<ILocalDefinition> closureLocals = new List<ILocalDefinition>();
-    List<IFieldDefinition> outerClosures = new List<IFieldDefinition>();
-    List<ITypeDefinition> privateHelperTypes = new List<ITypeDefinition>();
     Dictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
 
     /// <summary>
@@ -52,40 +49,53 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="body"></param>
     /// <returns></returns>
     public ISourceMethodBody GetNormalizedSourceMethodBodyFor(IMethodDefinition method, IBlockStatement body) {
-      this.CurrentClosureClass = new NestedTypeDefinition();
-      this.FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-      this.closureLocals = new List<ILocalDefinition>();
-      this.method = method;
-      this.outerClosures = new List<IFieldDefinition>();
-      this.privateHelperTypes = new List<ITypeDefinition>();
-      this.path.Push(method.ContainingTypeDefinition);
-      this.path.Push(method);
 
-      ClosureFinder finder = new ClosureFinder(this.FieldForCapturedLocalOrParameter, this.host.NameTable, this.contractProvider);
+      var FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
+      var privateHelperTypes = new List<ITypeDefinition>();
+
+      var finder = new ClosureFinder(method,
+        FieldForCapturedLocalOrParameter,
+        this.host,
+        this.contractProvider,
+        privateHelperTypes.Count);
       finder.Visit(body);
+
       IMethodContract/*?*/ methodContract = null;
       if (this.contractProvider != null)
         methodContract = this.contractProvider.GetMethodContractFor(method);
       if (methodContract != null)
         finder.Visit(methodContract);
-      if (finder.foundAnonymousDelegate && this.FieldForCapturedLocalOrParameter.Count == 0) {
-        body = this.CreateAndInitializeClosureTemp(body);
+
+      if (finder.foundAnonymousDelegate) {
+        var bodyFixer = new InjectClosureFields(method, FieldForCapturedLocalOrParameter,
+          finder.classList, 0,
+          finder.outerClosures,
+          this.host, this.sourceLocationProvider, finder.genericTypeParameterMapping,
+          finder.lambda2method
+          );
+        body = bodyFixer.Visit(body);
       }
-      body = this.Visit(body, method, methodContract);
+
       if (finder.foundYield) {
         this.isIteratorBody = true;
-        this.FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
         body = this.GetNormalizedIteratorBody(body, method, methodContract, privateHelperTypes);
       }
+      List<ITypeDefinition> priv = new List<ITypeDefinition>();
+      priv.AddRange(privateHelperTypes);
       SourceMethodBody result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       result.Block = body;
       result.MethodDefinition = method;
       result.IsNormalized = true;
       result.LocalsAreZeroed = true;
-      result.PrivateHelperTypes = privateHelperTypes;
+      if (finder.foundAnonymousDelegate) {
+        for (int i = 1; i < finder.classList.Count; i++) {
+          // the first element in classList is the containing type of "method": don't include that!
+          priv.Add(finder.classList[i]);
+        }
+      }
+      result.PrivateHelperTypes = priv;
+      //result.PrivateHelperTypes = privateHelperTypes;
 
-      this.path.Pop();
-      this.path.Pop();
       return result;
     }
 
@@ -121,7 +131,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, IMethodContract methodContract, List<ITypeDefinition> privateHelperTypes) {
       this.iteratorLocalCount = new Dictionary<IBlockStatement, uint>();
-      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this.FieldForCapturedLocalOrParameter, this.iteratorLocalCount,
+      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this.iteratorLocalCount,
         method, privateHelperTypes, this.host, this.sourceLocationProvider, this.contractProvider);
       return iteratorClosureGenerator.CompileIterator(body);
     }
@@ -134,593 +144,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     bool isIteratorBody;
 
-    private IMethodReference CompilerGeneratedCtor {
-      get {
-        if (this.compilerGeneratedCtor == null)
-          this.compilerGeneratedCtor = new Microsoft.Cci.MethodReference(this.host, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute,
-             CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
-        return this.compilerGeneratedCtor;
-      }
-    }
-    private IMethodReference/*?*/ compilerGeneratedCtor;
-
-    private IMethodReference ObjectCtor {
-      get {
-        if (this.objectCtor == null)
-          this.objectCtor = new Microsoft.Cci.MethodReference(this.host, this.host.PlatformType.SystemObject, CallingConvention.HasThis,
-             this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
-        return this.objectCtor;
-      }
-    }
-    private IMethodReference/*?*/ objectCtor;
-
-
-    private IBlockStatement CreateAndInitializeClosureTemp(IBlockStatement body) {
-      BlockStatement mutableBlockStatement = new BlockStatement(body);
-      NestedTypeDefinition closureClass = this.CreateClosureClass();
-      ILocalDefinition closureTemp = this.CreateClosureTemp(closureClass);
-      mutableBlockStatement.Statements.Insert(0, this.ConstructClosureInstance(closureTemp, closureClass));
-      return mutableBlockStatement;
-    }
-
-    private ILocalDefinition CreateClosureTemp(NestedTypeDefinition closureClass) {
-      LocalDefinition result = new LocalDefinition();
-      this.cache.Add(result, result);
-      this.closureLocals.Insert(0, result);
-      var boundExpression = new BoundExpression();
-      boundExpression.Definition = result;
-      this.closureInstanceFor.Add(closureClass, boundExpression);
-      result.Name = this.host.NameTable.GetNameFor("__closure " + this.privateHelperTypes.Count);
-      result.Type = this.GetSelfReferenceForPrivateHelperTypes(closureClass);
-      return result;
-    }
-
-    private IStatement ConstructClosureInstance(ILocalDefinition closureTemp, NestedTypeDefinition closureClass) {
-      var target = new TargetExpression() { Definition = closureTemp, Type = closureTemp.Type };
-      var constructor = this.CreateDefaultConstructorFor(closureClass);
-      var constructorReference = this.GetSelfReference(constructor);
-      var construct = new CreateObjectInstance() { MethodToCall = constructorReference, Type = 
-        this.GetSelfReferenceForPrivateHelperTypes(closureClass) };
-      var assignment = new Assignment() { Target = target, Source = construct, 
-        Type = this.GetSelfReferenceForPrivateHelperTypes(closureClass) };
-      return new ExpressionStatement() { Expression = assignment };
-    }
-
-    /// <summary>
-    /// Get a method reference to a method definition in a private helper type, to be used in the body of a method
-    /// in the same type. 
-    /// </summary>
-    /// <param name="methodDefinition"></param>
-    /// <returns></returns>
-    private IMethodReference GetSelfReference(IMethodDefinition methodDefinition) {
-      ITypeReference containingType = this.GetSelfReferenceForPrivateHelperTypes(methodDefinition.ContainingTypeDefinition);
-      if (containingType is IGenericTypeInstanceReference || containingType is ISpecializedNestedTypeReference) {
-        var result = new SpecializedMethodReference();
-        ((MethodReference)result).Copy(methodDefinition, this.host.InternFactory);
-        result.UnspecializedVersion = methodDefinition;
-        result.ContainingType = containingType;
-        return result;
-      }
-      var result1 = new MethodReference();
-      result1.Copy(methodDefinition, this.host.InternFactory);
-      result1.ContainingType = containingType;
-      return result1;
-    }
-
-    private NestedTypeDefinition CreateClosureClass() {
-      CustomAttribute compilerGeneratedAttribute = new CustomAttribute();
-      compilerGeneratedAttribute.Constructor = this.CompilerGeneratedCtor;
-
-      NestedTypeDefinition result = new NestedTypeDefinition();
-      this.cache.Add(result, result);
-      this.CurrentClosureClass = result;
-      this.privateHelperTypes.Add(result);
-      string signature = MemberHelper.GetMethodSignature(this.method, NameFormattingOptions.Signature | NameFormattingOptions.ReturnType | NameFormattingOptions.TypeParameters);
-      result.Name = this.host.NameTable.GetNameFor(signature + " closure " + this.privateHelperTypes.Count);
-      result.Attributes.Add(compilerGeneratedAttribute);
-      result.BaseClasses.Add(this.host.PlatformType.SystemObject);
-      result.ContainingTypeDefinition = this.GetCurrentType();
-      result.InternFactory = this.host.InternFactory;
-      result.IsBeforeFieldInit = true;
-      result.IsClass = true;
-      result.IsSealed = true;
-      result.Layout = LayoutKind.Auto;
-      result.StringFormat = StringFormatKind.Ansi;
-      result.Visibility = TypeMemberVisibility.Private;
-
-      BoundField/*?*/ capturedThis;
-      var thisTypeReference = TypeDefinition.SelfInstance(this.method.ContainingTypeDefinition, this.host.InternFactory);
-      if (this.closureLocals.Count == 0 && this.FieldForCapturedLocalOrParameter.TryGetValue(thisTypeReference.InternedKey, out capturedThis)) {
-        result.Fields.Add(capturedThis.Field);
-        capturedThis.Field.ContainingTypeDefinition = result;
-        capturedThis.Field.Type = this.Visit(capturedThis.Field.Type);
-      }
-      return result;
-    }
-
-    private void AddToClosureIfCaptured(ref NestedTypeDefinition closureClass, ref ILocalDefinition closureTemp, ref IStatement captureOuterClosure, object localOrParameter) {
-      //^ requires localOrParameter is ILocalDefinition || localOrParameter is IParameterDefinition;
-      BoundField/*?*/ bf = null;
-      if (this.FieldForCapturedLocalOrParameter.TryGetValue(localOrParameter, out bf)) {
-        if (closureClass == null) {
-          closureClass = this.CreateClosureClass();
-          closureTemp = this.CreateClosureTemp(closureClass);
-          if (this.closureLocals.Count > 1)
-            captureOuterClosure = this.CaptureOuterClosure(closureClass);
-        }
-        FieldDefinition correspondingField = bf.Field;
-        correspondingField.ContainingTypeDefinition = closureClass;
-        closureClass.Fields.Add(correspondingField);
-        //this.cache.Add(correspondingField, correspondingField);
-      }
-    }
-
-    private IStatement CaptureThisArgument(NestedTypeDefinition closureClass) {
-      var currentClosureLocal = this.closureLocals[0];
-      var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
-      var thisArgumentField = this.GetSelfReference(closureClass.Fields[0]);
-      var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = thisArgumentField, Type = thisArgumentField.Type };
-      var assignment = new Assignment() { Target = target, Source = new ThisReference(), Type = thisArgumentField.Type };
-      return new ExpressionStatement() { Expression = assignment };
-    }
-
-    /// <summary>
-    /// Create a field reference for a field definition of a private helper type. 
-    /// </summary>
-    /// <param name="fieldDefinition"></param>
-    /// <returns></returns>
-    private IFieldReference GetSelfReference(IFieldDefinition fieldDefinition) {
-      var containingType = this.GetSelfReferenceForPrivateHelperTypes(fieldDefinition.ContainingTypeDefinition);
-      if (containingType is IGenericTypeInstanceReference || containingType is ISpecializedNestedTypeReference) {
-        var sFieldReference = new SpecializedFieldReference();
-        ((FieldReference)sFieldReference).Copy(fieldDefinition, this.host.InternFactory);
-        sFieldReference.ContainingType = containingType;
-        sFieldReference.UnspecializedVersion = fieldDefinition;
-        return sFieldReference;
-      }
-      var result = new FieldReference();
-      result.Copy(fieldDefinition, this.host.InternFactory);
-      result.ContainingType = containingType;
-      return result;
-    }
-
-    /// <summary>
-    /// Given a private helper type, that is, a closure type generated for compiling anonymous delegate or an iterator
-    /// method, generate a type reference that can resolve itself without looking itself up from its containing type's
-    /// members. 
-    /// </summary>
-    private ITypeReference GetSelfReferenceForPrivateHelperTypes(ITypeDefinition privateHelperType) {
-      //^ requires privateHelperType is INestedTypeDefinition;
-      var nested = privateHelperType as INestedTypeDefinition;
-      if (nested == null) {
-        Debug.Assert(false);
-      } 
-      var containingType = TypeDefinition.SelfInstance(nested.ContainingTypeDefinition, this.host.InternFactory);
-      SpecializedNestedTypeDefinition specializedContainingType = containingType as SpecializedNestedTypeDefinition;
-      GenericTypeInstance genericTypeInstance = containingType as GenericTypeInstance;
-      if (specializedContainingType != null || genericTypeInstance != null) {
-        var resolved = Dummy.SpecializedNestedTypeDefinition;
-        if (specializedContainingType != null)
-          resolved = (ISpecializedNestedTypeDefinition)specializedContainingType.SpecializeMember(nested, this.host.InternFactory);
-        else
-          resolved = (ISpecializedNestedTypeDefinition)genericTypeInstance.SpecializeMember(nested, this.host.InternFactory);
-        var specailizedResult = new SpecializedNestedTypeReferencePrivateHelper();
-        specailizedResult.Copy(resolved, this.host.InternFactory);
-        if (specailizedResult.ResolvedType == null) {
-        }
-        return specailizedResult;
-      }
-      var result = new NestedTypeReferencePrivateHelper();
-      result.Copy(nested, this.host.InternFactory);
-      return result;
-    }
-
-    private IStatement CaptureOuterClosure(NestedTypeDefinition closureClass) {
-      var currentClosureLocal = this.closureLocals[0];
-      var outerClosureLocal = this.closureLocals[1];
-      var outerClosureField = new FieldDefinition();
-      closureClass.Fields.Add(outerClosureField);
-      this.outerClosures.Insert(0, outerClosureField);
-      outerClosureField.ContainingTypeDefinition = closureClass;
-      outerClosureField.Name = this.host.NameTable.GetNameFor("__outerClosure " + (this.privateHelperTypes.Count - 1));
-      outerClosureField.Type = outerClosureLocal.Type;
-      outerClosureField.Visibility = TypeMemberVisibility.Public;
-
-      var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
-      var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = outerClosureField, Type = outerClosureField.Type };
-      var source = new BoundExpression() { Definition = outerClosureLocal, Type = outerClosureLocal.Type };
-      var assignment = new Assignment() { Target = target, Source = source, Type = outerClosureField.Type };
-      return new ExpressionStatement() { Expression = assignment };
-    }
-
-    private IStatement InitializeBoundFieldFromParameter(BoundField boundField, IParameterDefinition parameter) {
-      var currentClosureLocal = this.closureLocals[0];
-      var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
-      var fieldDef = boundField.Field;
-      var fieldRef = this.GetSelfReference(fieldDef);
-      var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = fieldRef, Type = parameter.Type };
-      var boundParameter = new BoundExpression() { Definition = parameter, Type = parameter.Type };
-      var assignment = new Assignment() { Target = target, Source = boundParameter, Type = parameter.Type };
-      return new ExpressionStatement() { Expression = assignment };
-    }
-
-    private MethodDefinition CreateDefaultConstructorFor(NestedTypeDefinition closureClass) {
-      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new BaseClassReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
-      ExpressionStatement baseConstructorCallStatement = new ExpressionStatement() { Expression = baseConstructorCall };
-      List<IStatement> statements = new List<IStatement>();
-      statements.Add(baseConstructorCallStatement);
-      BlockStatement block = new BlockStatement() { Statements = statements };
-      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
-      body.IsNormalized = true;
-      body.LocalsAreZeroed = true;
-      body.Block = block;
-
-      MethodDefinition result = new MethodDefinition();
-      closureClass.Methods.Add(result);
-      this.cache.Add(result, result);
-      this.isAlreadyNormalized.Add(result, true);
-      result.Body = body;
-      body.MethodDefinition = result;
-      result.CallingConvention = CallingConvention.HasThis;
-      result.ContainingTypeDefinition = closureClass;
-      result.IsCil = true;
-      result.IsHiddenBySignature = true;
-      result.IsRuntimeSpecial = true;
-      result.IsSpecialName = true;
-      result.Name = this.host.NameTable.Ctor;
-      result.Type = this.host.PlatformType.SystemVoid;
-      result.Visibility = TypeMemberVisibility.Public;
-      return result;
-    }
-
-    private void CreateClosureClassIfNecessary(BlockStatement blockStatement, IMethodContract/*?*/ methodContract) {
-      bool captureThis = false;
-      List<IStatement> statements = new List<IStatement>();
-      if (this.FieldForCapturedLocalOrParameter.Count > 0) {
-        NestedTypeDefinition/*?*/ closureClass = null;
-        ILocalDefinition/*?*/ closureTemp = null;
-        IStatement/*?*/ captureOuterClosure = null;
-        if (this.closureLocals.Count == 0) {
-          foreach (object capturedLocalOrParameter in this.FieldForCapturedLocalOrParameter.Keys) {
-            if (capturedLocalOrParameter is uint) {
-              // if "this" is captured, we store its type's interned key in the table. 
-              captureThis = true;
-              if (closureClass == null) {
-                closureClass = this.CreateClosureClass();
-                closureTemp = this.CreateClosureTemp(closureClass);
-                if (this.closureLocals.Count > 1)
-                  captureOuterClosure = this.CaptureOuterClosure(closureClass);
-              }
-            }
-            IParameterDefinition/*?*/ parameter = capturedLocalOrParameter as IParameterDefinition;
-            if (parameter == null) continue;
-            this.AddToClosureIfCaptured(ref closureClass, ref closureTemp, ref captureOuterClosure, parameter);
-          }
-        }
-        foreach (IStatement statement in blockStatement.Statements) {
-          ILocalDeclarationStatement/*?*/ locDecl = statement as ILocalDeclarationStatement;
-          if (locDecl == null) continue;
-          this.AddToClosureIfCaptured(ref closureClass, ref closureTemp, ref captureOuterClosure, locDecl.LocalVariable);
-        }
-        if (closureTemp != null) {
-          statements.Add(this.ConstructClosureInstance(closureTemp, closureClass));
-          if (captureOuterClosure != null)
-            statements.Add(captureOuterClosure);
-          else if (captureThis)
-            statements.Add(this.CaptureThisArgument(closureClass));
-          foreach (object capturedLocalOrParameter in this.FieldForCapturedLocalOrParameter.Keys) {
-            IParameterDefinition/*?*/ parameter = capturedLocalOrParameter as IParameterDefinition;
-            if (parameter == null) continue;
-            BoundField bf = this.FieldForCapturedLocalOrParameter[parameter];
-            statements.Add(this.InitializeBoundFieldFromParameter(bf, parameter));
-          }
-        }
-      }
-      //if (methodContract != null) {
-      //  MethodCall callStartContract = new MethodCall();
-      //  callStartContract.IsStaticCall = true;
-      //  callStartContract.MethodToCall = this.contractProvider.ContractMethods.StartContract;
-      //  callStartContract.Type = this.host.PlatformType.SystemVoid;
-      //  ExpressionStatement startContract = new ExpressionStatement();
-      //  startContract.Expression = callStartContract;
-      //  statements.Add(startContract);
-      //}
-      if (statements.Count > 0) {
-        statements.AddRange(blockStatement.Statements);
-        blockStatement.Statements = statements;
-      }
-    }
-
-    private IBlockStatement Visit(IBlockStatement blockStatement, IMethodDefinition method, IMethodContract/*?*/ methodContract)
-      //^ requires methodContract != null ==> this.contractProvider != null;
-    {
-      BlockStatement mutableBlockStatement = new BlockStatement(blockStatement);
-      return this.Visit(mutableBlockStatement, method, methodContract);
-    }
-
-    private IBlockStatement Visit(BlockStatement blockStatement, IMethodDefinition/*?*/ method, IMethodContract/*?*/ methodContract)
-      //^ requires method == null ==> methodContract == null;
-      //^ requires methodContract != null ==> this.contractProvider != null;
-    {
-      NestedTypeDefinition savedCurrentClosureClass = this.CurrentClosureClass;
-      this.CreateClosureClassIfNecessary(blockStatement, methodContract);
-      blockStatement.Statements = this.Visit(blockStatement.Statements);
-      if (methodContract != null)
-        this.contractProvider.AssociateMethodWithContract(method, this.Visit(methodContract));
-      if (savedCurrentClosureClass != this.CurrentClosureClass) {
-        this.CurrentClosureClass = savedCurrentClosureClass;
-        this.closureLocals.RemoveAt(0);
-        if (this.outerClosures.Count > 0)
-          this.outerClosures.RemoveAt(0);
-      }
-      return blockStatement;
-    }
-
-    /// <summary>
-    /// Visits the specified global method definition.
-    /// </summary>
-    /// <param name="globalMethodDefinition">The global method definition.</param>
-    public override IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
-      var result = base.Visit(globalMethodDefinition);
-      this.isAlreadyNormalized.Add(globalMethodDefinition, true);
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified method definitions.
-    /// </summary>
-    /// <param name="methodDefinitions">The method definitions.</param>
-    public override List<IMethodDefinition> Visit(List<IMethodDefinition> methodDefinitions) {
-      int n = methodDefinitions.Count;
-      List<IMethodDefinition> result = new List<IMethodDefinition>(n);
-      for (int i = 0; i < n; i++) {
-        IMethodDefinition meth = methodDefinitions[i];
-        if (AttributeHelper.Contains(meth.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) {
-          if (meth.Name.Value.Contains(">b__"))
-            continue;
-        }
-        result.Add(this.Visit(this.GetMutableCopy(meth)));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified nested type definitions.
-    /// </summary>
-    /// <param name="nestedTypeDefinitions">The nested type definitions.</param>
-    public override List<INestedTypeDefinition> Visit(List<INestedTypeDefinition> nestedTypeDefinitions) {
-      int n = nestedTypeDefinitions.Count;
-      List<INestedTypeDefinition> result = new List<INestedTypeDefinition>(n);
-      for (int i = 0; i < n; i++) {
-        INestedTypeDefinition nt = nestedTypeDefinitions[i];
-        if (AttributeHelper.Contains(nt.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) {
-          continue;
-        }
-        result.Add(this.Visit(this.GetMutableCopy(nt)));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified method body.
-    /// </summary>
-    /// <param name="methodBody">The method body.</param>
-    public override IMethodBody Visit(IMethodBody methodBody) {
-      ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody != null)
-        return this.GetNormalizedSourceMethodBodyFor(this.GetCurrentMethod(), sourceMethodBody.Block);
-      return base.Visit(methodBody);
-    }
-
-    /// <summary>
-    /// Visits the specified block statement.
-    /// </summary>
-    /// <param name="blockStatement">The block statement.</param>
-    public override IBlockStatement Visit(BlockStatement blockStatement) {
-      return this.Visit(blockStatement, null, null);
-    }
-
-    /// <summary>
-    /// Visits the specified method definition.
-    /// </summary>
-    /// <param name="methodDefinition">The method definition.</param>
-    /// <returns></returns>
-    public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
-      if (this.isAlreadyNormalized.ContainsKey(methodDefinition)) {
-        object result = methodDefinition;
-        this.cache.TryGetValue(methodDefinition, out result);
-        return (IMethodDefinition)result;
-      }
-      return base.Visit(methodDefinition);
-    }
-
-    /// <summary>
-    /// Visits the specified method contract.
-    /// </summary>
-    /// <param name="methodContract">The method contract.</param>
-    public override IMethodContract Visit(IMethodContract methodContract) {
-      object/*?*/ result = null;
-      if (this.cache.TryGetValue(methodContract, out result)) return (IMethodContract)result;
-      result = base.Visit(methodContract);
-      this.cache.Add(methodContract, result);
-      return (IMethodContract)result;
-    }
-
-    /// <summary>
-    /// Visits the specified method definition.
-    /// </summary>
-    /// <param name="methodDefinition">The method definition.</param>
-    public override MethodDefinition Visit(MethodDefinition methodDefinition) {
-      if (this.stopTraversal) return methodDefinition;
-      if (methodDefinition == Dummy.Method) return methodDefinition;
-      this.Visit((TypeDefinitionMember)methodDefinition);
-      this.path.Push(methodDefinition);
-      if (methodDefinition.IsGeneric)
-        methodDefinition.GenericParameters = this.Visit(methodDefinition.GenericParameters, methodDefinition);
-      methodDefinition.Parameters = this.Visit(methodDefinition.Parameters);
-      if (methodDefinition.IsPlatformInvoke)
-        methodDefinition.PlatformInvokeData = this.Visit(this.GetMutableCopy(methodDefinition.PlatformInvokeData));
-      methodDefinition.ReturnValueAttributes = this.VisitMethodReturnValueAttributes(methodDefinition.ReturnValueAttributes);
-      if (methodDefinition.ReturnValueIsModified)
-        methodDefinition.ReturnValueCustomModifiers = this.VisitMethodReturnValueCustomModifiers(methodDefinition.ReturnValueCustomModifiers);
-      if (methodDefinition.ReturnValueIsMarshalledExplicitly)
-        methodDefinition.ReturnValueMarshallingInformation = this.VisitMethodReturnValueMarshallingInformation(this.GetMutableCopy(methodDefinition.ReturnValueMarshallingInformation));
-      if (methodDefinition.HasDeclarativeSecurity)
-        methodDefinition.SecurityAttributes = this.Visit(methodDefinition.SecurityAttributes);
-      methodDefinition.Type = this.Visit(methodDefinition.Type);
-      if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal)
-        methodDefinition.Body = this.Visit(methodDefinition.Body);
-      else {
-        if (this.contractProvider != null) {
-          IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
-          if (methodContract != null)
-            this.contractProvider.AssociateMethodWithContract(methodDefinition, this.Visit(methodContract));
-        }
-      }
-      this.path.Pop();
-      return methodDefinition;
-    }
-
-    /// <summary>
-    /// Visits the specified anonymous delegate.
-    /// </summary>
-    /// <param name="anonymousDelegate">The anonymous delegate.</param>
-    public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
-      var method = new MethodDefinition();
-      this.CurrentClosureClass.Methods.Add(method);
-      method.CallingConvention = anonymousDelegate.CallingConvention;
-      method.ContainingTypeDefinition = this.CurrentClosureClass;
-      method.IsCil = true;
-      method.IsHiddenBySignature = true;
-      if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) == 0)
-        method.IsStatic = true;
-      method.Name = this.host.NameTable.GetNameFor("__anonymous_method " + this.CurrentClosureClass.Methods.Count);
-      method.Parameters = new List<IParameterDefinition>(anonymousDelegate.Parameters);
-      if (anonymousDelegate.ReturnValueIsModified)
-        method.ReturnValueCustomModifiers = new List<ICustomModifier>(anonymousDelegate.ReturnValueCustomModifiers);
-      method.ReturnValueIsByRef = anonymousDelegate.ReturnValueIsByRef;
-      method.Type = anonymousDelegate.ReturnType;
-      method.Visibility = TypeMemberVisibility.Public;
-      method.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, method);
-      if (this.method.IsGeneric) {
-        method.GenericParameters = new List<IGenericMethodParameter>();
-        foreach (var gmpar in this.method.GenericParameters) {
-          var newpar = new GenericMethodParameter();
-          newpar.Copy(gmpar, this.host.InternFactory);
-          newpar.DefiningMethod = method;
-          method.GenericParameters.Add(gmpar);
-        }
-      }
-      var boundCurrentClosureLocal = new BoundExpression();
-      if (this.closureLocals.Count == 0)
-        boundCurrentClosureLocal.Definition = this.CreateClosureTemp(this.CurrentClosureClass);
-      else
-        boundCurrentClosureLocal.Definition = this.closureLocals[0];
-
-      var createDelegateInstance = new CreateDelegateInstance();
-      if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) != 0)
-        createDelegateInstance.Instance = boundCurrentClosureLocal;
-      createDelegateInstance.MethodToCallViaDelegate = this.GetSelfReference(method);
-      createDelegateInstance.Type = this.Visit(anonymousDelegate.Type);
-
-      return createDelegateInstance;
-    }
-
-    /// <summary>
-    /// Visits the specified local declaration statement.
-    /// </summary>
-    /// <param name="localDeclarationStatement">The local declaration statement.</param>
-    public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      var originalLocalVariable = localDeclarationStatement.LocalVariable;
-      localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(originalLocalVariable));
-      if (localDeclarationStatement.InitialValue != null) {
-        var source = this.Visit(localDeclarationStatement.InitialValue);
-        BoundField/*?*/ boundField;
-        if (this.FieldForCapturedLocalOrParameter.TryGetValue(originalLocalVariable, out boundField)) {
-          var currentClosureLocal = this.closureLocals[0];
-          var currentClosureLocalBinding = new BoundExpression() { Definition = currentClosureLocal, Type = currentClosureLocal.Type };
-          var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = boundField.Field, Type = boundField.Type };
-          var assignment = new Assignment() { Target = target, Source = source, Type = boundField.Type };
-          return new ExpressionStatement() { Expression = assignment, Locations = localDeclarationStatement.Locations };
-        } else {
-          return base.Visit(localDeclarationStatement);
-        }
-      }
-      return localDeclarationStatement;
-    }
-
-    /// <summary>
-    /// Visits the specified target expression.
-    /// </summary>
-    /// <param name="targetExpression">The target expression.</param>
-    public override ITargetExpression Visit(TargetExpression targetExpression) {
-      BoundField/*?*/ boundField;
-      if (this.FieldForCapturedLocalOrParameter.TryGetValue(targetExpression.Definition, out boundField)) {
-        targetExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        targetExpression.Definition = this.GetSelfReference(boundField.Field);
-        targetExpression.Type = this.Visit(targetExpression.Type);
-        return targetExpression;
-      }
-      return base.Visit(targetExpression);
-    }
-
-
-    /// <summary>
-    /// Visits the specified addressable expression.
-    /// </summary>
-    /// <param name="addressableExpression">The addressable expression.</param>
-    public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
-      BoundField/*?*/ boundField;
-      if (this.FieldForCapturedLocalOrParameter.TryGetValue(addressableExpression.Definition, out boundField)) {
-        addressableExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-        addressableExpression.Definition = this.GetSelfReference(boundField.Field);
-        addressableExpression.Type = this.Visit(addressableExpression.Type);
-        return addressableExpression;
-      }
-      return base.Visit(addressableExpression);
-    }
-
-    /// <summary>
-    /// Visits the specified bound expression.
-    /// </summary>
-    /// <param name="boundExpression">The bound expression.</param>
-    public override IExpression Visit(BoundExpression boundExpression) {
-      BoundField/*?*/ boundField;
-      if (this.FieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
-        IParameterDefinition/*?*/ boundParameter = boundExpression.Definition as IParameterDefinition;
-        if (boundParameter != null && !this.capturedParameters.ContainsKey(boundParameter)) {
-          this.capturedParameters.Add(boundParameter, true);
-        } else {
-          boundExpression.Instance = this.ClosureInstanceFor(boundField.Field.ContainingTypeDefinition);
-          boundExpression.Definition = this.GetSelfReference(boundField.Field);
-          boundExpression.Type = this.Visit(boundExpression.Type);
-          return boundExpression;
-        }
-      }
-      return base.Visit(boundExpression);
-    }
-
-
-    private IMethodBody GetMethodBodyFrom(IBlockStatement block, IMethodDefinition method) {
-      var bodyFixer = new FixAnonymousDelegateBodyToUseClosure(this.FieldForCapturedLocalOrParameter, this.cache, this.CurrentClosureClass, this.outerClosures,
-        this.host, this.sourceLocationProvider);
-      block = bodyFixer.Visit(block);
-      var result = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
-      result.Block = this.Visit(block, method, null);
-      result.IsNormalized = true;
-      result.LocalsAreZeroed = true;
-      result.MethodDefinition = method;
-      return result;
-    }
-
-    private IExpression ClosureInstanceFor(ITypeDefinition closure) {
-      IExpression/*?*/ result = CodeDummy.Expression;
-      if (!this.closureInstanceFor.TryGetValue(closure, out result)) {
-        Debug.Assert(false);
-      }
-      return result;
-    }
-    Dictionary<ITypeDefinition, IExpression> closureInstanceFor = new Dictionary<ITypeDefinition, IExpression>();
   }
 
   /// <summary>
@@ -775,19 +198,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 4) If the iterator method has a type parameter, so will the closure class. Make sure in the closure class only
     /// the right type parameter is referenced. 
     /// </summary>
-    internal IteratorClosureGenerator(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount,
+    internal IteratorClosureGenerator(Dictionary<IBlockStatement, uint> iteratorLocalCount,
         IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-    {
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
-      this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
+      this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
       this.iteratorLocalCount = iteratorLocalCount;
       this.host = host; this.contractProvider = contractProvider; this.sourceLocationProvider = sourceLocationProvider;
     }
 
     IMetadataHost host;
-    ISourceLocationProvider/*?*/ sourceLocationProvider; 
+    ISourceLocationProvider/*?*/ sourceLocationProvider;
     ContractProvider/*?*/ contractProvider;
 
     Dictionary<IBlockStatement, uint> iteratorLocalCount;
@@ -806,9 +228,9 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     CopyTypeFromIteratorToClosure copyTypeToClosure;
     /// <summary>
-    /// Mapping between method type parameters (of the iterator method) and generic type parameters (of the closure class).
+    /// Mapping between (the interned key of) method type parameters (of the iterator method) and generic type parameters (of the closure class).
     /// </summary>
-    Dictionary<IGenericMethodParameter, IGenericTypeParameter> genericTypeParameterMapping = new Dictionary<IGenericMethodParameter, IGenericTypeParameter>();
+    Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping = new Dictionary<uint, IGenericTypeParameter>();
     /// <summary>
     /// Mapping between parameters and locals to the fields of the closure class. 
     /// </summary>
@@ -817,7 +239,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
-   
+
     /// <summary>
     /// Compile the method body, represented by <paramref name="block"/>. It creates the closure class and all its members
     /// and creates a new body for the iterator method. 
@@ -891,13 +313,13 @@ namespace Microsoft.Cci.MutableCodeModel {
         Locations = block.Locations
       };
       CreateObjectInstance createObjectInstance = new CreateObjectInstance() {
-        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor), 
-        Locations = block.Locations, 
+        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor),
+        Locations = block.Locations,
         Type = localDefinition.Type
       };
       createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = -2, Type = this.host.PlatformType.SystemInt32 });
-      LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { 
-        InitialValue = createObjectInstance, 
+      LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() {
+        InitialValue = createObjectInstance,
         LocalVariable = localDefinition
       };
       result.Statements.Add(localDeclarationStatement);
@@ -922,31 +344,32 @@ namespace Microsoft.Cci.MutableCodeModel {
             Target = new TargetExpression() {
               Definition = GetFieldReference(iteratorClosure, boundField.Field),
               Type = this.method.ContainingType,
-              Instance = new BoundExpression() { 
-                Type = localDefinition.Type, 
-                Instance = null, 
-                Definition = localDefinition, 
-                IsVolatile = false 
+              Instance = new BoundExpression() {
+                Type = localDefinition.Type,
+                Instance = null,
+                Definition = localDefinition,
+                IsVolatile = false
               }
             },
           };
         } else {
           assignment = new Assignment {
-            Source = new BoundExpression() { 
-              Definition = capturedLocalOrParameter, 
-              Instance = null, 
-              IsVolatile = false, 
-              Type = localOrParameterType 
+            Source = new BoundExpression() {
+              Definition = capturedLocalOrParameter,
+              Instance = null,
+              IsVolatile = false,
+              Type = localOrParameterType
             },
             Type = localOrParameterType,
-            Target = new TargetExpression() { 
-              Definition = GetFieldReference(iteratorClosure, boundField.Field), 
-              Type = localOrParameterType, 
-              Instance = new BoundExpression() { 
-                Type = localDefinition.Type, 
-                Instance = null, 
-                Definition = localDefinition, 
-                IsVolatile = false } 
+            Target = new TargetExpression() {
+              Definition = GetFieldReference(iteratorClosure, boundField.Field),
+              Type = localOrParameterType,
+              Instance = new BoundExpression() {
+                Type = localDefinition.Type,
+                Instance = null,
+                Definition = localDefinition,
+                IsVolatile = false
+              }
             },
           };
         }
@@ -1063,9 +486,11 @@ namespace Microsoft.Cci.MutableCodeModel {
         genericMethodParameters.Add(genericMethodParameter);
         GenericTypeParameter newTypeParam = new GenericTypeParameter() {
           Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
-          Index = (count++)
+          //          Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value),
+          Index = (count++),
+          //          InternFactory = this.host.InternFactory,
         };
-        this.genericTypeParameterMapping[genericMethodParameter] = newTypeParam;
+        this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
         newTypeParam.DefiningType = iteratorClosureType;
         iteratorClosureType.GenericParameters.Add(newTypeParam);
       }
@@ -1074,7 +499,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       // Duplicate Constraints
       foreach (var genericMethodParameter in genericMethodParameters) {
-        GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[genericMethodParameter];
+        GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[genericMethodParameter.InternedKey];
         if (genericMethodParameter.Constraints != null) {
           correspondingTypeParameter.Constraints = new List<ITypeReference>();
           foreach (ITypeReference t in genericMethodParameter.Constraints) {
@@ -1108,7 +533,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       /* Interfaces. */
       result.InitializeInterfaces(result.ElementType);
-     
+
       /* Fields, Methods, and Properties. */
       CreateIteratorClosureFields(result);
       CreateIteratorClosureConstructor(result);
@@ -1267,8 +692,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Switch on cases. StateEntries, which have been computed previously, map a state number (for initial and continuing states) to a label that has been inserted 
       // right after the associated yield return. 
       BlockStatement result = new BlockStatement();
-      var returnFalse = new ReturnStatement() { Expression = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean} };
-      var returnFalseLabel = new LabeledStatement(){ Label = this.host.NameTable.GetNameFor("return false"), Statement = returnFalse};
+      var returnFalse = new ReturnStatement() { Expression = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean } };
+      var returnFalseLabel = new LabeledStatement() { Label = this.host.NameTable.GetNameFor("return false"), Statement = returnFalse };
       List<ISwitchCase> cases = new List<ISwitchCase>();
       foreach (int i in stateEntries.Keys) {
         SwitchCase c = new SwitchCase() {
@@ -1280,7 +705,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       // Default case.
       SwitchCase defaultCase = new SwitchCase();
-      defaultCase.Body.Add(new GotoStatement(){ TargetStatement = returnFalseLabel });
+      defaultCase.Body.Add(new GotoStatement() { TargetStatement = returnFalseLabel });
       cases.Add(defaultCase);
       SwitchStatement switchStatement = new SwitchStatement() {
         Cases = cases,
@@ -1306,18 +731,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       reset.Visibility = TypeMemberVisibility.Private;
       reset.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       reset.Type = this.host.PlatformType.SystemVoid;
-      reset.IsVirtual = true; 
-      reset.IsNewSlot = true; 
-      reset.IsHiddenBySignature = true; 
+      reset.IsVirtual = true;
+      reset.IsNewSlot = true;
+      reset.IsHiddenBySignature = true;
       reset.IsSealed = true;
       iteratorClosure.Reset = reset;
       // explicitly state that this reset method implements IEnumerator's reset method. 
       IMethodReference resetImplemented = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.NonGenericIEnumeratorInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("Reset"), false)) {
         IMethodReference mref = memref as IMethodReference;
-        if (mref != null) { 
-          resetImplemented = mref; 
-          break; 
+        if (mref != null) {
+          resetImplemented = mref;
+          break;
         }
       }
       MethodImplementation resetImp = new MethodImplementation() {
@@ -1353,9 +778,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       disposeMethod.Visibility = TypeMemberVisibility.Public;
       disposeMethod.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       disposeMethod.Type = this.host.PlatformType.SystemVoid;
-      disposeMethod.IsVirtual = true; 
-      disposeMethod.IsNewSlot = true; 
-      disposeMethod.IsHiddenBySignature = true; 
+      disposeMethod.IsVirtual = true;
+      disposeMethod.IsNewSlot = true;
+      disposeMethod.IsHiddenBySignature = true;
       disposeMethod.IsSealed = true;
       // Add disposeMethod to parent's member list. 
       iteratorClosure.DisposeMethod = disposeMethod;
@@ -1363,9 +788,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       IMethodReference disposeImplemented = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.DisposableInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("Dispose"), false)) {
         IMethodReference mref = memref as IMethodReference;
-        if (mref != null) { 
-          disposeImplemented = mref; 
-          break; 
+        if (mref != null) {
+          disposeImplemented = mref;
+          break;
         }
       }
       MethodImplementation disposeImp = new MethodImplementation() {
@@ -1526,7 +951,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       returnThis.Statements.Add(thisDotStateEq0);
       returnThis.Statements.Add(new ReturnStatement() { Expression = new ThisReference() });
       var returnNew = new BlockStatement();
-      var args = new List<IExpression>(); 
+      var args = new List<IExpression>();
       args.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
       var closureInstanceLocalDecl = new LocalDeclarationStatement() {
         LocalVariable = new LocalDefinition() {
@@ -1623,11 +1048,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       BlockStatement block1 = new BlockStatement();
       block1.Statements.Add(new ReturnStatement() {
         Expression = new MethodCall() {
-           IsStaticCall = false,
-           MethodToCall = iteratorClosure.GenericGetEnumeratorReference,
-           ThisArgument = new ThisReference(),
-           Type = iteratorClosure.NonGenericIEnumeratorInterface
-         }
+          IsStaticCall = false,
+          MethodToCall = iteratorClosure.GenericGetEnumeratorReference,
+          ThisArgument = new ThisReference(),
+          Type = iteratorClosure.NonGenericIEnumeratorInterface
+        }
       });
       SourceMethodBody body1 = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
       body1.IsNormalized = true;
@@ -1755,7 +1180,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Create fields for the closure class, which include fields for captured variables and fields for maintaining the state machine.
     /// </summary>
-    private void CreateIteratorClosureFields(IteratorClosureInformation iteratorClosure) 
+    private void CreateIteratorClosureFields(IteratorClosureInformation iteratorClosure)
       //^ requires (iteratorClosure.ElementType != null);
     {
       // Create fields of the closure class: parameters and this
@@ -1881,14 +1306,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
   }
 
-  internal class YieldReturnYieldBreakReplacer: MethodBodyCodeMutator {
-  /// <summary>
-  /// Used in the tranformation of an iterator method body into a MoveNext method body, this class replaces
-  /// yield returns and yield breaks with approppriate assignments to this dot current and return statements. 
-  /// In addition, it inserts a new label statement after each yield return, and associates a unique state 
-  /// number with the label. Such a mapping can be aquired from calling the GetStateEntries method. It is not
-  /// suggested to call the Visit methods directly. 
-  /// </summary>
+  internal class YieldReturnYieldBreakReplacer : MethodBodyCodeMutator {
+    /// <summary>
+    /// Used in the tranformation of an iterator method body into a MoveNext method body, this class replaces
+    /// yield returns and yield breaks with approppriate assignments to this dot current and return statements. 
+    /// In addition, it inserts a new label statement after each yield return, and associates a unique state 
+    /// number with the label. Such a mapping can be aquired from calling the GetStateEntries method. It is not
+    /// suggested to call the Visit methods directly. 
+    /// </summary>
     IteratorClosureInformation iteratorClosure;
     internal YieldReturnYieldBreakReplacer(IteratorClosureInformation iteratorClosure, IMetadataHost host) :
       base(host, true) {
@@ -1923,7 +1348,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       stateEntries.Add(0, initialLabel);
       this.stateNumber = 1;
       base.Visit(blockStatement);
-      this.stateNumber = 0; 
+      this.stateNumber = 0;
       Dictionary<int, ILabeledStatement> result = stateEntries;
       stateEntries = null;
       return result;

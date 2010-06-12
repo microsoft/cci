@@ -86,6 +86,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       finder.Visit(result);
       var remover = new RemoveUnnecessaryTypes(finder.helperTypes);
       remover.Visit(result);
+      result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
 
       return result;
     }
@@ -107,9 +108,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       finder.Visit(result);
       var remover = new RemoveUnnecessaryTypes(finder.helperTypes);
       remover.Visit(result);
+      result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
 
       return result;
     }
+
   }
 
   /// <summary>

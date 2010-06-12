@@ -733,7 +733,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       bool hadLocals = IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables);
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
-        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
+        SourceMethodBody mutableSourceMethodBody = null;
+        if (this.copyOnlyIfNotAlreadyMutable)
+          mutableSourceMethodBody = sourceMethodBody as SourceMethodBody;
+        if (mutableSourceMethodBody == null)
+          mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
         if (hadLocals)
@@ -2788,6 +2792,17 @@ namespace Microsoft.Cci.MutableCodeModel {
       createMutableType = new CreateMutableType(this);
     }
 
+    /// <summary>
+    /// Gets the mutable copy if it exists.
+    /// </summary>
+    /// <param name="parameterDefinition">The parameter definition.</param>
+    /// <returns></returns>
+    public virtual object GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
+      IReference/*?*/ cachedValue;
+      this.referenceCache.TryGetValue(parameterDefinition, out cachedValue);
+      return cachedValue != null ? cachedValue : parameterDefinition;
+    }
+
     #region Virtual methods for subtypes to override, one per type in MutableCodeModel
 
     /// <summary>
@@ -2812,7 +2827,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       else {
         IParameterDefinition/*?*/ par = def as IParameterDefinition;
         if (par != null)
-          addressableExpression.Definition = this.Visit(par);
+          addressableExpression.Definition = this.GetMutableCopyIfItExists(par);
         else {
           IFieldReference/*?*/ field = def as IFieldReference;
           if (field != null)
@@ -2873,7 +2888,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual IExpression Visit(AnonymousDelegate anonymousDelegate) {
       this.path.Push(anonymousDelegate);
-      for (int i = 0, n = anonymousDelegate.Parameters.Count; i < n; i++) 
+      for (int i = 0, n = anonymousDelegate.Parameters.Count; i < n; i++)
         anonymousDelegate.Parameters[i] = this.Visit(anonymousDelegate.Parameters[i]);
       anonymousDelegate.Body = this.Visit(anonymousDelegate.Body);
       this.path.Pop();
@@ -3000,7 +3015,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       else {
         IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
         if (par != null)
-          boundExpression.Definition = this.Visit(par);
+          boundExpression.Definition = this.GetMutableCopyIfItExists(par);
         else {
           IFieldReference/*?*/ field = boundExpression.Definition as IFieldReference;
           boundExpression.Definition = this.Visit(field);
@@ -3687,7 +3702,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       else {
         IParameterDefinition/*?*/ par = targetExpression.Definition as IParameterDefinition;
         if (par != null)
-          targetExpression.Definition = this.Visit(par);
+          targetExpression.Definition = this.GetMutableCopyIfItExists(par);
         else {
           IFieldReference/*?*/ field = targetExpression.Definition as IFieldReference;
           if (field != null) {
@@ -3992,7 +4007,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// This type implements the ICodeVisitor interface so that an IExpression or an IStatement
-    /// can dispatch the visits automatically. The result of a visit is either an IExprssion or
+    /// can dispatch the visits automatically. The result of a visit is either an IExpression or
     /// an IStatement stored in the resultExpression or resultStatement fields. 
     /// </summary>
     private class CreateMutableType : BaseCodeVisitor, ICodeVisitor {
@@ -4098,7 +4113,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       /// <param name="assertStatement">The assert statement.</param>
       public override void Visit(IAssertStatement assertStatement) {
         AssertStatement mutableAssertStatement = assertStatement as AssertStatement;
-        if ( mutableAssertStatement == null) {
+        if (mutableAssertStatement == null) {
           this.resultStatement = assertStatement;
           return;
         }
@@ -4765,7 +4780,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       /// <param name="outArgument">The out argument.</param>
       public override void Visit(IOutArgument outArgument) {
         OutArgument mutableOutArgument = outArgument as OutArgument;
-        if ( mutableOutArgument == null) mutableOutArgument = new OutArgument(outArgument);
+        if (mutableOutArgument == null) mutableOutArgument = new OutArgument(outArgument);
         this.resultExpression = this.myCodeMutator.Visit(mutableOutArgument);
       }
 
@@ -4775,7 +4790,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       /// <param name="pointerCall">The pointer call.</param>
       public override void Visit(IPointerCall pointerCall) {
         PointerCall mutablePointerCall = pointerCall as PointerCall;
-        if ( mutablePointerCall == null) mutablePointerCall = new PointerCall(pointerCall);
+        if (mutablePointerCall == null) mutablePointerCall = new PointerCall(pointerCall);
         this.resultExpression = this.myCodeMutator.Visit(mutablePointerCall);
       }
 

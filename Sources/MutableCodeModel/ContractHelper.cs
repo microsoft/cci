@@ -43,6 +43,9 @@ namespace Microsoft.Cci.MutableContracts {
   public sealed class SubstituteParameters : MethodBodyCodeAndContractMutator {
     private IMethodDefinition targetMethod;
     private IMethodDefinition sourceMethod;
+    private ITypeReference targetType;
+    List<IParameterDefinition> parameters;
+
     /// <summary>
     /// Creates a mutator that replaces all occurrences of parameters from the target method with those from the source method.
     /// </summary>
@@ -50,22 +53,34 @@ namespace Microsoft.Cci.MutableContracts {
       : base(host, false) { // NB: Important to pass "false": this mutator needs to make a copy of the entire contract!
       this.targetMethod = targetMethodDefinition;
       this.sourceMethod = sourceMethodDefinition;
+      this.targetType = targetMethodDefinition.ContainingType;
+      this.parameters = new List<IParameterDefinition>(targetMethod.Parameters);
     }
 
     /// <summary>
-    /// Visits the specified bound expression.
+    /// If the <paramref name="boundExpression"/> represents a parameter of the source method,
+    /// it is replaced with the equivalent parameter of the target method.
     /// </summary>
     /// <param name="boundExpression">The bound expression.</param>
-    /// <returns></returns>
     public override IExpression Visit(BoundExpression boundExpression) {
       ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
       if (par != null && par.ContainingSignature == this.sourceMethod) {
-        List<IParameterDefinition> parameters = new List<IParameterDefinition>(targetMethod.Parameters);
-        boundExpression.Definition = parameters[par.Index];
+        boundExpression.Definition = this.parameters[par.Index];
         return boundExpression;
       } else {
         return base.Visit(boundExpression);
       }
+    }
+
+    /// <summary>
+    /// Replaces the specified this reference with a this reference to the containing type of the target method
+    /// </summary>
+    /// <param name="thisReference">The this reference.</param>
+    /// <returns>a this reference to the containing type of the target method</returns>
+    public override IExpression Visit(ThisReference thisReference) {
+      return new ThisReference() {
+        Type = this.targetType,
+      };
     }
   }
 

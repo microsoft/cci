@@ -170,9 +170,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
       get {
-        return this.ilMethodBody.PrivateHelperTypes;
+        var x = this.privateHelperTypesToRemove;
+        return x == null ? SourceMethodBody.emptyPrivateHelperTypes : x;
       }
     }
+    static IEnumerable<ITypeDefinition> emptyPrivateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
 
     #endregion
 

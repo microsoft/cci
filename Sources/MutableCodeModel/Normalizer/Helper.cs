@@ -85,7 +85,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.currentField == null) {
           this.currentField = value;
           this.ClosureDefinition.Fields.Add(value);
-        } else Debug.Assert(false); 
+        } else Debug.Assert(false);
       }
     }
     private IFieldDefinition currentField;
@@ -255,7 +255,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       } else methodReference = method;
       return methodReference;
     }
-   
+
     /// <summary>
     /// The generic version of the GetEnumerator method. Should not be set more than once. The setter also add the member to the member list of the closure class.
     /// </summary>
@@ -277,7 +277,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal IMethodReference GenericGetEnumeratorReference {
       get {
         if (this.genericGetEnumeratorReference == null) {
-            this.genericGetEnumeratorReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetEnumerator);
+          this.genericGetEnumeratorReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetEnumerator);
         }
         return this.genericGetEnumeratorReference;
       }
@@ -305,7 +305,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal IMethodReference GenericGetCurrentReference {
       get {
         if (this.genericGetCurrentReference == null) {
-            this.genericGetCurrentReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetCurrent);
+          this.genericGetCurrentReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetCurrent);
         }
         return this.genericGetCurrentReference;
       }
@@ -384,10 +384,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference NonGenericIEnumeratorInterface {
       get { return nonGenericIEnumeratorInterface; }
-      set { nonGenericIEnumeratorInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value)) {
-        this.ClosureDefinition.Interfaces.Add(value);
-      }
+      set {
+        nonGenericIEnumeratorInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value)) {
+          this.ClosureDefinition.Interfaces.Add(value);
+        }
       }
     }
     private ITypeReference nonGenericIEnumeratorInterface;
@@ -397,9 +398,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference GenericIEnumeratorInterface {
       get { return genericIEnumeratorInterface; }
-      set { genericIEnumeratorInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        genericIEnumeratorInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference genericIEnumeratorInterface;
@@ -409,9 +411,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference NonGenericIEnumerableInterface {
       get { return nonGenericIEnumerableInterface; }
-      set { nonGenericIEnumerableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        nonGenericIEnumerableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference nonGenericIEnumerableInterface;
@@ -422,9 +425,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference GenericIEnumerableInterface {
       get { return genericIEnumerableInterface; }
-      set { genericIEnumerableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        genericIEnumerableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference genericIEnumerableInterface;
@@ -434,9 +438,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference DisposableInterface {
       get { return this.disposableInterface; }
-      set { this.disposableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        this.disposableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference disposableInterface;
@@ -519,80 +524,4 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
   }
 
-  /// <summary>
-  /// A type reference to a private helper type, which is nested. This type reference resolves itself
-  /// in a different way than a nested type reference, that is, without looking up itself in containing 
-  /// type's member list, which will not work with private helper types. 
-  /// </summary>
-  public class NestedTypeReferencePrivateHelper : NestedTypeReference {
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public NestedTypeReferencePrivateHelper() {
-      this.privateHelperTypeDefinition = Dummy.NestedType;
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="nestedTypeReference"></param>
-    /// <param name="internFactory"></param>
-    public new void Copy(INestedTypeReference nestedTypeReference, IInternFactory internFactory) {
-      base.Copy(nestedTypeReference, internFactory);
-      this.privateHelperTypeDefinition = nestedTypeReference.ResolvedType;
-      Debug.Assert(this.InternedKey == nestedTypeReference.InternedKey);
-    }
-    /// <summary>
-    /// The type definition being referred to.
-    /// In case this type was alias, this is also the type of the aliased type
-    /// </summary>
-    /// <value></value>
-    public override ITypeDefinition ResolvedType {
-      get { return this.privateHelperTypeDefinition; }
-    }
-
-    /// <summary>
-    /// For internal use.
-    /// </summary>
-    protected INestedTypeDefinition privateHelperTypeDefinition;
-  }
-
-  /// <summary>
-  /// A specialized nested type reference to a private helper type. This reference resolves itself
-  /// in a different way than other references in that it doesnt look up in the member list of its containing
-  /// type, which will not work with private helper types. 
-  /// </summary>
-  public sealed class SpecializedNestedTypeReferencePrivateHelper : NestedTypeReferencePrivateHelper, ISpecializedNestedTypeReference, ICopyFrom<ISpecializedNestedTypeReference> {
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public SpecializedNestedTypeReferencePrivateHelper() {
-      this.unspecializedVersion = Dummy.NestedType;
-      this.privateHelperTypeDefinition = Dummy.SpecializedNestedTypeDefinition;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="specializedNestedTypeReference"></param>
-    /// <param name="internFactory"></param>
-    public void Copy(ISpecializedNestedTypeReference specializedNestedTypeReference, IInternFactory internFactory) {
-      ((ICopyFrom<INestedTypeReference>)this).Copy(specializedNestedTypeReference, internFactory);
-      this.unspecializedVersion = specializedNestedTypeReference.UnspecializedVersion;
-      this.privateHelperTypeDefinition = specializedNestedTypeReference.ResolvedType;
-    }
-
-    /// <summary>
-    /// A reference to the nested type that has been specialized to obtain this nested type reference. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
-    /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
-    /// corresponds to a definition that is not obtained via specialization.)
-    /// </summary>
-    /// <value></value>
-    public INestedTypeReference UnspecializedVersion {
-      get { return this.unspecializedVersion; }
-      set { this.unspecializedVersion = value; }
-    }
-    INestedTypeReference unspecializedVersion;
-  }
 }
