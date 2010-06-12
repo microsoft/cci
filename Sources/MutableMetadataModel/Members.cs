@@ -935,6 +935,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+
+    /// <summary>
+    /// Returns the Name property of the LocalDefinition.
+    /// </summary>
+    public override string ToString() {
+      var x = this.Name.Value;
+      return x == null ? ":no name" : x;
+    }
   }
 
   /// <summary>
@@ -2353,6 +2361,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+
+    /// <summary>
+    /// Returns the Name property of the ParameterDefinition.
+    /// </summary>
+    public override string ToString() {
+      var x = this.Name.Value;
+      return x == null ? ":no name" : x;
+    }
   }
 
   /// <summary>

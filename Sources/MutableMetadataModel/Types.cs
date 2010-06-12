@@ -2000,31 +2000,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeDefinition">Unspecialized type definition to be specialized/instantiated.</param>
     /// <param name="internFactory">An internfactory. </param>
-    public static ITypeReference SelfInstance(ITypeDefinition typeDefinition, IInternFactory internFactory) {
+    public static ITypeDefinition SelfInstance(ITypeDefinition typeDefinition, IInternFactory internFactory) {
       INamespaceTypeDefinition namespaceTypeDefinition = typeDefinition as INamespaceTypeDefinition;
       if (namespaceTypeDefinition != null) {
         if (typeDefinition.IsGeneric)
-          return typeDefinition.InstanceType;
+          return typeDefinition.InstanceType.ResolvedType;
         else
           return typeDefinition;
       }
       INestedTypeDefinition nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
-      ITypeReference result = typeDefinition;
+      ITypeDefinition result = typeDefinition;
       if (nestedTypeDefinition != null) {
-        ITypeReference containingTypeReference = SelfInstance(nestedTypeDefinition.ContainingTypeDefinition, internFactory);
-        ISpecializedNestedTypeReference specializedNestedTypeRef = containingTypeReference as ISpecializedNestedTypeReference;
-        IGenericTypeInstanceReference genericInstanceRef = containingTypeReference as IGenericTypeInstanceReference;
-        if (specializedNestedTypeRef != null || genericInstanceRef != null) {
-          result = new SpecializedNestedTypeReference() {
-            ContainingType = containingTypeReference,
-            InternFactory = internFactory,
-            GenericParameterCount = typeDefinition.GenericParameterCount,
-            IsEnum = typeDefinition.IsEnum,
-            Attributes = new List<ICustomAttribute>(typeDefinition.Attributes),
-            UnspecializedVersion = nestedTypeDefinition,
-            Name = nestedTypeDefinition.Name,
-            IsValueType = typeDefinition.IsValueType
-          };
+        ITypeDefinition containingTypeDefinition = SelfInstance(nestedTypeDefinition.ContainingTypeDefinition, internFactory);
+        var genericTypeInstance = containingTypeDefinition as GenericTypeInstance;
+        while (genericTypeInstance == null) {
+          var specializedNestedTypeRef = containingTypeDefinition as ISpecializedNestedTypeReference;
+          if (specializedNestedTypeRef != null) {
+            containingTypeDefinition = specializedNestedTypeRef.ContainingType.ResolvedType;
+            genericTypeInstance = containingTypeDefinition as GenericTypeInstance;
+          } else {
+            break;
+          }
+        }
+        if (genericTypeInstance != null) {
+          result = new SpecializedNestedTypeDefinition(nestedTypeDefinition, nestedTypeDefinition, containingTypeDefinition, genericTypeInstance, internFactory);
         }
       }
       if (typeDefinition.IsGeneric) {

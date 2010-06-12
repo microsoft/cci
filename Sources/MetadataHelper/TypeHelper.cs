@@ -858,6 +858,7 @@ namespace Microsoft.Cci {
     /// then the result is null.
     /// </summary>
     public static IUnitReference/*?*/ GetDefiningUnitReference(ITypeReference typeReference) {
+      if (typeReference is ISpecializedNestedTypeReference) return null;
       INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
       while (nestedTypeReference != null) {
         typeReference = nestedTypeReference.ContainingType;

@@ -3327,8 +3327,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="visitImmutableNodes">
     /// When we see an immutable node, whether we descend to visit its children. 
     /// </param>
-    public MutatingVisitor(IMetadataHost host, bool visitImmutableNodes) : this(host)
-    {
+    public MutatingVisitor(IMetadataHost host, bool visitImmutableNodes)
+      : this(host) {
       this.visitImmutableNodes = visitImmutableNodes;
     }
 
@@ -3357,7 +3357,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A cache for references, which may be copied. There is one copy for an original reference ref; the cache always contains
     /// (ref, copy) and (copy, copy) for every reference that has been copied. 
     /// </summary>
-    Dictionary<IReference, IReference> referenceCache = new Dictionary<IReference, IReference>();
+    protected Dictionary<IReference, IReference> referenceCache = new Dictionary<IReference, IReference>();
 
     /// <summary>
     /// If we havent finished visiting a method definition, returns that that method. Otherwise, returns dummy. 
@@ -3689,8 +3689,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="aliasForType">Type of the alias for.</param>
     /// <returns></returns>
-    public virtual IAliasForType Visit(IAliasForType aliasForType) 
-    {
+    public virtual IAliasForType Visit(IAliasForType aliasForType) {
       // pure dispatcher method
       if (this.stopTraversal) return aliasForType;
       INamespaceAliasForType/*?*/ namespaceAliasForType = aliasForType as INamespaceAliasForType;
@@ -3762,11 +3761,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assemblyReference">The assembly reference.</param>
     /// <returns></returns>
-    public virtual  IAssemblyReference Visit(IAssemblyReference assemblyReference) {
+    public virtual IAssemblyReference Visit(IAssemblyReference assemblyReference) {
       if (this.stopTraversal) return assemblyReference;
       IReference cachedValue;
       if (this.referenceCache.TryGetValue(assemblyReference, out cachedValue)) {
-        return (IAssemblyReference) cachedValue;
+        return (IAssemblyReference)cachedValue;
       }
       IAssemblyReference result = this.Mutate(assemblyReference);
       return result;
@@ -3857,7 +3856,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual IEventDefinition Visit(IEventDefinition eventDefinition) {
       if (this.stopTraversal) return eventDefinition;
-      var mutable = eventDefinition as EventDefinition ;
+      var mutable = eventDefinition as EventDefinition;
       if (mutable != null) {
         this.Mutate(mutable);
       }
@@ -3982,7 +3981,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         return this.Mutate(this.GetReferenceCopy(fieldDefinition));
       var mutable = fieldReference as FieldReference;
       if (mutable != null) {
-        return this.Mutate(this.GetReferenceCopy(mutable)) ;
+        return this.Mutate(this.GetReferenceCopy(mutable));
       }
       if (this.visitImmutableNodes) {
         this.path.Push(fieldReference);
@@ -4474,7 +4473,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<IMetadataNamedArgument> Mutate(List<IMetadataNamedArgument> namedArguments) {
       if (this.stopTraversal) return namedArguments;
       for (int i = 0, n = namedArguments.Count; i < n; i++)
-        namedArguments[i] = (IMetadataNamedArgument) this.Dispatch(namedArguments[i]);
+        namedArguments[i] = (IMetadataNamedArgument)this.Dispatch(namedArguments[i]);
       return namedArguments;
     }
 
@@ -4549,7 +4548,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IOperationExceptionInformation Visit(IOperationExceptionInformation operationExceptionInformation) {
       if (this.stopTraversal) return operationExceptionInformation;
       var mutable = operationExceptionInformation as OperationExceptionInformation;
-      if (mutable != null) 
+      if (mutable != null)
         return this.Mutate(mutable);
       if (this.visitImmutableNodes) {
         this.path.Push(operationExceptionInformation);
@@ -4778,7 +4777,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual MethodDefinition Mutate(MethodDefinition methodDefinition) {
       if (this.stopTraversal) return methodDefinition;
       if (methodDefinition == Dummy.Method) return methodDefinition;
-      this.path.Push(methodDefinition); 
+      this.path.Push(methodDefinition);
       this.VisitTypeDefinitionMember(methodDefinition);
       if (methodDefinition.IsGeneric)
         methodDefinition.GenericParameters = this.Mutate(methodDefinition.GenericParameters);
@@ -5615,7 +5614,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           var copy = this.Mutate(vectorTypeReference);
           this.referenceCache.Add(arrayTypeReference, copy);
           if (copy != arrayTypeReference)
-          this.referenceCache.Add(copy, copy);
+            this.referenceCache.Add(copy, copy);
           return copy;
         }
       } else {
@@ -5803,7 +5802,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.stopTraversal) return functionPointerTypeReference;
       IReference cachedValue;
       if (this.referenceCache.TryGetValue(functionPointerTypeReference, out cachedValue)) {
-        return (IFunctionPointerTypeReference) cachedValue;
+        return (IFunctionPointerTypeReference)cachedValue;
       }
       var copy = this.Mutate(functionPointerTypeReference);
       this.referenceCache.Add(functionPointerTypeReference, copy);
@@ -5872,7 +5871,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (newp != par) changed = true;
         result.Add(newp);
       }
-      if (changed) 
+      if (changed)
         return result;
       return parameters;
     }
@@ -6693,7 +6692,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IMarshallingInformation VisitMethodReturnValueMarshallingInformation(MarshallingInformation marshallingInformation) {
       return this.Mutate(marshallingInformation);
     }
-    #endregion 
+    #endregion
 
     #region VisitAsReference methods
     /// <summary>
@@ -6943,7 +6942,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// created node.</param>
     /// <returns></returns>
     public static IFunctionPointerTypeReference GetFunctionPointerTypeReference(CallingConvention callingConvention, IEnumerable<IParameterTypeInformation> parameters,
-      IEnumerable<IParameterTypeInformation> extraArgumentTypes, bool returnValueIsModified, IEnumerable<ICustomModifier> returnValueCustomModifiers, bool returnValueIsByRef, ITypeReference type, IInternFactory internFactory, 
+      IEnumerable<IParameterTypeInformation> extraArgumentTypes, bool returnValueIsModified, IEnumerable<ICustomModifier> returnValueCustomModifiers, bool returnValueIsByRef, ITypeReference type, IInternFactory internFactory,
       ITypeReference original) {
       //^ ensures result is MutableModel.FuntionPointerTypeReference;
       FunctionPointerTypeReference result = new FunctionPointerTypeReference();
