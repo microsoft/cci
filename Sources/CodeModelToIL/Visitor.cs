@@ -387,10 +387,10 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.Int8: opcode = OperationCode.Ldelem_I1; break;
         case PrimitiveTypeCode.IntPtr: opcode = OperationCode.Ldelem_I; break;
         case PrimitiveTypeCode.Pointer: opcode = OperationCode.Ldelem_I; break;
-        case PrimitiveTypeCode.UInt16: opcode = OperationCode.Ldelem_I2; break;
-        case PrimitiveTypeCode.UInt32: opcode = OperationCode.Ldelem_I4; break;
+        case PrimitiveTypeCode.UInt16: opcode = OperationCode.Ldelem_U2; break;
+        case PrimitiveTypeCode.UInt32: opcode = OperationCode.Ldelem_U4; break;
         case PrimitiveTypeCode.UInt64: opcode = OperationCode.Ldelem_I8; break;
-        case PrimitiveTypeCode.UInt8: opcode = OperationCode.Ldelem_I1; break;
+        case PrimitiveTypeCode.UInt8: opcode = OperationCode.Ldelem_U1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Ldelem_I; break;
         default:
           if (typeReference.IsValueType || typeReference is IGenericParameterReference) {
