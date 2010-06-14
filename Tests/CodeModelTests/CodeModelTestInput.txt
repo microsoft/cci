@@ -59,6 +59,7 @@ namespace CodeModelTestInput
         private void Method3()
         {
             int j;
+            int k;
             int i = 1;
             if ((i == 1))
             {
@@ -68,7 +69,7 @@ namespace CodeModelTestInput
             {
                 j = 3;
             }
-            int k = (i + j);
+            k = (i + j);
             return;
 
         }
@@ -171,6 +172,7 @@ namespace CodeModelTestInput
 
         private static bool Method12(int x)
         {
+            bool local_0;
             int local_1 = x;
             switch((local_1 - 1)){
                 case 0:
@@ -183,7 +185,7 @@ namespace CodeModelTestInput
                     goto IL_0025;
             }
         IL_001d:
-            bool local_0 = 0;
+            local_0 = 0;
             goto IL_0029;
         IL_0021:
             local_0 = 1;
@@ -320,6 +322,7 @@ namespace CodeModelTestInput
         private bool Method17(bool A, bool B, bool C, bool D)
         {
             bool __temp_1;
+            bool local_0;
             if (!(A && B))
             {
                 __temp_1 = (C && D);
@@ -328,13 +331,14 @@ namespace CodeModelTestInput
             {
                 __temp_1 = 1;
             }
-            bool local_0 = __temp_1;
+            local_0 = __temp_1;
             return local_0;
 
         }
 
         private int Method18(int x, int y, int z)
         {
+            int local_1;
             int midVal = z;
             if ((y < z))
             {
@@ -352,7 +356,7 @@ namespace CodeModelTestInput
                 }
             IL_002b:
             }
-            int local_1 = midVal;
+            local_1 = midVal;
             return local_1;
 
         }
@@ -368,12 +372,10 @@ namespace CodeModelTestInput
                 {
                     yield return x;
 
-                    local_0 = 1;
                     goto IL_00a6;
                 }
                 yield return 8;
 
-                local_0 = 1;
             IL_00a6:
                 goto IL_00f2;
             }
@@ -406,10 +408,12 @@ namespace CodeModelTestInput
             {
                 goto IL_0011;
             }
+            goto IL_0057;
         IL_0011:
             if ((x > 0))
             {
                 x = 2;
+                goto IL_0057;
             }
             if ((x > 1))
             {
@@ -419,6 +423,7 @@ namespace CodeModelTestInput
             {
                 x = 4;
             }
+        IL_0057:
             yield break;
 
         }
@@ -948,8 +953,9 @@ namespace CodeModelTestInput
 
         public bool Method3_19(int p1)
         {
+            bool local_0;
             System.Collections.Generic.List<int> __temp_1 = this.list;
-            bool local_0 = __temp_1.TrueForAll(delegate (int t) {
+            local_0 = __temp_1.TrueForAll(delegate (int t) {
                 bool local_0 = (t == 10);
                 return local_0;
 
@@ -1368,8 +1374,9 @@ namespace CodeModelTestInput
 
         public static bool Method4_15(int p1)
         {
+            bool local_0;
             System.Collections.Generic.List<T> __temp_1 = CodeModelTestInput.Class4<T>.list;
-            bool local_0 = __temp_1.TrueForAll(delegate (T t) {
+            local_0 = __temp_1.TrueForAll(delegate (T t) {
                 bool local_0 = (((object)t) == null);
                 return local_0;
 
@@ -1415,8 +1422,9 @@ namespace CodeModelTestInput
 
         public bool Method4_19(int p1)
         {
+            bool local_0;
             System.Collections.Generic.List<T> __temp_1 = CodeModelTestInput.Class4<T>.list;
-            bool local_0 = __temp_1.TrueForAll(delegate (T t) {
+            local_0 = __temp_1.TrueForAll(delegate (T t) {
                 bool local_0 = (((object)t) == null);
                 return local_0;
 
