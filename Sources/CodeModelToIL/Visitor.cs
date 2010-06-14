@@ -1507,6 +1507,8 @@ namespace Microsoft.Cci {
         if (mpt != null)
           this.generator.Emit(OperationCode.Constrained_, mpt.TargetType);
       }
+      if (methodCall.IsTailCall)
+        this.generator.Emit(OperationCode.Tail_);
       this.generator.Emit(call, methodCall.MethodToCall);
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(methodCall.Arguments);
       if (!methodCall.IsStaticCall) this.StackSize--;
