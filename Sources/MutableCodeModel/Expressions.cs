@@ -1932,6 +1932,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public MethodCall(IMethodCall methodCall)
       : base(methodCall) {
       this.isVirtualCall = methodCall.IsVirtualCall;
+      this.isTailCall = methodCall.IsTailCall;
       this.isStaticCall = methodCall.IsStaticCall;
       if (!methodCall.IsStaticCall) {
         this.thisArgument = methodCall.ThisArgument;
