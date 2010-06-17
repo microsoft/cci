@@ -67,13 +67,16 @@ namespace Microsoft.Cci.MutableCodeModel {
         finder.Visit(methodContract);
 
       if (finder.foundAnonymousDelegate) {
-        var bodyFixer = new InjectClosureFields(method, FieldForCapturedLocalOrParameter,
-          finder.classList, 0,
+        body = InjectClosureFields.GetBodyAfterInjectingClosureFields(
+          method, FieldForCapturedLocalOrParameter,
+          finder.classList,
           finder.outerClosures,
-          this.host, this.sourceLocationProvider, finder.genericTypeParameterMapping,
-          finder.lambda2method
+          this.host,
+          this.sourceLocationProvider,
+          finder.genericTypeParameterMapping,
+          finder.lambda2method,
+          body
           );
-        body = bodyFixer.Visit(body);
       }
 
       if (finder.foundYield) {

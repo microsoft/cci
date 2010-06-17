@@ -107,7 +107,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="genericTypeParameterMapping"></param>
     /// <param name="lambda2method">The map used to get from an anonymous delegate encountered during mutation to the method
     /// in the closure class that implements the anonymous delegate.</param>
-    internal InjectClosureFields(
+    private InjectClosureFields(
       IMethodDefinition method,
       Dictionary<object, BoundField> fieldForCapturedLocalOrParameter,
       List<ITypeDefinition> classList, int index,
@@ -358,33 +358,59 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #endregion
 
-    #region Overrides
+    #region Entry Point
 
     /// <summary>
-    /// The assumption is that there is only one block statement per method,
-    /// so this is visiting the method body effectively. For all methods
-    /// except for the one in the innermost closure class, inject a preamble
-    /// that creates an instance of the next inner closure class and stores
-    /// the instance in a local variable. The preamble also stores any parameters
-    /// of the method that have been captured in that instance:
-    ///   local := new NestedClosure();
-    ///   local.p := p; // for each parameter p that is captured
+    /// Given a method and its body, along with a bunch of information
+    /// computed by a previous visit to the body, rewrite the body in
+    /// the following ways:
+    /// 1. Any references to captured locals or parameters become
+    /// references to the corresponding fields in the closure classes.
+    /// 2. Create the definitions for the methods in the
+    /// closure classes that implement the anonymous delegates.
+    /// 3. Replace occurrences of anonymous delegates by create-delegate
+    /// expressions.
     /// </summary>
-    public override IBlockStatement Visit(BlockStatement blockStatement) {
-      var result = base.Visit(blockStatement);
+    internal static IBlockStatement GetBodyAfterInjectingClosureFields(
+      IMethodDefinition method,
+      Dictionary<object, BoundField> fieldForCapturedLocalOrParameter,
+      List<ITypeDefinition> classList,
+      List<FieldDefinition> outerClosures,
+      IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider,
+      Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping,
+      Dictionary<IAnonymousDelegate, MethodDefinition> lambda2method,
+      IBlockStatement body) {
 
-      if (this.nestedClosure != null) {
+      var instance = new InjectClosureFields(
+        method, fieldForCapturedLocalOrParameter,
+          classList, 0,
+          outerClosures,
+          host, sourceLocationProvider, genericTypeParameterMapping,
+          lambda2method);
+      var result = instance.Visit(body);
+
+      // For all methods except for the one in the innermost closure class,
+      // inject a preamble that creates an instance of the next inner closure
+      // class and stores the instance in a local variable. The preamble also
+      // stores any parameters of the method that have been captured in that instance:
+      //   local := new NestedClosure();
+      //   local.p := p; // for each parameter p that is captured
+      // NOTE: Can't make this the override for Visit(IBlockStatement) because
+      // if the decompiler isn't perfect --- and who is? --- then there may be
+      // nested blocks, but this should be done only for the top-level block.
+      if (instance.nestedClosure != null) {
         var result2 = result as BlockStatement;
         if (result2 != null) { // result2 is just an alias for result
           var inits = new List<IStatement>();
-          var s = this.ConstructClosureInstance(this.closureLocal, this.nestedClosure);
+          var s = instance.ConstructClosureInstance(instance.closureLocal, instance.nestedClosure);
           inits.Add(s);
           BoundField boundField;
           // if a parameter was captured, assign its value to the corresponding field
           // in the closure class
-          foreach (var p in this.method.Parameters) {
-            if (this.fieldForCapturedLocalOrParameter.TryGetValue(p, out boundField)) {
-              s = this.InitializeBoundFieldFromParameter(boundField, p);
+          foreach (var p in method.Parameters) {
+            if (fieldForCapturedLocalOrParameter.TryGetValue(p, out boundField)) {
+              s = instance.InitializeBoundFieldFromParameter(boundField, p);
               inits.Add(s);
             }
           }
@@ -394,6 +420,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       return result;
     }
+
+    #endregion
+
+    #region Overrides
 
     /// <summary>
     /// If this is the declaration (i.e., definition) of a local that was captured, then

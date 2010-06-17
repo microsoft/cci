@@ -405,13 +405,31 @@ namespace N {
   }
 }
 
-//namespace Test1 {
-//  class A<T> {
-//    private void AnonymousDelegateTest1(int t) {
-//      List<int> list = new List<int>();
-//      list.Add(t);
-//      var b = list.TrueForAll((int t1) => t1 == t);
-//      Console.WriteLine("Test anonymous delegate, b = {0}.", b);
-//    }
-//  }
-//}
+namespace Test1 {
+  class A<T> {
+    private void AnonymousDelegateTest1(int t) {
+      List<int> list = new List<int>();
+      list.Add(t);
+      var b = list.TrueForAll((int t1) => t1 == t);
+      Console.WriteLine("Test anonymous delegate, b = {0}.", b);
+    }
+  }
+}
+
+/// Test nested anonymous delegate. 
+namespace Test2 {
+  class A {
+    private void AnonymousDelegateTest1(int t) {
+      List<int> list = new List<int>();
+      list.Add(t);
+      var b = list.TrueForAll(delegate(int t1) {
+        List<int> list1 = new List<int>();
+        return list1.TrueForAll(delegate(int t2) {
+          return (t1 == t) || (t1 == t2);
+        });
+        //return true;
+      });
+      Console.WriteLine("Test anonymous delegate, b = {0}.", b);
+    }
+  }
+}

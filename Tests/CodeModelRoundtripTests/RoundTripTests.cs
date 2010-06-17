@@ -78,6 +78,12 @@ public class CodeModelRoundTripTests {
     RoundTripWithCodeMutator("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
   }
 
+  [Fact]
+  public void DecompilationClosureRoundtrip() {
+    ExtractAndCompile("ClosureRoundtrip.cs");
+    RoundTripNoCopyTestDecompilation("ClosureRoundtrip.dll", "ClosureRoundtrip.pdb");
+  }
+
   //[Fact]
   public void SystemCoreWithCode() {
     ExtractResource("CodeModelRoundtripTests.TestData.v4.System.Core.dll", "System.Core.dll");
@@ -115,17 +121,17 @@ public class CodeModelRoundTripTests {
     this.RoundTripAddGenericMethodParameter("GenericMethods.dll", "GenericMethods.pdb");
   }
 
-  //[Fact]
-  //public void DecompilationTest1() {
-  //  ExtractAndCompile("MutableCopyTest.cs");
-  //  RoundTripNoCopyTestDecompilation("MutableCopyTest.dll", "MutableCopyTest.pdb");
-  //}
+  [Fact]
+  public void DecompilationTest1() {
+    ExtractAndCompile("MutableCopyTest.cs");
+    RoundTripNoCopyTestDecompilation("MutableCopyTest.dll", "MutableCopyTest.pdb");
+  }
 
-  //[Fact]
-  //public void DecompilationTest2() {
-  //  ExtractAndCompile("IteratorRoundTripTest.cs");
-  //  RoundTripNoCopyTestDecompilation("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
-  //}
+  [Fact]
+  public void DecompilationTest2() {
+    ExtractAndCompile("IteratorRoundTripTest.cs");
+    RoundTripNoCopyTestDecompilation("IteratorRoundTripTest.dll", "IteratorRoundTripTest.pdb");
+  }
 
   [Fact]
   public void AddGenericParameterNoCopy() {
@@ -143,6 +149,12 @@ public class CodeModelRoundTripTests {
   public void CodeCopierTest1() {
     ExtractAndCompile("MutableCopyTest.cs");
     this.RoundTripCodeCopier("MutableCopyTest.dll", "MutableCopyTest.pdb", false);
+  }
+
+  [Fact]
+  public void CodeCopierClosureRoundtrip() {
+    ExtractAndCompile("ClosureRoundtrip.cs");
+    this.RoundTripCodeCopier("ClosureRoundtrip.dll", "ClosureRoundtrip.pdb", false);
   }
 
   /// <summary>
@@ -375,6 +387,21 @@ public class CodeModelRoundTripTests {
       }
     }
   }
+
+  void RoundTripNoCopyTestDecompilation(string assemblyName, string pdbName) {
+    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    IAssembly assembly = LoadAssembly(assemblyName);
+    using (var f = File.OpenRead(pdbName)) {
+      using (var pdbReader = new PdbReader(f, host)) {
+        var codeAssembly = Decompiler.GetCodeModelFromMetadataModel(this.host, assembly, pdbReader);
+        Checker checker = new Checker(this.host);
+        checker.Visit(codeAssembly);
+        Debug.Assert(checker.Errors.Count == 0);
+        AssertWriteToPeFile(expectedResult, codeAssembly, pdbReader);
+      }
+    }
+  }
+
 
   void RoundTripMutableCopyMarkedNodes(string assemblyName, string pdbName) {
     PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);

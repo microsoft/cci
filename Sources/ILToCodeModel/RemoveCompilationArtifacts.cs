@@ -28,6 +28,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<ILocalDefinition, IExpression> expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal = new Dictionary<ILocalDefinition, IExpression>();
     Dictionary<IParameterDefinition, IParameterDefinition> parameterMap = new Dictionary<IParameterDefinition, IParameterDefinition>();
     internal Dictionary<int, bool>/*?*/ referencedLabels;
+    GenericMethodParameterMapper/*?*/ genericParameterMapper = null;
 
     public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
       var field = addressableExpression.Definition as IFieldReference;
@@ -100,12 +101,17 @@ namespace Microsoft.Cci.ILToCodeModel {
       ITypeReference t1 = UnspecializedMethods.AsUnspecializedTypeReference(closureType.ContainingType.ResolvedType);
       ITypeReference t2 = UnspecializedMethods.AsUnspecializedTypeReference(this.containingType);
       if (t1 != t2) return;
-      if (!UnspecializedMethods.IsCompilerGenerated(closureType.ResolvedType)) return;
+      var resolvedClosureType = closureType.ResolvedType;
+      if (!UnspecializedMethods.IsCompilerGenerated(resolvedClosureType)) return;
       if (this.sourceMethodBody.privateHelperTypesToRemove == null) this.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
-      this.sourceMethodBody.privateHelperTypesToRemove.Add(closureType.ResolvedType);
+      this.sourceMethodBody.privateHelperTypesToRemove.Add(resolvedClosureType);
       this.currentClosureLocal = locDecl.LocalVariable;
-      statements.RemoveAt(i-1);
-      for (int j = i-1; j < statements.Count; j++) {
+
+      if (resolvedClosureType.IsGeneric)
+        this.genericParameterMapper = new GenericMethodParameterMapper(this.host, this.sourceMethodBody.MethodDefinition, resolvedClosureType);
+
+      statements.RemoveAt(i - 1);
+      for (int j = i - 1; j < statements.Count; j++) {
         IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
         if (es == null) break;
         IAssignment/*?*/ assignment = es.Expression as IAssignment;
@@ -126,10 +132,12 @@ namespace Microsoft.Cci.ILToCodeModel {
             ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
             if (ctc != null) {
               LocalDefinition localDefinition = new LocalDefinition() {
-                Name = closureField.ResolvedField.Name, Type = closureField.Type
+                Name = closureField.ResolvedField.Name,
+                Type = this.genericParameterMapper == null ? closureField.Type : this.genericParameterMapper.Visit(closureField.Type),
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
-                LocalVariable = localDefinition, InitialValue = ctc
+                LocalVariable = localDefinition,
+                InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
@@ -142,9 +150,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       foreach (var field in closureType.ResolvedType.Fields) {
         if (this.capturedLocalOrParameter.ContainsKey(field.Name.Value)) continue;
-        var newLocal = new LocalDefinition() { Name = field.Name, Type = field.Type };
+        var newLocal = new LocalDefinition() {
+          Name = field.Name,
+          Type = this.genericParameterMapper == null ? field.Type : this.genericParameterMapper.Visit(field.Type),
+        };
         var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
-        statements.Insert(i-1, newLocalDecl);
+        statements.Insert(i - 1, newLocalDecl);
         this.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
       }
     }
@@ -223,16 +234,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       var result = this.Visit(anonDel);
 
       if (this.sourceMethodBody.MethodDefinition.IsGeneric) {
-        GenericMethodParameterMapper genericParameterMapper = null;
         if (unspecializedClosureMethod.IsGeneric)
           genericParameterMapper = new GenericMethodParameterMapper(this.host, this.sourceMethodBody.MethodDefinition, unspecializedClosureMethod);
-        else if (closureMethod is ISpecializedMethodDefinition) {
-          NestedTypeDefinition ntd = unspecializedClosureMethod.ContainingTypeDefinition as NestedTypeDefinition;
-          if (ntd != null && ntd.IsGeneric)
-            genericParameterMapper = new GenericMethodParameterMapper(this.host, this.sourceMethodBody.MethodDefinition, ntd);
-        }
-        if (genericParameterMapper != null) {
-          result = genericParameterMapper.Visit(result);
+        // If the closure method was not generic, then its containing type is generic
+        // and the generic parameter mapper was created when the closure instance creation
+        // was discovered at the beginning of this visitor.
+        if (this.genericParameterMapper != null) {
+          result = this.genericParameterMapper.Visit(result);
           foreach (var v in this.capturedLocalOrParameter.Values) {
             // Do NOT visit any of the parameters in the table because that
             // will cause them to (possibly) have their types changed. But
@@ -242,7 +250,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             // they need their types updated.
             LocalDefinition ld = v as LocalDefinition;
             if (ld != null) {
-              genericParameterMapper.Visit(ld);
+              this.genericParameterMapper.Visit(ld);
               ld.MethodDefinition = this.sourceMethodBody.MethodDefinition;
             }
           }
@@ -295,8 +303,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }
@@ -305,8 +315,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }
@@ -507,8 +519,8 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// to become references to the original method's generic parameters.
   /// Create an instance of this class for each anonymous delegate using the appropriate
   /// constructor. This is known from whether the closure method is (static and generic)
-  /// or (instance and not-generic). Those are the only two patterns created by the
-  /// compiler.
+  /// or (instance and not-generic, but whose containing type is generic).
+  /// Those are the only two patterns created by the compiler.
   /// </summary>
   internal class GenericMethodParameterMapper : CodeMutator {
 
@@ -578,8 +590,12 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override ITypeReference Visit(ITypeReference typeReference) {
       // No sense in doing this more than once
-      if (this.cache.ContainsKey(typeReference)) return typeReference;
-      ITypeReference result = null; ;
+      ITypeReference result = null;
+      object mappedTo = null;
+      if (this.cache.TryGetValue(typeReference, out mappedTo)) {
+        result = (ITypeReference)mappedTo;
+        return result;
+      }
       if (this.sourceMethod != null) {
         IGenericMethodParameterReference gmpr = typeReference as IGenericMethodParameterReference;
         if (gmpr != null && gmpr.DefiningMethod == this.sourceMethod) {
