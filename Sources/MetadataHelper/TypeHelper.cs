@@ -1621,8 +1621,8 @@ namespace Microsoft.Cci {
       if (type1 == type2) return true;
       if (type1.InternedKey == type2.InternedKey) return true;
 
-      var genMethPar1 = type1 as IGenericMethodParameter;
-      var genMethPar2 = type2 as IGenericMethodParameter;
+      var genMethPar1 = type1 as IGenericMethodParameterReference;
+      var genMethPar2 = type2 as IGenericMethodParameterReference;
       if (genMethPar1 != null || genMethPar2 != null) {
         if (genMethPar1 == null || genMethPar2 == null) return false;
         return genMethPar1.Index == genMethPar2.Index;
