@@ -1800,6 +1800,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The local definition to visit.</param>
+    public virtual ILocalDefinition Visit(ILocalDefinition localDefinition) {
+      return this.Visit(this.GetMutableCopy(localDefinition));
+    }
+
+    /// <summary>
+    /// Visits a reference to the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The referenced local definition to visit.</param>
+    public virtual ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
+      //The referrer must refer to the same copy of the local definition that was (or will be) produced by a visit to the actual definition.
+      return this.GetMutableCopy(localDefinition);
+    }
+
+    /// <summary>
     /// Visits the specified location.
     /// </summary>
     /// <param name="location">The location.</param>
@@ -2044,39 +2061,17 @@ namespace Microsoft.Cci.MutableCodeModel {
           else {
             IParameterDefinition/*?*/ parameterDefinition = operation.Value as IParameterDefinition;
             if (parameterDefinition != null)
-              operation.Value = this.GetMutableCopyIfItExists(parameterDefinition);
+              operation.Value = this.VisitReferenceTo(parameterDefinition);
             else {
               ILocalDefinition/*?*/ localDefinition = operation.Value as ILocalDefinition;
               if (localDefinition != null)
-                operation.Value = this.GetMutableCopyIfItExists(localDefinition);
+                operation.Value = this.VisitReferenceTo(localDefinition);
             }
           }
         }
       }
       this.path.Pop();
       return operation;
-    }
-
-    /// <summary>
-    /// Gets the mutable copy if it exists.
-    /// </summary>
-    /// <param name="parameterDefinition">The parameter definition.</param>
-    /// <returns></returns>
-    public virtual object GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
-      object/*?*/ cachedValue;
-      this.cache.TryGetValue(parameterDefinition, out cachedValue);
-      return cachedValue != null ? cachedValue : parameterDefinition;
-    }
-
-    /// <summary>
-    /// Gets the mutable copy if it exists.
-    /// </summary>
-    /// <param name="localDefinition">The local definition.</param>
-    /// <returns></returns>
-    public virtual object GetMutableCopyIfItExists(ILocalDefinition localDefinition) {
-      object/*?*/ cachedValue;
-      this.cache.TryGetValue(localDefinition, out cachedValue);
-      return cachedValue != null ? cachedValue : localDefinition;
     }
 
     /// <summary>
@@ -2087,7 +2082,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<ILocalDefinition> Visit(List<ILocalDefinition> locals) {
       if (this.stopTraversal) return locals;
       for (int i = 0, n = locals.Count; i < n; i++)
-        locals[i] = this.Visit(this.GetMutableCopy(locals[i]));
+        locals[i] = this.Visit(locals[i]);
       return locals;
     }
 
@@ -2724,6 +2719,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified parameter definition.
+    /// </summary>
+    /// <param name="parameterDefinition">The parameter definition to visit.</param>
+    public virtual IParameterDefinition Visit(IParameterDefinition parameterDefinition) {
+      return this.Visit(this.GetMutableCopy(parameterDefinition));
+    }
+
+    /// <summary>
+    /// Visits a parameter definition that is being referenced.
+    /// </summary>
+    /// <param name="parameterDefinition">The referenced parameter definition.</param>
+    public virtual IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
+      //The referrer must refer to the same copy of the parameter definition that was (or will be) produced by a visit to the actual definition.
+      return this.GetMutableCopy(parameterDefinition);
+    }
+
+    /// <summary>
     /// Visits the specified pointer type reference.
     /// </summary>
     /// <param name="pointerTypeReference">The pointer type reference.</param>
@@ -2919,7 +2931,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual List<IParameterDefinition> Visit(List<IParameterDefinition> parameterDefinitions) {
       if (this.stopTraversal) return parameterDefinitions;
       for (int i = 0, n = parameterDefinitions.Count; i < n; i++)
-        parameterDefinitions[i] = this.Visit(this.GetMutableCopy(parameterDefinitions[i]));
+        parameterDefinitions[i] = this.Visit(parameterDefinitions[i]);
       return parameterDefinitions;
     }
 
