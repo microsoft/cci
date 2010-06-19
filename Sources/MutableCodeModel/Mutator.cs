@@ -111,11 +111,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       object def = addressableExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
-        addressableExpression.Definition = this.GetMutableCopyIfItExists(loc);
+        addressableExpression.Definition = this.VisitReferenceTo(loc);
       else {
         IParameterDefinition/*?*/ par = def as IParameterDefinition;
         if (par != null)
-          addressableExpression.Definition = this.GetMutableCopyIfItExists(par);
+          addressableExpression.Definition = this.VisitReferenceTo(par);
         else {
           IFieldReference/*?*/ field = def as IFieldReference;
           if (field != null)
@@ -298,11 +298,11 @@ namespace Microsoft.Cci.MutableCodeModel {
         boundExpression.Instance = Visit(boundExpression.Instance);
       ILocalDefinition/*?*/ loc = boundExpression.Definition as ILocalDefinition;
       if (loc != null)
-        boundExpression.Definition = this.GetMutableCopyIfItExists(loc);
+        boundExpression.Definition = this.VisitReferenceTo(loc);
       else {
         IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
         if (par != null)
-          boundExpression.Definition = this.GetMutableCopyIfItExists(par);
+          boundExpression.Definition = this.VisitReferenceTo(par);
         else {
           IFieldReference/*?*/ field = boundExpression.Definition as IFieldReference;
           boundExpression.Definition = this.Visit(field);
@@ -688,7 +688,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     /// <returns></returns>
     public virtual IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(localDeclarationStatement.LocalVariable));
+      localDeclarationStatement.LocalVariable = this.VisitReferenceTo(localDeclarationStatement.LocalVariable);
       if (localDeclarationStatement.InitialValue != null)
         localDeclarationStatement.InitialValue = Visit(localDeclarationStatement.InitialValue);
       return localDeclarationStatement;
@@ -1027,11 +1027,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       object def = targetExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
-        targetExpression.Definition = this.GetMutableCopyIfItExists(loc);
+        targetExpression.Definition = this.VisitReferenceTo(loc);
       else {
         IParameterDefinition/*?*/ par = targetExpression.Definition as IParameterDefinition;
         if (par != null)
-          targetExpression.Definition = this.GetMutableCopyIfItExists(par);
+          targetExpression.Definition = this.VisitReferenceTo(par);
         else {
           IFieldReference/*?*/ field = targetExpression.Definition as IFieldReference;
           if (field != null) {
@@ -2609,9 +2609,10 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// Use this as a base class when you define a code mutator that mutates ONLY method bodies.
-  /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), and
-  /// Visit(ITypeReference) that make sure to not modify the references.
+  /// Use this as a base class when you define a code mutator that mutates ONLY method bodies (in other words
+  /// all metadata definitions, including parameter definitions and local definition remain unchanged).
+  /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), 
+  /// Visit(ITypeReference), VisitReferenceTo(ILocalDefinition) and VisitReferenceTo(IParameterDefinition) that make sure to not modify the references.
   /// </summary>
   public class MethodBodyCodeMutator : CodeMutator {
 
@@ -2652,6 +2653,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider) { }
 
     #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
+
     /// <summary>
     /// Visits the specified field reference.
     /// </summary>
@@ -2662,22 +2664,38 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits a reference to the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The referenced local definition to visit.</param>
+    /// <returns></returns>
+    public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
+      return localDefinition;
+    }
+
+    /// <summary>
     /// Visits the specified method reference.
     /// </summary>
     /// <param name="methodReference">The method reference.</param>
-    /// <returns></returns>
     public override IMethodReference Visit(IMethodReference methodReference) {
       return methodReference;
+    }
+
+    /// <summary>
+    /// Visits a parameter definition that is being referenced.
+    /// </summary>
+    /// <param name="parameterDefinition">The referenced parameter definition.</param>
+    public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
+      return parameterDefinition;
     }
 
     /// <summary>
     /// Visits the specified type reference.
     /// </summary>
     /// <param name="typeReference">The type reference.</param>
-    /// <returns></returns>
     public override ITypeReference Visit(ITypeReference typeReference) {
       return typeReference;
     }
+
     #endregion All code mutators that are not mutating an entire assembly need to *not* modify certain references
   }
 

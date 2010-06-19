@@ -396,26 +396,6 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   /// <summary>
-  /// Not used for now.
-  /// </summary>
-  internal class MethodMapper : CodeAndContractMutator {
-    IMethodDefinition targetMethod;
-    IMethodDefinition sourceMethod;
-    public MethodMapper(IMetadataHost host, IMethodDefinition targetMethod, IMethodDefinition sourceMethod)
-      : base(host, true) {
-      this.targetMethod = targetMethod;
-      this.sourceMethod = sourceMethod;
-    }
-    public override object GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
-      if (parameterDefinition.ContainingSignature == sourceMethod) {
-        var ps = new List<IParameterDefinition>(targetMethod.Parameters);
-        return ps[parameterDefinition.Index];
-      }
-      return base.GetMutableCopyIfItExists(parameterDefinition);
-    }
-  }
-
-  /// <summary>
   /// A mutator that changes all references defined in one unit into being
   /// references defined in another unit.
   /// It does so by substituting the target unit's identity for the source

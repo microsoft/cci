@@ -432,7 +432,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
       var originalLocalVariable = localDeclarationStatement.LocalVariable;
-      localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(originalLocalVariable));
+      localDeclarationStatement.LocalVariable = this.VisitReferenceTo(originalLocalVariable);
       if (localDeclarationStatement.InitialValue != null) {
         var source = this.Visit(localDeclarationStatement.InitialValue);
         BoundField/*?*/ boundField;
