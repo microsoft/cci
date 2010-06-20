@@ -42,7 +42,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="assembly">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
     public static Assembly GetCodeAndContractModelFromMetadataModel(IContractAwareHost host, IAssembly assembly, PdbReader/*?*/ pdbReader) {
-      return (Assembly)GetCodeAndContractModelFromMetadataModelHelper(host, assembly, pdbReader, pdbReader);
+      return (Assembly)GetCodeModelFromMetadataModelHelper(host, assembly, pdbReader, pdbReader);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="module">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
     public static Module GetCodeAndContractModelFromMetadataModel(IContractAwareHost host, IModule module, PdbReader/*?*/ pdbReader) {
-      return GetCodeAndContractModelFromMetadataModelHelper(host, module, pdbReader, pdbReader);
+      return GetCodeModelFromMetadataModelHelper(host, module, pdbReader, pdbReader);
     }
 
     /// <summary>
@@ -84,29 +84,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var result = replacer.Visit(module); //Makes a mutable copy of module and simultaneously replaces the method bodies with bodies that can decompile the IL
       var finder = new HelperTypeFinder();
       finder.Visit(result);
-      var remover = new RemoveUnnecessaryTypes(finder.helperTypes);
-      remover.Visit(result);
-      result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
-
-      return result;
-    }
-
-    /// <summary>
-    /// Returns a mutable Code Model module that is equivalent to the given Metadata Model module,
-    /// except that in the new module method bodies also implement ISourceMethodBody.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this decompiler. It is used to obtain access to some global
-    /// objects and services such as the shared name table, the table for interning references, and contracts from other methods/types.</param>
-    /// <param name="module">The root of the Metadata Model to be converted to a Code Model.</param>
-    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method. May be null.</param>
-    private static Module GetCodeAndContractModelFromMetadataModelHelper(IContractAwareHost host, IModule module,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
-      var replacer = new ReplaceMetadataMethodBodiesWithDecompiledMethodBodies(host, module, sourceLocationProvider, localScopeProvider);
-      var result = replacer.Visit(module); //Makes a mutable copy of module and simultaneously replaces the method bodies with bodies that can decompile the IL
-      var finder = new HelperTypeFinder();
-      finder.Visit(result);
-      var remover = new RemoveUnnecessaryTypes(finder.helperTypes);
+      var remover = new RemoveUnnecessaryTypes(finder.helperTypes, finder.helperMethods);
       remover.Visit(result);
       result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
 
@@ -238,6 +216,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal Dictionary<uint, ITypeDefinition> helperTypes = new Dictionary<uint, ITypeDefinition>();
 
     /// <summary>
+    /// Contains an entry for every method that has been introduced by the compiler in order to implement "non closure" anonymous delegates.
+    /// Since decompilation re-introduces the anonymous delegates and iterators, these members should be removed from member lists.
+    /// They stick around as PrivateHelperMembers of the methods containing the "non closure" anonymous delegates.
+    /// </summary>
+    internal Dictionary<uint, IMethodDefinition> helperMethods = new Dictionary<uint, IMethodDefinition>();
+
+    /// <summary>
     /// Traverses only the namespace root of the given assembly, removing any type from the model that have the same
     /// interned key as one of the entries of this.typesToRemove.
     /// </summary>
@@ -274,9 +259,14 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void Visit(IMethodBody methodBody) {
       var mutableBody = (SourceMethodBody)methodBody;
       var block = mutableBody.Block; //force decompilation
-      if (mutableBody.privateHelperTypesToRemove == null) return;
-      foreach (var helperType in mutableBody.privateHelperTypesToRemove)
-        this.helperTypes.Add(helperType.InternedKey, helperType);
+      if (mutableBody.privateHelperTypesToRemove != null) {
+        foreach (var helperType in mutableBody.privateHelperTypesToRemove)
+          this.helperTypes.Add(helperType.InternedKey, helperType);
+      }
+      if (mutableBody.privateHelperMethodsToRemove != null) {
+        foreach (var helperMethod in mutableBody.privateHelperMethodsToRemove.Values)
+          this.helperMethods.Add(helperMethod.InternedKey, helperMethod);
+      }
     }
 
   }
@@ -294,11 +284,20 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<uint, ITypeDefinition> helperTypes;
 
     /// <summary>
+    /// Contains an entry for every method that has been introduced by the compiler in order to implement "non closure" anonymous delegates.
+    /// Since decompilation re-introduces the anonymous delegates and iterators, these members should be removed from member lists.
+    /// They stick around as PrivateHelperMembers of the methods containing the "non closure" anonymous delegates.
+    /// </summary>
+    Dictionary<uint, IMethodDefinition> helperMethods;
+
+    /// <summary>
     /// Allocatates a traverser for a mutable code model that removes a specified set of types from the model.
     /// </summary>
-    /// <param name="helperTypes">Dictionary whose keys are the interned keys of the types to remove from member lists.</param>
-    internal RemoveUnnecessaryTypes(Dictionary<uint, ITypeDefinition> helperTypes) {
+    /// <param name="helperTypes">A dictionary whose keys are the interned keys of the types to remove from member lists.</param>
+    /// <param name="helperMethods">A dictionary whose keys are the interned keys of the methods to remove from member lists.</param>
+    internal RemoveUnnecessaryTypes(Dictionary<uint, ITypeDefinition> helperTypes, Dictionary<uint, IMethodDefinition> helperMethods) {
       this.helperTypes = helperTypes;
+      this.helperMethods = helperMethods;
     }
 
     /// <summary>
@@ -322,6 +321,13 @@ namespace Microsoft.Cci.ILToCodeModel {
           i--;
         } else
           this.Visit((ITypeDefinition)nestedType);
+      }
+      for (int i = 0; i < mutableTypeDefinition.Methods.Count; i++) {
+        var helperMethod = mutableTypeDefinition.Methods[i];
+        if (this.helperMethods.ContainsKey(helperMethod.InternedKey)) {
+          mutableTypeDefinition.Methods.RemoveAt(i);
+          i--;
+        }
       }
     }
 

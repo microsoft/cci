@@ -110,8 +110,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (resolvedClosureType.IsGeneric)
         this.genericParameterMapper = new GenericMethodParameterMapper(this.host, this.sourceMethodBody.MethodDefinition, resolvedClosureType);
 
-      statements.RemoveAt(i - 1);
-      for (int j = i - 1; j < statements.Count; j++) {
+      statements.RemoveAt(i-1);
+      for (int j = i-1; j < statements.Count; j++) {
         IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
         if (es == null) break;
         IAssignment/*?*/ assignment = es.Expression as IAssignment;
@@ -136,8 +136,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                 Type = this.genericParameterMapper == null ? closureField.Type : this.genericParameterMapper.Visit(closureField.Type),
               };
               LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
-                LocalVariable = localDefinition,
-                InitialValue = ctc
+                LocalVariable = localDefinition, InitialValue = ctc
               };
               statements.Insert(j, localDeclStatement); j++;
               this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
@@ -155,7 +154,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           Type = this.genericParameterMapper == null ? field.Type : this.genericParameterMapper.Visit(field.Type),
         };
         var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
-        statements.Insert(i - 1, newLocalDecl);
+        statements.Insert(i-1, newLocalDecl);
         this.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
       }
     }
@@ -210,6 +209,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private IExpression ConvertToAnonymousDelegate(CreateDelegateInstance createDelegateInstance) {
       IMethodDefinition closureMethod = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
+      if (this.sourceMethodBody.privateHelperMethodsToRemove == null) this.sourceMethodBody.privateHelperMethodsToRemove = new Dictionary<uint, IMethodDefinition>();
+      this.sourceMethodBody.privateHelperMethodsToRemove[closureMethod.InternedKey] = closureMethod;
       IMethodBody closureMethodBody = UnspecializedMethods.GetMethodBodyFromUnspecializedVersion(closureMethod);
       AnonymousDelegate anonDel = new AnonymousDelegate();
       anonDel.CallingConvention = closureMethod.CallingConvention;
@@ -303,10 +304,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast,
-            TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type,
-            Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type, Locations = greaterThan.Locations
           });
         }
       }
@@ -315,10 +314,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast,
-            TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type,
-            Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type, Locations = greaterThan.Locations
           });
         }
       }

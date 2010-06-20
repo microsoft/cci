@@ -35,6 +35,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal readonly IPlatformType platformType;
     internal List<ILocalDefinition> localVariables;
     internal List<ITypeDefinition> privateHelperTypesToRemove;
+    internal Dictionary<uint, IMethodDefinition> privateHelperMethodsToRemove;
     bool sawReadonly;
     bool sawTailCall;
     bool sawVolatile;
