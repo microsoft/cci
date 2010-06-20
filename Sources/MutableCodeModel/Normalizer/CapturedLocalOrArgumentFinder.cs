@@ -271,6 +271,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       // Clear set of locals in scope, start new scope within lambda
+      var savedLocalsOrParametersInScope = this.localsOrParametersInScope;
       this.localsOrParametersInScope = new Dictionary<INamedEntity, bool>();
 
       // The parameters of the lambda are available for capturing.
@@ -299,6 +300,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       this.currentAnonymousDelegate = savedCurrentAnonymousDelegate;
+      this.localsOrParametersInScope = savedLocalsOrParametersInScope;
       if (savedCurrentClosureClass != null) {
         // leave the outermost one so that Normalizer can retrieve it
         this.generatedclosureClass = savedCurrentClosureClass;
