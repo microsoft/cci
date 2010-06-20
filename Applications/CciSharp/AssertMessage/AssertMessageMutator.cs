@@ -11,6 +11,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System.Diagnostics.Contracts;
 using CciSharp.Framework;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Mutators
 {
@@ -57,7 +58,10 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<AssertMessageMutator>
         {
             readonly Microsoft.Cci.MethodReference stringFormatStringObjectArray;
-            public Mutator(AssertMessageMutator owner, ISourceLocationProvider sourceLocationProvider, ContractProvider contracts)
+            public Mutator(
+                AssertMessageMutator owner, 
+                ISourceLocationProvider sourceLocationProvider, 
+                ContractProvider contracts)
                 : base(owner, sourceLocationProvider, contracts)
             {
                 this.stringFormatStringObjectArray =
@@ -81,7 +85,10 @@ namespace CciSharp.Mutators
                 {
                     // we've got a winner here.
                     var condition = methodCall.Arguments[0];
-                    var message = ExtractSourceFromPdb(condition);
+                    string message;
+                    if (!TryExtractSourceFromPdb(condition, out message))
+                        return methodCall; // no sources avaiable
+
                     IMethodReference assertMethod;
                     bool hasFormatMethod = assertMethods.TryGetStringFormatMethod(out assertMethod);
                     if (!hasFormatMethod)
@@ -226,10 +233,12 @@ namespace CciSharp.Mutators
                 return message;
             }
 
-            private string ExtractSourceFromPdb(IExpression condition)
+            private bool TryExtractSourceFromPdb(IExpression condition, out string message)
             {
                 Contract.Requires(condition != null);
-                Contract.Ensures(!String.IsNullOrEmpty(Contract.Result<string>()));
+                Contract.Ensures(
+                    !Contract.Result<bool>() ||
+                    !String.IsNullOrEmpty(Contract.ValueAtReturn<string>(out message)));
 
                 var sb = new StringBuilder();
                 foreach (var location in condition.Locations)
@@ -248,8 +257,8 @@ namespace CciSharp.Mutators
                         }
                     }
 
-                var message = sb.ToString();
-                return message;
+                message = sb.ToString();
+                return !String.IsNullOrEmpty(message);
             }
         }
 

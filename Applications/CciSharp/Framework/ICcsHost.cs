@@ -10,6 +10,7 @@ using Microsoft.Cci;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Framework
 {

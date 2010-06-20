@@ -13,6 +13,7 @@ using Microsoft.Cci;
 using System.IO;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Mutators
 {

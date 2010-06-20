@@ -13,12 +13,14 @@ using Microsoft.Cci.ILToCodeModel;
 using Microsoft.Cci.MutableCodeModel;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp
 {
     sealed class CcsHost
-       : MetadataReaderHost
-        , ICcsHost
+       : CodeContractAwareHostEnvironment
+       , ICcsHost
+       , IContractAwareHost
     {
         readonly PeReader peReader;
         readonly object syncLock = new object();
@@ -59,7 +61,7 @@ namespace CciSharp
             if (!this.TryGetPdbReader(assembly, out pdbReader))
                 pdbReader = null;
             
-            return Decompiler.GetCodeAndContractModelFromMetadataModel(this, assembly, pdbReader, null);
+            return Decompiler.GetCodeAndContractModelFromMetadataModel(this, assembly, pdbReader);
         }
            
         public bool TryGetPdbReader(IAssembly assembly, out PdbReader reader)

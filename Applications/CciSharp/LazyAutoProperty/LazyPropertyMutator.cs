@@ -11,6 +11,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Mutators
 {
@@ -68,7 +69,10 @@ namespace CciSharp.Mutators
             : CcsCodeMutatorBase<LazyPropertyMutator>
         {
             readonly INamespaceTypeReference booleanType;
-            public Mutator(LazyPropertyMutator owner, ISourceLocationProvider _pdbReader, ContractProvider contracts)
+            public Mutator(
+                LazyPropertyMutator owner, 
+                ISourceLocationProvider _pdbReader, 
+                ContractProvider contracts)
                 : base(owner, _pdbReader, contracts)
             {
                 this.booleanType = this.Host.PlatformType.SystemBoolean; 

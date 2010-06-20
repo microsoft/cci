@@ -12,6 +12,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Mutators
 {
@@ -47,7 +48,10 @@ namespace CciSharp.Mutators
             readonly INamespaceTypeReference voidType;
             readonly IMethodReference contractRequiresMethod;
 
-            public Mutator(NotNullMutator owner, ISourceLocationProvider reader, ContractProvider contracts)
+            public Mutator(
+                NotNullMutator owner, 
+                ISourceLocationProvider reader, 
+                ContractProvider contracts)
                 : base(owner, reader, contracts)
             {
                 this.notNullsContext.Push(false);

@@ -23,16 +23,22 @@ namespace CciSharp.Test
             public bool Validate { get; set; }
         }
 
-        class Foo : DependencyObject
+        class Simple : DependencyObject
         {
             // simple case
             [DependencyAutoProperty]
             public int Value { get; set; }
+        }
 
+        class WithDefaultValue : DependencyObject
+        {
             // with default value
             [DependencyAutoProperty(DefaultValue = 10)]
             public int ValueWithDefault { get; set; }
+        }
 
+        class WithValidation : DependencyObject
+        {
             // default value and validation method
             [DependencyAutoProperty(Validate = true)]
             public int ValueWithValidation { get; set; }
@@ -45,7 +51,7 @@ namespace CciSharp.Test
         [Fact(Skip = "requires WPF message pump")]
         public void ValueTest()
         {
-            var foo = new Foo();
+            var foo = new Simple();
             foo.Value = 100;
             var value = foo.Value;
             Assert.True(100 == value);

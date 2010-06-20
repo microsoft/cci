@@ -12,6 +12,7 @@ using System.Diagnostics.Contracts;
 using System.Diagnostics;
 using CciSharp;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Framework
 {

@@ -5,6 +5,7 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace CciSharp.Mutators
 {
@@ -248,7 +249,7 @@ namespace CciSharp.Mutators
                 }
 
                 // we're good, we can start implement the property
-                var declaringType = (TypeDefinition)propertyDefinition.ContainingType;
+                var declaringType = (TypeDefinition)propertyDefinition.ContainingTypeDefinition;
                 if (!TypeHelper.Type1DerivesFromType2(declaringType, this.dependencyObjectType))
                 {
                     this.Owner.Error(propertyDefinition, "must be declared in a type inheriting from System.Windows.DependencyObject");
@@ -263,7 +264,7 @@ namespace CciSharp.Mutators
                     IsStatic = true,
                     Visibility = TypeMemberVisibility.Public,
                     IsReadOnly = true,
-                    ContainingType = declaringType
+                    ContainingTypeDefinition = declaringType
                 };
                 declaringType.Fields.Add(propertyField);
 
@@ -443,7 +444,7 @@ namespace CciSharp.Mutators
                         IsStatic = true,
                         Visibility = TypeMemberVisibility.Private,
                         CallingConvention = CallingConvention.Default,
-                        ContainingType = declaringType
+                        ContainingTypeDefinition = declaringType
                     };
                     validator.Parameters.Add(new ParameterDefinition
                     {
@@ -620,7 +621,7 @@ namespace CciSharp.Mutators
                     IsRuntimeSpecial = true,
                     Name = this.Host.NameTable.Cctor,
                     Body = body,
-                    ContainingType = typeDefinition
+                    ContainingTypeDefinition = typeDefinition
                 };
                 body.MethodDefinition = cctor;
                 typeDefinition.Methods.Add(cctor);
