@@ -687,3 +687,27 @@ public class Class4<T>
   }
 }
 #endregion
+
+/// <summary>
+/// Test case for an issue reported by ckitching:
+/// http://cciast.codeplex.com/workitem/4662
+/// </summary>
+public class ckitching4662 {
+  public void test1() {
+    List<string> la = new List<string>();
+    List<uint> lb = new List<uint>();
+    Action<string> a;
+    Action<uint> b;
+
+    a = o => {
+      string va = "Hi";
+
+      la.Add(va);
+    };
+    b = o => {
+      uint vb = 42;
+
+      lb.Add(vb);
+    };
+  }
+}
