@@ -283,4 +283,7 @@
   <data name="MustBeConstInt" xml:space="preserve">
     <value>Array sizes must be int32 constants if an initializer is supplied.</value>
   </data>
+  <data name="IllegalUseOfType" xml:space="preserve">
+    <value>'{0}' : illegal use of type '{1}'.</value>
+  </data>
 </root>

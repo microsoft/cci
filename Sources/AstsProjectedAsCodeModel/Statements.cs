@@ -3261,8 +3261,13 @@ namespace Microsoft.Cci.Ast {
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       bool result = false;
       if (this.TypeExpression != null) result = this.TypeExpression.HasErrors;
-      foreach (LocalDeclaration localDeclaration in this.Declarations)
+      foreach (LocalDeclaration localDeclaration in this.Declarations) {
         result = result || localDeclaration.HasErrors;
+        if (!result && this.TypeExpression.ResolvedType.TypeCode == PrimitiveTypeCode.Void) {
+          this.Helper.ReportError(new AstErrorMessage(this, Error.IllegalUseOfType,  localDeclaration.Name.Value, this.Helper.GetTypeName(this.PlatformType.SystemVoid.ResolvedType)));
+          result = true;
+        }
+      }
       return result;
     }
 

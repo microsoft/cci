@@ -397,6 +397,11 @@ namespace Microsoft.Cci.Ast {
     WrongNumberOfArgumentsInConstructorCall,
 
     /// <summary>
+    /// '{0}' : illegal use of type '{1}'.	
+    /// </summary>
+    IllegalUseOfType,
+
+    /// <summary>
     /// Not an actual error message, but a convenient place holder during development.
     /// </summary>
     ToBeDefined
