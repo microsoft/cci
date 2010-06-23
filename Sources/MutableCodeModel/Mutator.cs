@@ -3235,6 +3235,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified DupValue.
+    /// </summary>
+    /// <param name="dupValue">The DupValue.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(DupValue dupValue) {
+      return dupValue;
+    }
+
+    /// <summary>
     /// Visits the specified empty statement.
     /// </summary>
     /// <param name="emptyStatement">The empty statement.</param>
@@ -3567,6 +3576,25 @@ namespace Microsoft.Cci.MutableCodeModel {
       pointerCall.Arguments = Visit(pointerCall.Arguments);
       pointerCall.Type = this.Visit(pointerCall.Type);
       return pointerCall;
+    }
+
+    /// <summary>
+    /// Visits the specified PopValue.
+    /// </summary>
+    /// <param name="popValue">The PopValue.</param>
+    /// <returns></returns>
+    public virtual IExpression Visit(PopValue popValue) {
+      return popValue;
+    }
+
+    /// <summary>
+    /// Visits the specified push statement.
+    /// </summary>
+    /// <param name="pushStatement">The push statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(PushStatement pushStatement) {
+      pushStatement.ValueToPush = Visit(pushStatement.ValueToPush);
+      return pushStatement;
     }
 
     /// <summary>
@@ -4438,6 +4466,19 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       /// <summary>
+      /// Visits the specified DupValue.
+      /// </summary>
+      /// <param name="dupValue">The DupValue.</param>
+      public override void Visit(IDupValue dupValue) {
+        DupValue mutableDupValue = dupValue as DupValue;
+        if (mutableDupValue == null) {
+          this.resultExpression = dupValue;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutableDupValue);
+      }
+
+      /// <summary>
       /// Visits the specified empty statement.
       /// </summary>
       /// <param name="emptyStatement">The empty statement.</param>
@@ -4810,6 +4851,32 @@ namespace Microsoft.Cci.MutableCodeModel {
         PointerCall mutablePointerCall = pointerCall as PointerCall;
         if (mutablePointerCall == null) mutablePointerCall = new PointerCall(pointerCall);
         this.resultExpression = this.myCodeMutator.Visit(mutablePointerCall);
+      }
+
+      /// <summary>
+      /// Visits the specified PopValue.
+      /// </summary>
+      /// <param name="popValue">The PopValue.</param>
+      public override void Visit(IPopValue popValue) {
+        PopValue mutablePopValue = popValue as PopValue;
+        if (mutablePopValue == null) {
+          this.resultExpression = popValue;
+          return;
+        }
+        this.resultExpression = this.myCodeMutator.Visit(mutablePopValue);
+      }
+
+      /// <summary>
+      /// Visits the specified push statement.
+      /// </summary>
+      /// <param name="pushStatement">The push statement.</param>
+      public override void Visit(IPushStatement pushStatement) {
+        PushStatement mutablePushStatement = pushStatement as PushStatement;
+        if (mutablePushStatement == null) {
+          this.resultStatement = pushStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutablePushStatement);
       }
 
       /// <summary>
