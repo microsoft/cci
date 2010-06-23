@@ -1742,37 +1742,6 @@ namespace Microsoft.Cci.Ast {
       return this.ImplicitConversion(expression, targetType);
     }
 
-    struct Pair : IEquatable<Pair> {
-      internal Expression s;
-      internal uint t;
-
-      public Pair(Expression s, uint t) {
-        this.s = s;
-        this.t = t;
-      }
-
-      public override string ToString() {
-        return "[" + s.ToString() + ", " + t.ToString() + "]";
-      }
-
-      public override bool Equals(object obj) {
-        if (!(obj is Pair)) return false;
-        return this.Equals((Pair)obj);
-      }
-
-      public override int GetHashCode() {
-        return s.GetHashCode() ^ (int)this.t;
-      }
-
-      #region IEquatable<Pair<S,T>> Members
-
-      public bool Equals(Pair other) {
-        return object.ReferenceEquals(this.s, other.s) && this.t == other.t;
-      }
-
-      #endregion
-    }
-
     /// <summary>
     /// Returns true if an implicit conversion is available to convert the value of the given expression to a corresponding value of the given target type.
     /// </summary>
