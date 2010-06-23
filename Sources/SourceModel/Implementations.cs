@@ -223,6 +223,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Error information relating to a portion of a source document.
   /// </summary>
+  [DebuggerDisplay("Message = {Message}")]
   public abstract class ErrorMessage : ISourceErrorMessage {
 
     /// <summary>
