@@ -981,6 +981,14 @@ namespace Microsoft.Cci.Ast {
               this.Helper.ReportError(new AstErrorMessage(this, Error.AssignmentLeftHandValueExpected, addrDeref.Locations));
               return true;
             }
+          } else {
+            LocalDefinition local = resolvedTarget as LocalDefinition;
+            if (local != null) {
+              if (allowAssignment && local.IsConstant) {
+                this.Helper.ReportError(new AstErrorMessage(this, Error.AssignmentLeftHandValueExpected));
+                return true;
+              }
+            }
           }
           if (resolvedTarget == null) {
             if (!this.Expression.HasErrors)
@@ -17542,7 +17550,10 @@ namespace Microsoft.Cci.Ast {
       } else {
         LocalDefinition/*?*/ local = container as LocalDefinition;
         if (local != null) {
-          if (local.IsConstant) return this.cachedProjection = local.CompileTimeValue.ProjectAsIExpression();
+          if (local.IsConstant) {
+            var compileTimeVal = local.CompileTimeValue.ProjectAsIExpression();
+            if (!(compileTimeVal is DummyConstant)) return cachedProjection = compileTimeVal;
+          } 
         }
       }
       if (container == null) container = Dummy.Field;
