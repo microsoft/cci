@@ -326,14 +326,15 @@ namespace CodeModelTestInput
             if (!(A && B))
             {
                 __temp_1 = (C && D);
+                goto IL_0012;
             }
-            else
             {
                 __temp_1 = 1;
-            }
-            local_0 = __temp_1;
-            return local_0;
+            IL_0012:
+                local_0 = __temp_1;
+                return local_0;
 
+            }
         }
 
         private int Method18(int x, int y, int z)

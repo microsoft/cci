@@ -229,13 +229,27 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!(conditionalStatement2.TrueBranch is EmptyStatement)) {
         if (!(conditionalStatement2.TrueBranch is GotoStatement)) return false;
         if (!(conditionalStatement2.FalseBranch is EmptyStatement)) return false;
+        //Now have:
+        //if (cond1) goto lab1;
+        //if (cond2) goto lab2;
+        //lab1:...
         conditionalStatement2.Condition = InvertCondition(conditionalStatement2.Condition);
         IStatement temp = conditionalStatement2.TrueBranch;
         conditionalStatement2.TrueBranch = conditionalStatement2.FalseBranch;
         conditionalStatement2.FalseBranch = temp;
+        //Now have:
+        //if (cond1) goto lab1;
+        //if (!cond2) {} else goto lab2;
+        //lab1:...
       } else {
         if (!(conditionalStatement2.FalseBranch is GotoStatement)) return false;
       }
+
+      //Now have:
+      //if (cond1) goto lab1;
+      //if (cond2a) {} else goto lab2;
+      //lab1:...
+
       Conditional conditional = new Conditional();
       conditional.Condition = conditionalStatement.Condition;
       conditional.ResultIfTrue = new CompileTimeConstant() { Value = 1, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
@@ -243,6 +257,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       conditionalStatement2.Condition = conditional;
       this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
       statements.RemoveAt(i);
+
+      //Now have:
+      //if (cond1 ? true : cond2a) {} goto lab2;
+      //lab1:....
+      //
+      //Which amounts to
+      //if (!(cond1 || cond2a)) goto lab2;
+      //lab1:...
       return true;
     }
 
@@ -270,9 +292,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         BasicBlock/*?*/ bb = statements[i+2] as BasicBlock;
         if (bb == null) return false;
         if (bb.Statements.Count < 1 || !(bb.Statements[0] == gotoStatement.TargetStatement)) return false;
-        statements.RemoveAt(i+2);
-        statements.InsertRange(i+2, bb.Statements);
-        statements.RemoveAt(i+2);
+        //we have:
+        //i+0: if (cond1) {} else goto lab1;
+        //i+1: if (cond2) goto lab2;
+        //i+2: {....}
         Conditional conditional = new Conditional();
         conditional.Condition = conditionalStatement.Condition;
         conditional.ResultIfTrue = conditionalStatement2.Condition;
@@ -280,6 +303,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditionalStatement2.Condition = conditional;
         this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
         statements.RemoveAt(i);
+        //we now have:
+        //i+0: if (cond1 ? cond2 : 0) goto lab2;
+        //i+1: {....}
+        //which amounts to:
+        // if (cond1 && cond2) goto lab2;
+        // {...}
         return this.ReplaceShortCircuitPattern2(statements, i);
       }
       if (!(conditionalStatement2.TrueBranch is EmptyStatement)) return false;
