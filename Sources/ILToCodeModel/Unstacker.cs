@@ -55,13 +55,20 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (this.block == null) this.block = block;
       this.operandStack = new StackOfLocals(this.body);
       this.codePointsToAnalyze.Enqueue(new CodePoint() { statements = block.Statements, index = 0, operandStack = this.operandStack });
+
       while (this.codePointsToAnalyze.Count > 0) {
         CodePoint codePoint = this.codePointsToAnalyze.Dequeue();
         if (codePoint.operandStack == null) {
           //Can only get here for a code point with a label and labels are only created if there a branches to them. 
-          //Sooner or later the branch must be encountered and then this code point will get an operand stack.
-          this.codePointsToAnalyze.Enqueue(codePoint);
-          continue;
+          //Sooner or later the branch must be encountered and then this code point will get an operand stack from the branch.
+          if (this.codePointsToAnalyze.Count == 0) {
+            //But if we get here, there are NO other code blocks, so we'll loop forever if we just put codePoint back on the queue with an empty stack.
+            //Start with an empty stack and just carry on.
+            codePoint.operandStack = new StackOfLocals(this.body);
+          } else {
+            this.codePointsToAnalyze.Enqueue(codePoint); //keep looking for the branch.
+            continue;
+          }
         }
         this.operandStack = codePoint.operandStack.Clone(this.block);
         List<IStatement> statements = codePoint.statements;
