@@ -29,7 +29,7 @@ public class CodeModelRoundTripTests {
   HostEnvironment host;
 
   public CodeModelRoundTripTests() {
-    Assert.True(File.Exists(PeVerify.PeVerifyPathv3), "Can't find PEVerify, please update the const.");
+    Assert.True(File.Exists(PeVerify.PeVerifyPathv4), "Can't find PEVerify, please update the const.");
 
     pdbReader = null;
     pdbWriter = null;
@@ -170,13 +170,13 @@ public class CodeModelRoundTripTests {
   [Fact]
   public void CodeCopyAndExecute1() {
     ExtractAndCompileExe("TestClass1.cs");
-    this.RoundTripCopyAndExecute("TestClass1.exe", "TestClass1.pdb");
+    this.RoundTripCopyAndExecute("TestClass1.exe", "TestClass1.pdb", false);
   }
 
   [Fact]
   public void CodeCopyRewriteAndExecute1() {
     ExtractAndCompileExe("TestClass1.cs");
-    this.RoundTripCopyRewriteAndExecute("TestClass1.exe", "TestClass1.pdb");
+    this.RoundTripCopyRewriteAndExecute("TestClass1.exe", "TestClass1.pdb", false);
   }
 
   CodeAndContractMutator CreateCodeMutator(IAssembly assembly, string pdbName) {
@@ -216,7 +216,7 @@ public class CodeModelRoundTripTests {
     }
 
     Assert.True(File.Exists(assembly.Location));
-    PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
+    PeVerify.Assert(expectedResult, PeVerify.RunPeVerifyOnAssembly(assembly.Location));
   }
 
   void VisitAndMutate(MetadataMutator mutator, ref IAssembly assembly) {
@@ -321,7 +321,7 @@ public class CodeModelRoundTripTests {
       }
     }
     Assert.True(File.Exists(assembly.Location));
-    PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
+    PeVerify.Assert(expectedResult, PeVerify.RunPeVerifyOnAssembly(assembly.Location));
   }
 
   void RoundTripMutableCopyAndAddGenericParameter2(string assemblyName) {
@@ -446,9 +446,13 @@ public class CodeModelRoundTripTests {
       AssertWriteToPeFile(expectedResult, codeAssembly, null);
     }
   }
-
   void RoundTripCopyAndExecute(string assemblyName, string pdbName) {
-    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    RoundTripCopyAndExecute(assemblyName, pdbName, true);
+  }
+  void RoundTripCopyAndExecute(string assemblyName, string pdbName, bool inputShouldVerify) {
+    PeVerifyResult expectedResult = inputShouldVerify
+      ? PeVerify.VerifyAssembly(assemblyName)
+      : PeVerify.RunPeVerifyOnAssembly(assemblyName);
     string expectedOutput = Execute(assemblyName);
     IAssembly assembly = LoadAssembly(assemblyName);
     using (var f = File.OpenRead(pdbName)) {
@@ -469,7 +473,13 @@ public class CodeModelRoundTripTests {
   }
 
   void RoundTripCopyRewriteAndExecute(string assemblyName, string pdbName) {
-    PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+    RoundTripCopyRewriteAndExecute(assemblyName, pdbName, true);
+  }
+
+  void RoundTripCopyRewriteAndExecute(string assemblyName, string pdbName, bool inputShouldVerify) {
+    PeVerifyResult expectedResult = inputShouldVerify
+      ? PeVerify.VerifyAssembly(assemblyName)
+      : PeVerify.RunPeVerifyOnAssembly(assemblyName);
     string expectedOutput = Execute(assemblyName);
     IAssembly assembly = LoadAssembly(assemblyName);
     using (var f = File.OpenRead(pdbName)) {

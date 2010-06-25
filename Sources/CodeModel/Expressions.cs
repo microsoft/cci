@@ -351,6 +351,8 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// The initial values of the array elements. May be empty.
+    /// This must be a flat list of the initial values. Its length
+    /// must be the product of the size of each dimension.
     /// </summary>
     IEnumerable<IExpression> Initializers {
       get;

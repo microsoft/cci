@@ -965,38 +965,37 @@ namespace Microsoft.Cci {
           this.StoreVectorElement(createArray.ElementType);
         }
       } else {
-        // Recurse over rank dimensions ...
-        int count = 0;
-        int[] indices = new int[createArray.Rank - 1];
-        foreach (IExpression element in createArray.Initializers) {
-          indices[0] = count++;
-          SetElements(element as ICreateArray, 1, indices, arrayType);
-        }
+        StoreInitializers(createArray, arrayType);
       }
+      //TODO: initialization from compile time constant
     }
 
-    // Recurse over nested ICreateArray elements until the leaves are reached.
-    // At the leaf elements call Set() on the element [x, y, ... , N] where N 
-    // varies over the final IEnumerable<ElementType> object.  The indexing
-    // prefix [x, y, ... ] is accumulated during the incoming recursion.
-    private void SetElements(ICreateArray array, int depth, int[] indices, IArrayTypeReference type) {
-      if (depth == indices.Length) {
-        int count = 0;
-        foreach (IExpression elemValue in array.Initializers) {
+    private void StoreInitializers(ICreateArray createArray, IArrayTypeReference arrayType) {
+      var initializers = new List<IExpression>(createArray.Initializers);
+      if (0 < initializers.Count) {
+        var sizes = new List<IExpression>(createArray.Sizes);
+        // Used to do the "reverse" mapping from offset (linear index into
+        // initializer list) to the d-dimensional coordinates, where d is
+        // the rank of the array.
+        int[] dimensionStride = new int[sizes.Count];
+        dimensionStride[sizes.Count - 1] = 1;
+        for (int i = sizes.Count - 2; 0 <= i; i--) {
+          var size = (int)(((ICompileTimeConstant)sizes[i + 1]).Value);
+          dimensionStride[i] = size * dimensionStride[i + 1];
+        }
+        for (int i = 0; i < initializers.Count; i++) {
           this.generator.Emit(OperationCode.Dup);
           this.StackSize++;
-          for (int i = 0; i < indices.Length; i++)
-            this.EmitConstant(indices[i]);
-          this.EmitConstant(count++);
-          this.Visit(elemValue);
-          this.generator.Emit(OperationCode.Array_Set, type);
-          this.StackSize -= (ushort)(depth + 3); // ArrayRef, (depth + 1), elem-value 
-        }
-      } else { // Recurse deeper ...
-        int count = 0;
-        foreach (IExpression element in array.Initializers) {
-          indices[depth] = count++;
-          SetElements(element as ICreateArray, depth + 1, indices, type);
+          var n = i; // compute the indices that map to the offset n
+          for (int d = 0; d < createArray.Rank; d++) {
+            var divisor = dimensionStride[d];
+            var indexInThisDimension = n / divisor;
+            n = n % divisor;
+            this.EmitConstant(indexInThisDimension);
+          }
+          this.Visit(initializers[i]);
+          this.generator.Emit(OperationCode.Array_Set, arrayType);
+          this.StackSize -= (ushort)(createArray.Rank + 2);
         }
       }
     }

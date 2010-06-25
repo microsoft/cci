@@ -1208,6 +1208,11 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IArrayCreate Members
 
+    /// <summary>
+    /// The initial values of the array elements. May be empty.
+    /// This must be a flat list of the initial values. Its length
+    /// must be the product of the size of each dimension.
+    /// </summary>
     IEnumerable<IExpression> ICreateArray.Initializers {
       get { return this.initializers.AsReadOnly(); }
     }
