@@ -711,3 +711,17 @@ public class ckitching4662 {
     };
   }
 }
+
+/// <summary>
+/// Test case for an issue reported by ckitching:
+/// http://cciast.codeplex.com/workitem/4673
+/// </summary>
+public class ckitching4673 {
+  public void t1() {
+    for (int i = 0; i < 1; i++) {
+      Action t = () => i.Equals(i);
+    }
+  }
+}
+
+

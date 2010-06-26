@@ -330,6 +330,11 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
       ILocalDefinition local = localDeclarationStatement.LocalVariable;
+      if (this.currentClosureLocal != Dummy.LocalVariable && local is TempVariable) {
+        //if this temp was introduced to hold a copy of the closure local, then delete it
+        if (TypeHelper.TypesAreEquivalent(this.currentClosureLocal.Type, local.Type))
+          return CodeDummy.Block;
+      }
       base.Visit(localDeclarationStatement);
       int numberOfAssignments = 0;
       if (!this.sourceMethodBody.numberOfAssignments.TryGetValue(local, out numberOfAssignments) || numberOfAssignments > 1)
