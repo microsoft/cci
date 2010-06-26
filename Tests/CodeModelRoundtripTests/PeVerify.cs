@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -37,24 +37,58 @@ public class PeVerifyResult {
 
 public class PeVerify {
 
-  const int PeVerifyExpectedExitCode = 0;
-  public const string PeVerifyPathv4 = @"C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\NETFX 4.0 Tools\PEVerify.exe";
-
   public static PeVerifyResult VerifyAssembly(string assemblyName) {
+    return VerifyAssembly(assemblyName, false);
+  }
+
+  public static PeVerifyResult VerifyAssembly(string assemblyName, bool verificationMayFail) {
     PeVerifyResult result = RunPeVerifyOnAssembly(assemblyName);
-    if (result.ExitCode != PeVerifyExpectedExitCode) {
+    if (result.ExitCode != 0 && !verificationMayFail) {
       throw new Exception("PeVerify Failed with " + result.Errors.Count + " different errors.");
     }
     return result;
   }
 
-  public static PeVerifyResult RunPeVerifyOnAssembly(string assemblyName) {
+  static string _peVerify;
+  public static string PeVerifyPath {
+    get {
+      if (_peVerify == null) {
+        var sdk = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles%\Microsoft SDKs\Windows"));
+        if (sdk.Exists) {
+          foreach (var sdkVersion in sdk.GetDirectories()) {
+            var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin\\NETFX 4.0 Tools"), "peverify.exe");
+            if (File.Exists(peverify)) {
+              _peVerify = peverify;
+              break;
+            }
+          }
+        }
+        if (_peVerify == null) {
+          sdk = new DirectoryInfo(sdk.FullName.Replace(" (x86)", ""));
+          if (sdk.Exists) {
+            foreach (var sdkVersion in sdk.GetDirectories()) {
+              var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin\\NETFX 4.0 Tools"), "peverify.exe");
+              if (File.Exists(peverify)) {
+                _peVerify = peverify;
+                break;
+              }
+            }
+          }
+        }
+        if (_peVerify == null)
+          throw new FileNotFoundException(@"could not find peverify.exe under %programfiles%\Microsoft SDKs\Windows\...");
+      }
 
+      return _peVerify;
+    }
+  }
+
+  public static PeVerifyResult RunPeVerifyOnAssembly(string assemblyName) {
     PeVerifyResult result = new PeVerifyResult();
     result.AssemblyName = assemblyName;
 
     string stdOut, stdErr;
-    result.ExitCode = StartAndWaitForResult(PeVerifyPathv4, assemblyName + " /UNIQUE /IL /NOLOGO", out stdOut, out stdErr);
+    result.ExitCode = StartAndWaitForResult(PeVerifyPath, assemblyName + " /UNIQUE /IL /NOLOGO", out stdOut, out stdErr);
     ParseErrors(result, stdOut);
 
     return result;
