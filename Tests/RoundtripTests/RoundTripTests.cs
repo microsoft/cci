@@ -67,13 +67,13 @@ public class RoundTripTests {
         ExtractResource("RoundtripTests.TestData.v4.System.Core.dll", "System.Core.dll");
         ExtractResource("RoundtripTests.TestData.v4.System.Core.pdb", "System.Core.pdb");
 
-        RoundTripWithILMutator("System.Core.dll", "System.Core.pdb");
+        RoundTripWithILMutator("System.Core.dll", "System.Core.pdb", true);
     }
 
     [Fact]
     public void Pe2PeNoPdbWithv2() {
         ExtractResource("RoundtripTests.TestData.v2.mscorlib.dll", "mscorlib.dll");
-        RoundTripWithILMutator("mscorlib.dll", null);
+        RoundTripWithILMutator("mscorlib.dll", null, true);
     }
 
     [Fact]
@@ -81,13 +81,13 @@ public class RoundTripTests {
         ExtractResource("RoundtripTests.TestData.v2.mscorlib.dll", "mscorlib.dll");
         ExtractResource("RoundtripTests.TestData.v2.mscorlib.pdb", "mscorlib.pdb");
 
-        RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb");
+        RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb", true);
     }
 
     [Fact]
     public void Pe2PeNoPdbWithv4() {
         ExtractResource("RoundtripTests.TestData.v4.mscorlib.dll", "mscorlib.dll");
-        RoundTripWithILMutator("mscorlib.dll", null);
+        RoundTripWithILMutator("mscorlib.dll", null, true);
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class RoundTripTests {
         ExtractResource("RoundtripTests.TestData.v4.mscorlib.dll", "mscorlib.dll");
         ExtractResource("RoundtripTests.TestData.v4.mscorlib.pdb", "mscorlib.pdb");
 
-        RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb");
+        RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb", true);
     }
 
     void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator, string pdbPath) {
@@ -105,7 +105,11 @@ public class RoundTripTests {
     }
 
     void RoundTripWithILMutator(string assemblyName, string pdbPath) {
-        PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
+      this.RoundTripWithILMutator(assemblyName, pdbPath, false);
+    }
+
+    void RoundTripWithILMutator(string assemblyName, string pdbPath, bool verificationMayFail) {
+        PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName, verificationMayFail);
         RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataMutator(host), pdbPath);
     }
 
@@ -127,7 +131,7 @@ public class RoundTripTests {
         }
 
         Assert.True(File.Exists(assembly.Location));
-        PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
+        PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location, true));
     }
 
     void VisitAndMutate(MetadataMutator mutator, ref IAssembly assembly) {

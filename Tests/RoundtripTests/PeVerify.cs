@@ -47,7 +47,7 @@ public class PeVerify {
           var sdk = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles%\Microsoft SDKs\Windows"));
           if (sdk.Exists) {
             foreach (var sdkVersion in sdk.GetDirectories()) {
-              var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin"), "peverify.exe");
+              var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin\\NETFX 4.0 Tools"), "peverify.exe");
               if (File.Exists(peverify)) {
                 _peVerify = peverify;
                 break;
@@ -58,7 +58,7 @@ public class PeVerify {
             sdk = new DirectoryInfo(sdk.FullName.Replace(" (x86)", ""));
             if (sdk.Exists) {
               foreach (var sdkVersion in sdk.GetDirectories()) {
-                var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin"), "peverify.exe");
+                var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin\\NETFX 4.0 Tools"), "peverify.exe");
                 if (File.Exists(peverify)) {
                   _peVerify = peverify;
                   break;
@@ -74,7 +74,7 @@ public class PeVerify {
       }
     }
 
-    public static PeVerifyResult VerifyAssembly(string assemblyName) {
+    private static PeVerifyResult RunPeVerifyOnAssembly(string assemblyName) {
 
         PeVerifyResult result = new PeVerifyResult();
         result.AssemblyName = assemblyName;
@@ -86,9 +86,24 @@ public class PeVerify {
         return result;
     }
 
+
+    public static PeVerifyResult VerifyAssembly(string assemblyName) {
+      return VerifyAssembly(assemblyName, false);
+    }
+
+    public static PeVerifyResult VerifyAssembly(string assemblyName, bool verificationMayFail) {
+      PeVerifyResult result = RunPeVerifyOnAssembly(assemblyName);
+      if (result.ExitCode != 0 && !verificationMayFail) {
+        throw new Exception("PeVerify Failed with " + result.Errors.Count + " different errors.");
+      }
+      return result;
+    }
+
+
     static void ParseErrors(PeVerifyResult result, string stdOut) {
 
         result.Errors = new List<string>();
+        if (result.ExitCode == 0) return;
 
         int startIndex = 0;
         while (startIndex < stdOut.Length) {
