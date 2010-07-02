@@ -724,4 +724,8 @@ public class ckitching4673 {
   }
 }
 
-
+public static class Repro8 {
+  public static void ObserveFirst<T>(Func<T, bool> discriminator) {
+    discriminator = e => discriminator((T)e);
+  }
+}

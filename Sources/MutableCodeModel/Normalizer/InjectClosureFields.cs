@@ -467,7 +467,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (selfReference == null) return addressableExpression; // really "assert false" since no bound field belongs to a non-nested type
         addressableExpression.Instance = this.ClosureInstanceFor(selfReference);
         addressableExpression.Definition = this.GetSelfReference(boundField.Field);
-        addressableExpression.Type = this.Visit(addressableExpression.Type);
+        addressableExpression.Type = this.Visit(boundField.Type);
         return addressableExpression;
       }
       return base.Visit(addressableExpression);
@@ -483,7 +483,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (selfReference == null) return boundExpression; // really "assert false" since no bound field belongs to a non-nested type
         boundExpression.Instance = this.ClosureInstanceFor(selfReference);
         boundExpression.Definition = this.GetSelfReference(boundField.Field);
-        boundExpression.Type = this.Visit(boundExpression.Type);
+        boundExpression.Type = this.Visit(boundField.Type);
         return boundExpression;
       }
       return base.Visit(boundExpression);

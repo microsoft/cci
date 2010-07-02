@@ -149,7 +149,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       field.Type = this.copyTypeToClosure.Visit(type);
       field.Visibility = TypeMemberVisibility.Public;
       containingClass.Fields.Add(field);
-      BoundField be = new BoundField(field, type);
+      BoundField be = new BoundField(field, field.Type);
       this.fieldForCapturedLocalOrParameter.Add(definition, be);
     }
 
