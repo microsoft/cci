@@ -789,6 +789,8 @@ namespace Microsoft.Cci {
       this.StackSize++;
       if (catchClause.ExceptionContainer != Dummy.LocalVariable)
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
+      else
+        this.generator.Emit(OperationCode.Pop);
       this.Visit(catchClause.Body);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
@@ -935,9 +937,6 @@ namespace Microsoft.Cci {
         if (size.Type.TypeCode == PrimitiveTypeCode.Int64 || size.Type.TypeCode == PrimitiveTypeCode.UInt64)
           this.generator.Emit(OperationCode.Conv_Ovf_U);
       }
-      //
-      // Now create the array
-      //
       IArrayTypeReference arrayType;
       OperationCode create;
       if (hasOneOrMoreBounds) {
@@ -951,10 +950,7 @@ namespace Microsoft.Cci {
         arrayType = Vector.GetVector(createArray.ElementType, this.host.InternFactory);
       }
       this.generator.Emit(create, arrayType);
-      this.StackSize -= (ushort)(createArray.Rank + boundsEmitted - 1);
-      //
-      // Here we specialize according to rank == 1 or not.
-      //
+      this.StackSize -= (ushort)(createArray.Rank+boundsEmitted - 1);
       if (createArray.Rank == 1) {
         int i = 0;
         foreach (IExpression elemValue in createArray.Initializers) {
