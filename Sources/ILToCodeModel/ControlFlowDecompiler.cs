@@ -292,7 +292,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void DecompileSwitch(List<IStatement> statements, int i) {
-      if (i >= statements.Count-2) return;
+      if (i >= statements.Count-1) return;
       SwitchInstruction/*?*/ switchInstruction = statements[i] as SwitchInstruction;
       if (switchInstruction == null) return;
       SwitchStatement result = new SwitchStatement();
@@ -306,10 +306,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (j < n-1 && currentCaseBody == switchInstruction.switchCases[j+1]) continue;
         ExtractCaseBody(currentCaseBody, currentCase.Body);
       }
-      SwitchCase defaultCase = new SwitchCase() {}; // Default case is represented by a dummy Expression.
-      defaultCase.Body.Add(statements[i + 1]);
-      statements.RemoveAt(i + 1);
-      result.Cases.Add(defaultCase);
+      if (i == statements.Count-1) return;
+      var gotoStatement = statements[i+1] as IGotoStatement;
+      if (gotoStatement != null) {
+        SwitchCase defaultCase = new SwitchCase() { }; // Default case is represented by a dummy Expression.
+        defaultCase.Body.Add(statements[i + 1]);
+        statements.RemoveAt(i + 1);
+        result.Cases.Add(defaultCase);
+      }
     }
 
     private static void ExtractCaseBody(BasicBlock caseBody, List<IStatement> caseStatements) {
