@@ -167,7 +167,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!(assign.Target.Definition is ILocalDefinition)) return result;
       result = (ILocalDefinition)assign.Target.Definition;
       bb.Statements.RemoveAt(0);
-      if (bb.LocalVariables != null && bb.LocalVariables.Remove(result)) 
+      if (bb.LocalVariables != null && bb.LocalVariables.Remove(result))
         return result;
       if (bb.Statements.Count > 0) {
         BasicBlock nbb = bb.Statements[0] as BasicBlock;
@@ -198,6 +198,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       GotoStatement/*?*/ gotoElse = conditionalStatement.TrueBranch as GotoStatement;
       if (gotoElse == null) return false;
       if (!(conditionalStatement.FalseBranch is EmptyStatement)) return false;
+      //At this point we have:
+      //if (cond) goto elseLab;
       GotoStatement/*?*/ gotoEndif = null;
       int j = i;
       while (j < statements.Count) {
@@ -300,11 +302,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       statements[i] = result;
       for (int j = 0, n = switchInstruction.switchCases.Count; j < n; j++) {
         CompileTimeConstant caseLabel = new CompileTimeConstant() { Value = j, Type = this.platformType.SystemInt32 };
-        BasicBlock currentCaseBody = switchInstruction.switchCases[j];
+        var gotoCaseBody = switchInstruction.switchCases[j];
         SwitchCase currentCase = new SwitchCase() { Expression = caseLabel };
         result.Cases.Add(currentCase);
-        if (j < n-1 && currentCaseBody == switchInstruction.switchCases[j+1]) continue;
-        ExtractCaseBody(currentCaseBody, currentCase.Body);
+        if (j < n-1 && gotoCaseBody.TargetStatement == switchInstruction.switchCases[j+1].TargetStatement) continue;
+        currentCase.Body.Add(gotoCaseBody);
       }
       if (i == statements.Count-1) return;
       var gotoStatement = statements[i+1] as IGotoStatement;
@@ -313,16 +315,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         defaultCase.Body.Add(statements[i + 1]);
         statements.RemoveAt(i + 1);
         result.Cases.Add(defaultCase);
-      }
-    }
-
-    private static void ExtractCaseBody(BasicBlock caseBody, List<IStatement> caseStatements) {
-      List<IStatement> body = caseBody.Statements;
-      if (body.Count == 0) return;
-      ILabeledStatement labeledStatement = body[0] as ILabeledStatement;
-      if (labeledStatement != null) {
-        caseStatements.Add(new GotoStatement() { TargetStatement = labeledStatement });
-        return;
       }
     }
 

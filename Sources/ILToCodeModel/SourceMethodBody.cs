@@ -1502,8 +1502,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       uint[] branches = (uint[])operation.Value;
       foreach (uint targetAddress in branches) {
         BasicBlock bb = this.GetOrCreateBlock(targetAddress, true);
-        //bb.StartsSwitchCase = true;
-        result.switchCases.Add(bb);
+        var gotoBB = new GotoStatement() { TargetStatement = (LabeledStatement)bb.Statements[0] };
+        result.switchCases.Add(gotoBB);
       }
       return result;
     }

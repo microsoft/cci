@@ -36,8 +36,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     internal uint StartOffset;
 
-    //internal bool StartsSwitchCase;
-
   }
 
   internal sealed class ConvertToUnsigned : Expression, IConversion {
@@ -121,7 +119,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal sealed class SwitchInstruction : Statement {
     internal IExpression switchExpression;
-    internal readonly List<BasicBlock> switchCases = new List<BasicBlock>();
+    internal readonly List<GotoStatement> switchCases = new List<GotoStatement>();
 
     public override void Dispatch(ICodeVisitor visitor) {
       //Debug.Assert(false); //Objects of this class are not supposed to escape.
