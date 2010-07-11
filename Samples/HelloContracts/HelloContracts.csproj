@@ -63,6 +63,10 @@
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
       <Name>PeReader</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\PeWriter\PeWriter.csproj">
+      <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
+      <Name>PeWriter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>

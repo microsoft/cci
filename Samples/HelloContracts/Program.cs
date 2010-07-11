@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -10,24 +10,29 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.Cci;
 using System.IO;
+using Microsoft.Cci;
 using Microsoft.Cci.ILToCodeModel;
-using System.Diagnostics;
-using CSharpSourceEmitter;
+using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableContracts;
+using CSharpSourceEmitter;
 
 namespace HelloContracts {
 
   class Options : OptionParsing {
 
-    [OptionDescription("The name of the reference assembly that will be used to pull contract information from. Ex. 'foo.contracts.dll'", ShortForm = "a")]
+    [OptionDescription("The name of the assembly to use as input", ShortForm = "a")]
     public string assembly = null;
 
-    [OptionDescription("Show inherited contracts", ShortForm = "i")]
+    [OptionDescription("Print any contracts found in the input assembly", ShortForm = "p")]
+    public bool printContracts = false;
+
+    [OptionDescription("Show inherited contracts (used with -p)", ShortForm = "i")]
     public bool inherited = false;
+
+    [OptionDescription("Inject non-null postconditions (used when -p is *not* used)")]
+    public bool inject = true;
 
     [OptionDescription("Search paths for assembly dependencies.", ShortForm = "lp")]
     public List<string> libpaths = new List<string>();
@@ -37,7 +42,7 @@ namespace HelloContracts {
   class Program {
     static int Main(string[] args) {
       if (args == null || args.Length == 0) {
-        Console.WriteLine("usage: HelloContracts [path]fileName.Contracts.dll [-libpaths ...]*");
+        Console.WriteLine("usage: HelloContracts [path]fileName.Contracts.dll [-libpaths ...]* [-p [-i] | -inject]");
         return 1;
       }
       #region Parse options
@@ -49,17 +54,69 @@ namespace HelloContracts {
         return 1;
       }
       #endregion
-      #region Collect and write contracts
-      var host = new CodeContractAwareHostEnvironment(options.libpaths);
-      var fileName = String.IsNullOrEmpty(options.assembly) ? options.GeneralArguments[0] : options.assembly;
-      IModule module = host.LoadUnitFrom(fileName) as IModule;
-      if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-        Console.WriteLine("'{0}' is not a PE file containing a CLR module or assembly.", fileName);
-        Environment.Exit(1);
+
+      if (options.printContracts) {
+        #region Collect and write contracts
+        var host = new CodeContractAwareHostEnvironment(options.libpaths);
+        var fileName = String.IsNullOrEmpty(options.assembly) ? options.GeneralArguments[0] : options.assembly;
+        IModule module = host.LoadUnitFrom(fileName) as IModule;
+        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+          Console.WriteLine("'{0}' is not a PE file containing a CLR module or assembly.", fileName);
+          Environment.Exit(1);
+        }
+        var t = new Traverser(host, options.inherited);
+        t.Visit(module);
+        #endregion
+        return 0;
+      } else {
+
+
+        var host = new PeReader.DefaultHost();
+
+        // Read the Metadata Model from the PE file
+        var module = host.LoadUnitFrom(args[1]) as IModule;
+        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+          Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
+          return 1;
+        }
+
+        // Get a PDB reader if there is a PDB file.
+        PdbReader/*?*/ pdbReader = null;
+        string pdbFile = Path.ChangeExtension(module.Location, "pdb");
+        if (File.Exists(pdbFile)) {
+          using (var pdbStream = File.OpenRead(pdbFile)) {
+            pdbReader = new PdbReader(pdbStream, host);
+          }
+        }
+
+        using (pdbReader) {
+
+          // Construct a Code Model from the Metadata model via decompilation
+          var mutableModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
+
+          // Extract contracts (side effect: removes them from the method bodies)
+          var contractProvider = Microsoft.Cci.MutableContracts.ContractHelper.ExtractContracts(host, mutableModule, pdbReader, pdbReader);
+
+          // Inject non-null postconditions
+          if (options.inject) {
+            new NonNullInjector(host, contractProvider).Visit(mutableModule);
+          }
+
+          // Put the contracts back in as method calls at the beginning of each method
+          Microsoft.Cci.MutableContracts.ContractHelper.InjectContractCalls(host, mutableModule, contractProvider, pdbReader);
+
+          // Write out the resulting module. Each method's corresponding IL is produced
+          // lazily using CodeModelToILConverter via the delegate that the mutator stored in the method bodies.
+          Stream peStream = File.Create(mutableModule.Location + ".pe");
+          if (pdbReader == null) {
+            PeWriter.WritePeToStream(mutableModule, host, peStream);
+          } else {
+            using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", pdbReader)) {
+              PeWriter.WritePeToStream(mutableModule, host, peStream, pdbReader, pdbReader, pdbWriter);
+            }
+          }
+        }
       }
-      var t = new Traverser(host, options.inherited);
-      t.Visit(module);
-      #endregion
       return 0;
     }
   }
@@ -220,4 +277,49 @@ namespace HelloContracts {
     #endregion
   }
 
+  class NonNullInjector : BaseCodeTraverser {
+
+    IMetadataHost host;
+    Microsoft.Cci.MutableContracts.ContractProvider contractProvider;
+
+    public NonNullInjector(
+      IMetadataHost host,
+      Microsoft.Cci.MutableContracts.ContractProvider contractProvider) {
+      this.host = host;
+      this.contractProvider = contractProvider;
+    }
+
+    public override void Visit(IMethodDefinition method) {
+      if (!MemberHelper.IsVisibleOutsideAssembly(method)) return;
+      var returnType = method.Type;
+      if (returnType == this.host.PlatformType.SystemVoid
+        || returnType.IsEnum
+        || returnType.IsValueType
+        ) return;
+
+      var newContract = new Microsoft.Cci.MutableContracts.MethodContract();
+      var post = new List<IPostcondition>();
+      var p = new Microsoft.Cci.MutableContracts.PostCondition() {
+        Condition = new NotEquality() {
+          LeftOperand = new ReturnValue() { Type = returnType, },
+          RightOperand = new CompileTimeConstant() {
+            Type = returnType,
+            Value = null,
+          },
+          Type = this.host.PlatformType.SystemBoolean,
+        },
+        OriginalSource = "result != null",
+      };
+      post.Add(p);
+      newContract.Postconditions = post;
+
+      var contract = this.contractProvider.GetMethodContractFor(method);
+      if (contract != null) {
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(newContract, contract);
+      }
+      this.contractProvider.AssociateMethodWithContract(method, newContract);
+
+      base.Visit(method);
+    }
+  }
 }
