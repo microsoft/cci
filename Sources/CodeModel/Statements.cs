@@ -15,7 +15,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.Cci {
   /// <summary>
-  /// A statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#.
+  /// A statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#
+  /// or a call to System.Diagnostics.Debug.Assert in C#.
+  /// This node must be replaced before converting the Code Model to IL.
   /// </summary>
   public interface IAssertStatement : IStatement {
     /// <summary>
@@ -30,8 +32,8 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// A statement that asserts that a condition will always be true when execution reaches it. For example the assume statement of Spec#
-  /// or a call to System.Diagnostics.Assert in C#.
+  /// A statement that assumes that a condition will always be true when execution reaches it. For example the assume statement of Spec#.
+  /// This node must be replaced before converting the Code Model to IL.
   /// </summary>
   public interface IAssumeStatement : IStatement {
     /// <summary>

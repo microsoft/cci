@@ -14,14 +14,225 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
-using Microsoft.Cci.MutableContracts;
 
-namespace Microsoft.Cci.ILToCodeModel {
+namespace Microsoft.Cci.MutableContracts {
 
   /// <summary>
   /// Helper class for performing common tasks on mutable contracts
   /// </summary>
   public class ContractHelper {
+
+    /// <summary>
+    /// Accumulates all elements from <paramref name="sourceContract"/> into <paramref name="targetContract"/>
+    /// </summary>
+    /// <param name="targetContract">Contract which is target of accumulator</param>
+    /// <param name="sourceContract">Contract which is source of accumulator</param>
+    public static void AddMethodContract(MethodContract targetContract, IMethodContract sourceContract) {
+      targetContract.Preconditions.AddRange(sourceContract.Preconditions);
+      targetContract.Postconditions.AddRange(sourceContract.Postconditions);
+      targetContract.ThrownExceptions.AddRange(sourceContract.ThrownExceptions);
+      targetContract.IsPure |= sourceContract.IsPure; // need the disjunction
+      return;
+    }
+
+    /// <summary>
+    /// Mutates the given <paramref name="module"/> by injecting calls to contract methods at the
+    /// beginnning of any method in the <paramref name="module"/> that has a corresponding contract
+    /// in the <paramref name="contractProvider"/>. It also creates a contract invariant method
+    /// for each type in <paramref name="module"/> that has a type contract in the
+    /// <paramref name="contractProvider"/>.
+    /// </summary>
+    public static void InjectContractCalls(IMetadataHost host, Module module, ContractProvider contractProvider, ISourceLocationProvider sourceLocationProvider) {
+      var cci = new ContractCallInjector(host, contractProvider, sourceLocationProvider);
+      cci.Visit(module);
+    }
+
+    private class ContractCallInjector : CodeAndContractMutator {
+
+      private readonly ITypeReference systemVoid;
+
+      public ContractCallInjector(IMetadataHost host, ContractProvider contractProvider, ISourceLocationProvider sourceLocationProvider)
+        : base(host, true, sourceLocationProvider, contractProvider) {
+        this.systemVoid = host.PlatformType.SystemVoid;
+      }
+
+      private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
+
+      /// <summary>
+      /// If the <paramref name="typeDefinition"/> has a type contract, generate a
+      /// contract invariant method and add it to the Methods of the <paramref name="typeDefinition"/>.
+      /// </summary>
+      protected override void Visit(TypeDefinition typeDefinition) {
+        ITypeContract typeContract = this.contractProvider.GetTypeContractFor(typeDefinition);
+        if (typeContract != null) {
+          #region Define the method
+          List<IStatement> statements = new List<IStatement>();
+          var methodBody = new SourceMethodBody(this.host, null, null) {
+            LocalsAreZeroed = true,
+            Block = new BlockStatement() { Statements = statements }
+          };
+          List<ICustomAttribute> attributes = new List<ICustomAttribute>();
+          MethodDefinition m = new MethodDefinition() {
+            Attributes = attributes,
+            Body = methodBody,
+            CallingConvention = CallingConvention.HasThis,
+            ContainingTypeDefinition = typeDefinition,
+            InternFactory = this.host.InternFactory,
+            IsStatic = false,
+            Name = this.host.NameTable.GetNameFor("$InvariantMethod$"),
+            Type = systemVoid,
+            Visibility = TypeMemberVisibility.Private,
+          };
+          methodBody.MethodDefinition = m;
+          #region Add calls to Contract.Invariant
+          foreach (var inv in typeContract.Invariants) {
+            var methodCall = new MethodCall() {
+              Arguments = MkList(inv.Condition),
+              IsStaticCall = true,
+              MethodToCall = this.contractProvider.ContractMethods.Invariant,
+              Type = systemVoid,
+              Locations = new List<ILocation>(inv.Locations),
+            };
+            ExpressionStatement es = new ExpressionStatement() {
+              Expression = methodCall
+            };
+            statements.Add(es);
+          }
+          statements.Add(new ReturnStatement());
+          #endregion
+          #region Add [ContractInvariantMethod]
+          var contractInvariantMethodType = new NamespaceTypeReference(
+            this.host,
+            this.host.PlatformType.SystemDiagnosticsContractsContract.ContainingUnitNamespace,
+            this.host.NameTable.GetNameFor("ContractInvariantMethodAttribute"),
+            0,
+            false,
+            false,
+            PrimitiveTypeCode.NotPrimitive
+            );
+          var contractInvariantMethodCtor = new Microsoft.Cci.MutableCodeModel.MethodReference() {
+            CallingConvention = CallingConvention.HasThis,
+            ContainingType = contractInvariantMethodType,
+            GenericParameterCount = 0,
+            Name = host.NameTable.Ctor,
+            Type = host.PlatformType.SystemVoid,
+          };
+          var contractInvariantMethodAttribute = new CustomAttribute();
+          contractInvariantMethodAttribute.Constructor = contractInvariantMethodCtor;
+          attributes.Add(contractInvariantMethodAttribute);
+          #endregion
+          typeDefinition.Methods.Add(m);
+          #endregion Define the method
+        }
+        base.Visit(typeDefinition);
+      }
+
+      public override MethodDefinition Visit(MethodDefinition methodDefinition) {
+        IMethodContract methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
+        if (methodContract == null) return methodDefinition;
+        SourceMethodBody sourceMethodBody = methodDefinition.Body as SourceMethodBody;
+        if (sourceMethodBody == null) return methodDefinition;
+        List<IStatement> statements = new List<IStatement>();
+        foreach (var precondition in methodContract.Preconditions) {
+          var methodCall = new MethodCall() {
+            Arguments = MkList(precondition.Condition),
+            IsStaticCall = true,
+            MethodToCall = this.contractProvider.ContractMethods.Requires,
+            Type = systemVoid,
+            Locations = new List<ILocation>(precondition.Locations),
+          };
+          ExpressionStatement es = new ExpressionStatement() {
+            Expression = methodCall
+          };
+          statements.Add(es);
+        }
+        foreach (var postcondition in methodContract.Postconditions) {
+          var methodCall = new MethodCall() {
+            Arguments = MkList(this.Visit(postcondition.Condition)),
+            IsStaticCall = true,
+            MethodToCall = this.contractProvider.ContractMethods.Ensures,
+            Type = systemVoid,
+            Locations = new List<ILocation>(postcondition.Locations),
+          };
+          ExpressionStatement es = new ExpressionStatement() {
+            Expression = methodCall
+          };
+          statements.Add(es);
+        }
+        List<IStatement> existingStatements = new List<IStatement>(sourceMethodBody.Block.Statements);
+        statements.AddRange(this.Visit(existingStatements)); // replaces assert/assume
+        sourceMethodBody.Block = new BlockStatement() {
+          Statements = statements,
+        };
+        return methodDefinition;
+      }
+
+      /// <summary>
+      /// Converts the assert statement into a call to Contract.Assert
+      /// </summary>
+      public override IStatement Visit(AssertStatement assertStatement) {
+        var methodCall = new MethodCall() {
+          Arguments = MkList(assertStatement.Condition),
+          IsStaticCall = true,
+          MethodToCall = this.contractProvider.ContractMethods.Assert,
+          Type = systemVoid,
+          Locations = new List<ILocation>(assertStatement.Locations),
+        };
+        ExpressionStatement es = new ExpressionStatement() {
+          Expression = methodCall
+        };
+        return es;
+      }
+
+      /// <summary>
+      /// Converts the assume statement into a call to Contract.Assume
+      /// </summary>
+      public override IStatement Visit(AssumeStatement assumeStatement) {
+        var methodCall = new MethodCall() {
+          Arguments = MkList(assumeStatement.Condition),
+          IsStaticCall = true,
+          MethodToCall = this.contractProvider.ContractMethods.Assume,
+          Type = systemVoid,
+          Locations = new List<ILocation>(assumeStatement.Locations),
+        };
+        ExpressionStatement es = new ExpressionStatement() {
+          Expression = methodCall
+        };
+        return es;
+      }
+
+      /// <summary>
+      /// Converts the old value into a call to Contract.OldValue
+      /// </summary>
+      public override IExpression Visit(OldValue oldValue) {
+        var methodToCall = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Old,
+          IteratorHelper.GetSingletonEnumerable<ITypeReference>(oldValue.Type), this.host.InternFactory);
+        var methodCall = new MethodCall() {
+          Arguments = MkList(oldValue.Expression),
+          IsStaticCall = true,
+          MethodToCall = methodToCall,
+          Type = oldValue.Type,
+          Locations = new List<ILocation>(oldValue.Locations),
+        };
+        return methodCall;
+      }
+
+      /// <summary>
+      /// Converts the return value into a call to Contract.Result
+      /// </summary>
+      public override IExpression Visit(ReturnValue returnValue) {
+        var methodToCall = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Result,
+          IteratorHelper.GetSingletonEnumerable<ITypeReference>(returnValue.Type), this.host.InternFactory);
+        var methodCall = new MethodCall() {
+          IsStaticCall = true,
+          MethodToCall = methodToCall,
+          Type = returnValue.Type,
+          Locations = new List<ILocation>(returnValue.Locations),
+        };
+        return methodCall;
+      }
+    }
+
     /// <summary>
     /// Accumulates all elements from <paramref name="sourceContract"/> into <paramref name="targetContract"/>
     /// </summary>
@@ -321,8 +532,116 @@ namespace Microsoft.Cci.ILToCodeModel {
       return atLeastOneContract ? cumulativeContract : null;
     }
 
+    /// <summary>
+    /// Given a mutable module that is a "declarative" module, i.e., it has contracts expressed as contract calls
+    /// at the beginning of method bodies, this method will extract them, leaving the method bodies without those
+    /// calls and return a contract provider for the module containing any extracted contracts.
+    /// </summary>
+    public static ContractProvider ExtractContracts(IMetadataHost host, Module module, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
+      var contractMethods = new ContractMethods(host);
+      var cp = new Microsoft.Cci.MutableContracts.ContractProvider(contractMethods, module);
+      var extractor = new SeparateContractsFromCode(host, sourceLocationProvider, localScopeProvider, cp);
+      module = extractor.Visit(module);
+      return cp;
+    }
 
+    /// <summary>
+    /// A mutator that extracts the contracts from each method.
+    /// A client retrieves the extractor from the field after using
+    /// this to visit a module.
+    /// </summary>
+    private class SeparateContractsFromCode : CodeMutator {
 
+      private Microsoft.Cci.MutableContracts.ContractProvider contractProvider;
+      ILocalScopeProvider/*?*/ localScopeProvider;
+
+      internal SeparateContractsFromCode(
+        IMetadataHost host,
+        ISourceLocationProvider/*?*/ sourceLocationProvider,
+        ILocalScopeProvider/*?*/ localScopeProvider,
+        Microsoft.Cci.MutableContracts.ContractProvider contractProvider
+        )
+        : base(host, true, sourceLocationProvider) {
+        this.localScopeProvider = localScopeProvider;
+        this.contractProvider = contractProvider;
+      }
+
+      protected override void Visit(TypeDefinition typeDefinition) {
+        var contract = ContractExtractor.GetObjectInvariant(this.host, typeDefinition, this.sourceLocationProvider, this.localScopeProvider);
+        if (contract != null) {
+          this.contractProvider.AssociateTypeWithContract(typeDefinition, contract);
+        }
+        base.Visit(typeDefinition);
+      }
+
+      /// <summary>
+      /// For each method body, use the extractor to split it into the code
+      /// and contract. Returns a new mutable source method body with the
+      /// residual code.
+      /// </summary>
+      public override IMethodBody Visit(IMethodBody methodBody) {
+        ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
+        if (sourceMethodBody != null) {
+          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.host, sourceMethodBody, this.sourceLocationProvider, this.localScopeProvider);
+          this.contractProvider.AssociateMethodWithContract(methodBody.MethodDefinition, codeAndContractPair.MethodContract);
+          var mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
+          mutableSourceMethodBody.Block = codeAndContractPair.BlockStatement;
+          mutableSourceMethodBody.MethodDefinition = methodBody.MethodDefinition;
+          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+          return mutableSourceMethodBody;
+        }
+        return base.Visit(methodBody);
+      }
+
+    }
+
+  }
+
+  /// <summary>
+  /// A mutator that substitutes parameters defined in one method with those from another method.
+  /// </summary>
+  public sealed class SubstituteParameters : MethodBodyCodeAndContractMutator {
+    private IMethodDefinition targetMethod;
+    private IMethodDefinition sourceMethod;
+    private ITypeReference targetType;
+    List<IParameterDefinition> parameters;
+
+    /// <summary>
+    /// Creates a mutator that replaces all occurrences of parameters from the target method with those from the source method.
+    /// </summary>
+    public SubstituteParameters(IMetadataHost host, IMethodDefinition targetMethodDefinition, IMethodDefinition sourceMethodDefinition)
+      : base(host, false) { // NB: Important to pass "false": this mutator needs to make a copy of the entire contract!
+      this.targetMethod = targetMethodDefinition;
+      this.sourceMethod = sourceMethodDefinition;
+      this.targetType = targetMethodDefinition.ContainingType;
+      this.parameters = new List<IParameterDefinition>(targetMethod.Parameters);
+    }
+
+    /// <summary>
+    /// If the <paramref name="boundExpression"/> represents a parameter of the source method,
+    /// it is replaced with the equivalent parameter of the target method.
+    /// </summary>
+    /// <param name="boundExpression">The bound expression.</param>
+    public override IExpression Visit(BoundExpression boundExpression) {
+      ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
+      if (par != null && par.ContainingSignature == this.sourceMethod) {
+        boundExpression.Definition = this.parameters[par.Index];
+        return boundExpression;
+      } else {
+        return base.Visit(boundExpression);
+      }
+    }
+
+    /// <summary>
+    /// Replaces the specified this reference with a this reference to the containing type of the target method
+    /// </summary>
+    /// <param name="thisReference">The this reference.</param>
+    /// <returns>a this reference to the containing type of the target method</returns>
+    public override IExpression Visit(ThisReference thisReference) {
+      return new ThisReference() {
+        Type = this.targetType,
+      };
+    }
   }
 
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
@@ -572,7 +891,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       // and gone through here (and so already has a contract provider attached to it).
       if (this.unit2ContractExtractor.ContainsKey(alreadyLoadedUnit.UnitIdentity))
         this.unit2ContractExtractor.Remove(alreadyLoadedUnit.UnitIdentity);
-        //return;
+      //return;
 
       var contractMethods = new ContractMethods(this);
       using (var lazyContractProviderForLoadedUnit = new LazyContractExtractor(this, alreadyLoadedUnit, contractMethods, this.AllowExtractorsToUsePdbs)) {
@@ -654,4 +973,5 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     #endregion
   }
+
 }

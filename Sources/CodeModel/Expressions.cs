@@ -671,6 +671,7 @@ namespace Microsoft.Cci {
 
   /// <summary>
   /// An expression that represents the value that a target expression had at the start of the method that has a postcondition that includes this expression.
+  /// This node must be replaced before converting the Code Model to IL.
   /// </summary>
   public interface IOldValue : IExpression {
     /// <summary>
@@ -743,6 +744,7 @@ namespace Microsoft.Cci {
 
   /// <summary>
   /// An expression that refers to the return value of a method.
+  /// This node must be replaced before converting the Code Model to IL.
   /// </summary>
   public interface IReturnValue : IExpression {
   }

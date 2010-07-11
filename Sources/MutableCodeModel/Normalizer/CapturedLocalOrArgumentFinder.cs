@@ -14,7 +14,7 @@ using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
-  internal class ClosureFinder : BaseCodeAndContractTraverser {
+  internal class ClosureFinder : BaseCodeTraverser {
 
     /*\
      * 
@@ -74,9 +74,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       IMethodDefinition method,
       Dictionary<object, BoundField> fieldForCapturedLocalOrParameter,
       IMetadataHost host,
-      IContractProvider/*?*/ contractProvider,
-      int counter)
-      : base(contractProvider) {
+      int counter) {
       this.method = method;
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.host = host;
@@ -106,7 +104,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CaptureDefinition(object definition) {
       IThisReference/*?*/ thisRef = definition as IThisReference;
       if (thisRef != null) {
-        definition = thisRef.Type.ResolvedType.InternedKey;
+        definition = thisRef.Type.ResolvedType.InternedKey;        
       }
       if (this.fieldForCapturedLocalOrParameter.ContainsKey(definition)) return;
 
@@ -235,7 +233,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           var outerClosureField = new FieldDefinition() {
             ContainingTypeDefinition = closureClass,
             Name = this.host.NameTable.GetNameFor("__outerClosure"),
-            Type = TypeDefinition.SelfInstance(savedCurrentClosureClass, this.host.InternFactory),
+            Type = TypeDefinition.SelfInstance(savedCurrentClosureClass,this.host.InternFactory),
             Visibility = TypeMemberVisibility.Public,
           };
           closureClass.Fields.Add(outerClosureField);

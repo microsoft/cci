@@ -314,7 +314,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       List<IStatement> statements = new List<IStatement>();
       statements.Add(baseConstructorCallStatement);
       BlockStatement block = new BlockStatement() { Statements = statements };
-      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider);
       body.IsNormalized = true;
       body.LocalsAreZeroed = true;
       body.Block = block;
@@ -406,6 +406,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           var s = instance.ConstructClosureInstance(instance.closureLocal, instance.nestedClosure);
           inits.Add(s);
           BoundField boundField;
+
           // if a parameter was captured, assign its value to the corresponding field
           // in the closure class
           foreach (var p in method.Parameters) {

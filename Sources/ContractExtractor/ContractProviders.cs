@@ -13,9 +13,10 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.ILToCodeModel;
 using Microsoft.Cci.MutableContracts;
 
-namespace Microsoft.Cci.ILToCodeModel {
+namespace Microsoft.Cci.Contracts {
 
   /// <summary>
   /// A contract provider that layers on top of an existing contract provider and which
@@ -228,7 +229,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Disposes the PdbReader object, if any, that is used to obtain the source text locations corresponding to contracts.
     /// </summary>
     ~LazyContractExtractor() {
-       this.Close();
+      this.Close();
     }
 
     private void Close() {
@@ -290,7 +291,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       IMethodBody methodBody = methodDefinition.Body;
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null) {
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
+        //sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
+        sourceMethodBody = Decompiler.GetCodeModelFromMetadataModel(this.host, methodBody, this.pdbReader);
       }
 
       MethodContractAndMethodBody result = this.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
@@ -340,26 +342,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         return null;
       }
 
-      TypeContract cumulativeContract = new TypeContract();
-      foreach (var invariantMethod in ContractHelper.GetInvariantMethods(typeDefinition)) {
-        IMethodBody methodBody = invariantMethod.Body;
-        ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
-        if (sourceMethodBody == null) {
-          sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
-        }
-        var e = new ContractExtractor(sourceMethodBody, this.host, this.pdbReader);
-        var tc = e.ExtractObjectInvariant(sourceMethodBody.Block);
-        if (tc != null) {
-          cumulativeContract.Invariants.AddRange(tc.Invariants);
-        }
-      }
-
-      if (cumulativeContract.Invariants.Count == 0) {
+      var contract = Microsoft.Cci.MutableContracts.ContractExtractor.GetObjectInvariant(this.host, typeDefinition, this.pdbReader, this.pdbReader);
+      if (contract == null) {
         this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract); // so we don't try to extract more than once
         return null;
       } else {
-        this.underlyingContractProvider.AssociateTypeWithContract(type, cumulativeContract);
-        return cumulativeContract;
+        this.underlyingContractProvider.AssociateTypeWithContract(type, contract);
+        return contract;
       }
     }
 
@@ -388,8 +377,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// contract extracted and added to the contract provider.
     /// </summary>
     public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody) {
-      var e = new ContractExtractor(sourceMethodBody, this.host, this.pdbReader);
-      return e.SplitMethodBodyIntoContractAndCode(sourceMethodBody.Block);
+      return Microsoft.Cci.MutableContracts.ContractExtractor.SplitMethodBodyIntoContractAndCode(this.host, sourceMethodBody, this.pdbReader, this.pdbReader);
     }
 
     #endregion
@@ -547,7 +535,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Disposes any constituent contract providers that implement the IDisposable interface. 
     /// </summary>
     ~AggregatingContractExtractor() {
-       this.Close();
+      this.Close();
     }
 
     private void Close() {

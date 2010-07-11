@@ -59,6 +59,13 @@ namespace Microsoft.Cci.Contracts {
     IMethodReference Forall { get; }
 
     /// <summary>
+    /// A reference to a method that is called to indicate that the condition supplied as its argument is an
+    /// object invariant for the type in which the method call is found. The exact meaning of when an object
+    /// invariant must hold is left up to the individual tools.
+    /// </summary>
+    IMethodReference Invariant { get; }
+
+    /// <summary>
     /// A reference to a generic method whose result is the value of its argument expression as it was at the start of the method.
     /// </summary>
     IMethodReference Old { get; }
@@ -244,6 +251,22 @@ namespace Microsoft.Cci.Contracts {
       }
     }
     ITypeReference/*?*/ predicateType;
+
+    /// <summary>
+    /// A reference to a method that is called to indicate that the condition supplied as its argument is an
+    /// object invariant for the type in which the method call is found. The exact meaning of when an object
+    /// invariant must hold is left up to the individual tools.
+    /// </summary>
+    public IMethodReference Invariant {
+      get {
+        if (this.invariantRef == null)
+          this.invariantRef = new MethodReference(this.host, this.host.PlatformType.SystemDiagnosticsContractsContract, CallingConvention.Default,
+            this.host.PlatformType.SystemVoid, this.host.NameTable.GetNameFor("Invariant"), 0, this.host.PlatformType.SystemBoolean);
+        return this.invariantRef;
+      }
+    }
+    IMethodReference/*?*/ invariantRef;
+
 
     /// <summary>
     /// A reference to a generic method whose result is the value of its argument expression as it was at the start of the method.

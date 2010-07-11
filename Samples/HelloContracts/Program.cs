@@ -12,12 +12,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
-using Microsoft.Cci.Contracts;
 using System.IO;
 using Microsoft.Cci.ILToCodeModel;
 using System.Diagnostics;
 using CSharpSourceEmitter;
-using ContractHelper=Microsoft.Cci.ILToCodeModel.ContractHelper;
+using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 namespace HelloContracts {
 
@@ -191,7 +191,7 @@ namespace HelloContracts {
 
     public override void Visit(IMethodDefinition methodDefinition) {
       if (AttributeHelper.Contains(methodDefinition.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return;
-      if (Microsoft.Cci.ILToCodeModel.ContractHelper.IsInvariantMethod(this.host, methodDefinition)) return;
+      if (ContractHelper.IsInvariantMethod(this.host, methodDefinition)) return;
       if (IsGetter(methodDefinition) || IsSetter(methodDefinition)) return;
       IMethodContract methodContract;
       if (this.showInherited)

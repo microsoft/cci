@@ -20,7 +20,7 @@ namespace Microsoft.Cci {
   /// An object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private
   /// helper types.
   /// </summary>
-  public class CodeModelToILConverter : BaseCodeAndContractTraverser, ISourceToILConverter {
+  public class CodeModelToILConverter : BaseCodeTraverser, ISourceToILConverter {
 
     /// <summary>
     /// Initializes an object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private 
@@ -30,10 +30,7 @@ namespace Microsoft.Cci {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider)
-      : base(contractProvider) {
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider) {
       this.generator = new ILGenerator(host, method);
       this.host = host;
       this.method = method;
@@ -49,11 +46,8 @@ namespace Microsoft.Cci {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IContractProvider/*?*/ contractProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount)
-      : base(contractProvider) {
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
       this.generator = new ILGenerator(host, method);
       this.host = host;
       this.method = method;
@@ -429,14 +423,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified assert statement.
+    /// Throws an exception when executed: IAssertStatement nodes
+    /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    /// <param name="assertStatement">The assert statement.</param>
     public override void Visit(IAssertStatement assertStatement) {
-      if (this.contractProvider == null) return;
-      this.Visit(assertStatement.Condition);
-      this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.Assert);
-      this.StackSize--;
+      throw new InvalidOperationException("IAssertStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -665,14 +656,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified assume statement.
+    /// Throws an exception when executed: IAssumeStatement nodes
+    /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    /// <param name="assumeStatement">The assume statement.</param>
     public override void Visit(IAssumeStatement assumeStatement) {
-      if (this.contractProvider == null) return;
-      this.Visit(assumeStatement.Condition);
-      this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.Assume);
-      this.StackSize--;
+      throw new InvalidOperationException("IAssumeStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -1487,11 +1475,6 @@ namespace Microsoft.Cci {
     /// <param name="methodCall">The method call.</param>
     public override void Visit(IMethodCall methodCall) {
       if (methodCall.MethodToCall == Dummy.MethodReference) return;
-      if (this.contractProvider != null && methodCall.MethodToCall.InternedKey == this.contractProvider.ContractMethods.StartContract.InternedKey) {
-        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(this.method);
-        if (methodContract != null) this.Visit(methodContract);
-        return;
-      }
       if (!methodCall.IsStaticCall)
         this.Visit(methodCall.ThisArgument);
       this.Visit(methodCall.Arguments);
@@ -1509,16 +1492,6 @@ namespace Microsoft.Cci {
       if (!methodCall.IsStaticCall) this.StackSize--;
       if (methodCall.Type.TypeCode != PrimitiveTypeCode.Void)
         this.StackSize++;
-    }
-
-    /// <summary>
-    /// Traverses the given method contract.
-    /// </summary>
-    /// <param name="methodContract"></param>
-    public override void Visit(IMethodContract methodContract) {
-      this.Visit(methodContract.Postconditions);
-      this.Visit(methodContract.Preconditions);
-      this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.EndContract);
     }
 
     /// <summary>
@@ -1583,16 +1556,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified old value.
+    /// Throws an exception when executed: IOldValue nodes
+    /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    /// <param name="oldValue">The old value.</param>
     public override void Visit(IOldValue oldValue) {
-      if (this.contractProvider == null) return;
-      this.Visit(oldValue.Expression);
-      IEnumerable<ITypeReference> genArgs = IteratorHelper.GetSingletonEnumerable<ITypeReference>(oldValue.Type);
-      GenericMethodInstanceReference oldInst = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Old, genArgs, this.host.InternFactory);
-      this.generator.Emit(OperationCode.Call, oldInst);
+      throw new InvalidOperationException("IOldValue nodes must be replaced before trying to convert the Code Model to IL.");
     }
+
 
     /// <summary>
     /// Visits the specified ones complement.
@@ -1622,28 +1592,6 @@ namespace Microsoft.Cci {
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(pointerCall.Arguments);
       if (pointerCall.Type.TypeCode == PrimitiveTypeCode.Void)
         this.StackSize--;
-    }
-
-    /// <summary>
-    /// Traverses the given postCondition.
-    /// </summary>
-    /// <param name="postCondition"></param>
-    public override void Visit(IPostcondition postCondition) {
-      if (this.contractProvider == null) return;
-      this.Visit(postCondition.Condition);
-      this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.Ensures);
-      this.StackSize--;
-    }
-
-    /// <summary>
-    /// Traverses the given pre condition.
-    /// </summary>
-    /// <param name="precondition"></param>
-    public override void Visit(IPrecondition precondition) {
-      if (this.contractProvider == null) return;
-      this.Visit(precondition.Condition);
-      this.generator.Emit(OperationCode.Call, this.contractProvider.ContractMethods.Requires);
-      this.StackSize--;
     }
 
     /// <summary>
@@ -1711,15 +1659,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given return value expression.
+    /// Throws an exception when executed: IReturnValue nodes
+    /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    /// <param name="returnValue"></param>
     public override void Visit(IReturnValue returnValue) {
-      if (this.contractProvider == null) return;
-      IEnumerable<ITypeReference> genArgs = IteratorHelper.GetSingletonEnumerable<ITypeReference>(returnValue.Type);
-      GenericMethodInstanceReference resultInst = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Result, genArgs, this.host.InternFactory);
-      this.generator.Emit(OperationCode.Call, resultInst);
-      this.StackSize++;
+      throw new InvalidOperationException("IReturnValue nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>

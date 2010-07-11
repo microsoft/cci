@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.MutableCodeModel;
-using Microsoft.Cci.Contracts;
 using System.Text;
 
 namespace Microsoft.Cci.ILToCodeModel {
@@ -22,10 +21,6 @@ namespace Microsoft.Cci.ILToCodeModel {
   public class SourceMethodBody : ISourceMethodBody {
 
     internal readonly IMetadataHost host;
-
-    internal readonly IContractAwareHost/*?*/ contractAwareHost;
-    private DecompilerCallback/*?*/ alreadyDecompiledBodyProvider;
-    //^ invariant (this.contractAwareHost == null) == (this.alreadyDecompiledBodies == null);
 
     internal readonly IMethodBody ilMethodBody;
     internal readonly INameTable nameTable;
@@ -68,40 +63,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
-    /// </summary>
-    /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
-    /// result of the Block property of the resulting source method body.</param>
-    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
-    /// objects and services such as the shared name table, the table for interning references, and contracts from other methods/types.</param>
-    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    /// <param name="alreadyDecompiledBodyProvider">An object that holds already decompiled bodies put there by the callback mechanism for IContractAwareHosts</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IContractAwareHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider,
-      DecompilerCallback alreadyDecompiledBodyProvider)
-      : this(ilMethodBody, (IMetadataHost)host, sourceLocationProvider, localScopeProvider) {
-      this.contractAwareHost = host;
-      this.alreadyDecompiledBodyProvider = alreadyDecompiledBodyProvider;
-      var definingUnit = TypeHelper.GetDefiningUnit(ilMethodBody.MethodDefinition.ContainingTypeDefinition);
-    }
-
-    /// <summary>
     /// The collection of statements making up the body.
     /// This is produced by either language parser or through decompilation of the Instructions.
     /// </summary>
     public IBlockStatement Block {
       get {
         if (this.block == null) {
-          if (this.alreadyDecompiledBodyProvider != null) {
-            var bs = this.alreadyDecompiledBodyProvider.GetAlreadyDecompiledBody(this.MethodDefinition);
-            if (bs != null)
-              this.block = bs;
-            else
-              this.block = this.CreateDecompiledBlock();
-          } else {
-            this.block = this.CreateDecompiledBlock();
-          }
+          this.block = this.CreateDecompiledBlock();
         }
         return this.block;
       }
@@ -415,12 +383,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
         this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
-        MoveNextSourceMethodBody moveNextBody;
-        if (this.contractAwareHost != null) {
-          moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.contractAwareHost, this.sourceLocationProvider, this.localScopeProvider);
-        } else {
-          moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
-        }
+        var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
         result = moveNextBody.TransformedBlock;
       }
       result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);
@@ -429,7 +392,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         new UnreferencedLabelRemover().Visit(bb);
       }
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      result = new AssertAssumeExtractor(this).Visit(result);
       return result;
     }
 
@@ -1617,23 +1579,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Allocates a metadata (IL) representation along with a source level representation of the body of an iterator method/property-event accessor.
-    /// </summary>
-    /// <param name="iteratorMethodBody"> The method body of the iterator method, to which this MoveNextSourceMethodBody corresponds.</param>
-    /// <param name="ilMethodBody">The method body of MoveNext whose IL operations should be decompiled into a block of statements that will be the
-    /// result of the Block property of the resulting source method body. More importantly, the decompiled body for the original iterator method 
-    /// is accessed by the TransformedBlock property.</param>
-    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IContractAwareHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
-      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider) {
-      this.iteratorMethodBody = iteratorMethodBody;
-    }
-
-    /// <summary>
     /// Decompile the method body of the MoveNext, the results of which may be decompiled to and duplicated as the iterator method body.
     /// </summary>
     /// <param name="rootBlock">The root block of </param>
@@ -1648,7 +1593,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
       IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
-      result = new AssertAssumeExtractor(this).Visit(result);
       return result;
     }
 

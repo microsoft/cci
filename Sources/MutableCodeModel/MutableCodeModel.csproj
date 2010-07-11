@@ -107,7 +107,6 @@
     <Compile Include="..\common\include\version.cs">
       <Link>Build\version.cs</Link>
     </Compile>
-    <Compile Include="ContractHelper.cs" />
     <Compile Include="Contracts.cs" />
     <Compile Include="Copier.cs" />
     <Compile Include="Expressions.cs" />

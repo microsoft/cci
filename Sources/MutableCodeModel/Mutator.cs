@@ -2429,7 +2429,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override IMethodBody Visit(IMethodBody methodBody) {
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
-        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
+        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         var currentMethod = this.GetCurrentMethod();
         // Visiting the block extracts the contract, but it gets associated with the immutable method

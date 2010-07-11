@@ -1,4 +1,5 @@
-﻿//
+﻿//-----------------------------------------------------------------------------
+//
 // Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
@@ -8,14 +9,63 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
+using System.IO;
+using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
+using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
-using Microsoft.Cci.MutableContracts;
+using Microsoft.Cci.ILToCodeModel;
 
-namespace Microsoft.Cci.ILToCodeModel {
+namespace Microsoft.Cci.MutableContracts {
 
   internal class ContractExtractor : MethodBodyCodeMutator {
+
+    #region Public API
+    /// <summary>
+    /// Extracts calls to precondition and postcondition methods from the type
+    /// System.Diagnostics.Contracts.Contract from the ISourceMethodBody and
+    /// returns a pair of the extracted method contract and the residual method
+    /// body. If the <paramref name="sourceMethodBody"/> is mutable, then it
+    /// has the side-effect of updating the body so that it contains only the
+    /// residual code in addition to returning it.
+    /// </summary>
+    public static MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IMetadataHost host, ISourceMethodBody sourceMethodBody, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
+      var e = new ContractExtractor(sourceMethodBody, host, sourceLocationProvider, localScopeProvider);
+      return e.SplitMethodBodyIntoContractAndCode(sourceMethodBody.Block);
+    }
+
+    /// <summary>
+    /// Extracts calls to Contract.Invariant contained in invariant methods within
+    /// <paramref name="typeDefinition"/> and returns the resulting type contract.
+    /// If <paramref name="typeDefinition"/> is mutable, then all invariant methods
+    /// are removed as members of <paramref name="typeDefinition"/>.
+    /// </summary>
+    public static ITypeContract/*?*/ GetObjectInvariant(IMetadataHost host, ITypeDefinition typeDefinition, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
+      TypeContract cumulativeContract = new TypeContract();
+      TypeDefinition mutableTypeDefinition = typeDefinition as TypeDefinition;
+      var invariantMethods = new List<IMethodDefinition>(ContractHelper.GetInvariantMethods(typeDefinition));
+      foreach (var invariantMethod in invariantMethods) {
+        IMethodBody methodBody = invariantMethod.Body;
+        ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
+        if (sourceMethodBody == null) {
+          sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, sourceLocationProvider, localScopeProvider);
+        }
+        var e = new Microsoft.Cci.MutableContracts.ContractExtractor(sourceMethodBody, host, sourceLocationProvider, localScopeProvider);
+        var tc = e.ExtractObjectInvariant(sourceMethodBody.Block);
+        if (tc != null) {
+          cumulativeContract.Invariants.AddRange(tc.Invariants);
+        }
+        if (mutableTypeDefinition != null) {
+          mutableTypeDefinition.Methods.Remove(invariantMethod);
+        }
+      }
+
+      return (cumulativeContract.Invariants.Count == 0)
+        ? null
+        : cumulativeContract;
+    }
+
+    #endregion
 
     private MethodContract/*?*/ currentMethodContract;
     private MethodContract/*!*/ CurrentMethodContract {
@@ -36,7 +86,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    ISourceMethodBody sourceMethodBody;
+    private ISourceMethodBody sourceMethodBody;
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
     /// <summary>
@@ -49,7 +99,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     private ITypeReference contractClassDefinedInReferenceAssembly;
 
     private IUnit definingUnit;
-    private IContractAwareHost contractAwareHost;
 
     private bool methodIsInReferenceAssembly;
 
@@ -70,7 +119,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return null;
     }
 
-    public bool IsContractMethod(IMethodReference/*?*/ method) {
+    private bool IsContractMethod(IMethodReference/*?*/ method) {
       if (method == null) return false;
       if (method.ContainingType.InternedKey == this.contractClass.InternedKey) return true;
       // Reference assemblies define their own internal versions of the contract methods
@@ -85,21 +134,21 @@ namespace Microsoft.Cci.ILToCodeModel {
         // method is *not* in a contract class and it is an implementation of an interface method
         (this.extractingFromAMethodInAContractClass == null
           &&
-          // method is being used as an implementation of an interface method
+        // method is being used as an implementation of an interface method
           (IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetImplicitlyImplementedInterfaceMethods(methodDefinition))
-          // method is an explicit implementation of an interface method
+        // method is an explicit implementation of an interface method
           || IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition))
           ))
         );
     }
 
-    internal ContractExtractor(
+    private ContractExtractor(
       ISourceMethodBody sourceMethodBody,
-      IContractAwareHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider)
+      IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider,
+      ILocalScopeProvider/*?*/ localScopeProvider)
       : base(host, true, sourceLocationProvider) {
       this.sourceMethodBody = sourceMethodBody;
-      this.contractAwareHost = host;
 
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
@@ -140,7 +189,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.cache, this.referenceCache, this.contractClass);
 
-      this.extractingFromACtorInAClass = 
+      this.extractingFromACtorInAClass =
         sourceMethodBody.MethodDefinition.IsConstructor
         &&
         !sourceMethodBody.MethodDefinition.ContainingType.IsValueType;
@@ -151,13 +200,13 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     }
 
-    public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
+    private MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
       // Don't start with an empty contract because the ctor may have set some things in it
       var bs = this.Visit(blockStatement);
       return new MethodContractAndMethodBody(this.currentMethodContract, bs);
     }
 
-    public ITypeContract/*?*/ ExtractObjectInvariant(IBlockStatement blockStatement) {
+    private ITypeContract/*?*/ ExtractObjectInvariant(IBlockStatement blockStatement) {
       var stmts = new List<IStatement>(blockStatement.Statements);
       List<IStatement> newStmts = new List<IStatement>();
       var i = 0;
@@ -323,6 +372,33 @@ namespace Microsoft.Cci.ILToCodeModel {
       return blockStatement;
     }
 
+    public override IStatement Visit(ExpressionStatement expressionStatement) {
+      IMethodCall/*?*/ methodCall = expressionStatement.Expression as IMethodCall;
+      if (methodCall == null) goto JustVisit;
+      IMethodReference methodToCall = methodCall.MethodToCall;
+      if (!IsContractMethod(methodToCall)) goto JustVisit;
+      string mname = methodToCall.Name.Value;
+      List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
+      List<ILocation> locations = new List<ILocation>(methodCall.Locations);
+      if (arguments.Count != 1) goto JustVisit;
+      if (mname == "Assert") {
+        AssertStatement assertStatement = new AssertStatement() {
+          Condition = this.Visit(arguments[0]),
+          Locations = locations
+        };
+        return assertStatement;
+      }
+      if (mname == "Assume") {
+        AssumeStatement assumeStatement = new AssumeStatement() {
+          Condition = this.Visit(arguments[0]),
+          Locations = locations
+        };
+        return assumeStatement;
+      }
+    JustVisit:
+      return base.Visit(expressionStatement);
+    }
+
     private List<IStatement> ExtractObjectInvariant(List<IStatement> stmts) {
       List<IStatement> newStmts = new List<IStatement>();
       var i = 0;
@@ -436,7 +512,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return -1;
     }
-    internal int OffsetOfLastContractCallOrNegativeOne() {
+    private int OffsetOfLastContractCallOrNegativeOne() {
       List<IOperation> instrs = new List<IOperation>(this.sourceMethodBody.Operations);
       for (int i = instrs.Count - 1; 0 <= i; i--) {
         IOperation op = instrs[i];
@@ -620,7 +696,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
               PostCondition postcondition = new PostCondition() {
                 Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
-                Description = numArgs >=2 ? arguments[1] : null,
+                Description = numArgs >= 2 ? arguments[1] : null,
                 OriginalSource = origSource,
                 Locations = locations
               };
@@ -820,7 +896,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           failureBehavior = throwStatement.Exception;
         } else {
           var localAssignments = new List<IStatement>();
-          for (int i = 0; i < statements.Count -1; i++) {
+          for (int i = 0; i < statements.Count - 1; i++) {
             localAssignments.Add(statements[i]);
           }
           failureBehavior = new BlockExpression() {
@@ -1104,6 +1180,42 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
   }
+  //private class AssertAssumeExtractor : MethodBodyCodeMutator {
 
+  //  SourceMethodBody sourceMethodBody;
+
+  //  internal AssertAssumeExtractor(SourceMethodBody sourceMethodBody)
+  //    : base(sourceMethodBody.host, true) {
+  //    this.sourceMethodBody = sourceMethodBody;
+  //  }
+
+  //  public override IStatement Visit(ExpressionStatement expressionStatement) {
+  //    IMethodCall/*?*/ methodCall = expressionStatement.Expression as IMethodCall;
+  //    if (methodCall == null) goto JustVisit;
+  //    IMethodReference methodToCall = methodCall.MethodToCall;
+  //    if (!TypeHelper.TypesAreEquivalent(methodToCall.ContainingType, this.sourceMethodBody.platformType.SystemDiagnosticsContractsContract)) goto JustVisit;
+  //    string mname = methodToCall.Name.Value;
+  //    List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
+  //    List<ILocation> locations = new List<ILocation>(methodCall.Locations);
+  //    if (arguments.Count != 1) goto JustVisit;
+  //    if (mname == "Assert") {
+  //      AssertStatement assertStatement = new AssertStatement() {
+  //        Condition = this.Visit(arguments[0]),
+  //        Locations = locations
+  //      };
+  //      return assertStatement;
+  //    }
+  //    if (mname == "Assume") {
+  //      AssumeStatement assumeStatement = new AssumeStatement() {
+  //        Condition = this.Visit(arguments[0]),
+  //        Locations = locations
+  //      };
+  //      return assumeStatement;
+  //    }
+  //  JustVisit:
+  //    return base.Visit(expressionStatement);
+  //  }
+
+  //}
 
 }

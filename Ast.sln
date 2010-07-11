@@ -78,6 +78,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericResolutionTests", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloContracts", "Samples\HelloContracts\HelloContracts.csproj", "{ADD09DE8-1D22-4DF6-8C35-F91C1FCD3236}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractExtractor", "Sources\ContractExtractor\ContractExtractor.csproj", "{0703D916-A881-45E6-A5CD-6BC50E2E30E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -318,6 +320,14 @@ Global
 		{ADD09DE8-1D22-4DF6-8C35-F91C1FCD3236}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{ADD09DE8-1D22-4DF6-8C35-F91C1FCD3236}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADD09DE8-1D22-4DF6-8C35-F91C1FCD3236}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0703D916-A881-45E6-A5CD-6BC50E2E30E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

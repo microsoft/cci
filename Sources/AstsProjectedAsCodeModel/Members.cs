@@ -2650,13 +2650,13 @@ namespace Microsoft.Cci.Ast {
       }
 
       MethodBodyNormalizer normalizer = new MethodBodyNormalizer(this.Block.Compilation.HostEnvironment,
-        this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
+        this.Block.Compilation.SourceLocationProvider);
       ISourceMethodBody normalizedBody = normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
       this.isIteratorBody = normalizer.IsIteratorBody;
 
       CodeModelToILConverter converter = new CodeModelToILConverter(this.Block.Compilation.HostEnvironment,
         this.MethodDefinition,
-        this.Block.Compilation.SourceLocationProvider, this.Block.Compilation.ContractProvider);
+        this.Block.Compilation.SourceLocationProvider);
       converter.ConvertToIL(normalizedBody.Block);
 
       this.localScopes = converter.GetLocalScopes();

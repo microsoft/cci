@@ -28,11 +28,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this source method body. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider) {
+    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider) {
       this.Block = CodeDummy.Block;
-      this.contractProvider = contractProvider;
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
     }
@@ -43,12 +40,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this source method body. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
+    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
       this.Block = CodeDummy.Block;
-      this.contractProvider = contractProvider;
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
       this.iteratorLocalCount = iteratorLocalCount;
@@ -65,7 +59,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     IBlockStatement block;
 
-    ContractProvider/*?*/ contractProvider;
     IMetadataHost host;
     ISourceLocationProvider/*?*/ sourceLocationProvider;
 
@@ -88,7 +81,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
 
       if (this.isNormalized) {
-        var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.contractProvider, this.iteratorLocalCount);
+        var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.iteratorLocalCount);
         converter.ConvertToIL(this.Block);
         iteratorScopes = converter.GetIteratorScopes();
         localVariables = converter.GetLocalVariables();
@@ -98,7 +91,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (privateHelperTypes == null)
           privateHelperTypes = new List<ITypeDefinition>(0);
       } else {
-        var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider, this.contractProvider);
+        var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider); //, this.contractProvider);
         var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
         normalizedBody.isNormalized = true;
         iteratorScopes = normalizedBody.iteratorScopes;

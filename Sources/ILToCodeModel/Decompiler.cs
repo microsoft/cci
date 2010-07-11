@@ -10,7 +10,6 @@
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
-using Microsoft.Cci.Contracts;
 using System.IO;
 using System.Diagnostics;
 
@@ -34,18 +33,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Returns a mutable Code Model assembly that is equivalent to the given Metadata Model assembly,
-    /// except that in the new assembly method bodies also implement ISourceMethodBody.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this decompiler. It is used to obtain access to some global
-    /// objects and services such as the shared name table, the table for interning references, and contracts from other methods/types.</param>
-    /// <param name="assembly">The root of the Metadata Model to be converted to a Code Model.</param>
-    /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
-    public static Assembly GetCodeAndContractModelFromMetadataModel(IContractAwareHost host, IAssembly assembly, PdbReader/*?*/ pdbReader) {
-      return (Assembly)GetCodeModelFromMetadataModelHelper(host, assembly, pdbReader, pdbReader);
-    }
-
-    /// <summary>
     /// Returns a mutable Code Model module that is equivalent to the given Metadata Model module,
     /// except that in the new module method bodies also implement ISourceMethodBody.
     /// </summary>
@@ -58,15 +45,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Returns a mutable Code Model module that is equivalent to the given Metadata Model module,
-    /// except that in the new module method bodies also implement ISourceMethodBody.
+    /// Returns a (mutable) Code Model SourceMethod body that is equivalent to the given Metadata Model method body.
+    /// It does *not* delete any helper types.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this decompiler. It is used to obtain access to some global
-    /// objects and services such as the shared name table, the table for interning references, and contracts from other methods/types.</param>
-    /// <param name="module">The root of the Metadata Model to be converted to a Code Model.</param>
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="methodBody">The Metadata Model method body that is to be decompiled.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
-    public static Module GetCodeAndContractModelFromMetadataModel(IContractAwareHost host, IModule module, PdbReader/*?*/ pdbReader) {
-      return GetCodeModelFromMetadataModelHelper(host, module, pdbReader, pdbReader);
+    public static ISourceMethodBody GetCodeModelFromMetadataModel(IMetadataHost host, IMethodBody methodBody, PdbReader/*?*/ pdbReader) {
+      return new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, pdbReader);
     }
 
     /// <summary>
@@ -87,7 +74,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       var remover = new RemoveUnnecessaryTypes(finder.helperTypes, finder.helperMethods);
       remover.Visit(result);
       result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
-
       return result;
     }
 
@@ -99,19 +85,6 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// by decompiling the metadata model information provided by the properties of IMethodBody.
   /// </summary>
   internal class ReplaceMetadataMethodBodiesWithDecompiledMethodBodies : MetadataMutator {
-
-    /// <summary>
-    /// A host that has extra functionality for dealing with contracts.
-    /// </summary>
-    IContractAwareHost/*?*/ contractAwareHost;
-
-    /// <summary>
-    /// The handle to the table where residual method bodies are kept if the extractor
-    /// asynchronously decompiles and extracts a contract.
-    /// invariant: (this.decompilerCallback == null) == (this.contractAwareHost == null).
-    /// </summary>
-    DecompilerCallback/*?*/ decompilerCallback;
-    //^ invariant (this.decompilerCallback == null) == (this.contractAwareHost == null);
 
     /// <summary>
     /// An object that can provide information about the local scopes of a method. May be null. 
@@ -141,66 +114,15 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Allocates a mutator that copies metadata models into mutable code models by using the base MetadataMutator class to make a mutable copy
-    /// of a given metadata model and also replaces any method bodies with instances of SourceMethodBody, which implements the ISourceMethodBody.Block property
-    /// by decompiling the metadata model information provided by the properties of IMethodBody.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table, the table for interning references, and contracts from other methods/types.</param>
-    /// <param name="unit">The unit of metadata that will be mutated.</param>
-    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method. May be null.</param>
-    internal ReplaceMetadataMethodBodiesWithDecompiledMethodBodies(IContractAwareHost host, IUnit unit,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
-      : base(host) {
-      this.contractAwareHost = host;
-      this.localScopeProvider = localScopeProvider;
-      this.sourceLocationProvider = sourceLocationProvider;
-      var ce = host.GetContractExtractor(unit.UnitIdentity);
-      this.decompilerCallback = new DecompilerCallback();
-      ce.RegisterContractProviderCallback(this.decompilerCallback);
-    }
-
-    /// <summary>
     /// Replaces the given method body with an equivalent instance of SourceMethod body, which in addition also implements ISourceMethodBody,
     /// which has the additional property, Block, which represents the corresponding Code Model for the method body.
     /// </summary>
     /// <param name="methodBody">The method body to visit.</param>
     public override IMethodBody Visit(IMethodBody methodBody) {
       var ilBody = base.Visit(methodBody); //Visit the body to fix up all the references to point to the copy.
-      if (this.contractAwareHost != null) {
-        return new SourceMethodBody(ilBody, this.contractAwareHost, this.sourceLocationProvider, this.localScopeProvider, this.decompilerCallback);
-      } else {
-        return new SourceMethodBody(ilBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
-      }
+      return new SourceMethodBody(ilBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
     }
 
-  }
-
-  /// <summary>
-  /// An object used to register with the contract-aware host so that all method bodies which get decompiled are
-  /// reported. It is public only because it is a parameter to the constructor for SourceMethodBody and that is public.
-  /// </summary>
-  public class DecompilerCallback : IContractProviderCallback {
-
-    /// <summary>
-    /// The table holding decompiled bodies, keyed by the method definition's interned key
-    /// </summary>
-    internal Dictionary<uint, IBlockStatement> extractedMethods = new Dictionary<uint, IBlockStatement>();
-
-    #region IContractProviderCallback Members
-
-    void IContractProviderCallback.ProvideResidualMethodBody(IMethodDefinition methodDefinition, IBlockStatement blockStatement) {
-      this.extractedMethods.Add(methodDefinition.InternedKey, blockStatement);
-    }
-
-    #endregion
-
-    internal IBlockStatement/*?*/ GetAlreadyDecompiledBody(IMethodDefinition methodDefinition) {
-      IBlockStatement/*?*/ bs = null;
-      this.extractedMethods.TryGetValue(methodDefinition.InternedKey, out bs);
-      return bs;
-    }
   }
 
   /// <summary>

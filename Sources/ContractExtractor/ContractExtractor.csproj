@@ -3,16 +3,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</ProjectGuid>
+    <ProjectGuid>{0703D916-A881-45E6-A5CD-6BC50E2E30E2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Micorsoft.Cci.ILToCodeModel</RootNamespace>
-    <AssemblyName>Microsoft.Cci.ILToCodeModel</AssemblyName>
+    <RootNamespace>ContractExtractor</RootNamespace>
+    <AssemblyName>ContractExtractor</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SignAssembly>true</SignAssembly>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,9 +22,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
-    <DocumentationFile>bin\Debug\Microsoft.Cci.ILToCodeModel.XML</DocumentationFile>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,47 +30,48 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="BlockRemover.cs" />
-    <Compile Include="ControlFlowDecompiler.cs" />
-    <Compile Include="DeclarationAdder.cs" />
-    <Compile Include="Decompiler.cs" />
-    <Compile Include="EmptyStatementRemover.cs" />
-    <Compile Include="HelperObjects.cs" />
-    <Compile Include="MoveNextDecompiler.cs" />
-    <Compile Include="PatternDecompiler.cs" />
-    <Compile Include="RemoveBranchConditionLocals.cs" />
-    <Compile Include="RemoveCompilationArtifacts.cs" />
-    <Compile Include="SourceMethodBody.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TypeInferencer.cs" />
-    <Compile Include="UnreferencedLabelRemover.cs" />
-    <Compile Include="Unstacker.cs" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\metadata\Sources\MetadataHelper\MetadataHelper.csproj">
-      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
-      <Name>MetadataHelper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\metadata\Sources\MetadataModel\MetadataModel.csproj">
-      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
-      <Name>MetadataModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
-      <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
-      <Name>MutableMetadataModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\metadata\Sources\PdbReader\PdbReader.csproj">
-      <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
-      <Name>PdbReader</Name>
+    <Compile Include="ContractExtractor.cs" />
+    <Compile Include="ContractHelper.cs" />
+    <Compile Include="ContractProviders.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ILToCodeModel\ILToCodeModel.csproj">
+      <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
+      <Name>ILToCodeModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
-      <Name>PeReader</Name>
+      <Name>PEReader</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\metadata\Sources\SourceModel\SourceModel.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
+      <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
+      <Name>MutableMetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MutableCodeModel\MutableCodeModel.csproj">
+      <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
+      <Name>MutableCodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\PdbReader\PdbReader.csproj">
+      <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
+      <Name>PdbReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
@@ -81,13 +79,6 @@
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
       <Name>CodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MutableCodeModel\MutableCodeModel.csproj">
-      <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
-      <Name>MutableCodeModel</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
