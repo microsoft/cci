@@ -142,6 +142,10 @@
       <Project>{CE5831A2-5C56-456B-8742-8DB4C6012CF8}</Project>
       <Name>DependencyAutoProperty</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\EnsuresNotNull\EnsuresNotNull.csproj">
+      <Project>{32DD618D-7B5F-437A-A8A5-AED7D776E142}</Project>
+      <Name>EnsuresNotNull</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
       <Name>Framework</Name>

@@ -293,7 +293,7 @@ namespace CciSharp.Mutators
                 if (CcsHelper.TryGetFirstFieldReference(getterBody, out backingField))
                     declaringType.Fields.Remove((IFieldDefinition)backingField);
 
-                getterBody = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider)
+                getterBody = new SourceMethodBody(this.host, this.sourceLocationProvider)
                 {
                     MethodDefinition = getter,
                     LocalsAreZeroed = getter.Body.LocalsAreZeroed
@@ -328,7 +328,7 @@ namespace CciSharp.Mutators
                 Contract.Requires(setter != null);
                 Contract.Requires(propertyField != null);
 
-                var setterBody = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider)
+                var setterBody = new SourceMethodBody(this.host, this.sourceLocationProvider)
                 {
                     MethodDefinition = setter,
                     LocalsAreZeroed = setter.Body.LocalsAreZeroed
@@ -456,7 +456,7 @@ namespace CciSharp.Mutators
                     declaringType.Methods.Add(validator);
                     var block = new BlockStatement();
                     SourceMethodBody body;
-                    validator.Body = body = new SourceMethodBody(this.Host, this.sourceLocationProvider, this.contractProvider)
+                    validator.Body = body = new SourceMethodBody(this.Host, this.sourceLocationProvider)
                     {
                         MethodDefinition = validator,
                         Block = block,
@@ -588,7 +588,7 @@ namespace CciSharp.Mutators
                     SourceMethodBody body;
                     if (cctor.Body == Dummy.MethodBody)
                     {
-                        cctor.Body = body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
+                        cctor.Body = body = new SourceMethodBody(this.host, this.sourceLocationProvider);
                         body.MethodDefinition = cctor;
                     }
                     body = (SourceMethodBody)cctor.Body;
@@ -611,7 +611,7 @@ namespace CciSharp.Mutators
                         return method;
                     }
 
-                var body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.contractProvider);
+                var body = new SourceMethodBody(this.host, this.sourceLocationProvider);
                 var cctor = new Microsoft.Cci.MutableCodeModel.MethodDefinition
                 {
                     IsExternal = false,

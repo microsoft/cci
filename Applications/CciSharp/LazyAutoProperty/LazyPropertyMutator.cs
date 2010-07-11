@@ -154,7 +154,7 @@ namespace CciSharp.Mutators
                 uncachedGetter.Visibility = TypeMemberVisibility.Private;
 
                 // replace getter body
-                var body = new SourceMethodBody(this.Host, this.sourceLocationProvider, this.contractProvider)
+                var body = new SourceMethodBody(this.Host, this.sourceLocationProvider)
                 {
                     MethodDefinition = getter
                 };

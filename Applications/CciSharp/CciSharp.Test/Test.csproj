@@ -34,6 +34,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,8 +48,8 @@
     <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
     <CodeContractsRuntimeThrowOnFailure>True</CodeContractsRuntimeThrowOnFailure>
     <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
-    <CodeContractsRunCodeAnalysis>False</CodeContractsRunCodeAnalysis>
-    <CodeContractsNonNullObligations>False</CodeContractsNonNullObligations>
+    <CodeContractsRunCodeAnalysis>True</CodeContractsRunCodeAnalysis>
+    <CodeContractsNonNullObligations>True</CodeContractsNonNullObligations>
     <CodeContractsBoundsObligations>False</CodeContractsBoundsObligations>
     <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
     <CodeContractsRedundantAssumptions>False</CodeContractsRedundantAssumptions>
@@ -71,6 +72,9 @@
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>Build</CodeContractsReferenceAssembly>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeContractsPointerObligations>False</CodeContractsPointerObligations>
+    <CodeContractsContainerAnalysis>False</CodeContractsContainerAnalysis>
+    <CodeContractsExtraRewriteOptions />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -142,6 +146,7 @@
     <Compile Include="ContractThrowsAttribute.cs" />
     <Compile Include="DefaultPropertyValueTest.cs" />
     <Compile Include="DependencyAutoPropertyTest.cs" />
+    <Compile Include="EnsuresNotNullTest.cs" />
     <Compile Include="NotNullTest.cs" />
     <Compile Include="WeakLazyAutoPropertyTest.cs" />
     <Compile Include="LazyAutoPropertyTest.cs" />
@@ -162,6 +167,10 @@
     <ProjectReference Include="..\DependencyAutoProperty\DependencyAutoProperty.csproj">
       <Project>{CE5831A2-5C56-456B-8742-8DB4C6012CF8}</Project>
       <Name>DependencyAutoProperty</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EnsuresNotNull\EnsuresNotNull.csproj">
+      <Project>{32DD618D-7B5F-437A-A8A5-AED7D776E142}</Project>
+      <Name>EnsuresNotNull</Name>
     </ProjectReference>
     <ProjectReference Include="..\Framework\Framework.csproj">
       <Project>{6FD40C71-610C-4117-B360-60FC238F7D58}</Project>
@@ -192,13 +201,15 @@
     <CcsPath>..\CciSharp\bin\$(Configuration)\</CcsPath>
   </PropertyGroup>
   <ItemGroup>
-    <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />
+    <CcsMutatorAssemblies Include="..\EnsuresNotNull\bin\$(Configuration)\CciSharp.EnsuresNotNull.dll" />
+    <!--    <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />
     <CcsMutatorAssemblies Include="..\ReadOnlyAutoProperty\bin\$(Configuration)\CciSharp.ReadOnlyAutoProperty.dll" />
     <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" />
     <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" />
     <CcsMutatorAssemblies Include="..\NotNull\bin\$(Configuration)\CciSharp.NotNull.dll" />
     <CcsMutatorAssemblies Include="..\DefaultPropertyValue\bin\$(Configuration)\CciSharp.DefaultPropertyValue.dll" />
     <CcsMutatorAssemblies Include="..\DependencyAutoProperty\bin\$(Configuration)\CciSharp.DependencyAutoProperty.dll" />
+-->
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
