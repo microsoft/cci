@@ -61,14 +61,18 @@ namespace CciSharp.Mutators {
         var newContract = new MethodContract {
           Postconditions = new List<IPostcondition> {
             new PostCondition {
+              // !=
               Condition = new NotEquality {
+                // result
                 LeftOperand = new ReturnValue { Type = returnType, },
+                // null
                 RightOperand = new CompileTimeConstant {
                   Type = returnType,
                   Value = null,
                 },
                 Type = this.host.PlatformType.SystemBoolean,
               },
+              // description
               OriginalSource = "result != null",
             }
           }
@@ -79,6 +83,7 @@ namespace CciSharp.Mutators {
         if(contract != null) {
           ContractHelper.AddMethodContract(newContract,contract);
         }
+        // store new contracts
         this.contractProvider.AssociateMethodWithContract(method,newContract);
       }
     }
