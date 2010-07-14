@@ -13,7 +13,7 @@ namespace CciSharp
     {
         static int Main(string[] args)
         {
-            Console.WriteLine("CCISharp: A pluggable post compiler for .NET");
+            Console.WriteLine("CciSharp: A pluggable post compiler for .NET");
 
             if (args == null ||
                 args.Length != 2)

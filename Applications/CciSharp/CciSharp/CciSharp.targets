@@ -98,14 +98,16 @@
     <Exec Command="$(CcsExecCommand)" />
     <!-- keep a copy of the original -->
     <Copy
+      Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')')"
       SourceFiles="@(CcsRewriterInputs)"
       DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).csc%(Extension)')" />
     <Copy
-      Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')')"
+      Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')') AND Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')')"
       SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).pdb')"
       DestinationFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).csc.pdb')" />
     <!-- copy ccs in -->
     <Copy
+      Condition="Exists('@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')')"
       SourceFiles="@(CcsRewriterInputs->'%(RootDir)%(Directory)%(FileName).ccs%(Extension)')"
       DestinationFiles="@(CcsRewriterInputs)" />
     <Copy

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xunit;
-#if FALSE
 namespace CciSharp.Test
 {
     public partial class NotNullTest
@@ -91,4 +90,3 @@ namespace CciSharp.Test
         }
     }
 }
-#endif

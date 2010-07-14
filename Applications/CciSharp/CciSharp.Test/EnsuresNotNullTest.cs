@@ -4,25 +4,27 @@ using System.Linq;
 using System.Text;
 using Xunit;
 
-namespace CciSharp.Test {
-  public class EnsuresNotNullTest {
-    public static object ReturnsNull()
+namespace CciSharp.Test
+{
+    public class EnsuresNotNullTest
     {
-      return null;
-    }
+        public static object ReturnsNull()
+        {
+            return null;
+        }
 
-    [Fact]
-    public static void ReturnsNullThrows()
-    {
-      try
-      {
-        ReturnsNull();
-        Assert.True(false);
-      }
-      catch(Exception ex)
-      {
-        Console.WriteLine(ex);
-      }
+        [Fact]
+        public static void ReturnsNullThrows()
+        {
+            try
+            {
+                ReturnsNull();
+                Assert.True(false);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
     }
-  }
 }

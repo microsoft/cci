@@ -128,6 +128,7 @@ namespace CciSharp.Mutators
                 // 3# remove the lazy attribute
                 propertyDefinition.Attributes.Remove(lazyAttribute);
 
+                this.Owner.Host.Event(CcsEventLevel.Message,"lazy: {0}", propertyDefinition);
                 this.MutationCount++;
                 return propertyDefinition;
             }

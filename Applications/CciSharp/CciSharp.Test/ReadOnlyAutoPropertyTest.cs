@@ -3,26 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xunit;
+using System.ComponentModel;
 
 namespace CciSharp.Test
 {
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-    public sealed class ReadOnlyAttribute : Attribute
-    {
-    }
-
     public partial class ReadOnlyAutoPropertyTest
     {
         [Fact]
         public void CPropertyIsReadonly()
         {
-            Assert.False(typeof(CProperty).GetProperty("Value").CanWrite, "setter should be removed");
+            Assert.False(typeof(CProperty).GetProperty("Value").CanWrite,"setter should be removed");
         }
 
         [Fact]
         public void SPropertyIsReadonly()
         {
-            Assert.False(typeof(SProperty).GetProperty("Value").CanWrite, "setter should be removed");
+            Assert.False(typeof(SProperty).GetProperty("Value").CanWrite,"setter should be removed");
         }
 
         class CProperty
@@ -31,8 +27,12 @@ namespace CciSharp.Test
             {
                 this.Value = value;
             }
-            [ReadOnly]
-            public object Value { get; private set; }
+            [ReadOnly(true)]
+            public object Value
+            {
+                get;
+                private set;
+            }
         }
         class SProperty
         {
@@ -40,8 +40,12 @@ namespace CciSharp.Test
             {
                 this.Value = value;
             }
-            [ReadOnly]
-            public int Value { get; private set; }
+            [ReadOnly(true)]
+            public int Value
+            {
+                get;
+                private set;
+            }
         }
     }
 }

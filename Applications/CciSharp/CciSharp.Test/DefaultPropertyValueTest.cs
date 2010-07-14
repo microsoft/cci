@@ -20,7 +20,7 @@ namespace CciSharp.Test
             public int ValueGetPrivateSet { get; private set; }
             [DefaultValue(100)]
             public int ValueGetSet { get; set; }
-            [DefaultValue(1000), ReadOnly]
+            [DefaultValue(1000), ReadOnly(true)]
             public int ReadonlyValueGetPrivateSet { get; private set; }
         }
 
