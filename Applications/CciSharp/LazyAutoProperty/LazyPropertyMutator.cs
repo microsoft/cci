@@ -146,6 +146,7 @@ namespace CciSharp.Mutators
                 Contract.Requires(resultFieldDefinition != null);
                 Contract.Requires(resultInitializedFieldDefinition != null);
 
+                // create new method that holds the uncache method implementation
                 var uncachedGetter = new MethodDefinition();
                 uncachedGetter.Copy(getter, this.Host.InternFactory);
                 var name = getter.Name.Value;
@@ -153,6 +154,10 @@ namespace CciSharp.Mutators
                 uncachedGetter.Name = this.Host.NameTable.GetNameFor("Get" + name + "Uncached");
                 uncachedGetter.Locations.AddRange(getter.Locations);
                 uncachedGetter.Visibility = TypeMemberVisibility.Private;
+                // clone contracts as well
+                var getterContracts = this.contractProvider.GetMethodContractFor(getter);
+                if(getterContracts != null)
+                    this.contractProvider.AssociateMethodWithContract(uncachedGetter, new MethodContract(getterContracts));
 
                 // replace getter body
                 var body = new SourceMethodBody(this.Host, this.sourceLocationProvider)
