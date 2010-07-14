@@ -77,7 +77,10 @@
     <CcsPath>..\CciSharp\bin\$(Configuration)\</CcsPath>
   </PropertyGroup>
   <ItemGroup>
+    <!--
     <CcsMutatorAssemblies Include="..\EnsuresNotNull\bin\$(Configuration)\CciSharp.EnsuresNotNull.dll" />
+    -->
+    <CcsMutatorAssemblies Include="..\NotNull\bin\$(Configuration)\CciSharp.NotNull.dll" />
   </ItemGroup>
   <Import Project="..\CciSharp\CciSharp.targets" />
 </Project>

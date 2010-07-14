@@ -35,9 +35,7 @@ namespace CciSharp.Framework
 
             foreach (var a in attributes)
             {
-                var type = a.Type as INamedEntity;
-                if (type != null &&
-                    String.Equals(type.Name.Value, attributeName, StringComparison.Ordinal))
+                if (AttributeMatchesByName(a, attributeName))
                 {
                     attribute = a;
                     return true;
@@ -45,6 +43,16 @@ namespace CciSharp.Framework
             }
             attribute = null;
             return false;
+        }
+
+      /// <summary>
+      /// Returns true iff the name of the attribute <paramref name="a"/> is
+      /// equal to the given <paramref name="attributeName"/>.
+      /// </summary>
+        public static bool AttributeMatchesByName(ICustomAttribute a, string attributeName) {
+          var type = a.Type as INamedEntity;
+          if (type == null) return false;
+          return String.Equals(type.Name.Value, attributeName, StringComparison.Ordinal);
         }
 
         /// <summary>
