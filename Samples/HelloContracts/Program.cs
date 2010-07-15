@@ -55,10 +55,11 @@ namespace HelloContracts {
       }
       #endregion
 
+      var fileName = String.IsNullOrEmpty(options.assembly) ? options.GeneralArguments[0] : options.assembly;
+
       if (options.printContracts) {
         #region Collect and write contracts
         var host = new CodeContractAwareHostEnvironment(options.libpaths);
-        var fileName = String.IsNullOrEmpty(options.assembly) ? options.GeneralArguments[0] : options.assembly;
         IModule module = host.LoadUnitFrom(fileName) as IModule;
         if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
           Console.WriteLine("'{0}' is not a PE file containing a CLR module or assembly.", fileName);
@@ -74,9 +75,9 @@ namespace HelloContracts {
         var host = new PeReader.DefaultHost();
 
         // Read the Metadata Model from the PE file
-        var module = host.LoadUnitFrom(args[1]) as IModule;
+        var module = host.LoadUnitFrom(fileName) as IModule;
         if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-          Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
+          Console.WriteLine(fileName + " is not a PE file containing a CLR module or assembly.");
           return 1;
         }
 
