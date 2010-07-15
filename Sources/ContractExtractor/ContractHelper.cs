@@ -205,8 +205,23 @@ namespace Microsoft.Cci.MutableContracts {
       /// Converts the old value into a call to Contract.OldValue
       /// </summary>
       public override IExpression Visit(OldValue oldValue) {
-        var methodToCall = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Old,
-          IteratorHelper.GetSingletonEnumerable<ITypeReference>(oldValue.Type), this.host.InternFactory);
+
+        var mdef = this.contractProvider.ContractMethods.Old.ResolvedMethod;
+        var methodToCall = new Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference() {
+          CallingConvention = CallingConvention.Generic,
+          ContainingType = TypeDefinition.SelfInstance(mdef.ContainingTypeDefinition, this.host.InternFactory),
+          GenericArguments = new List<ITypeReference> { oldValue.Type },
+          GenericMethod = mdef,
+          InternFactory = this.host.InternFactory,
+          Name = mdef.Name,
+          Parameters = new List<IParameterTypeInformation>{ 
+            new ParameterTypeInformation { Type = oldValue.Type }
+          },
+          Type = oldValue.Type,
+        };
+
+        //var methodToCall = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Old,
+        //  IteratorHelper.GetSingletonEnumerable<ITypeReference>(oldValue.Type), this.host.InternFactory);
         var methodCall = new MethodCall() {
           Arguments = MkList(oldValue.Expression),
           IsStaticCall = true,
@@ -221,8 +236,19 @@ namespace Microsoft.Cci.MutableContracts {
       /// Converts the return value into a call to Contract.Result
       /// </summary>
       public override IExpression Visit(ReturnValue returnValue) {
-        var methodToCall = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Result,
-          IteratorHelper.GetSingletonEnumerable<ITypeReference>(returnValue.Type), this.host.InternFactory);
+
+        var mdef = this.contractProvider.ContractMethods.Result.ResolvedMethod;
+        var methodToCall = new Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference() {
+          CallingConvention = CallingConvention.Generic,
+          ContainingType = TypeDefinition.SelfInstance(mdef.ContainingTypeDefinition, this.host.InternFactory),
+          GenericArguments = new List<ITypeReference>{returnValue.Type},
+          GenericMethod = mdef,
+          InternFactory = this.host.InternFactory,
+          Name = mdef.Name,
+          Parameters = new List<IParameterTypeInformation>(),
+          Type = mdef.Type,
+        };
+
         var methodCall = new MethodCall() {
           IsStaticCall = true,
           MethodToCall = methodToCall,
