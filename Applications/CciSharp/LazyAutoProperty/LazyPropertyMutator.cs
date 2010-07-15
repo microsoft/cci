@@ -154,6 +154,8 @@ namespace CciSharp.Mutators
                 uncachedGetter.Name = this.Host.NameTable.GetNameFor("Get" + name + "Uncached");
                 uncachedGetter.Locations.AddRange(getter.Locations);
                 uncachedGetter.Visibility = TypeMemberVisibility.Private;
+                SourceMethodBody smb = (SourceMethodBody) uncachedGetter.Body;
+                smb.MethodDefinition = uncachedGetter;
                 // clone contracts as well
                 var getterContracts = this.contractProvider.GetMethodContractFor(getter);
                 if(getterContracts != null)
