@@ -379,6 +379,8 @@ namespace ILMutator {
         #endregion Emit operation along with any injection
 
       }
+      while (generator.InTryBody)
+        generator.EndTryBody();
       #endregion Pass 2: Emit each operation, along with labels
 
       #region Retrieve the operations (and the exception information) from the generator
