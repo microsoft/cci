@@ -2043,8 +2043,10 @@ namespace Microsoft.Cci {
           else
             r.TypeNamespace = this.GetStringIndex(TypeHelper.GetNamespaceName(nestedUnitNamespaceReference, NameFormattingOptions.None));
           r.Implementation = this.GetImplementationCodedIndex(nsRef);
-          if ((r.Implementation & 1) == 1)
+          if ((r.Implementation & 1) == 1) {
             r.Flags = TypeFlags.PrivateAccess|TypeFlags.ForwarderImplementation;
+            r.TypeDefId = 0;
+          }
         } else if ((neRef = exportedType as INestedTypeReference) != null) {
           r.Flags = TypeFlags.NestedPublicAccess;
           r.TypeName = this.GetStringIndex(GetMangledName(neRef));
