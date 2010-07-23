@@ -913,8 +913,8 @@ namespace Microsoft.Cci {
     /// Gives the alias for the type
     /// </summary>
     /// <value></value>
-    public IAliasForType/*?*/ AliasForType {
-      get { return null; }
+    public IAliasForType AliasForType {
+      get { return Dummy.AliasForType; }
     }
 
     /// <summary>

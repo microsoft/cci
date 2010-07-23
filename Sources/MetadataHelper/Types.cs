@@ -1398,7 +1398,7 @@ namespace Microsoft.Cci {
     #region ITypeReference Members
 
     public IAliasForType AliasForType {
-      get { return null; }
+      get { return Dummy.AliasForType; }
     }
 
     public uint InternedKey {
