@@ -206,22 +206,19 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       public override IExpression Visit(OldValue oldValue) {
 
-        var mdef = this.contractProvider.ContractMethods.Old.ResolvedMethod;
+        var mref = this.contractProvider.ContractMethods.Old;
         var methodToCall = new Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference() {
           CallingConvention = CallingConvention.Generic,
-          ContainingType = TypeDefinition.SelfInstance(mdef.ContainingTypeDefinition, this.host.InternFactory),
+          ContainingType = mref.ContainingType,
           GenericArguments = new List<ITypeReference> { oldValue.Type },
-          GenericMethod = mdef,
+          GenericMethod = mref,
           InternFactory = this.host.InternFactory,
-          Name = mdef.Name,
-          Parameters = new List<IParameterTypeInformation>{ 
-            new ParameterTypeInformation { Type = oldValue.Type }
+          Name = mref.Name,
+          Parameters = new List<IParameterTypeInformation>{
+            new ParameterTypeInformation { Type = oldValue.Type, }
           },
           Type = oldValue.Type,
         };
-
-        //var methodToCall = new GenericMethodInstanceReference(this.contractProvider.ContractMethods.Old,
-        //  IteratorHelper.GetSingletonEnumerable<ITypeReference>(oldValue.Type), this.host.InternFactory);
         var methodCall = new MethodCall() {
           Arguments = MkList(oldValue.Expression),
           IsStaticCall = true,
@@ -237,18 +234,17 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       public override IExpression Visit(ReturnValue returnValue) {
 
-        var mdef = this.contractProvider.ContractMethods.Result.ResolvedMethod;
+        var mref = this.contractProvider.ContractMethods.Result;
         var methodToCall = new Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference() {
           CallingConvention = CallingConvention.Generic,
-          ContainingType = TypeDefinition.SelfInstance(mdef.ContainingTypeDefinition, this.host.InternFactory),
-          GenericArguments = new List<ITypeReference>{returnValue.Type},
-          GenericMethod = mdef,
+          ContainingType = mref.ContainingType,
+          GenericArguments = new List<ITypeReference> { returnValue.Type },
+          GenericMethod = mref,
           InternFactory = this.host.InternFactory,
-          Name = mdef.Name,
+          Name = mref.Name,
           Parameters = new List<IParameterTypeInformation>(),
-          Type = mdef.Type,
+          Type = returnValue.Type,
         };
-
         var methodCall = new MethodCall() {
           IsStaticCall = true,
           MethodToCall = methodToCall,
