@@ -262,20 +262,20 @@ namespace CciSharp.Mutators
                 Contract.Ensures(resultFieldDefinition.Type == propertyDefinition.Type);
                 Contract.Ensures(resultInitializedFieldDefinition.Type == this.booleanType);
 
-                resultFieldDefinition = new FieldDefinition
-                {
-                    Type = propertyDefinition.Type,
-                    Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
+                resultFieldDefinition = new FieldDefinition {
+                  ContainingTypeDefinition = declaringType,
+                  Type = propertyDefinition.Type,
+                  Visibility = TypeMemberVisibility.Private,
+                  Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
                 declaringType.Fields.Add(resultFieldDefinition);
-                resultInitializedFieldDefinition = new FieldDefinition
-                {
-                    Type = booleanType,
-                    Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")
+                resultInitializedFieldDefinition = new FieldDefinition {
+                  ContainingTypeDefinition = declaringType,
+                  Type = booleanType,
+                  Visibility = TypeMemberVisibility.Private,
+                  Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")
                 };
                 resultInitializedFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultInitializedFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
