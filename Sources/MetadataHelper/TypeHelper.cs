@@ -67,41 +67,11 @@ namespace Microsoft.Cci {
     public static ClrOperandStackType ClrOperandStackTypeFor(ITypeReference typeReference)
       //^ ensures result >= ClrOperandStackType.Int32 && result <= ClrOperandStackType.Invalid;
     {
-      switch (typeReference.ResolvedType.TypeCode) {
-        case PrimitiveTypeCode.Boolean:
-        case PrimitiveTypeCode.Char:
-        case PrimitiveTypeCode.Int16:
-        case PrimitiveTypeCode.Int32:
-        case PrimitiveTypeCode.Int8:
-        case PrimitiveTypeCode.UInt16:
-        case PrimitiveTypeCode.UInt32:
-        case PrimitiveTypeCode.UInt8:
-          return ClrOperandStackType.Int32;
-
-        case PrimitiveTypeCode.Int64:
-        case PrimitiveTypeCode.UInt64:
-          return ClrOperandStackType.Int64;
-
-        case PrimitiveTypeCode.IntPtr:
-        case PrimitiveTypeCode.UIntPtr:
-          return ClrOperandStackType.NativeInt;
-
-        case PrimitiveTypeCode.Float32:
-        case PrimitiveTypeCode.Float64:
-          return ClrOperandStackType.Float;
-
-        case PrimitiveTypeCode.Reference:
-          return ClrOperandStackType.Reference;
-
-        case PrimitiveTypeCode.Pointer:
-          return ClrOperandStackType.Pointer;
-
-        case PrimitiveTypeCode.Invalid:
-          return ClrOperandStackType.Invalid;
-
-        default:
-          return ClrOperandStackType.Object;
-      }
+      var typeDefinition = typeReference.ResolvedType;
+      if (typeDefinition.IsEnum) //should only be true for types that can be resolved
+        return ClrOperandStackTypeFor(typeDefinition.UnderlyingType.TypeCode);
+      else
+        return ClrOperandStackTypeFor(typeReference.TypeCode);
     }
 
     /// <summary>
