@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -553,19 +553,21 @@ namespace Microsoft.Cci.UtilityDataStructures {
       out int numberOfBytesRead
     ) {
       byte* pStart = this.CurrentPointer + offset;
+      byte* pEnd = this.Buffer+this.Length;
+      if (pStart >= pEnd) { numberOfBytesRead = 0; return ""; }
       byte* pIter = pStart;
       StringBuilder sb = new StringBuilder();
       byte b = 0;
       for (; ; ) {
         b = *pIter++;
-        if (b == 0) break;
+        if (b == 0 || pIter == pEnd) break;
         if ((b & 0x80) == 0) {
           sb.Append((char)b);
           continue;
         }
         char ch;
         byte b1 = *pIter++;
-        if (b1 == 0) { //Dangling lead byte, do not decompose
+        if (b1 == 0 || pIter == pEnd) { //Dangling lead byte, do not decompose
           sb.Append((char)b);
           break;
         }
@@ -573,7 +575,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
           ch = (char)(((b & 0x1F) << 6) | (b1 & 0x3F));
         } else {
           byte b2 = *pIter++;
-          if (b2 == 0) { //Dangling lead bytes, do not decompose
+          if (b2 == 0 || pIter == pEnd) { //Dangling lead bytes, do not decompose
             sb.Append((char)((b << 8) | b1));
             break;
           }
@@ -582,7 +584,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
             ch32 = (uint)(((b & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F));
           else {
             byte b3 = *pIter++;
-            if (b3 == 0) { //Dangling lead bytes, do not decompose
+            if (b3 == 0 || pIter == pEnd) { //Dangling lead bytes, do not decompose
               sb.Append((char)((b << 8) | b1));
               sb.Append((char)b2);
               break;
