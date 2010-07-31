@@ -4036,13 +4036,18 @@ namespace Microsoft.Cci {
       writer.WriteUint(0x00004550); /* "PE\0\0" */
 
       //COFF Header 20 bytes
-      if (!module.Requires64bits) {
-        writer.WriteUshort(0x014c); //Machine = I386
-      } else {
-        if (module.RequiresAmdInstructionSet)
-          writer.WriteUshort(0x8664); //Machine = AMD64
-        else
-          writer.WriteUshort(0x0200); //Machine = IA64
+      if (module.Machine != Machine.Unknown)
+        writer.WriteUshort((ushort)(module.Machine));
+      else {
+        // Machine property not explicitly set (or set to Unknown.) Fallback to CCI behavior prior to adding IModule.Machine property
+        if (!module.Requires64bits) {
+          writer.WriteUshort((ushort)Machine.I386);
+        } else {
+          if (module.RequiresAmdInstructionSet)
+            writer.WriteUshort((ushort)Machine.AMD64);
+          else
+            writer.WriteUshort((ushort)Machine.IA64); //Machine = IA64
+        }
       }
       writer.WriteUshort((ushort)ntHeader.NumberOfSections);
       writer.WriteUint(ntHeader.TimeDateStamp);

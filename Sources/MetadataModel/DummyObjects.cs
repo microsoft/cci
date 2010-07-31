@@ -778,6 +778,10 @@ namespace Microsoft.Cci {
       get { return Guid.Empty; }
     }
 
+    public Machine Machine {
+      get { return Machine.Unknown; }
+    }
+
     public bool RequiresAmdInstructionSet {
       get { return false; }
     }
@@ -2741,6 +2745,10 @@ namespace Microsoft.Cci {
 
     public Guid PersistentIdentifier {
       get { return Guid.Empty; }
+    }
+
+    public Machine Machine {
+      get { return Machine.Unknown; }
     }
 
     public bool RequiresAmdInstructionSet {

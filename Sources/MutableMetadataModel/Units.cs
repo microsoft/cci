@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -83,7 +83,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public string Culture {
       get { return this.culture; }
-      set { this.culture = value; }
+      set { this.culture = value; this.assemblyIdentity = null; }
     }
     string culture;
 
@@ -140,6 +140,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// An indication of the location where the assembly is or will be stored. This need not be a file system path and may be empty.
+    /// The interpretation depends on the ICompilationHostEnviroment instance used to resolve references to this unit.
+    /// </summary>
+    /// <value></value>
+    public override string Location {
+      get { return base.Location; }
+      set { base.Location = value; this.assemblyIdentity = null; }
+    }
+
+    /// <summary>
     /// A list of the modules that constitute the assembly.
     /// </summary>
     /// <value></value>
@@ -169,13 +179,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// The name of the assembly.
+    /// </summary>
+    /// <value></value>
+    public override IName Name {
+      get { return base.Name; }
+      set { base.Name = value; this.assemblyIdentity = null; }
+    }
+
+    /// <summary>
     /// The public part of the key used to encrypt the SHA1 hash over the persisted form of this assembly . Empty if not specified.
     /// This value is used by the loader to decrypt HashValue which it then compares with a freshly computed hash value to verify the
     /// integrity of the assembly.
     /// </summary>
     public IEnumerable<byte> PublicKey {
       get { return this.publicKey; }
-      set { this.publicKey = value; }
+      set { this.publicKey = value; this.assemblyIdentity = null; }
     }
     IEnumerable<byte> publicKey;
 
@@ -205,7 +224,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public Version Version {
       get { return this.version; }
-      set { this.version = value; }
+      set { this.version = value; this.assemblyIdentity = null; }
     }
     Version version;
 
@@ -494,6 +513,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.moduleAttributes = new List<ICustomAttribute>();
       this.moduleReferences = new List<IModuleReference>();
       this.persistentIdentifier = Guid.NewGuid();
+      this.machine = Machine.Unknown;
       this.requiresAmdInstructionSet = false;
       this.requires32bits = false;
       this.requires64bits = false;
@@ -535,6 +555,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.moduleAttributes = new List<ICustomAttribute>(module.ModuleAttributes);
       this.moduleReferences = new List<IModuleReference>(module.ModuleReferences);
       this.persistentIdentifier = Guid.NewGuid();
+      this.machine = module.Machine;
       this.requiresAmdInstructionSet = module.RequiresAmdInstructionSet;
       this.requires32bits = module.Requires32bits;
       this.requires64bits = module.Requires64bits;
@@ -668,6 +689,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     byte linkerMinorVersion;
 
     /// <summary>
+    /// An indication of the location where the assembly is or will be stored. This need not be a file system path and may be empty.
+    /// The interpretation depends on the ICompilationHostEnviroment instance used to resolve references to this unit.
+    /// </summary>
+    /// <value></value>
+    public override string Location {
+      get { return base.Location; }
+      set { base.Location = value; this.moduleIdentity = null; }
+    }
+
+    /// <summary>
     /// The first part of a two part version number indicating the version of the format used to persist this module. For example, the 1 in 1.0.
     /// </summary>
     /// <value></value>
@@ -718,6 +749,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<IModuleReference> moduleReferences;
 
     /// <summary>
+    /// The name of the module.
+    /// </summary>
+    /// <value></value>
+    public override IName Name {
+      get { return base.Name; }
+      set { base.Name = value; this.moduleIdentity = null; }
+    }
+
+    /// <summary>
     /// A globally unique persistent identifier for this module.
     /// </summary>
     /// <value></value>
@@ -726,6 +766,17 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.persistentIdentifier = value; }
     }
     Guid persistentIdentifier;
+
+    /// <summary>
+    /// Specifies the target CPU. 
+    /// </summary>
+    /// <value></value>
+    public Machine Machine {
+      get { return this.machine; }
+      set { this.machine = value; }
+    }
+    Machine machine;
+
 
     /// <summary>
     /// If set, the module contains instructions or assumptions that are specific to the AMD 64 bit instruction set. Setting this flag to
@@ -1108,7 +1159,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The interpretation depends on the ICompilationHostEnviroment instance used to resolve references to this unit.
     /// </summary>
     /// <value></value>
-    public string Location {
+    public virtual string Location {
       get { return this.location; }
       set { this.location = value; }
     }

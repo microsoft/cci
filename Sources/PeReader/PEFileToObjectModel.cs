@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -438,6 +438,12 @@ namespace Microsoft.Cci.MetadataReader {
     internal byte MetadataFormatMinorVersion {
       get {
         return this.PEFileReader.MetadataTableHeader.MinorVersion;
+      }
+    }
+
+    internal Machine Machine {
+      get {
+        return this.PEFileReader.Machine;
       }
     }
 
@@ -3700,6 +3706,8 @@ namespace Microsoft.Cci.MetadataReader {
           return this.PEFileToObjectModel.SystemObject;
         case ElementType.String:
           return this.PEFileToObjectModel.SystemString;
+        case ElementType.ByReference:
+          return this.GetModuleManagedPointerType(0xFFFFFFFF);
         case ElementType.Pointer:
           return this.GetModulePointerType(0xFFFFFFFF);
         case ElementType.Array:

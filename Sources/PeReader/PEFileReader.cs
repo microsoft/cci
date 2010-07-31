@@ -2608,16 +2608,23 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         return this.OptionalHeaderStandardFields.MinorLinkerVersion;
       }
     }
+
+    internal Machine Machine {
+      get {
+        return this.COFFFileHeader.Machine;
+      }
+    }
+
     internal bool RequiresAmdInstructionSet {
       get {
-        return this.COFFFileHeader.Machine == Machine.AMD64;
+        return this.COFFFileHeader.Machine == Microsoft.Cci.Machine.AMD64;
       }
     }
     internal bool Requires64Bits {
       get {
         return this.OptionalHeaderStandardFields.PEMagic == PEMagic.PEMagic64
-          || this.COFFFileHeader.Machine == Machine.AMD64
-          || this.COFFFileHeader.Machine == Machine.IA64;
+          || this.COFFFileHeader.Machine == Microsoft.Cci.Machine.AMD64
+          || this.COFFFileHeader.Machine == Microsoft.Cci.Machine.IA64;
       }
     }
     internal ulong SizeOfHeapCommit {
