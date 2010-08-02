@@ -486,9 +486,8 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Specifies the target CPU. 
     /// </summary>
-    public Machine Machine
-    {
-      get { return this.containingAssembly.Machine; }
+    public Machine Machine {
+      get { return Machine.Unknown; } //TODO: get from compilation host
     }
 
     /// <summary>
