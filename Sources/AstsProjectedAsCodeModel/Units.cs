@@ -484,6 +484,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Specifies the target CPU. 
+    /// </summary>
+    public Machine Machine
+    {
+      get { return this.containingAssembly.Machine; }
+    }
+
+    /// <summary>
     /// The first part of a two part version number indicating the version of the format used to persist this module. For example, the 1 in 1.0.
     /// </summary>
     public byte MetadataFormatMajorVersion {
