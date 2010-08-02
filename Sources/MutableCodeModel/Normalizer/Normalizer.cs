@@ -1099,7 +1099,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         Type = currentField.Type
       };
       IExpression returnExpression;
-      if (TypeHelper.TypesAreAssignmentCompatible(iteratorClosure.ElementType.ResolvedType, this.host.PlatformType.SystemObject.ResolvedType)) {
+      if (!iteratorClosure.ElementType.IsValueType && TypeHelper.TypesAreAssignmentCompatible(iteratorClosure.ElementType.ResolvedType, this.host.PlatformType.SystemObject.ResolvedType)) {
         returnExpression = thisDotCurr;
       } else {
         Conversion convertion = new Conversion() {
