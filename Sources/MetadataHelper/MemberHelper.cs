@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -200,6 +200,7 @@ namespace Microsoft.Cci {
         }
       }
     }
+
 
     /// <summary>
     /// Returns the method from the closest base class that is overridden by the given method.
@@ -909,7 +910,7 @@ namespace Microsoft.Cci {
       }
       sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
       if (def != null && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
-        if (def.IsOut || def.IsByReference) sb.Append("@");
+        if (def.IsByReference) sb.Append("@");
       }
       if (def != null && (formattingOptions & NameFormattingOptions.ParameterName) != 0) {
         sb.Append(" ");
