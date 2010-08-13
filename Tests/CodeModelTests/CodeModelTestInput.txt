@@ -364,7 +364,7 @@ namespace CodeModelTestInput
 
         public System.Collections.Generic.IEnumerable<int> Method19(int x)
         {
-            <i>5__4 = 0;
+            int <i>5__4 = 0;
             goto IL_0101;
         IL_0043:
             if ((<i>5__4 == 8))
@@ -520,7 +520,7 @@ namespace CodeModelTestInput
             {
                 Microsoft.Contracts.Contract.Requires((s != null));
                 Microsoft.Contracts.Contract.Ensures((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>() != null));
-                __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>();
+                System.Collections.Generic.IEnumerable<string> __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<string>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<string>(__temp_2, delegate (string s1) {
                     bool local_0 = (s1 != null);
                     return local_0;
@@ -564,10 +564,10 @@ namespace CodeModelTestInput
                     return local_0;
 
                 }));
-                <>7__wrapf = input.GetEnumerator();
+                System.Collections.Generic.IEnumerator<T> <>7__wrapf = input.GetEnumerator();
                 goto IL_00c4;
             IL_0095:
-                <t>5__e = <>7__wrapf.Current.get();
+                T <t>5__e = <>7__wrapf.Current.get();
                 yield return <t>5__e;
 
             IL_00c4:
@@ -586,10 +586,10 @@ namespace CodeModelTestInput
                     return local_0;
 
                 }));
-                <>7__wrap16 = input.GetEnumerator();
+                System.Collections.Generic.IEnumerator<T> <>7__wrap16 = input.GetEnumerator();
                 goto IL_0095;
             IL_0064:
-                <t>5__15 = <>7__wrap16.Current.get();
+                T <t>5__15 = <>7__wrap16.Current.get();
                 yield return <t>5__15;
 
             IL_0095:
@@ -608,16 +608,16 @@ namespace CodeModelTestInput
                     return local_0;
 
                 }));
-                __temp_3 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<int>>();
+                System.Collections.Generic.IEnumerable<int> __temp_3 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<int>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<int>(__temp_3, delegate (int y) {
                     bool local_0 = (y > 0);
                     return local_0;
 
                 }));
-                <>7__wrap21 = inputArray.GetEnumerator();
+                System.Collections.Generic.IEnumerator<int> <>7__wrap21 = inputArray.GetEnumerator();
                 goto IL_00f6;
             IL_00b7:
-                <i>5__20 = <>7__wrap21.Current.get();
+                int <i>5__20 = <>7__wrap21.Current.get();
                 yield return ((max - <i>5__20) - 1);
 
             IL_00f6:
@@ -661,12 +661,12 @@ namespace CodeModelTestInput
                     return local_0;
 
                 }));
-                <>7__wrap31 = input.GetEnumerator();
+                System.Collections.Generic.IEnumerator<T> <>7__wrap31 = input.GetEnumerator();
                 goto IL_0104;
                 {
                 IL_00ba:
-                    <t>5__30 = <>7__wrap31.Current.get();
-                    local_2 = <t>5__30;
+                    T <t>5__30 = <>7__wrap31.Current.get();
+                    T local_2 = <t>5__30;
                     yield return local_2.IncrementBy(y);
 
                 IL_0104:
@@ -701,7 +701,7 @@ namespace CodeModelTestInput
             {
                 Microsoft.Contracts.Contract.Requires((((object)t) != null));
                 Microsoft.Contracts.Contract.Ensures((Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>() != null));
-                __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
+                System.Collections.Generic.IEnumerable<T> __temp_2 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_2, delegate (T s1) {
                     bool local_0 = (((object)s1) != null);
                     return local_0;
@@ -728,22 +728,22 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T> Test1d(System.Collections.Generic.IEnumerable<T> input)
             {
                 Microsoft.Contracts.Contract.Requires((input != null));
-                __temp_3 = input;
+                System.Collections.Generic.IEnumerable<T> __temp_3 = input;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(__temp_3, delegate (T s1) {
                     bool local_0 = (((object)s1) != null);
                     return local_0;
 
                 }));
-                __temp_4 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
+                System.Collections.Generic.IEnumerable<T> __temp_4 = Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>();
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_4, delegate (T s1) {
                     bool local_0 = (((object)s1) != null);
                     return local_0;
 
                 }));
-                <>7__wrap43 = input.GetEnumerator();
+                System.Collections.Generic.IEnumerator<T> <>7__wrap43 = input.GetEnumerator();
                 goto IL_00ea;
             IL_00bb:
-                <t>5__42 = <>7__wrap43.Current.get();
+                T <t>5__42 = <>7__wrap43.Current.get();
                 yield return <t>5__42;
 
             IL_00ea:
@@ -775,10 +775,10 @@ namespace CodeModelTestInput
                     return local_0;
 
                 }));
-                <>7__wrap52 = ts.GetEnumerator();
+                System.Collections.Generic.IEnumerator<T1> <>7__wrap52 = ts.GetEnumerator();
                 goto IL_00c8;
             IL_0099:
-                <t1>5__51 = <>7__wrap52.Current.get();
+                T1 <t1>5__51 = <>7__wrap52.Current.get();
                 yield return <t1>5__51;
 
             IL_00c8:

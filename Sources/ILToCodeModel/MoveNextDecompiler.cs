@@ -338,6 +338,13 @@ namespace Microsoft.Cci.ILToCodeModel {
           var thisReference = localOrParameter as IThisReference;
           if (thisReference != null)
             return thisReference;
+          LocalDefinition ld = localOrParameter as LocalDefinition;
+          if (ld != null) {
+            // When the locals were created, they were given the type of the corresponding field.
+            // That type might contain references to generic type parameters of the MoveNext method's
+            // containing type and they also need to get replaced with generic method type parameters.
+            ld.Type = this.Visit(ld.Type);
+          }
           boundExpression.Definition = localOrParameter;
           boundExpression.Instance = null;
           return boundExpression;
@@ -465,16 +472,13 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (assignment != null) {
             var localDefinition = assignment.Target.Definition as ILocalDefinition;
             if (localDefinition != null && (!this.locals.ContainsKey(localDefinition))) {
-              var createObjectInstance = assignment.Source as CreateObjectInstance;
-              if (createObjectInstance != null && IsCompilerGeneratedClass(createObjectInstance.MethodToCall.ContainingType)) {
-                var localDeclarationStatement = new LocalDeclarationStatement() {
-                  LocalVariable = localDefinition,
-                  InitialValue = assignment.Source
-                };
-                localDeclarationStatement.Locations.AddRange(expressionStatement.Locations);
-                this.locals[localDefinition] = true;
-                statements[i] = localDeclarationStatement;
-              }
+              var localDeclarationStatement = new LocalDeclarationStatement() {
+                LocalVariable = localDefinition,
+                InitialValue = assignment.Source
+              };
+              localDeclarationStatement.Locations.AddRange(expressionStatement.Locations);
+              this.locals[localDefinition] = true;
+              statements[i] = localDeclarationStatement;
             }
             continue;
           }

@@ -5,7 +5,8 @@ using System.Text;
 namespace RoundtripTests.TestData.source {
   class TestClass1<T> {
     T t;
-    public TestClass1(T t): base() {
+    public TestClass1(T t)
+      : base() {
       this.t = t;
     }
     public void Print() {
@@ -20,6 +21,15 @@ namespace RoundtripTests.TestData.source {
       MethodCallTest2(this.t, ref t1, out t2);
       Console.WriteLine("Back from method call test2, we have t2 as {0}.", t2);
       Console.WriteLine("I have {0}.", this.t);
+      int[] A = new int[] { 3, 4, 5 };
+      int[] B = new int[] { 6, 7 };
+      var e = Iterator(A, B);
+      var s = "";
+      while (e.MoveNext()) {
+        var x = e.Current;
+        s += x;
+      }
+      Console.WriteLine("Iterator returned {0}", s);
     }
     private bool IsSame(T t) {
       return true;
@@ -44,7 +54,7 @@ namespace RoundtripTests.TestData.source {
         default: Console.WriteLine("Switch test hits default case we have {0}.", this.t);
           break;
       }
-      int y=0;
+      int y = 0;
       int x = 0;
     }
     /// <summary>
@@ -73,12 +83,12 @@ namespace RoundtripTests.TestData.source {
     /// Test arithmetics
     /// </summary>
     private void ExpressionTest2() {
-      byte a=1, b=2;
-      int x=3, y=4;
-      long l1=1L, l2=2L;
-      float f1=3.0F, f2=1.0F;
-      double d1=3.0, d2=3.0;
-      char c1='1', c2='1';
+      byte a = 1, b = 2;
+      int x = 3, y = 4;
+      long l1 = 1L, l2 = 2L;
+      float f1 = 3.0F, f2 = 1.0F;
+      double d1 = 3.0, d2 = 3.0;
+      char c1 = '1', c2 = '1';
       var r = (a + b) + (a + x) - (l1 - l2) * (f1 / f2) + (d1 * x) + (c1 / c2) + (a - d1);
       Console.WriteLine("Test arithmetic. Result is {1}. We have {0}.", this.t, r);
       r = +x;
@@ -94,7 +104,7 @@ namespace RoundtripTests.TestData.source {
       r = x | 0xFFFF;
       r = x & 0xFFFF;
       r = x % 2;
-      if ((x>0) || (x>= y) && !(x<3) && (x<=3) || (x ==0) )
+      if ((x > 0) || (x >= y) && !(x < 3) && (x <= 3) || (x == 0))
         x++;
       else
         x--;
@@ -134,7 +144,7 @@ namespace RoundtripTests.TestData.source {
     /// Test generic method parameters
     /// </summary>
     private void MethodCallTest1<T1>(T1 t) {
-      T1 [] arr = new T1[1] {t};
+      T1[] arr = new T1[1] { t };
       Console.WriteLine("Test array whose element type is generic method parameter. We have {0}.", arr[0]);
     }
 
@@ -151,6 +161,14 @@ namespace RoundtripTests.TestData.source {
     //  var b = list.TrueForAll((int t1) => t1==t);
     //  Console.WriteLine("Test anonymous delegate, b = {0}.", b);
     //}
+
+    public IEnumerator<U> Iterator<U>(IEnumerable<U> first, IEnumerable<U> second) {
+      foreach (var x in first)
+        yield return x;
+      foreach (var x in second)
+        yield return x;
+    }
+
   }
   class C {
     public static void Main(string[] args) {

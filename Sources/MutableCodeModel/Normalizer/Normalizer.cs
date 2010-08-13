@@ -292,13 +292,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <remarks>
     /// Pseudo code:
-    /// iteratorClosureLocal = new Closure(-2);
+    /// iteratorClosureLocal = new Closure(0);
     /// iteratorClosureLocal.field = parameter; // for each parameter including this. 
     /// return iteratorClosureLocal;
     /// </remarks>
     private IBlockStatement CreateNewIteratorMethodBody(BlockStatement block, IteratorClosureInformation iteratorClosure) {
       BlockStatement result = new BlockStatement();
-      // iteratorClosureLocal = new IteratorClosure(-2);
+      // iteratorClosureLocal = new IteratorClosure(0);
       LocalDefinition localDefinition = new LocalDefinition() {
         Name = this.host.NameTable.GetNameFor("iteratorClosureLocal"),
         Type = GetClosureTypeReferenceFromIterator(iteratorClosure),
@@ -309,7 +309,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         Locations = block.Locations, 
         Type = localDefinition.Type
       };
-      createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = -2, Type = this.host.PlatformType.SystemInt32 });
+      createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
       LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { 
         InitialValue = createObjectInstance, 
         LocalVariable = localDefinition
