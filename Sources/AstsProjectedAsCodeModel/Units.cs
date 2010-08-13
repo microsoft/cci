@@ -572,6 +572,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// If set, the module must include a machine code stub that transfers control to the virtual execution system.
+    /// </summary>
+    public virtual bool RequiresStartupStub {
+      get { return true; } //TODO: provide an option for setting this
+    }
+
+    /// <summary>
     /// The size of the virtual memory initially committed for the initial process heap.
     /// </summary>
     public virtual ulong SizeOfHeapCommit {
