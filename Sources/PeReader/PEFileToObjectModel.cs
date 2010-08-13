@@ -453,6 +453,12 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
+    internal bool RequiresStartupStub {
+      get {
+        return this.PEFileReader.RequiresStartupStub;
+      }
+    }
+
     internal bool Requires64Bits {
       get {
         return this.PEFileReader.Requires64Bits;

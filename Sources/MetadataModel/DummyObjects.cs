@@ -786,6 +786,10 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    public bool RequiresStartupStub {
+      get { return false; }
+    }
+
     public bool Requires32bits {
       get { return false; }
     }
@@ -2752,6 +2756,10 @@ namespace Microsoft.Cci {
     }
 
     public bool RequiresAmdInstructionSet {
+      get { return false; }
+    }
+
+    public bool RequiresStartupStub {
       get { return false; }
     }
 

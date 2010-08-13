@@ -515,6 +515,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.persistentIdentifier = Guid.NewGuid();
       this.machine = Machine.Unknown;
       this.requiresAmdInstructionSet = false;
+      this.requiresStartupStub = false;
       this.requires32bits = false;
       this.requires64bits = false;
       this.sizeOfHeapCommit = 0x1000;
@@ -557,6 +558,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.persistentIdentifier = Guid.NewGuid();
       this.machine = module.Machine;
       this.requiresAmdInstructionSet = module.RequiresAmdInstructionSet;
+      this.requiresStartupStub = module.RequiresStartupStub;
       this.requires32bits = module.Requires32bits;
       this.requires64bits = module.Requires64bits;
       this.sizeOfHeapCommit = module.SizeOfHeapCommit;
@@ -788,6 +790,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.requiresAmdInstructionSet = value; }
     }
     bool requiresAmdInstructionSet;
+
+    /// <summary>
+    /// If set, the module must include a machine code stub that transfers control to the virtual execution system.
+    /// </summary>
+    public bool RequiresStartupStub {
+      get { return this.requiresStartupStub; }
+      set { this.requiresStartupStub = value; }
+    }
+    bool requiresStartupStub;
 
     /// <summary>
     /// If set, the module contains instructions that assume a 32 bit instruction set. For example it may depend on an address being 32 bits.

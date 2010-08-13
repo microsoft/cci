@@ -393,6 +393,11 @@ namespace Microsoft.Cci {
     bool RequiresAmdInstructionSet { get; }
 
     /// <summary>
+    /// If set, the module must include a machine code stub that transfers control to the virtual execution system.
+    /// </summary>
+    bool RequiresStartupStub { get; }
+
+    /// <summary>
     /// If set, the module contains instructions that assume a 32 bit instruction set. For example it may depend on an address being 32 bits.
     /// This may be true even if the module contains only IL instructions because of PlatformInvoke and COM interop.
     /// </summary>

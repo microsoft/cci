@@ -2620,6 +2620,13 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         return this.COFFFileHeader.Machine == Microsoft.Cci.Machine.AMD64;
       }
     }
+
+    internal bool RequiresStartupStub {
+      get {
+        return this.OptionalHeaderStandardFields.RVAOfEntryPoint != 0;
+      }
+    }
+
     internal bool Requires64Bits {
       get {
         return this.OptionalHeaderStandardFields.PEMagic == PEMagic.PEMagic64
@@ -2627,6 +2634,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
           || this.COFFFileHeader.Machine == Microsoft.Cci.Machine.IA64;
       }
     }
+
     internal ulong SizeOfHeapCommit {
       get
         //^ requires this.ReaderState >= ReaderState.PEFile;

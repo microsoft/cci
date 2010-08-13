@@ -368,6 +368,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.RequiresAmdInstructionSet; }
     }
 
+    bool IModule.RequiresStartupStub {
+      get { return this.PEFileToObjectModel.RequiresStartupStub; }
+    }
+
     bool IModule.Requires32bits {
       get { return (this.Cor20Flags & COR20Flags.Bit32Required) == COR20Flags.Bit32Required; }
     }
