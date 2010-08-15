@@ -5,8 +5,7 @@ using System.Text;
 namespace RoundtripTests.TestData.source {
   class TestClass1<T> {
     T t;
-    public TestClass1(T t)
-      : base() {
+    public TestClass1(T t): base() {
       this.t = t;
     }
     public void Print() {
@@ -30,6 +29,14 @@ namespace RoundtripTests.TestData.source {
         s += x;
       }
       Console.WriteLine("Iterator returned {0}", s);
+
+      // Test to make sure that loops within anonymous delegates are properly preserved
+      Console.Write("LoopInAnonymousDelegate: ");
+      DoActionOnThree(
+        i => { for (int j = 0; j < i; j++) Console.Write(j.ToString()); }
+      );
+      Console.WriteLine();
+      
     }
     private bool IsSame(T t) {
       return true;
@@ -54,7 +61,7 @@ namespace RoundtripTests.TestData.source {
         default: Console.WriteLine("Switch test hits default case we have {0}.", this.t);
           break;
       }
-      int y = 0;
+      int y=0;
       int x = 0;
     }
     /// <summary>
@@ -83,12 +90,12 @@ namespace RoundtripTests.TestData.source {
     /// Test arithmetics
     /// </summary>
     private void ExpressionTest2() {
-      byte a = 1, b = 2;
-      int x = 3, y = 4;
-      long l1 = 1L, l2 = 2L;
-      float f1 = 3.0F, f2 = 1.0F;
-      double d1 = 3.0, d2 = 3.0;
-      char c1 = '1', c2 = '1';
+      byte a=1, b=2;
+      int x=3, y=4;
+      long l1=1L, l2=2L;
+      float f1=3.0F, f2=1.0F;
+      double d1=3.0, d2=3.0;
+      char c1='1', c2='1';
       var r = (a + b) + (a + x) - (l1 - l2) * (f1 / f2) + (d1 * x) + (c1 / c2) + (a - d1);
       Console.WriteLine("Test arithmetic. Result is {1}. We have {0}.", this.t, r);
       r = +x;
@@ -104,7 +111,7 @@ namespace RoundtripTests.TestData.source {
       r = x | 0xFFFF;
       r = x & 0xFFFF;
       r = x % 2;
-      if ((x > 0) || (x >= y) && !(x < 3) && (x <= 3) || (x == 0))
+      if ((x>0) || (x>= y) && !(x<3) && (x<=3) || (x ==0) )
         x++;
       else
         x--;
@@ -144,7 +151,7 @@ namespace RoundtripTests.TestData.source {
     /// Test generic method parameters
     /// </summary>
     private void MethodCallTest1<T1>(T1 t) {
-      T1[] arr = new T1[1] { t };
+      T1 [] arr = new T1[1] {t};
       Console.WriteLine("Test array whose element type is generic method parameter. We have {0}.", arr[0]);
     }
 
@@ -168,6 +175,11 @@ namespace RoundtripTests.TestData.source {
       foreach (var x in second)
         yield return x;
     }
+
+    public void DoActionOnThree(Action<int> action) {
+      action(3);
+    }
+
 
   }
   class C {

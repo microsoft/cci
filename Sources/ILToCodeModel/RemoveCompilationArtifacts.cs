@@ -232,7 +232,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       anonDel.ReturnType = closureMethod.Type;
       anonDel.Type = createDelegateInstance.Type;
 
+      var savedReferencedLabels = this.referencedLabels;
+      this.referencedLabels = null;
       var result = this.Visit(anonDel);
+      this.referencedLabels = savedReferencedLabels;
 
       if (this.sourceMethodBody.MethodDefinition.IsGeneric) {
         if (unspecializedClosureMethod.IsGeneric)
