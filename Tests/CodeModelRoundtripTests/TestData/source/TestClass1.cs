@@ -36,7 +36,14 @@ namespace RoundtripTests.TestData.source {
         i => { for (int j = 0; j < i; j++) Console.Write(j.ToString()); }
       );
       Console.WriteLine();
-      
+
+      // Test for nested closures
+      NestedClosure<int, string>(new List<int> { 3, 4, 5 },
+                      i => { var xs = new List<string>(); for (int j = 0; j < i; j++) xs.Add(i.ToString()); return xs; },
+                      ncs => Console.WriteLine(ncs)
+                     );
+
+
     }
     private bool IsSame(T t) {
       return true;
@@ -179,6 +186,16 @@ namespace RoundtripTests.TestData.source {
     public void DoActionOnThree(Action<int> action) {
       action(3);
     }
+
+    public static void NestedClosure<NC1, NC2>(
+                    List<NC1> ts,
+                    Func<NC1, List<NC2>> generateListOfUFromT,
+                    Action<NC2> actionOnU) {
+      ts.ForEach(outerElt =>
+           generateListOfUFromT(outerElt).ForEach(innerElt => actionOnU(innerElt))
+           );
+    }
+
 
 
   }

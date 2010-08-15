@@ -23,7 +23,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// NOTE: It must be instantiated for each body it visits, either an anonymous
   /// delegate or the original method body.
   /// </summary>  
-  internal class InjectClosureFields : CodeAndContractMutator {
+  internal class InjectClosureFields : CodeMutator {
 
     #region Fields
 
@@ -115,7 +115,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping,
       Dictionary<IAnonymousDelegate, MethodDefinition> lambda2method
       )
-      : base(host, true, sourceLocationProvider, null) {
+      : base(host, true, sourceLocationProvider) {
       this.method = method;
       this.classList = classList;
       this.nestingDepth = index;
@@ -164,7 +164,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Need to possibly instantiate "closure" because outer closure fields
       // will be generic *if* (and only if) outermost closure class is generic.
       var k = this.GetSelfReferenceForPrivateHelperTypes(closure).InternedKey;
-      foreach (var closureField in this.outerClosures) {
+      for (int i = this.outerClosures.Count - 1; 0 <= i; i--){
+        var closureField = this.outerClosures[i];
         boundExpression.Definition = this.GetSelfReference(closureField);
         if (closureField.Type.InternedKey == k) {
           boundExpression.Type = this.GetSelfReferenceForPrivateHelperTypes(closure);
@@ -273,6 +274,38 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.lambda2method
         );
       block = bodyFixer.Visit(block);
+
+      // For all methods except for the one in the innermost closure class,
+      // inject a preamble that creates an instance of the next inner closure
+      // class and stores the instance in a local variable. The preamble also
+      // stores any parameters of the method that have been captured in that instance:
+      //   local := new NestedClosure();
+      //   local.p := p; // for each parameter p that is captured
+      // NOTE: Can't make this the override for Visit(IBlockStatement) because
+      // if the decompiler isn't perfect --- and who is? --- then there may be
+      // nested blocks, but this should be done only for the top-level block.
+      if (bodyFixer.nestedClosure != null) {
+        var result2 = block as BlockStatement;
+        if (result2 != null) { // result2 is just an alias for result
+          var inits = new List<IStatement>();
+          var s = bodyFixer.ConstructClosureInstance(bodyFixer.closureLocal, bodyFixer.nestedClosure);
+          inits.Add(s);
+          BoundField boundField;
+
+          inits.Add(InitializeOuterClosurePointer(method, bodyFixer.closureLocal, bodyFixer.outerClosures[nestingDepth], closureClass));
+
+          // if a parameter was captured, assign its value to the corresponding field
+          // in the closure class
+          foreach (var p in method.Parameters) {
+            if (fieldForCapturedLocalOrParameter.TryGetValue(p, out boundField)) {
+              s = bodyFixer.InitializeBoundFieldFromParameter(boundField, p);
+              inits.Add(s);
+            }
+          }
+          result2.Statements.InsertRange(0, inits);
+        }
+      }
+
       var result = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
       result.Block = block;
       result.IsNormalized = true;
@@ -353,6 +386,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = fieldRef, Type = parameter.Type };
       var boundParameter = new BoundExpression() { Definition = parameter, Type = parameter.Type };
       var assignment = new Assignment() { Target = target, Source = boundParameter, Type = parameter.Type };
+      return new ExpressionStatement() { Expression = assignment };
+    }
+
+    private IStatement InitializeOuterClosurePointer(IMethodDefinition method, LocalDefinition closureLocal, FieldDefinition outerClosure, INestedTypeDefinition currentClass) {
+      var currentClosureLocalBinding = new BoundExpression() { Definition = closureLocal, Type = closureLocal.Type };
+      var tmp = this.method;
+      this.method = method;
+
+      var fieldRef = GetSelfReference(outerClosure);
+      var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = fieldRef, Type = currentClass };
+      var thisRef = new ThisReference() {
+        Type = this.GetSelfReferenceForPrivateHelperTypes(currentClass),
+//        Type = currentClass,
+      };
+      var assignment = new Assignment() { Target = target, Source = thisRef, Type = currentClass };
+      this.method = tmp;
       return new ExpressionStatement() { Expression = assignment };
     }
 
@@ -534,11 +583,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       thisRef.Type = this.GetSelfReferenceForPrivateHelperTypes(closure);
       var boundExpression = new BoundExpression();
       boundExpression.Instance = thisRef;
-      for (int i = this.nestingDepth - 1; 0 < i; i--) {
-        boundExpression.Definition = this.GetSelfReference(this.outerClosures[i]);
-        var be = new BoundExpression();
-        be.Instance = boundExpression;
-        boundExpression = be;
+      if (this.nestingDepth > 1) {
+        for (int i = this.nestingDepth - 1; 0 < i; i--) {
+          boundExpression.Definition = this.GetSelfReference(this.outerClosures[i]);
+          var be = new BoundExpression();
+          be.Instance = boundExpression;
+          boundExpression = be;
+        }
       }
       boundExpression.Definition = this.GetSelfReference(f.Field);
       return boundExpression;

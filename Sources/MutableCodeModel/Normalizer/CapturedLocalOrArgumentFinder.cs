@@ -226,19 +226,17 @@ namespace Microsoft.Cci.MutableCodeModel {
         closureClass = (NestedTypeDefinition)this.classList[nestingDepth];
       } else {
         closureClass = this.CreateClosureClass(savedCurrentClosureClass == null);
-        // If this is not the outermost closure class, then create a field
-        // that methods in this closure class can use to access fields in
+        // Create a field that methods in this closure class can use to access fields in
         // enclosing closure classes.
-        if (savedCurrentClosureClass != null) {
-          var outerClosureField = new FieldDefinition() {
-            ContainingTypeDefinition = closureClass,
-            Name = this.host.NameTable.GetNameFor("__outerClosure"),
-            Type = TypeDefinition.SelfInstance(savedCurrentClosureClass,this.host.InternFactory),
-            Visibility = TypeMemberVisibility.Public,
-          };
-          closureClass.Fields.Add(outerClosureField);
-          this.outerClosures.Add(outerClosureField);
-        }
+        var outerClosureField = new FieldDefinition() {
+          ContainingTypeDefinition = closureClass,
+          Name = this.host.NameTable.GetNameFor("__outerClosure"),
+          //Type = TypeDefinition.SelfInstance(savedCurrentClosureClass,this.host.InternFactory),
+          Type = TypeDefinition.SelfInstance(this.classList[nestingDepth - 1], this.host.InternFactory),
+          Visibility = TypeMemberVisibility.Public,
+        };
+        closureClass.Fields.Add(outerClosureField);
+        this.outerClosures.Add(outerClosureField);
       }
 
       this.generatedclosureClass = closureClass;
