@@ -660,7 +660,7 @@ namespace Microsoft.Cci {
       ntHeader.LoadConfigTable.Size = 0;
       ntHeader.Reserved.RelativeVirtualAddress = 0;
       ntHeader.Reserved.Size = 0;
-      ntHeader.ResourceTable.RelativeVirtualAddress = this.resourceSection.RelativeVirtualAddress;
+      ntHeader.ResourceTable.RelativeVirtualAddress = this.resourceSection.VirtualSize == 0 ? 0u : this.resourceSection.RelativeVirtualAddress;
       ntHeader.ResourceTable.Size = this.resourceSection.VirtualSize;
       ntHeader.ThreadLocalStorageTable.RelativeVirtualAddress = this.tlsSection.SizeOfRawData == 0 ? 0u : this.tlsSection.RelativeVirtualAddress;
       ntHeader.ThreadLocalStorageTable.Size = this.tlsSection.SizeOfRawData;
@@ -4367,16 +4367,19 @@ namespace Microsoft.Cci {
     }
 
     private void WriteCoverSection() {
+      if (this.coverageDataWriter.BaseStream.Length == 0) return;
       this.peStream.Position = this.coverSection.PointerToRawData;
       this.coverageDataWriter.BaseStream.WriteTo(this.peStream);
     }
 
     private void WriteRdataSection() {
+      if (this.rdataWriter.BaseStream.Length == 0) return;
       this.peStream.Position = this.rdataSection.PointerToRawData;
       this.rdataWriter.BaseStream.WriteTo(this.peStream);
     }
 
     private void WriteSdataSection() {
+      if (this.sdataWriter.BaseStream.Length == 0) return;
       this.peStream.Position = this.sdataSection.PointerToRawData;
       this.sdataWriter.BaseStream.WriteTo(this.peStream);
     }
@@ -4414,6 +4417,7 @@ namespace Microsoft.Cci {
     }
 
     private void WriteTlsSection() {
+      if (this.tlsDataWriter.BaseStream.Length == 0) return;
       this.peStream.Position = this.tlsSection.PointerToRawData;
       this.tlsDataWriter.BaseStream.WriteTo(this.peStream);
     }
