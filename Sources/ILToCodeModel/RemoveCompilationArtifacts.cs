@@ -210,11 +210,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     private IExpression ConvertToAnonymousDelegate(CreateDelegateInstance createDelegateInstance) {
       IMethodDefinition closureMethod = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
       if (this.sourceMethodBody.privateHelperMethodsToRemove == null) this.sourceMethodBody.privateHelperMethodsToRemove = new Dictionary<uint, IMethodDefinition>();
-      this.sourceMethodBody.privateHelperMethodsToRemove[closureMethod.InternedKey] = closureMethod;
       IMethodBody closureMethodBody = UnspecializedMethods.GetMethodBodyFromUnspecializedVersion(closureMethod);
       AnonymousDelegate anonDel = new AnonymousDelegate();
       anonDel.CallingConvention = closureMethod.CallingConvention;
       var unspecializedClosureMethod = UnspecializedMethods.UnspecializedMethodDefinition(closureMethod);
+      this.sourceMethodBody.privateHelperMethodsToRemove[unspecializedClosureMethod.InternedKey] = unspecializedClosureMethod;
       anonDel.Parameters = new List<IParameterDefinition>(unspecializedClosureMethod.Parameters);
       for (int i = 0, n = anonDel.Parameters.Count; i < n; i++) {
         IParameterDefinition closureMethodPar = UnspecializedParameterDefinition(anonDel.Parameters[i]);
@@ -224,8 +224,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         par.ContainingSignature = anonDel;
         anonDel.Parameters[i] = par;
       }
-      anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
-        this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider).Block;
+      var alreadyDecompiledBody = closureMethodBody as SourceMethodBody;
+      if (alreadyDecompiledBody == null) {
+        anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
+          this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider).Block;
+      } else {
+        anonDel.Body = alreadyDecompiledBody.Block;
+      }
+        
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -337,6 +343,16 @@ namespace Microsoft.Cci.ILToCodeModel {
         //if this temp was introduced to hold a copy of the closure local, then delete it
         if (TypeHelper.TypesAreEquivalent(this.currentClosureLocal.Type, local.Type))
           return CodeDummy.Block;
+        // Or it might be that we are visiting the method that is being turned back into a lambda
+        // and it might be a temp introduced to hold "this" because of decompilation inadequacies.
+        // (E.g., if there was "f++" operator in the lambda for a captured local/parameter, then
+        // it becomes "ldarg0; dup" in the IL in the closure class and that decompiles to
+        // "t1 := this; t2 := t1; t1.f := t2.f + 1".
+        ITypeReference t1 = UnspecializedMethods.AsUnspecializedTypeReference(this.currentClosureLocal.Type);
+        ITypeReference t2 = UnspecializedMethods.AsUnspecializedTypeReference(local.Type);
+        if (t1 == t2)
+          return CodeDummy.Block;
+
       }
       base.Visit(localDeclarationStatement);
       int numberOfAssignments = 0;

@@ -43,6 +43,8 @@ namespace RoundtripTests.TestData.source {
                       ncs => Console.WriteLine(ncs)
                      );
 
+      // Test for code that creates "ldarg0; dup" IL within a closure, such as ++
+      Console.WriteLine("++ in closure returned {0}", Count(A));
 
     }
     private bool IsSame(T t) {
@@ -196,7 +198,21 @@ namespace RoundtripTests.TestData.source {
            );
     }
 
-
+    public static bool ForEach<T>(IEnumerable<T> source, Func<T, bool> pred) {
+      foreach (T item in source) {
+        if (!pred(item))
+          return false;
+      }
+      return true;
+    }
+    public static int Count<T>(IEnumerable<T> source) {
+      int count = 0;
+      ForEach(source, delegate(T item) {
+        count++;
+        return true;
+      });
+      return count;
+    }
 
   }
   class C {
