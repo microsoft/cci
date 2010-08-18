@@ -3683,7 +3683,7 @@ namespace Microsoft.Cci {
             break;
           }
           //TODO: conversion from method to (function) pointer
-          if (!sourceType.IsValueType && targetType.TypeCode == PrimitiveTypeCode.IntPtr)
+          if (!sourceType.IsValueType && !TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject) && targetType.TypeCode == PrimitiveTypeCode.IntPtr)
             this.generator.Emit(OperationCode.Conv_I);
           else {
             //TODO: assume TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject);

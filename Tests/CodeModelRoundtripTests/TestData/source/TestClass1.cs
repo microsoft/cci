@@ -47,6 +47,11 @@ namespace RoundtripTests.TestData.source {
       Console.WriteLine("++ in closure returned {0}", Count(A));
 
     }
+    // Not to execute, just to go through decompilation and then peverify.
+    public IntPtr Method22(object o) {
+      return (IntPtr)o;
+    }
+
     private bool IsSame(T t) {
       return true;
     }
