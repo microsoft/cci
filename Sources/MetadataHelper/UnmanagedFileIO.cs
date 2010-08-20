@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -113,7 +113,7 @@ namespace Microsoft.Cci {
       }
     }
 
-  #region Interop stuff
+    #region Interop stuff
     private enum PageAccess : int { PAGE_READONLY = 0x02 };
     private enum FileMapAccess : int { FILE_MAP_READ = 0x0004 };
 
@@ -148,7 +148,7 @@ namespace Microsoft.Cci {
       IntPtr hObject  // handle to object
     );
 
-  #endregion Interop stuff
+    #endregion Interop stuff
   }
 #endif
 
@@ -194,43 +194,57 @@ namespace Microsoft.Cci {
     #endregion
 
     /// <summary>
-    /// Factory method for opening the memory mapped file. The content of the map is assumed to come from localFileName.
-    /// This can throw FileLoadException in case of error.
+    /// Creates an unmanaged binary memory block and copies the contents of the file at the given location into the block.
     /// </summary>
-    /// <param name="localFileName"></param>
-    /// <param name="binaryDocument"></param>
-    /// <returns></returns>
-    public static UnmanagedBinaryMemoryBlock CreateUnmanagedBinaryMemoryBlock(
-      string localFileName,
-      IBinaryDocument binaryDocument
-    ) {
+    /// <param name="localFileName">The path to the file to read.</param>
+    /// <param name="binaryDocument">The binary document whose contents are stored in the given file.</param>
+    /// <exception cref="System.ArgumentException">localFileName is an empty string (""), contains only white space, or contains one
+    /// or more invalid characters. -or- localFileName refers to a non-file device, such as "con:", "com1:", "lpt1:", etc. in an NTFS environment.</exception>
+    /// <exception cref="System.NotSupportedException">localFileName refers to a non-file device, such as "con:", "com1:", "lpt1:", etc. in a non-NTFS environment.</exception>
+    /// <exception cref="System.IO.FileNotFoundException">The file specified by localFileName does not exist.</exception>
+    /// <exception cref="System.Security.SecurityException">The caller does not have the required permission.</exception>
+    /// <exception cref="System.IO.DirectoryNotFoundException">The specified path is invalid, such as being on an unmapped drive.</exception>
+    /// <exception cref="System.UnauthorizedAccessException">The file cannot be be read, for example because it is already being accessed exclusively by another process.</exception>
+    /// <exception cref="System.IO.PathTooLongException">The specified path, file name, or both exceed the system-defined maximum length. For example, on Windows-based platforms,
+    /// paths must be less than 248 characters, and file names must be less than 260 characters.</exception>
+    public static UnmanagedBinaryMemoryBlock CreateUnmanagedBinaryMemoryBlock(string localFileName, IBinaryDocument binaryDocument) {
       using (FileStream stream = new FileStream(localFileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-        if (stream.Length != binaryDocument.Length)
-          throw new IOException("File size difference: " + localFileName);
-        if (stream.Length > Int32.MaxValue)
-          throw new IOException("File too Big: " + localFileName);
-        UnmanagedBinaryMemoryBlock unmanagedBinaryMemoryBlock = new UnmanagedBinaryMemoryBlock(binaryDocument);
-        byte* pMainBuffer = (byte*)unmanagedBinaryMemoryBlock.Pointer;
-        //Read a fixed length block at a time, so that the GC does not come under pressure from lots of large byte arrays.
-        int fileRemainingLen = (int)binaryDocument.Length;
-        int copyBufferLen = 8096;
-        byte[] tempBuffer = new byte[copyBufferLen];
-        fixed (byte* tempBufferPtr = tempBuffer) {
-          while (fileRemainingLen > 0) {
-            if (fileRemainingLen < copyBufferLen) {
-              copyBufferLen = fileRemainingLen;
-            }
-            stream.Read(tempBuffer, 0, copyBufferLen);
-            byte* iterBuffer = tempBufferPtr;
-            byte* endBuffer = tempBufferPtr + copyBufferLen;
-            while (iterBuffer < endBuffer) {
-              *pMainBuffer++ = *iterBuffer++;
-            }
-            fileRemainingLen -= copyBufferLen;
-          }
-        }
-        return unmanagedBinaryMemoryBlock;
+        return CreateUnmanagedBinaryMemoryBlock(stream, binaryDocument);
       }
+    }
+
+    /// <summary>
+    /// Creates an unmanaged binary memory block and copies the contents of the given stream into the block.
+    /// </summary>
+    /// <param name="stream">A stream of bytes that are to be copied into the resulting memory block.</param>
+    /// <param name="binaryDocument">The binary document whose contents are stored in the given file.</param>
+    /// <exception cref="System.IO.IOException">The length of the stream is not the same as the length of the binary document, or the stream length is greater than Int32.MaxValue.</exception>
+    public static UnmanagedBinaryMemoryBlock CreateUnmanagedBinaryMemoryBlock(Stream stream, IBinaryDocument binaryDocument) {
+      if (stream.Length != binaryDocument.Length)
+        throw new IOException("stream.Length != binaryDocument.Length: " + binaryDocument.Location);
+      if (stream.Length > Int32.MaxValue)
+        throw new IOException("stream.Length > Int32.MaxValue: " + binaryDocument.Location);
+      UnmanagedBinaryMemoryBlock unmanagedBinaryMemoryBlock = new UnmanagedBinaryMemoryBlock(binaryDocument);
+      byte* pMainBuffer = (byte*)unmanagedBinaryMemoryBlock.Pointer;
+      //Read a fixed length block at a time, so that the GC does not come under pressure from lots of large byte arrays.
+      int remainingLength = (int)binaryDocument.Length;
+      int copyBufferLength = 8096;
+      byte[] tempBuffer = new byte[copyBufferLength];
+      fixed (byte* tempBufferPtr = tempBuffer) {
+        while (remainingLength > 0) {
+          if (remainingLength < copyBufferLength) {
+            copyBufferLength = remainingLength;
+          }
+          stream.Read(tempBuffer, 0, copyBufferLength);
+          byte* iterBuffer = tempBufferPtr;
+          byte* endBuffer = tempBufferPtr + copyBufferLength;
+          while (iterBuffer < endBuffer) {
+            *pMainBuffer++ = *iterBuffer++;
+          }
+          remainingLength -= copyBufferLength;
+        }
+      }
+      return unmanagedBinaryMemoryBlock;
     }
   }
 
@@ -322,17 +336,17 @@ namespace Microsoft.Cci {
     #region IBinaryLocation Members
 
     IBinaryDocument IBinaryLocation.BinaryDocument {
-      get 
+      get
         //^ ensures result == this.binaryDocument;
-      { 
-        return this.binaryDocument; 
+      {
+        return this.binaryDocument;
       }
     }
 
     uint IBinaryLocation.Offset {
-      get { 
+      get {
         //^ assume ((IBinaryLocation)this).BinaryDocument == this.binaryDocument; //see above
-        return this.offset; 
+        return this.offset;
       }
     }
 
