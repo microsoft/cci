@@ -1,0 +1,12 @@
+Sources/ILGenerator/bin/
+Sources/ILGenerator/obj/
+Sources/MetadataHelper/bin/
+Sources/MetadataHelper/obj/
+Sources/MetadataModel/bin/
+Sources/MetadataModel/obj/
+Sources/MutableMetadataModel/bin/
+Sources/MutableMetadataModel/obj/
+Sources/PeReader/bin/
+Sources/PeReader/obj/
+Sources/SourceModel/bin/
+Sources/SourceModel/obj/
