@@ -46,6 +46,9 @@ namespace RoundtripTests.TestData.source {
       // Test for code that creates "ldarg0; dup" IL within a closure, such as ++
       Console.WriteLine("++ in closure returned {0}", Count(A));
 
+      // Test to make sure that signed comparisons remain signed
+      Console.WriteLine("8 >= -1 is: {0}", XAtLeastNegativeOne(8));
+      Console.WriteLine("8 >= -1 is: {0}", XAtLeastNegativeOneAndLessThanNinetyNine(8));
     }
     // Not to execute, just to go through decompilation and then peverify.
     public IntPtr Method22(object o) {
@@ -217,6 +220,20 @@ namespace RoundtripTests.TestData.source {
         return true;
       });
       return count;
+    }
+
+    public static string ConvertBoolToTrueFalse(bool b) {
+      return b ? "true" : "false";
+    }
+    public static string XAtLeastNegativeOne(int x) {
+      // Need to pass the comparison to a method for the bug to show itself
+      // This one leads to a clt (signed) instruction
+      return ConvertBoolToTrueFalse(x >= -1);
+    }
+    public static string XAtLeastNegativeOneAndLessThanNinetyNine(int x) {
+      // Need to pass the comparison to a method for the bug to show itself
+      // This one leads to a blt (signed) instruction
+      return ConvertBoolToTrueFalse(x >= -1 && x < 99);
     }
 
   }

@@ -1320,9 +1320,9 @@ namespace Microsoft.Cci {
       this.Visit(greaterThanOrEqual.LeftOperand);
       this.Visit(greaterThanOrEqual.RightOperand);
       if (greaterThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type))
-        this.generator.Emit(OperationCode.Clt);
-      else
         this.generator.Emit(OperationCode.Clt_Un);
+      else
+        this.generator.Emit(OperationCode.Clt);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.generator.Emit(OperationCode.Ceq);
       this.StackSize--;
@@ -1375,9 +1375,9 @@ namespace Microsoft.Cci {
       this.Visit(lessThanOrEqual.LeftOperand);
       this.Visit(lessThanOrEqual.RightOperand);
       if (lessThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type))
-        this.generator.Emit(OperationCode.Cgt);
-      else
         this.generator.Emit(OperationCode.Cgt_Un);
+      else
+        this.generator.Emit(OperationCode.Cgt);
       this.generator.Emit(OperationCode.Ldc_I4_0);
       this.generator.Emit(OperationCode.Ceq);
       this.StackSize--;

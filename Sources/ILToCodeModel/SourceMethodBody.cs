@@ -366,9 +366,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="rootBlock"></param>
     /// <returns></returns>
     protected virtual IBlockStatement Transform(BasicBlock rootBlock) {
+      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new Unstacker(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
