@@ -39,15 +39,15 @@ namespace Microsoft.Cci.ILToCodeModel {
         case PrimitiveTypeCode.UInt8:
           switch (rightTypeCode) {
             case PrimitiveTypeCode.Boolean:
-            case PrimitiveTypeCode.Char:
-            case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:
-            case PrimitiveTypeCode.UInt8:
               return this.platformType.SystemUInt32;
 
+            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
+            case PrimitiveTypeCode.UInt16:
+            case PrimitiveTypeCode.UInt8:
               return this.platformType.SystemInt32;
 
             case PrimitiveTypeCode.UInt64:
@@ -667,7 +667,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

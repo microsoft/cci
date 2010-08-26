@@ -49,6 +49,18 @@ namespace RoundtripTests.TestData.source {
       // Test to make sure that signed comparisons remain signed
       Console.WriteLine("8 >= -1 is: {0}", XAtLeastNegativeOne(8));
       Console.WriteLine("8 >= -1 is: {0}", XAtLeastNegativeOneAndLessThanNinetyNine(8));
+
+      try {
+        Console.WriteLine(Difference('a', 'd'));
+      } catch (OverflowException) {
+        Console.WriteLine("Difference('a','d') caused an overflow exception");
+      }
+      try {
+        Console.WriteLine(Difference((byte)3, (byte)4));
+      } catch (OverflowException) {
+        Console.WriteLine("Difference((byte)3, (byte)4)) caused an overflow exception");
+      }
+
     }
     // Not to execute, just to go through decompilation and then peverify.
     public IntPtr Method22(object o) {
@@ -235,6 +247,14 @@ namespace RoundtripTests.TestData.source {
       // This one leads to a blt (signed) instruction
       return ConvertBoolToTrueFalse(x >= -1 && x < 99);
     }
+
+    public static int Difference(char x, char y) {
+      return checked(x - y);
+    }
+    public static int Difference(byte x, byte y) {
+      return checked(x - y);
+    }
+
 
   }
   class C {
