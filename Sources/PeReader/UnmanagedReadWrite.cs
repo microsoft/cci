@@ -902,11 +902,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal string ReadUTF8WithSize(
       int byteCount
     ) {
-#if !COMPACTFX
-      string retStr = new string((sbyte*)this.CurrentPointer, 0, byteCount, Encoding.UTF8);
-      this.CurrentPointer += byteCount;
-      return retStr;
-#else
       int bytesToRead = byteCount;
       char[] buffer = new char[bytesToRead];
       byte* pb = this.CurrentPointer;
@@ -948,10 +943,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
         }
         buffer[j++] = ch;
       }
-      if (j > 0 && buffer[j - 1] == 0) j--;
+      while (j > 0 && buffer[j - 1] == 0) j--;
       this.CurrentPointer += byteCount;
       return new String(buffer, 0, j);
-#endif
     }
 
     internal string ReadUTF16WithSize(
