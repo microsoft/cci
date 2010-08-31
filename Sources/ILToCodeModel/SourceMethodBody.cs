@@ -173,14 +173,15 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Expression ConvertToUnsigned(Expression expression) {
       CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
-      if (cc == null) return expression;
+      if (cc == null) return new ConvertToUnsigned(expression);
       IConvertible/*?*/ ic = cc.Value as IConvertible;
       if (ic == null) {
         if (cc.Value is System.IntPtr) {
           cc.Value = (System.UIntPtr)(ulong)(System.IntPtr)cc.Value;
           cc.Type = this.platformType.SystemUIntPtr;
+          return cc;
         }
-        return expression;
+        return new ConvertToUnsigned(expression);
       }
       switch (ic.GetTypeCode()) {
         case TypeCode.SByte:
@@ -450,9 +451,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression ParseAddition(OperationCode currentOpcode) {
       Addition addition = new Addition();
       addition.CheckOverflow = currentOpcode != OperationCode.Add;
-      if (currentOpcode == OperationCode.Add_Ovf_Un)
+      if (currentOpcode == OperationCode.Add_Ovf_Un) {
+        addition.TreatOperandsAsUnsignedIntegers = true; //force use of unsigned addition, even for cases where the operands are expressions that result in signed values
         return this.ParseUnsignedBinaryOperation(addition);
-      else
+      } else
         return this.ParseBinaryOperation(addition);
     }
 
@@ -650,7 +652,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Div:
           return this.ParseBinaryOperation(new Division());
         case OperationCode.Div_Un:
-          return this.ParseUnsignedBinaryOperation(new Division());
+          return this.ParseUnsignedBinaryOperation(new Division() { TreatOperandsAsUnsignedIntegers = true });
         case OperationCode.Mul:
         case OperationCode.Mul_Ovf:
         case OperationCode.Mul_Ovf_Un:
@@ -660,7 +662,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Rem:
           return this.ParseBinaryOperation(new Modulus());
         case OperationCode.Rem_Un:
-          return this.ParseUnsignedBinaryOperation(new Modulus());
+          return this.ParseUnsignedBinaryOperation(new Modulus() { TreatOperandsAsUnsignedIntegers = true });
         case OperationCode.Shl:
           return this.ParseBinaryOperation(new LeftShift());
         case OperationCode.Shr:
@@ -978,9 +980,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression ParseMultiplication(OperationCode currentOpcode) {
       Multiplication multiplication = new Multiplication();
       multiplication.CheckOverflow = currentOpcode != OperationCode.Mul;
-      if (currentOpcode == OperationCode.Mul_Ovf_Un)
+      if (currentOpcode == OperationCode.Mul_Ovf_Un) {
+        multiplication.TreatOperandsAsUnsignedIntegers = true;
         return this.ParseUnsignedBinaryOperation(multiplication);
-      else
+      } else
         return this.ParseBinaryOperation(multiplication);
     }
 
@@ -1452,9 +1455,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression ParseSubtraction(OperationCode currentOpcode) {
       Subtraction subtraction = new Subtraction();
       subtraction.CheckOverflow = currentOpcode != OperationCode.Sub;
-      if (currentOpcode == OperationCode.Sub_Ovf_Un)
+      if (currentOpcode == OperationCode.Sub_Ovf_Un) {
+        subtraction.TreatOperandsAsUnsignedIntegers = true;
         return this.ParseUnsignedBinaryOperation(subtraction);
-      else
+      } else
         return this.ParseBinaryOperation(subtraction);
     }
 
@@ -1542,7 +1546,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         return new PopAsUnsigned();
       else
         result = this.operandStack.Pop();
-      return result; //TODO: need an expression that represents a conversion, but that does not know the target type until after inference is done.
+      return new ConvertToUnsigned(result);
     }
 
     private Dictionary<uint, LabeledStatement> targetStatementFor = new Dictionary<uint, LabeledStatement>();

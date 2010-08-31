@@ -36,10 +36,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The addition must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The addition must be performed with a check for arithmetic overflow and the operands must be integers.
     /// </summary>
-    /// <value></value>
     public bool CheckOverflow { get; set; }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the addition. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    public bool TreatOperandsAsUnsignedIntegers { get; set; }
 
     /// <summary>
     /// Calls visitor.Visit(IAddition).
@@ -1412,14 +1416,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="division"></param>
     public Division(IDivision division)
       : base(division) {
-      this.CheckOverflow = division.CheckOverflow;
     }
-
-    /// <summary>
-    /// The division must be performed with a check for arithmetic overflow if the operands are integers.
-    /// </summary>
-    /// <value></value>
-    public bool CheckOverflow { get; set; }
 
     /// <summary>
     /// Calls visitor.Visit(IDivision).
@@ -1427,6 +1424,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the division.
+    /// </summary>
+    public bool TreatOperandsAsUnsignedIntegers { get; set; }
+
   }
 
   /// <summary>
@@ -2049,6 +2052,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the modulus.
+    /// </summary>
+    public bool TreatOperandsAsUnsignedIntegers { get; set; }
   }
 
   /// <summary>
@@ -2072,9 +2079,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The multiplication must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The multiplication must be performed with a check for arithmetic overflow and the operands must be integers.
     /// </summary>
-    /// <value></value>
     public bool CheckOverflow { get; set; }
 
     /// <summary>
@@ -2083,6 +2089,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the multiplication. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    public bool TreatOperandsAsUnsignedIntegers { get; set; }
+
   }
 
   /// <summary>
@@ -2653,9 +2665,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The subtraction must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The subtraction must be performed with a check for arithmetic overflow and the operands must be integers.
     /// </summary>
-    /// <value></value>
     public bool CheckOverflow { get; set; }
 
     /// <summary>
@@ -2664,6 +2675,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the subtraction. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    public bool TreatOperandsAsUnsignedIntegers { get; set; }
+
   }
 
   /// <summary>
@@ -2911,9 +2928,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The negation must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The negation must be performed with a check for arithmetic overflow and the operand must be an integer.
     /// </summary>
-    /// <value></value>
     public bool CheckOverflow { get; set; }
 
     /// <summary>

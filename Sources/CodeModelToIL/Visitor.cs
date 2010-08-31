@@ -1065,7 +1065,7 @@ namespace Microsoft.Cci {
     public override void Visit(IDivision division) {
       this.Visit(division.LeftOperand);
       this.Visit(division.RightOperand);
-      if (TypeHelper.IsUnsignedPrimitiveInteger(division.Type))
+      if (division.TreatOperandsAsUnsignedIntegers)
         this.generator.Emit(OperationCode.Div_Un);
       else
         this.generator.Emit(OperationCode.Div);
@@ -1501,7 +1501,7 @@ namespace Microsoft.Cci {
     public override void Visit(IModulus modulus) {
       this.Visit(modulus.LeftOperand);
       this.Visit(modulus.RightOperand);
-      if (TypeHelper.IsUnsignedPrimitiveInteger(modulus.Type))
+      if (modulus.TreatOperandsAsUnsignedIntegers)
         this.generator.Emit(OperationCode.Rem_Un);
       else
         this.generator.Emit(OperationCode.Rem);
@@ -1517,10 +1517,10 @@ namespace Microsoft.Cci {
       this.Visit(multiplication.RightOperand);
       OperationCode operationCode = OperationCode.Mul;
       if (multiplication.CheckOverflow) {
-        if (TypeHelper.IsSignedPrimitiveInteger(multiplication.Type))
-          operationCode = OperationCode.Mul_Ovf;
-        else if (TypeHelper.IsUnsignedPrimitiveInteger(multiplication.Type))
+        if (multiplication.TreatOperandsAsUnsignedIntegers)
           operationCode = OperationCode.Mul_Ovf_Un;
+        else
+          operationCode = OperationCode.Mul_Ovf;
       }
       this.generator.Emit(operationCode);
       this.StackSize--;
@@ -1735,18 +1735,10 @@ namespace Microsoft.Cci {
       this.Visit(subtraction.RightOperand);
       OperationCode operationCode = OperationCode.Sub;
       if (subtraction.CheckOverflow) {
-        if (TypeHelper.IsSignedPrimitive(subtraction.Type))
-          operationCode = OperationCode.Sub_Ovf;
-        else if (TypeHelper.IsUnsignedPrimitive(subtraction.Type))
+        if (subtraction.TreatOperandsAsUnsignedIntegers)
           operationCode = OperationCode.Sub_Ovf_Un;
-        else if (subtraction.Type.TypeCode == PrimitiveTypeCode.Pointer
-          || subtraction.Type.TypeCode == PrimitiveTypeCode.Reference) {
-          if (TypeHelper.IsSignedPrimitive(subtraction.LeftOperand.Type) ||
-            TypeHelper.IsSignedPrimitive(subtraction.RightOperand.Type))
-            operationCode = OperationCode.Sub_Ovf;
-          else
-            operationCode = OperationCode.Sub_Ovf_Un;
-        }
+        else
+          operationCode = OperationCode.Sub_Ovf;
       }
       this.generator.Emit(operationCode);
       this.StackSize--;

@@ -20,12 +20,18 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface IAddition : IBinaryOperation {
     /// <summary>
-    /// The addition must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The addition must be performed with a check for arithmetic overflow and the operands must be integers.
     /// </summary>
     bool CheckOverflow {
       get;
     }
 
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the addition. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    bool TreatOperandsAsUnsignedIntegers {
+      get;
+    }
   }
 
   /// <summary>
@@ -437,9 +443,9 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface IDivision : IBinaryOperation {
     /// <summary>
-    /// The division must be performed with a check for arithmetic overflow if the operands are integers.
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the division.
     /// </summary>
-    bool CheckOverflow {
+    bool TreatOperandsAsUnsignedIntegers {
       get;
     }
   }
@@ -626,6 +632,12 @@ namespace Microsoft.Cci {
   /// An expression that results in the remainder of dividing value the left operand by the value of the right operand. 
   /// </summary>
   public interface IModulus : IBinaryOperation {
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the modulus.
+    /// </summary>
+    bool TreatOperandsAsUnsignedIntegers {
+      get;
+    }
   }
 
   /// <summary>
@@ -633,9 +645,16 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface IMultiplication : IBinaryOperation {
     /// <summary>
-    /// The multiplication must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The multiplication must be performed with a check for arithmetic overflow and the operands must be integers.
     /// </summary>
     bool CheckOverflow {
+      get;
+    }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the multiplication. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    bool TreatOperandsAsUnsignedIntegers {
       get;
     }
   }
@@ -794,9 +813,16 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface ISubtraction : IBinaryOperation {
     /// <summary>
-    /// The subtraction must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The subtraction must be performed with a check for arithmetic overflow and the operands must be integers.
     /// </summary>
     bool CheckOverflow {
+      get;
+    }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the subtraction. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    bool TreatOperandsAsUnsignedIntegers {
       get;
     }
   }
@@ -896,7 +922,7 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface IUnaryNegation : IUnaryOperation {
     /// <summary>
-    /// The negation must be performed with a check for arithmetic overflow if the operands are integers.
+    /// The negation must be performed with a check for arithmetic overflow and the operand must be an integer.
     /// </summary>
     bool CheckOverflow {
       get;

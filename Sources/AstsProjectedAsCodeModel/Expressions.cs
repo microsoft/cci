@@ -307,6 +307,13 @@ namespace Microsoft.Cci.Ast {
       }
       readonly Expression rightOperand;
 
+      /// <summary>
+      /// If true the operands must be integers and are treated as being unsigned for the purpose of the addition. This only makes a difference if CheckOverflow is true as well.
+      /// </summary>
+      public bool TreatOperandsAsUnsignedIntegers {
+        get { return this.addition.TreatOperandsAsUnsignedIntegers; }
+      }
+
       public ITypeDefinition Type {
         get { return this.addition.Type; }
       }
@@ -379,6 +386,13 @@ namespace Microsoft.Cci.Ast {
           }
         }
       }
+    }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the addition. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    public virtual bool TreatOperandsAsUnsignedIntegers {
+      get { return TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedLeftOperand.Type) && TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedRightOperand.Type); }
     }
 
   }
@@ -7730,31 +7744,6 @@ namespace Microsoft.Cci.Ast {
       //^ requires template.ContainingBlock != containingBlock;
       //^ ensures this.containingBlock == containingBlock;
     {
-      this.flags = template.flags;
-    }
-
-    /// <summary>
-    /// The division must be performed with a check for arithmetic overflow if the operands are integers.
-    /// </summary>
-    public virtual bool CheckOverflow {
-      get {
-        return (this.flags & 1) != 0;
-      }
-    }
-
-    /// <summary>
-    /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
-    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
-    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
-    /// </summary>
-    /// <param name="containingExpression"></param>
-    public override void SetContainingExpression(Expression containingExpression) {
-      base.SetContainingExpression(containingExpression);
-      if (containingExpression.ContainingBlock.UseCheckedArithmetic)
-        this.flags |= 1;
-      else
-        this.flags &= ~1;
-      //Note that checked/unchecked expressions intercept this call and provide a dummy block that has the flag set appropriately.
     }
 
     /// <summary>
@@ -7785,11 +7774,6 @@ namespace Microsoft.Cci.Ast {
     protected override string OperationSymbolForErrorMessage {
       get { return "/"; }
     }
-
-    /// <summary>
-    /// Storage for boolean properties. 1=Use checked arithmetic.
-    /// </summary>
-    protected int flags;
 
     /// <summary>
     /// Returns the name a method must have to overload this operator.
@@ -7875,6 +7859,13 @@ namespace Microsoft.Cci.Ast {
         yield return dummyMethods.Float64opFloat64;
         yield return dummyMethods.DecimalOpDecimal;
       }
+    }
+
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the division.
+    /// </summary>
+    public virtual bool TreatOperandsAsUnsignedIntegers {
+      get { return TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedLeftOperand.Type) && TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedRightOperand.Type); }
     }
 
   }
@@ -12917,6 +12908,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the modulus.
+    /// </summary>
+    public bool TreatOperandsAsUnsignedIntegers {
+      get { return TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedLeftOperand.Type) && TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedRightOperand.Type); }
+    }
   }
 
   /// <summary>
@@ -13129,6 +13126,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the multiplication. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    public virtual bool TreatOperandsAsUnsignedIntegers {
+      get { return TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedLeftOperand.Type) && TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedRightOperand.Type); }
+    }
   }
 
   /// <summary>
@@ -18547,6 +18550,10 @@ namespace Microsoft.Cci.Ast {
         get { return this.subtraction.Type; }
       }
 
+      public bool TreatOperandsAsUnsignedIntegers {
+        get { return this.subtraction.TreatOperandsAsUnsignedIntegers; }
+      }
+
       #region IExpression Members
 
       ITypeReference IExpression.Type {
@@ -18605,6 +18612,12 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
+    /// <summary>
+    /// If true the operands must be integers and are treated as being unsigned for the purpose of the subtraction. This only makes a difference if CheckOverflow is true as well.
+    /// </summary>
+    public virtual bool TreatOperandsAsUnsignedIntegers {
+      get { return TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedLeftOperand.Type) && TypeHelper.IsUnsignedPrimitiveInteger(this.ConvertedRightOperand.Type); }
+    }
   }
 
   /// <summary>

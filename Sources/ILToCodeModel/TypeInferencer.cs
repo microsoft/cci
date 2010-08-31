@@ -28,6 +28,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.platformType = containingType.PlatformType;
     }
 
+    private ITypeReference GetBinaryNumericOperationType(IBinaryOperation binaryOperation, bool operandsAreTreatedAsUnsigned) {
+      var result = this.GetBinaryNumericOperationType(binaryOperation);
+      if (operandsAreTreatedAsUnsigned) result = TypeHelper.UnsignedEquivalent(result);
+      return result;
+    }
+
     private ITypeReference GetBinaryNumericOperationType(IBinaryOperation binaryOperation) {
       PrimitiveTypeCode leftTypeCode = binaryOperation.LeftOperand.Type.TypeCode;
       PrimitiveTypeCode rightTypeCode = binaryOperation.RightOperand.Type.TypeCode;
@@ -239,7 +245,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IAddition addition) {
       base.Visit(addition);
-      ((Addition)addition).Type = this.GetBinaryNumericOperationType(addition);
+      ((Addition)addition).Type = this.GetBinaryNumericOperationType(addition, addition.TreatOperandsAsUnsignedIntegers);
     }
 
     public override void Visit(IAddressableExpression addressableExpression) {
@@ -468,7 +474,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IDivision division) {
       base.Visit(division);
-      ((Division)division).Type = this.GetBinaryNumericOperationType(division);
+      ((Division)division).Type = this.GetBinaryNumericOperationType(division, division.TreatOperandsAsUnsignedIntegers);
     }
 
     public override void Visit(IEquality equality) {
@@ -559,12 +565,12 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IModulus modulus) {
       base.Visit(modulus);
-      ((Modulus)modulus).Type = this.GetBinaryNumericOperationType(modulus);
+      ((Modulus)modulus).Type = this.GetBinaryNumericOperationType(modulus, modulus.TreatOperandsAsUnsignedIntegers);
     }
 
     public override void Visit(IMultiplication multiplication) {
       base.Visit(multiplication);
-      ((Multiplication)multiplication).Type = this.GetBinaryNumericOperationType(multiplication);
+      ((Multiplication)multiplication).Type = this.GetBinaryNumericOperationType(multiplication, multiplication.TreatOperandsAsUnsignedIntegers);
     }
 
     public override void Visit(INamedArgument namedArgument) {
@@ -631,7 +637,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(ISubtraction subtraction) {
       base.Visit(subtraction);
-      ((Subtraction)subtraction).Type = this.GetBinaryNumericOperationType(subtraction);
+      ((Subtraction)subtraction).Type = this.GetBinaryNumericOperationType(subtraction, subtraction.TreatOperandsAsUnsignedIntegers);
     }
 
     public override void Visit(ITargetExpression targetExpression) {
@@ -667,7 +673,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }
