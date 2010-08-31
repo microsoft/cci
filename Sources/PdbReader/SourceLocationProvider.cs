@@ -64,9 +64,11 @@ namespace Microsoft.Cci {
     /// <param name="locations">Zero or more locations in documents that have been derived from one or more source documents.</param>
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsFor(IEnumerable<ILocation> locations) {
       foreach (ILocation location in locations) {
+        IPrimarySourceLocation/*?*/ psloc = location as IPrimarySourceLocation;
+        if (psloc != null) yield return psloc;
         MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
         if (mbLocation != null) {
-          IPrimarySourceLocation/*?*/ psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation);
+          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation);
           if (psloc != null) yield return psloc;
         }
       }
@@ -335,6 +337,7 @@ namespace Microsoft.Cci {
           PdbLine mid = array[midPointIndex];
           if (midPointIndex == maxIndex ||
             (mid.offset <= desiredOffset && desiredOffset < array[midPointIndex + 1].offset)) {
+            if (desiredOffset != mid.offset) return null;
             PdbLine line = mid;
             PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(pdbSourceFile);
             return new PdbSourceLineLocation(psDoc, (int)line.lineBegin, line.colBegin, (int)line.lineEnd, line.colEnd);
