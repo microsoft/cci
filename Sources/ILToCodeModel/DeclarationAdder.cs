@@ -55,7 +55,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             ILocalDefinition localDef = assignment.Target.Definition as ILocalDefinition;
             if (localDef != null && topLevelLocals.Contains(localDef) && !localsMet.Contains(localDef) && !this.declaredLocals.ContainsKey(localDef)) {
               LocalDeclarationStatement localDecl = new LocalDeclarationStatement() {
-                LocalVariable = localDef, InitialValue = assignment.Source,
+                LocalVariable = localDef, InitialValue = assignment.Source, Locations = new List<ILocation>(expressionStatement.Locations),
               };
               this.declaredLocals.Add(localDef, true);
               block.Statements[i] = localDecl;

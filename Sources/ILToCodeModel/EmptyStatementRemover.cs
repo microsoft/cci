@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -23,8 +23,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     private static void FindPattern(List<IStatement> statements) {
       int n = statements.Count;
       for (int i = n - 1; 0 <= i; i--) {
-        if (statements[i] is IEmptyStatement)
-          statements.RemoveAt(i);
+        IEmptyStatement emptyStatement = statements[i] as IEmptyStatement;
+        if (emptyStatement == null) continue;
+        //if (IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations)) continue; //TODO: have to remove this while the iterator decompiler depends on the removal.
+        statements.RemoveAt(i);
       }
       return;
     }

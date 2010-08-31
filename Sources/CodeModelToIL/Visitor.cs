@@ -1108,7 +1108,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="emptyStatement">The empty statement.</param>
     public override void Visit(IEmptyStatement emptyStatement) {
-      if (!this.minizeCodeSize)
+      if (!this.minizeCodeSize || IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations))
         this.generator.Emit(OperationCode.Nop);
     }
 

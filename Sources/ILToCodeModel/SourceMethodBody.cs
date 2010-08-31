@@ -31,6 +31,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal List<ILocalDefinition> localVariables;
     internal List<ITypeDefinition> privateHelperTypesToRemove;
     internal Dictionary<uint, IMethodDefinition> privateHelperMethodsToRemove;
+    ISourceLocation/*?*/ lastSourceLocation;
     bool sawReadonly;
     bool sawTailCall;
     bool sawVolatile;
@@ -148,15 +149,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     #endregion
 
     private Dictionary<uint, BasicBlock> blockFor = new Dictionary<uint, BasicBlock>();
-
-    internal void CombineLocations(List<ILocation> target, IEnumerable<ILocation> source) {
-      foreach (var sourceLoc in source) {
-        if (target.Count == 0)
-          target.Add(sourceLoc);
-        else if (this.pdbReader != null)
-          target[0] = this.pdbReader.LocationWithSmallerOffset(target[0], sourceLoc);
-      }
-    }
 
     private static int ConvertToInt(Expression expression) {
       CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
@@ -1022,6 +1014,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       Expression/*?*/ expression = null;
       IOperation currentOperation = this.operationEnumerator.Current;
       OperationCode currentOpcode = currentOperation.OperationCode;
+      if (this.sourceLocationProvider != null && this.lastSourceLocation == null) {
+        foreach (var sourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(currentOperation.Location)) {
+          this.lastSourceLocation = sourceLocation;
+          break;
+        }
+      }
       switch (currentOpcode) {
         case OperationCode.Add:
         case OperationCode.Add_Ovf:
@@ -1421,12 +1419,14 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       }
       if (expression != null) {
-        expression.Locations.Add(currentOperation.Location);
         this.operandStack.Push(expression);
       } else if (statement != null) {
         this.TurnOperandStackIntoPushStatements(currentBlock);
         currentBlock.Statements.Add(statement);
-        statement.Locations.Add(currentOperation.Location);
+        if (this.lastSourceLocation != null) {
+          statement.Locations.Add(this.lastSourceLocation);
+          this.lastSourceLocation = null;
+        }
       }
     }
 

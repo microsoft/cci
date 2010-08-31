@@ -231,7 +231,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         anonDel.Body = alreadyDecompiledBody.Block;
       }
-        
+
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -419,7 +419,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IStatement Visit(ReturnStatement returnStatement) {
       if (returnStatement.Expression != null) {
         returnStatement.Expression = this.Visit(returnStatement.Expression);
-        this.sourceMethodBody.CombineLocations(returnStatement.Locations, returnStatement.Expression.Locations);
       }
       if (this.sourceMethodBody.MethodDefinition.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         CompileTimeConstant/*?*/ cc = returnStatement.Expression as CompileTimeConstant;

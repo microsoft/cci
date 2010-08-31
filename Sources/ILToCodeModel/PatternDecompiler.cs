@@ -170,9 +170,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (block2 == null || block2.Statements.Count < 1 || block2.Statements[0] != gotoL2.TargetStatement) return false;
 
       Conditional conditional = new Conditional();
-      this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.Condition.Locations);
-      this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfTrue.Locations);
-      this.sourceMethodBody.CombineLocations(conditional.Locations, conditional.ResultIfFalse.Locations);
       if (conditionalStatement.TrueBranch is EmptyStatement) {
         conditional.Condition = conditionalStatement.Condition;
         conditional.ResultIfTrue = push.ValueToPush;
@@ -255,7 +252,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       conditional.ResultIfTrue = new CompileTimeConstant() { Value = 1, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
       conditional.ResultIfFalse = conditionalStatement2.Condition;
       conditionalStatement2.Condition = conditional;
-      this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
       statements.RemoveAt(i);
 
       //Now have:
@@ -301,7 +297,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
-        this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
         statements.RemoveAt(i);
         //we now have:
         //i+0: if (cond1 ? cond2 : 0) goto lab2;
@@ -318,7 +313,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
-        this.sourceMethodBody.CombineLocations(conditionalStatement2.Locations, conditionalStatement.Locations);
         statements.RemoveAt(i);
         return true;
       }
