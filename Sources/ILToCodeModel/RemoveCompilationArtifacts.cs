@@ -231,7 +231,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         anonDel.Body = alreadyDecompiledBody.Block;
       }
-
+        
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -440,9 +440,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       : base(sourceMethodBody.host, true) {
       this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
       this.sourceMethodBody = sourceMethodBody;
+      this.isCtor = sourceMethodBody.MethodDefinition.IsConstructor;
     }
     ITypeDefinition containingType;
     SourceMethodBody sourceMethodBody;
+    bool isCtor = false;
+    bool foundCachedDelegateFieldOrLocal = false;
     class CachedDelegateInfo {
       public int State;
       public IName Label;
@@ -452,23 +455,75 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.Fname = fname;
       }
     }
-    Dictionary<string, CachedDelegateInfo> cachedDelegateFields = new Dictionary<string, CachedDelegateInfo>();
+    Dictionary<string, CachedDelegateInfo> cachedDelegateFieldsOrLocals = new Dictionary<string, CachedDelegateInfo>();
     static string CachedDelegateId = "CachedAnonymousMethodDelegate";
 
     public override IBlockStatement Visit(BlockStatement blockStatement) {
-      FindAndRemoveAssignmentToCachedDelegate(blockStatement.Statements);
-      return base.Visit(blockStatement);
+      FindAndRemoveAssignmentToCachedDelegateStaticField(blockStatement.Statements);
+      if (this.isCtor && !this.foundCachedDelegateFieldOrLocal) {
+        // In ctors, cached delegates aren't necessarily held in (static) fields, but can also be held in locals.
+        // Can't depend on the local's name the way that fields are handled by this class, so need to handle it differently.
+        var statements = blockStatement.Statements;
+        FindAssignmentToCachedDelegateLocal(statements);
+        if (this.foundCachedDelegateFieldOrLocal){
+          // remove "loc := null" and "if (loc) goto Lab; else nop"
+          for (int/*change in the body*/ i = 0; i < statements.Count; i++) {
+            ILocalDeclarationStatement lds = statements[i] as ILocalDeclarationStatement;
+            if (lds != null && this.cachedDelegateFieldsOrLocals.ContainsKey(lds.LocalVariable.Name.Value)) {
+              statements.RemoveAt(i--);
+              continue;
+            }
+            IConditionalStatement conditionalStatement = statements[i] as IConditionalStatement;
+            if (conditionalStatement == null) continue;
+            IBoundExpression boundExpression = conditionalStatement.Condition as IBoundExpression;
+            if (boundExpression == null) continue;
+            ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
+            if (localDefinition == null) continue;
+            if (!this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) continue;
+            statements.RemoveAt(i--);
+            break;
+          }
+        }
+      }
+      if (this.foundCachedDelegateFieldOrLocal) {
+        return base.Visit(blockStatement);
+      } else {
+        return blockStatement;
+      }
+    }
+
+    private void FindAssignmentToCachedDelegateLocal(List<IStatement> statements) {
+      for (int/*change in the body*/ i = 0; i < statements.Count; i++) {
+        IExpressionStatement expressionStatement = statements[i] as IExpressionStatement;
+        if (expressionStatement == null) continue;
+        IAssignment assignment = expressionStatement.Expression as IAssignment;
+        if (assignment == null || !(assignment.Source is AnonymousDelegate)) continue;
+        ILocalDefinition/*?*/ localDefinition = assignment.Target.Definition as ILocalDefinition;
+        if (localDefinition == null) continue;
+        if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) continue;
+        CachedDelegateInfo info = new CachedDelegateInfo(localDefinition.Name.Value);
+        info.State = 3;
+        info.theDelegate = assignment.Source as AnonymousDelegate;
+        this.foundCachedDelegateFieldOrLocal = true;
+        this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value] = info;
+        statements.RemoveAt(i--);
+        break;
+      }
     }
 
     public override IExpression Visit(BoundExpression boundExpression) {
       IFieldReference fieldReference = boundExpression.Definition as IFieldReference;
-      if (fieldReference != null && this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 3) {
-        return this.cachedDelegateFields[fieldReference.Name.Value].theDelegate;
+      if (fieldReference != null && this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value].State == 3) {
+        return this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value].theDelegate;
+      }
+      ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
+      if (localDefinition != null && this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value) && this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value].State == 3) {
+        return this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value].theDelegate;
       }
       return base.Visit(boundExpression);
     }
 
-    void FindAndRemoveAssignmentToCachedDelegate(List<IStatement> statements) {
+    void FindAndRemoveAssignmentToCachedDelegateStaticField(List<IStatement> statements) {
       for (int/*change in the body*/ i = 0; i < statements.Count; i++) {
         IConditionalStatement conditionalStatement = statements[i] as IConditionalStatement;
         if (conditionalStatement != null) {
@@ -482,9 +537,10 @@ namespace Microsoft.Cci.ILToCodeModel {
               if (gotoStatement != null) {
                 info.Label = gotoStatement.TargetStatement.Label;
                 info.State = 1;
+                this.foundCachedDelegateFieldOrLocal = true;
               }
-              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value))
-                this.cachedDelegateFields.Add(fieldReference.Name.Value, info);
+              if (!this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value))
+                this.cachedDelegateFieldsOrLocals.Add(fieldReference.Name.Value, info);
               statements.RemoveAt(i--);
               continue;
             }
@@ -496,17 +552,18 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (assignment != null && assignment.Source is AnonymousDelegate) {
             IFieldReference/*?*/ fieldReference = assignment.Target.Definition as IFieldReference;
             if (fieldReference != null) {
-              if (this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFields[fieldReference.Name.Value].State == 1) {
-                this.cachedDelegateFields[fieldReference.Name.Value].State = 3;
-                this.cachedDelegateFields[fieldReference.Name.Value].theDelegate = assignment.Source as AnonymousDelegate;
+              if (this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value) && this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value].State == 1) {
+                this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value].State = 3;
+                this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value].theDelegate = assignment.Source as AnonymousDelegate;
                 statements.RemoveAt(i--);
                 continue;
               }
-              if (!this.cachedDelegateFields.ContainsKey(fieldReference.Name.Value)) {
+              if (!this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value)) {
                 CachedDelegateInfo info = new CachedDelegateInfo(fieldReference.Name.Value);
                 info.State = 3;
                 info.theDelegate = assignment.Source as AnonymousDelegate;
-                this.cachedDelegateFields[fieldReference.Name.Value] = info;
+                this.foundCachedDelegateFieldOrLocal = true;
+                this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value] = info;
                 statements.RemoveAt(i--);
                 continue;
               }

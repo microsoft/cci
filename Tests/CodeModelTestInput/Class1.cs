@@ -18,7 +18,7 @@ namespace CodeModelTestInput {
     }
 
     public void Method2() {
-      byte[] Bytes = new byte[] { byte.MaxValue };
+      byte[] Bytes = new byte[] {byte.MaxValue };
       ushort[] UShorts = new ushort[] { ushort.MaxValue };
       uint[] UInts = new uint[] { uint.MaxValue };
       ulong[] ULongs = new ulong[] { ulong.MaxValue };
@@ -26,8 +26,8 @@ namespace CodeModelTestInput {
       short[] Shorts = new short[] { short.MinValue };
       int[] Ints = new int[] { int.MinValue };
       long[] Longs = new long[] { long.MinValue };
-      char[] Chars = new char[] { 'a' };
-      bool[] Bools = new bool[] { true };
+      char[] Chars = new char[] { 'a'};
+      bool[] Bools = new bool[] { true};
       decimal[] Decimals = new decimal[] { 1.1m };
     }
 
@@ -191,8 +191,7 @@ namespace CodeModelTestInput {
       }
     }
     public IEnumerable<int> Method20(int x) {
-      if (x > 0) {
-        x = 2; yield break;
+      if (x > 0) { x = 2; yield break;
       } else if (x > 1) {
         x = 3; yield break;
       } else {
@@ -337,6 +336,16 @@ namespace CodeModelTestInput {
   ///           non-generic class * non generic method * instance * both * non/nested * single * non embedded * (8)
   /// </summary>
   public class Class3 {
+
+    bool fieldJustForCtorTest = false;
+
+    /// <summary>
+    /// Test lambda in ctor
+    /// </summary>
+    public Class3(List<int> xs) {
+      this.fieldJustForCtorTest = xs.TrueForAll(i => i > 0);
+    }
+
     /// <summary>
     /// None-Generic class + Generic Method + Static + Capture Locals + no nested closure + single + non embedded class
     /// </summary>
@@ -463,6 +472,15 @@ namespace CodeModelTestInput {
     /// <typeparam name="T2"></typeparam>
     class Class3Inner1<T2> where T2 : class {
       List<T2> list_inner = new List<T2>();
+      bool fieldJustForCtorTest = false;
+
+      /// <summary>
+      /// Test lambda in ctor
+      /// </summary>
+      public Class3Inner1(List<T2> xs) {
+        this.fieldJustForCtorTest = xs.TrueForAll(i => i != null);
+      }
+
       /// <summary>
       /// NoneGeneric class + Generic Method + Instance + Capture Both + nested closure + single + embedded generic class
       /// </summary>
@@ -502,6 +520,15 @@ namespace CodeModelTestInput {
 
     class Class3Inner1 {
       List<int> list_inner = new List<int>();
+      bool fieldJustForCtorTest = false;
+      
+      /// <summary>
+      /// Test lambda in ctor
+      /// </summary>
+      public Class3Inner1(List<int> xs) {
+        this.fieldJustForCtorTest = xs.TrueForAll(i => i > 0);
+      }
+
       /// <summary>
       /// NoneGeneric class + NoneGeneric Method + Instance + Capture Both + nested closure + single + embedded nongeneric class
       /// </summary>
@@ -662,15 +689,26 @@ namespace CodeModelTestInput {
     }
   }
 
-  public class Class4<T>
-    where T : class {
+  public class Class4<T> 
+    where T: class
+  {
     static List<T> list = new List<T>();
+    bool fieldJustForCtorTest = false;
+
+    /// <summary>
+    /// Test lambda in ctor
+    /// </summary>
+    public Class4(List<T> xs) {
+      this.fieldJustForCtorTest = xs.TrueForAll(i => i != null);
+    }
+
     /// <summary>
     /// Generic class + Generic Method + Static + Capture Locals + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public static bool Method4_1<T1>(T1 p1)
-      where T1 : class {
+    public static bool Method4_1<T1>(T1 p1) 
+      where T1: class
+    {
       T1 tmp = p1;
       return list.TrueForAll((T t) => t.GetHashCode() == tmp.GetHashCode());
     }
@@ -687,8 +725,9 @@ namespace CodeModelTestInput {
     /// Generic class + Generic Method + Static + Capture None + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public static bool Method4_3<T1>(T1 p1)
-      where T1 : class {
+    public static bool Method4_3<T1>(T1 p1) 
+      where T1: class
+    {
       return list.TrueForAll((T t) => t == null);
     }
 
@@ -696,8 +735,9 @@ namespace CodeModelTestInput {
     /// Generic class + Generic Method + Static + Capture Both + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public static bool Method4_4<T1>(T1 p1)
-      where T1 : class {
+    public static bool Method4_4<T1>(T1 p1) 
+      where T1: class
+    {
       int j = 1;
       return list.TrueForAll((T t) => t.GetHashCode() == p1.GetHashCode() +j);
     }
@@ -742,7 +782,8 @@ namespace CodeModelTestInput {
     /// Generic class + Generic Method + Instance + Capture Both + nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_9<T1>(T1 p1) where T1 : class {
+    public bool Method4_9<T1>(T1 p1) where T1: class
+    {
       int j = 1;
       return list.TrueForAll(delegate(T t) {
         List<T> newList = list;
@@ -758,7 +799,8 @@ namespace CodeModelTestInput {
     /// Generic class + Generic Method + Instance + Capture Both + nested closure + multiple + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_10<T1>(T1 p1) where T1 : class {
+    public bool Method4_10<T1>(T1 p1) where T1: class
+    {
       int j = 1;
       return list.TrueForAll(delegate(T t) {
         List<T> newList = list;
@@ -780,6 +822,15 @@ namespace CodeModelTestInput {
     /// <typeparam name="T2"></typeparam>
     class Class4Inner1<T2> where T2 : class {
       List<T2> list_inner = new List<T2>();
+      bool fieldJustForCtorTest = false;
+
+      /// <summary>
+      /// Test lambda in ctor
+      /// </summary>
+      public Class4Inner1(List<T> xs, List<T2> ys) {
+        this.fieldJustForCtorTest = xs.TrueForAll(i => i != null) && ys.TrueForAll(i => i != null);
+      }
+
       /// <summary>
       /// Generic class + Generic Method + Instance + Capture Both + nested closure + single + embedded generic class
       /// </summary>
@@ -816,9 +867,18 @@ namespace CodeModelTestInput {
         );
       }
     }
-
-    class Class4Inner2 {
+    
+    class Class4Inner2{
       List<T> list_inner = new List<T>();
+      bool fieldJustForCtorTest = false;
+
+      /// <summary>
+      /// Test lambda in ctor
+      /// </summary>
+      public Class4Inner2(List<T> xs) {
+        this.fieldJustForCtorTest = xs.TrueForAll(i => i != null);
+      }
+
       /// <summary>
       /// Generic class + Generic Method + Instance + Capture Both + nested closure + single + embedded nongeneric class
       /// </summary>
@@ -855,11 +915,12 @@ namespace CodeModelTestInput {
         );
       }
     }
-    /// <summary>
+        /// <summary>
     /// Generic class + non generic Method + Static + Capture Locals + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public static bool Method4_13() {
+    public static bool Method4_13() 
+    {
       int local=3;
       return list.TrueForAll((T t) => t.GetHashCode() == local);
     }
@@ -876,7 +937,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + Static + Capture None + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public static bool Method4_15(int p1) {
+    public static bool Method4_15(int p1) 
+    {
       return list.TrueForAll((T t) => t == null);
     }
 
@@ -884,7 +946,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + Static + Capture Both + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public static bool Method4_16(int p1) {
+    public static bool Method4_16(int p1) 
+    {
       int j = 1;
       return list.TrueForAll((T t) => t.GetHashCode() == p1 +j);
     }
@@ -893,7 +956,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + instance + Capture Locals + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_17(int p1) {
+    public bool Method4_17(int p1)
+    {
       int local =3;
       return list.TrueForAll((T t) => t.GetHashCode() == local);
     }
@@ -910,7 +974,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + Instance + Capture None + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_19(int p1) {
+    public bool Method4_19(int p1)
+    {
       return list.TrueForAll((T t) => t == null);
     }
 
@@ -918,7 +983,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + Instance + Capture Both + no nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_20(int p1) {
+    public bool Method4_20(int p1)
+    {
       int j = 1;
       return list.TrueForAll((T t) => t.GetHashCode() == p1 + j);
     }
@@ -926,7 +992,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + Instance + Capture Both + nested closure + single + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_21(int p1) {
+    public bool Method4_21(int p1) 
+    {
       int j = 1;
       return list.TrueForAll(delegate(T t) {
         List<T> newList = list;
@@ -942,7 +1009,8 @@ namespace CodeModelTestInput {
     /// Generic class + NoneGeneric Method + Instance + Capture Both + nested closure + multiple + non embedded class
     /// </summary>
     /// <returns></returns>
-    public bool Method4_22(int p1) {
+    public bool Method4_22(int p1) 
+    {
       int j = 1;
       return list.TrueForAll(delegate(T t) {
         List<T> newList = list;
@@ -1001,5 +1069,5 @@ namespace CodeModelTestInput {
       }
     }
   }
-  #endregion
+  #endregion 
 }

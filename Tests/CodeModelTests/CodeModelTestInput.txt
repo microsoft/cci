@@ -813,6 +813,21 @@ namespace CodeModelTestInput
 
     public class Class3
     {
+        public Class3(System.Collections.Generic.List<int> xs)
+        {
+            this.fieldJustForCtorTest = 0;
+            this.list = new System.Collections.Generic.List<int>();
+            this.object();
+            System.Collections.Generic.List<int> __temp_1 = xs;
+            this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (int i) {
+                bool local_0 = (i > 0);
+                return local_0;
+
+            });
+            return;
+
+        }
+
         public static bool Method3_1<T>(T p1)
         {
             T tmp;
@@ -1064,18 +1079,27 @@ namespace CodeModelTestInput
 
         }
 
-        public Class3()
-        {
-            this.list = new System.Collections.Generic.List<int>();
-            this.object();
-            return;
-
-        }
+        private bool fieldJustForCtorTest;
 
         private System.Collections.Generic.List<int> list;
 
         private class Class3Inner1<T2>
         {
+            public Class3Inner1(System.Collections.Generic.List<T2> xs)
+            {
+                this.list_inner = new System.Collections.Generic.List<T2>();
+                this.fieldJustForCtorTest = 0;
+                this.object();
+                System.Collections.Generic.List<T2> __temp_1 = xs;
+                this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (T2 i) {
+                    bool local_0 = (((object)i) != null);
+                    return local_0;
+
+                });
+                return;
+
+            }
+
             public bool Method3_11(int i)
             {
                 int j = 1;
@@ -1120,19 +1144,28 @@ namespace CodeModelTestInput
 
             }
 
-            public Class3Inner1()
-            {
-                this.list_inner = new System.Collections.Generic.List<T2>();
-                this.object();
-                return;
-
-            }
-
             private System.Collections.Generic.List<T2> list_inner;
+
+            private bool fieldJustForCtorTest;
         }
 
         private class Class3Inner1
         {
+            public Class3Inner1(System.Collections.Generic.List<int> xs)
+            {
+                this.list_inner = new System.Collections.Generic.List<int>();
+                this.fieldJustForCtorTest = 0;
+                this.object();
+                System.Collections.Generic.List<int> __temp_1 = xs;
+                this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (int i) {
+                    bool local_0 = (i > 0);
+                    return local_0;
+
+                });
+                return;
+
+            }
+
             public bool Method3_13(int i)
             {
                 int j = 1;
@@ -1177,15 +1210,9 @@ namespace CodeModelTestInput
 
             }
 
-            public Class3Inner1()
-            {
-                this.list_inner = new System.Collections.Generic.List<int>();
-                this.object();
-                return;
-
-            }
-
             private System.Collections.Generic.List<int> list_inner;
+
+            private bool fieldJustForCtorTest;
         }
 
         private class Class3Inner2<T2>
@@ -1248,6 +1275,20 @@ namespace CodeModelTestInput
 
     public class Class4<T>
     {
+        public Class4(System.Collections.Generic.List<T> xs)
+        {
+            this.fieldJustForCtorTest = 0;
+            this.object();
+            System.Collections.Generic.List<T> __temp_1 = xs;
+            this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (T i) {
+                bool local_0 = (((object)i) != null);
+                return local_0;
+
+            });
+            return;
+
+        }
+
         public static bool Method4_1<T1>(T1 p1)
         {
             bool local_1 = CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
@@ -1522,17 +1563,44 @@ namespace CodeModelTestInput
 
         }
 
-        public Class4()
-        {
-            this.object();
-            return;
-
-        }
-
         private static System.Collections.Generic.List<T> list;
+
+        private bool fieldJustForCtorTest;
 
         private class Class4Inner1<T2>
         {
+            public Class4Inner1(System.Collections.Generic.List<T> xs, System.Collections.Generic.List<T2> ys)
+            {
+                System.Collections.Generic.List<T2> __temp_2;
+                bool __temp_3;
+                this.list_inner = new System.Collections.Generic.List<T2>();
+                this.fieldJustForCtorTest = 0;
+                this.object();
+                System.Collections.Generic.List<T> __temp_1 = xs;
+                if (__temp_1.TrueForAll(delegate (T i) {
+                    bool local_0 = (((object)i) != null);
+                    return local_0;
+
+                }))
+                {
+                    __temp_2 = ys;
+                IL_005d:
+                    __temp_3 = __temp_2.TrueForAll(delegate (T2 i) {
+                        bool local_0 = (((object)i) != null);
+                        return local_0;
+
+                    });
+                    goto IL_006a;
+                }
+                {
+                    __temp_3 = 0;
+                IL_006a:
+                    this.fieldJustForCtorTest = __temp_3;
+                    return;
+
+                }
+            }
+
             public bool Method4_11(int i)
             {
                 int j = 1;
@@ -1577,19 +1645,28 @@ namespace CodeModelTestInput
 
             }
 
-            public Class4Inner1()
-            {
-                this.list_inner = new System.Collections.Generic.List<T2>();
-                this.object();
-                return;
-
-            }
-
             private System.Collections.Generic.List<T2> list_inner;
+
+            private bool fieldJustForCtorTest;
         }
 
         private class Class4Inner2
         {
+            public Class4Inner2(System.Collections.Generic.List<T> xs)
+            {
+                this.list_inner = new System.Collections.Generic.List<T>();
+                this.fieldJustForCtorTest = 0;
+                this.object();
+                System.Collections.Generic.List<T> __temp_1 = xs;
+                this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (T i) {
+                    bool local_0 = (((object)i) != null);
+                    return local_0;
+
+                });
+                return;
+
+            }
+
             public bool Method4_11(int i)
             {
                 int j = 1;
@@ -1634,15 +1711,9 @@ namespace CodeModelTestInput
 
             }
 
-            public Class4Inner2()
-            {
-                this.list_inner = new System.Collections.Generic.List<T>();
-                this.object();
-                return;
-
-            }
-
             private System.Collections.Generic.List<T> list_inner;
+
+            private bool fieldJustForCtorTest;
         }
 
         private class Class4Inner3<T2>
