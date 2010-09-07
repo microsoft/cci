@@ -1584,7 +1584,6 @@ namespace CodeModelTestInput
                 }))
                 {
                     __temp_2 = ys;
-                IL_005d:
                     __temp_3 = __temp_2.TrueForAll(delegate (T2 i) {
                         bool local_0 = (((object)i) != null);
                         return local_0;
@@ -1772,5 +1771,40 @@ namespace CodeModelTestInput
 
             private System.Collections.Generic.List<T2> list_inner;
         }
+    }
+
+    public class ClassWithCtorThatGeneratesTwoClosureClasses
+    {
+        public ClassWithCtorThatGeneratesTwoClosureClasses(object encoder, string[] data)
+        {
+            System.Collections.Generic.List<int> __temp_4;
+            CodeModelTestInput.ClassWithCtorThatGeneratesTwoClosureClasses <>4__this;
+            this.name = "";
+            this.object();
+            <>4__this = this;
+            {
+                string nullEncoder;
+                System.Collections.Generic.List<int> xs = new System.Collections.Generic.List<int>();
+                __temp_4 = xs;
+                __temp_4.TrueForAll(delegate (int i) {
+                    bool local_0 = string.op_Equality(data[i], <>4__this.name);
+                    return local_0;
+
+                });
+                nullEncoder = (encoder as string);
+                this.name = nullEncoder;
+                this.ValueToString = delegate (object obj) {
+                    string local_0 = ((obj != default(object)) ? encoder.ToString() : nullEncoder);
+                    return local_0;
+
+                };
+                return;
+
+            }
+        }
+
+        internal readonly System.Func<object, string> ValueToString;
+
+        internal string name;
     }
 }

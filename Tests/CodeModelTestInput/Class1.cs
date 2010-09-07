@@ -1069,5 +1069,18 @@ namespace CodeModelTestInput {
       }
     }
   }
+
+  public class ClassWithCtorThatGeneratesTwoClosureClasses {
+    internal readonly Func<object, string> ValueToString;
+    internal string name = "";
+    public ClassWithCtorThatGeneratesTwoClosureClasses(object encoder, string[] data) {
+      List<int> xs = new List<int>();
+      xs.TrueForAll(i => data[i] == this.name);
+      var nullEncoder = encoder as string;
+      this.name = nullEncoder;
+      this.ValueToString = obj => (obj != null) ? encoder.ToString() : nullEncoder;
+    }
+  }
+
   #endregion 
 }

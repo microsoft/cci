@@ -379,7 +379,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
         result = moveNextBody.TransformedBlock;
       }
-      result = new CompilationArtifactRemover(this).Visit((BlockStatement)result);
+      result = new CompilationArtifactRemover(this).RemoveCompilationArtifacts((BlockStatement)result);
       var bb = result as BasicBlock;
       if (bb != null) {
         new UnreferencedLabelRemover().Visit(bb);
@@ -1596,7 +1596,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
-      IBlockStatement result = new CompilationArtifactRemover(this).Visit(rootBlock);
+      IBlockStatement result = new CompilationArtifactRemover(this).RemoveCompilationArtifacts(rootBlock);
       return result;
     }
 
