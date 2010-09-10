@@ -956,26 +956,26 @@ namespace Microsoft.Cci {
 
     private void StoreInitializers(ICreateArray createArray, IArrayTypeReference arrayType) {
       var initializers = new List<IExpression>(createArray.Initializers);
-      if (0 < initializers.Count) {
+      if (initializers.Count > 0) {
         var sizes = new List<IExpression>(createArray.Sizes);
         // Used to do the "reverse" mapping from offset (linear index into
         // initializer list) to the d-dimensional coordinates, where d is
         // the rank of the array.
-        int[] dimensionStride = new int[sizes.Count];
+        ulong[] dimensionStride = new ulong[sizes.Count];
         dimensionStride[sizes.Count - 1] = 1;
         for (int i = sizes.Count - 2; 0 <= i; i--) {
-          var size = (int)(((ICompileTimeConstant)sizes[i + 1]).Value);
+          var size = ((IConvertible)((ICompileTimeConstant)sizes[i + 1]).Value).ToUInt64(null);
           dimensionStride[i] = size * dimensionStride[i + 1];
         }
         for (int i = 0; i < initializers.Count; i++) {
           this.generator.Emit(OperationCode.Dup);
           this.StackSize++;
-          var n = i; // compute the indices that map to the offset n
-          for (int d = 0; d < createArray.Rank; d++) {
+          ulong n = (ulong)i; // compute the indices that map to the offset n
+          for (uint d = 0; d < createArray.Rank; d++) {
             var divisor = dimensionStride[d];
             var indexInThisDimension = n / divisor;
             n = n % divisor;
-            this.EmitConstant(indexInThisDimension);
+            this.EmitConstant((int)indexInThisDimension);
           }
           this.Visit(initializers[i]);
           this.generator.Emit(OperationCode.Array_Set, arrayType);
@@ -1139,7 +1139,6 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="expressionStatement">The expression statement.</param>
     public override void Visit(IExpressionStatement expressionStatement) {
-      if (expressionStatement.Expression == CodeDummy.Expression) return;
       IAssignment/*?*/ assigment = expressionStatement.Expression as IAssignment;
       if (assigment != null) {
         this.VisitAssignment(assigment, true);
@@ -3677,13 +3676,31 @@ namespace Microsoft.Cci {
           //TODO: conversion from method to (function) pointer
           if (!sourceType.IsValueType && !TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject) && targetType.TypeCode == PrimitiveTypeCode.IntPtr)
             this.generator.Emit(OperationCode.Conv_I);
-          else {
-            //TODO: assume TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject);
+          else if (TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject)) {
             var mptr = targetType as IManagedPointerTypeReference;
             if (mptr != null)
               this.generator.Emit(OperationCode.Unbox, mptr.TargetType);
-            else
+            else {
               this.generator.Emit(OperationCode.Unbox_Any, targetType);
+            }
+          } else if (sourceType.IsValueType && TypeHelper.IsPrimitiveInteger(targetType)) {
+            //This can only be legal if sourceType is an unresolved enum type
+            switch (targetType.TypeCode) {
+              case PrimitiveTypeCode.Int16: this.generator.Emit(OperationCode.Conv_I2); break;
+              case PrimitiveTypeCode.Int32: this.generator.Emit(OperationCode.Conv_I4); break;
+              case PrimitiveTypeCode.Int64: this.generator.Emit(OperationCode.Conv_I8); break;
+              case PrimitiveTypeCode.UInt16: this.generator.Emit(OperationCode.Conv_U2); break;
+              case PrimitiveTypeCode.UInt32: this.generator.Emit(OperationCode.Conv_U4); break;
+              case PrimitiveTypeCode.UInt64: this.generator.Emit(OperationCode.Conv_U8); break;
+              case PrimitiveTypeCode.UInt8: this.generator.Emit(OperationCode.Conv_U1); break;
+              default:
+                Debug.Assert(false); //Not expected to happen. Please notify hermanv@microsoft.com with a way to reproduce this.
+                break;
+            }
+          } else if (!sourceType.IsValueType) {
+            this.generator.Emit(OperationCode.Unbox_Any, targetType);
+          } else {
+            Debug.Assert(false);  //Not expected to happen. Please notify hermanv@microsoft.com with a way to reproduce this.
           }
           break;
       }
@@ -3723,14 +3740,14 @@ namespace Microsoft.Cci {
         IConditional/*?*/ conditional = expression as IConditional;
         if (conditional != null) {
           ICompileTimeConstant/*?*/ resultIfFalse = conditional.ResultIfFalse as ICompileTimeConstant;
-          if (resultIfFalse != null && resultIfFalse.Value is bool && !((bool)resultIfFalse.Value)) {
+          if (resultIfFalse != null && (ExpressionHelper.IsIntegralZero(resultIfFalse) || (resultIfFalse.Value is bool && !((bool)resultIfFalse.Value)))) {
             //conditional.Condition && conditional.ResultIfTrue
             this.VisitBranchIfFalse(conditional.Condition, targetLabel);
             this.VisitBranchIfFalse(conditional.ResultIfTrue, targetLabel);
             return;
           }
           ICompileTimeConstant/*?*/ resultIfTrue = conditional.ResultIfTrue as ICompileTimeConstant;
-          if (resultIfTrue != null && resultIfTrue.Value is bool && (bool)resultIfTrue.Value) {
+          if (resultIfTrue != null && (ExpressionHelper.IsIntegralOne(resultIfTrue) || (resultIfTrue.Value is bool && (bool)resultIfTrue.Value))) {
             //conditional.Condition || conditional.ResultIfFalse
             ILGeneratorLabel fallThrough = new ILGeneratorLabel();
             this.VisitBranchIfTrue(conditional.Condition, fallThrough);
@@ -3757,12 +3774,8 @@ namespace Microsoft.Cci {
         } else {
           ILogicalNot/*?*/ logicalNot = expression as ILogicalNot;
           if (logicalNot != null) {
-            expression = logicalNot.Operand;
-            if (expression is IBinaryOperation) {
-              this.VisitBranchIfTrue(expression, targetLabel);
-              return;
-            }
-            branchOp = OperationCode.Brtrue;
+            this.VisitBranchIfTrue(logicalNot.Operand, targetLabel);
+            return;
           }
         }
       }
@@ -3817,7 +3830,7 @@ namespace Microsoft.Cci {
         IConditional/*?*/ conditional = expression as IConditional;
         if (conditional != null) {
           ICompileTimeConstant/*?*/ resultIfFalse = conditional.ResultIfFalse as ICompileTimeConstant;
-          if (resultIfFalse != null && resultIfFalse.Value is bool && !((bool)resultIfFalse.Value)) {
+          if (resultIfFalse != null && (ExpressionHelper.IsIntegralZero(resultIfFalse) || (resultIfFalse.Value is bool && !((bool)resultIfFalse.Value)))) {
             //conditional.Condition && conditional.ResultIfTrue
             ILGeneratorLabel fallThrough = new ILGeneratorLabel();
             this.VisitBranchIfFalse(conditional.Condition, fallThrough);
@@ -3826,7 +3839,7 @@ namespace Microsoft.Cci {
             return;
           }
           ICompileTimeConstant/*?*/ resultIfTrue = conditional.ResultIfTrue as ICompileTimeConstant;
-          if (resultIfTrue != null && resultIfTrue.Value is bool && (bool)resultIfTrue.Value) {
+          if (resultIfTrue != null && (ExpressionHelper.IsIntegralOne(resultIfTrue) || (resultIfTrue.Value is bool && (bool)resultIfTrue.Value))) {
             //conditional.Condition || conditional.ResultIfFalse
             this.VisitBranchIfTrue(conditional.Condition, targetLabel);
             this.VisitBranchIfTrue(conditional.ResultIfFalse, targetLabel);
@@ -3851,12 +3864,8 @@ namespace Microsoft.Cci {
         } else {
           ILogicalNot/*?*/ logicalNot = expression as ILogicalNot;
           if (logicalNot != null) {
-            expression = logicalNot.Operand;
-            if (expression is IBinaryOperation) {
-              this.VisitBranchIfFalse(expression, targetLabel);
-              return;
-            }
-            branchOp = OperationCode.Brfalse;
+            this.VisitBranchIfFalse(logicalNot.Operand, targetLabel);
+            return;
           }
         }
       }
