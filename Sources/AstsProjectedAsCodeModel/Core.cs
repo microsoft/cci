@@ -1163,9 +1163,10 @@ namespace Microsoft.Cci.Ast {
       if (sourceIsNullable) {
         //^ assume sType == this.RemoveNullableWrapper(sourceType);
         if (targetIsNullable) return this.LiftedConversionExpression(expression, sType, sourceType, tType, targetType, isExplicitConversion);
-        if (sType.IsEnum && TypeHelper.TypesAreEquivalent(targetType, systemEnum)) return this.ConversionExpression(expression, tType);
+        if (sType.IsEnum && TypeHelper.TypesAreEquivalent(targetType, systemEnum))
+          return this.ConversionExpression(this.ConversionExpression(expression, systemObject), tType);
         if (TypeHelper.TypesAreEquivalent(tType, systemValueType) || TypeHelper.TypesAreEquivalent(tType, systemObject) || (tType.IsInterface && TypeHelper.Type1ImplementsType2(sType, tType)))
-          return this.ConversionExpression(expression, tType); //boxes the nullable type, which strips the wrapper
+          return this.ConversionExpression(this.ConversionExpression(expression, systemObject), tType);
         if (isExplicitConversion)
           return this.Conversion(this.UnboxedNullable(expression, sType, sourceType), tType, allowUserDefinedConversion, isExplicitConversion);
         return new DummyExpression(expression.SourceLocation); //Can't implicitly convert from a nullable type to anything but a base type or implemented interface

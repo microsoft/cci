@@ -2651,7 +2651,6 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (!(this.ContainingBlock.ContainingTypeDeclaration is IClassDeclaration)) return new DummyExpression(this.SourceLocation);
       return this;
     }
 
@@ -7123,8 +7122,21 @@ namespace Microsoft.Cci.Ast {
     }
 
     IEnumerable<IExpression> ICreateArray.Initializers {
-      // Return the converted initializers rather than initializers as parsed.
-      get { foreach (Expression initializer in this.ConvertedInitializers) yield return initializer.ProjectAsIExpression(); }
+      // Return the converted initializers rather than initializers as parsed. Also flattens the list if the rank is > 1.
+      get {
+        if (this.Rank == 1) {
+          foreach (Expression initializer in this.ConvertedInitializers) yield return initializer.ProjectAsIExpression();
+        } else {
+          foreach (Expression initializer in this.ConvertedInitializers) {
+            var nestedArray = initializer as ICreateArray;
+            if (nestedArray != null) {
+              foreach (var nestedInitializer in nestedArray.Initializers)
+                yield return nestedInitializer;
+            } else
+              yield return initializer.ProjectAsIExpression();
+          }
+        }
+      }
     }
 
     IEnumerable<int> ICreateArray.LowerBounds {
@@ -17866,7 +17878,7 @@ namespace Microsoft.Cci.Ast {
         //follows from post condition of ContainingTypeDefinition and precondition of method and fact that typeDefinition is immutable
         return this.ResolveUsing(containingTypeDefinition, restrictToNamespacesAndTypes);
       }
-      if (TypeHelper.TypesAreEquivalent(typeDefinition, this.PlatformType.SystemObject) || this.PlatformType.SystemObject.ResolvedType.IsGeneric) return null;
+      if (TypeHelper.TypesAreEquivalent(typeDefinition, this.PlatformType.SystemObject)) return null;
       return this.ResolveUsing(this.PlatformType.SystemObject.ResolvedType, restrictToNamespacesAndTypes);
     }
 

@@ -1664,8 +1664,12 @@ namespace Microsoft.Cci.Ast {
       PostfixUnaryOperationAssignment/*?*/ postFix = this.Expression as PostfixUnaryOperationAssignment;
       if (postFix != null)
         postFix.VisitAsUnaryOperationAssignment(visitor);
-      else
+      else {
+        BaseClassConstructorCall/*?*/ baseClassConstructorCall = this.Expression as BaseClassConstructorCall;
+        if (baseClassConstructorCall != null && !(this.ContainingBlock.ContainingTypeDeclaration is IClassDeclaration))
+          return; //Value types do not have a callable base class contructor.
         visitor.Visit(this);
+      }
     }
 
     /// <summary>
