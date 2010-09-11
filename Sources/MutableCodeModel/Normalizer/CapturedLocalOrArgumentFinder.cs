@@ -187,6 +187,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           GenericTypeParameter newTypeParam = new GenericTypeParameter() {
             Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
             Index = (count++),
+            InternFactory = this.host.InternFactory,
           };
           this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
           newTypeParam.DefiningType = result;

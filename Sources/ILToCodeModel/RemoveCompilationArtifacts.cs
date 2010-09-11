@@ -85,6 +85,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void RecursivelyFindCapturedLocals(BlockStatement blockStatement) {
+      if (blockStatement.Statements.Count == 0) return;
       FindCapturedLocals(blockStatement.Statements);
       BlockStatement bs = blockStatement.Statements[blockStatement.Statements.Count - 1] as BlockStatement;
       if (bs != null) RecursivelyFindCapturedLocals(bs);
@@ -232,9 +233,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         anonDel.Parameters[i] = par;
       }
       var alreadyDecompiledBody = closureMethodBody as SourceMethodBody;
+      var anonDelSourceMethodBody = alreadyDecompiledBody;
       if (alreadyDecompiledBody == null) {
-        anonDel.Body = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
-          this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider).Block;
+        var smb = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
+          this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider);
+        anonDelSourceMethodBody = smb;
+        anonDel.Body = smb.Block;
       } else {
         anonDel.Body = alreadyDecompiledBody.Block;
       }
@@ -262,6 +266,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         // was discovered at the beginning of this visitor.
         if (this.genericParameterMapper != null) {
           result = this.genericParameterMapper.Visit(result);
+          foreach (var v in anonDelSourceMethodBody.LocalVariables)
+            this.genericParameterMapper.Visit(v);
           foreach (var v in this.capturedLocalOrParameter.Values) {
             // Do NOT visit any of the parameters in the table because that
             // will cause them to (possibly) have their types changed. But

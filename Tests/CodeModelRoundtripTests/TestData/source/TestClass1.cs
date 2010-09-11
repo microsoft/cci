@@ -61,6 +61,11 @@ namespace RoundtripTests.TestData.source {
         Console.WriteLine("Difference((byte)3, (byte)4)) caused an overflow exception");
       }
 
+      List<string> strings = new List<string> { "cat", "dog" };
+      var closure = ReturnClosureWhoseReturnTypeIsGenericMethodParameter(strings, 1);
+      var elementFromStringsOffsetByOne = closure(0);
+      Console.WriteLine("Testing ReturnClosureWhoseReturnTypeIsGenericMethodParameter: {0}", elementFromStringsOffsetByOne);
+
     }
     // Not to execute, just to go through decompilation and then peverify.
     public IntPtr Method22(object o) {
@@ -253,6 +258,10 @@ namespace RoundtripTests.TestData.source {
     }
     public static int Difference(byte x, byte y) {
       return checked(x - y);
+    }
+
+    public Func<int, T> ReturnClosureWhoseReturnTypeIsGenericMethodParameter<T>(List<T> xs, int j) {
+      return i => xs[i + j];
     }
 
 

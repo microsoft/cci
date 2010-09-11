@@ -648,12 +648,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       L.IsCil = true;
       L.IsHiddenBySignature = true;
 
+      if (anonymousDelegate.ReturnValueIsModified)
+        L.ReturnValueCustomModifiers = new List<ICustomModifier>(anonymousDelegate.ReturnValueCustomModifiers);
+      L.ReturnValueIsByRef = anonymousDelegate.ReturnValueIsByRef;
+      L.Visibility = TypeMemberVisibility.Public;
+      L.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, L, this.genericTypeParameterMapping);
+
       var newParams = new List<IParameterDefinition>(anonymousDelegate.Parameters.Count);
       // hack? increment the nesting depth so that the visit of the parameter types
       // happens in the context of the anonymous delegate and not the containing method.
       // If this isn't done, then generic method parameters referred to in the parameter
       // types don't get transformed into being references to the generic type parameters
       // of the closure class.
+      // Also, need to do this for the types of any local variables, as well as the return
+      // type of the closure method itself.
       this.nestingDepth++;
       foreach (var p in anonymousDelegate.Parameters) {
         var newP = new ParameterDefinition();
@@ -662,15 +670,16 @@ namespace Microsoft.Cci.MutableCodeModel {
         newP.Type = this.Visit(newP.Type);
         newParams.Add(newP);
       }
+      L.Type = this.Visit(anonymousDelegate.ReturnType);
+      foreach (var v in L.Body.LocalVariables) {
+        LocalDefinition ld = v as LocalDefinition;
+        if (ld != null) {
+          ld.Type = this.Visit(ld.Type);
+          ld.MethodDefinition = L;
+        }
+      }
       this.nestingDepth--;
       L.Parameters = newParams;
-
-      if (anonymousDelegate.ReturnValueIsModified)
-        L.ReturnValueCustomModifiers = new List<ICustomModifier>(anonymousDelegate.ReturnValueCustomModifiers);
-      L.ReturnValueIsByRef = anonymousDelegate.ReturnValueIsByRef;
-      L.Type = anonymousDelegate.ReturnType;
-      L.Visibility = TypeMemberVisibility.Public;
-      L.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, L, this.genericTypeParameterMapping);
 
       var boundCurrentClosureLocal = new BoundExpression();
       boundCurrentClosureLocal.Definition = this.closureLocal;

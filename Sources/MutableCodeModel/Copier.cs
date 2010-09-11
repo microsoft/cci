@@ -203,6 +203,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       anonymousDelegate.Parameters = pars;
       anonymousDelegate.Body = (IBlockStatement)this.Substitute(anonymousDelegate.Body);
+      anonymousDelegate.ReturnType = this.Substitute(anonymousDelegate.ReturnType);
+      anonymousDelegate.Type = this.Substitute(anonymousDelegate.Type);
       return anonymousDelegate;
     }
 

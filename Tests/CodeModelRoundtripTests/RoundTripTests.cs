@@ -1276,6 +1276,7 @@ class NameChanger : CodeMutatingVisitor {
       namespaceTypeDefinition.Name = this.host.NameTable.GetNameFor(this.pattern.Replace(namespaceTypeDefinition.Name.Value, this.evaluator));
     } else {
       // we changed one name to another?
+      Debug.Assert(false);
     }
     return base.Mutate(namespaceTypeDefinition);
   }
@@ -1303,6 +1304,8 @@ class NameChanger : CodeMutatingVisitor {
         var name = this.host.NameTable.GetNameFor(this.pattern.Replace(namespaceTypeReference.Name.Value, this.evaluator));
         if (name != namespaceTypeReference.Name) {
           return MutableModelHelper.GetNamespaceTypeReference(result.ContainingUnitNamespace, result.GenericParameterCount, result.MangleName, result.Name, this.host.InternFactory, result);
+        } else {
+          Debug.Assert(false);
         }
       }
       return result;

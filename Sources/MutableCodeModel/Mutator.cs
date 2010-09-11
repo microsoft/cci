@@ -178,6 +178,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(anonymousDelegate);
       anonymousDelegate.Parameters = this.Visit(anonymousDelegate.Parameters);
       anonymousDelegate.Body = this.Visit(anonymousDelegate.Body);
+      anonymousDelegate.ReturnType = this.Visit(anonymousDelegate.ReturnType);
+      anonymousDelegate.Type = this.Visit(anonymousDelegate.Type);
       this.path.Pop();
       return anonymousDelegate;
     }
@@ -2909,6 +2911,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       for (int i = 0, n = anonymousDelegate.Parameters.Count; i < n; i++)
         anonymousDelegate.Parameters[i] = this.Visit(anonymousDelegate.Parameters[i]);
       anonymousDelegate.Body = this.Visit(anonymousDelegate.Body);
+      anonymousDelegate.ReturnType = this.Visit(anonymousDelegate.ReturnType);
+      anonymousDelegate.Type = this.Visit(anonymousDelegate.Type);
       this.path.Pop();
       return anonymousDelegate;
     }
