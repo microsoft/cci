@@ -2615,7 +2615,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns a collection of methods that represent the the base class constructors of the declaring type of the method containing this call.
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">Ignored.</param>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       TypeDeclaration/*?*/ declaringType = this.ContainingBlock.ContainingTypeDeclaration;
       if (declaringType == null || !(declaringType is IClassDeclaration)) yield break;
       //^ assert declaringType != null;
@@ -4320,7 +4320,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns a collection of methods that represent the constructors for declaring type of the constructor containing this call.
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">This flag is ignored, since constructors cannot have generic parameters.</param>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       TypeDeclaration/*?*/ declaringType = this.ContainingBlock.ContainingTypeDeclaration;
       if (declaringType == null) yield break;
       //^ assume declaringType != null;
@@ -4676,7 +4676,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">If this flag is true, 
     /// generic methods should be included in the collection if their method parameter types could not be inferred from the argument types.</param>
-    protected abstract IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail);
+    public abstract IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail);
 
     /// <summary>
     /// Returns a default value to pass as an argument corresponding the the given parameter.
@@ -6366,7 +6366,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns a collection of methods that represent the constructors for the named type.
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">This flag is ignored, since constructors cannot have generic parameters.</param>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       foreach (ITypeDefinitionMember member in this.Type.GetMembersNamed(this.NameTable.Ctor, false)) {
         IMethodDefinition/*?*/ meth = member as IMethodDefinition;
         if (meth != null && meth.IsSpecialName) yield return meth;
@@ -6517,7 +6517,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns an empty collection. This routine should never be called since ResolveMethod is overridden with a trivial implementation.
     /// </summary>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       //^ assume false;
       return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
     }
@@ -7973,7 +7973,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns an empty collection. This method should never be called.
     /// </summary>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       //^ assume false;
       return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
     }
@@ -10113,7 +10113,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">If this flag is true, 
     /// generic methods should be included in the collection if their method parameter types could not be inferred from the argument types.</param>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       ITypeDefinition indexedObjectType = this.IndexedObject.Type;
       IArrayTypeReference/*?*/ arrayType = indexedObjectType as IArrayTypeReference;
       if (arrayType != null)
@@ -12189,6 +12189,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected virtual IMethodReference GetReferenceToMethodToCall() {
       IMethodDefinition method = this.ResolvedMethod;
+      if (method == Dummy.Method) return Dummy.MethodReference;
       if (!method.AcceptsExtraArguments) return method;
       ushort nPars = (ushort)IteratorHelper.EnumerableCount(method.Parameters);
       ushort nArgs = (ushort)IteratorHelper.EnumerableCount(this.ConvertedArguments);
@@ -12214,7 +12215,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">If this flag is true, 
     /// generic methods should be included in the collection if their method parameter types could not be inferred from the argument types.</param>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       ITypeDefinition methodExpressionType = this.MethodExpression.Type;
 
       //If this.MethodExpression binds to a delegate, return the Invoke method
@@ -17051,7 +17052,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns a collection of methods that represent the constructors for the named type.
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">This flag is ignored, since constructors cannot have generic parameters.</param>
-    protected override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
+    public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
     }
 
