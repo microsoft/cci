@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
+using System.Globalization;
 
 //^ using Microsoft.Contracts;
 
@@ -14810,6 +14811,349 @@ namespace Microsoft.Cci.Ast {
 
   }
 
+  /// <summary>
+  /// An expression consisting of a the prefix of a simple name, for example "SimpleN".
+  /// </summary>
+  /// <remarks>This is intended for use by an editor that want to offer a list of completions for partially typed simple name.</remarks>
+  public class PartialName : Expression {
+
+    /// <summary>
+    /// Constructs an expression consisting of a the prefix of a simple name, for example "SimpleN".
+    /// </summary>
+    /// <param name="simpleName">The simple name to treat as partial name. Must be fully constructed.</param>
+    public PartialName(SimpleName simpleName)
+      : base(simpleName.ContainingBlock, simpleName.SourceLocation) {
+      this.ignoreCase = simpleName.IgnoreCase;
+      this.name = simpleName.Name;
+    }
+
+    /// <summary>
+    /// Does nothing and always returns false.
+    /// </summary>
+    protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
+      return false;
+    }
+
+    /// <summary>
+    /// Does nothing.
+    /// </summary>
+    public override void Dispatch(SourceVisitor visitor) {
+    }
+
+    /// <summary>
+    /// Always returns null.
+    /// </summary>
+    protected override object/*?*/ GetValue() {
+      return null;
+    }
+
+    /// <summary>
+    /// Always return Dumm.Type.
+    /// </summary>
+    public override ITypeDefinition InferType() {
+      return Dummy.Type;
+    }
+
+    /// <summary>
+    /// Gets the namespace in which the given type is contained. Also works for nested types.
+    /// </summary>
+    protected NamespaceDeclaration GetContainingNamespace(TypeDeclaration typeDeclaration) {
+      while (true) {
+        NestedTypeDeclaration/*?*/ ntd = typeDeclaration as NestedTypeDeclaration;
+        if (ntd == null) break;
+        typeDeclaration = ntd.ContainingTypeDeclaration;
+      }
+      NamespaceTypeDeclaration/*?*/ nd = typeDeclaration as NamespaceTypeDeclaration;
+      if (nd != null) return nd.ContainingNamespaceDeclaration;
+      //The given type declaration is not nested and not in a namespace declaration. That cannot be statically precluded, but is an invalid way to construct an AST.
+      //^ assume nd != null;
+      return nd.ContainingNamespaceDeclaration; //fail so that AST constructor gets some feedback while debugging.
+    }
+
+    /// <summary>
+    /// Always return false;
+    /// </summary>
+    /// <param name="reportError">If true, report an error if the expression has a side effect.</param>
+    public override bool HasSideEffect(bool reportError) {
+      return false;
+    }
+
+    /// <summary>
+    /// True if the case of the simple name must be ignored when resolving it.
+    /// </summary>
+    public bool IgnoreCase {
+      get { return this.ignoreCase; }
+    }
+    private readonly bool ignoreCase;
+
+    /// <summary>
+    /// Always returns this.
+    /// </summary>
+    //^ [MustOverride]
+    public override Expression MakeCopyFor(BlockStatement containingBlock)
+      //^^ ensures result.GetType() == this.GetType();
+      //^^ ensures result.ContainingBlock == containingBlock;
+    {
+      return this;
+    }
+
+    /// <summary>
+    /// The name corresponding to the source expression.
+    /// </summary>
+    public IName Name {
+      get { return this.name; }
+    }
+    readonly IName name;
+
+    /// <summary>
+    /// Always return CodeDummy.Expression.
+    /// </summary>
+    protected override IExpression ProjectAsNonConstantIExpression() {
+      return CodeDummy.Expression;
+      //if (this.cachedProjection != null) return this.cachedProjection;
+      //object/*?*/ container = this.ResolveAsValueContainer();
+      //IPropertyDefinition/*?*/ property = container as IPropertyDefinition;
+      //if (property != null) {
+      //  if (property.Getter != null) {
+      //    if (property.Getter.ResolvedMethod.IsStatic)
+      //      return this.cachedProjection = new ResolvedMethodCall(property.Getter.ResolvedMethod, new List<Expression>(0), this.SourceLocation);
+      //    else {
+      //      ThisReference thisRef = new ThisReference(this.SourceLocation);
+      //      thisRef.SetContainingExpression(this);
+      //      return this.cachedProjection = new ResolvedMethodCall(property.Getter.ResolvedMethod, thisRef, new List<Expression>(0), this.SourceLocation);
+      //    }
+      //  }
+      //  return this.cachedProjection = new DummyExpression(this.SourceLocation);
+      //}
+      //if (container is IEventDefinition) return this.cachedProjection = new DummyExpression(this.SourceLocation); //TODO: is this right?
+      //IFieldDefinition/*?*/ field = container as IFieldDefinition;
+      //if (field != null) {
+      //  if (this.Helper.UseCompileTimeValueOfField(field)) return this.cachedProjection = CompileTimeConstant.For(field.CompileTimeValue, this);
+      //} else {
+      //  LocalDefinition/*?*/ local = container as LocalDefinition;
+      //  if (local != null) {
+      //    if (local.IsConstant) {
+      //      var compileTimeVal = local.CompileTimeValue.ProjectAsIExpression();
+      //      if (!(compileTimeVal is DummyConstant)) return cachedProjection = compileTimeVal;
+      //    }
+      //  }
+      //}
+      //if (container == null) container = Dummy.Field;
+      //Expression expr =  new BoundExpression(this, container);
+      //IParameterDefinition/*?*/ parameter = container as IParameterDefinition;
+      //if (parameter != null && parameter.IsByReference) {
+      //  expr = new AddressDereference(expr, expr.SourceLocation);
+      //}
+      //expr.SetContainingExpression(this);
+      //return this.cachedProjection = (IExpression)expr;
+    }
+
+    /// <summary>
+    /// Returns a list of named entities that might bind to the partial name once completed.
+    /// </summary>
+    public virtual List<INamedEntity> GetCandidates()
+      //^^ ensures result == null || result is ILocalDefinition || result is IParameterDefinition || result is ITypeDefinitionMember || result is INamespaceMember || 
+      //^^ result is ITypeDefinition || result is ITypeGroup || result is INamespaceDefinition;
+    {
+      List<INamedEntity> candidates = new List<INamedEntity>();
+      this.PopulateUsing(this.ContainingBlock, candidates);
+      return candidates;
+    }
+
+    /// <summary>
+    /// Populates the given list with named entities that might bind to the partial name once completed,
+    /// by using the scope chain of the given block.
+    /// </summary>
+    /// <param name="block">The block whose scope chain is used to resolve this name.</param>
+    /// <param name="candidates">A list of named entities to which candidates should be added.</param>
+    protected virtual void PopulateUsing(BlockStatement block, List<INamedEntity> candidates)
+      //^ ensures result == null || result is ITypeDefinition || result is INamespaceDefinition || result is ITypeGroup ||
+      //^ (!restrictToNamespacesAndTypes && (result is ILocalDefinition || result is IParameterDefinition || result is ITypeDefinitionMember || result is INamespaceMember));
+    {
+      for (BlockStatement b = block; b.ContainingSignatureDeclaration == block.ContainingSignatureDeclaration && b.ContainingBlock != b && b.Scope is StatementScope; b = b.ContainingBlock) {
+        foreach (var local in b.Scope.Members) {
+          if (local.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture))
+            candidates.Add(local.LocalVariable);
+        }
+      }
+      if (block.ContainingSignatureDeclaration != null) {
+        foreach (ParameterDeclaration par in block.ContainingSignatureDeclaration.Parameters) {
+          if (par.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture))
+            candidates.Add(par.ParameterDefinition);
+        }
+      }
+      AnonymousMethod/*?*/ anonymousMethod = block.ContainingSignatureDeclaration as AnonymousMethod;
+      if (anonymousMethod != null) {
+        this.PopulateUsing(anonymousMethod.ContainingBlock, candidates);
+        return;
+      }
+      AnonymousDelegate/*?*/ anonymousDelegate = block.ContainingSignatureDeclaration as AnonymousDelegate;
+      if (anonymousDelegate != null) {
+        this.PopulateUsing(anonymousDelegate.ContainingBlock, candidates);
+        return;
+      }
+      if (block.ContainingSignatureDeclaration != null) {
+        this.PopulateUsing(block.ContainingSignatureDeclaration, candidates);
+        return;
+      }
+      if (block.ContainingTypeDeclaration != null) {
+        this.PopulateUsing(block.ContainingTypeDeclaration, candidates);
+        return;
+      }
+      this.PopulateUsing(block.ContainingNamespaceDeclaration, candidates);
+    }
+
+    /// <summary>
+    /// Populates the given list with named entities that might bind to the partial name once completed,
+    /// by using the scope chain of the given method.
+    /// </summary>
+    /// <param name="signatureDeclaration">The signature bearing object whose scope chain is used to resolve this name.</param>
+    /// <param name="candidates">A list of named entities to which candidates should be added.</param>
+    protected virtual void PopulateUsing(ISignatureDeclaration signatureDeclaration, List<INamedEntity> candidates)
+      //^ ensures result == null || result is ITypeDefinition || result is INamespaceDefinition || result is ITypeGroup ||
+      //^ (!restrictToNamespacesAndTypes && (result is IParameterDefinition || result is ITypeDefinitionMember || result is INamespaceMember));
+    {
+      MethodDeclaration/*?*/ method = signatureDeclaration as MethodDeclaration;
+      if (method != null && method.IsGeneric) {
+        foreach (GenericMethodParameterDeclaration gpar in method.GenericParameters) {
+          if (gpar.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture))
+            candidates.Add(gpar.GenericMethodParameterDefinition);
+        }
+      }
+      ITypeDeclarationMember/*?*/ typeDeclarationMember = signatureDeclaration as ITypeDeclarationMember;
+      if (typeDeclarationMember == null) return;
+      this.PopulateUsing(typeDeclarationMember.ContainingTypeDeclaration, candidates);
+    }
+
+    /// <summary>
+    /// Populates the given list with named entities that might bind to the partial name once completed,
+    /// by using the scope chain of the given type declaration.
+    /// </summary>
+    /// <param name="typeDeclaration">The type whose scope chain is used to resolve this name.</param>
+    /// <param name="candidates">A list of named entities to which candidates should be added.</param>
+    protected virtual void PopulateUsing(TypeDeclaration typeDeclaration, List<INamedEntity> candidates)
+      //^ ensures result == null || result is ITypeDefinition || result is INamespaceDefinition || result is ITypeGroup ||
+      //^ (!restrictToNamespacesAndTypes && (result is ITypeDefinitionMember || result is INamespaceMember));
+    {
+      //Look for type parameter
+      ITypeDefinition type = typeDeclaration.TypeDefinition;
+      if (type.IsGeneric) {
+        foreach (IGenericTypeParameter gpar in type.GenericParameters) {
+          if (gpar.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture))
+            candidates.Add(gpar);
+        }
+      }
+
+      //Ignore members if resolving a base type or interface expression
+      if (typeDeclaration.OuterDummyBlock == this.ContainingBlock) {
+        //This partial name is part of the signature of typeDeclaration. It should not be resolved using typeDeclaration.
+        //Proceed to the outer type, if any, otherwise proceed to the namespace.
+        NestedTypeDeclaration/*?*/ nestedTypeDeclaration = typeDeclaration as NestedTypeDeclaration;
+        if (nestedTypeDeclaration != null)
+          this.PopulateUsing(nestedTypeDeclaration.ContainingTypeDeclaration, candidates);
+        else
+          this.PopulateUsing(this.GetContainingNamespace(typeDeclaration), candidates);
+        return;
+      }
+
+      //Look for member (including inherited members)
+      if (type.IsGeneric) type = type.InstanceType.ResolvedType;
+      this.PopulateUsing(type, candidates);
+
+      //Look for outer declaration
+      this.PopulateUsing(this.GetContainingNamespace(typeDeclaration), candidates);
+
+    }
+
+    /// <summary>
+    /// Populates the given list with named entities that might bind to the partial name once completed,
+    /// by using the scope chain of the given type definition.
+    /// </summary>
+    /// <param name="typeDefinition">The type whose members and inherited members are used to resolve this name.</param>
+    /// <param name="candidates">A list of named entities to which candidates should be added.</param>
+    protected virtual void PopulateUsing(ITypeDefinition typeDefinition, List<INamedEntity> candidates)
+      //^ requires !typeDefinition.IsGeneric;
+      //^ ensures result == null || result is ITypeGroup || (!restrictToNamespacesAndTypes && result is ITypeDefinitionMember);
+    {
+      if (typeDefinition == Dummy.Type || typeDefinition == Dummy.NamespaceTypeDefinition) return;
+      foreach (ITypeDefinitionMember member in typeDefinition.Members) {
+        if (!member.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture)) continue;
+        if (!this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) continue;
+        candidates.Add(member);
+      }
+      IEnumerable<ITypeReference> baseClasses = typeDefinition.BaseClasses;
+      foreach (ITypeReference baseClassReference in baseClasses) {
+        ITypeDefinition baseClass = baseClassReference.ResolvedType;
+        if (baseClass.IsGeneric) baseClass = baseClass.InstanceType.ResolvedType;
+        this.PopulateUsing(baseClass, candidates);
+      }
+      INestedTypeDefinition/*?*/ nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
+      if (nestedTypeDefinition != null) {
+        ITypeDefinition containingTypeDefinition = nestedTypeDefinition.ContainingTypeDefinition;
+        this.PopulateUsing(containingTypeDefinition, candidates);
+      }
+      if (TypeHelper.TypesAreEquivalent(typeDefinition, this.PlatformType.SystemObject)) return;
+      this.PopulateUsing(this.PlatformType.SystemObject.ResolvedType, candidates);
+    }
+
+    /// <summary>
+    /// Populates the given list with named entities that might bind to the partial name once completed,
+    /// by using the scope chain of the given namespace declaration.
+    /// </summary>
+    /// <param name="namespaceDeclaration">The namespace to use to resolve this name.</param>
+    /// <param name="candidates">A list of named entities to which candidates should be added.</param>
+    protected virtual void PopulateUsing(NamespaceDeclaration namespaceDeclaration, List<INamedEntity> candidates)
+      //^ ensures result == null || result is ITypeDefinition || result is INamespaceDefinition || result is ITypeGroup ||
+      //^ (!restrictToNamespacesAndTypes && result is INamespaceMember);
+    {
+      foreach (var member in namespaceDeclaration.Aliases) {
+        if (!member.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture)) continue;
+        candidates.Add(member);
+      }
+      foreach (var member in namespaceDeclaration.UnitSetAliases) {
+        if (!member.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture)) continue;
+        candidates.Add(member);
+      }
+      IEnumerable<INamespaceMember> members;
+      if (namespaceDeclaration.BusyResolvingAnAliasOrImport) {
+        //Have to ignore using statements.
+        members = namespaceDeclaration.UnitSetNamespace.Members;
+      } else {
+        //Consider types that were imported into the namespace via using statements
+        members = namespaceDeclaration.Scope.Members;
+      }
+      foreach (var member in members) {
+        if (!member.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture)) continue;
+        var nestedNamespaceDefinition = member as INamespaceDefinition;
+        if (nestedNamespaceDefinition != null) {
+          if (this.ContainingBlock.ContainingTypeDeclaration.CanAccess(nestedNamespaceDefinition))
+            candidates.Add(nestedNamespaceDefinition);
+          continue;
+        }
+        var namespaceTypeDefinition = member as INamespaceTypeDefinition;
+        if (namespaceTypeDefinition != null)
+          candidates.Add(member);
+      }
+      NestedNamespaceDeclaration/*?*/ nestedNamespace = namespaceDeclaration as NestedNamespaceDeclaration;
+      if (nestedNamespace != null) this.PopulateUsing(nestedNamespace.ContainingNamespaceDeclaration, candidates);
+    }
+
+    /// <summary>
+    /// Returns this.Name.Value.
+    /// </summary>
+    //^ [Confined]
+    public override string ToString() {
+      return this.Name.Value;
+    }
+
+    /// <summary>
+    /// Always return Dummy.Type.
+    /// </summary>
+    public sealed override ITypeDefinition Type {
+      get { return Dummy.Type; }
+    }
+
+  }
   /// <summary>
   /// 
   /// </summary>

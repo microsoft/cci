@@ -2291,6 +2291,19 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if the given namespace, or one of its descendant namespaces, contains a type that can be accessed from the scope defined by this block.
+    /// </summary>
+    public virtual bool CanAccess(INamespaceDefinition nestedNamespaceDefinition) {
+      foreach (var member in nestedNamespaceDefinition.Members) {
+        var typeDef = member as ITypeDefinition;
+        if (typeDef != null && this.CanAccess(typeDef)) return true;
+        var nestedNs = member as INamespaceDefinition;
+        if (nestedNs != null && this.CanAccess(nestedNs)) return true;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// A map from names to resolved metadata items. Use this table for case insensitive lookup.
     /// Do not use this dictionary unless you are implementing SimpleName.ResolveUsing(TypeDeclaration typeDeclaration). 
     /// </summary>
@@ -2654,9 +2667,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     #endregion
-
-
-
   }
 
 }
