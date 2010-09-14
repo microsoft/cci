@@ -12458,8 +12458,14 @@ namespace Microsoft.Cci.Ast {
     /// Returns the collection of methods that overload the given method and might correpond to this call (based on their parameter counts). Includes inherited methods.
     /// </summary>
     private IEnumerable<IMethodDefinition> GetMethodGroupMethods(IMethodDefinition methodGroupRepresentative) {
-      uint argumentCount = IteratorHelper.EnumerableCount(this.OriginalArguments);
-      return this.Helper.GetMethodGroupMethods(methodGroupRepresentative, argumentCount);
+      uint argumentCount = 0;
+      bool argumentListIsIncomplete = false;
+      foreach (var argument in this.OriginalArguments) {
+        argumentCount++;
+        argumentListIsIncomplete = argument is DummyExpression;
+      }
+      if (argumentListIsIncomplete) argumentCount--;
+      return this.Helper.GetMethodGroupMethods(methodGroupRepresentative, argumentCount, argumentListIsIncomplete);
       //TODO: pass in "this", so that visibility can be checked.
     }
 

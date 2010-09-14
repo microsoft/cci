@@ -1565,9 +1565,9 @@ namespace Microsoft.Cci.Ast {
       List<Expression> fakeArguments = MakeFakeArgumentList(expression, invokeMethod);
       IEnumerable<IMethodDefinition> candidates;
       if (genericInstance == null)
-        candidates = this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), null);
+        candidates = this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), false, null);
       else
-        candidates = this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), genericInstance.GetArgumentTypeReferences());
+        candidates = this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), false, genericInstance.GetArgumentTypeReferences());
       IMethodDefinition matchingMethod = this.ResolveOverload(candidates, fakeArguments);
       // There is an applicable method, but is not consistent with delegate invocation semantics.
       // The caller needs to know this, since no extension method is searched for in this case.
@@ -1603,8 +1603,8 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //TODO: pass in an expression to provide a context for determining visibility
     //^ [Pure]
-    public virtual IEnumerable<IMethodDefinition> GetMethodGroupMethods(IMethodDefinition methodGroupRepresentative, uint argumentCount) {
-      return this.GetMethodGroupMethods(methodGroupRepresentative, argumentCount, null);
+    public virtual IEnumerable<IMethodDefinition> GetMethodGroupMethods(IMethodDefinition methodGroupRepresentative, uint argumentCount, bool argumentListIsIncomplete) {
+      return this.GetMethodGroupMethods(methodGroupRepresentative, argumentCount, argumentListIsIncomplete, null);
     }
 
     /// <summary>
@@ -1613,11 +1613,11 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //TODO: pass in an expression to provide a context for determining visibility
     //^ [Pure]
-    public virtual IEnumerable<IMethodDefinition> GetMethodGroupMethods(IMethodDefinition methodGroupRepresentative, uint argumentCount, IEnumerable<ITypeReference>/*?*/ genericArguments) {
+    public virtual IEnumerable<IMethodDefinition> GetMethodGroupMethods(IMethodDefinition methodGroupRepresentative, uint argumentCount, bool argumentListIsIncomplete, IEnumerable<ITypeReference>/*?*/ genericArguments) {
       //TODO: need to instantiate generic methods
       ITypeDefinition type = methodGroupRepresentative.ContainingTypeDefinition;
       IName methodName = methodGroupRepresentative.Name;
-      return this.GetMethodGroupMethods(type, methodName, argumentCount, genericArguments);
+      return this.GetMethodGroupMethods(type, methodName, argumentCount, argumentListIsIncomplete, genericArguments);
     }
 
     /// <summary>
@@ -1625,13 +1625,14 @@ namespace Microsoft.Cci.Ast {
     /// and that might be called with the given number of arguments.
     /// </summary>
     //^ [Pure]
-    private IEnumerable<IMethodDefinition> GetMethodGroupMethods(ITypeDefinition type, IName methodName, uint argumentCount, IEnumerable<ITypeReference>/*?*/ genericArguments) {
+    private IEnumerable<IMethodDefinition> GetMethodGroupMethods(ITypeDefinition type, IName methodName, uint argumentCount, bool argumentListIsIncomplete, IEnumerable<ITypeReference>/*?*/ genericArguments) {
       uint genericArgumentCount = IteratorHelper.EnumerableCount(genericArguments);
       foreach (ITypeDefinitionMember member in type.GetMembersNamed(methodName, false)) {
         IMethodDefinition/*?*/ method = member as IMethodDefinition;
         if (method == null) continue; //Cannot happen with classes defined in C#
         uint methodParameterCount = IteratorHelper.EnumerableCount(method.Parameters);
-        if (methodParameterCount != argumentCount && !this.MethodQualifiesEvenIfArgumentNumberMismatches(method, methodParameterCount, argumentCount)) continue;
+        if (methodParameterCount != argumentCount && (methodParameterCount < argumentCount || !argumentListIsIncomplete) &&
+          !this.MethodQualifiesEvenIfArgumentNumberMismatches(method, methodParameterCount, argumentCount)) continue;
         //TODO: ignore method if it is not visible (needs an extra parameter)
         if (genericArgumentCount == 0)
           yield return method;
@@ -1641,7 +1642,7 @@ namespace Microsoft.Cci.Ast {
           yield return new GenericMethodInstance(method, genericArguments, this.Compilation.HostEnvironment.InternFactory);
       }
       foreach (ITypeReference baseTypeRef in type.BaseClasses) {
-        foreach (IMethodDefinition baseClassMethod in this.GetMethodGroupMethods(baseTypeRef.ResolvedType, methodName, argumentCount, genericArguments))
+        foreach (IMethodDefinition baseClassMethod in this.GetMethodGroupMethods(baseTypeRef.ResolvedType, methodName, argumentCount, argumentListIsIncomplete, genericArguments))
           yield return baseClassMethod;
       }
     }
@@ -3031,7 +3032,7 @@ namespace Microsoft.Cci.Ast {
       bool sawOnlyGenericMethods = true;
       IMethodDefinition invokeMethod = this.GetInvokeMethod(targetType);
       IMethodDefinition/*?*/ methodToComplainAbout = null;
-      foreach (IMethodDefinition method in this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters))) {
+      foreach (IMethodDefinition method in this.GetMethodGroupMethods(methodGroupRepresentative, IteratorHelper.EnumerableCount(invokeMethod.Parameters), false)) {
         if (!method.IsGeneric) sawOnlyGenericMethods = false;
         if (methodToComplainAbout == null) methodToComplainAbout = method;
       }
