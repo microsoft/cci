@@ -14834,6 +14834,17 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Constructs an expression consisting of a the prefix of a simple name, for example "SimpleN".
+    /// </summary>
+    /// <param name="simpleName">The simple name to treat as partial name. Must be fully constructed.</param>
+    /// <param name="ignoreCase">True if the case of the partial name must be ignored when resolving it.</param>
+    public PartialName(SimpleName simpleName, bool ignoreCase)
+      : base(simpleName.ContainingBlock, simpleName.SourceLocation) {
+      this.ignoreCase = ignoreCase;
+      this.name = simpleName.Name;
+    }
+
+    /// <summary>
     /// Does nothing and always returns false.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
@@ -14885,7 +14896,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// True if the case of the simple name must be ignored when resolving it.
+    /// True if the case of the partial name must be ignored when resolving it.
     /// </summary>
     public bool IgnoreCase {
       get { return this.ignoreCase; }
