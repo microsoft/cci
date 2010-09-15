@@ -400,8 +400,8 @@ namespace Microsoft.Cci.Ast {
         TypeDeclaration typeDeclaration = member as TypeDeclaration;
         if (typeDeclaration != null && typeDeclaration.TypeDefinition.HasExtensionMethod) {
           foreach (ITypeDefinitionMember typeMember in typeDeclaration.TypeDefinition.Members) {
-            MethodDefinition method = typeMember as MethodDefinition;
-            if (method.IsExtensionMethod)
+            var method = typeMember as MethodDefinition;
+            if (method != null && method.IsExtensionMethod)
               extensionMethodsFromEnclosedScope.InsertInExtensionScope(method);
           }
         }
