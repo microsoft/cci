@@ -15148,7 +15148,7 @@ namespace Microsoft.Cci.Ast {
           continue;
         }
         var namespaceTypeDefinition = member as INamespaceTypeDefinition;
-        if (namespaceTypeDefinition != null)
+        if (namespaceTypeDefinition != null && this.ContainingBlock.ContainingTypeDeclaration.CanAccess(namespaceTypeDefinition))
           candidates.Add(member);
       }
       NestedNamespaceDeclaration/*?*/ nestedNamespace = namespaceDeclaration as NestedNamespaceDeclaration;
