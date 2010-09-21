@@ -20,6 +20,7 @@ namespace RoundtripTests.TestData.source {
       MethodCallTest2(this.t, ref t1, out t2);
       Console.WriteLine("Back from method call test2, we have t2 as {0}.", t2);
       Console.WriteLine("I have {0}.", this.t);
+
       int[] A = new int[] { 3, 4, 5 };
       int[] B = new int[] { 6, 7 };
       var e = Iterator(A, B);
@@ -28,7 +29,7 @@ namespace RoundtripTests.TestData.source {
         var x = e.Current;
         s += x;
       }
-      Console.WriteLine("Iterator returned {0}", s);
+      Console.WriteLine("Iterator returned '{0}'", s);
 
       // Test to make sure that loops within anonymous delegates are properly preserved
       Console.Write("LoopInAnonymousDelegate: ");
@@ -65,6 +66,12 @@ namespace RoundtripTests.TestData.source {
       var closure = ReturnClosureWhoseReturnTypeIsGenericMethodParameter(strings, 1);
       var elementFromStringsOffsetByOne = closure(0);
       Console.WriteLine("Testing ReturnClosureWhoseReturnTypeIsGenericMethodParameter: {0}", elementFromStringsOffsetByOne);
+
+      var yieldFooResults = "";
+      foreach (var yfr in YieldFooOrBar(true)) {
+        yieldFooResults += yfr;
+      }
+      Console.WriteLine("IEnumerable test: '{0}'", yieldFooResults);
 
     }
     // Not to execute, just to go through decompilation and then peverify.
@@ -264,7 +271,12 @@ namespace RoundtripTests.TestData.source {
       return i => xs[i + j];
     }
 
-
+    public IEnumerable<string> YieldFooOrBar(bool yieldFoo) {
+      if (yieldFoo)
+        yield return "foo";
+      else
+        yield return "bar";
+    }
   }
   class C {
     public static void Main(string[] args) {

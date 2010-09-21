@@ -104,7 +104,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 1.2) fields that manages the state machine: __current and __state, and a currentThreadId field.
     /// 1.3) a constructor that takes one int argument.  
     /// 1.4) methods that are required by the interfaces of the closure class: MoveNext, Reset,
-    /// GetEnumerator, Current getter, and DisposeMethod. 
+    /// GetEnumerator, Current getter, and DisposeMethod. (GetEnumerator is needed only if the iterator's type is IEnumerable and not IEnumerator.)
     /// 2) creates the new body of the iterator method: which returns a local variable that holds a new object of the closure class, with the fields of 
     /// the closure class that correspond to the parameters (including the self parameter if applicable)
     /// initialized. 
@@ -199,6 +199,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
       this.iteratorLocalCount = iteratorLocalCount;
       this.host = host; this.sourceLocationProvider = sourceLocationProvider;
+
+      var methodType = method.Type;
+      var genericMethodType = methodType as IGenericTypeInstanceReference;
+      if (genericMethodType != null) methodType = genericMethodType.GenericType;
+      this.isEnumerable =
+        TypeHelper.TypesAreEquivalent(methodType, host.PlatformType.SystemCollectionsGenericIEnumerable)
+        || TypeHelper.TypesAreEquivalent(methodType, host.PlatformType.SystemCollectionsIEnumerable);
     }
 
     IMetadataHost host;
@@ -231,6 +238,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
+
+    bool isEnumerable; // true if return type of method is IEnumerable, false if return type of method is IEnumerator
    
     /// <summary>
     /// Compile the method body, represented by <paramref name="block"/>. It creates the closure class and all its members
@@ -309,7 +318,11 @@ namespace Microsoft.Cci.MutableCodeModel {
         Locations = block.Locations, 
         Type = localDefinition.Type
       };
-      createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
+      // the start state depends on whether the iterator is an IEnumerable or an IEnumerator. For the former,
+      // it must be created in state -2. Then it is the GetEnumerator method that puts it into its
+      // "start" state, i.e., state 0.
+      var startState = this.isEnumerable ? -2 : 0;
+      createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = startState, Type = this.host.PlatformType.SystemInt32 });
       LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { 
         InitialValue = createObjectInstance, 
         LocalVariable = localDefinition
@@ -327,7 +340,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           if (!this.method.ContainingTypeDefinition.IsClass) {
             thisValue = new AddressDereference() {
               Address = thisR,
-              Type = this.method.ContainingType
+              Type = this.method.ContainingTypeDefinition.IsGeneric ? (ITypeReference)this.method.ContainingTypeDefinition.InstanceType : (ITypeReference)this.method.ContainingTypeDefinition
             };
           }
           assignment = new Assignment {
@@ -523,7 +536,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       iteratorClosureType.Visibility = TypeMemberVisibility.Private;
 
       /* Interfaces. */
-      result.InitializeInterfaces(result.ElementType);
+      result.InitializeInterfaces(result.ElementType, this.isEnumerable);
      
       /* Fields, Methods, and Properties. */
       CreateIteratorClosureFields(result);
@@ -606,8 +619,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       CreateResetMethod(iteratorClosure);
       CreateDisposeMethod(iteratorClosure);
       // Two versions of GetEnumerator for generic and non-generic interfaces.
-      CreateGetEnumeratorMethodGeneric(iteratorClosure);
-      CreateGetEnumeratorMethodNonGeneric(iteratorClosure);
+      if (this.isEnumerable) {
+        CreateGetEnumeratorMethodGeneric(iteratorClosure);
+        CreateGetEnumeratorMethodNonGeneric(iteratorClosure);
+      }
       // MoveNext
       CreateMoveNextMethod(iteratorClosure, blockStatement);
     }
