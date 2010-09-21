@@ -49,8 +49,12 @@ namespace Microsoft.Cci.MetadataReader {
 
     CoreTypes CoreTypes {
       get {
-        if (this.coreTypes == null)
-          this.coreTypes = new CoreTypes(this);
+        if (this.coreTypes == null) {
+          lock (this) {
+            if (this.coreTypes == null)
+              this.coreTypes = new CoreTypes(this);
+          }
+        }
         return this.coreTypes;
       }
     }
