@@ -25,39 +25,40 @@ namespace ILMutator {
         return 1;
       }
 
-      var host = new PeReader.DefaultHost();
+      using (var host = new PeReader.DefaultHost()) {
 
-      IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
-      if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-        Console.WriteLine(args[0] + " is not a PE file containing a CLR assembly, or an error occurred when loading it.");
-        return 1;
-      }
-
-      PdbReader/*?*/ pdbReader = null;
-      string pdbFile = Path.ChangeExtension(module.Location, "pdb");
-      if (File.Exists(pdbFile)) {
-        using (var pdbStream = File.OpenRead(pdbFile)) {
-          pdbReader = new PdbReader(pdbStream, host);
+        IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
+        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+          Console.WriteLine(args[0] + " is not a PE file containing a CLR assembly, or an error occurred when loading it.");
+          return 1;
         }
-      } else {
-        Console.WriteLine("Could not load the PDB file for '" + module.Name.Value + "' . Proceeding anyway.");
-      }
-      using (pdbReader) {
-        ILMutator mutator = new ILMutator(host, pdbReader);
-        module = mutator.Visit(module);
 
-        string outputPath;
-        if (args.Length == 2)
-          outputPath = args[1];
-        else
-          outputPath = module.Location + ".pe";
+        PdbReader/*?*/ pdbReader = null;
+        string pdbFile = Path.ChangeExtension(module.Location, "pdb");
+        if (File.Exists(pdbFile)) {
+          using (var pdbStream = File.OpenRead(pdbFile)) {
+            pdbReader = new PdbReader(pdbStream, host);
+          }
+        } else {
+          Console.WriteLine("Could not load the PDB file for '" + module.Name.Value + "' . Proceeding anyway.");
+        }
+        using (pdbReader) {
+          ILMutator mutator = new ILMutator(host, pdbReader);
+          module = mutator.Visit(module);
 
-        var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
+          string outputPath;
+          if (args.Length == 2)
+            outputPath = args[1];
+          else
+            outputPath = module.Location + ".pe";
 
-        // Need to not pass in a local scope provider until such time as we have one that will use the mutator
-        // to remap things (like the type of a scope constant) from the original assembly to the mutated one.
-        using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
-          PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
+          var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
+
+          // Need to not pass in a local scope provider until such time as we have one that will use the mutator
+          // to remap things (like the type of a scope constant) from the original assembly to the mutated one.
+          using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
+            PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
+          }
         }
       }
       return 0; // success

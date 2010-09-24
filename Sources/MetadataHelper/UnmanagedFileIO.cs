@@ -19,9 +19,10 @@ namespace Microsoft.Cci {
 
 #if !COMPACTFX
   /// <summary>
-  /// Class representing the unmanaged memory mapped file. This can be used to open the file as memory mapped file and get the pointer to the buffer of file content.
+  /// A managed wrapper for an unmanaged memory mapped file.
+  /// Important: each instance of this class holds a read-lock on a file. Instances should be explicitly disposed as soon as they become inactive.
   /// </summary>
-  public unsafe sealed class MemoryMappedFile : IBinaryDocumentMemoryBlock {
+  public unsafe sealed class MemoryMappedFile : IBinaryDocumentMemoryBlock, IDisposable {
 
     private MemoryMappedFile(
       IBinaryDocument binaryDocument,
@@ -37,10 +38,18 @@ namespace Microsoft.Cci {
     /// Finalizer for the Memory mapped file. Calls the CloseMap.
     /// </summary>
     ~MemoryMappedFile() {
-      this.CloseMap();
+      this.Close();
     }
 
-    private void CloseMap() {
+    /// <summary>
+    /// Frees the memory mapped file.
+    /// </summary>
+    public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    private void Close() {
       if (buffer != null) {
         MemoryMappedFile.UnmapViewOfFile(buffer);
         buffer = null;
@@ -153,14 +162,15 @@ namespace Microsoft.Cci {
 #endif
 
   /// <summary>
+  /// A managed wrapper for a block of memory allocated from the unmanaged heap.
+  /// Important: each instance of this class holds a read-lock on a file. Instances should be explicitly disposed as soon as they become inactive.
   /// </summary>
-  [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1049:TypesThatOwnNativeResourcesShouldBeDisposable")]
-  public unsafe sealed class UnmanagedBinaryMemoryBlock : IBinaryDocumentMemoryBlock { //TODO: implement IDisposable
+  public unsafe sealed class UnmanagedBinaryMemoryBlock : IBinaryDocumentMemoryBlock, IDisposable {
     IBinaryDocument binaryDocument;
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
     IntPtr Pointer;
 
-    internal UnmanagedBinaryMemoryBlock(IBinaryDocument binaryDocument) {
+    private UnmanagedBinaryMemoryBlock(IBinaryDocument binaryDocument) {
       this.binaryDocument = binaryDocument;
       this.Pointer = Marshal.AllocHGlobal((int)binaryDocument.Length);
       if (this.Pointer == IntPtr.Zero) {
@@ -169,9 +179,21 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Destructor for UnmanagedBinaryMemoryBlock
+    /// Frees the umanaged memory block.
     /// </summary>
     ~UnmanagedBinaryMemoryBlock() {
+      this.Close();
+    }
+
+    /// <summary>
+    /// Frees the umanaged memory block.
+    /// </summary>
+    public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    private void Close() {
       if (this.Pointer != IntPtr.Zero)
         Marshal.FreeHGlobal(this.Pointer);
       this.Pointer = IntPtr.Zero;
@@ -246,6 +268,7 @@ namespace Microsoft.Cci {
       }
       return unmanagedBinaryMemoryBlock;
     }
+
   }
 
   /// <summary>

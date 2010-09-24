@@ -41,12 +41,12 @@ namespace Microsoft.Cci {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize) 
-      :this(nameTable, new InternFactory(), pointerSize)
+    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize)
+      : this(nameTable, new InternFactory(), pointerSize)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
     }
-      
+
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
@@ -412,7 +412,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Raises the CompilationErrors event with the given error event arguments.
+    /// Raises the Errors event with the given error event arguments.
     /// The event is raised on a separate thread.
     /// </summary>
     public virtual void ReportErrors(Microsoft.Cci.ErrorEventArgs errorEventArguments) {
@@ -421,7 +421,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Raises the CompilationErrors event with the given error event arguments.
+    /// Raises the Errors event with the given error event arguments.
     /// </summary>
     /// <param name="state">The error event arguments.</param>
     protected void SynchronousReportErrors(object/*?*/ state)
@@ -577,12 +577,15 @@ namespace Microsoft.Cci {
   }
   /// <summary>
   /// A base class for an object provided by the application hosting the metadata reader. The object allows the host application
-  /// to control how assembly references are unified, where files are found and so on.
+  /// to control how assembly references are unified, where files are found and so on. The object also controls the lifetime
+  /// of things such as memory mapped files and blocks of unmanaged memory. Be sure to call Dispose on the object when
+  /// it is no longer needed and the associated locks and/or memory must be released immediately.
   /// </summary>
-  public abstract class MetadataReaderHost : MetadataHostEnvironment, IMetadataReaderHost {
+  public abstract class MetadataReaderHost : MetadataHostEnvironment, IMetadataReaderHost, IDisposable {
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
     protected MetadataReaderHost()
       : this(new NameTable(), 0) {
@@ -590,6 +593,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
     /// <param name="searchPaths">
     /// A collection of strings that are interpreted as valid paths which are used to search for units.
@@ -601,6 +605,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
     /// <param name="searchPaths">
     /// A collection of strings that are interpreted as valid paths which are used to search for units.
@@ -621,6 +626,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
     /// <param name="nameTable">
     /// A collection of IName instances that represent names that are commonly used during compilation.
@@ -633,6 +639,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
     /// <param name="nameTable">
     /// A collection of IName instances that represent names that are commonly used during compilation.
@@ -654,6 +661,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
+    /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
     /// <param name="nameTable">
     /// A collection of IName instances that represent names that are commonly used during compilation.
@@ -674,6 +682,34 @@ namespace Microsoft.Cci {
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
     }
+
+    /// <summary>
+    /// Calls IDiposable.Dispose on any disposable objects allocated by this host environment.
+    /// </summary>
+    ~MetadataReaderHost() {
+      this.Close();
+    }
+
+    /// <summary>
+    /// Calls IDiposable.Dispose on any disposable objects allocated by this host environment.
+    /// </summary>
+    public void Dispose() {
+      this.Close();
+      GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Calls IDiposable.Dispose on any disposable objects allocated by this host environment.
+    /// </summary>
+    private void Close() {
+      foreach (var disposable in this.disposableObjectAllocatedByThisHost)
+        disposable.Dispose();
+    }
+
+    /// <summary>
+    /// A list of all of the IDisposable object that have been allocated by this host.
+    /// </summary>
+    protected List<IDisposable> disposableObjectAllocatedByThisHost = new List<IDisposable>();
 
     /// <summary>
     /// Adds a new directory (path) to the list of search paths for which
@@ -761,9 +797,13 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Open the binary document as a memory block in host dependent fashion.
+    /// IMPORTANT: The lifetime of the memory block is the same as the lifetime of this host object.
+    /// Be sure to call Dispose on the host object when it is no longer needed, otherwise files may stay locked,
+    /// or resources such as large blocks of memory may remain allocated until the host's finalizer method runs.
     /// </summary>
     /// <param name="sourceDocument">The binary document that is to be opened.</param>
     /// <returns>The unmanaged memory block corresponding to the source document.</returns>
+    /// <remarks>When overridding this method, be sure to add any disposable objects to this.disposableObjectAllocatedByThisHost.</remarks>
     public virtual IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
       try {
 #if !COMPACTFX
@@ -771,6 +811,7 @@ namespace Microsoft.Cci {
 #else
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
 #endif
+        this.disposableObjectAllocatedByThisHost.Add((IDisposable)binDocMemoryBlock);
         return binDocMemoryBlock;
       } catch (IOException) {
         return null;
@@ -780,11 +821,15 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Open the child binary document within the context of parent source document.as a memory block in host dependent fashion 
     /// For example: in multimodule assemblies the main module will be parentSourceDocument, where as other modules will be child
-    /// docuements.
+    /// documents.
+    /// IMPORTANT: The lifetime of the memory block is the same as the lifetime of this host object.
+    /// Be sure to call Dispose on the host object when it is no longer needed, otherwise files may stay locked,
+    /// or resources such as large blocks of memory may remain allocated until the host's finalizer method runs.
     /// </summary>
     /// <param name="parentSourceDocument">The source document indicating the child document location.</param>
     /// <param name="childDocumentName">The name of the child document.</param>
     /// <returns>The unmanaged memory block corresponding to the child document.</returns>
+    /// <remarks>When overridding this method, be sure to add any disposable objects to this.disposableObjectAllocatedByThisHost.</remarks>
     public virtual IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName) {
       try {
         string directory = Path.GetDirectoryName(parentSourceDocument.Location);
@@ -795,6 +840,7 @@ namespace Microsoft.Cci {
 #else
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);
 #endif
+        this.disposableObjectAllocatedByThisHost.Add((IDisposable)binDocMemoryBlock);
         return binDocMemoryBlock;
       } catch (IOException) {
         return null;

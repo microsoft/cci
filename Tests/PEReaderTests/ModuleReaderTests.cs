@@ -46,6 +46,7 @@ namespace ModuleReaderTests {
     public override IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
       try {
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
+        this.disposableObjectAllocatedByThisHost.Add((IDisposable)binDocMemoryBlock);
         return binDocMemoryBlock;
       } catch (IOException) {
         return null;
@@ -440,6 +441,7 @@ namespace ModuleReaderTests {
       this.MRW_TypeTests();
       this.MRW_TypeMemberTests();
       this.MRW_MethodBodyTests();
+      this.HostEnv.Dispose();
     }
 
   }

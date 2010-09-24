@@ -221,22 +221,26 @@ internal class HostEnvironment : MetadataReaderHost {
     }
 
     public override IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
-        try {
-            return UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
-        } catch (IOException) {
-            return null;
-        }
+      try {
+        var block = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
+        this.disposableObjectAllocatedByThisHost.Add(block);
+        return block;
+      } catch (IOException) {
+        return null;
+      }
     }
 
     public override IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName) {
-        try {
-            string directory = Path.GetDirectoryName(parentSourceDocument.Location);
-            string fullPath = Path.Combine(directory, childDocumentName);
-            IBinaryDocument newBinaryDocument = BinaryDocument.GetBinaryDocumentForFile(fullPath, this);
-            return UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);
-        } catch (IOException) {
-            return null;
-        }
+      try {
+        string directory = Path.GetDirectoryName(parentSourceDocument.Location);
+        string fullPath = Path.Combine(directory, childDocumentName);
+        IBinaryDocument newBinaryDocument = BinaryDocument.GetBinaryDocumentForFile(fullPath, this);
+        var block = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);
+        this.disposableObjectAllocatedByThisHost.Add(block);
+        return block;
+      } catch (IOException) {
+        return null;
+      }
     }
 }
 

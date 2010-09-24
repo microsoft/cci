@@ -19,35 +19,36 @@ namespace FindThrowPlatformType {
         return;
       }
 
-      var host = new PeReader.DefaultHost();
-      var module = host.LoadUnitFrom(args[0]) as IModule;
+      using (var host = new PeReader.DefaultHost()) {
+        var module = host.LoadUnitFrom(args[0]) as IModule;
 
-      if (module == null) {
-        Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
-        return;
-      }
+        if (module == null) {
+          Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
+          return;
+        }
 
-      var platformType = new MyPlatformType(host);
-      INamespaceTypeReference systemArgumentNullException = platformType.SystemArgumentNullException;
-      IName ctor = host.NameTable.Ctor;
+        var platformType = new MyPlatformType(host);
+        INamespaceTypeReference systemArgumentNullException = platformType.SystemArgumentNullException;
+        IName ctor = host.NameTable.Ctor;
 
-      //write out the signature of every method that contains the IL equivalent of "throw new System.ArgumentNullException();"
-      foreach (var type in module.GetAllTypes()) {
-        foreach (var methodDefinition in type.Methods) {
-          var lastInstructionWasNewObjSystemArgumentNull = false;
-          foreach (var operation in methodDefinition.Body.Operations) {
-            if (operation.OperationCode == OperationCode.Newobj) {
-              var consRef = operation.Value as IMethodReference;
-              if (consRef != null && consRef.Name == ctor &&
+        //write out the signature of every method that contains the IL equivalent of "throw new System.ArgumentNullException();"
+        foreach (var type in module.GetAllTypes()) {
+          foreach (var methodDefinition in type.Methods) {
+            var lastInstructionWasNewObjSystemArgumentNull = false;
+            foreach (var operation in methodDefinition.Body.Operations) {
+              if (operation.OperationCode == OperationCode.Newobj) {
+                var consRef = operation.Value as IMethodReference;
+                if (consRef != null && consRef.Name == ctor &&
                   TypeHelper.TypesAreEquivalent(consRef.ContainingType, systemArgumentNullException)) {
-                lastInstructionWasNewObjSystemArgumentNull = true;
+                  lastInstructionWasNewObjSystemArgumentNull = true;
+                }
+              } else if (lastInstructionWasNewObjSystemArgumentNull && operation.OperationCode == OperationCode.Throw) {
+                Console.WriteLine(MemberHelper.GetMethodSignature(methodDefinition,
+                  NameFormattingOptions.ReturnType|NameFormattingOptions.TypeParameters|NameFormattingOptions.Signature));
+                break;
+              } else {
+                lastInstructionWasNewObjSystemArgumentNull = false;
               }
-            } else if (lastInstructionWasNewObjSystemArgumentNull && operation.OperationCode == OperationCode.Throw) {
-              Console.WriteLine(MemberHelper.GetMethodSignature(methodDefinition, 
-                NameFormattingOptions.ReturnType|NameFormattingOptions.TypeParameters|NameFormattingOptions.Signature));
-              break;
-            } else {
-              lastInstructionWasNewObjSystemArgumentNull = false;
             }
           }
         }
