@@ -24,34 +24,35 @@ namespace CodeModelTests {
 
     [Fact]
     public static void TestCodeModel() {
-      HostEnvironment host = new HostEnvironment();
-      var location = typeof(CodeModelTestInput.Class1).Assembly.Location;
-      IAssembly/*?*/ assembly = host.LoadUnitFrom(location) as IAssembly;
-      Assert.True(assembly != null, "Failed to read in test executable as test data");
+      using (var host = new HostEnvironment()) {
+        var location = typeof(CodeModelTestInput.Class1).Assembly.Location;
+        IAssembly/*?*/ assembly = host.LoadUnitFrom(location) as IAssembly;
+        Assert.True(assembly != null, "Failed to read in test executable as test data");
 
-      PdbReader/*?*/ pdbReader = null;
-      string pdbFile = Path.ChangeExtension(assembly.Location, "pdb");
-      if (File.Exists(pdbFile)) {
-        using (var pdbStream = File.OpenRead(pdbFile)) {
-          pdbReader = new PdbReader(pdbStream, host);
-        }
-      }
-      using (pdbReader) {
-        SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
-        SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, true);
-        csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
-        string result = sourceEmitterOutput.Data;
-        string expected;
-        using (var resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt")) {
-          using (var reader = new StreamReader(resource)) {
-            expected = reader.ReadToEnd();
+        PdbReader/*?*/ pdbReader = null;
+        string pdbFile = Path.ChangeExtension(assembly.Location, "pdb");
+        if (File.Exists(pdbFile)) {
+          using (var pdbStream = File.OpenRead(pdbFile)) {
+            pdbReader = new PdbReader(pdbStream, host);
           }
         }
+        using (pdbReader) {
+          SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
+          SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, true);
+          csSourceEmitter.Visit((INamespaceDefinition)assembly.UnitNamespaceRoot);
+          string result = sourceEmitterOutput.Data;
+          string expected;
+          using (var resource = typeof(Test).Assembly.GetManifestResourceStream("CodeModelTests.CodeModelTestInput.txt")) {
+            using (var reader = new StreamReader(resource)) {
+              expected = reader.ReadToEnd();
+            }
+          }
 
-        if (result != expected) {
-          string resultFile = Path.GetFullPath("CodeModelTestOutput.txt");
-          File.WriteAllText(resultFile, result);
-          Assert.True(false, "Output didn't match CodeModelTestInput.txt: " + resultFile);
+          if (result != expected) {
+            string resultFile = Path.GetFullPath("CodeModelTestOutput.txt");
+            File.WriteAllText(resultFile, result);
+            Assert.True(false, "Output didn't match CodeModelTestInput.txt: " + resultFile);
+          }
         }
       }
     }

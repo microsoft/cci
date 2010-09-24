@@ -59,61 +59,61 @@ namespace HelloContracts {
 
       if (options.printContracts) {
         #region Collect and write contracts
-        var host = new CodeContractAwareHostEnvironment(options.libpaths);
-        IModule module = host.LoadUnitFrom(fileName) as IModule;
-        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-          Console.WriteLine("'{0}' is not a PE file containing a CLR module or assembly.", fileName);
-          Environment.Exit(1);
+        using (var host = new CodeContractAwareHostEnvironment(options.libpaths)) {
+          IModule module = host.LoadUnitFrom(fileName) as IModule;
+          if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+            Console.WriteLine("'{0}' is not a PE file containing a CLR module or assembly.", fileName);
+            Environment.Exit(1);
+          }
+          var t = new Traverser(host, options.inherited);
+          t.Visit(module);
         }
-        var t = new Traverser(host, options.inherited);
-        t.Visit(module);
         #endregion
         return 0;
       } else {
+        using (var host = new PeReader.DefaultHost()) {
 
-
-        var host = new PeReader.DefaultHost();
-
-        // Read the Metadata Model from the PE file
-        var module = host.LoadUnitFrom(fileName) as IModule;
-        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-          Console.WriteLine(fileName + " is not a PE file containing a CLR module or assembly.");
-          return 1;
-        }
-
-        // Get a PDB reader if there is a PDB file.
-        PdbReader/*?*/ pdbReader = null;
-        string pdbFile = Path.ChangeExtension(module.Location, "pdb");
-        if (File.Exists(pdbFile)) {
-          using (var pdbStream = File.OpenRead(pdbFile)) {
-            pdbReader = new PdbReader(pdbStream, host);
-          }
-        }
-
-        using (pdbReader) {
-
-          // Construct a Code Model from the Metadata model via decompilation
-          var mutableModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
-
-          // Extract contracts (side effect: removes them from the method bodies)
-          var contractProvider = Microsoft.Cci.MutableContracts.ContractHelper.ExtractContracts(host, mutableModule, pdbReader, pdbReader);
-
-          // Inject non-null postconditions
-          if (options.inject) {
-            new NonNullInjector(host, contractProvider).Visit(mutableModule);
+          // Read the Metadata Model from the PE file
+          var module = host.LoadUnitFrom(fileName) as IModule;
+          if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+            Console.WriteLine(fileName + " is not a PE file containing a CLR module or assembly.");
+            return 1;
           }
 
-          // Put the contracts back in as method calls at the beginning of each method
-          Microsoft.Cci.MutableContracts.ContractHelper.InjectContractCalls(host, mutableModule, contractProvider, pdbReader);
+          // Get a PDB reader if there is a PDB file.
+          PdbReader/*?*/ pdbReader = null;
+          string pdbFile = Path.ChangeExtension(module.Location, "pdb");
+          if (File.Exists(pdbFile)) {
+            using (var pdbStream = File.OpenRead(pdbFile)) {
+              pdbReader = new PdbReader(pdbStream, host);
+            }
+          }
 
-          // Write out the resulting module. Each method's corresponding IL is produced
-          // lazily using CodeModelToILConverter via the delegate that the mutator stored in the method bodies.
-          Stream peStream = File.Create(mutableModule.Location + ".pe");
-          if (pdbReader == null) {
-            PeWriter.WritePeToStream(mutableModule, host, peStream);
-          } else {
-            using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", pdbReader)) {
-              PeWriter.WritePeToStream(mutableModule, host, peStream, pdbReader, pdbReader, pdbWriter);
+          using (pdbReader) {
+
+            // Construct a Code Model from the Metadata model via decompilation
+            var mutableModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
+
+            // Extract contracts (side effect: removes them from the method bodies)
+            var contractProvider = Microsoft.Cci.MutableContracts.ContractHelper.ExtractContracts(host, mutableModule, pdbReader, pdbReader);
+
+            // Inject non-null postconditions
+            if (options.inject) {
+              new NonNullInjector(host, contractProvider).Visit(mutableModule);
+            }
+
+            // Put the contracts back in as method calls at the beginning of each method
+            Microsoft.Cci.MutableContracts.ContractHelper.InjectContractCalls(host, mutableModule, contractProvider, pdbReader);
+
+            // Write out the resulting module. Each method's corresponding IL is produced
+            // lazily using CodeModelToILConverter via the delegate that the mutator stored in the method bodies.
+            Stream peStream = File.Create(mutableModule.Location + ".pe");
+            if (pdbReader == null) {
+              PeWriter.WritePeToStream(mutableModule, host, peStream);
+            } else {
+              using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", pdbReader)) {
+                PeWriter.WritePeToStream(mutableModule, host, peStream, pdbReader, pdbReader, pdbWriter);
+              }
             }
           }
         }

@@ -69,31 +69,32 @@ namespace ResolutionTests {
       ExtractAndCompile(sourceLocation);
       string dllLocation = Path.ChangeExtension(sourceLocation, ".dll");
 
-      var host = new PeReader.DefaultHost();
-      //Read the Metadata Model from the PE file
-      var module = host.LoadUnitFrom(dllLocation) as IModule;
-      if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
-        Console.WriteLine(dllLocation + " is not a PE file containing a CLR module or assembly.");
-        return;
+      using (var host = new PeReader.DefaultHost()) {
+        //Read the Metadata Model from the PE file
+        var module = host.LoadUnitFrom(dllLocation) as IModule;
+        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+          Console.WriteLine(dllLocation + " is not a PE file containing a CLR module or assembly.");
+          return;
+        }
+
+        //Get a PDB reader if there is a PDB file.
+        PdbReader/*?*/ pdbReader = null;
+        string pdbFile = Path.ChangeExtension(module.Location, "pdb");
+        if (File.Exists(pdbFile)) {
+          Stream pdbStream = File.OpenRead(pdbFile);
+          pdbReader = new PdbReader(pdbStream, host);
+        }
+
+        //Create a mutator and run it over the module, producing a copy that could be different if the mutator
+        //were a subclass that made changes during the copy process.
+        MetadataMutator mutator = new MetadataMutator(host);
+        module = mutator.Visit(module);
+        TestMutator mutator1 = new TestMutator(host);
+        module = mutator1.Visit(module);
+
+        string result = mutator1.Output.ToString();
+        Assert.True(!result.Contains("Dummy"));
       }
-
-      //Get a PDB reader if there is a PDB file.
-      PdbReader/*?*/ pdbReader = null;
-      string pdbFile = Path.ChangeExtension(module.Location, "pdb");
-      if (File.Exists(pdbFile)) {
-        Stream pdbStream = File.OpenRead(pdbFile);
-        pdbReader = new PdbReader(pdbStream, host);
-      }
-
-      //Create a mutator and run it over the module, producing a copy that could be different if the mutator
-      //were a subclass that made changes during the copy process.
-      MetadataMutator mutator = new MetadataMutator(host);
-      module = mutator.Visit(module);
-      TestMutator mutator1 = new TestMutator(host);
-      module = mutator1.Visit(module);
-
-      string result = mutator1.Output.ToString();
-      Assert.True(!result.Contains("Dummy"));
     }
 
     public class TestMutator : CodeMutator {

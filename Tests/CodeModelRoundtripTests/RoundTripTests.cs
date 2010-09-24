@@ -534,7 +534,9 @@ internal class HostEnvironment : MetadataReaderHost {
 
   public override IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
     try {
-      return UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
+      var block = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
+      this.disposableObjectAllocatedByThisHost.Add((IDisposable)block);
+      return block;
     } catch (IOException) {
       return null;
     }
@@ -545,7 +547,9 @@ internal class HostEnvironment : MetadataReaderHost {
       string directory = Path.GetDirectoryName(parentSourceDocument.Location);
       string fullPath = Path.Combine(directory, childDocumentName);
       IBinaryDocument newBinaryDocument = BinaryDocument.GetBinaryDocumentForFile(fullPath, this);
-      return UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);
+      var block = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);
+      this.disposableObjectAllocatedByThisHost.Add((IDisposable)block);
+      return block;
     } catch (IOException) {
       return null;
     }

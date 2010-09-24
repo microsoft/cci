@@ -253,6 +253,7 @@ namespace Microsoft.Cci.MutableContracts {
         };
         return methodCall;
       }
+
     }
 
     /// <summary>
@@ -936,6 +937,7 @@ namespace Microsoft.Cci.MutableContracts {
               if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
                 var separateHost = new SimpleHostEnvironment(this.NameTable);
+                this.disposableObjectAllocatedByThisHost.Add(separateHost);
                 referenceUnit = separateHost.LoadUnitFrom(referenceAssemblyIdentity.Location);
                 hostForReferenceAssembly = separateHost;
               } else {

@@ -18,21 +18,21 @@ using System.Collections.Generic;
 namespace HelloAST {
   class Program {
     static void Main(string[] args) {
-      var host = new HelloHost();
-      var nameTable = host.NameTable;
-      var coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
+      using (var host = new HelloHost()) {
+        var nameTable = host.NameTable;
+        var coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
 
-      var aname = nameTable.GetNameFor("hello");
-      var mname = nameTable.GetNameFor("hello.exe");
-      var arefs = IteratorHelper.GetSingletonEnumerable<IAssemblyReference>(coreAssembly);
-      var source = new HelloSourceDocument(aname);
-      var sources = IteratorHelper.GetSingletonEnumerable<HelloSourceDocument>(source);
+        var aname = nameTable.GetNameFor("hello");
+        var mname = nameTable.GetNameFor("hello.exe");
+        var arefs = IteratorHelper.GetSingletonEnumerable<IAssemblyReference>(coreAssembly);
+        var source = new HelloSourceDocument(aname);
+        var sources = IteratorHelper.GetSingletonEnumerable<HelloSourceDocument>(source);
 
-      var helloAssembly = new HelloAssembly(aname, host, mname, arefs, sources);
+        var helloAssembly = new HelloAssembly(aname, host, mname, arefs, sources);
 
-      Stream peStream = File.Create("hello.exe");
-      PeWriter.WritePeToStream(helloAssembly, host, peStream);
-
+        Stream peStream = File.Create("hello.exe");
+        PeWriter.WritePeToStream(helloAssembly, host, peStream);
+      }
     }
 
     /// <summary>
