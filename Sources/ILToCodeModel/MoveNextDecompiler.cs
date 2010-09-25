@@ -585,6 +585,12 @@ namespace Microsoft.Cci.ILToCodeModel {
                 } else continue; // assign thisDotState to a non-local, shouldnt happen from csc generated code. 
               }
             }
+            if (assignment.Source is IThisReference) {
+              Debug.Assert(assignment.Target.Definition is TempVariable);
+              //The this value of the MoveNext is being placed in a temp variable as a result of Unstacker
+              //It must be also be deleted since later references to the "this" of MoveNext will happen in field accesses that become locals.
+              statements[i] = CodeDummy.LabeledStatement;
+            }
           }
           var methodCall = expressionStatement.Expression as IMethodCall;
           if (methodCall != null) {
