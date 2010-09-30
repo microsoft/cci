@@ -136,7 +136,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal static IMethodDefinition UnspecializedMethodDefinition(IMethodDefinition methodDefinition) {
       IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
       if (genericMethodInstance != null) {
-        return genericMethodInstance.GenericMethod.ResolvedMethod;
+        methodDefinition = genericMethodInstance.GenericMethod.ResolvedMethod;
       }
       ISpecializedMethodDefinition specializedMethodDefinition = methodDefinition as ISpecializedMethodDefinition;
       if (specializedMethodDefinition != null)

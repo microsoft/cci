@@ -73,6 +73,10 @@ namespace RoundtripTests.TestData.source {
       }
       Console.WriteLine("IEnumerable test: '{0}'", yieldFooResults);
 
+      Console.WriteLine("Nested closure where inner closure captures a parameter of the outer.");
+      NestedClosureCapturingOuterParameter(new List<List<int>>() { new List<int>() { 3, 4, 5 }, new List<int>() { 10, 11, 12 } });
+
+
     }
     // Not to execute, just to go through decompilation and then peverify.
     public IntPtr Method22(object o) {
@@ -230,16 +234,16 @@ namespace RoundtripTests.TestData.source {
            );
     }
 
-    public static bool ForEach<T>(IEnumerable<T> source, Func<T, bool> pred) {
-      foreach (T item in source) {
+    public static bool ForEach<U>(IEnumerable<U> source, Func<U, bool> pred) {
+      foreach (U item in source) {
         if (!pred(item))
           return false;
       }
       return true;
     }
-    public static int Count<T>(IEnumerable<T> source) {
+    public static int Count<U>(IEnumerable<U> source) {
       int count = 0;
-      ForEach(source, delegate(T item) {
+      ForEach(source, delegate(U item) {
         count++;
         return true;
       });
@@ -267,7 +271,7 @@ namespace RoundtripTests.TestData.source {
       return checked(x - y);
     }
 
-    public Func<int, T> ReturnClosureWhoseReturnTypeIsGenericMethodParameter<T>(List<T> xs, int j) {
+    public Func<int, U> ReturnClosureWhoseReturnTypeIsGenericMethodParameter<U>(List<U> xs, int j) {
       return i => xs[i + j];
     }
 
@@ -277,6 +281,12 @@ namespace RoundtripTests.TestData.source {
       else
         yield return "bar";
     }
+
+    public int NestedClosureCapturingOuterParameter<U>(List<List<U>> xss) {
+      xss.ForEach(xs => xs.ForEach(x => Console.WriteLine("{0} is at index {1}", x, xs.IndexOf(x))));
+      return xss.Count;
+    }
+
   }
   class C {
     public static void Main(string[] args) {

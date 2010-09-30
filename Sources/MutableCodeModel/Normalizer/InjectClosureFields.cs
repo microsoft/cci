@@ -292,7 +292,9 @@ namespace Microsoft.Cci.MutableCodeModel {
           inits.Add(s);
           BoundField boundField;
 
-          inits.Add(InitializeOuterClosurePointer(method, bodyFixer.closureLocal, bodyFixer.outerClosures[nestingDepth], closureClass));
+          if (!method.IsStatic) {
+            inits.Add(InitializeOuterClosurePointer(method, bodyFixer.closureLocal, bodyFixer.outerClosures[nestingDepth], closureClass));
+          }
 
           // if a parameter was captured, assign its value to the corresponding field
           // in the closure class
@@ -652,7 +654,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         L.ReturnValueCustomModifiers = new List<ICustomModifier>(anonymousDelegate.ReturnValueCustomModifiers);
       L.ReturnValueIsByRef = anonymousDelegate.ReturnValueIsByRef;
       L.Visibility = TypeMemberVisibility.Public;
-      L.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, L, this.genericTypeParameterMapping);
 
       var newParams = new List<IParameterDefinition>(anonymousDelegate.Parameters.Count);
       // hack? increment the nesting depth so that the visit of the parameter types
@@ -669,8 +670,18 @@ namespace Microsoft.Cci.MutableCodeModel {
         newP.ContainingSignature = L;
         newP.Type = this.Visit(newP.Type);
         newParams.Add(newP);
+        BoundField bf;
+        if (this.fieldForCapturedLocalOrParameter.TryGetValue(p, out bf)) {
+          this.fieldForCapturedLocalOrParameter.Add(newP, bf);
+        }
       }
+      L.Parameters = newParams;
+
       L.Type = this.Visit(anonymousDelegate.ReturnType);
+
+      L.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, L, this.genericTypeParameterMapping);
+      // Can't ask for the local variables until after the body has been set
+
       foreach (var v in L.Body.LocalVariables) {
         LocalDefinition ld = v as LocalDefinition;
         if (ld != null) {
@@ -679,7 +690,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         }
       }
       this.nestingDepth--;
-      L.Parameters = newParams;
 
       var boundCurrentClosureLocal = new BoundExpression();
       boundCurrentClosureLocal.Definition = this.closureLocal;
