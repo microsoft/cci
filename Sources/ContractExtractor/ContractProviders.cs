@@ -101,18 +101,43 @@ namespace Microsoft.Cci.Contracts {
       }
 
       // But if it is an abstract method, then check to see if its containing type points to a class holding the contract
-      IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(methodDefinition);
+      IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(this.host, methodDefinition);
       if (proxyMethod == null) {
         this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
-      contract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
-      if (contract == null) return null;
-      SubstituteParameters sps = new SubstituteParameters(this.host, methodDefinition, proxyMethod);
-      MethodContract modifiedContract = sps.Visit(contract) as MethodContract;
-      this.contractProviderCache.AssociateMethodWithContract(methodDefinition, modifiedContract);
-      return modifiedContract;
+      ITypeDefinition contractClass;
+      var specializedProxyMethod = proxyMethod as ISpecializedMethodDefinition;
+      IMethodDefinition unspec = null;
+      if (specializedProxyMethod != null) {
+        unspec = ContractHelper.UninstantiateAndUnspecialize(specializedProxyMethod).ResolvedMethod;
+        contract = this.underlyingContractProvider.GetMethodContractFor(unspec);
+        contractClass = unspec.ContainingTypeDefinition;
+        //if (contract != null) 
+        //  contract = ContractHelper.SpecializeMethodContract(this.host, contract, unspec.ContainingTypeDefinition, methodDefinition.ContainingTypeDefinition);
+      } else {
+        contract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
+        contractClass = proxyMethod.ContainingTypeDefinition;
+      }
+      if (contract == null) {
+        this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        return null;
+      }
+      var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
+      contract = cccc.Visit(contract);
+      var sps = new MutableContracts.SubstituteParameters(this.host, specializedProxyMethod != null ? unspec : proxyMethod, methodDefinition);
+      contract = (MethodContract) sps.Visit(contract);
+      if (specializedProxyMethod != null) {
+        SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedProxyMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
+        var sourceTypeReferences = stdm.ContainingGenericTypeInstance.GenericArguments;
+        var justToSee = unspec.InternedKey;
+        contract = ContractHelper.SpecializeMethodContract(this.host, contract, unspec.ContainingTypeDefinition, unspec.ContainingTypeDefinition.GenericParameters, sourceTypeReferences,
+          unspec.GenericParameters, methodDefinition.GenericParameters);
+      }
+      this.contractProviderCache.AssociateMethodWithContract(methodDefinition, contract);
+      return contract;
     }
+
 
     /// <summary>
     /// Returns the triggers, if any, that have been associated with the given object. Returns null if no association exits.
@@ -169,6 +194,53 @@ namespace Microsoft.Cci.Contracts {
     }
 
     #endregion
+
+    private class ConvertContractClassContract : CodeAndContractMutator {
+
+      private ITypeDefinition contractClass;
+      private ITypeDefinition abstractType;
+      private uint contractClassInternedKey;
+
+      private Dictionary<uint, IMethodReference> correspondingAbstractMember = new Dictionary<uint, IMethodReference>();
+
+      public ConvertContractClassContract(IMetadataHost host, ITypeDefinition contractClass, ITypeDefinition abstractType)
+        : base(host, true)
+      {
+        this.contractClass = contractClass;
+        this.contractClassInternedKey = this.contractClass.InternedKey;
+        this.abstractType = abstractType;
+      }
+
+      public override IExpression Visit(MethodCall methodCall) {
+        var k = methodCall.MethodToCall.ContainingType.InternedKey;
+        if (k == this.contractClassInternedKey) {
+          IMethodReference abstractMember;
+          if (this.correspondingAbstractMember.TryGetValue(k, out abstractMember)) {
+          } else {
+            abstractMember = this.FindCorrespondingMember(methodCall.MethodToCall);
+            this.correspondingAbstractMember.Add(k, abstractMember);
+          }
+          methodCall.MethodToCall = abstractMember;
+          methodCall.IsVirtualCall = true;
+        }
+        return base.Visit(methodCall);
+      }
+
+      private IMethodReference/*?*/ FindCorrespondingMember(IMethodReference methodReference) {
+        var matchingMembers = this.abstractType.GetMatchingMembersNamed(methodReference.Name, false,
+          tdm => {
+            var mr = tdm as IMethodReference;
+            return mr != null && MemberHelper.SignaturesAreEqual(methodReference, mr);
+          });
+        if (IteratorHelper.EnumerableCount(matchingMembers) != 1) {
+          // TODO: thread error handler in and report error
+          return null;
+        } else {
+          return IteratorHelper.First(matchingMembers) as IMethodReference;
+        }
+      }
+    }
+  
   }
 
   /// <summary>
