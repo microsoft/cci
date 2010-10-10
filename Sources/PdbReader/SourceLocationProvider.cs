@@ -68,11 +68,28 @@ namespace Microsoft.Cci {
         if (psloc != null) yield return psloc;
         MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
         if (mbLocation != null) {
-          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation);
+          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, true);
           if (psloc != null) yield return psloc;
         }
       }
     }
+
+    /// <summary>
+    /// Return zero or more locations in primary source documents that are the closest to corresponding to one or more of the given derived (non primary) document locations.
+    /// </summary>
+    /// <param name="locations">Zero or more locations in documents that have been derived from one or more source documents.</param>
+    public IEnumerable<IPrimarySourceLocation> GetClosestPrimarySourceLocationsFor(IEnumerable<ILocation> locations){
+      foreach (ILocation location in locations) {
+        IPrimarySourceLocation/*?*/ psloc = location as IPrimarySourceLocation;
+        if (psloc != null) yield return psloc;
+        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        if (mbLocation != null) {
+          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, false);
+          if (psloc != null) yield return psloc;
+        }
+      }
+    }
+
 
     /// <summary>
     /// Return zero or more locations in primary source documents that correspond to the given derived (non primary) document location.
@@ -85,11 +102,29 @@ namespace Microsoft.Cci {
       else {
         MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
         if (mbLocation != null) {
-          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation);
+          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, true);
           if (psloc != null) yield return psloc;
         }
       }
     }
+
+    /// <summary>
+    /// Return zero or more locations in primary source documents that are the closest to corresponding to the given derived (non primary) document location.
+    /// </summary>
+    /// <param name="location">A location in a document that have been derived from one or more source documents.</param>
+    public IEnumerable<IPrimarySourceLocation> GetClosestPrimarySourceLocationsFor(ILocation location) {
+      var psloc = location as IPrimarySourceLocation;
+      if (psloc != null)
+        yield return psloc;
+      else {
+        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        if (mbLocation != null) {
+          psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, false);
+          if (psloc != null) yield return psloc;
+        }
+      }
+    }
+
 
     /// <summary>
     /// Return zero or more locations in primary source documents that correspond to the definition of the given local.
@@ -318,7 +353,7 @@ namespace Microsoft.Cci {
       return location1;
     }
 
-    private IPrimarySourceLocation/*?*/ MapMethodBodyLocationToSourceLocation(MethodBodyLocation mbLocation) {
+    private IPrimarySourceLocation/*?*/ MapMethodBodyLocationToSourceLocation(MethodBodyLocation mbLocation, bool exact) {
       PdbFunction/*?*/ pdbFunction;
       if (!this.pdbFunctionMap.TryGetValue(mbLocation.Document.MethodToken, out pdbFunction)) return null;
       if (pdbFunction.lines == null) return null;
@@ -337,7 +372,7 @@ namespace Microsoft.Cci {
           PdbLine mid = array[midPointIndex];
           if (midPointIndex == maxIndex ||
             (mid.offset <= desiredOffset && desiredOffset < array[midPointIndex + 1].offset)) {
-            if (desiredOffset != mid.offset) return null;
+            if (exact && desiredOffset != mid.offset) return null;
             PdbLine line = mid;
             PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(pdbSourceFile);
             return new PdbSourceLineLocation(psDoc, (int)line.lineBegin, line.colBegin, (int)line.lineEnd, line.colEnd);
