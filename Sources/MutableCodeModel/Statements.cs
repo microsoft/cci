@@ -25,6 +25,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public AssertStatement() {
       this.condition = CodeDummy.Expression;
+      this.description = null;
+      this.conditionAsText = null;
     }
 
     /// <summary>
@@ -34,6 +36,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public AssertStatement(IAssertStatement assertStatement)
       : base(assertStatement) {
       this.condition = assertStatement.Condition;
+      this.description = assertStatement.Description;
+      this.conditionAsText = assertStatement.OriginalSource;
       this.hasBeenVerified = assertStatement.HasBeenVerified;
     }
 
@@ -61,6 +65,36 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.hasBeenVerified = value; }
     }
     bool hasBeenVerified;
+
+
+    /// <summary>
+    /// An optional expression that is associated with the assertion. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public IExpression/*?*/ Description {
+      get { return this.description; }
+      set { this.description = value; }
+    }
+    IExpression description;
+
+    /// <summary>
+    /// The original source representation of the assertion.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    public string/*?*/ OriginalSource {
+      get { return this.conditionAsText; }
+      set { this.conditionAsText = value; }
+    }
+    string conditionAsText;
+
   }
 
   /// <summary>
@@ -74,6 +108,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public AssumeStatement() {
       this.condition = CodeDummy.Expression;
+      this.description = null;
+      this.conditionAsText = null;
     }
 
     /// <summary>
@@ -83,6 +119,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public AssumeStatement(IAssumeStatement assumeStatement)
       : base(assumeStatement) {
       this.condition = assumeStatement.Condition;
+      this.description = assumeStatement.Description;
+      this.conditionAsText = assumeStatement.OriginalSource;
     }
 
     /// <summary>
@@ -100,6 +138,34 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// An optional expression that is associated with the assumption. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public IExpression/*?*/ Description {
+      get { return this.description; }
+      set { this.description = value; }
+    }
+    IExpression description;
+
+    /// <summary>
+    /// The original source representation of the assumption.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    public string/*?*/ OriginalSource {
+      get { return this.conditionAsText; }
+      set { this.conditionAsText = value; }
+    }
+    string conditionAsText;
 
   }
 

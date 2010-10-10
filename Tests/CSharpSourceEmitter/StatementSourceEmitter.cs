@@ -26,6 +26,10 @@ namespace CSharpSourceEmitter {
       this.PrintToken(CSharpToken.Indent);
       sourceEmitterOutput.Write("CodeContract.Assert(");
       this.Visit(assertStatement.Condition);
+      if (assertStatement.Description != null) {
+        sourceEmitterOutput.Write(",");
+        this.Visit(assertStatement.Description);
+      }
       sourceEmitterOutput.WriteLine(");");
     }
 
@@ -33,6 +37,10 @@ namespace CSharpSourceEmitter {
       this.PrintToken(CSharpToken.Indent);
       sourceEmitterOutput.Write("CodeContract.Assume(");
       this.Visit(assumeStatement.Condition);
+      if (assumeStatement.Description != null) {
+        sourceEmitterOutput.Write(",");
+        this.Visit(assumeStatement.Description);
+      }
       sourceEmitterOutput.WriteLine(");");
     }
 

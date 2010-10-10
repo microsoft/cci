@@ -27,6 +27,8 @@ namespace Microsoft.Cci.Ast {
     public AssertStatement(Expression condition, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.condition = condition;
+      this.description = null;
+      this.conditionAsText = null;
     }
 
     /// <summary>
@@ -37,6 +39,8 @@ namespace Microsoft.Cci.Ast {
     public AssertStatement(BlockStatement containingBlock, AssertStatement template)
       : base(containingBlock, template) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
+      this.description = (template.Description != null) ? template.Description.MakeCopyFor(containingBlock) : null;
+      this.conditionAsText = template.OriginalSource;
     }
 
     /// <summary>
@@ -54,6 +58,34 @@ namespace Microsoft.Cci.Ast {
       get { return this.condition; }
     }
     Expression condition;
+
+    /// <summary>
+    /// An optional expression that is associated with the assertion. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public Expression/*?*/ Description {
+      get { return this.description; }
+      set { this.description = value; }
+    }
+    Expression/*?*/ description;
+
+    /// <summary>
+    /// The original source representation of the assertion.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    public string/*?*/ OriginalSource {
+      get { return this.conditionAsText; }
+      set { this.conditionAsText = value; }
+    }
+    string conditionAsText;
 
     /// <summary>
     /// The condition that must be true at the start of the method that is associated with this Precondition instance.
@@ -109,12 +141,17 @@ namespace Microsoft.Cci.Ast {
       base.SetContainingBlock(containingBlock);
       DummyExpression containingExpression = new DummyExpression(containingBlock, SourceDummy.SourceLocation);
       this.condition.SetContainingExpression(containingExpression);
+      if (this.description != null) this.description.SetContainingExpression(containingExpression);
     }
 
     #region IAssertStatement Members
 
     IExpression IAssertStatement.Condition {
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
+    }
+
+    IExpression/*?*/ IAssertStatement.Description {
+      get { return (this.Description == null) ? null : this.Description.ProjectAsIExpression(); }
     }
 
     #endregion
@@ -134,6 +171,8 @@ namespace Microsoft.Cci.Ast {
     public AssumeStatement(Expression condition, ISourceLocation sourceLocation)
       : base(sourceLocation) {
       this.condition = condition;
+      this.description = null;
+      this.conditionAsText = null;
     }
 
     /// <summary>
@@ -144,6 +183,8 @@ namespace Microsoft.Cci.Ast {
     public AssumeStatement(BlockStatement containingBlock, AssumeStatement template)
       : base(containingBlock, template) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
+      this.description = (template.Description != null) ? template.Description.MakeCopyFor(containingBlock) : null;
+      this.conditionAsText = template.OriginalSource;
     }
 
     /// <summary>
@@ -161,6 +202,34 @@ namespace Microsoft.Cci.Ast {
       get { return this.condition; }
     }
     readonly Expression condition;
+
+    /// <summary>
+    /// An optional expression that is associated with the assumption. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    public Expression/*?*/ Description {
+      get { return this.description; }
+      set { this.description = value; }
+    }
+    Expression/*?*/ description;
+
+    /// <summary>
+    /// The original source representation of the assumption.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    public string/*?*/ OriginalSource {
+      get { return this.conditionAsText; }
+      set { this.conditionAsText = value; }
+    }
+    string conditionAsText;
 
     /// <summary>
     /// The condition that must be true at the start of the method that is associated with this Precondition instance.
@@ -209,12 +278,17 @@ namespace Microsoft.Cci.Ast {
       base.SetContainingBlock(containingBlock);
       DummyExpression containingExpression = new DummyExpression(containingBlock, SourceDummy.SourceLocation);
       this.condition.SetContainingExpression(containingExpression);
+      if (this.description != null) this.description.SetContainingExpression(containingExpression);
     }
 
     #region IAssumeStatement Members
 
     IExpression IAssumeStatement.Condition {
       get { return this.ConvertedCondition.ProjectAsIExpression(); }
+    }
+
+    IExpression/*?*/ IAssumeStatement.Description {
+      get { return (this.Description == null) ? null : this.Description.ProjectAsIExpression(); }
     }
 
     #endregion

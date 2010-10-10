@@ -511,6 +511,8 @@ namespace Microsoft.Cci {
       //^ int oldCount = this.path.Count;
       this.path.Push(assertStatement);
       this.Visit(assertStatement.Condition);
+      if (assertStatement.Description != null)
+        this.Visit(assertStatement.Description);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
     }
@@ -558,6 +560,8 @@ namespace Microsoft.Cci {
       //^ int oldCount = this.path.Count;
       this.path.Push(assumeStatement);
       this.Visit(assumeStatement.Condition);
+      if (assumeStatement.Description != null)
+        this.Visit(assumeStatement.Description);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
     }

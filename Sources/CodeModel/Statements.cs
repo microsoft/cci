@@ -26,6 +26,26 @@ namespace Microsoft.Cci {
     IExpression Condition { get; }
 
     /// <summary>
+    /// An optional expression that is associated with the assertion. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    IExpression/*?*/ Description { get; }
+
+    /// <summary>
+    /// The original source representation of the assertion.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    string/*?*/ OriginalSource { get; }
+
+    /// <summary>
     /// True if a static verification tool has determined that the condition will always be true when execution reaches this statement.
     /// </summary>
     bool HasBeenVerified { get; }
@@ -40,6 +60,26 @@ namespace Microsoft.Cci {
     /// A condition that will be true when execution reaches this statement.
     /// </summary>
     IExpression Condition { get; }
+
+    /// <summary>
+    /// An optional expression that is associated with the assumption. Generally, it would
+    /// be a message that was written at the same time as the contract and is meant to be used as a description
+    /// when the contract fails.
+    /// </summary>
+    IExpression/*?*/ Description { get; }
+
+    /// <summary>
+    /// The original source representation of the assumption.
+    /// </summary>
+    /// <remarks>
+    /// Normally this would be extracted directly from the source file.
+    /// The expectation is that one would translate the Condition into
+    /// a source string in a source language appropriate for
+    /// the particular tool environment, e.g., when doing static analysis,
+    /// in the language the client code uses, not the language the contract
+    /// was written.
+    /// </remarks>
+    string/*?*/ OriginalSource { get; }
   }
 
   /// <summary>
