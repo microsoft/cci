@@ -243,12 +243,12 @@ namespace Microsoft.Cci {
     /// If no such method exists, Dummy.Method is returned.
     /// </summary>
     public static IMethodDefinition GetImplicitlyOverridingDerivedClassMethod(IMethodDefinition baseClassMethod, ITypeDefinition derivedClass) {
-      foreach (ITypeDefinitionMember baseMember in derivedClass.GetMembersNamed(baseClassMethod.Name, false)) {
-        IMethodDefinition/*?*/ baseMethod = baseMember as IMethodDefinition;
-        if (baseMethod == null) continue;
-        if (MemberHelper.SignaturesAreEqual(baseClassMethod, baseMethod)) {
-          if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.Method;
-          return baseMethod;
+      foreach (ITypeDefinitionMember derivedMember in derivedClass.GetMembersNamed(baseClassMethod.Name, false)) {
+        IMethodDefinition/*?*/ derivedMethod = derivedMember as IMethodDefinition;
+        if (derivedMethod == null) continue;
+        if (MemberHelper.MethodsAreEquivalent(baseClassMethod, derivedMethod)) {
+          if (!derivedMethod.IsVirtual || derivedMethod.IsSealed) return Dummy.Method;
+          return derivedMethod;
         } else {
           if (!baseClassMethod.IsHiddenBySignature) return Dummy.Method;
         }
@@ -273,14 +273,18 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Decides if the given type definition member is visible outside of the assembly it
-    /// is defined in.
+    /// Decides if the given type definition member is visible outside of the assembly it is defined in.
     /// It does not take into account friend assemblies: the meaning of this method
     /// is that it returns true for those members that are visible outside of their
     /// defining assembly to *all* assemblies.
+    /// It also does not take into account the unlikely case that a subtype of the type defining the given member may 
+    /// expose it outside the assembly via an explicit method implementation (taking that into account
+    /// would require this method to traverse the entire defining assembly, which is expensive and
+    /// should probably be done only by tools that are checking security properties).
     /// </summary>
     public static bool IsVisibleOutsideAssembly(ITypeDefinitionMember typeDefinitionMember) {
-      if (!TypeHelper.IsVisibleOutsideAssembly(typeDefinitionMember.ContainingTypeDefinition)) return false;
+      var containingTypeDefinition = typeDefinitionMember.ContainingTypeDefinition;
+      if (!TypeHelper.IsVisibleOutsideAssembly(containingTypeDefinition)) return false;
       switch (typeDefinitionMember.Visibility) {
         case TypeMemberVisibility.Public:
           return true;
@@ -288,20 +292,53 @@ namespace Microsoft.Cci {
         case TypeMemberVisibility.FamilyOrAssembly:
           return !typeDefinitionMember.ContainingTypeDefinition.IsSealed;
         default:
-          break; // still have to check in case it is a method
+          break;
       }
-      // methods have special needs beyond other type definition members
-      IMethodDefinition methodDefinition = typeDefinitionMember as IMethodDefinition;
-      if (methodDefinition != null) {
-        ITypeDefinition typeDefinition = methodDefinition.ContainingTypeDefinition;
-        foreach (IMethodImplementation methodImpl in typeDefinition.ExplicitImplementationOverrides) {
-          if (methodImpl.ImplementingMethod == methodDefinition) {
-            // if it is defined in another assembly, then it must be visible, so check that first
-            IMethodDefinition resolvedMethod = methodImpl.ImplementedMethod.ResolvedMethod;
-            if (resolvedMethod == Dummy.Method) return true;
-            if (IsVisibleOutsideAssembly(resolvedMethod)) return true;
-          }
+
+      //If we get here, the member is not visible outside the assembly unless it is/contains a method
+      //that serves as the explicit implementation of a method that is visible outside the assembly.
+      //Usually only the type that implements the explicit implementation method will list it as
+      //an explicit implementation of some virtual base class method or interface method.
+      //However the CLR allows subtypes to use base type methods to serve as explicit implementations,
+      //which means that a method with FamilyAndAssembly visibility might be visible outside its assembly
+      //even when its containing type does not list it as an explicit implementation.
+      //
+      //We choose not to check for this case because it would require us to load all types in the assembly
+      //in order to find any subtypes of containingTypeDefinition. This seems to be too much work to do
+      //for a case that is not likely to happen in practice. However, if security properties are being 
+      //checked, this method should not be used.
+
+      var methodDefinition = typeDefinitionMember as IMethodDefinition;
+      if (methodDefinition != null)
+        return IsExplicitImplementationVisible(methodDefinition, containingTypeDefinition);
+      
+      var propertyDefinition = typeDefinitionMember as IPropertyDefinition;
+      if (propertyDefinition != null)
+        return IsExplicitImplementationVisible(propertyDefinition.Getter, containingTypeDefinition) || IsExplicitImplementationVisible(propertyDefinition.Setter, containingTypeDefinition);
+      
+      var eventDefinition = typeDefinitionMember as IEventDefinition;
+      if (eventDefinition != null)
+        return IsExplicitImplementationVisible(eventDefinition.Adder, containingTypeDefinition) || IsExplicitImplementationVisible(eventDefinition.Remover, containingTypeDefinition);
+
+      return false;
+    }
+
+    /// <summary>
+    /// Returns true if the given referenced method is not null and is explicitly implemented by the given type definition.
+    /// </summary>
+    /// <param name="methodReference">A possibly null reference to a method.</param>
+    /// <param name="containingTypeDefinition">The type definition that contains the type member that is or contains the method reference.</param>
+    private static bool IsExplicitImplementationVisible(IMethodReference/*?*/ methodReference, ITypeDefinition containingTypeDefinition) {
+      if (methodReference == null) return false;
+      foreach (IMethodImplementation methodImpl in containingTypeDefinition.ExplicitImplementationOverrides) {
+        if (methodImpl.ImplementingMethod.InternedKey != methodReference.InternedKey) continue;
+        var implementedMethod = methodImpl.ImplementedMethod.ResolvedMethod;
+        if (implementedMethod == Dummy.Method) {
+          //If the method being implemented did not resolve it can only be because it is actually defined in another assembly, which implies that it is visible outside its assembly,
+          //at least in the case where the implemented method is public or internal. Since we can't know that without resolving the method, we'll err on the "safe" side.
+          return true;
         }
+        if (IsVisibleOutsideAssembly(implementedMethod)) return true;
       }
       return false;
     }
@@ -911,7 +948,7 @@ namespace Microsoft.Cci {
       sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
       if (def != null && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
         if (def.IsByReference) sb.Append("@");
-      }
+      } 
       if (def != null && (formattingOptions & NameFormattingOptions.ParameterName) != 0) {
         sb.Append(" ");
         sb.Append(def.Name.Value);
