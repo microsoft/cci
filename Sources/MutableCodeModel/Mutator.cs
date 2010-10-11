@@ -2330,10 +2330,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="loopContract">The loop contract.</param>
     /// <returns></returns>
     public virtual ILoopContract Visit(ILoopContract loopContract) {
-      LoopContract mutableLoopContract = new LoopContract(loopContract);
-      mutableLoopContract.Invariants = this.Visit(mutableLoopContract.Invariants);
-      mutableLoopContract.Writes = this.Visit(mutableLoopContract.Writes);
-      return mutableLoopContract;
+      LoopContract mutableLoopContract = loopContract as LoopContract;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableLoopContract == null)
+        mutableLoopContract = new LoopContract(loopContract);
+      return this.Visit(mutableLoopContract);
+    }
+
+    /// <summary>
+    /// Visits the specified loop contract.
+    /// </summary>
+    /// <param name="loopContract">The loop contract.</param>
+    /// <returns></returns>
+    public virtual ILoopContract Visit(LoopContract loopContract) {
+      loopContract.Invariants = this.Visit(loopContract.Invariants);
+      loopContract.Writes = this.Visit(loopContract.Writes);
+      return loopContract;
     }
 
     /// <summary>
@@ -2354,9 +2365,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="loopInvariant">The loop invariant.</param>
     /// <returns></returns>
     public virtual ILoopInvariant Visit(ILoopInvariant loopInvariant) {
-      LoopInvariant mutableLoopInvariant = new LoopInvariant(loopInvariant);
-      mutableLoopInvariant.Condition = this.Visit(mutableLoopInvariant.Condition);
-      return mutableLoopInvariant;
+      LoopInvariant mutableLoopInvariant = loopInvariant as LoopInvariant;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableLoopInvariant == null)
+        mutableLoopInvariant = new LoopInvariant(loopInvariant);
+      return this.Visit(mutableLoopInvariant);
+    }
+
+      /// <summary>
+    /// Visits the specified loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant">The loop invariant.</param>
+    /// <returns></returns>
+    public virtual ILoopInvariant Visit(LoopInvariant loopInvariant) {
+      loopInvariant.Condition = this.Visit(loopInvariant.Condition);
+      return loopInvariant;
     }
 
     /// <summary>
@@ -2454,16 +2476,27 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodContract">The method contract.</param>
     /// <returns></returns>
     public virtual IMethodContract Visit(IMethodContract methodContract) {
-      MethodContract mutableMethodContract = new MethodContract(methodContract);
-      mutableMethodContract.Allocates = this.Visit(mutableMethodContract.Allocates);
-      mutableMethodContract.Frees = this.Visit(mutableMethodContract.Frees);
-      mutableMethodContract.ModifiedVariables = this.Visit(mutableMethodContract.ModifiedVariables);
-      mutableMethodContract.Postconditions = this.Visit(mutableMethodContract.Postconditions);
-      mutableMethodContract.Preconditions = this.Visit(mutableMethodContract.Preconditions);
-      mutableMethodContract.Reads = this.Visit(mutableMethodContract.Reads);
-      mutableMethodContract.ThrownExceptions = this.Visit(mutableMethodContract.ThrownExceptions);
-      mutableMethodContract.Writes = this.Visit(mutableMethodContract.Writes);
-      return mutableMethodContract;
+      MethodContract mutableMethodContract = methodContract as MethodContract;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableMethodContract == null)
+        mutableMethodContract = new MethodContract(methodContract);
+      return this.Visit(mutableMethodContract);
+    }
+
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
+    /// <returns></returns>
+    public virtual IMethodContract Visit(MethodContract methodContract) {
+      methodContract.Allocates = this.Visit(methodContract.Allocates);
+      methodContract.Frees = this.Visit(methodContract.Frees);
+      methodContract.ModifiedVariables = this.Visit(methodContract.ModifiedVariables);
+      methodContract.Postconditions = this.Visit(methodContract.Postconditions);
+      methodContract.Preconditions = this.Visit(methodContract.Preconditions);
+      methodContract.Reads = this.Visit(methodContract.Reads);
+      methodContract.ThrownExceptions = this.Visit(methodContract.ThrownExceptions);
+      methodContract.Writes = this.Visit(methodContract.Writes);
+      return methodContract;
     }
 
     /// <summary>
@@ -2483,9 +2516,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="postCondition">The post condition.</param>
     public virtual IPostcondition Visit(IPostcondition postCondition) {
-      PostCondition mutablePostCondition = new PostCondition(postCondition);
-      mutablePostCondition.Condition = this.Visit(mutablePostCondition.Condition);
-      return mutablePostCondition;
+      PostCondition mutablePostCondition = postCondition as PostCondition;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutablePostCondition == null)
+        mutablePostCondition = new PostCondition(postCondition);
+      return this.Visit(mutablePostCondition);
+    }
+
+    /// <summary>
+    /// Visits the specified post condition.
+    /// </summary>
+    /// <param name="postCondition">The post condition.</param>
+    public virtual IPostcondition Visit(PostCondition postCondition) {
+      postCondition.Condition = this.Visit(postCondition.Condition);
+      return postCondition;
     }
 
     /// <summary>
@@ -2504,11 +2547,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="precondition">The precondition.</param>
     public virtual IPrecondition Visit(IPrecondition precondition) {
-      Precondition mutablePrecondition = new Precondition(precondition);
-      mutablePrecondition.Condition = this.Visit(mutablePrecondition.Condition);
-      if (mutablePrecondition.ExceptionToThrow != null)
-        mutablePrecondition.ExceptionToThrow = this.Visit(mutablePrecondition.ExceptionToThrow);
-      return mutablePrecondition;
+      Precondition mutablePrecondition = precondition as Precondition;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutablePrecondition == null)
+        mutablePrecondition = new Precondition(precondition);
+      return this.Visit(mutablePrecondition);
+    }
+
+    /// <summary>
+    /// Visits the specified precondition.
+    /// </summary>
+    /// <param name="precondition">The precondition.</param>
+    public virtual IPrecondition Visit(Precondition precondition) {
+      precondition.Condition = this.Visit(precondition.Condition);
+      if (precondition.ExceptionToThrow != null)
+        precondition.ExceptionToThrow = this.Visit(precondition.ExceptionToThrow);
+      return precondition;
     }
 
     /// <summary>
@@ -2541,10 +2594,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="thrownException">The thrown exception.</param>
     public virtual IThrownException Visit(IThrownException thrownException) {
-      ThrownException mutableThrownException = new ThrownException(thrownException);
-      mutableThrownException.ExceptionType = this.Visit(mutableThrownException.ExceptionType);
-      mutableThrownException.Postcondition = this.Visit(mutableThrownException.Postcondition);
-      return mutableThrownException;
+      ThrownException mutableThrownException = thrownException as ThrownException;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableThrownException == null)
+        mutableThrownException = new ThrownException(thrownException);
+      return this.Visit(mutableThrownException);
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exception.
+    /// </summary>
+    /// <param name="thrownException">The thrown exception.</param>
+    public virtual IThrownException Visit(ThrownException thrownException) {
+      thrownException.ExceptionType = this.Visit(thrownException.ExceptionType);
+      thrownException.Postcondition = this.Visit(thrownException.Postcondition);
+      return thrownException;
     }
 
     /// <summary>
@@ -2552,11 +2615,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeContract">The type contract.</param>
     public virtual ITypeContract Visit(ITypeContract typeContract) {
-      TypeContract mutableTypeContract = new TypeContract(typeContract);
-      mutableTypeContract.ContractFields = this.Visit(mutableTypeContract.ContractFields);
-      mutableTypeContract.ContractMethods = this.Visit(mutableTypeContract.ContractMethods);
-      mutableTypeContract.Invariants = this.Visit(mutableTypeContract.Invariants);
-      return mutableTypeContract;
+      TypeContract mutableTypeContract = typeContract as TypeContract;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableTypeContract == null)
+        mutableTypeContract = new TypeContract(typeContract);
+      return this.Visit(mutableTypeContract);
+    }
+
+    /// <summary>
+    /// Visits the specified type contract.
+    /// </summary>
+    /// <param name="typeContract">The type contract.</param>
+    public virtual ITypeContract Visit(TypeContract typeContract) {
+      typeContract.ContractFields = this.Visit(typeContract.ContractFields);
+      typeContract.ContractMethods = this.Visit(typeContract.ContractMethods);
+      typeContract.Invariants = this.Visit(typeContract.Invariants);
+      return typeContract;
     }
 
     /// <summary>
@@ -2575,9 +2648,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeInvariant">The type invariant.</param>
     public virtual ITypeInvariant Visit(ITypeInvariant typeInvariant) {
-      TypeInvariant mutableTypeInvariant = new TypeInvariant(typeInvariant);
-      mutableTypeInvariant.Condition = this.Visit(mutableTypeInvariant.Condition);
-      return mutableTypeInvariant;
+      TypeInvariant mutableTypeInvariant = typeInvariant as TypeInvariant;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableTypeInvariant == null)
+        mutableTypeInvariant = new TypeInvariant(typeInvariant);
+      return this.Visit(mutableTypeInvariant);
+    }
+
+    /// <summary>
+    /// Visits the specified type invariant.
+    /// </summary>
+    /// <param name="typeInvariant">The type invariant.</param>
+    public virtual ITypeInvariant Visit(TypeInvariant typeInvariant) {
+      typeInvariant.Condition = this.Visit(typeInvariant.Condition);
+      return typeInvariant;
     }
 
     /// <summary>
