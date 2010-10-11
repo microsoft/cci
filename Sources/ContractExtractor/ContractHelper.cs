@@ -160,7 +160,13 @@ namespace Microsoft.Cci.MutableContracts {
           statements.Add(es);
         }
         List<IStatement> existingStatements = new List<IStatement>(sourceMethodBody.Block.Statements);
-        statements.AddRange(this.Visit(existingStatements)); // replaces assert/assume
+        existingStatements = this.Visit(existingStatements);
+        // keep the call to the base constructor at the top
+        if (methodDefinition.IsConstructor && existingStatements.Count > 0) {
+          statements.Insert(0, existingStatements[0]);
+          existingStatements.RemoveAt(0);
+        }
+        statements.AddRange(existingStatements); // replaces assert/assume
         sourceMethodBody.Block = new BlockStatement() {
           Statements = statements,
         };
