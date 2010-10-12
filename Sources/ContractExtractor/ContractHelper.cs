@@ -834,11 +834,8 @@ namespace Microsoft.Cci.MutableContracts {
         if (sourceMethodBody != null) {
           var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.host, sourceMethodBody, this.pdbReader, this.localScopeProvider);
           this.contractProvider.AssociateMethodWithContract(methodBody.MethodDefinition, codeAndContractPair.MethodContract);
-          var mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
-          mutableSourceMethodBody.Block = codeAndContractPair.BlockStatement;
-          mutableSourceMethodBody.MethodDefinition = methodBody.MethodDefinition;
-          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
-          return mutableSourceMethodBody;
+          var smb = sourceMethodBody as Microsoft.Cci.ILToCodeModel.SourceMethodBody;
+          return smb == null ? Dummy.MethodBody : smb;
         }
         return base.Visit(methodBody);
       }
