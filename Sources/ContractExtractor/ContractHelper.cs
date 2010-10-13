@@ -28,6 +28,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="targetContract">Contract which is target of accumulator</param>
     /// <param name="sourceContract">Contract which is source of accumulator</param>
     public static void AddMethodContract(MethodContract targetContract, IMethodContract sourceContract) {
+      targetContract.Locations.AddRange(sourceContract.Locations);
       targetContract.Preconditions.AddRange(sourceContract.Preconditions);
       targetContract.Postconditions.AddRange(sourceContract.Postconditions);
       targetContract.ThrownExceptions.AddRange(sourceContract.ThrownExceptions);
@@ -130,9 +131,9 @@ namespace Microsoft.Cci.MutableContracts {
       public override MethodDefinition Visit(MethodDefinition methodDefinition) {
         IMethodContract methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
         if (methodContract == null) return methodDefinition;
-        SourceMethodBody sourceMethodBody = methodDefinition.Body as SourceMethodBody;
+        ISourceMethodBody sourceMethodBody = methodDefinition.Body as ISourceMethodBody;
         if (sourceMethodBody == null) return methodDefinition;
-        List<IStatement> statements = new List<IStatement>();
+        List<IStatement> contractStatements = new List<IStatement>();
         foreach (var precondition in methodContract.Preconditions) {
           var methodCall = new MethodCall() {
             Arguments = MkList(precondition.Condition),
@@ -144,7 +145,7 @@ namespace Microsoft.Cci.MutableContracts {
           ExpressionStatement es = new ExpressionStatement() {
             Expression = methodCall
           };
-          statements.Add(es);
+          contractStatements.Add(es);
         }
         foreach (var postcondition in methodContract.Postconditions) {
           var methodCall = new MethodCall() {
@@ -157,19 +158,25 @@ namespace Microsoft.Cci.MutableContracts {
           ExpressionStatement es = new ExpressionStatement() {
             Expression = methodCall
           };
-          statements.Add(es);
+          contractStatements.Add(es);
         }
         List<IStatement> existingStatements = new List<IStatement>(sourceMethodBody.Block.Statements);
         existingStatements = this.Visit(existingStatements);
         // keep the call to the base constructor at the top
         if (methodDefinition.IsConstructor && existingStatements.Count > 0) {
-          statements.Insert(0, existingStatements[0]);
+          contractStatements.Insert(0, existingStatements[0]);
           existingStatements.RemoveAt(0);
         }
-        statements.AddRange(existingStatements); // replaces assert/assume
-        sourceMethodBody.Block = new BlockStatement() {
-          Statements = statements,
+        contractStatements.AddRange(existingStatements); // replaces assert/assume
+        var newSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider) {
+          Block = new BlockStatement(){
+            Statements = contractStatements,
+          },
+          IsNormalized = false,
+          LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed,
+          MethodDefinition = methodDefinition,
         };
+        methodDefinition.Body = newSourceMethodBody;
         return methodDefinition;
       }
 

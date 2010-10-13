@@ -409,6 +409,7 @@ namespace Microsoft.Cci.MutableContracts {
                 Locations = locations
               };
               this.CurrentMethodContract.Postconditions.Add(postcondition);
+              this.CurrentMethodContract.Locations.AddRange(postcondition.Locations);
               return;
             }
             if (mname == "EnsuresOnThrow" && genericMethodToCall != null) {
@@ -425,6 +426,7 @@ namespace Microsoft.Cci.MutableContracts {
                 }
               };
               this.CurrentMethodContract.ThrownExceptions.Add(exceptionalPostcondition);
+              this.CurrentMethodContract.Locations.AddRange(exceptionalPostcondition.Postcondition.Locations);
               return;
             }
             if (mname == "Requires") {
@@ -449,6 +451,7 @@ namespace Microsoft.Cci.MutableContracts {
                 ExceptionToThrow = thrownException,
               };
               this.CurrentMethodContract.Preconditions.Add(precondition);
+              this.CurrentMethodContract.Locations.AddRange(precondition.Locations);
               return;
             }
           }
