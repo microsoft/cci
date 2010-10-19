@@ -185,6 +185,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfFalse = push.ValueToPush;
         }
       }
+      conditional.Locations = conditionalStatement.Locations;
 
       push.ValueToPush = conditional;
       push.Locations = conditional.Locations;
@@ -249,6 +250,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       Conditional conditional = new Conditional();
       conditional.Condition = conditionalStatement.Condition;
+      conditional.Locations = conditionalStatement.Locations;
       conditional.ResultIfTrue = new CompileTimeConstant() { Value = 1, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
       conditional.ResultIfFalse = conditionalStatement2.Condition;
       conditionalStatement2.Condition = conditional;
@@ -294,6 +296,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         //i+2: {....}
         Conditional conditional = new Conditional();
         conditional.Condition = conditionalStatement.Condition;
+        conditional.Locations = conditionalStatement.Locations;
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
@@ -310,6 +313,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (gotoStatement.TargetStatement == gotoStatement2.TargetStatement) {
         Conditional conditional = new Conditional();
         conditional.Condition = conditionalStatement.Condition;
+        conditional.Locations = conditionalStatement.Locations;
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
         conditionalStatement2.Condition = conditional;
@@ -451,6 +455,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfTrue = push2.ValueToPush;
           conditional.ResultIfFalse = push1.ValueToPush;
         }
+        conditional.Locations = conditionalStatement.Locations;
         push1.ValueToPush = conditional;
         push1.Locations = conditionalStatement.Locations;
         statements[i] = push1;

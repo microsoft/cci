@@ -32,6 +32,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal List<ITypeDefinition> privateHelperTypesToRemove;
     internal Dictionary<uint, IMethodDefinition> privateHelperMethodsToRemove;
     ISourceLocation/*?*/ lastSourceLocation;
+    ILocation/*?*/ lastLocation;
     bool sawReadonly;
     bool sawTailCall;
     bool sawVolatile;
@@ -46,8 +47,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
       this.nameTable = host.NameTable;
@@ -470,11 +470,26 @@ namespace Microsoft.Cci.ILToCodeModel {
       return new AddressOf() { Expression = addressableExpression };
     }
 
-    private Expression ParseAddressDereference() {
+    private Expression ParseAddressDereference(IOperation currentOperation) {
+      ITypeReference elementType = null;
+      switch (currentOperation.OperationCode) {
+        case OperationCode.Ldind_I: elementType = this.platformType.SystemIntPtr; break;
+        case OperationCode.Ldind_I1: elementType = this.platformType.SystemInt8; break;
+        case OperationCode.Ldind_I2: elementType = this.platformType.SystemInt16; break;
+        case OperationCode.Ldind_I4: elementType = this.platformType.SystemInt32; break;
+        case OperationCode.Ldind_I8: elementType = this.platformType.SystemInt64; break;
+        case OperationCode.Ldind_R4: elementType = this.platformType.SystemFloat32; break;
+        case OperationCode.Ldind_R8: elementType = this.platformType.SystemFloat64; break;
+        case OperationCode.Ldind_U1: elementType = this.platformType.SystemUInt8; break;
+        case OperationCode.Ldind_U2: elementType = this.platformType.SystemUInt16; break;
+        case OperationCode.Ldind_U4: elementType = this.platformType.SystemUInt32; break;
+      }
       AddressDereference result = new AddressDereference();
       result.Address = this.PopOperandStack();
       result.Alignment = this.alignment;
       result.IsVolatile = this.sawVolatile;
+      //Capture the element type. The pointer might be untyped, in which case the instruction is the only point where the element type is known.
+      if (elementType != null) result.Type = elementType; //else: The type inferencer will fill in the type once the pointer type is known.
       this.alignment = 0;
       this.sawVolatile = false;
       return result;
@@ -587,20 +602,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Stobj:
           AddressDereference addressDereference = new AddressDereference();
           addressDereference.Address = this.PopOperandStack();
-          if (elementType != null) {
-            var addressType = addressDereference.Address.Type;
-            var addressTypePtr = addressType as IPointerTypeReference;
-            var addressTypeMPtr = addressType as IManagedPointerTypeReference;
-            if ((addressTypePtr == null || !TypeHelper.TypesAreEquivalent(addressTypePtr.TargetType, elementType)) &&
-              (addressTypeMPtr == null || !TypeHelper.TypesAreEquivalent(addressTypeMPtr.TargetType, elementType))) {
-              addressDereference.Address = new Conversion() {
-                ValueToConvert = addressDereference.Address,
-                TypeAfterConversion = PointerType.GetPointerType(elementType, this.host.InternFactory)
-              };
-            }
-          }
           addressDereference.Alignment = this.alignment;
           addressDereference.IsVolatile = this.sawVolatile;
+          //capture the element type. The pointer might be untyped, in which case the instruction is the only point where the element type is known.
+          if (elementType != null) addressDereference.Type = elementType; //else: The type inferencer will fill in the type once the pointer type is known.
           target.Definition = addressDereference;
           break;
         case OperationCode.Stloc:
@@ -618,6 +623,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.alignment = 0;
       this.sawVolatile = false;
       return result;
+    }
+
+    private static bool TypesAreClrCompatible(ITypeReference sourceType, ITypeReference targetType) {
+      if (sourceType == targetType) return true;
+      if (sourceType.InternedKey == targetType.InternedKey) return true;
+      if (sourceType.TypeCode == PrimitiveTypeCode.Boolean && TypeHelper.IsPrimitiveInteger(targetType)) return true;
+      if (TypeHelper.IsPrimitiveInteger(sourceType) && targetType.TypeCode == PrimitiveTypeCode.Boolean) return true;
+      return false;
     }
 
     internal readonly Dictionary<ILocalDefinition, int> numberOfAssignments = new Dictionary<ILocalDefinition, int>();
@@ -726,6 +739,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           condition = this.ParseBinaryOperation(new NotEquality());
           break;
       }
+      if (this.host.PreserveILLocations) {
+        condition.Locations.Add(currentOperation.Location);
+      }
       GotoStatement gotoStatement = MakeGoto(currentOperation);
       ConditionalStatement ifStatement = new ConditionalStatement();
       ifStatement.Condition = condition;
@@ -742,6 +758,20 @@ namespace Microsoft.Cci.ILToCodeModel {
       result.Alignment = this.alignment;
       result.Definition = currentOperation.Value;
       result.IsVolatile = this.sawVolatile;
+      var parameter = result.Definition as IParameterDefinition;
+      if (parameter != null) {
+        result.Type = parameter.Type;
+        if (parameter.IsByReference) result.Type = ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
+      } else {
+        var local = result.Definition as ILocalDefinition;
+        if (local != null) {
+          result.Type = local.Type;
+          if (local.IsReference) result.Type = ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
+        } else {
+          var field = (IFieldReference)result.Definition;
+          result.Type = field.Type;
+        }
+      }
       switch (currentOperation.OperationCode) {
         case OperationCode.Ldfld:
           result.Instance = this.PopOperandStack();
@@ -1017,10 +1047,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       Expression/*?*/ expression = null;
       IOperation currentOperation = this.operationEnumerator.Current;
       OperationCode currentOpcode = currentOperation.OperationCode;
-      if (this.sourceLocationProvider != null && this.lastSourceLocation == null) {
-        foreach (var sourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(currentOperation.Location)) {
-          this.lastSourceLocation = sourceLocation;
-          break;
+      if (this.host.PreserveILLocations) {
+        if (this.lastLocation == null)
+          this.lastLocation = currentOperation.Location;
+      } else {
+        if (this.sourceLocationProvider != null && this.lastSourceLocation == null) {
+          foreach (var sourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(currentOperation.Location)) {
+            this.lastSourceLocation = sourceLocation;
+            break;
+          }
         }
       }
       switch (currentOpcode) {
@@ -1301,7 +1336,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Ldind_U2:
         case OperationCode.Ldind_U4:
         case OperationCode.Ldobj:
-          expression = this.ParseAddressDereference();
+          expression = this.ParseAddressDereference(currentOperation);
           break;
 
         case OperationCode.Ldlen:
@@ -1422,11 +1457,19 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       }
       if (expression != null) {
+        if (this.host.PreserveILLocations) {
+          expression.Locations.Add(currentOperation.Location);
+        }
         this.operandStack.Push(expression);
       } else if (statement != null) {
         this.TurnOperandStackIntoPushStatements(currentBlock);
         currentBlock.Statements.Add(statement);
-        if (this.lastSourceLocation != null) {
+        if (this.host.PreserveILLocations) {
+          if (this.lastLocation != null) {
+            statement.Locations.Add(this.lastLocation);
+            this.lastLocation = null;
+          }
+        } else if (this.lastSourceLocation != null) {
           statement.Locations.Add(this.lastSourceLocation);
           this.lastSourceLocation = null;
         }
@@ -1576,8 +1619,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
       : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider) {
       this.iteratorMethodBody = iteratorMethodBody;
     }
