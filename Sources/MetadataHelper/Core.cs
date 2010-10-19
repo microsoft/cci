@@ -41,12 +41,12 @@ namespace Microsoft.Cci {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize)
-      : this(nameTable, new InternFactory(), pointerSize)
+    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize) 
+      :this(nameTable, new InternFactory(), pointerSize)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
     }
-
+      
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
@@ -498,6 +498,12 @@ namespace Microsoft.Cci {
         return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;
     }
+
+    /// <summary>
+    /// True if IL locations should be preserved up into the code model by decompilers using this host.
+    /// </summary>
+    public virtual bool PreserveILLocations { get { return false; } }
+
   }
 
   /// <summary>

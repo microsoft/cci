@@ -1044,6 +1044,10 @@ namespace Microsoft.Cci {
       get { return Dummy.InternFactory; }
     }
 
+    public bool PreserveILLocations {
+      get { return false; }
+    }
+
     #endregion
   }
 
@@ -2752,7 +2756,7 @@ namespace Microsoft.Cci {
     }
 
     public Machine Machine {
-      get { return Machine.Unknown; }
+      get { return Machine.Unknown; } 
     }
 
     public bool RequiresAmdInstructionSet {

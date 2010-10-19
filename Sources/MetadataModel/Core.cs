@@ -275,6 +275,11 @@ namespace Microsoft.Cci {
     /// </remarks>
     //^ [Pure]
     AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity);
+
+    /// <summary>
+    /// True if IL locations should be preserved up into the code model by decompilers using this host.
+    /// </summary>
+    bool PreserveILLocations { get; }
   }
 
   /// <summary>
