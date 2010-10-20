@@ -125,8 +125,7 @@ namespace Microsoft.Cci.Contracts {
       }
       var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
       contract = cccc.Visit(contract);
-      var sps = new MutableContracts.SubstituteParameters(this.host, specializedProxyMethod != null ? unspec : proxyMethod, methodDefinition);
-      contract = (MethodContract) sps.Visit(contract);
+      contract = ContractHelper.CopyContract(this.host, contract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
       if (specializedProxyMethod != null) {
         SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedProxyMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
         var sourceTypeReferences = stdm.ContainingGenericTypeInstance.GenericArguments;

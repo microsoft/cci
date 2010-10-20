@@ -576,22 +576,15 @@ namespace Microsoft.Cci.MutableContracts {
           IMethodContract/*?*/ overriddenContract = ContractHelper.GetMethodContractFor(host, overriddenMethod);
           if (overriddenContract != null) {
 
-            //var copier = new CodeCopier(host, sourceLocationProvider);
-            //overriddenContract = copier.Substitute(overriddenContract);
-            var copier = new CodeAndContractMutator(host, false);
-            overriddenContract = copier.Visit(overriddenContract);
-
-            overriddenContract = ReplacePrivateFieldsThatHavePublicProperties(host, methodDefinition.ContainingTypeDefinition, overriddenMethod.ContainingTypeDefinition, overriddenContract);
-
-            var overriddenContainingType = overriddenMethod.ContainingTypeDefinition;
-            
             var specializedoverriddenMethod = overriddenMethod as ISpecializedMethodDefinition;
 
-            if (specializedoverriddenMethod != null){
+            if (specializedoverriddenMethod != null) {
               overriddenMethod = UninstantiateAndUnspecialize(overriddenMethod).ResolvedMethod;
             }
-            SubstituteParameters sps = new SubstituteParameters(host, overriddenMethod, methodDefinition);
-            overriddenContract = sps.Visit(overriddenContract) as MethodContract;
+
+            overriddenContract = CopyContract(host, overriddenContract, methodDefinition, overriddenMethod);
+
+            overriddenContract = ReplacePrivateFieldsThatHavePublicProperties(host, methodDefinition.ContainingTypeDefinition, overriddenMethod.ContainingTypeDefinition, overriddenContract);
 
             if (specializedoverriddenMethod != null) {
               SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedoverriddenMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
@@ -619,9 +612,7 @@ namespace Microsoft.Cci.MutableContracts {
       foreach (IMethodDefinition ifaceMethod in ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(methodDefinition)) {
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
-        SubstituteParameters sps = new SubstituteParameters(host, ifaceMethod, methodDefinition);
-        MethodContract newContract = sps.Visit(ifaceContract) as MethodContract;
-        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, CopyContract(host, ifaceContract, methodDefinition, ifaceMethod));
         atLeastOneContract = true;
       }
       #endregion Implicit interface implementations
@@ -631,9 +622,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (ifaceMethod == null) continue;
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
-        SubstituteParameters sps = new SubstituteParameters(host, ifaceMethod, methodDefinition);
-        MethodContract newContract = sps.Visit(ifaceContract) as MethodContract;
-        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, newContract);
+        Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, CopyContract(host, ifaceContract, methodDefinition, ifaceMethod));
         atLeastOneContract = true;
       }
       #endregion Explicit interface implementations and explicit method overrides
@@ -792,7 +781,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// at the beginning of method bodies, this method will extract them, leaving the method bodies without those
     /// calls and return a contract provider for the module containing any extracted contracts.
     /// </summary>
-    public static ContractProvider ExtractContracts(IMetadataHost host, Module module, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
+    public static ContractProvider ExtractContracts(IContractAwareHost host, Module module, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
       var contractMethods = new ContractMethods(host);
       var cp = new Microsoft.Cci.MutableContracts.ContractProvider(contractMethods, module);
       var extractor = new SeparateContractsFromCode(host, pdbReader, localScopeProvider, cp);
@@ -810,21 +799,23 @@ namespace Microsoft.Cci.MutableContracts {
       private Microsoft.Cci.MutableContracts.ContractProvider contractProvider;
       PdbReader/*?*/ pdbReader;
       ILocalScopeProvider/*?*/ localScopeProvider;
+      private IContractAwareHost contractAwareHost;
 
       internal SeparateContractsFromCode(
-        IMetadataHost host,
+        IContractAwareHost host,
         PdbReader/*?*/ pdbReader,
         ILocalScopeProvider/*?*/ localScopeProvider,
         Microsoft.Cci.MutableContracts.ContractProvider contractProvider
         )
         : base(host, true, pdbReader) {
+        this.contractAwareHost = host;
         this.pdbReader = pdbReader;
         this.localScopeProvider = localScopeProvider;
         this.contractProvider = contractProvider;
       }
 
       protected override void Visit(TypeDefinition typeDefinition) {
-        var contract = ContractExtractor.GetObjectInvariant(this.host, typeDefinition, this.pdbReader, this.localScopeProvider);
+        var contract = ContractExtractor.GetObjectInvariant(this.contractAwareHost, typeDefinition, this.pdbReader, this.localScopeProvider);
         if (contract != null) {
           this.contractProvider.AssociateTypeWithContract(typeDefinition, contract);
         }
@@ -839,7 +830,7 @@ namespace Microsoft.Cci.MutableContracts {
       public override IMethodBody Visit(IMethodBody methodBody) {
         ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
         if (sourceMethodBody != null) {
-          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.host, sourceMethodBody, this.pdbReader, this.localScopeProvider);
+          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody, this.pdbReader, this.localScopeProvider);
           this.contractProvider.AssociateMethodWithContract(methodBody.MethodDefinition, codeAndContractPair.MethodContract);
           var smb = sourceMethodBody as Microsoft.Cci.ILToCodeModel.SourceMethodBody;
           return smb == null ? Dummy.MethodBody : smb;
@@ -893,7 +884,19 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-
+    /// <summary>
+    /// Returns a deep copy of <paramref name="methodContract"/> which belongs to <paramref name="fromMethod"/> so that
+    /// it is a method contract for <paramref name="toMethod"/>.
+    /// </summary>
+    public static IMethodContract CopyContract(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
+      var copier = new CodeAndContractMutator(host, false);
+      var mc = copier.Visit(methodContract);
+      // The parameters from "toMethod" should be substituted for the parameters from "fromMethod"
+      // wherever they occur in the contract.
+      SubstituteParameters sps = new SubstituteParameters(host, fromMethod, toMethod);
+      mc = sps.Visit(mc) as MethodContract;
+      return mc;
+    }
   }
 
   /// <summary>

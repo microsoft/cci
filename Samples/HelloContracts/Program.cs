@@ -25,7 +25,7 @@ namespace HelloContracts {
     [OptionDescription("The name of the assembly to use as input", ShortForm = "a")]
     public string assembly = null;
 
-    [OptionDescription("Print any contracts found in the input assembly", ShortForm = "p")]
+    [OptionDescription("Print any contracts found in the input assembly", ShortForm= "p")]
     public bool printContracts = false;
 
     [OptionDescription("Show inherited contracts (used with -p)", ShortForm = "i")]
@@ -71,8 +71,7 @@ namespace HelloContracts {
         #endregion
         return 0;
       } else {
-        using (var host = new PeReader.DefaultHost()) {
-
+        using (var host = new CodeContractAwareHostEnvironment(options.libpaths, true, true)) {
           // Read the Metadata Model from the PE file
           var module = host.LoadUnitFrom(fileName) as IModule;
           if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
@@ -117,8 +116,8 @@ namespace HelloContracts {
             }
           }
         }
+        return 0;
       }
-      return 0;
     }
   }
 
