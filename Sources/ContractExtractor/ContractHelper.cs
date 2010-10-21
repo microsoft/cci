@@ -889,7 +889,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// it is a method contract for <paramref name="toMethod"/>.
     /// </summary>
     public static IMethodContract CopyContract(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
-      var copier = new CodeAndContractMutator(host, false);
+      var copier = new MethodBodyCodeAndContractMutator(host, false);
       var mc = copier.Visit(methodContract);
       // The parameters from "toMethod" should be substituted for the parameters from "fromMethod"
       // wherever they occur in the contract.
@@ -903,7 +903,7 @@ namespace Microsoft.Cci.MutableContracts {
   /// A mutator that substitutes parameters defined in the target method with those from the source method
   /// (including the "this" parameter).
   /// </summary>
-  public sealed class SubstituteParameters : CodeAndContractMutator {
+  public sealed class SubstituteParameters : MethodBodyCodeAndContractMutator {
     private IMethodDefinition targetMethod;
     private IMethodDefinition sourceMethod;
     private ITypeReference targetType;
@@ -987,6 +987,8 @@ namespace Microsoft.Cci.MutableContracts {
   /// in order to see the updated contents of the units.
   /// </summary>
   public class CodeContractAwareHostEnvironment : MetadataReaderHost, IContractAwareHost {
+
+    #region Fields
     PeReader peReader;
     readonly List<string> libPaths = new List<string>();
     protected Dictionary<UnitIdentity, IContractExtractor> unit2ContractExtractor = new Dictionary<UnitIdentity, IContractExtractor>();
@@ -1001,6 +1003,7 @@ namespace Microsoft.Cci.MutableContracts {
     private Dictionary<IUnitReference, List<IUnitReference>> unit2DependentUnits = new Dictionary<IUnitReference, List<IUnitReference>>();
     // A table that maps each unit, U, to all of the reference assemblies for U.
     private Dictionary<IUnitReference, List<IUnitReference>> unit2ReferenceAssemblies = new Dictionary<IUnitReference, List<IUnitReference>>();
+    #endregion
 
     #region Constructors
     /// <summary>
@@ -1099,12 +1102,54 @@ namespace Microsoft.Cci.MutableContracts {
     }
     #endregion Constructors
 
+    #region Methods introduced by this class
     /// <summary>
     /// Set this before loading any units with this host. Default is true.
     /// Note that extractors may use PDB file to open source files.
     /// Both PDB and source files may be opened with exclusive access.
     /// </summary>
     public virtual bool AllowExtractorsToUsePdbs { get; protected set; }
+
+    /// <summary>
+    /// Adds a new pair of (assembly name, path) to the table of candidates to use
+    /// when searching for a unit to load. Overwrites previous entry if the assembly
+    /// name is already in the table. Note that "assembly name" does not have an
+    /// extension.
+    /// </summary>
+    /// <param name="path">
+    /// A valid path in the file system that ends with a file name. The
+    /// file name (without extension) is used as the key in the candidate
+    /// table.
+    /// </param>
+    /// <returns>
+    /// Returns true iff <paramref name="path"/> is a valid path pointing
+    /// to an existing file and the table was successfully updated.
+    /// </returns>
+    public virtual bool AddResolvedPath(string path) {
+      if (path == null) return false;
+      if (!File.Exists(path)) return false;
+      var fileNameWithExtension = Path.GetFileName(path);
+      if (String.IsNullOrEmpty(fileNameWithExtension)) return false;
+      var fileName = Path.GetFileNameWithoutExtension(path);
+      if (this.assemblyNameToPath.ContainsKey(fileName))
+        this.assemblyNameToPath[fileName] = path;
+      else
+        this.assemblyNameToPath.Add(fileName, path);
+      return true;
+    }
+    private Dictionary<string, string> assemblyNameToPath = new Dictionary<string, string>();
+    #endregion
+
+    #region MetadataReaderHost Overrides
+    public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      string pathFromTable;
+      var assemblyName = referencedAssembly.Name.Value;
+      if (this.assemblyNameToPath.TryGetValue(assemblyName, out pathFromTable)) {
+        return new AssemblyIdentity(referencedAssembly, pathFromTable);
+      } else {
+        return base.ProbeAssemblyReference(referringUnit, referencedAssembly);
+      }
+    }
 
     /// <summary>
     /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
@@ -1117,6 +1162,12 @@ namespace Microsoft.Cci.MutableContracts {
         } catch (UriFormatException) {
           return Dummy.Unit;
         }
+      }
+
+      string pathFromTable;
+      var assemblyName = Path.GetFileNameWithoutExtension(location);
+      if (this.assemblyNameToPath.TryGetValue(assemblyName, out pathFromTable)) {
+        location = pathFromTable;
       }
 
       var timeOfLastModification = UnloadPreviouslyLoadedUnitIfLocationIsNewer(location);
@@ -1137,6 +1188,7 @@ namespace Microsoft.Cci.MutableContracts {
       return result;
     }
 
+    #region Helper Methods
     /// <summary>
     /// Checks the location against all previously loaded locations. If a unit
     /// had been loaded from it before and if the last write time is newer, then
@@ -1260,6 +1312,8 @@ namespace Microsoft.Cci.MutableContracts {
         }
       }
     }
+    #endregion
+    #endregion
 
     #region IContractAwareHost Members
 
@@ -1286,5 +1340,67 @@ namespace Microsoft.Cci.MutableContracts {
 
     #endregion
   }
+
+  /// <summary>
+  /// A host that is a subtype of Microsoft.Cci.PeReader.DefaultHost that also maintains
+  /// a (mutable) table mapping assembly names to paths.
+  /// When an assembly is to be loaded, if its name is in the table, then the
+  /// associated path is used to load it.
+  /// </summary>
+  public class FullyResolvedPathHost : Microsoft.Cci.PeReader.DefaultHost {
+
+    private Dictionary<string, string> assemblyNameToPath = new Dictionary<string, string>();
+
+    /// <summary>
+    /// Adds a new pair of (assembly name, path) to the table of candidates to use
+    /// when searching for a unit to load. Overwrites previous entry if the assembly
+    /// name is already in the table. Note that "assembly name" does not have an
+    /// extension.
+    /// </summary>
+    /// <param name="path">
+    /// A valid path in the file system that ends with a file name. The
+    /// file name (without extension) is used as the key in the candidate
+    /// table.
+    /// </param>
+    /// <returns>
+    /// Returns true iff <paramref name="path"/> is a valid path pointing
+    /// to an existing file and the table was successfully updated.
+    /// </returns>
+    public virtual bool AddResolvedPath(string path) {
+      if (path == null) return false;
+      if (!File.Exists(path)) return false;
+      var fileNameWithExtension = Path.GetFileName(path);
+      if (String.IsNullOrEmpty(fileNameWithExtension)) return false;
+      var fileName = Path.GetFileNameWithoutExtension(path);
+      if (this.assemblyNameToPath.ContainsKey(fileName))
+        this.assemblyNameToPath[fileName] = path;
+      else
+        this.assemblyNameToPath.Add(fileName, path);
+      return true;
+    }
+
+    public override IUnit LoadUnitFrom(string location) {
+      string pathFromTable;
+      var assemblyName = Path.GetFileNameWithoutExtension(location);
+      if (this.assemblyNameToPath.TryGetValue(assemblyName, out pathFromTable)) {
+        return base.LoadUnitFrom(pathFromTable);
+      } else {
+        return base.LoadUnitFrom(location);
+      }
+    }
+
+    public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      string pathFromTable;
+      var assemblyName = referencedAssembly.Name.Value;
+      if (this.assemblyNameToPath.TryGetValue(assemblyName, out pathFromTable)) {
+        return new AssemblyIdentity(referencedAssembly, pathFromTable);
+      } else {
+        return base.ProbeAssemblyReference(referringUnit, referencedAssembly);
+      }
+    }
+
+
+  }
+
 
 }
