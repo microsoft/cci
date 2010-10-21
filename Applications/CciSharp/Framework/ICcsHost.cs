@@ -245,6 +245,8 @@ namespace CciSharp.Framework
             throw new NotImplementedException();
         }
 
+        bool IMetadataHost.PreserveILLocations { get { throw new NotImplementedException(); } }
+
         #endregion
 
         Assembly ICcsHost.MutatedAssembly
