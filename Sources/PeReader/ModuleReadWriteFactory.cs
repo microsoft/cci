@@ -58,7 +58,7 @@ namespace Microsoft.Cci {
     readonly Hashtable<Module> InternedIdToModuleMap;
     Assembly/*?*/ coreAssembly;
 
-    internal readonly IName value__;
+    internal readonly IName Value__;
     internal readonly IName AsyncCallback;
     internal readonly IName ParamArrayAttribute;
     internal readonly IName IAsyncResult;
@@ -96,7 +96,7 @@ namespace Microsoft.Cci {
       this.metadataReaderHost = metadataReaderHost;
       this.InternedIdToModuleMap = new Hashtable<Module>();
       INameTable nameTable = metadataReaderHost.NameTable;
-      this.value__ = nameTable.GetNameFor("value__");
+      this.Value__ = nameTable.GetNameFor("value__");
       this.AsyncCallback = nameTable.GetNameFor("AsyncCallback");
       this.ParamArrayAttribute = nameTable.GetNameFor("ParamArrayAttribute");
       this.IAsyncResult = nameTable.GetNameFor("IAsyncResult");

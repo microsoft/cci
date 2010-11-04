@@ -2239,7 +2239,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.initFlags & TypeBase.EnumInited) != TypeBase.EnumInited) {
           this.initFlags |= TypeBase.EnumInited;
           if (this.IsEnum) {
-            foreach (ITypeDefinitionMember tdm in this.GetMembersNamed(this.PEFileToObjectModel.ModuleReader.value__, false)) {
+            foreach (ITypeDefinitionMember tdm in this.GetMembersNamed(this.PEFileToObjectModel.ModuleReader.Value__, false)) {
               FieldDefinition/*?*/ mf = tdm as FieldDefinition;
               if (mf == null)
                 continue;
@@ -2503,7 +2503,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.initFlags & TypeBase.EnumInited) != TypeBase.EnumInited) {
           this.initFlags |= TypeBase.EnumInited;
           if (this.IsEnum) {
-            foreach (ITypeDefinitionMember tdm in this.GetMembersNamed(this.PEFileToObjectModel.ModuleReader.value__, false)) {
+            foreach (ITypeDefinitionMember tdm in this.GetMembersNamed(this.PEFileToObjectModel.ModuleReader.Value__, false)) {
               FieldDefinition/*?*/ mf = tdm as FieldDefinition;
               if (mf == null)
                 continue;
