@@ -809,17 +809,21 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.CurrentIndex = endMark;
       return vers;
     }
-    bool ScanBoolean() {
+    bool ScanYesNo(out bool value) {
       this.SkipSpaces();
       int currPtr = this.CurrentIndex;
       string name = this.TypeName;
-      if (currPtr + 4 <= this.Length && string.Compare(name.Substring(currPtr, 4), "true", StringComparison.OrdinalIgnoreCase) == 0) {
-        this.CurrentIndex += 4;
+      if (currPtr + 3 <= this.Length && string.Compare(name, currPtr, "yes", 0, 3, StringComparison.OrdinalIgnoreCase) == 0) {
+        this.CurrentIndex += 3;
+        value = true;
         return true;
       }
-      if (currPtr + 5 <= this.Length && string.Compare(name.Substring(currPtr, 5), "false", StringComparison.OrdinalIgnoreCase) == 0) {
-        this.CurrentIndex += 5;
+      if (currPtr + 2 <= this.Length && string.Compare(name, currPtr, "no", 0, 2, StringComparison.OrdinalIgnoreCase) == 0) {
+        this.CurrentIndex += 2;
+        value = false;
+        return true;
       }
+      value = false;
       return false;
     }
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
@@ -827,7 +831,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.SkipSpaces();
       int currPtr = this.CurrentIndex;
       string name = this.TypeName;
-      if (currPtr + 4 <= this.Length && string.Compare(name.Substring(currPtr, 4), "null", StringComparison.OrdinalIgnoreCase) == 0) {
+      if (currPtr + 4 <= this.Length && string.Compare(name, currPtr, "null", 0, 4, StringComparison.OrdinalIgnoreCase) == 0) {
         this.CurrentIndex += 4;
         return TypeCache.EmptyByteArray;
       }
@@ -1106,7 +1110,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         } else if (infoIdent.UniqueKeyIgnoringCase == this.Retargetable.UniqueKeyIgnoringCase) {
           if (retargetableRead)
             return null;
-          retargetable = this.ScanBoolean();
+          if (!this.ScanYesNo(out retargetable))
+            return null;
+          retargetableRead = true;
         } else {
           //  TODO: Error: Identifier in assembly name.
           while (this.CurrentTypeNameTokenKind != TypeNameTokenKind.Comma && this.CurrentTypeNameTokenKind != TypeNameTokenKind.CloseBracket && this.CurrentTypeNameTokenKind != TypeNameTokenKind.EOS) {
