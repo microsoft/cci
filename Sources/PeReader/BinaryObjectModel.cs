@@ -2152,6 +2152,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       //^ base;
     }
 
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     #region INamespaceMember Members
 
     public INamespaceDefinition ContainingNamespace {
@@ -2274,6 +2278,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.NamespaceMemberName = namespaceMemberName;
       this.ParentModuleNamespace = parentModuleNamespace;
       //^ base;
+    }
+
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
     }
 
     #region INamespaceMember Members
