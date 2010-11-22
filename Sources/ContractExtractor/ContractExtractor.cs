@@ -222,6 +222,8 @@ namespace Microsoft.Cci.MutableContracts {
       // Don't start with an empty contract because the ctor may have set some things in it
       var bs = this.Visit(blockStatement);
       bs = new AssertAssumeExtractor(this, this.sourceMethodBody, this.host, this.sourceLocationProvider).Visit(bs);
+      if (this.currentMethodContract != null)
+        this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition, this.currentMethodContract);
       return new MethodContractAndMethodBody(this.currentMethodContract, bs);
     }
 
@@ -508,12 +510,15 @@ namespace Microsoft.Cci.MutableContracts {
               return;
             }
           } else if (IsValidatorOrAbbreviator(expressionStatement)) {
-            var abbreviatorDef = methodToCall.ResolvedMethod;
+            var gmir = methodToCall as IGenericMethodInstanceReference;
+            IMethodDefinition abbreviatorDef;
+            if (gmir != null)
+              abbreviatorDef = gmir.GenericMethod.ResolvedMethod;
+            else
+              abbreviatorDef = methodToCall.ResolvedMethod;
             var mc = ContractHelper.GetMethodContractFor(this.contractAwarehost, abbreviatorDef);
             if (mc != null) {
-
-              mc = ContractHelper.CopyContract(this.host, mc, this.sourceMethodBody.MethodDefinition, abbreviatorDef);
-
+              mc = ContractHelper.InlineAndStuff(this.host, mc, this.sourceMethodBody.MethodDefinition, abbreviatorDef, new List<IExpression>(methodCall.Arguments));
               if (this.currentMethodContract == null)
                 this.currentMethodContract = new MethodContract(mc);
               else
@@ -1387,6 +1392,59 @@ namespace Microsoft.Cci.MutableContracts {
 
 
     }
+
+    /// <summary>
+    /// Replaces any BoundExpressions of the form (this,x) in the methodContract with a method call where the method
+    /// being called is P where x is a private field of the source type that has been marked as [ContractPublicPropertyName("P")].
+    /// </summary>
+    private static MethodContract ReplacePrivateFieldsThatHavePublicProperties(IMetadataHost host, ITypeDefinition sourceType, MethodContract methodContract) {
+
+      Dictionary<IName, IMethodReference> field2Getter = new Dictionary<IName, IMethodReference>();
+
+      foreach (var mem in sourceType.Members) {
+        IFieldDefinition f = mem as IFieldDefinition;
+        if (f == null) continue;
+        string propertyName = ContractHelper.GetStringArgumentFromAttribute(f.Attributes, "System.Diagnostics.Contracts.ContractPublicPropertyNameAttribute");
+        if (propertyName != null) {
+          foreach (var p in sourceType.Properties) {
+            if (p.Name.Value == propertyName) {
+              field2Getter.Add(f.Name, p.Getter);
+              break;
+            }
+          }
+        }
+      }
+      if (0 < field2Getter.Count) {
+        SubstitutePropertyGetterForField s = new SubstitutePropertyGetterForField(host, sourceType, field2Getter);
+        methodContract = (MethodContract)s.Visit(methodContract);
+      }
+      return methodContract;
+    }
+
+    private class SubstitutePropertyGetterForField : CodeAndContractMutator {
+      ITypeDefinition sourceType;
+      Dictionary<IName, IMethodReference> substitution;
+      public SubstitutePropertyGetterForField(IMetadataHost host, ITypeDefinition sourceType, Dictionary<IName, IMethodReference> substitutionTable)
+        : base(host, true) {
+        this.sourceType = sourceType;
+        this.substitution = substitutionTable;
+      }
+      public override IExpression Visit(BoundExpression boundExpression) {
+        IFieldDefinition f = boundExpression.Definition as IFieldDefinition;
+        if (f != null && f.ContainingType.InternedKey == this.sourceType.InternedKey && this.substitution.ContainsKey(f.Name)) {
+          IMethodReference m = this.substitution[f.Name];
+          return new MethodCall() {
+            IsVirtualCall = true,
+            MethodToCall = m,
+            Type = m.Type,
+            ThisArgument = boundExpression.Instance,
+          };
+        } else {
+          return base.Visit(boundExpression);
+        }
+      }
+    }
+
   }
 
 

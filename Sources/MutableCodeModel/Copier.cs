@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Cci;
 using System.Diagnostics;
+using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableContracts;
 
 //^ using Microsoft.Contracts;
 
@@ -2091,5 +2093,313 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       #endregion overriding implementations of ICodeVisitor Members
     }
+  }
+
+  /// <summary>
+  /// Provides copy of a method contract, method body, a statement, or an expression, in which the references to the nodes
+  /// inside a cone is replaced. The cone is defined using the parent class. 
+  /// </summary>
+  public class CodeAndContractCopier : CodeCopier {
+    /// <summary>
+    /// Provides copy of a method contract, method body, a statement, or an expression, in which the references to the nodes
+    /// inside a cone is replaced. The cone is defined using the parent class. 
+    /// </summary>
+    public CodeAndContractCopier(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider)
+      : base(host, sourceLocationProvider) {
+    }
+    /// <summary>
+    /// Provides copy of a method contract, method body, a statement, or an expression, in which the references to the nodes
+    /// inside a cone is replaced. The cone is defined using the parent class. 
+    /// </summary>
+    public CodeAndContractCopier(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes)
+      : base(host, sourceLocationProvider, rootOfCone, out newTypes)
+    {
+    }
+
+    #region GetMutableCopy methods
+
+    /// <summary>
+    /// Get the mutable copy of a loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant"></param>
+    /// <returns></returns>
+    public virtual LoopInvariant GetMutableCopy(ILoopInvariant loopInvariant) {
+      object cachedValue;
+      if (this.cache.TryGetValue(loopInvariant, out cachedValue))
+        return (LoopInvariant)cachedValue;
+      var result = new LoopInvariant(loopInvariant);
+      // Probably not necessary, no two loop invariants are shared. 
+      this.cache.Add(loopInvariant, result);
+      this.cache.Add(result, result);
+      return result;
+    }
+
+    /// <summary>
+    /// Get the mutable copy of a postcondition.
+    /// </summary>
+    /// <param name="postcondition"></param>
+    /// <returns></returns>
+    public virtual PostCondition GetMutableCopy(IPostcondition postcondition) {
+      object cachedValue;
+      if (this.cache.TryGetValue(postcondition, out cachedValue))
+        return (PostCondition)cachedValue;
+      var result = new PostCondition(postcondition);
+      // Probably not necessary, no two postconditions are shared. 
+      this.cache.Add(postcondition, result);
+      this.cache.Add(result, result);
+      return result;
+    }
+
+    /// <summary>
+    /// Get the mutable copy of a precondition.
+    /// </summary>
+    /// <param name="precondition"></param>
+    /// <returns></returns>
+    public virtual Precondition GetMutableCopy(IPrecondition precondition) {
+      object cachedValue;
+      if (this.cache.TryGetValue(precondition, out cachedValue))
+        return (Precondition)cachedValue;
+      var result = new Precondition(precondition);
+      // Probably not necessary, no two postconditions are shared. 
+      this.cache.Add(precondition, result);
+      this.cache.Add(result, result);
+      return result;
+    }
+
+    /// <summary>
+    /// Get the mutable copy of a thrown exception.
+    /// </summary>
+    /// <param name="thrownException"></param>
+    /// <returns></returns>
+    public virtual ThrownException GetMutableCopy(IThrownException thrownException) {
+      object cachedValue;
+      if (this.cache.TryGetValue(thrownException, out cachedValue))
+        return (ThrownException)cachedValue;
+      var result = new ThrownException(thrownException);
+      // Probably not necessary, no two thrown exceptions are shared. 
+      this.cache.Add(thrownException, result);
+      this.cache.Add(result, result);
+      return result;
+    }
+
+    /// <summary>
+    /// Get the mutable copy of a type invariant.
+    /// </summary>
+    /// <param name="typeInvariant"></param>
+    /// <returns></returns>
+    public virtual TypeInvariant GetMutableCopy(ITypeInvariant typeInvariant) {
+      object cachedValue;
+      if (this.cache.TryGetValue(typeInvariant, out cachedValue))
+        return (TypeInvariant)cachedValue;
+      var result = new TypeInvariant(typeInvariant);
+      // Probably not necessary, no two thrown exceptions are shared. 
+      this.cache.Add(typeInvariant, result);
+      this.cache.Add(result, result);
+      return result;
+    }
+
+    #endregion
+
+    #region DeepCopy methods
+
+    /// <summary>
+    /// Visits the specified addressable expressions.
+    /// </summary>
+    /// <param name="addressableExpressions">The addressable expressions.</param>
+    /// <returns></returns>
+    protected virtual List<IAddressableExpression> DeepCopy(List<IAddressableExpression> addressableExpressions) {
+      List<IAddressableExpression> newList = new List<IAddressableExpression>();
+      foreach (var addressableExpression in addressableExpressions)
+        newList.Add((IAddressableExpression)this.Substitute(addressableExpression));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified loop contract.
+    /// </summary>
+    /// <param name="loopContract">The loop contract.</param>
+    /// <returns></returns>
+    protected virtual ILoopContract DeepCopy(LoopContract loopContract) {
+      loopContract.Invariants = this.DeepCopy(loopContract.Invariants);
+      loopContract.Writes = this.DeepCopy(loopContract.Writes);
+      return loopContract;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariants.
+    /// </summary>
+    /// <param name="loopInvariants">The loop invariants.</param>
+    /// <returns></returns>
+    protected virtual List<ILoopInvariant> DeepCopy(List<ILoopInvariant> loopInvariants) {
+      List<ILoopInvariant> newList = new List<ILoopInvariant>();
+      foreach (var loopInvariant in loopInvariants)
+        newList.Add(this.DeepCopy(this.GetMutableCopy(loopInvariant)));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant">The loop invariant.</param>
+    /// <returns></returns>
+    protected virtual ILoopInvariant DeepCopy(LoopInvariant loopInvariant) {
+      loopInvariant.Condition = this.Substitute(loopInvariant.Condition);
+      if (loopInvariant.Description != null)
+        loopInvariant.Description = this.Substitute(loopInvariant.Description);
+      return loopInvariant;
+    }
+
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
+    /// <returns></returns>
+    protected virtual IMethodContract DeepCopy(MethodContract methodContract) {
+      methodContract.Allocates = this.DeepCopy(methodContract.Allocates);
+      methodContract.Frees = this.DeepCopy(methodContract.Frees);
+      methodContract.ModifiedVariables = this.DeepCopy(methodContract.ModifiedVariables);
+      methodContract.Postconditions = this.DeepCopy(methodContract.Postconditions);
+      methodContract.Preconditions = this.DeepCopy(methodContract.Preconditions);
+      methodContract.Reads = this.DeepCopy(methodContract.Reads);
+      methodContract.ThrownExceptions = this.DeepCopy(methodContract.ThrownExceptions);
+      methodContract.Writes = this.DeepCopy(methodContract.Writes);
+      return methodContract;
+    }
+
+    /// <summary>
+    /// Visits the specified post conditions.
+    /// </summary>
+    /// <param name="postConditions">The post conditions.</param>
+    /// <returns></returns>
+    protected virtual List<IPostcondition> DeepCopy(List<IPostcondition> postConditions) {
+      List<IPostcondition> newList = new List<IPostcondition>();
+      foreach (var postcondition in postConditions)
+        newList.Add(this.DeepCopy(this.GetMutableCopy(postcondition)));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified post condition.
+    /// </summary>
+    /// <param name="postCondition">The post condition.</param>
+    protected virtual IPostcondition DeepCopy(PostCondition postCondition) {
+      postCondition.Condition = this.Substitute(postCondition.Condition);
+      if (postCondition.Description != null)
+        postCondition.Description = this.Substitute(postCondition.Description);
+      return postCondition;
+    }
+
+    /// <summary>
+    /// Visits the specified preconditions.
+    /// </summary>
+    /// <param name="preconditions">The preconditions.</param>
+    protected virtual List<IPrecondition> DeepCopy(List<IPrecondition> preconditions) {
+      List<IPrecondition> newList = new List<IPrecondition>();
+      foreach (var precondition in preconditions)
+        newList.Add(this.DeepCopy(this.GetMutableCopy(precondition)));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified precondition.
+    /// </summary>
+    /// <param name="precondition">The precondition.</param>
+    protected virtual IPrecondition DeepCopy(Precondition precondition) {
+      precondition.Condition = this.Substitute(precondition.Condition);
+      if (precondition.ExceptionToThrow != null)
+        precondition.ExceptionToThrow = this.Substitute(precondition.ExceptionToThrow);
+      return precondition;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exceptions.
+    /// </summary>
+    /// <param name="thrownExceptions">The thrown exceptions.</param>
+    protected virtual List<IThrownException> DeepCopy(List<IThrownException> thrownExceptions) {
+      List<IThrownException> newList = new List<IThrownException>();
+      foreach (var thrownException in thrownExceptions)
+        newList.Add(this.DeepCopy(this.GetMutableCopy(thrownException)));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exception.
+    /// </summary>
+    /// <param name="thrownException">The thrown exception.</param>
+    protected virtual IThrownException DeepCopy(ThrownException thrownException) {
+      thrownException.ExceptionType = this.Substitute(thrownException.ExceptionType);
+      thrownException.Postcondition = this.Substitute(thrownException.Postcondition);
+      return thrownException;
+    }
+
+    /// <summary>
+    /// Visits the specified type contract.
+    /// </summary>
+    /// <param name="typeContract">The type contract.</param>
+    protected virtual ITypeContract DeepCopy(TypeContract typeContract) {
+      typeContract.ContractFields = this.DeepCopy(typeContract.ContractFields);
+      typeContract.ContractMethods = this.DeepCopy(typeContract.ContractMethods);
+      typeContract.Invariants = this.DeepCopy(typeContract.Invariants);
+      return typeContract;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariants.
+    /// </summary>
+    /// <param name="typeInvariants">The type invariants.</param>
+    protected virtual List<ITypeInvariant> DeepCopy(List<ITypeInvariant> typeInvariants) {
+      List<ITypeInvariant> newList = new List<ITypeInvariant>();
+      foreach (var typeInvariant in typeInvariants)
+        newList.Add(this.DeepCopy(this.GetMutableCopy(typeInvariant)));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariant.
+    /// </summary>
+    /// <param name="typeInvariant">The type invariant.</param>
+    protected virtual ITypeInvariant DeepCopy(TypeInvariant typeInvariant) {
+      typeInvariant.Condition = this.Substitute(typeInvariant.Condition);
+      if (typeInvariant.Description != null)
+        typeInvariant.Description = this.Substitute(typeInvariant.Description);
+      return typeInvariant;
+    }
+
+    #endregion
+
+    #region Substitute methods
+
+    public virtual IPrecondition Substitute(IPrecondition precondition) {
+      this.coneAlreadyFixed = true;
+      return this.DeepCopy(new Precondition(precondition));
+    }
+
+    public virtual IPostcondition Substitute(IPostcondition postcondition) {
+      this.coneAlreadyFixed = true;
+      return this.DeepCopy(new PostCondition(postcondition));
+    }
+
+    public virtual IThrownException Substitute(IThrownException thrownException) {
+      this.coneAlreadyFixed = true;
+      return this.DeepCopy(new ThrownException(thrownException));
+    }
+
+    public virtual IMethodContract Substitute(IMethodContract methodContract) {
+      this.coneAlreadyFixed = true;
+      return this.DeepCopy(new MethodContract(methodContract));
+    }
+
+    public virtual ITypeInvariant Substitute(ITypeInvariant typeInvariant) {
+      this.coneAlreadyFixed = true;
+      return this.DeepCopy(new TypeInvariant(typeInvariant));
+    }
+
+    public virtual ITypeContract Substitute(ITypeContract typeContract) {
+      this.coneAlreadyFixed = true;
+      return this.DeepCopy(new TypeContract(typeContract));
+    }
+
+    #endregion
+
   }
 }
