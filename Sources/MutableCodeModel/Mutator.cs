@@ -2378,6 +2378,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual ILoopInvariant Visit(LoopInvariant loopInvariant) {
       loopInvariant.Condition = this.Visit(loopInvariant.Condition);
+      if (loopInvariant.Description != null)
+        loopInvariant.Description = this.Visit(loopInvariant.Description);
       return loopInvariant;
     }
 
@@ -2528,6 +2530,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="postCondition">The post condition.</param>
     public virtual IPostcondition Visit(PostCondition postCondition) {
       postCondition.Condition = this.Visit(postCondition.Condition);
+      if (postCondition.Description != null)
+        postCondition.Description = this.Visit(postCondition.Description);
       return postCondition;
     }
 
@@ -2559,6 +2563,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="precondition">The precondition.</param>
     public virtual IPrecondition Visit(Precondition precondition) {
       precondition.Condition = this.Visit(precondition.Condition);
+      if (precondition.Description != null)
+        precondition.Description = this.Visit(precondition.Description);
       if (precondition.ExceptionToThrow != null)
         precondition.ExceptionToThrow = this.Visit(precondition.ExceptionToThrow);
       return precondition;
@@ -2660,6 +2666,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="typeInvariant">The type invariant.</param>
     public virtual ITypeInvariant Visit(TypeInvariant typeInvariant) {
       typeInvariant.Condition = this.Visit(typeInvariant.Condition);
+      if (typeInvariant.Description != null)
+        typeInvariant.Description = this.Visit(typeInvariant.Description);
       return typeInvariant;
     }
 

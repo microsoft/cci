@@ -2836,6 +2836,8 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(loopInvariant);
       this.Visit(loopInvariant.Condition);
+      if (loopInvariant.Description != null)
+        this.Visit(loopInvariant.Description);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -2915,6 +2917,8 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(postCondition);
       this.Visit(postCondition.Condition);
+      if (postCondition.Description != null)
+        this.Visit(postCondition.Description);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -2973,6 +2977,8 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(precondition);
       this.Visit(precondition.Condition);
+      if (precondition.Description != null)
+        this.Visit(precondition.Description);
       if (precondition.ExceptionToThrow != null)
         this.Visit(precondition.ExceptionToThrow);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
@@ -3068,6 +3074,8 @@ namespace Microsoft.Cci.Contracts {
       //^ int oldCount = this.path.Count;
       this.path.Push(typeInvariant);
       this.Visit(typeInvariant.Condition);
+      if (typeInvariant.Description != null)
+        this.Visit(typeInvariant.Description);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
