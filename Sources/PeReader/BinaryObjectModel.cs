@@ -1333,13 +1333,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    //  Half of the double check lock. Other half done by the caller...
     void InitFieldSignature()
       //^ ensures (this.FieldFlags & FieldFlags.FieldLoaded) == FieldFlags.FieldLoaded;
     {
-      FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldSignature(this);
-      this.fieldType = fieldSignature.TypeReference;
-      this.FieldFlags |= FieldFlags.FieldLoaded;
+      lock (this) {
+        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
+          FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldSignature(this);
+          this.fieldType = fieldSignature.TypeReference;
+          this.FieldFlags |= FieldFlags.FieldLoaded;
+        }
+      }
     }
 
     public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
@@ -2514,17 +2517,20 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    //  Half of the double check lock. Other half done by the caller...
     void InitPropertySignature()
       //^ ensures this.ReturnModuleCustomModifiers != null;
     {
-      PropertySignatureConverter propertySignature = this.PEFileToObjectModel.GetPropertySignature(this);
-      this.FirstSignatureByte = propertySignature.FirstByte;
-      this.returnModuleCustomModifiers = propertySignature.ReturnCustomModifiers;
-      this.returnType = propertySignature.ReturnTypeReference;
-      this.moduleParameters = propertySignature.Parameters;
-      if (propertySignature.ReturnValueIsByReference)
-        this.PropertyFlags |= PropertyFlags.ReturnValueIsByReference;
+      lock (this) {
+        if (this.returnModuleCustomModifiers == null) {
+          PropertySignatureConverter propertySignature = this.PEFileToObjectModel.GetPropertySignature(this);
+          this.FirstSignatureByte = propertySignature.FirstByte;
+          this.returnModuleCustomModifiers = propertySignature.ReturnCustomModifiers;
+          this.returnType = propertySignature.ReturnTypeReference;
+          this.moduleParameters = propertySignature.Parameters;
+          if (propertySignature.ReturnValueIsByReference)
+            this.PropertyFlags |= PropertyFlags.ReturnValueIsByReference;
+        }
+      }
     }
 
     internal EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnModuleCustomModifiers {
@@ -4407,15 +4413,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    //  Half of the double check lock. Other half done by the caller...
     protected virtual void InitMethodSignature() {
-      MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
-      this.genericParameterCount = methodSignature.GenericParamCount;
-      this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
-      this.returnTypeReference = methodSignature.ReturnTypeReference;
-      this.isReturnByReference = methodSignature.IsReturnByReference;
-      this.requiredParameters = methodSignature.RequiredParameters;
-      this.varArgParameters = methodSignature.VarArgParameters;
+      lock (this) {
+        if (this.returnCustomModifiers == null) {
+          MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
+          this.genericParameterCount = methodSignature.GenericParamCount;
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
+          this.returnTypeReference = methodSignature.ReturnTypeReference;
+          this.isReturnByReference = methodSignature.IsReturnByReference;
+          this.requiredParameters = methodSignature.RequiredParameters;
+          this.varArgParameters = methodSignature.VarArgParameters;
+        }
+      }
     }
 
     public override ITypeDefinitionMember ResolvedTypeDefinitionMember {
@@ -4596,21 +4605,24 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.unspecializedMethodReference = new MethodReference(peFileToObjectModel, memberRefRowId, parentTypeReference.ModuleGenericTypeReference, name, firstByte);
     }
 
-    //  Half of the double check lock. Other half done by the caller...
     protected override void InitMethodSignature() {
-      MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
-      this.genericParameterCount = methodSignature.GenericParamCount;
-      this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
-      this.isReturnByReference = methodSignature.IsReturnByReference;
-      this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
-      this.varArgParameters = methodSignature.VarArgParameters; //Ditto
-      //^ assume this.ParentTypeReference is IModuleGenericTypeInstance; //ensured by the constructor
-      IModuleGenericTypeInstance moduleGenericTypeInstance = (IModuleGenericTypeInstance)this.ParentTypeReference;
-      if (methodSignature.ReturnTypeReference != null) {
-        this.returnTypeReference = methodSignature.ReturnTypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
+      lock (this) {
+        if (this.returnCustomModifiers == null) {
+          MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
+          this.genericParameterCount = methodSignature.GenericParamCount;
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
+          this.isReturnByReference = methodSignature.IsReturnByReference;
+          this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
+          this.varArgParameters = methodSignature.VarArgParameters; //Ditto
+          //^ assume this.ParentTypeReference is IModuleGenericTypeInstance; //ensured by the constructor
+          IModuleGenericTypeInstance moduleGenericTypeInstance = (IModuleGenericTypeInstance)this.ParentTypeReference;
+          if (methodSignature.ReturnTypeReference != null) {
+            this.returnTypeReference = methodSignature.ReturnTypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
+          }
+          this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
+          this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
+        }
       }
-      this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
-      this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
     }
 
     public override IMethodDefinition ResolvedMethod {
@@ -4659,29 +4671,32 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.specializedParentTypeReference = specializedParentTypeReference;
     }
 
-    //  Half of the double check lock. Other half done by the caller...
     protected override void InitMethodSignature() {
-      MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
-      this.genericParameterCount = methodSignature.GenericParamCount;
-      this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
-      this.isReturnByReference = methodSignature.IsReturnByReference;
-      this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
-      this.varArgParameters = methodSignature.VarArgParameters; //Ditto
-      IModuleSpecializedNestedTypeReference/*?*/ neType = this.specializedParentTypeReference;
-      while (neType.ContainingType is IGenericTypeInstanceReference) {
-        neType = neType.ContainingType as IModuleSpecializedNestedTypeReference;
-        if (neType == null) {
-          //TODO: error
-          return;
+      lock (this) {
+        if (this.returnCustomModifiers == null) {
+          MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
+          this.genericParameterCount = methodSignature.GenericParamCount;
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
+          this.isReturnByReference = methodSignature.IsReturnByReference;
+          this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
+          this.varArgParameters = methodSignature.VarArgParameters; //Ditto
+          IModuleSpecializedNestedTypeReference/*?*/ neType = this.specializedParentTypeReference;
+          while (neType.ContainingType is IGenericTypeInstanceReference) {
+            neType = neType.ContainingType as IModuleSpecializedNestedTypeReference;
+            if (neType == null) {
+              //TODO: error
+              return;
+            }
+          }
+          //TODO: add methods to IModuleSpecializedNestedTypeReference that will allow the cast below to go away.
+          IModuleGenericTypeInstance/*?*/ moduleGenericTypeInstance = (IModuleGenericTypeInstance)neType.ContainingType;
+          if (methodSignature.ReturnTypeReference != null) {
+            this.returnTypeReference = methodSignature.ReturnTypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
+          }
+          this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
+          this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
         }
       }
-      //TODO: add methods to IModuleSpecializedNestedTypeReference that will allow the cast below to go away.
-      IModuleGenericTypeInstance/*?*/ moduleGenericTypeInstance = (IModuleGenericTypeInstance)neType.ContainingType;
-      if (methodSignature.ReturnTypeReference != null) {
-        this.returnTypeReference = methodSignature.ReturnTypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
-      }
-      this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
-      this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
     }
 
     public override IMethodDefinition ResolvedMethod {
