@@ -446,6 +446,8 @@ namespace Microsoft.Cci.MutableContracts {
               };
             }
 
+            var isModel = FindModelMembers.ContainsModelMembers(contractExpression);
+
             string/*?*/ origSource = null;
             if (this.methodIsInReferenceAssembly) {
               origSource = GetStringFromArgument(arguments[2]);
@@ -461,6 +463,7 @@ namespace Microsoft.Cci.MutableContracts {
               PostCondition postcondition = new PostCondition() {
                 Condition = contractExpression,
                 Description = description,
+                IsModel = isModel,
                 OriginalSource = origSource,
                 Locations = locations
               };
@@ -476,6 +479,7 @@ namespace Microsoft.Cci.MutableContracts {
                 Postcondition = new PostCondition() {
                   Condition = contractExpression,
                   Description = description,
+                  IsModel = isModel,
                   OriginalSource = origSource,
                   Locations = locations
                 }
@@ -501,6 +505,7 @@ namespace Microsoft.Cci.MutableContracts {
                 AlwaysCheckedAtRuntime = false,
                 Condition = contractExpression,
                 Description = description,
+                IsModel = isModel,
                 OriginalSource = origSource,
                 Locations = locations,
                 ExceptionToThrow = thrownException,
@@ -596,10 +601,19 @@ namespace Microsoft.Cci.MutableContracts {
         this.typeOfThis = typeOfThis;
       }
 
+      /// <summary>
+      /// Parameters might be immutable and if so, then this mutator would end up creating
+      /// mutable copies. But then they are not object-equal to the parameter from the method
+      /// and downstream mutators/copiers (especially copiers) expect all references to a parameter
+      /// to be object-equal to the parameter reached from the method definition.
+      /// </summary>
       public override IExpression Visit(BoundExpression boundExpression) {
         ILocalDefinition/*?*/ ld = boundExpression.Definition as ILocalDefinition;
         if (ld != null && ld == this.local)
           return new ThisReference() { Type = typeOfThis, };
+        IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
+        if (par != null)
+          return boundExpression;
         return base.Visit(boundExpression);
       }
     }
@@ -763,143 +777,6 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
-
-    private void ExtractContractCall(List<IStatement> statements, int lo, int hi) {
-      //^ requires lo <= hi;
-      //^ requires IsPreconditionOrPostCondition(statements[hi])
-
-      BlockExpression be = null;
-      if (lo < hi) {
-        List<IStatement> stmts = new List<IStatement>();
-        List<ILocation> locations = new List<ILocation>();
-        for (int i = lo; i < hi; i++) {
-          stmts.Add(statements[i]);
-          locations.AddRange(statements[i].Locations);
-        }
-        BlockStatement bs = new BlockStatement() {
-          Statements = stmts,
-          Locations = locations,
-        };
-        be = new BlockExpression() {
-          BlockStatement = bs,
-        };
-      }
-
-      ExpressionStatement expressionStatement = statements[hi] as ExpressionStatement;
-      IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
-      IMethodReference methodToCall = methodCall.MethodToCall;
-      IGenericMethodInstanceReference/*?*/ genericMethodToCall = methodToCall as IGenericMethodInstanceReference;
-      if (false && genericMethodToCall != null) { // REVIEW: What difference does it make if it is generic?
-        //TODO: ensuresOnThrow
-      } else {
-        if (IsContractMethod(methodToCall)) {
-          string mname = methodToCall.Name.Value;
-          List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
-          List<ILocation> locations = new List<ILocation>(methodCall.Locations);
-          int numArgs = arguments.Count;
-          if (numArgs == 0) {
-            if (mname == "EndContractBlock") return;
-          }
-          if (numArgs == 1 || numArgs == 2 || numArgs == 3) {
-            if (mname == "Ensures") {
-              if (be != null) {
-                be.BlockStatement = this.oldAndResultExtractor.Visit(be.BlockStatement);
-              }
-              var arg = this.oldAndResultExtractor.Visit(arguments[0]);
-              if (be != null) {
-                be.Expression = arg;
-                arg = be;
-                locations.AddRange(be.BlockStatement.Locations);
-              }
-
-              string/*?*/ origSource = null;
-              if (this.methodIsInReferenceAssembly) {
-                origSource = GetStringFromArgument(arguments[2]);
-              } else {
-                TryGetConditionText(locations, numArgs, out origSource);
-              }
-
-              PostCondition postcondition = new PostCondition() {
-                Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
-                Description = numArgs >= 2 ? arguments[1] : null,
-                OriginalSource = origSource,
-                Locations = locations
-              };
-
-              this.CurrentMethodContract.Postconditions.Add(postcondition);
-              return;
-            }
-            if (mname == "EnsuresOnThrow" && genericMethodToCall != null) {
-              var genericArgs = new List<ITypeReference>(genericMethodToCall.GenericArguments); // REVIEW: Better way to get the single element from the enumerable?
-              var arg = this.oldAndResultExtractor.Visit(arguments[0]);
-              if (be != null) {
-                be.Expression = arg;
-                arg = be;
-                locations.AddRange(be.BlockStatement.Locations);
-              }
-
-              string/*?*/ origSource = null;
-              if (this.methodIsInReferenceAssembly) {
-                origSource = GetStringFromArgument(arguments[2]);
-              } else {
-                TryGetConditionText(locations, numArgs, out origSource);
-              }
-
-              ThrownException exceptionalPostcondition = new ThrownException() {
-                ExceptionType = genericArgs[0],
-                Postcondition = new PostCondition() {
-                  Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
-                  Description = numArgs >= 2 ? arguments[1] : null,
-                  OriginalSource = origSource,
-                  Locations = locations
-                }
-              };
-              this.CurrentMethodContract.ThrownExceptions.Add(exceptionalPostcondition);
-              return;
-            }
-            if (mname == "Requires") {
-              var arg = arguments[0];
-              if (be != null) {
-                be.Expression = arg;
-                arg = be;
-                locations.AddRange(be.BlockStatement.Locations);
-              }
-              IExpression thrownException = null;
-              IGenericMethodInstanceReference genericMethodInstance = methodToCall as IGenericMethodInstanceReference;
-              if (genericMethodInstance != null && 0 < genericMethodInstance.GenericParameterCount) {
-                foreach (var a in genericMethodInstance.GenericArguments) {
-                  thrownException = new TypeOf() {
-                    Type = this.host.PlatformType.SystemType,
-                    TypeToGet = a,
-                    Locations = new List<ILocation>(a.Locations),
-                  };
-                  break;
-                }
-              }
-
-              string/*?*/ origSource = null;
-              if (this.methodIsInReferenceAssembly) {
-                origSource = GetStringFromArgument(arguments[2]);
-              } else {
-                TryGetConditionText(locations, numArgs, out origSource);
-              }
-
-              Precondition precondition = new Precondition() {
-                AlwaysCheckedAtRuntime = false,
-                Condition = this.Visit(arg), // REVIEW: Does this need to be visited?
-                Description = numArgs >= 2 ? arguments[1] : null,
-                OriginalSource = origSource,
-                Locations = locations,
-                ExceptionToThrow = thrownException,
-              };
-              this.CurrentMethodContract.Preconditions.Add(precondition);
-              return;
-            }
-          }
-        }
-      }
-      return;
-    }
 
     private bool TryGetConditionText(IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
       int startColumn;
@@ -1444,6 +1321,22 @@ namespace Microsoft.Cci.MutableContracts {
         }
       }
     }
+
+    private class FindModelMembers : BaseCodeTraverser {
+      private bool foundModelMember = false;
+      private FindModelMembers() { }
+      public static bool ContainsModelMembers(IExpression expression) {
+        var fmm = new FindModelMembers();
+        fmm.Visit(expression);
+        return fmm.foundModelMember;
+      }
+      public override void Visit(IMethodCall methodCall) {
+        if (ContractHelper.IsModel(methodCall.MethodToCall))
+          this.foundModelMember = true;
+        base.Visit(methodCall);
+      }
+    }
+
 
   }
 

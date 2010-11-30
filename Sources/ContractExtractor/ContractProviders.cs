@@ -208,6 +208,19 @@ namespace Microsoft.Cci.Contracts {
         this.abstractType = abstractType;
       }
 
+      /// <summary>
+      /// Parameters might be immutable and if so, then this mutator would end up creating
+      /// mutable copies. But then they are not object-equal to the parameter from the method
+      /// and downstream mutators/copiers (especially copiers) expect all references to a parameter
+      /// to be object-equal to the parameter reached from the method definition.
+      /// </summary>
+      public override IExpression Visit(BoundExpression boundExpression) {
+        IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
+        if (par != null)
+          return boundExpression;
+        return base.Visit(boundExpression);
+      }
+
       public override IExpression Visit(MethodCall methodCall) {
         var mtc = methodCall.MethodToCall;
         var smr = mtc as ISpecializedMethodReference;

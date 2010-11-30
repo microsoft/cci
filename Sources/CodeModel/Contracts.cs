@@ -267,7 +267,6 @@ namespace Microsoft.Cci.Contracts {
     }
     IMethodReference/*?*/ invariantRef;
 
-
     /// <summary>
     /// A reference to a generic method whose result is the value of its argument expression as it was at the start of the method.
     /// </summary>
@@ -378,6 +377,12 @@ namespace Microsoft.Cci.Contracts {
     /// was written.
     /// </remarks>
     string/*?*/ OriginalSource { get; }
+
+    /// <summary>
+    /// True iff any member mentioned in the Condition is a "model member", i.e.,
+    /// its definition has the [ContractModel] attribute on it.
+    /// </summary>
+    bool IsModel { get; }
   }
 
   /// <summary>
@@ -776,6 +781,8 @@ namespace Microsoft.Cci.Contracts {
     public string OriginalSource {
       get { return null; }
     }
+
+    public bool IsModel { get { return false; } }
 
     #endregion
 

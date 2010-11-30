@@ -789,6 +789,16 @@ namespace Microsoft.Cci.MutableContracts {
     }
     string conditionAsText;
 
+    /// <summary>
+    /// True iff any member mentioned in the Condition is a "model member", i.e.,
+    /// its definition has the [ContractModel] attribute on it.
+    /// </summary>
+    public bool IsModel {
+      get { return this.isModel; }
+      set { this.isModel = value; }
+    }
+    bool isModel;
+
     #endregion
 
     #region IObjectWithLocations Members

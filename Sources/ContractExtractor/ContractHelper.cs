@@ -518,6 +518,37 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
+    /// Returns true iff the method resolves to a definition which is decorated
+    /// with an attribute named "ContractModelAttribute".
+    /// The namespace the attribute belongs to is ignored.
+    /// </summary>
+    public static bool IsModel(IMethodReference method) {
+      var mr = UninstantiateAndUnspecialize(method);
+      IMethodDefinition methodDefinition = mr.ResolvedMethod;
+      if (methodDefinition == Dummy.Method) return false;
+      if (ContainsAttributeByName(methodDefinition.Attributes, "ContractModelAttribute")) return true;
+      // TODO: Need to cache this information. This is an expensive way to tell if something is a getter.
+      bool isPropertyGetter = methodDefinition.IsSpecialName && methodDefinition.Name.Value.StartsWith("get_");
+      if (isPropertyGetter) {
+        foreach (var p in methodDefinition.ContainingTypeDefinition.Properties)
+          if (p.Getter != null && p.Getter.ResolvedMethod == methodDefinition) {
+            if (ContainsAttributeByName(p.Attributes, "ContractModelAttribute")) {
+              return true;
+            }
+          }
+      }
+      return false;
+    }
+    private static bool ContainsAttributeByName(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
+      foreach (ICustomAttribute attribute in attributes) {
+        if (TypeHelper.GetTypeName(attribute.Type).EndsWith(attributeTypeName)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Indicates when the unit is marked with the assembly-level attribute
     /// [System.Diagnostics.Contracts.ContractReferenceAssembly]
     /// where that attribute type is defined in the unit itself.
