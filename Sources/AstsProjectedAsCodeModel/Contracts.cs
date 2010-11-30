@@ -105,6 +105,7 @@ namespace Microsoft.Cci.Ast {
     protected Ariant(BlockStatement containingBlock, Ariant template)
       : base(template.SourceLocation) {
       this.condition = template.condition.MakeCopyFor(containingBlock);
+      this.isModel = template.IsModel;
     }
 
     /// <summary>
@@ -169,6 +170,18 @@ namespace Microsoft.Cci.Ast {
       result |= this.Condition.HasSideEffect(true);
       return result;
     }
+
+    /// <summary>
+    /// True iff any member mentioned in the Condition is a "model member", i.e.,
+    /// its definition has the [ContractModel] attribute on it.
+    /// </summary>
+    public bool IsModel {
+      get {
+        return this.isModel;
+      }
+    }
+    bool isModel;
+
   }
 
   /// <summary>
@@ -901,6 +914,7 @@ namespace Microsoft.Cci.Ast {
     protected MethodContractItem(BlockStatement containingBlock, MethodContractItem template)
       : base(template.SourceLocation) {
       this.condition = template.Condition.MakeCopyFor(containingBlock);
+      this.isModel = template.IsModel;
     }
 
     /// <summary>
@@ -958,6 +972,17 @@ namespace Microsoft.Cci.Ast {
     public virtual void SetContainingExpression(Expression containingExpression) {
       this.Condition.SetContainingExpression(containingExpression);
     }
+
+    /// <summary>
+    /// True iff any member mentioned in the Condition is a "model member", i.e.,
+    /// its definition has the [ContractModel] attribute on it.
+    /// </summary>
+    public bool IsModel {
+      get {
+        return this.isModel;
+      }
+    }
+    bool isModel;
   }
 
   /// <summary>
