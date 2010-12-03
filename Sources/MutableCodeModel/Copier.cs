@@ -2369,31 +2369,49 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region Substitute methods
 
+    /// <summary>
+    /// Returns a deep copy of the <param name="precondition"/>.
+    /// </summary>
     public virtual IPrecondition Substitute(IPrecondition precondition) {
       this.coneAlreadyFixed = true;
       return this.DeepCopy(new Precondition(precondition));
     }
 
+    /// <summary>
+    /// Returns a deep copy of the <param name="postcondition"/>.
+    /// </summary>
     public virtual IPostcondition Substitute(IPostcondition postcondition) {
       this.coneAlreadyFixed = true;
       return this.DeepCopy(new PostCondition(postcondition));
     }
 
+    /// <summary>
+    /// Returns a deep copy of the <param name="thrownException"/>.
+    /// </summary>
     public virtual IThrownException Substitute(IThrownException thrownException) {
       this.coneAlreadyFixed = true;
       return this.DeepCopy(new ThrownException(thrownException));
     }
 
+    /// <summary>
+    /// Returns a deep copy of the <param name="methodContract"/>.
+    /// </summary>
     public virtual IMethodContract Substitute(IMethodContract methodContract) {
       this.coneAlreadyFixed = true;
       return this.DeepCopy(new MethodContract(methodContract));
     }
 
+    /// <summary>
+    /// Returns a deep copy of the <param name="typeInvariant"/>.
+    /// </summary>
     public virtual ITypeInvariant Substitute(ITypeInvariant typeInvariant) {
       this.coneAlreadyFixed = true;
       return this.DeepCopy(new TypeInvariant(typeInvariant));
     }
 
+    /// <summary>
+    /// Returns a deep copy of the <param name="typeContract"/>.
+    /// </summary>
     public virtual ITypeContract Substitute(ITypeContract typeContract) {
       this.coneAlreadyFixed = true;
       return this.DeepCopy(new TypeContract(typeContract));
