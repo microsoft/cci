@@ -1331,7 +1331,7 @@ namespace Microsoft.Cci.MutableContracts {
         return fmm.foundModelMember;
       }
       public override void Visit(IMethodCall methodCall) {
-        if (ContractHelper.IsModel(methodCall.MethodToCall))
+        if (ContractHelper.IsModel(methodCall.MethodToCall) != null)
           this.foundModelMember = true;
         base.Visit(methodCall);
       }

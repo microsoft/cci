@@ -566,7 +566,12 @@ namespace Microsoft.Cci.Contracts {
 
     #region Methods
     public override IMethodReference Visit(IMethodReference methodReference) {
-      return this.Visit(this.GetMutableCopy(methodReference));
+      var a = ContractHelper.IsModel(methodReference);
+      var mutableMethodReference = this.GetMutableCopy(methodReference);
+      if (a != null) {
+        mutableMethodReference.Attributes.Add(a);
+      }
+      return this.Visit(mutableMethodReference);
     }
     #endregion Methods
 

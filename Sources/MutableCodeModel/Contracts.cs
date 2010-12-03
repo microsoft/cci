@@ -730,6 +730,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.condition = CodeDummy.Expression;
       this.description = null;
       this.conditionAsText = null;
+      this.isModel = false;
       this.locations = new List<ILocation>(1);
     }
 
@@ -741,6 +742,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.condition = element.Condition;
       this.description = element.Description;
       this.conditionAsText = element.OriginalSource;
+      this.isModel = element.IsModel;
       this.locations = new List<ILocation>(element.Locations);
     }
 

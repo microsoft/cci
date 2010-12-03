@@ -518,30 +518,33 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// Returns true iff the method resolves to a definition which is decorated
+    /// Returns the attribute iff the method resolves to a definition which is decorated
     /// with an attribute named "ContractModelAttribute".
     /// The namespace the attribute belongs to is ignored.
     /// </summary>
-    public static bool IsModel(IMethodReference method) {
+    public static ICustomAttribute/*?*/ IsModel(IMethodReference method) {
       var mr = UninstantiateAndUnspecialize(method);
       IMethodDefinition methodDefinition = mr.ResolvedMethod;
-      if (methodDefinition == Dummy.Method) return false;
-      if (ContainsAttributeByName(methodDefinition.Attributes, "ContractModelAttribute")) return true;
+      if (methodDefinition == Dummy.Method) return null;
+      ICustomAttribute/*?*/ attr;
+      if (TryGetAttributeByName(methodDefinition.Attributes, "ContractModelAttribute", out attr)) return attr;
       // TODO: Need to cache this information. This is an expensive way to tell if something is a getter.
       bool isPropertyGetter = methodDefinition.IsSpecialName && methodDefinition.Name.Value.StartsWith("get_");
       if (isPropertyGetter) {
         foreach (var p in methodDefinition.ContainingTypeDefinition.Properties)
           if (p.Getter != null && p.Getter.ResolvedMethod == methodDefinition) {
-            if (ContainsAttributeByName(p.Attributes, "ContractModelAttribute")) {
-              return true;
+            if (TryGetAttributeByName(p.Attributes, "ContractModelAttribute", out attr)) {
+              return attr;
             }
           }
       }
-      return false;
+      return null;
     }
-    private static bool ContainsAttributeByName(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
-      foreach (ICustomAttribute attribute in attributes) {
-        if (TypeHelper.GetTypeName(attribute.Type).EndsWith(attributeTypeName)) {
+    private static bool TryGetAttributeByName(IEnumerable<ICustomAttribute> attributes, string attributeTypeName, out ICustomAttribute/*?*/ attribute) {
+      attribute = null;
+      foreach (ICustomAttribute a in attributes) {
+        if (TypeHelper.GetTypeName(a.Type).EndsWith(attributeTypeName)) {
+          attribute = a;
           return true;
         }
       }
