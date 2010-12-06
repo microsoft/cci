@@ -45,28 +45,25 @@ namespace Microsoft.Cci.ILToCodeModel {
         case PrimitiveTypeCode.UInt8:
           switch (rightTypeCode) {
             case PrimitiveTypeCode.Boolean:
+            case PrimitiveTypeCode.Char:
+            case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:
+            case PrimitiveTypeCode.UInt8:
               return this.platformType.SystemUInt32;
 
-            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
-            case PrimitiveTypeCode.UInt16:
-            case PrimitiveTypeCode.UInt8:
-              return this.platformType.SystemInt32;
+              return this.platformType.SystemUInt32; //code generators will tend to make both operands be of the same type. Assume this happened because the right operand is a polymorphic constant.
 
+            //The cases below are not expected to happen in practice
             case PrimitiveTypeCode.UInt64:
+            case PrimitiveTypeCode.Int64:
               return this.platformType.SystemUInt64;
 
-            case PrimitiveTypeCode.Int64:
-              return this.platformType.SystemInt64;
-
             case PrimitiveTypeCode.UIntPtr:
-              return this.platformType.SystemUIntPtr;
-
             case PrimitiveTypeCode.IntPtr:
-              return this.platformType.SystemIntPtr;
+              return this.platformType.SystemUIntPtr;
 
             case PrimitiveTypeCode.Float32:
               return this.platformType.SystemFloat32;
@@ -87,16 +84,23 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:
             case PrimitiveTypeCode.UInt8:
+              return this.platformType.SystemUInt32; //code generators will tend to make both operands be of the same type. Assume this happened because the left operand is a polymorphic constant.
+
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
               return this.platformType.SystemInt32;
 
+            //The cases below are not expected to happen in practice
             case PrimitiveTypeCode.UInt64:
+              return this.platformType.SystemUInt64;
+
             case PrimitiveTypeCode.Int64:
               return this.platformType.SystemInt64;
 
             case PrimitiveTypeCode.UIntPtr:
+              return this.platformType.SystemUIntPtr;
+
             case PrimitiveTypeCode.IntPtr:
               return this.platformType.SystemIntPtr;
 
@@ -124,7 +128,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
             case PrimitiveTypeCode.Int64:
-              return this.platformType.SystemInt64;
+              return this.platformType.SystemUInt64; //code generators will tend to make both operands be of the same type. Assume this happened because the right operand is a polymorphic constant.
 
             case PrimitiveTypeCode.UIntPtr:
               return this.platformType.SystemUIntPtr;
@@ -149,10 +153,12 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:
             case PrimitiveTypeCode.UInt8:
+            case PrimitiveTypeCode.UInt64:
+              return this.platformType.SystemUInt64; //code generators will tend to make both operands be of the same type. Assume this happened because the left operand is a polymorphic constant.
+
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
-            case PrimitiveTypeCode.UInt64:
             case PrimitiveTypeCode.Int64:
               return this.platformType.SystemInt64;
 
@@ -186,7 +192,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.Int32:
             case PrimitiveTypeCode.Int64:
             case PrimitiveTypeCode.IntPtr:
-              return this.platformType.SystemIntPtr;
+              return this.platformType.SystemUIntPtr;
 
             case PrimitiveTypeCode.Float32:
               return this.platformType.SystemFloat32;
@@ -205,12 +211,14 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:
             case PrimitiveTypeCode.UInt8:
+            case PrimitiveTypeCode.UInt64:
+            case PrimitiveTypeCode.UIntPtr:
+              return this.platformType.SystemUIntPtr;
+
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
-            case PrimitiveTypeCode.UInt64:
             case PrimitiveTypeCode.Int64:
-            case PrimitiveTypeCode.UIntPtr:
             case PrimitiveTypeCode.IntPtr:
               return this.platformType.SystemIntPtr;
 
@@ -290,6 +298,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IAddressDereference addressDereference) {
       base.Visit(addressDereference);
+      if (addressDereference.Type != Dummy.TypeReference) return;
       IPointerTypeReference/*?*/ pointerTypeReference = addressDereference.Address.Type as IPointerTypeReference;
       if (pointerTypeReference != null) {
         ((AddressDereference)addressDereference).Type = pointerTypeReference.TargetType;
@@ -300,7 +309,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
         return;
       }
-      //TODO: error
+      Debug.Assert(addressDereference.Address.Type == Dummy.TypeReference);
     }
 
     public override void Visit(IArrayIndexer arrayIndexer) {
