@@ -296,11 +296,12 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// Converts a value to a given type.
+  /// Converts a value to a given type using a primitive type conversion for which an IL instruction exsists.
   /// </summary>
+  /// <remarks>User defined conversions are modeled as method calls.</remarks>
   public interface IConversion : IExpression {
     /// <summary>
-    /// The value to convert.
+    /// The value to convert. If the type of this value is an enumeration, the target type must have the same size and may not itself be an enumeration.
     /// </summary>
     IExpression ValueToConvert { get; }
 
@@ -310,7 +311,7 @@ namespace Microsoft.Cci {
     bool CheckNumericRange { get; }
 
     /// <summary>
-    /// The type to which the value is to be converted.
+    /// The type to which the value is to be converted. If the type of this value is an enumeration, the source type must have the same size and may not itself be an enumeration.
     /// </summary>
     ITypeReference TypeAfterConversion { get; }
   }
