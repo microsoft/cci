@@ -311,12 +311,14 @@ namespace Microsoft.Cci {
           var ptr = addressDereference.Type as IPointerTypeReference;
           if (ptr != null) {
             opcode = OperationCode.Ldind_I; break;
+          } else {
+            var mgdPtr = addressDereference.Type as IManagedPointerTypeReference;
+            if (mgdPtr != null) {
+              opcode = OperationCode.Ldind_I; break;
+            }
           }
-          var mgdPtr = addressDereference.Type as IManagedPointerTypeReference;
-          if (mgdPtr != null) {
-            opcode = OperationCode.Ldind_I; break;
-          }
-          if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, addressDereference.Type.PlatformType.SystemObject)) {
+          //If addressDereference.Type is a reference type, then Ldobj is equivalent to Lind_Ref, but the instruction is larger, so try to avoid it.
+          if (addressDereference.Type.IsValueType || addressDereference.Type is IGenericParameterReference) {
             this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
             return;
           }
@@ -891,6 +893,9 @@ namespace Microsoft.Cci {
       if (sourceType.ResolvedType.IsEnum) sourceType = sourceType.ResolvedType.UnderlyingType;
       ITypeReference targetType = conversion.Type;
       if (targetType.ResolvedType.IsEnum) targetType = targetType.ResolvedType.UnderlyingType;
+      if (sourceType == Dummy.TypeReference) sourceType = targetType;
+      if (targetType == Dummy.TypeReference) targetType = sourceType;
+      if (TypeHelper.TypesAreEquivalent(sourceType, targetType)) return;
       if (conversion.CheckNumericRange)
         this.VisitCheckedConversion(sourceType, targetType);
       else
@@ -1101,6 +1106,7 @@ namespace Microsoft.Cci {
     /// <param name="dupValue"></param>
     public override void Visit(IDupValue dupValue) {
       this.generator.Emit(OperationCode.Dup);
+      this.StackSize++;
     }
 
     /// <summary>
@@ -3660,6 +3666,8 @@ namespace Microsoft.Cci {
             case PrimitiveTypeCode.UIntPtr:
             case PrimitiveTypeCode.Pointer:
             case PrimitiveTypeCode.Reference:
+              if (sourceType.TypeCode != targetType.TypeCode)
+                this.generator.Emit(targetType.TypeCode == PrimitiveTypeCode.UIntPtr ? OperationCode.Conv_U : OperationCode.Conv_I);
               break;
 
             default:
