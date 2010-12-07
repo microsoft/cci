@@ -84,84 +84,109 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(targetExpression);
     }
 
-    private void RecursivelyFindCapturedLocals(BlockStatement blockStatement) {
-      if (blockStatement.Statements.Count == 0) return;
-      FindCapturedLocals(blockStatement.Statements);
-      BlockStatement bs = blockStatement.Statements[blockStatement.Statements.Count - 1] as BlockStatement;
-      if (bs != null) RecursivelyFindCapturedLocals(bs);
+    class CapturedLocalsFinder : BaseCodeTraverser {
+
+      CompilationArtifactRemover remover;
+
+      internal CapturedLocalsFinder(CompilationArtifactRemover remover) {
+        this.remover = remover;
+      }
+
+      public override void Visit(IBlockStatement block) {
+        var blockStatement = block as BlockStatement;
+        if (blockStatement != null)
+          this.FindCapturedLocals(blockStatement.Statements);
+        base.Visit(block);
+      }
+
+      private void FindCapturedLocals(List<IStatement> statements) {
+        ILocalDefinition/*?*/ locDef = null;
+        INestedTypeReference/*?*/ closureType = null;
+        int i = 0;
+        while (i < statements.Count && closureType == null) {
+          var statement = statements[i++];
+          var locDecl = statement as LocalDeclarationStatement;
+          if (locDecl == null) {
+            var exprStatement = statement as ExpressionStatement;
+            if (exprStatement == null) continue;
+            var assignment = exprStatement.Expression as Assignment;
+            if (assignment == null) continue;
+            locDef = assignment.Target.Definition as ILocalDefinition;
+            if (locDef == null) continue;
+            if (!(assignment.Source is ICreateObjectInstance)) continue;
+          } else {
+            if (!(locDecl.InitialValue is ICreateObjectInstance)) continue;
+            locDef = locDecl.LocalVariable;
+          }
+          closureType = UnspecializedMethods.AsUnspecializedNestedTypeReference(locDef.Type);
+        }
+        if (closureType == null) return;
+        //REVIEW: need to avoid resolving types that are not defined in the module we are analyzing.
+        ITypeReference t1 = UnspecializedMethods.AsUnspecializedTypeReference(closureType.ContainingType.ResolvedType);
+        ITypeReference t2 = UnspecializedMethods.AsUnspecializedTypeReference(this.remover.containingType);
+        if (t1 != t2) return;
+        var resolvedClosureType = closureType.ResolvedType;
+        if (!UnspecializedMethods.IsCompilerGenerated(resolvedClosureType)) return;
+        if (this.remover.sourceMethodBody.privateHelperTypesToRemove == null) 
+          this.remover.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
+        this.remover.sourceMethodBody.privateHelperTypesToRemove.Add(resolvedClosureType);
+        this.remover.currentClosureLocals.Add(locDef, true);
+
+        if (resolvedClosureType.IsGeneric)
+          this.remover.genericParameterMapper = new GenericMethodParameterMapper(this.remover.host, this.remover.sourceMethodBody.MethodDefinition, resolvedClosureType);
+
+        statements.RemoveAt(i-1);
+        for (int j = i-1; j < statements.Count; j++) {
+          IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
+          if (es == null) break;
+          IAssignment/*?*/ assignment = es.Expression as IAssignment;
+          if (assignment == null) break;
+          IFieldReference/*?*/ closureField = assignment.Target.Definition as IFieldReference;
+          if (closureField == null) break;
+          ITypeReference closureFieldContainingType = UnspecializedMethods.AsUnspecializedNestedTypeReference(assignment.Target.Instance.Type);
+          if (closureFieldContainingType == null) break;
+          if (!TypeHelper.TypesAreEquivalent(closureFieldContainingType, closureType)) break;
+          IThisReference thisReference = assignment.Source as IThisReference;
+          if (thisReference == null) {
+            IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
+            if (binding != null && (binding.Definition is IParameterDefinition || binding.Definition is ILocalDefinition)) {
+              this.remover.capturedLocalOrParameter.Add(closureField.Name.Value, binding.Definition);
+            } else {
+              // Corner case: csc generated closure class captures a local that does not appear in the original method.
+              // Assume this local is always holding a constant;
+              ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
+              if (ctc != null) {
+                LocalDefinition localDefinition = new LocalDefinition() {
+                  Name = closureField.ResolvedField.Name,
+                  Type = this.remover.genericParameterMapper == null ? closureField.Type : this.remover.genericParameterMapper.Visit(closureField.Type),
+                };
+                LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
+                  LocalVariable = localDefinition, InitialValue = ctc
+                };
+                statements.Insert(j, localDeclStatement); j++;
+                this.remover.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
+              } else continue;
+            }
+          } else {
+            this.remover.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
+          }
+          statements.RemoveAt(j--);
+        }
+        foreach (var field in closureType.ResolvedType.Fields) {
+          if (this.remover.capturedLocalOrParameter.ContainsKey(field.Name.Value)) continue;
+          var newLocal = new LocalDefinition() {
+            Name = field.Name,
+            Type = this.remover.genericParameterMapper == null ? field.Type : this.remover.genericParameterMapper.Visit(field.Type),
+          };
+          var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
+          statements.Insert(i-1, newLocalDecl);
+          this.remover.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
+        }
+      }
     }
 
-    private void FindCapturedLocals(List<IStatement> statements) {
-      LocalDeclarationStatement/*?*/ locDecl = null;
-      INestedTypeReference/*?*/ closureType = null;
-      int i = 0;
-      while (i < statements.Count && closureType == null) {
-        var statement = statements[i++];
-        locDecl = statement as LocalDeclarationStatement;
-        if (locDecl == null || !(locDecl.InitialValue is ICreateObjectInstance)) continue;
-        closureType = UnspecializedMethods.AsUnspecializedNestedTypeReference(locDecl.LocalVariable.Type);
-      }
-      if (closureType == null) return;
-      //REVIEW: need to avoid resolving types that are not defined in the module we are analyzing.
-      ITypeReference t1 = UnspecializedMethods.AsUnspecializedTypeReference(closureType.ContainingType.ResolvedType);
-      ITypeReference t2 = UnspecializedMethods.AsUnspecializedTypeReference(this.containingType);
-      if (t1 != t2) return;
-      var resolvedClosureType = closureType.ResolvedType;
-      if (!UnspecializedMethods.IsCompilerGenerated(resolvedClosureType)) return;
-      if (this.sourceMethodBody.privateHelperTypesToRemove == null) this.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
-      this.sourceMethodBody.privateHelperTypesToRemove.Add(resolvedClosureType);
-      this.currentClosureLocals.Add(locDecl.LocalVariable, true);
-
-      if (resolvedClosureType.IsGeneric)
-        this.genericParameterMapper = new GenericMethodParameterMapper(this.host, this.sourceMethodBody.MethodDefinition, resolvedClosureType);
-
-      statements.RemoveAt(i-1);
-      for (int j = i-1; j < statements.Count; j++) {
-        IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
-        if (es == null) break;
-        IAssignment/*?*/ assignment = es.Expression as IAssignment;
-        if (assignment == null) break;
-        IFieldReference/*?*/ closureField = assignment.Target.Definition as IFieldReference;
-        if (closureField == null) break;
-        ITypeReference closureFieldContainingType = UnspecializedMethods.AsUnspecializedNestedTypeReference(assignment.Target.Instance.Type);
-        if (closureFieldContainingType == null) break;
-        if (!TypeHelper.TypesAreEquivalent(closureFieldContainingType, closureType)) break;
-        IThisReference thisReference = assignment.Source as IThisReference;
-        if (thisReference == null) {
-          IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
-          if (binding != null && (binding.Definition is IParameterDefinition || binding.Definition is ILocalDefinition)) {
-            this.capturedLocalOrParameter.Add(closureField.Name.Value, binding.Definition);
-          } else {
-            // Corner case: csc generated closure class captures a local that does not appear in the original method.
-            // Assume this local is always holding a constant;
-            ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
-            if (ctc != null) {
-              LocalDefinition localDefinition = new LocalDefinition() {
-                Name = closureField.ResolvedField.Name,
-                Type = this.genericParameterMapper == null ? closureField.Type : this.genericParameterMapper.Visit(closureField.Type),
-              };
-              LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
-                LocalVariable = localDefinition, InitialValue = ctc
-              };
-              statements.Insert(j, localDeclStatement); j++;
-              this.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
-            } else continue;
-          }
-        } else {
-          this.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
-        }
-        statements.RemoveAt(j--);
-      }
-      foreach (var field in closureType.ResolvedType.Fields) {
-        if (this.capturedLocalOrParameter.ContainsKey(field.Name.Value)) continue;
-        var newLocal = new LocalDefinition() {
-          Name = field.Name,
-          Type = this.genericParameterMapper == null ? field.Type : this.genericParameterMapper.Visit(field.Type),
-        };
-        var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
-        statements.Insert(i-1, newLocalDecl);
-        this.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
-      }
+    private void RecursivelyFindCapturedLocals(BlockStatement blockStatement) {
+      new CapturedLocalsFinder(this).Visit(blockStatement);
     }
 
     public override IExpression Visit(BoundExpression boundExpression) {
@@ -356,7 +381,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
       ILocalDefinition local = localDeclarationStatement.LocalVariable;
-      if (0 < this.currentClosureLocals.Count && local is TempVariable) {
+      if (0 < this.currentClosureLocals.Count) {
         //if this temp was introduced to hold a copy of the closure local, then delete it
         foreach (var currentClosureLocal in this.currentClosureLocals.Keys) {
           if (TypeHelper.TypesAreEquivalent(currentClosureLocal.Type, local.Type))
