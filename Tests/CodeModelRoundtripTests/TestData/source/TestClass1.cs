@@ -76,6 +76,8 @@ namespace RoundtripTests.TestData.source {
       Console.WriteLine("Nested closure where inner closure captures a parameter of the outer.");
       NestedClosureCapturingOuterParameter(new List<List<int>>() { new List<int>() { 3, 4, 5 }, new List<int>() { 10, 11, 12 } });
 
+      Console.WriteLine("Test for nested anonymous delegate that is within a statement");
+      NestedClosureInStatementCapturingLocal(3);
 
     }
     // Not to execute, just to go through decompilation and then peverify.
@@ -287,6 +289,19 @@ namespace RoundtripTests.TestData.source {
       return xss.Count;
     }
 
+    public void DoAction(Action a) { a(); }
+    public void NestedClosureInStatementCapturingLocal(int x) {
+      var outerAction = new Action(delegate() {
+        try {
+          var y = x + 10;
+          var innerAction = new Action(() => Console.WriteLine("inner delegate sez x: " + x + " y: " + y));
+          DoAction(innerAction);
+        } catch (Exception exception) {
+          Console.WriteLine("inner delegate caught an exception" + exception.Message);
+        }
+      });
+      DoAction(outerAction);
+    }
   }
   class C {
     public static void Main(string[] args) {
