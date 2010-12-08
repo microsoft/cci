@@ -127,7 +127,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (t1 != t2) return;
         var resolvedClosureType = closureType.ResolvedType;
         if (!UnspecializedMethods.IsCompilerGenerated(resolvedClosureType)) return;
-        if (this.remover.sourceMethodBody.privateHelperTypesToRemove == null) 
+        if (this.remover.sourceMethodBody.privateHelperTypesToRemove == null)
           this.remover.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
         this.remover.sourceMethodBody.privateHelperTypesToRemove.Add(resolvedClosureType);
         this.remover.currentClosureLocals.Add(locDef, true);
@@ -267,7 +267,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         anonDel.Body = alreadyDecompiledBody.Block;
       }
-        
+
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -424,7 +424,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         return PatternDecompiler.InvertCondition(this.Visit(logicalNot.Operand));
       else if (logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Int32)
         return new Equality() {
-          LeftOperand = logicalNot.Operand,
+          LeftOperand = this.Visit(logicalNot.Operand),
           RightOperand = new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 },
           Type = this.host.PlatformType.SystemBoolean,
           Locations = logicalNot.Locations
@@ -549,7 +549,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
       }
-      JustVisit:
+    JustVisit:
       return base.Visit(conditionalStatement);
     }
 
