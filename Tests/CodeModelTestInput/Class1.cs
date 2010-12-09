@@ -315,6 +315,12 @@ namespace CodeModelTestInput {
     }
   }
 
+  public class GenericParamMustBeStruct<T> where T : struct {
+    public string M() {
+      return new T().ToString();
+    }
+  }
+
   #region Test cases for closure decompilation
   /// <summary>
   /// Dimensions used in designing the test cases:

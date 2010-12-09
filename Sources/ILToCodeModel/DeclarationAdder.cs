@@ -98,6 +98,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (!foundLocals.Contains(localDefinition)) foundLocals.Add(localDefinition);
         base.Visit(localDefinition);
       }
+
+      public override void VisitReference(ILocalDefinition local) {
+        if (!foundLocals.Contains(local)) foundLocals.Add(local);
+        base.Visit(local);
+      }
+
     }
 
     public override void Visit(IBlockStatement block) {

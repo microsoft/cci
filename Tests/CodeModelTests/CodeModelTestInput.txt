@@ -811,6 +811,26 @@ namespace CodeModelTestInput
         }
     }
 
+    public class GenericParamMustBeStruct<T>
+    {
+        public string M()
+        {
+            T local_1;
+            local_1 = default(T);
+            local_1 = local_1;
+            string local_0 = local_1.ToString();
+            return local_0;
+
+        }
+
+        public GenericParamMustBeStruct()
+        {
+            this.object();
+            return;
+
+        }
+    }
+
     public class Class3
     {
         public Class3(System.Collections.Generic.List<int> xs)
