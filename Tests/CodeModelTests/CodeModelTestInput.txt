@@ -432,21 +432,16 @@ namespace CodeModelTestInput
         public void Method21()
         {
             {
-                System.Action CS$<>9__CachedAnonymousMethodDelegateb = null;
                 int i = 0;
                 goto IL_0036;
                 {
                     System.Action t;
                 IL_0012:
-                    if (CS$<>9__CachedAnonymousMethodDelegateb)
-                        goto IL_0025;
-                    CS$<>9__CachedAnonymousMethodDelegateb = delegate () {
+                    t = delegate () {
                         i.Equals(i);
                         return;
 
                     };
-                IL_0025:
-                    t = CS$<>9__CachedAnonymousMethodDelegateb;
                     {
                         i = (i + 1);
                     IL_0036:

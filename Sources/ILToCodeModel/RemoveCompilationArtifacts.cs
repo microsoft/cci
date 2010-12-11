@@ -222,19 +222,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(CreateDelegateInstance createDelegateInstance) {
-      BoundExpression/*?*/ bexpr = createDelegateInstance.Instance as BoundExpression;
-      if (bexpr != null) {
-        var localDefinition = bexpr.Definition as ILocalDefinition;
-        if (localDefinition != null && this.currentClosureLocals.ContainsKey(localDefinition))
-          return ConvertToAnonymousDelegate(createDelegateInstance);
-      }
-      CompileTimeConstant/*?*/ cc = createDelegateInstance.Instance as CompileTimeConstant;
       IMethodDefinition delegateMethodDefinition = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
       delegateMethodDefinition = UnspecializedMethods.UnspecializedMethodDefinition(delegateMethodDefinition);
       ITypeReference delegateContainingType = createDelegateInstance.MethodToCallViaDelegate.ContainingType;
       delegateContainingType = UnspecializedMethods.AsUnspecializedTypeReference(delegateContainingType);
-      bool IsNullInstanceOrThis = (cc != null && cc.Value == null) || createDelegateInstance.Instance is IThisReference;
-      if (IsNullInstanceOrThis && TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) &&
+      INestedTypeDefinition/*?*/ dctnt = delegateContainingType.ResolvedType as INestedTypeDefinition;
+      ITypeDefinition/*?*/ dctct = dctnt == null ? null : dctnt.ContainingTypeDefinition;
+      if ((TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) || TypeHelper.TypesAreEquivalent(dctct, this.containingType)) &&
         UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
         return ConvertToAnonymousDelegate(createDelegateInstance);
       return base.Visit(createDelegateInstance);
@@ -480,21 +474,21 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   internal class CachedDelegateRemover : MethodBodyCodeMutator {
+
     internal CachedDelegateRemover(SourceMethodBody sourceMethodBody)
       : base(sourceMethodBody.host, true) {
       this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
       this.sourceMethodBody = sourceMethodBody;
-      this.isCtor = sourceMethodBody.MethodDefinition.IsConstructor;
     }
+
     ITypeDefinition containingType;
     SourceMethodBody sourceMethodBody;
-    bool isCtor = false;
     Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals = new Dictionary<string, AnonymousDelegate>();
     static string CachedDelegateId = "CachedAnonymousMethodDelegate";
     Dictionary<int, bool> deletedLabels = new Dictionary<int, bool>();
 
     public override IBlockStatement Visit(BlockStatement blockStatement) {
-      var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal(this.cachedDelegateFieldsOrLocals, this.isCtor);
+      var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal(this.cachedDelegateFieldsOrLocals);
       finder.Visit(blockStatement);
       if (0 == this.cachedDelegateFieldsOrLocals.Count) return blockStatement;
       return base.Visit(blockStatement);
@@ -508,14 +502,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         else
           return boundExpression;
       }
-      if (this.isCtor) {
-        var localDefinition = boundExpression.Definition as ILocalDefinition;
-        if (localDefinition != null) {
-          if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
-            return this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value];
-          else
-            return boundExpression;
-        }
+      var localDefinition = boundExpression.Definition as ILocalDefinition;
+      if (localDefinition != null) {
+        if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
+          return this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value];
+        else
+          return boundExpression;
       }
       return base.Visit(boundExpression);
     }
@@ -535,18 +527,16 @@ namespace Microsoft.Cci.ILToCodeModel {
           return conditionalStatement;
         }
       }
-      if (this.isCtor) {
-        var localDefinition = boundExpression.Definition as ILocalDefinition;
-        if (localDefinition != null) {
-          if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) {
-            IGotoStatement gto = conditionalStatement.TrueBranch as IGotoStatement;
-            if (gto != null) {
-              this.deletedLabels.Add(gto.TargetStatement.Label.UniqueKey, true);
-            }
-            return CodeDummy.Block;
-          } else {
-            return conditionalStatement;
+      var localDefinition = boundExpression.Definition as ILocalDefinition;
+      if (localDefinition != null) {
+        if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) {
+          IGotoStatement gto = conditionalStatement.TrueBranch as IGotoStatement;
+          if (gto != null) {
+            this.deletedLabels.Add(gto.TargetStatement.Label.UniqueKey, true);
           }
+          return CodeDummy.Block;
+        } else {
+          return conditionalStatement;
         }
       }
     JustVisit:
@@ -567,15 +557,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         else
           return expressionStatement;
       }
-      if (this.isCtor) { // then also look for local
-        var localDefinition = assignment.Target.Definition as ILocalDefinition;
-        if (localDefinition == null) return expressionStatement;
-        if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
-          return CodeDummy.Block;
-        else
-          return expressionStatement;
-      }
-      return expressionStatement;
+      var localDefinition = assignment.Target.Definition as ILocalDefinition;
+      if (localDefinition == null) return expressionStatement;
+      if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
+        return CodeDummy.Block;
+      else
+        return expressionStatement;
     }
 
     public override IStatement Visit(LabeledStatement labeledStatement) {
@@ -585,7 +572,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      if (!this.isCtor) return localDeclarationStatement;
       var localDefinition = localDeclarationStatement.LocalVariable;
       if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
         return CodeDummy.Block;
@@ -595,14 +581,10 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     class FindAssignmentToCachedDelegateStaticFieldOrLocal : BaseCodeTraverser {
 
-      bool visitingCtor;
       public Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals;
 
-      public FindAssignmentToCachedDelegateStaticFieldOrLocal(
-        Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals,
-        bool visitingCtor) {
+      public FindAssignmentToCachedDelegateStaticFieldOrLocal(Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals) {
         this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
-        this.visitingCtor = visitingCtor;
       }
 
       public override void Visit(IAssignment assignment) {
@@ -616,13 +598,10 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
           return;
         }
-        if (this.visitingCtor) { // then also look for local
-          ILocalDefinition/*?*/ localDefinition = assignment.Target.Definition as ILocalDefinition;
-          if (localDefinition != null) {
-            this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value] = lambda;
-          }
+        ILocalDefinition/*?*/ localDefinition = assignment.Target.Definition as ILocalDefinition;
+        if (localDefinition != null) {
+          this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value] = lambda;
         }
-        return;
       }
     }
   }
