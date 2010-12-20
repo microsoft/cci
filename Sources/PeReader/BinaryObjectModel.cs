@@ -1756,14 +1756,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    //  Half of the double check lock. Other half done by the caller...
     void InitMethodSignature() {
-      MethodDefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodSignature(this);
-      this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
-      this.returnType = methodSignature.ReturnTypeReference;
-      this.FirstSignatureByte = methodSignature.FirstByte;
-      this.moduleParameters = methodSignature.Parameters;
-      this.returnParameter = methodSignature.ReturnParameter;
+      lock (this) {
+        if (this.returnCustomModifiers == null) {
+          MethodDefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodSignature(this);
+          this.returnType = methodSignature.ReturnTypeReference;
+          this.FirstSignatureByte = methodSignature.FirstByte;
+          this.moduleParameters = methodSignature.Parameters;
+          this.returnParameter = methodSignature.ReturnParameter;
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
+        }
+      }
     }
 
     public override IEnumerable<ILocation> Locations {
@@ -4418,11 +4421,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
           this.genericParameterCount = methodSignature.GenericParamCount;
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
           this.returnTypeReference = methodSignature.ReturnTypeReference;
           this.isReturnByReference = methodSignature.IsReturnByReference;
           this.requiredParameters = methodSignature.RequiredParameters;
           this.varArgParameters = methodSignature.VarArgParameters;
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
         }
       }
     }
@@ -4610,7 +4613,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
           this.genericParameterCount = methodSignature.GenericParamCount;
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
           this.isReturnByReference = methodSignature.IsReturnByReference;
           this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
           this.varArgParameters = methodSignature.VarArgParameters; //Ditto
@@ -4621,6 +4623,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           }
           this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
           this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
         }
       }
     }
@@ -4676,7 +4679,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
           this.genericParameterCount = methodSignature.GenericParamCount;
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
           this.isReturnByReference = methodSignature.IsReturnByReference;
           this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
           this.varArgParameters = methodSignature.VarArgParameters; //Ditto
@@ -4695,6 +4697,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           }
           this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
           this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
         }
       }
     }
