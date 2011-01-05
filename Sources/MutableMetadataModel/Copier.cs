@@ -1989,7 +1989,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodDefinition">The method definition.</param>
     /// <returns></returns>
     protected virtual MethodDefinition DeepCopy(MethodDefinition methodDefinition) {
-      if (methodDefinition == Dummy.Method) return methodDefinition;
       this.DeepCopy((TypeDefinitionMember)methodDefinition);
       if (methodDefinition.IsGeneric)
         methodDefinition.GenericParameters = this.DeepCopy(methodDefinition.GenericParameters, methodDefinition);
@@ -3424,6 +3423,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IModule Substitute(IModule module) {
       //^ requires this.cache.ContainsKey(module);
       //^ requires this.cache[module] is Module;
+      var assembly = module as IAssembly;
+      if (assembly != null) return this.Substitute(assembly);
       this.coneAlreadyFixed = true;
       Module copy = (Module)this.cache[module];
       return this.DeepCopy(copy);

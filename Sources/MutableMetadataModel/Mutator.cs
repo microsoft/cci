@@ -2132,7 +2132,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual MethodDefinition Visit(MethodDefinition methodDefinition) {
       if (this.stopTraversal) return methodDefinition;
-      if (methodDefinition == Dummy.Method) return methodDefinition;
       this.Visit((TypeDefinitionMember)methodDefinition);
       this.path.Push(methodDefinition);
       if (methodDefinition.IsGeneric)
@@ -4788,7 +4787,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual MethodDefinition Mutate(MethodDefinition methodDefinition) {
       if (this.stopTraversal) return methodDefinition;
-      if (methodDefinition == Dummy.Method) return methodDefinition;
       this.path.Push(methodDefinition);
       this.VisitTypeDefinitionMember(methodDefinition);
       if (methodDefinition.IsGeneric)

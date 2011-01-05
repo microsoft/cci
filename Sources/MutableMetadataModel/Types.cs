@@ -950,7 +950,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public MatrixTypeReference() {
-      this.elementType = Dummy.Type;
+      this.elementType = Dummy.TypeReference;
       this.lowerBounds = new List<int>();
       this.rank = 0;
       this.sizes = new List<ulong>();
@@ -1830,7 +1830,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.stringFormat = StringFormatKind.Ansi;
       this.template = Dummy.Type;
       this.typeCode = PrimitiveTypeCode.NotPrimitive;
-      this.underlyingType = Dummy.Type;
+      this.underlyingType = Dummy.TypeReference;
     }
 
     /// <summary>
@@ -1870,7 +1870,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (typeDefinition.IsEnum)
         this.underlyingType = typeDefinition.UnderlyingType;
       else
-        this.underlyingType = Dummy.Type;
+        this.underlyingType = Dummy.TypeReference;
       //^ base();
       this.HasDeclarativeSecurity = typeDefinition.HasDeclarativeSecurity;
       this.IsAbstract = typeDefinition.IsAbstract;

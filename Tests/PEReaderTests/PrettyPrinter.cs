@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -613,11 +613,11 @@ namespace ModuleReaderTests {
       }
     }
 
-    public void TypeDefinitionAsReference(ITypeReference typeDefinition) {
-      if (typeDefinition == null || typeDefinition == Dummy.Type) {
+    public void TypeDefinitionAsReference(ITypeReference typeReference) {
+      if (typeReference == null || typeReference == Dummy.TypeReference) {
         this.ILDasmPaper.Identifier("###DummyType###");
       }
-      PrimitiveTypeCode ptc = typeDefinition.TypeCode;
+      PrimitiveTypeCode ptc = typeReference.TypeCode;
       switch (ptc) {
         case PrimitiveTypeCode.Boolean:
           this.ILDasmPaper.Keyword("bool");
@@ -665,7 +665,7 @@ namespace ModuleReaderTests {
           this.ILDasmPaper.Keyword("void");
           return;
       }
-      INamespaceTypeReference namespaceType = typeDefinition as INamespaceTypeReference;
+      INamespaceTypeReference namespaceType = typeReference as INamespaceTypeReference;
       if (namespaceType != null) {
         bool wasRoot;
         this.ModuleQualifiedUnitNamespace(namespaceType.ContainingUnitNamespace, out wasRoot);
@@ -679,7 +679,7 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Identifier(name);
         return;
       }
-      INestedTypeReference nestedTypeDefinition = typeDefinition as INestedTypeReference;
+      INestedTypeReference nestedTypeDefinition = typeReference as INestedTypeReference;
       if (nestedTypeDefinition != null) {
         this.TypeDefinitionAsReference(nestedTypeDefinition.ContainingType);
         this.ILDasmPaper.Symbol("/");
@@ -690,34 +690,34 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Identifier(name);
         return;
       }
-      IGenericTypeInstanceReference genericTypeInstance = typeDefinition as IGenericTypeInstanceReference;
+      IGenericTypeInstanceReference genericTypeInstance = typeReference as IGenericTypeInstanceReference;
       if (genericTypeInstance != null) {
         this.TypeReference(genericTypeInstance.GenericType);
         this.ILDasmPaper.Symbol("<");
         bool isNotFirst = false;
-        foreach (ITypeReference typeReference in genericTypeInstance.GenericArguments) {
+        foreach (ITypeReference genericArgument in genericTypeInstance.GenericArguments) {
           if (isNotFirst) {
             this.ILDasmPaper.Symbol(",");
           }
           isNotFirst = true;
-          this.TypeReference(typeReference);
+          this.TypeReference(genericArgument);
         }
         this.ILDasmPaper.Symbol(">");
         return;
       }
-      IPointerTypeReference pointerType = typeDefinition as IPointerTypeReference;
+      IPointerTypeReference pointerType = typeReference as IPointerTypeReference;
       if (pointerType != null) {
         this.TypeReference(pointerType.TargetType);
         this.ILDasmPaper.Symbol("*");
         return;
       }
-      IManagedPointerTypeReference mgdPointerType = typeDefinition as IManagedPointerTypeReference;
+      IManagedPointerTypeReference mgdPointerType = typeReference as IManagedPointerTypeReference;
       if (mgdPointerType != null) {
         this.TypeReference(mgdPointerType.TargetType);
         this.ILDasmPaper.Symbol("&");
         return;
       }
-      IArrayTypeReference arrayType = typeDefinition as IArrayTypeReference;
+      IArrayTypeReference arrayType = typeReference as IArrayTypeReference;
       if (arrayType != null) {
         this.TypeReference(arrayType.ElementType);
         this.ILDasmPaper.Symbol("[");
@@ -733,19 +733,19 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Symbol("]");
         return;
       }
-      IGenericTypeParameter genericTypeParameter = typeDefinition as IGenericTypeParameter;
+      IGenericTypeParameter genericTypeParameter = typeReference as IGenericTypeParameter;
       if (genericTypeParameter != null) {
         this.ILDasmPaper.Symbol("!");
         this.ILDasmPaper.Int((int)genericTypeParameter.Index);
         return;
       }
-      IGenericMethodParameter genericMethodParameter = typeDefinition as IGenericMethodParameter;
+      IGenericMethodParameter genericMethodParameter = typeReference as IGenericMethodParameter;
       if (genericMethodParameter != null) {
         this.ILDasmPaper.Symbol("!!");
         this.ILDasmPaper.Int((int)genericMethodParameter.Index);
         return;
       }
-      IFunctionPointerTypeReference functionPointerType = typeDefinition as IFunctionPointerTypeReference;
+      IFunctionPointerTypeReference functionPointerType = typeReference as IFunctionPointerTypeReference;
       if (functionPointerType != null) {
         this.TypeReference(functionPointerType.Type);
         this.ILDasmPaper.Symbol("(");

@@ -2098,7 +2098,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.index = 0;
       this.locations = new List<ILocation>();
       this.marshallingInformation = Dummy.MarshallingInformation;
-      this.paramArrayElementType = Dummy.Type;
+      this.paramArrayElementType = Dummy.TypeReference;
       this.name = Dummy.Name;
       this.type = Dummy.TypeReference;
     }
@@ -2128,7 +2128,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (parameterDefinition.IsParameterArray)
         this.paramArrayElementType = parameterDefinition.ParamArrayElementType;
       else
-        this.paramArrayElementType = Dummy.Type;
+        this.paramArrayElementType = Dummy.TypeReference;
       this.name = parameterDefinition.Name;
       this.type = parameterDefinition.Type;
       this.IsByReference = parameterDefinition.IsByReference;
@@ -2282,7 +2282,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsParameterArray {
-      get { return this.paramArrayElementType != Dummy.Type; }
+      get { return this.paramArrayElementType != Dummy.TypeReference; }
     }
 
     /// <summary>

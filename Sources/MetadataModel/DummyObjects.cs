@@ -2756,7 +2756,7 @@ namespace Microsoft.Cci {
     }
 
     public Machine Machine {
-      get { return Machine.Unknown; } 
+      get { return Machine.Unknown; }
     }
 
     public bool RequiresAmdInstructionSet {
@@ -3020,7 +3020,7 @@ namespace Microsoft.Cci {
     }
 
     public ITypeReference Type {
-      get { return Dummy.Type; }
+      get { return Dummy.TypeReference; }
     }
 
     #endregion
@@ -5981,7 +5981,7 @@ namespace Microsoft.Cci {
     #region ISpecializedMethodReference Members
 
     IMethodReference ISpecializedMethodReference.UnspecializedVersion {
-      get { return Dummy.Method; }
+      get { return Dummy.MethodReference; }
     }
 
     #endregion
@@ -6745,7 +6745,7 @@ namespace Microsoft.Cci {
     #region ITypeMemberReference Members
 
     public ITypeReference ContainingType {
-      get { return Dummy.Type; }
+      get { return Dummy.TypeReference; }
     }
 
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {

@@ -3319,9 +3319,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly EventDefinition RawTemplateModuleEvent;
     bool eventTypeInited;
     IModuleTypeReference/*?*/ eventType;
-    IMethodDefinition/*?*/ adderMethod;
-    IMethodDefinition/*?*/ removerMethod;
-    IMethodDefinition/*?*/ fireMethod;
+    IMethodReference/*?*/ adderMethod;
+    IMethodReference/*?*/ removerMethod;
+    IMethodReference/*?*/ fireMethod;
     EventFlags EventFlags;
     //^ invariant ((this.EventFlags & EventFlags.AdderLoaded) == EventFlags.AdderLoaded) ==> this.adderMethod != null;
     //^ invariant ((this.EventFlags & EventFlags.RemoverLoaded) == EventFlags.RemoverLoaded) ==> this.removerMethod != null;
@@ -3373,7 +3373,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           this.adderMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)this.RawTemplateModuleEvent.AdderMethod) as TypeMember) as IMethodDefinition;
           if (this.adderMethod == null) {
             //  MDError
-            this.adderMethod = Dummy.Method;
+            this.adderMethod = Dummy.MethodReference;
           }
           this.EventFlags |= EventFlags.AdderLoaded;
         }
@@ -3403,10 +3403,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public IMethodReference Remover {
       get {
         if ((this.EventFlags & EventFlags.RemoverLoaded) != EventFlags.RemoverLoaded) {
-          this.removerMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)this.RawTemplateModuleEvent.RemoverMethod) as TypeMember) as IMethodDefinition;
+          this.removerMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)this.RawTemplateModuleEvent.RemoverMethod) as TypeMember) as IMethodReference;
           if (this.removerMethod == null) {
             //  MDError
-            this.removerMethod = Dummy.Method;
+            this.removerMethod = Dummy.MethodReference;
           }
           this.EventFlags |= EventFlags.RemoverLoaded;
         }
