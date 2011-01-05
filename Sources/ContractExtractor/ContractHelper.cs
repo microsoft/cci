@@ -169,7 +169,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
         contractStatements.AddRange(existingStatements); // replaces assert/assume
         var newSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider) {
-          Block = new BlockStatement(){
+          Block = new BlockStatement() {
             Statements = contractStatements,
           },
           IsNormalized = false,
@@ -266,7 +266,7 @@ namespace Microsoft.Cci.MutableContracts {
         };
         return methodCall;
       }
-      
+
     }
 
     /// <summary>
@@ -410,11 +410,9 @@ namespace Microsoft.Cci.MutableContracts {
             host.InternFactory);
           typeHoldingContractDefinition = instant;
         }
-        IMethodReference methodReference = MemberHelper.GetImplicitlyOverridingDerivedClassMethod(methodDefinition, typeHoldingContractDefinition);
-        if (methodReference == Dummy.Method) return null;
-        return methodReference.ResolvedMethod;
-        //var uninstant = UninstantiateAndUnspecialize(methodReference.ResolvedMethod);
-        //return uninstant.ResolvedMethod;
+        IMethodDefinition method = MemberHelper.GetImplicitlyOverridingDerivedClassMethod(methodDefinition, typeHoldingContractDefinition);
+        if (method == Dummy.Method) return null;
+        return method;
       }
       return null;
     }
@@ -442,9 +440,9 @@ namespace Microsoft.Cci.MutableContracts {
           return methodReference.ResolvedMethod;
         }
       } else if (abstractTypeDefinition.IsAbstract) {
-        IMethodReference methodReference = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition);
-        if (methodReference == Dummy.Method) return null;
-        return methodReference.ResolvedMethod;
+        IMethodDefinition method = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition);
+        if (method == Dummy.Method) return null;
+        return method;
       }
       return null;
     }
@@ -791,7 +789,7 @@ namespace Microsoft.Cci.MutableContracts {
       public override ITypeReference Visit(ITypeReference typeReference) {
         ITypeReference mappedTo;
         if (this.typeRefMap.TryGetValue(typeReference.InternedKey, out mappedTo))
-            return mappedTo;
+          return mappedTo;
         else
           return base.Visit(typeReference);
       }
@@ -1047,7 +1045,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.methodDefinitionInternedKey = methodDefinition.InternedKey;
       this.expressions = new IExpression[methodDefinition.ParameterCount];
       var i = 0;
-      foreach (var p in methodDefinition.Parameters){
+      foreach (var p in methodDefinition.Parameters) {
         this.expressions[i] = expressions[i];
         i++;
       }
@@ -1079,7 +1077,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="boundExpression">The bound expression.</param>
     public override IExpression Visit(BoundExpression boundExpression) {
       ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
-      if (par != null){
+      if (par != null) {
         var md = par.ContainingSignature as IMethodDefinition;
         if (md != null && md.InternedKey == this.methodDefinitionInternedKey) {
           return this.expressions[par.Index];

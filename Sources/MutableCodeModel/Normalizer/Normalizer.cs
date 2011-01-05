@@ -397,7 +397,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       ILocalDefinition localDefinition = obj as ILocalDefinition;
       if (localDefinition != null) return localDefinition.Type;
-      return Dummy.Type;
+      return Dummy.TypeReference;
     }
 
     /// <summary>

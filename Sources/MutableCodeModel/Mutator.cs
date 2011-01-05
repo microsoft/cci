@@ -2371,7 +2371,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.Visit(mutableLoopInvariant);
     }
 
-      /// <summary>
+    /// <summary>
     /// Visits the specified loop invariant.
     /// </summary>
     /// <param name="loopInvariant">The loop invariant.</param>
@@ -2420,7 +2420,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public override MethodDefinition Visit(MethodDefinition methodDefinition) {
       if (this.stopTraversal) return methodDefinition;
-      if (methodDefinition == Dummy.Method) return methodDefinition;
       this.Visit((TypeDefinitionMember)methodDefinition);
       this.path.Push(methodDefinition);
       if (methodDefinition.IsGeneric)
