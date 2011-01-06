@@ -100,6 +100,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
 
       private void FindCapturedLocals(List<IStatement> statements) {
+      tryAgain:
         ILocalDefinition/*?*/ locDef = null;
         INestedTypeReference/*?*/ closureType = null;
         int i = 0;
@@ -182,6 +183,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           statements.Insert(i-1, newLocalDecl);
           this.remover.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
         }
+        goto tryAgain;
       }
     }
 
@@ -490,7 +492,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IBlockStatement Visit(BlockStatement blockStatement) {
       var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal(this.cachedDelegateFieldsOrLocals);
       finder.Visit(blockStatement);
-      if (0 == this.cachedDelegateFieldsOrLocals.Count) return blockStatement;
+      if (this.cachedDelegateFieldsOrLocals.Count == 0) return blockStatement;
       return base.Visit(blockStatement);
     }
 
