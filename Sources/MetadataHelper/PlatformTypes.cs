@@ -951,6 +951,34 @@ namespace Microsoft.Cci {
     INamespaceTypeReference/*?*/ systemCollectionsIList;
 
     /// <summary>
+    /// System.Collections.IList
+    /// </summary>
+    public INamespaceTypeReference SystemCollectionsIStructuralComparable {
+      [DebuggerNonUserCode]
+      get {
+        if (this.systemCollectionsIStructuralComparable == null) {
+          this.systemCollectionsIStructuralComparable = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IStructuralComparable");
+        }
+        return this.systemCollectionsIStructuralComparable;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemCollectionsIStructuralComparable;
+
+    /// <summary>
+    /// System.Collections.IList
+    /// </summary>
+    public INamespaceTypeReference SystemCollectionsIStructuralEquatable {
+      [DebuggerNonUserCode]
+      get {
+        if (this.systemCollectionsIStructuralEquatable == null) {
+          this.systemCollectionsIStructuralEquatable = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IStructuralEquatable");
+        }
+        return this.systemCollectionsIStructuralEquatable;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemCollectionsIStructuralEquatable;
+
+    /// <summary>
     /// System.DateTime
     /// </summary>
     public INamespaceTypeReference SystemDateTime {

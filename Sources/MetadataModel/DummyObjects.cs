@@ -4286,6 +4286,14 @@ namespace Microsoft.Cci {
       get { return Dummy.NamespaceTypeReference; }
     }
 
+    public INamespaceTypeReference SystemCollectionsIStructuralComparable {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
+    public INamespaceTypeReference SystemCollectionsIStructuralEquatable {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
     public INamespaceTypeReference SystemIAsyncResult {
       get { return Dummy.NamespaceTypeReference; }
     }

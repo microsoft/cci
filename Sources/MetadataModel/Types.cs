@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -605,6 +605,16 @@ namespace Microsoft.Cci {
     /// System.Collections.IList
     /// </summary>
     INamespaceTypeReference SystemCollectionsIList { get; }
+
+    /// <summary>
+    /// System.Collections.IStructuralComparable
+    /// </summary>
+    INamespaceTypeReference SystemCollectionsIStructuralComparable { get; }
+
+    /// <summary>
+    /// System.Collections.IStructuralEquatable
+    /// </summary>
+    INamespaceTypeReference SystemCollectionsIStructuralEquatable { get; }
 
     /// <summary>
     /// System.DateTime

@@ -50,11 +50,13 @@ namespace Microsoft.Cci {
 
     //  Issue: Array type does not have to give these as they are indirectly inherited from System.Array?!?
     protected virtual IEnumerable<ITypeReference> GetInterfaceList() {
-      List<ITypeReference> interfaces = new List<ITypeReference>(4);
+      List<ITypeReference> interfaces = new List<ITypeReference>(6);
       interfaces.Add(this.PlatformType.SystemICloneable);
       interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
       interfaces.Add(this.PlatformType.SystemCollectionsICollection);
       interfaces.Add(this.PlatformType.SystemCollectionsIList);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
       return interfaces.AsReadOnly();
     }
 
@@ -3293,18 +3295,18 @@ namespace Microsoft.Cci {
       : base(elementType, internFactory) {
     }
 
-    //  Issue: Does this have to give non generic interfaces since they come from System.Array?!?
     protected override IEnumerable<ITypeReference> GetInterfaceList() {
-      List<ITypeReference> interfaces = new List<ITypeReference>(7);
-      List<ITypeReference> argTypes = new List<ITypeReference>(1);
-      argTypes.Add(this.ElementType);
-      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes.AsReadOnly(), this.InternFactory));
+      List<ITypeReference> interfaces = new List<ITypeReference>(9);
       interfaces.Add(this.PlatformType.SystemICloneable);
       interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
       interfaces.Add(this.PlatformType.SystemCollectionsICollection);
       interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes.AsReadOnly(), this.InternFactory));
-      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes.AsReadOnly(), this.InternFactory));
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
+      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));
+      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, this.InternFactory));
+      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, this.InternFactory));
       return interfaces.AsReadOnly();
     }
 
