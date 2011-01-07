@@ -19,7 +19,7 @@ namespace Microsoft.Cci {
 
 #pragma warning disable 1591
 
-  public static class Dummy {
+  public abstract class Dummy {
 
     public static IAliasForType AliasForType {
       [DebuggerNonUserCode]
@@ -294,7 +294,6 @@ namespace Microsoft.Cci {
     }
     private static IModule/*?*/ module;
 
-    //  Issue: This is kind of bad thing to do. What happens to IModule m = loadAssembly(...)   m != Dummy.Module?!?
     public static IAssembly Assembly {
       [DebuggerNonUserCode]
       get {
@@ -596,7 +595,7 @@ namespace Microsoft.Cci {
     private static IArrayType/*?*/ arrayType;
   }
 
-  internal sealed class DummyAliasForType : IAliasForType {
+  internal sealed class DummyAliasForType : Dummy, IAliasForType {
     #region IAliasForType Members
 
     public ITypeReference AliasedType {
@@ -649,7 +648,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyAssembly : IAssembly {
+  internal sealed class DummyAssembly : Dummy, IAssembly {
     #region IAssembly Members
 
     public IEnumerable<ICustomAttribute> AssemblyAttributes {
@@ -696,7 +695,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
     }
 
-    public Version Version {
+    public new Version Version {
       get { return Dummy.Version; }
     }
 
@@ -848,15 +847,15 @@ namespace Microsoft.Cci {
 
     #region IUnit Members
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
-    public string Location {
+    public new string Location {
       get { return string.Empty; }
     }
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -955,7 +954,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyMetadataHost : IMetadataHost {
+  internal sealed class DummyMetadataHost : Dummy, IMetadataHost {
 
     #region ICompilationHostEnvironment Members
 
@@ -1001,11 +1000,11 @@ namespace Microsoft.Cci {
       return Dummy.Unit;
     }
 
-    public INameTable NameTable {
+    public new INameTable NameTable {
       get { return Dummy.NameTable; }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -1040,7 +1039,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IUnit>(); }
     }
 
-    public IInternFactory InternFactory {
+    public new IInternFactory InternFactory {
       get { return Dummy.InternFactory; }
     }
 
@@ -1051,7 +1050,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyMetadataConstant : IMetadataConstant {
+  internal sealed class DummyMetadataConstant : Dummy, IMetadataConstant {
 
     #region IMetadataConstant Members
 
@@ -1070,7 +1069,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -1078,7 +1077,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyCustomAttribute : ICustomAttribute {
+  internal sealed class DummyCustomAttribute : Dummy, ICustomAttribute {
     #region ICustomAttribute Members
 
     public IEnumerable<IMetadataExpression> Arguments {
@@ -1097,7 +1096,7 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -1105,7 +1104,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyCustomModifier : ICustomModifier {
+  internal sealed class DummyCustomModifier : Dummy, ICustomModifier {
 
     #region ICustomModifier Members
 
@@ -1121,7 +1120,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyEventDefinition : IEventDefinition {
+  internal sealed class DummyEventDefinition : Dummy, IEventDefinition {
 
     #region IEventDefinition Members
 
@@ -1153,7 +1152,7 @@ namespace Microsoft.Cci {
       get { return Dummy.MethodReference; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -1193,7 +1192,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -1223,7 +1222,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyMetadataExpression : IMetadataExpression {
+  internal sealed class DummyMetadataExpression : Dummy, IMetadataExpression {
 
     #region IMetadataExpression Members
 
@@ -1231,7 +1230,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -1245,7 +1244,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyFieldDefinition : IFieldDefinition {
+  internal sealed class DummyFieldDefinition : Dummy, IFieldDefinition {
 
     #region IFieldDefinition Members
 
@@ -1309,7 +1308,7 @@ namespace Microsoft.Cci {
       get { return Dummy.Constant; }
     }
 
-    public IMarshallingInformation MarshallingInformation {
+    public new IMarshallingInformation MarshallingInformation {
       get {
         //^ assume false;
         IMarshallingInformation/*?*/ dummyValue = null;
@@ -1318,7 +1317,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -1346,7 +1345,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -1397,14 +1396,14 @@ namespace Microsoft.Cci {
 
     #region IMetadataConstantContainer
 
-    public IMetadataConstant Constant {
+    public new IMetadataConstant Constant {
       get { return Dummy.Constant; }
     }
 
     #endregion
   }
 
-  internal sealed class DummyFileReference : IFileReference {
+  internal sealed class DummyFileReference : Dummy, IFileReference {
     #region IFileReference Members
 
     public IAssembly ContainingAssembly {
@@ -1427,7 +1426,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyGenericTypeInstance : IGenericTypeInstance {
+  internal sealed class DummyGenericTypeInstance : Dummy, IGenericTypeInstance {
 
     #region IGenericTypeInstance Members
 
@@ -1549,7 +1548,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -1648,7 +1647,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -1663,7 +1662,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyGenericTypeParameter : IGenericTypeParameter {
+  internal sealed class DummyGenericTypeParameter : Dummy, IGenericTypeParameter {
 
     #region IGenericTypeParameter Members
 
@@ -1802,7 +1801,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -1901,7 +1900,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -1913,7 +1912,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -1952,7 +1951,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyGenericMethodParameter : IGenericMethodParameter {
+  internal sealed class DummyGenericMethodParameter : Dummy, IGenericMethodParameter {
     #region IGenericMethodParameter Members
 
     public IMethodDefinition DefiningMethod {
@@ -2093,7 +2092,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -2192,7 +2191,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -2204,7 +2203,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -2243,7 +2242,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyMethodBody : IMethodBody {
+  internal sealed class DummyMethodBody : Dummy, IMethodBody {
 
     #region IMethodBody Members
 
@@ -2280,7 +2279,7 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
-    public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
+    public new IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
       get { return IteratorHelper.GetEmptyEnumerable<IOperationExceptionInformation>(); }
     }
 
@@ -2295,7 +2294,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyMethodDefinition : IMethodDefinition {
+  internal sealed class DummyMethodDefinition : Dummy, IMethodDefinition {
 
     #region IMethodDefinition Members
 
@@ -2470,7 +2469,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -2498,7 +2497,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -2573,7 +2572,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyMethodReference : IMethodReference {
+  internal sealed class DummyMethodReference : Dummy, IMethodReference {
     #region IMethodReference Members
 
     public bool AcceptsExtraArguments {
@@ -2634,7 +2633,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -2669,14 +2668,14 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
     #endregion
   }
 
-  internal sealed class DummyModule : IModule {
+  internal sealed class DummyModule : Dummy, IModule {
     #region IModule Members
 
     public IName ModuleName {
@@ -2825,15 +2824,15 @@ namespace Microsoft.Cci {
 
     #region IUnit Members
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
-    public string Location {
+    public new string Location {
       get { return string.Empty; }
     }
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -2907,11 +2906,11 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyModuleReference : IModuleReference {
+  internal sealed class DummyModuleReference : Dummy, IModuleReference {
 
     #region IUnitReference Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -2969,7 +2968,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyName : IName {
+  internal sealed class DummyName : Dummy, IName {
 
     #region IName Members
 
@@ -2989,7 +2988,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyNamedArgument : IMetadataNamedArgument {
+  internal sealed class DummyNamedArgument : Dummy, IMetadataNamedArgument {
     #region IMetadataNamedArgument Members
 
     public IName ArgumentName {
@@ -3019,15 +3018,14 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
     #endregion
   }
 
-
-  internal sealed class DummyNamespaceTypeDefinition : INamespaceTypeDefinition {
+  internal sealed class DummyNamespaceTypeDefinition : Dummy, INamespaceTypeDefinition {
     #region INamespaceTypeDefinition Members
 
     public IUnitNamespace ContainingUnitNamespace {
@@ -3141,7 +3139,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -3252,7 +3250,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -3272,7 +3270,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -3312,7 +3310,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyNamespaceTypeReference : INamespaceTypeReference {
+  internal sealed class DummyNamespaceTypeReference : Dummy, INamespaceTypeReference {
 
     #region INamespaceTypeReference Members
 
@@ -3332,7 +3330,7 @@ namespace Microsoft.Cci {
 
     #region ITypeReference Members
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -3363,7 +3361,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -3386,7 +3384,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -3405,7 +3403,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyNameTable : INameTable {
+  internal sealed class DummyNameTable : Dummy, INameTable {
 
     #region INameTable Members
 
@@ -3851,7 +3849,7 @@ namespace Microsoft.Cci {
       get { return Dummy.Name; }
     }
 
-    public IName Type {
+    public new IName Type {
       get { return Dummy.Name; }
     }
 
@@ -3922,7 +3920,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyNestedType : INestedTypeDefinition {
+  internal sealed class DummyNestedType : Dummy, INestedTypeDefinition {
 
     #region ITypeDefinition Members
 
@@ -4028,7 +4026,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -4140,7 +4138,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -4160,7 +4158,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -4210,7 +4208,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyPlatformType : IPlatformType {
+  internal sealed class DummyPlatformType : Dummy, IPlatformType {
 
     #region IPlatformType Members
 
@@ -4465,7 +4463,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyPropertyDefinition : IPropertyDefinition {
+  internal sealed class DummyPropertyDefinition : Dummy, IPropertyDefinition {
 
     #region IPropertyDefinition Members
 
@@ -4525,7 +4523,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -4569,7 +4567,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -4611,14 +4609,14 @@ namespace Microsoft.Cci {
 
     #region IMetadataConstantContainer
 
-    public IMetadataConstant Constant {
+    public new IMetadataConstant Constant {
       get { return Dummy.Constant; }
     }
 
     #endregion
   }
 
-  internal sealed class DummyType : ITypeDefinition {
+  internal sealed class DummyType : Dummy, ITypeDefinition {
 
     #region ITypeDefinition Members
 
@@ -4721,7 +4719,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -4820,7 +4818,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -4835,11 +4833,11 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyTypeReference : ITypeReference {
+  internal sealed class DummyTypeReference : Dummy, ITypeReference {
 
     #region ITypeReference Members
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -4870,7 +4868,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -4892,7 +4890,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyUnit : IUnit {
+  internal sealed class DummyUnit : Dummy, IUnit {
 
     #region IUnit Members
 
@@ -4904,15 +4902,15 @@ namespace Microsoft.Cci {
       get { return Dummy.Assembly.AssemblyIdentity; }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
-    public string Location {
+    public new string Location {
       get { return string.Empty; }
     }
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -4974,7 +4972,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyRootUnitNamespace : IRootUnitNamespace {
+  internal sealed class DummyRootUnitNamespace : Dummy, IRootUnitNamespace {
 
     #region IUnitNamespace Members
 
@@ -4982,7 +4980,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
-    public IUnit Unit {
+    public new IUnit Unit {
       get { return Dummy.Unit; }
     }
 
@@ -5013,7 +5011,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -5052,7 +5050,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyNestedUnitNamespace : INestedUnitNamespace {
+  internal sealed class DummyNestedUnitNamespace : Dummy, INestedUnitNamespace {
 
     #region IUnitNamespace Members
 
@@ -5060,7 +5058,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
     }
 
-    public IUnit Unit {
+    public new IUnit Unit {
       get { return Dummy.Unit; }
     }
 
@@ -5088,7 +5086,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -5174,7 +5172,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyUnitSet : IUnitSet {
+  internal sealed class DummyUnitSet : Dummy, IUnitSet {
 
     #region IUnitSet Members
 
@@ -5208,11 +5206,11 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyRootUnitSetNamespace : IRootUnitSetNamespace {
+  internal sealed class DummyRootUnitSetNamespace : Dummy, IRootUnitSetNamespace {
 
     #region IUnitSetNamespace Members
 
-    public IUnitSet UnitSet {
+    public new IUnitSet UnitSet {
       get { return Dummy.UnitSet; }
     }
 
@@ -5247,7 +5245,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -5274,7 +5272,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyResource : IResource {
+  internal sealed class DummyResource : Dummy, IResource {
     #region IResource Members
 
     public IEnumerable<ICustomAttribute> Attributes {
@@ -5301,11 +5299,11 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
-    public IResource Resource {
+    public new IResource Resource {
       get { return this; }
     }
 
@@ -5313,7 +5311,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyAssemblyReference : IAssemblyReference {
+  internal sealed class DummyAssemblyReference : Dummy, IAssemblyReference {
     #region IAssemblyReference Members
 
     public IEnumerable<IName> Aliases {
@@ -5328,7 +5326,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
     }
 
-    public Version Version {
+    public new Version Version {
       get { return new Version(0, 0); }
     }
 
@@ -5336,7 +5334,7 @@ namespace Microsoft.Cci {
 
     #region IUnitReference Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -5406,7 +5404,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyMarshallingInformation : IMarshallingInformation {
+  internal sealed class DummyMarshallingInformation : Dummy, IMarshallingInformation {
     #region IMarshallingInformation Members
 
     public ITypeReference CustomMarshaller {
@@ -5456,7 +5454,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummySecurityAttribute : ISecurityAttribute {
+  internal sealed class DummySecurityAttribute : Dummy, ISecurityAttribute {
     #region ISecurityAttribute Members
 
     public SecurityAction Action {
@@ -5470,7 +5468,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyParameterTypeInformation : IParameterTypeInformation {
+  internal sealed class DummyParameterTypeInformation : Dummy, IParameterTypeInformation {
     #region IParameterTypeInformation Members
 
     public ISignature ContainingSignature {
@@ -5489,7 +5487,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -5504,7 +5502,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummySpecializedNestedTypeDefinition : ISpecializedNestedTypeDefinition {
+  internal sealed class DummySpecializedNestedTypeDefinition : Dummy, ISpecializedNestedTypeDefinition {
     #region ISpecializedNestedTypeDefinition Members
 
     public INestedTypeDefinition UnspecializedVersion {
@@ -5625,7 +5623,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -5737,7 +5735,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -5758,7 +5756,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -5810,7 +5808,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummySpecializedFieldDefinition : ISpecializedFieldDefinition {
+  internal sealed class DummySpecializedFieldDefinition : Dummy, ISpecializedFieldDefinition {
 
     #region IFieldDefinition Members
 
@@ -5874,11 +5872,11 @@ namespace Microsoft.Cci {
       get { return Dummy.Constant; }
     }
 
-    public IMarshallingInformation MarshallingInformation {
+    public new IMarshallingInformation MarshallingInformation {
       get { return Dummy.MarshallingInformation; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -5909,7 +5907,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -5969,7 +5967,7 @@ namespace Microsoft.Cci {
 
     #region IMetadataConstantContainer
 
-    public IMetadataConstant Constant {
+    public new IMetadataConstant Constant {
       get { return Dummy.Constant; }
     }
 
@@ -5977,7 +5975,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummySpecializedMethodDefinition : ISpecializedMethodDefinition {
+  internal sealed class DummySpecializedMethodDefinition : Dummy, ISpecializedMethodDefinition {
     #region ISpecializedMethodDefinition Members
 
     public IMethodDefinition UnspecializedVersion {
@@ -6172,7 +6170,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6200,7 +6198,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -6272,7 +6270,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummySpecializedPropertyDefinition : ISpecializedPropertyDefinition {
+  internal sealed class DummySpecializedPropertyDefinition : Dummy, ISpecializedPropertyDefinition {
     #region ISpecializedPropertyDefinition Members
 
     public IPropertyDefinition UnspecializedVersion {
@@ -6339,7 +6337,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6383,7 +6381,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -6424,7 +6422,7 @@ namespace Microsoft.Cci {
 
     #region IMetadataConstantContainer
 
-    public IMetadataConstant Constant {
+    public new IMetadataConstant Constant {
       get { return Dummy.Constant; }
     }
 
@@ -6432,7 +6430,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyFunctionPointerType : IFunctionPointer {
+  internal sealed class DummyFunctionPointerType : Dummy, IFunctionPointer {
     #region IFunctionPointer Members
 
     public CallingConvention CallingConvention {
@@ -6459,7 +6457,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6566,7 +6564,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -6670,7 +6668,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
@@ -6685,7 +6683,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyLocalVariable : ILocalDefinition {
+  internal sealed class DummyLocalVariable : Dummy, ILocalDefinition {
 
     #region ILocalDefinition Members
 
@@ -6721,7 +6719,7 @@ namespace Microsoft.Cci {
       get { return Dummy.Method; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6729,7 +6727,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -6737,10 +6735,10 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyFieldReference : IFieldReference {
+  internal sealed class DummyFieldReference : Dummy, IFieldReference {
     #region IFieldReference Members
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6779,14 +6777,14 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
     #endregion
   }
 
-  internal sealed class DummyParameterDefinition : IParameterDefinition {
+  internal sealed class DummyParameterDefinition : Dummy, IParameterDefinition {
     #region IParameterDefinition Members
 
     public ISignature ContainingSignature {
@@ -6821,7 +6819,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IMarshallingInformation MarshallingInformation {
+    public new IMarshallingInformation MarshallingInformation {
       get { return Dummy.MarshallingInformation; }
     }
 
@@ -6848,7 +6846,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -6876,7 +6874,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6884,7 +6882,7 @@ namespace Microsoft.Cci {
 
     #region IMetadataConstantContainer
 
-    public IMetadataConstant Constant {
+    public new IMetadataConstant Constant {
       get { return Dummy.Constant; }
     }
 
@@ -6892,7 +6890,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummySectionBlock : ISectionBlock {
+  internal sealed class DummySectionBlock : Dummy, ISectionBlock {
     #region ISectionBlock Members
 
     public PESectionKind PESectionKind {
@@ -6914,7 +6912,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyPlatformInvokeInformation : IPlatformInvokeInformation {
+  internal sealed class DummyPlatformInvokeInformation : Dummy, IPlatformInvokeInformation {
 
     #region IPlatformInvokeInformation Members
 
@@ -6953,7 +6951,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyGlobalMethodDefinition : IGlobalMethodDefinition {
+  internal sealed class DummyGlobalMethodDefinition : Dummy, IGlobalMethodDefinition {
 
     #region ISignature Members
 
@@ -6965,7 +6963,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -6989,7 +6987,7 @@ namespace Microsoft.Cci {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -7252,11 +7250,11 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyGlobalFieldDefinition : IGlobalFieldDefinition {
+  internal sealed class DummyGlobalFieldDefinition : Dummy, IGlobalFieldDefinition {
 
     #region INamedEntity Members
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
@@ -7359,7 +7357,7 @@ namespace Microsoft.Cci {
       get { return Dummy.Constant; }
     }
 
-    public IMarshallingInformation MarshallingInformation {
+    public new IMarshallingInformation MarshallingInformation {
       get {
         //^ assume false;
         IMarshallingInformation/*?*/ dummyValue = null;
@@ -7368,7 +7366,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    public ITypeReference Type {
+    public new ITypeReference Type {
       get { return Dummy.TypeReference; }
     }
 
@@ -7424,7 +7422,7 @@ namespace Microsoft.Cci {
 
     #region IMetadataConstantContainer
 
-    public IMetadataConstant Constant {
+    public new IMetadataConstant Constant {
       get { return Dummy.Constant; }
     }
 
@@ -7432,7 +7430,7 @@ namespace Microsoft.Cci {
 
   }
 
-  internal sealed class DummyOperation : IOperation {
+  internal sealed class DummyOperation : Dummy, IOperation {
     #region IOperation Members
 
     public OperationCode OperationCode {
@@ -7443,7 +7441,7 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
-    public ILocation Location {
+    public new ILocation Location {
       get { return Dummy.Location; }
     }
 
@@ -7454,31 +7452,31 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyDocument : IDocument {
+  internal sealed class DummyDocument : Dummy, IDocument {
     #region IDocument Members
 
-    public string Location {
+    public new string Location {
       get { return string.Empty; }
     }
 
-    public IName Name {
+    public new IName Name {
       get { return Dummy.Name; }
     }
 
     #endregion
   }
 
-  internal sealed class DummyLocation : ILocation {
+  internal sealed class DummyLocation : Dummy, ILocation {
     #region ILocation Members
 
-    public IDocument Document {
+    public new IDocument Document {
       get { return Dummy.Document; }
     }
 
     #endregion
   }
 
-  internal sealed class DummyOperationExceptionInformation : IOperationExceptionInformation {
+  internal sealed class DummyOperationExceptionInformation : Dummy, IOperationExceptionInformation {
     #region IOperationExceptionInformation Members
 
     public HandlerKind HandlerKind {
@@ -7512,7 +7510,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyInternFactory : IInternFactory {
+  internal sealed class DummyInternFactory : Dummy, IInternFactory {
     #region IInternFactory Members
 
     public uint GetAssemblyInternedKey(AssemblyIdentity assemblyIdentity) {
@@ -7578,7 +7576,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
-  internal sealed class DummyArrayType : IArrayType {
+  internal sealed class DummyArrayType : Dummy, IArrayType {
 
     #region ITypeDefinition Members
 
@@ -7681,7 +7679,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
     }
 
-    public IPlatformType PlatformType {
+    public new IPlatformType PlatformType {
       get { return Dummy.PlatformType; }
     }
 
@@ -7780,7 +7778,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public IAliasForType AliasForType {
+    public new IAliasForType AliasForType {
       get { return Dummy.AliasForType; }
     }
 
