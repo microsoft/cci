@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -743,9 +743,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override PrimitiveTypeCode TypeCode {
       get {
-        if (this.typeCode == PrimitiveTypeCode.Invalid){
+        if (this.typeCode == PrimitiveTypeCode.Invalid) {
           this.typeCode = PrimitiveTypeCode.NotPrimitive;
-          if (this.Module.ContainingAssembly.AssemblyIdentity.Equals(this.PEFileToObjectModel.ModuleReader.metadataReaderHost.CoreAssemblySymbolicIdentity)){
+          if (this.Module.ContainingAssembly.AssemblyIdentity.Equals(this.PEFileToObjectModel.ModuleReader.metadataReaderHost.CoreAssemblySymbolicIdentity)) {
             var td = this.ResolvedType;
             if (td != Dummy.Type)
               this.typeCode = td.TypeCode;
@@ -753,7 +753,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
               this.typeCode = this.UseNameToResolveTypeCode();
           }
         }
-        return this.typeCode; 
+        return this.typeCode;
       }
     }
     PrimitiveTypeCode typeCode = PrimitiveTypeCode.Invalid;
@@ -4038,7 +4038,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class VectorType : SimpleStructuralType, IArrayType { //TODO: make this a reference, not a def
+  internal sealed class VectorType : SimpleStructuralType, IArrayType {
     internal readonly IModuleTypeReference/*?*/ ElementType;
 
     internal VectorType(
@@ -4060,10 +4060,27 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override IEnumerable<ITypeReference> Interfaces {
       get {
-        yield return this.PEFileToObjectModel.typeCache.GetGenericTypeInstanceReference(0xFFFFFFFF, this.PEFileToObjectModel.SystemCollectionsGenericIList1, new IModuleTypeReference/*?*/[] { this.ElementType });
-        yield return this.PEFileToObjectModel.typeCache.GetGenericTypeInstanceReference(0xFFFFFFFF, this.PEFileToObjectModel.SystemCollectionsGenericIEnumerable1, new IModuleTypeReference/*?*/[] { this.ElementType });
-        yield return this.PEFileToObjectModel.typeCache.GetGenericTypeInstanceReference(0xFFFFFFFF, this.PEFileToObjectModel.SystemCollectionsGenericICollection1, new IModuleTypeReference/*?*/[] { this.ElementType });
+        if (this.interfaces == null)
+          this.interfaces = this.GetInterfaceList();
+        return this.interfaces;
       }
+    }
+    IEnumerable<ITypeReference> interfaces;
+
+    private IEnumerable<ITypeReference> GetInterfaceList() {
+      var internFactory = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory;
+      List<ITypeReference> interfaces = new List<ITypeReference>(9);
+      interfaces.Add(this.PlatformType.SystemICloneable);
+      interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
+      interfaces.Add(this.PlatformType.SystemCollectionsICollection);
+      interfaces.Add(this.PlatformType.SystemCollectionsIList);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
+      interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, internFactory));
+      interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, internFactory));
+      interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, internFactory));
+      return interfaces.AsReadOnly();
     }
 
     public override bool IsReferenceType {
@@ -4142,7 +4159,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class MatrixType : SimpleStructuralType, IArrayType { //TODO: make this a reference, not a def
+  internal sealed class MatrixType : SimpleStructuralType, IArrayType {
     internal readonly IModuleTypeReference/*?*/ ElementType;
     internal readonly uint Rank;
     internal readonly EnumerableArrayWrapper<ulong> Sizes;
@@ -4175,6 +4192,26 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override IEnumerable<ITypeReference> BaseClasses {
       get { return IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.PEFileToObjectModel.SystemArray); }
+    }
+
+    public override IEnumerable<ITypeReference> Interfaces {
+      get {
+        if (this.interfaces == null)
+          this.interfaces = this.GetInterfaceList();
+        return this.interfaces;
+      }
+    }
+    IEnumerable<ITypeReference> interfaces;
+
+    private IEnumerable<ITypeReference> GetInterfaceList() {
+      List<ITypeReference> interfaces = new List<ITypeReference>(6);
+      interfaces.Add(this.PlatformType.SystemICloneable);
+      interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
+      interfaces.Add(this.PlatformType.SystemCollectionsICollection);
+      interfaces.Add(this.PlatformType.SystemCollectionsIList);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      return interfaces.AsReadOnly();
     }
 
     public override IModuleTypeReference/*?*/ SpecializeTypeInstance(
@@ -4899,7 +4936,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsValueType {
-      get { return this.ResolvedModuleType != null && this.ResolvedModuleType.IsValueType; }
+      get { return this.ModuleGenericTypeReference.IsValueType; }
     }
 
     public uint InternedKey {
