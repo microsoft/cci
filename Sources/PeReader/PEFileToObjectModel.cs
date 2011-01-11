@@ -132,15 +132,6 @@ namespace Microsoft.Cci.MetadataReader {
     internal IModuleNominalType SystemParamArrayAttribute {
       get { return this.CoreTypes.SystemParamArrayAttribute; }
     }
-    internal IModuleNominalType SystemCollectionsGenericIList1 {
-      get { return this.CoreTypes.SystemCollectionsGenericIList1; }
-    }
-    internal IModuleNominalType SystemCollectionsGenericICollection1 {
-      get { return this.CoreTypes.SystemCollectionsGenericICollection1; }
-    }
-    internal IModuleNominalType SystemCollectionsGenericIEnumerable1 {
-      get { return this.CoreTypes.SystemCollectionsGenericIEnumerable1; }
-    }
 
     /*^
     #pragma warning disable 2666, 2669, 2677, 2674

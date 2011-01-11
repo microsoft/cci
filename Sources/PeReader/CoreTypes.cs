@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -45,9 +45,6 @@ namespace Microsoft.Cci.MetadataReader {
     internal readonly IModuleNominalType SystemType;
     internal readonly IModuleNominalType SystemArray;
     internal readonly IModuleNominalType SystemParamArrayAttribute;
-    internal readonly IModuleNominalType SystemCollectionsGenericIList1;
-    internal readonly IModuleNominalType SystemCollectionsGenericICollection1;
-    internal readonly IModuleNominalType SystemCollectionsGenericIEnumerable1;
 
     //  Caller should lock peFileToObjectModel
     internal CoreTypes(PEFileToObjectModel peFileToObjectModel) {
@@ -83,10 +80,6 @@ namespace Microsoft.Cci.MetadataReader {
       int typeName = nameTable.Type.UniqueKey;
       int arrayName = nameTable.Array.UniqueKey;
       int paramArrayAttributeName = peReader.ParamArrayAttribute.UniqueKey;
-      int systemCollectionsGenericName = peReader.System_Collections_Generic.UniqueKey;
-      int iList1Name = peReader.IList1.UniqueKey;
-      int iCollection1Name = peReader.ICollection1.UniqueKey;
-      int iEnumerable1Name = peReader.IEnumerable1.UniqueKey;
       if (assemblyIdentity != null && assemblyIdentity.Equals(peReader.metadataReaderHost.CoreAssemblySymbolicIdentity)) {
         peReader.RegisterCoreAssembly(module as Assembly);
         uint numberOfTypeDefs = peFileReader.TypeDefTable.NumberOfRows;
@@ -146,14 +139,6 @@ namespace Microsoft.Cci.MetadataReader {
                 this.SystemArray = peFileToObjectModel.GetPredefinedTypeDefinitionAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
               else if (typeDefName == paramArrayAttributeName)
                 this.SystemParamArrayAttribute = peFileToObjectModel.GetPredefinedTypeDefinitionAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
-            } else if (namespaceName == systemCollectionsGenericName) {
-              int typeDefName = peFileToObjectModel.GetNameFromOffset(typeDefRow.Name).UniqueKey;
-              if (typeDefName == iList1Name)
-                this.SystemCollectionsGenericIList1 = peFileToObjectModel.GetPredefinedTypeDefinitionAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
-              else if (typeDefName == iCollection1Name)
-                this.SystemCollectionsGenericICollection1 = peFileToObjectModel.GetPredefinedTypeDefinitionAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
-              else if (typeDefName == iEnumerable1Name)
-                this.SystemCollectionsGenericIEnumerable1 = peFileToObjectModel.GetPredefinedTypeDefinitionAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
             }
           }
         }
@@ -222,18 +207,9 @@ namespace Microsoft.Cci.MetadataReader {
               this.SystemArray = peFileToObjectModel.GetPredefinedTypeRefReferenceAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
             else if (typeDefName == paramArrayAttributeName)
               this.SystemParamArrayAttribute = peFileToObjectModel.GetPredefinedTypeRefReferenceAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
-          } else if (namespaceName == systemCollectionsGenericName) {
-            int typeDefName = peFileToObjectModel.GetNameFromOffset(typeRefRow.Name).UniqueKey;
-            if (typeDefName == iList1Name)
-              this.SystemCollectionsGenericIList1 = peFileToObjectModel.GetPredefinedTypeRefReferenceAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
-            else if (typeDefName == iCollection1Name)
-              this.SystemCollectionsGenericICollection1 = peFileToObjectModel.GetPredefinedTypeRefReferenceAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
-            else if (typeDefName == iEnumerable1Name)
-              this.SystemCollectionsGenericIEnumerable1 = peFileToObjectModel.GetPredefinedTypeRefReferenceAtRowWorker(i, ModuleSignatureTypeCode.NotModulePrimitive);
           }
         }
         NamespaceReference systemNSR = peFileToObjectModel.GetNamespaceReferenceForString(coreAssemblyRef, nameTable.System);
-        NamespaceReference systemCollectionsGenericNSR = peFileToObjectModel.GetNamespaceReferenceForString(coreAssemblyRef, peReader.System_Collections_Generic);
         if (this.SystemVoid == null)
           this.SystemVoid = peFileToObjectModel.typeCache.CreateCoreTypeReference(coreAssemblyRef, systemNSR, nameTable.Void, ModuleSignatureTypeCode.Void);
         if (this.SystemBoolean == null)
@@ -284,10 +260,6 @@ namespace Microsoft.Cci.MetadataReader {
           this.SystemArray = peFileToObjectModel.typeCache.CreateCoreTypeReference(coreAssemblyRef, systemNSR, nameTable.Array, ModuleSignatureTypeCode.NotModulePrimitive);
         if (this.SystemParamArrayAttribute == null)
           this.SystemParamArrayAttribute = peFileToObjectModel.typeCache.CreateCoreTypeReference(coreAssemblyRef, systemNSR, peReader.ParamArrayAttribute, ModuleSignatureTypeCode.NotModulePrimitive);
-        if (this.SystemCollectionsGenericIList1 == null)
-          this.SystemCollectionsGenericIList1 = peFileToObjectModel.typeCache.CreateCoreTypeReference(coreAssemblyRef, systemCollectionsGenericNSR, peReader.IList, 1, ModuleSignatureTypeCode.NotModulePrimitive);
-        if (this.SystemCollectionsGenericIEnumerable1 == null)
-          this.SystemCollectionsGenericIEnumerable1 = peFileToObjectModel.typeCache.CreateCoreTypeReference(coreAssemblyRef, systemCollectionsGenericNSR, peReader.IEnumerable, 1, ModuleSignatureTypeCode.NotModulePrimitive);
       }
     }
   }
