@@ -45,6 +45,16 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
+    /// Removes the association of the given object with the loop contract.
+    /// </summary>
+    /// <param name="loop">The object to remove the association with the loop contract. This can be any kind of object.</param>
+    public void UnassociateLoopWithContract(object loop) {
+      lock (this.methodContractFor) {
+        this.methodContractFor.Remove(loop);
+      }
+    }
+
+    /// <summary>
     /// Associates the given object with the given method contract.
     /// If the object is already associated with a method contract, that association will be lost as a result of this call.
     /// </summary>
@@ -53,6 +63,16 @@ namespace Microsoft.Cci.MutableContracts {
     public void AssociateMethodWithContract(object method, IMethodContract contract) {
       lock (this.methodContractFor) {
         this.methodContractFor[method] = contract;
+      }
+    }
+
+    /// <summary>
+    /// Removes the association of the given object with the method contract.
+    /// </summary>
+    /// <param name="method">The object to remove the association with the method contract. This can be any kind of object.</param>
+    public void UnassociateMethodWithContract(object method) {
+      lock (this.methodContractFor) {
+        this.methodContractFor.Remove(method);
       }
     }
 
@@ -69,6 +89,16 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
+    /// Removes the association of the given object with the list of triggers.
+    /// </summary>
+    /// <param name="quantifier">The object to remove the association with the list of triggers. This can be any kind of object.</param>
+    public void UnassociateTriggersWithQuantifier(object quantifier) {
+      lock (this.triggersFor) {
+        this.triggersFor.Remove(quantifier);
+      }
+    }
+
+    /// <summary>
     /// Associates the given object with the given type contract.
     /// If the object is already associated with a type contract, that association will be lost as a result of this call.
     /// </summary>
@@ -77,6 +107,16 @@ namespace Microsoft.Cci.MutableContracts {
     public void AssociateTypeWithContract(object type, ITypeContract contract) {
       lock (this.typeContractFor) {
         this.typeContractFor[type] = contract;
+      }
+    }
+
+    /// <summary>
+    /// Removes the association of the given object with the type contract.
+    /// </summary>
+    /// <param name="type">The object to remove the association with the type contract. This can be any kind of object.</param>
+    public void UnassociateTypeWithContract(object type) {
+      lock (this.typeContractFor) {
+        this.typeContractFor.Remove(type);
       }
     }
 
@@ -207,10 +247,9 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// A possibly empty list of loop variants.
     /// </summary>
-    public List<ILoopVariant> Variants
-    {
-        get { return this.variants; }
-        set { this.variants = value; }
+    public List<ILoopVariant> Variants {
+      get { return this.variants; }
+      set { this.variants = value; }
     }
     List<ILoopVariant> variants;
 
@@ -236,9 +275,8 @@ namespace Microsoft.Cci.MutableContracts {
       get { return this.Writes == null ? null : this.Writes.AsReadOnly(); }
     }
 
-    IEnumerable<ILoopVariant> ILoopContract.Variants
-    {
-        get { return this.Variants.AsReadOnly(); }
+    IEnumerable<ILoopVariant> ILoopContract.Variants {
+      get { return this.Variants.AsReadOnly(); }
     }
     #endregion
 
@@ -399,14 +437,13 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
-    public List<IMethodVariant> Variants
-    {
-        get { return this.variants; }
-        set { this.variants = value; }
+    public List<IMethodVariant> Variants {
+      get { return this.variants; }
+      set { this.variants = value; }
     }
     List<IMethodVariant> variants;
-      
-      /// <summary>
+
+    /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
     public List<IExpression> Writes {
