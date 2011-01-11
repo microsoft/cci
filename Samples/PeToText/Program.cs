@@ -22,7 +22,7 @@ namespace PeToText {
         return;
       }
       bool noIL = args.Length == 2;
-      using (var host = new HostEnvironment()) {
+      using (var host = new PeReader.DefaultHost()) {
         IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
         if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
           Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
@@ -44,20 +44,6 @@ namespace PeToText {
         }
       }
     }
-  }
-
-  internal class HostEnvironment : MetadataReaderHost {
-    PeReader peReader;
-    internal HostEnvironment() {
-      this.peReader = new PeReader(this);
-    }
-
-    public override IUnit LoadUnitFrom(string location) {
-      IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(location, this));
-      this.RegisterAsLatest(result);
-      return result;
-    }
-
   }
 
 }
