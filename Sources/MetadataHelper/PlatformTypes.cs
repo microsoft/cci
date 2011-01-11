@@ -136,8 +136,13 @@ namespace Microsoft.Cci {
     /// The referenced assembly, or Dummy.Assembly if the reference cannot be resolved.
     /// </summary>
     public IAssembly ResolvedAssembly {
-      get { return this.host.FindAssembly(this.UnifiedAssemblyIdentity); }
+      get {
+        if (this.resolvedAssembly == null)
+          this.resolvedAssembly = this.host.LoadAssembly(this.UnifiedAssemblyIdentity);
+        return this.resolvedAssembly;
+      }
     }
+    IAssembly/*?*/ resolvedAssembly;
 
     /// <summary>
     /// The referenced module, or Dummy.Module if the reference cannot be resolved.
@@ -365,8 +370,13 @@ namespace Microsoft.Cci {
     /// The referenced module, or Dummy.Module if the reference cannot be resolved.
     /// </summary>
     public IModule ResolvedModule {
-      get { return this.host.FindModule(this.ModuleIdentity); }
+      get { 
+        if (this.resolvedModule == null)
+          this.resolvedModule = this.host.LoadModule(this.ModuleIdentity);
+        return this.resolvedModule;
+      }
     }
+    IModule resolvedModule;
 
     /// <summary>
     /// The referenced unit, or Dummy.Unit if the reference cannot be resolved.
