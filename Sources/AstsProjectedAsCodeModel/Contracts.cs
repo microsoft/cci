@@ -763,7 +763,7 @@ namespace Microsoft.Cci.Ast {
     /// which may or may not be executed, depending on how the program has been compiled.
     /// </summary>
     public bool IsPure {
-      get { return IsPure; }
+      get { return this.isPure; }
     }
 
     readonly bool isPure;
