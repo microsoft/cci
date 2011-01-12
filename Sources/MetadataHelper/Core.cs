@@ -34,26 +34,9 @@ namespace Microsoft.Cci {
     /// This is a provided as a parameter to the host environment in order to allow more than one host
     /// environment to co-exist while agreeing on how to map strings to IName instances.
     /// </param>
-    /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
-    /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
-    /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
-    /// TypeHelper.TypeAlignment. If the host application does not care about the pointer size it can provide 0 as the value
-    /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
-    /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
-    /// </param>
-    protected MetadataHostEnvironment(INameTable nameTable, byte pointerSize) 
-      :this(nameTable, new InternFactory(), pointerSize)
-      //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
-    {
-    }
-      
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// </summary>
-    /// <param name="nameTable">
-    /// A collection of IName instances that represent names that are commonly used during compilation.
-    /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// <param name="factory">
+    /// The intern factory to use when generating keys. When comparing two or more assemblies using
+    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.
     /// </param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
@@ -62,15 +45,47 @@ namespace Microsoft.Cci {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    /// <param name="factory">The intern factory to use when generating keys. When comparing two or more assemblies using
-    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.</param>
-    protected MetadataHostEnvironment(INameTable nameTable, IInternFactory factory, byte pointerSize)
+    /// <param name="searchPaths">
+    /// A collection of strings that are interpreted as valid paths which are used to search for units.
+    /// </param>
+    /// <param name="searchInGAC">
+    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
+    /// </param>
+    protected MetadataHostEnvironment(INameTable nameTable, IInternFactory factory, byte pointerSize, IEnumerable<string> searchPaths, bool searchInGAC)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
       this.nameTable = nameTable;
       this.internFactory = factory;
       this.pointerSize = pointerSize;
+      this.libPaths = searchPaths == null ? new List<string>(0) : new List<string>(searchPaths);
+      this.SearchInGAC = searchInGAC;
     }
+
+    /// <summary>
+    /// Adds a new directory (path) to the list of search paths for which
+    /// to look in when searching for a unit to load.
+    /// </summary>
+    /// <param name="path"></param>
+    public virtual void AddLibPath(string path) {
+      this.LibPaths.Add(path);
+    }
+
+    /// <summary>
+    /// A potentially empty list of directory paths that will be searched when probing for an assembly reference.
+    /// </summary>
+    protected List<string> LibPaths {
+      get {
+        if (this.libPaths == null)
+          this.libPaths = new List<string>();
+        return this.libPaths;
+      }
+    }
+    List<string> libPaths;
+
+    /// <summary>
+    /// Sets or gets the boolean that determines if lookups of assemblies searches the GAC by default.
+    /// </summary>
+    public bool SearchInGAC { get; protected set; }
 
     /// <summary>
     /// The errors reported by this event are discovered in background threads by an opend ended
@@ -134,10 +149,11 @@ namespace Microsoft.Cci {
       string loc = GetLocalPath(coreAssemblyName);
       if (this.unitCache.Count > 0) {
         AssemblyIdentity/*?*/ result = null;
+        IUnit referringUnit = Dummy.Unit;
         foreach (IUnit unit in this.unitCache.Values) {
           AssemblyIdentity coreId = unit.CoreAssemblySymbolicIdentity;
           if (coreId.Name.Value.Length == 0) continue;
-          if (result == null || result.Version < coreId.Version) result = coreId;
+          if (result == null || result.Version < coreId.Version) { result = coreId; referringUnit = unit; }
         }
         if (result != null) {
           //The loaded assemblies have an opinion on the identity of the core assembly. By default, we are going to respect that opinion.
@@ -149,9 +165,9 @@ namespace Microsoft.Cci {
               var myCore = new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), loc);
               if (myCore.Equals(result)) return myCore; //myCore is the same as result, but also has a non null location.
             }
-            //TODO: if the core assembly being referenced is not the same as the one running the host, probe in the standard places to find its location.
-            //put this probing logic in a separate, overridable method and use it in LoadAssembly and LoadModule.
-            //Hook it up with the GAC.
+            //Now use host specific heuristics for finding the assembly.
+            this.coreAssemblySymbolicIdentity = result; //in case ProbeAssemblyReference wants to know the core identity
+            return this.ProbeAssemblyReference(referringUnit, result);
           }
           return result;
         }
@@ -391,6 +407,106 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Looks in the specified <paramref name="probeDir"/> to see if a file
+    /// exists, first with the extension "dll" and then with the extension "exe".
+    /// Returns null if not found, otherwise constructs a new AssemblyIdentity
+    /// </summary>
+    private AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
+      string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
+      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
+      path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
+      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
+      return null;
+    }
+
+    /// <summary>
+    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
+    /// of the referenced assembly.
+    /// Returns an assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced assembly.</param>
+    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
+    /// for the location of an assembly when you already know its location.</param>
+    /// <returns>
+    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
+    /// <remarks>
+    /// Looks for the referenced assembly first in the same directory as the referring unit, then
+    /// in any search paths provided to the constructor, then finally the GAC.
+    /// </remarks>
+    //^ [Pure]
+    public virtual AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      // probe for in the same directory as the referring unit
+      var referringDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
+      AssemblyIdentity result = this.Probe(referringDir, referencedAssembly);
+      if (result != null) return result;
+
+      // Probe in the libPaths directories
+      foreach (string libPath in this.LibPaths) {
+        result = this.Probe(libPath, referencedAssembly);
+        if (result != null) return result;
+      }
+
+      // Check GAC
+#if !COMPACTFX
+      if (this.SearchInGAC) {
+        string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
+        if (gacLocation != null) {
+          return new AssemblyIdentity(referencedAssembly, gacLocation);
+        }
+      }
+#endif
+
+      // Check platform location
+      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
+      var coreVersion = this.CoreAssemblySymbolicIdentity.Version;
+      if (coreVersion.Major == 1) {
+        if (coreVersion.Minor == 0)
+          platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v1.0.3705");
+        else if (coreVersion.Minor == 1)
+          platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v1.1.4322");
+      } else if (coreVersion.Major == 2) {
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v3.5");
+        result = this.Probe(platformDir, referencedAssembly);
+        if (result != null) return result;
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v3.0");
+        result = this.Probe(platformDir, referencedAssembly);
+        if (result != null) return result;
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v2.0.50727");
+      } else if (coreVersion.Major == 4) {
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v4.0.30319");
+      }
+
+      result = this.Probe(platformDir, referencedAssembly);
+      if (result != null) return result;
+
+      // Give up
+      return new AssemblyIdentity(referencedAssembly, "unknown://location");
+    }
+
+    /// <summary>
+    /// Given the identity of a referenced module (but not its location), apply host specific policies for finding the location
+    /// of the referenced module.
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the module. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced module.</param>
+    /// <param name="referencedModule">Module being referenced.</param>
+    /// <returns>
+    /// A module identity that matches the given referenced module identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
+    /// <remarks>
+    /// Default implementation of ProbeModuleReference. Override this method to change the behavior.
+    /// </remarks>
+    //^ [Pure]
+    public virtual ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
+      return new ModuleIdentity(referencedModule.Name, "unknown://location", referencedModule.ContainingAssembly);
+    }
+
+    /// <summary>
     /// Registers the given unit as the latest one associated with the unit's location.
     /// Such units can then be discovered by clients via GetUnit. 
     /// </summary>
@@ -449,48 +565,8 @@ namespace Microsoft.Cci {
     readonly Dictionary<UnitIdentity, IUnit> unitCache = new Dictionary<UnitIdentity, IUnit>();
 
     /// <summary>
-    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
-    /// of the referenced assembly.
-    /// </summary>
-    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
-    /// has a known location, which will typically be probed for the referenced assembly.</param>
-    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
-    /// for the location of an assembly when you already know its location.</param>
-    /// <returns>
-    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
-    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
-    /// </returns>
-    /// <remarks>
-    /// Default implementation of ProbeAssemblyReference. Override this method to change its behavior.
-    /// </remarks>
-    //^ [Pure]
-    public virtual AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
-      return new AssemblyIdentity(referencedAssembly, "unknown://location");
-    }
-
-    /// <summary>
-    /// Given the identity of a referenced module (but not its location), apply host specific policies for finding the location
-    /// of the referenced module.
-    /// </summary>
-    /// <param name="referringUnit">The unit that is referencing the module. It will have been loaded from somewhere and thus
-    /// has a known location, which will typically be probed for the referenced module.</param>
-    /// <param name="referencedModule">Module being referenced.</param>
-    /// <returns>
-    /// A module identity that matches the given referenced module identity, but which includes a location.
-    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
-    /// </returns>
-    /// <remarks>
-    /// Default implementation of ProbeModuleReference. Override this method to change the behavior.
-    /// </remarks>
-    //^ [Pure]
-    public virtual ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
-      return new ModuleIdentity(referencedModule.Name, "unknown://location", referencedModule.ContainingAssembly);
-    }
-
-    /// <summary>
     /// Default implementation of UnifyAssembly. Override this method to change the behaviour.
     /// </summary>
-    //^ [Pure]
     public virtual AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
       if (assemblyIdentity.Name.UniqueKeyIgnoringCase == this.CoreAssemblySymbolicIdentity.Name.UniqueKeyIgnoringCase &&
         assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
@@ -593,64 +669,14 @@ namespace Microsoft.Cci {
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// Remember to call the Dispose method when the resulting object is no longer needed.
     /// </summary>
-    protected MetadataReaderHost()
-      : this(new NameTable(), 0) {
-    }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// Remember to call the Dispose method when the resulting object is no longer needed.
-    /// </summary>
-    /// <param name="searchPaths">
-    /// A collection of strings that are interpreted as valid paths which are used to search for units.
-    /// </param>
-    protected MetadataReaderHost(IEnumerable<string> searchPaths)
-      : this() {
-      this.libPaths = new List<string>(searchPaths);
-    }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// Remember to call the Dispose method when the resulting object is no longer needed.
-    /// </summary>
-    /// <param name="searchPaths">
-    /// A collection of strings that are interpreted as valid paths which are used to search for units.
-    /// </param>
-    /// <param name="searchInGAC">
-    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
-    /// </param>
-    protected MetadataReaderHost(IEnumerable<string> searchPaths, bool searchInGAC)
-      : this() {
-      this.libPaths = new List<string>(searchPaths);
-      this.SearchInGAC = searchInGAC;
-    }
-
-    /// <summary>
-    /// Sets or gets the boolean that determines if lookups of assemblies searches the GAC by default.
-    /// </summary>
-    public bool SearchInGAC { get; protected set; }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// Remember to call the Dispose method when the resulting object is no longer needed.
-    /// </summary>
     /// <param name="nameTable">
     /// A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
     /// environment to co-exist while agreeing on how to map strings to IName instances.
     /// </param>
-    protected MetadataReaderHost(INameTable nameTable)
-      : this(nameTable, 0) {
-    }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// Remember to call the Dispose method when the resulting object is no longer needed.
-    /// </summary>
-    /// <param name="nameTable">
-    /// A collection of IName instances that represent names that are commonly used during compilation.
-    /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// <param name="factory">
+    /// The intern factory to use when generating keys. When comparing two or more assemblies using
+    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.
     /// </param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
@@ -659,32 +685,14 @@ namespace Microsoft.Cci {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    protected MetadataReaderHost(INameTable nameTable, byte pointerSize)
-      : base(nameTable, pointerSize)
-      //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
-    {
-    }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// Remember to call the Dispose method when the resulting object is no longer needed.
-    /// </summary>
-    /// <param name="nameTable">
-    /// A collection of IName instances that represent names that are commonly used during compilation.
-    /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// <param name="searchPaths">
+    /// A collection of strings that are interpreted as valid paths which are used to search for units.
     /// </param>
-    /// <param name="factory">The intern factory to use when generating keys. When comparing two or more assemblies using
-    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.</param>
-    /// /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
-    /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
-    /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
-    /// TypeHelper.TypeAlignment. If the host application does not care about the pointer size it can provide 0 as the value
-    /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
-    /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
+    /// <param name="searchInGAC">
+    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
     /// </param>
-    protected MetadataReaderHost(INameTable nameTable, IInternFactory factory, byte pointerSize)
-      : base(nameTable, factory, pointerSize)
+    protected MetadataReaderHost(INameTable nameTable, IInternFactory factory, byte pointerSize, IEnumerable<string> searchPaths, bool searchInGAC)
+      : base(nameTable, factory, pointerSize, searchPaths, searchInGAC)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
     }
@@ -716,90 +724,6 @@ namespace Microsoft.Cci {
     /// A list of all of the IDisposable object that have been allocated by this host.
     /// </summary>
     protected List<IDisposable> disposableObjectAllocatedByThisHost = new List<IDisposable>();
-
-    /// <summary>
-    /// Adds a new directory (path) to the list of search paths for which
-    /// to look in when searching for a unit to load.
-    /// </summary>
-    /// <param name="path"></param>
-    public virtual void AddLibPath(string path) {
-      this.LibPaths.Add(path);
-    }
-
-    /// <summary>
-    /// A potentially empty list of directory paths that will be searched when probing for an assembly reference.
-    /// </summary>
-    protected List<string> LibPaths {
-      get {
-        if (this.libPaths == null)
-          this.libPaths = new List<string>();
-        return this.libPaths;
-      }
-    }
-    List<string> libPaths;
-
-    /// <summary>
-    /// Looks in the specified <paramref name="probeDir"/> to see if a file
-    /// exists, first with the extension "dll" and then with the extension "exe".
-    /// Returns null if not found, otherwise constructs a new AssemblyIdentity
-    /// </summary>
-    private AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
-      string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
-      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
-      path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
-      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
-      return null;
-    }
-
-    /// <summary>
-    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
-    /// of the referenced assembly.
-    /// Returns an assembly identity that matches the given referenced assembly identity, but which includes a location.
-    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
-    /// </summary>
-    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
-    /// has a known location, which will typically be probed for the referenced assembly.</param>
-    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
-    /// for the location of an assembly when you already know its location.</param>
-    /// <returns>
-    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
-    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
-    /// </returns>
-    /// <remarks>
-    /// Looks for the referenced assembly first in the same directory as the referring unit, then
-    /// in any search paths provided to the constructor, then finally the GAC.
-    /// </remarks>
-    //^ [Pure]
-    public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
-      // probe for in the same directory as the referring unit
-      var referringDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
-      AssemblyIdentity result = this.Probe(referringDir, referencedAssembly);
-      if (result != null) return result;
-
-      // Probe in the libPaths directories
-      foreach (string libPath in this.LibPaths) {
-        result = this.Probe(libPath, referencedAssembly);
-        if (result != null) return result;
-      }
-
-      // Check GAC
-#if !COMPACTFX
-      if (this.SearchInGAC) {
-        string/*?*/ gacLocation = GlobalAssemblyCache.GetLocation(referencedAssembly, this);
-        if (gacLocation != null) {
-          return new AssemblyIdentity(referencedAssembly, gacLocation);
-        }
-      }
-#endif
-
-      // Check platform location
-      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
-      result = this.Probe(platformDir, referencedAssembly);
-      if (result != null) return result;
-
-      // Give up
-      return new AssemblyIdentity(referencedAssembly, "unknown://location");
-    }
 
     /// <summary>
     /// Open the binary document as a memory block in host dependent fashion.
@@ -964,7 +888,12 @@ namespace Microsoft.Cci {
     Dictionary<uint, byte> currentGoodGuesses;
   }
 
-  internal sealed class InternFactory : IInternFactory {
+  /// <summary>
+  /// A collection of methods that associate unique integers with metadata model entities.
+  /// The association is based on the identities of the entities and the factory does not retain
+  /// references to the given metadata model objects.
+  /// </summary>
+  public sealed class InternFactory : IInternFactory {
 
     sealed class AssemblyStore {
       internal readonly AssemblyIdentity AssemblyIdentity;
@@ -1128,6 +1057,9 @@ namespace Microsoft.Cci {
     readonly DoubleHashtable ModifiedTypeHashtable;
     readonly Hashtable<MultiHashtable<SignatureStore>> MethodReferenceHashtable;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public InternFactory() {
       this.CurrentAssemblyInternValue = 0x00001000;
       this.CurrentMethodReference = Dummy.MethodReference;

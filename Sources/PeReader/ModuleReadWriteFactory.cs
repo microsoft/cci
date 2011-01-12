@@ -495,7 +495,7 @@ namespace Microsoft.Cci {
       /// uses PeReader as its metadata reader.
       /// </summary>
       public DefaultHost()
-        : base(new NameTable()) {
+        : base(new NameTable(), new InternFactory(), 0, null, true) {
         this.peReader = new PeReader(this);
       }
 
@@ -509,7 +509,7 @@ namespace Microsoft.Cci {
       /// environment to co-exist while agreeing on how to map strings to IName instances.
       /// </param>
       public DefaultHost(INameTable nameTable)
-        : base(nameTable) {
+      : base(nameTable, new InternFactory(), 0, null, false) {
         this.peReader = new PeReader(this);
       }
 

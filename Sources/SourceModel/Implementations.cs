@@ -41,25 +41,15 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
     /// </summary>
-    protected SourceEditHostEnvironment() {
-    }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// </summary>
-    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
+    /// <param name="nameTable">
+    /// A collection of IName instances that represent names that are commonly used during compilation.
     /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
-    protected SourceEditHostEnvironment(INameTable nameTable)
-      : base(nameTable) {
-    }
-
-    /// <summary>
-    /// Allocates an object that provides an abstraction over the application hosting compilers based on this framework.
-    /// </summary>
-    /// <param name="nameTable">A collection of IName instances that represent names that are commonly used during compilation.
-    /// This is a provided as a parameter to the host environment in order to allow more than one host
-    /// environment to co-exist while agreeing on how to map strings to IName instances.</param>
+    /// environment to co-exist while agreeing on how to map strings to IName instances.
+    /// </param>
+    /// <param name="factory">
+    /// The intern factory to use when generating keys. When comparing two or more assemblies using
+    /// TypeHelper, MemberHelper, etc. it is necessary to make the hosts use the same intern factory.
+    /// </param>
     /// <param name="pointerSize">The size of a pointer on the runtime that is the target of the metadata units to be loaded
     /// into this metadta host. This parameter only matters if the host application wants to work out what the exact layout
     /// of a struct will be on the target runtime. The framework uses this value in methods such as TypeHelper.SizeOfType and
@@ -67,8 +57,14 @@ namespace Microsoft.Cci {
     /// of this parameter. In that case, the first reference to IMetadataHost.PointerSize will probe the list of loaded assemblies
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
-    protected SourceEditHostEnvironment(INameTable nameTable, byte pointerSize)
-      : base(nameTable, pointerSize)
+    /// <param name="searchPaths">
+    /// A collection of strings that are interpreted as valid paths which are used to search for units.
+    /// </param>
+    /// <param name="searchInGAC">
+    /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
+    /// </param>
+    protected SourceEditHostEnvironment(INameTable nameTable, IInternFactory factory, byte pointerSize, IEnumerable<string> searchPaths, bool searchInGAC)
+      : base(nameTable, factory, pointerSize, searchPaths, searchInGAC)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
     }
