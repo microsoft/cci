@@ -31,8 +31,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider)
-    {
+    public MethodBodyNormalizer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider) {
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
     }
@@ -192,8 +191,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal IteratorClosureGenerator(Dictionary<IBlockStatement, uint> iteratorLocalCount,
         IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider)
-    {
+      ISourceLocationProvider/*?*/ sourceLocationProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
       this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
@@ -209,7 +207,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     IMetadataHost host;
-    ISourceLocationProvider/*?*/ sourceLocationProvider; 
+    ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     Dictionary<IBlockStatement, uint> iteratorLocalCount;
     /// <summary>
@@ -240,7 +238,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
 
     bool isEnumerable; // true if return type of method is IEnumerable, false if return type of method is IEnumerator
-   
+
     /// <summary>
     /// Compile the method body, represented by <paramref name="block"/>. It creates the closure class and all its members
     /// and creates a new body for the iterator method. 
@@ -314,8 +312,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         Locations = block.Locations
       };
       CreateObjectInstance createObjectInstance = new CreateObjectInstance() {
-        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor), 
-        Locations = block.Locations, 
+        MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor),
+        Locations = block.Locations,
         Type = localDefinition.Type
       };
       // the start state depends on whether the iterator is an IEnumerable or an IEnumerator. For the former,
@@ -323,8 +321,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       // "start" state, i.e., state 0.
       var startState = this.isEnumerable ? -2 : 0;
       createObjectInstance.Arguments.Add(new CompileTimeConstant() { Value = startState, Type = this.host.PlatformType.SystemInt32 });
-      LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() { 
-        InitialValue = createObjectInstance, 
+      LocalDeclarationStatement localDeclarationStatement = new LocalDeclarationStatement() {
+        InitialValue = createObjectInstance,
         LocalVariable = localDefinition
       };
       result.Statements.Add(localDeclarationStatement);
@@ -349,31 +347,32 @@ namespace Microsoft.Cci.MutableCodeModel {
             Target = new TargetExpression() {
               Definition = GetFieldReference(iteratorClosure, boundField.Field),
               Type = this.method.ContainingType,
-              Instance = new BoundExpression() { 
-                Type = localDefinition.Type, 
-                Instance = null, 
-                Definition = localDefinition, 
-                IsVolatile = false 
+              Instance = new BoundExpression() {
+                Type = localDefinition.Type,
+                Instance = null,
+                Definition = localDefinition,
+                IsVolatile = false
               }
             },
           };
         } else {
           assignment = new Assignment {
-            Source = new BoundExpression() { 
-              Definition = capturedLocalOrParameter, 
-              Instance = null, 
-              IsVolatile = false, 
-              Type = localOrParameterType 
+            Source = new BoundExpression() {
+              Definition = capturedLocalOrParameter,
+              Instance = null,
+              IsVolatile = false,
+              Type = localOrParameterType
             },
             Type = localOrParameterType,
-            Target = new TargetExpression() { 
-              Definition = GetFieldReference(iteratorClosure, boundField.Field), 
-              Type = localOrParameterType, 
-              Instance = new BoundExpression() { 
-                Type = localDefinition.Type, 
-                Instance = null, 
-                Definition = localDefinition, 
-                IsVolatile = false } 
+            Target = new TargetExpression() {
+              Definition = GetFieldReference(iteratorClosure, boundField.Field),
+              Type = localOrParameterType,
+              Instance = new BoundExpression() {
+                Type = localDefinition.Type,
+                Instance = null,
+                Definition = localDefinition,
+                IsVolatile = false
+              }
             },
           };
         }
@@ -485,14 +484,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.privateHelperTypes.Add(iteratorClosureType);
       result.ClosureDefinition = iteratorClosureType;
       List<IGenericMethodParameter> genericMethodParameters = new List<IGenericMethodParameter>();
-      ushort count =0;
+      ushort count = 0;
       foreach (var genericMethodParameter in method.GenericParameters) {
         genericMethodParameters.Add(genericMethodParameter);
         GenericTypeParameter newTypeParam = new GenericTypeParameter() {
           Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
-//          Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value),
           Index = (count++),
-//          InternFactory = this.host.InternFactory,
         };
         this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
         newTypeParam.DefiningType = iteratorClosureType;
@@ -537,7 +534,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       /* Interfaces. */
       result.InitializeInterfaces(result.ElementType, this.isEnumerable);
-     
+
       /* Fields, Methods, and Properties. */
       CreateIteratorClosureFields(result);
       CreateIteratorClosureConstructor(result);
@@ -566,7 +563,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       };
       constructor.Parameters.Add(stateParameter);
       // Statements
-      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new BaseClassReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
+      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new ThisReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
       ExpressionStatement baseConstructorCallStatement = new ExpressionStatement() { Expression = baseConstructorCall };
       List<IStatement> statements = new List<IStatement>();
       ExpressionStatement thisDotStateEqState = new ExpressionStatement() {
@@ -698,8 +695,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Switch on cases. StateEntries, which have been computed previously, map a state number (for initial and continuing states) to a label that has been inserted 
       // right after the associated yield return. 
       BlockStatement result = new BlockStatement();
-      var returnFalse = new ReturnStatement() { Expression = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean} };
-      var returnFalseLabel = new LabeledStatement(){ Label = this.host.NameTable.GetNameFor("return false"), Statement = returnFalse};
+      var returnFalse = new ReturnStatement() { Expression = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean } };
+      var returnFalseLabel = new LabeledStatement() { Label = this.host.NameTable.GetNameFor("return false"), Statement = returnFalse };
       List<ISwitchCase> cases = new List<ISwitchCase>();
       foreach (int i in stateEntries.Keys) {
         SwitchCase c = new SwitchCase() {
@@ -711,7 +708,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       // Default case.
       SwitchCase defaultCase = new SwitchCase();
-      defaultCase.Body.Add(new GotoStatement(){ TargetStatement = returnFalseLabel });
+      defaultCase.Body.Add(new GotoStatement() { TargetStatement = returnFalseLabel });
       cases.Add(defaultCase);
       SwitchStatement switchStatement = new SwitchStatement() {
         Cases = cases,
@@ -737,18 +734,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       reset.Visibility = TypeMemberVisibility.Private;
       reset.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       reset.Type = this.host.PlatformType.SystemVoid;
-      reset.IsVirtual = true; 
-      reset.IsNewSlot = true; 
-      reset.IsHiddenBySignature = true; 
+      reset.IsVirtual = true;
+      reset.IsNewSlot = true;
+      reset.IsHiddenBySignature = true;
       reset.IsSealed = true;
       iteratorClosure.Reset = reset;
       // explicitly state that this reset method implements IEnumerator's reset method. 
       IMethodReference resetImplemented = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.NonGenericIEnumeratorInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("Reset"), false)) {
         IMethodReference mref = memref as IMethodReference;
-        if (mref != null) { 
-          resetImplemented = mref; 
-          break; 
+        if (mref != null) {
+          resetImplemented = mref;
+          break;
         }
       }
       MethodImplementation resetImp = new MethodImplementation() {
@@ -784,9 +781,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       disposeMethod.Visibility = TypeMemberVisibility.Public;
       disposeMethod.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
       disposeMethod.Type = this.host.PlatformType.SystemVoid;
-      disposeMethod.IsVirtual = true; 
-      disposeMethod.IsNewSlot = true; 
-      disposeMethod.IsHiddenBySignature = true; 
+      disposeMethod.IsVirtual = true;
+      disposeMethod.IsNewSlot = true;
+      disposeMethod.IsHiddenBySignature = true;
       disposeMethod.IsSealed = true;
       // Add disposeMethod to parent's member list. 
       iteratorClosure.DisposeMethod = disposeMethod;
@@ -794,9 +791,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       IMethodReference disposeImplemented = Dummy.MethodReference;
       foreach (var memref in iteratorClosure.DisposableInterface.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("Dispose"), false)) {
         IMethodReference mref = memref as IMethodReference;
-        if (mref != null) { 
-          disposeImplemented = mref; 
-          break; 
+        if (mref != null) {
+          disposeImplemented = mref;
+          break;
         }
       }
       MethodImplementation disposeImp = new MethodImplementation() {
@@ -957,7 +954,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       returnThis.Statements.Add(thisDotStateEq0);
       returnThis.Statements.Add(new ReturnStatement() { Expression = new ThisReference() });
       var returnNew = new BlockStatement();
-      var args = new List<IExpression>(); 
+      var args = new List<IExpression>();
       args.Add(new CompileTimeConstant() { Value = 0, Type = this.host.PlatformType.SystemInt32 });
       var closureInstanceLocalDecl = new LocalDeclarationStatement() {
         LocalVariable = new LocalDefinition() {
@@ -1054,11 +1051,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       BlockStatement block1 = new BlockStatement();
       block1.Statements.Add(new ReturnStatement() {
         Expression = new MethodCall() {
-           IsStaticCall = false,
-           MethodToCall = iteratorClosure.GenericGetEnumeratorReference,
-           ThisArgument = new ThisReference(),
-           Type = iteratorClosure.NonGenericIEnumeratorInterface
-         }
+          IsStaticCall = false,
+          MethodToCall = iteratorClosure.GenericGetEnumeratorReference,
+          ThisArgument = new ThisReference(),
+          Type = iteratorClosure.NonGenericIEnumeratorInterface
+        }
       });
       SourceMethodBody body1 = new SourceMethodBody(this.host, this.sourceLocationProvider);
       body1.IsNormalized = true;
@@ -1186,7 +1183,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Create fields for the closure class, which include fields for captured variables and fields for maintaining the state machine.
     /// </summary>
-    private void CreateIteratorClosureFields(IteratorClosureInformation iteratorClosure) 
+    private void CreateIteratorClosureFields(IteratorClosureInformation iteratorClosure)
       //^ requires (iteratorClosure.ElementType != null);
     {
       // Create fields of the closure class: parameters and this
@@ -1312,14 +1309,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
   }
 
-  internal class YieldReturnYieldBreakReplacer: MethodBodyCodeMutator {
-  /// <summary>
-  /// Used in the tranformation of an iterator method body into a MoveNext method body, this class replaces
-  /// yield returns and yield breaks with approppriate assignments to this dot current and return statements. 
-  /// In addition, it inserts a new label statement after each yield return, and associates a unique state 
-  /// number with the label. Such a mapping can be aquired from calling the GetStateEntries method. It is not
-  /// suggested to call the Visit methods directly. 
-  /// </summary>
+  internal class YieldReturnYieldBreakReplacer : MethodBodyCodeMutator {
+    /// <summary>
+    /// Used in the tranformation of an iterator method body into a MoveNext method body, this class replaces
+    /// yield returns and yield breaks with approppriate assignments to this dot current and return statements. 
+    /// In addition, it inserts a new label statement after each yield return, and associates a unique state 
+    /// number with the label. Such a mapping can be aquired from calling the GetStateEntries method. It is not
+    /// suggested to call the Visit methods directly. 
+    /// </summary>
     IteratorClosureInformation iteratorClosure;
     internal YieldReturnYieldBreakReplacer(IteratorClosureInformation iteratorClosure, IMetadataHost host) :
       base(host, true) {
@@ -1354,7 +1351,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       stateEntries.Add(0, initialLabel);
       this.stateNumber = 1;
       base.Visit(blockStatement);
-      this.stateNumber = 0; 
+      this.stateNumber = 0;
       Dictionary<int, ILabeledStatement> result = stateEntries;
       stateEntries = null;
       return result;

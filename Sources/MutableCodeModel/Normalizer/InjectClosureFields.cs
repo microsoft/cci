@@ -176,7 +176,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Need to possibly instantiate "closure" because outer closure fields
       // will be generic *if* (and only if) outermost closure class is generic.
       var k = this.GetSelfReferenceForPrivateHelperTypes(closure).InternedKey;
-      for (int i = this.outerClosures.Count - 1; 0 <= i; i--){
+      for (int i = this.outerClosures.Count - 1; 0 <= i; i--) {
         var closureField = this.outerClosures[i];
         boundExpression.Definition = this.GetSelfReference(closureField);
         if (closureField.Type.InternedKey == k) {
@@ -287,15 +287,15 @@ namespace Microsoft.Cci.MutableCodeModel {
         );
       block = bodyFixer.Visit(block);
 
-        // For all methods except for the one in the innermost closure class,
-        // inject a preamble that creates an instance of the next inner closure
-        // class and stores the instance in a local variable. The preamble also
-        // stores any parameters of the method that have been captured in that instance:
-        //   local := new NestedClosure();
-        //   local.p := p; // for each parameter p that is captured
-        // NOTE: Can't make this the override for Visit(IBlockStatement) because
-        // if the decompiler isn't perfect --- and who is? --- then there may be
-        // nested blocks, but this should be done only for the top-level block.
+      // For all methods except for the one in the innermost closure class,
+      // inject a preamble that creates an instance of the next inner closure
+      // class and stores the instance in a local variable. The preamble also
+      // stores any parameters of the method that have been captured in that instance:
+      //   local := new NestedClosure();
+      //   local.p := p; // for each parameter p that is captured
+      // NOTE: Can't make this the override for Visit(IBlockStatement) because
+      // if the decompiler isn't perfect --- and who is? --- then there may be
+      // nested blocks, but this should be done only for the top-level block.
       if (bodyFixer.nestedClosure != null) {
         var result2 = block as BlockStatement;
         if (result2 != null) { // result2 is just an alias for result
@@ -358,7 +358,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private MethodDefinition GetOrCreateDefaultConstructorFor(NestedTypeDefinition closureClass) {
       MethodDefinition md = null;
       if (this.constructorForClosureClass.TryGetValue(closureClass, out md)) return md;
-      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new BaseClassReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
+      MethodCall baseConstructorCall = new MethodCall() { ThisArgument = new ThisReference(), MethodToCall = this.ObjectCtor, Type = this.host.PlatformType.SystemVoid };
       ExpressionStatement baseConstructorCallStatement = new ExpressionStatement() { Expression = baseConstructorCall };
       List<IStatement> statements = new List<IStatement>();
       statements.Add(baseConstructorCallStatement);
@@ -415,7 +415,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = fieldRef, Type = currentClass };
       var thisRef = new ThisReference() {
         Type = this.GetSelfReferenceForPrivateHelperTypes(currentClass),
-//        Type = currentClass,
       };
       var assignment = new Assignment() { Target = target, Source = thisRef, Type = currentClass };
       this.method = tmp;

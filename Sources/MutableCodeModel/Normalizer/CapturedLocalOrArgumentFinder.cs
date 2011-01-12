@@ -104,7 +104,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CaptureDefinition(object definition) {
       IThisReference/*?*/ thisRef = definition as IThisReference;
       if (thisRef != null) {
-        definition = thisRef.Type.ResolvedType.InternedKey;        
+        definition = thisRef.Type.ResolvedType.InternedKey;
       }
       if (this.fieldForCapturedLocalOrParameter.ContainsKey(definition)) return;
 
@@ -308,10 +308,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       base.Visit(addressableExpression);
       if (this.currentAnonymousDelegate != null)
         this.CaptureDefinition(addressableExpression.Definition);
-    }
-
-    public override void Visit(IBaseClassReference baseClassReference) {
-      base.Visit(baseClassReference);
     }
 
     public override void Visit(IBoundExpression boundExpression) {

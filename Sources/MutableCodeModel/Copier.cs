@@ -31,9 +31,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Provides copy of a method body, a statement, or an expression, in which the references to the nodes
     /// inside a cone is replaced. The cone is defined using the parent class. 
     /// </summary>
-    public CodeCopier(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes) 
-      : base(host, rootOfCone, out newTypes)
-    {
+    public CodeCopier(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes)
+      : base(host, rootOfCone, out newTypes) {
       this.sourceLocationProvider = sourceLocationProvider;
       this.createMutableType = new CreateMutableType(this);
     }
@@ -274,16 +273,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Visits the specified base class reference.
-    /// </summary>
-    /// <param name="baseClassReference">The base class reference.</param>
-    /// <returns></returns>
-    protected virtual IExpression DeepCopy(BaseClassReference baseClassReference) {
-      baseClassReference.Type = this.Substitute(baseClassReference.Type);
-      return baseClassReference;
-    }
-
-    /// <summary>
     /// Visits the specified bitwise and.
     /// </summary>
     /// <param name="bitwiseAnd">The bitwise and.</param>
@@ -380,7 +369,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return castIfPossible;
     }
 
-  
+
     /// <summary>
     /// Visits the specified catch clause.
     /// </summary>
@@ -886,7 +875,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="outArgument">The out argument.</param>
     /// <returns></returns>
     protected virtual IExpression DeepCopy(OutArgument outArgument) {
-      outArgument.Expression = (ITargetExpression) Substitute(outArgument.Expression);
+      outArgument.Expression = (ITargetExpression)Substitute(outArgument.Expression);
       outArgument.Type = this.Substitute(outArgument.Type);
       return outArgument;
     }
@@ -1063,7 +1052,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     protected virtual ISwitchCase DeepCopy(SwitchCase switchCase) {
       if (!switchCase.IsDefault)
-        switchCase.Expression = (ICompileTimeConstant) Substitute(switchCase.Expression);
+        switchCase.Expression = (ICompileTimeConstant)Substitute(switchCase.Expression);
       switchCase.Body = this.Substitute(switchCase.Body);
       return switchCase;
     }
@@ -1290,7 +1279,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return yieldReturnStatement;
     }
 
-    #endregion 
+    #endregion
 
     /// <summary>
     /// The best way to dispatch a visit method in code copier is to implement an 
@@ -1401,15 +1390,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IAssumeStatement assumeStatement) {
         AssumeStatement mutableAssumeStatement = new AssumeStatement(assumeStatement);
         this.resultStatement = this.myCodeCopier.DeepCopy(mutableAssumeStatement);
-      }
-
-      /// <summary>
-      /// Visits the specified base class reference.
-      /// </summary>
-      /// <param name="baseClassReference">The base class reference.</param>
-      public override void Visit(IBaseClassReference baseClassReference) {
-        BaseClassReference mutableBaseClassReference = new BaseClassReference(baseClassReference);
-        this.resultExpression = this.myCodeCopier.DeepCopy(mutableBaseClassReference);
       }
 
       /// <summary>
@@ -2112,8 +2092,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// inside a cone is replaced. The cone is defined using the parent class. 
     /// </summary>
     public CodeAndContractCopier(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes)
-      : base(host, sourceLocationProvider, rootOfCone, out newTypes)
-    {
+      : base(host, sourceLocationProvider, rootOfCone, out newTypes) {
     }
 
     #region GetMutableCopy methods

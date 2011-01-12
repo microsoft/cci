@@ -486,34 +486,6 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
-  /// </summary>
-  public sealed class BaseClassReference : Expression, IBaseClassReference {
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public BaseClassReference() {
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="baseClassReference"></param>
-    public BaseClassReference(IBaseClassReference baseClassReference)
-      : base(baseClassReference) {
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(IBaseClassReference).
-    /// </summary>
-    public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-  }
-
-  /// <summary>
   /// A binary operation performed on a left and right operand.
   /// </summary>
   public abstract class BinaryOperation : Expression, IBinaryOperation {

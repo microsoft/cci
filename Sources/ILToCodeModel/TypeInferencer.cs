@@ -331,16 +331,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       ((Assignment)assignment).Type = assignment.Target.Type;
     }
 
-    public override void Visit(IBaseClassReference baseClassReference) {
-      base.Visit(baseClassReference);
-      ITypeReference type = this.containingType;
-      foreach (ITypeReference baseClass in type.ResolvedType.BaseClasses) {
-        type = baseClass;
-        break;
-      }
-      ((BaseClassReference)baseClassReference).Type = type;
-    }
-
     public override void Visit(IBitwiseAnd bitwiseAnd) {
       base.Visit(bitwiseAnd);
       ((BitwiseAnd)bitwiseAnd).Type = this.GetBinaryNumericOperationType(bitwiseAnd);

@@ -229,16 +229,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Visits the specified base class reference.
-    /// </summary>
-    /// <param name="baseClassReference">The base class reference.</param>
-    /// <returns></returns>
-    public virtual IExpression Visit(BaseClassReference baseClassReference) {
-      baseClassReference.Type = this.Visit(baseClassReference.Type);
-      return baseClassReference;
-    }
-
-    /// <summary>
     /// Visits the specified bitwise and.
     /// </summary>
     /// <param name="bitwiseAnd">The bitwise and.</param>
@@ -1440,16 +1430,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         AssumeStatement mutableAssumeStatement = assumeStatement as AssumeStatement;
         if (alwaysMakeACopy || mutableAssumeStatement == null) mutableAssumeStatement = new AssumeStatement(assumeStatement);
         this.resultStatement = this.myCodeMutator.Visit(mutableAssumeStatement);
-      }
-
-      /// <summary>
-      /// Visits the specified base class reference.
-      /// </summary>
-      /// <param name="baseClassReference">The base class reference.</param>
-      public override void Visit(IBaseClassReference baseClassReference) {
-        BaseClassReference mutableBaseClassReference = baseClassReference as BaseClassReference;
-        if (alwaysMakeACopy || mutableBaseClassReference == null) mutableBaseClassReference = new BaseClassReference(baseClassReference);
-        this.resultExpression = this.myCodeMutator.Visit(mutableBaseClassReference);
       }
 
       /// <summary>
@@ -3052,16 +3032,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Visits the specified base class reference.
-    /// </summary>
-    /// <param name="baseClassReference">The base class reference.</param>
-    /// <returns></returns>
-    public virtual IExpression Visit(BaseClassReference baseClassReference) {
-      baseClassReference.Type = this.Visit(baseClassReference.Type);
-      return baseClassReference;
-    }
-
-    /// <summary>
     /// Visits the specified bitwise and.
     /// </summary>
     /// <param name="bitwiseAnd">The bitwise and.</param>
@@ -4284,19 +4254,6 @@ namespace Microsoft.Cci.MutableCodeModel {
           return;
         }
         this.resultStatement = this.myCodeMutator.Visit(mutableAssumeStatement);
-      }
-
-      /// <summary>
-      /// Visits the specified base class reference.
-      /// </summary>
-      /// <param name="baseClassReference">The base class reference.</param>
-      public override void Visit(IBaseClassReference baseClassReference) {
-        BaseClassReference mutableBaseClassReference = baseClassReference as BaseClassReference;
-        if (mutableBaseClassReference == null) {
-          this.resultExpression = baseClassReference;
-          return;
-        }
-        this.resultExpression = this.myCodeMutator.Visit(mutableBaseClassReference);
       }
 
       /// <summary>

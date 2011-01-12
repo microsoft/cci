@@ -59,10 +59,6 @@ namespace Microsoft.Cci {
     /// </summary>
     void Visit(IAssumeStatement assumeStatement);
     /// <summary>
-    /// Performs some computation with the given base class reference expression.
-    /// </summary>
-    void Visit(IBaseClassReference baseClassReference);
-    /// <summary>
     /// Performs some computation with the given bitwise and expression.
     /// </summary>
     void Visit(IBitwiseAnd bitwiseAnd);
@@ -564,15 +560,6 @@ namespace Microsoft.Cci {
         this.Visit(assumeStatement.Description);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
-    }
-
-    /// <summary>
-    /// Performs some computation with the given base class reference expression.
-    /// </summary>
-    /// <param name="baseClassReference"></param>
-    public virtual void Visit(IBaseClassReference baseClassReference)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
     }
 
     /// <summary>
@@ -1316,7 +1303,7 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given method definition.
     /// </summary>
     /// <param name="method"></param>
-    public override void Visit(IMethodDefinition method) 
+    public override void Visit(IMethodDefinition method)
       //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
@@ -2078,13 +2065,6 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given base class reference expression.
-    /// </summary>
-    /// <param name="baseClassReference"></param>
-    public virtual void Visit(IBaseClassReference baseClassReference) {
-    }
-
-    /// <summary>
     /// Performs some computation with the given bitwise and expression.
     /// </summary>
     /// <param name="bitwiseAnd"></param>
@@ -2701,7 +2681,7 @@ namespace Microsoft.Cci.Contracts {
     /// Performs some computation with the given method contract.
     /// </summary>
     void Visit(IMethodVariant methodVariant);
-    
+
     /// <summary>
     /// Performs some computation with the given postCondition.
     /// </summary>
@@ -2846,7 +2826,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the given list of loop variants.
     /// </summary>
     public virtual void Visit(IEnumerable<ILoopVariant> loopVariants)
-    //^ ensures this.path.Count == old(this.path.Count);
+      //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -2856,19 +2836,19 @@ namespace Microsoft.Cci.Contracts {
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
-    
+
     /// <summary>
     /// Traverses the given loop variant.
     /// </summary>
     public virtual void Visit(ILoopVariant loopVariant)
-    //^ ensures this.path.Count == old(this.path.Count);
+      //^ ensures this.path.Count == old(this.path.Count);
     {
-        if (this.stopTraversal) return;
-        //^ int oldCount = this.path.Count;
-        this.path.Push(loopVariant);
-        this.Visit(loopVariant.Condition);
-        //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-        this.path.Pop();
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(loopVariant);
+      this.Visit(loopVariant.Condition);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
     }
 
     /// <summary>
@@ -2927,7 +2907,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the given list of post conditions.
     /// </summary>
     public virtual void Visit(IEnumerable<IMethodVariant> variants)
-    //^ ensures this.path.Count == old(this.path.Count);
+      //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -2942,7 +2922,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the given variant.
     /// </summary>
     public virtual void Visit(IMethodVariant variant)
-    //^ ensures this.path.Count == old(this.path.Count);
+      //^ ensures this.path.Count == old(this.path.Count);
     {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
@@ -3150,10 +3130,9 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Visits the given loop variant.
     /// </summary>
-    public virtual void Visit(ILoopVariant loopVariant)
-    {
+    public virtual void Visit(ILoopVariant loopVariant) {
     }
-    
+
     /// <summary>
     /// Visits the given method contract.
     /// </summary>
@@ -3163,10 +3142,9 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Visits the given variant.
     /// </summary>
-    public virtual void Visit(IMethodVariant variant)
-    {
+    public virtual void Visit(IMethodVariant variant) {
     }
-    
+
     /// <summary>
     /// Visits the given postCondition.
     /// </summary>

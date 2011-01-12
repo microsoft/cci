@@ -151,10 +151,6 @@ namespace CSharpSourceEmitter {
       this.Visit(assignment.Source);
     }
 
-    public override void Visit(IBaseClassReference baseClassReference) {
-      base.Visit(baseClassReference);
-    }
-
     public override void Visit(IBitwiseAnd bitwiseAnd) {
       this.sourceEmitterOutput.Write("(");
       this.Visit(bitwiseAnd.LeftOperand);

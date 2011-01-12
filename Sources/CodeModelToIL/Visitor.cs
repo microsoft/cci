@@ -666,15 +666,6 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified base class reference.
-    /// </summary>
-    /// <param name="baseClassReference">The base class reference.</param>
-    public override void Visit(IBaseClassReference baseClassReference) {
-      this.generator.Emit(OperationCode.Ldarg_0);
-      this.StackSize++;
-    }
-
-    /// <summary>
     /// Visits the specified bitwise and.
     /// </summary>
     /// <param name="bitwiseAnd">The bitwise and.</param>

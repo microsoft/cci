@@ -167,13 +167,6 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// An expression that represents a reference to the base class instance of the current object instance. 
-  /// Used to qualify calls to base class methods from inside overrides, and so on.
-  /// </summary>
-  public interface IBaseClassReference : IExpression {
-  }
-
-  /// <summary>
   /// A binary operation performed on a left and right operand.
   /// </summary>
   public interface IBinaryOperation : IExpression {

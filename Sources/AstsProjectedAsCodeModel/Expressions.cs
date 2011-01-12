@@ -2674,7 +2674,7 @@ namespace Microsoft.Cci.Ast {
   /// An expression that represents a reference to the base class instance of the current object instance. 
   /// Used to qualify calls to base class methods from inside overrides, and so on.
   /// </summary>
-  public class BaseClassReference : Expression, IBaseClassReference {
+  public class BaseClassReference : Expression, IThisReference {
 
     /// <summary>
     /// Allocates an expression that represents a reference to the base class instance of the current object instance. 
@@ -2698,7 +2698,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(IBaseClassReference) method.
+    /// Calls the visitor.Visit(IThisReference) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
       visitor.Visit(this);
