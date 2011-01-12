@@ -85,6 +85,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private static BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
       BasicBlock result = new BasicBlock(b.StartOffset);
+      if (b.LocalVariables != null)
+        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
       result.EndOffset = endOffset;
       int n = b.Statements.Count;
       for (int i = 0; i < n-1; i++) {
@@ -321,6 +323,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     private static BasicBlock ExtractAsBasicBlock(BasicBlock b, int i, int j) {
       List<IStatement> statements = b.Statements;
       BasicBlock result = new BasicBlock(0);
+      if (b.LocalVariables != null)
+        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
       while (i < j) {
         var s = statements[i++];
         MoveTempIfNecessary(b, result, s);
@@ -347,6 +351,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     private BasicBlock ExtractBasicBlockUpto(BasicBlock b, int i, ILabeledStatement label) {
       List<IStatement> statements = b.Statements;
       BasicBlock result = new BasicBlock(0);
+      if (b.LocalVariables != null)
+        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
       for (int j = i, n = statements.Count; j < n; j++) {
         IStatement s = statements[j];
         if (s == label) {

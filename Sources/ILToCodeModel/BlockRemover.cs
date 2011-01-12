@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -22,10 +22,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void Flatten(BasicBlock blockStatement, List<IStatement> flatListOfStatements) {
-      foreach (IStatement statement in blockStatement.Statements){
+      foreach (IStatement statement in blockStatement.Statements) {
         BasicBlock/*?*/ nestedBlock = statement as BasicBlock;
         if (nestedBlock != null) {
-          if (nestedBlock.LocalVariables == null || nestedBlock.LocalVariables.Count == 0)
+          if (nestedBlock.LocalVariables == null || nestedBlock.LocalVariables.Count == 0 || nestedBlock.Statements.Count == 0 || (nestedBlock.Statements.Count == 1 && nestedBlock.Statements[0] is BasicBlock))
             this.Flatten(nestedBlock, flatListOfStatements);
           else {
             this.Visit(nestedBlock);
