@@ -1099,7 +1099,7 @@ namespace Microsoft.Cci.MutableContracts {
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
     public SimpleHostEnvironment(INameTable nameTable)
-      : base(nameTable, 4) {
+      : base(nameTable, new InternFactory(), 0, null, false) {
       this.peReader = new PeReader(this);
     }
 
@@ -1200,8 +1200,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </param>
     /// <param name="loadPDBs">Whether PDB files should be loaded by the extractors attached to each unit.</param>
     public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths, bool searchInGAC, bool loadPDBs)
-      : base(searchPaths, searchInGAC) {
-      this.peReader = new PeReader(this);
+      : base(new NameTable(), new InternFactory(), 0, searchPaths, searchInGAC) {
       this.AllowExtractorsToUsePdbs = loadPDBs;
     }
 
@@ -1234,10 +1233,9 @@ namespace Microsoft.Cci.MutableContracts {
     /// </param>
     /// <param name="loadPDBs">Whether PDB files should be loaded by the extractors attached to each unit.</param>
     public CodeContractAwareHostEnvironment(INameTable nameTable, byte pointerSize, bool loadPDBs)
-      : base(nameTable, pointerSize)
+      : base(nameTable, new InternFactory(), pointerSize, null, false)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
-      this.peReader = new PeReader(this);
       this.AllowExtractorsToUsePdbs = loadPDBs;
     }
     #endregion Constructors

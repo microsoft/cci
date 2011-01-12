@@ -383,7 +383,8 @@ namespace HelloAST {
       /// framework in order to obtain environmental specific policy decisions, such as how to resolve a reference to an assembly
       /// and how to report an error. The host object is also a convenient place to store global state, such as the name table.
       /// </summary>
-      internal HelloHost() {
+      internal HelloHost()
+        : base(new NameTable(), new InternFactory(), 0, null, false) {
         this.peReader = new PeReader(this);
       }
 

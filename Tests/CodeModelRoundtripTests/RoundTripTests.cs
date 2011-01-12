@@ -522,7 +522,8 @@ internal class HostEnvironment : MetadataReaderHost {
 
   PeReader peReader;
 
-  internal HostEnvironment() {
+  internal HostEnvironment()
+    : base(new NameTable(), new InternFactory(), 0, null, false) {
     this.peReader = new PeReader(this);
   }
 
