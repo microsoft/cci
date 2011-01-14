@@ -2285,6 +2285,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="precondition">The precondition.</param>
     protected virtual IPrecondition DeepCopy(Precondition precondition) {
       precondition.Condition = this.Substitute(precondition.Condition);
+      if (precondition.Description != null)
+        precondition.Description = this.Substitute(precondition.Description);
       if (precondition.ExceptionToThrow != null)
         precondition.ExceptionToThrow = this.Substitute(precondition.ExceptionToThrow);
       return precondition;
