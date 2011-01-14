@@ -124,9 +124,13 @@ namespace Microsoft.Cci.Contracts {
       var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
       contract = cccc.Visit(contract);
       contract = ContractHelper.CopyContract(this.host, contract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
-      if (specializedProxyMethod != null | proxyMethod.IsGeneric) {
+      if (specializedProxyMethod != null || proxyMethod.IsGeneric || proxyMethod.ContainingTypeDefinition.IsGeneric) {
         SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedProxyMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
-        var sourceTypeReferences = stdm == null ? IteratorHelper.GetEmptyEnumerable<ITypeReference>() : stdm.ContainingGenericTypeInstance.GenericArguments;
+        var sourceTypeReferences = stdm == null ? 
+          (proxyMethod.ContainingTypeDefinition.IsGeneric ? 
+            IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(methodDefinition.ContainingTypeDefinition.GenericParameters)
+            : IteratorHelper.GetEmptyEnumerable<ITypeReference>())
+          : stdm.ContainingGenericTypeInstance.GenericArguments;
         contract = ContractHelper.SpecializeMethodContract(this.host, contract, unspec == null ? proxyMethod.ContainingTypeDefinition : unspec.ContainingTypeDefinition, unspec == null ? proxyMethod.ContainingTypeDefinition.GenericParameters : unspec.ContainingTypeDefinition.GenericParameters, sourceTypeReferences,
           unspec == null ? proxyMethod.GenericParameters : unspec.GenericParameters, methodDefinition.GenericParameters);
       }
@@ -221,6 +225,26 @@ namespace Microsoft.Cci.Contracts {
         return base.Visit(boundExpression);
       }
 
+      //public override IExpression Visit(ThisReference thisReference) {
+      //  var t = thisReference.Type;
+      //  var gt = t as IGenericTypeInstanceReference;
+      //  if (gt != null) t = gt.GenericType;
+      //  var k = t.InternedKey;
+      //  if (k == this.contractClassInternedKey) {
+      //    ITypeReference st = this.abstractType;
+      //    if (gt != null) {
+      //      st = new GenericTypeInstanceReference() {
+      //        GenericArguments = new List<ITypeReference>(gt.GenericArguments),
+      //        GenericType = st,
+      //        InternFactory = this.host.InternFactory,
+      //      };
+      //    }
+      //    thisReference.Type = st;
+      //    return thisReference;
+      //  }
+      //  return base.Visit(thisReference);
+      //}
+
       public override IExpression Visit(MethodCall methodCall) {
         var mtc = methodCall.MethodToCall;
         var smr = mtc as ISpecializedMethodReference;
@@ -231,10 +255,14 @@ namespace Microsoft.Cci.Contracts {
           if (this.correspondingAbstractMember.TryGetValue(possiblyUnspecializedMethodReference.InternedKey, out abstractMember)) {
           } else {
             abstractMember = this.FindCorrespondingMember(possiblyUnspecializedMethodReference);
-            if (smr != null) {
+            if (smr != null && abstractMember.ContainingType == this.abstractType) {
+              ITypeReference specializedType;
+
+              var b = TypeHelper.TryGetFullyInstantiatedSpecializedTypeReference(this.abstractType, out specializedType);
+
               abstractMember = new SpecializedMethodReference() {
                 CallingConvention = abstractMember.CallingConvention,
-                ContainingType = abstractMember.ContainingType,
+                ContainingType = specializedType,
                 InternFactory = this.host.InternFactory,
                 Name = abstractMember.Name,
                 Parameters = new List<IParameterTypeInformation>(abstractMember.Parameters), // REVIEW: Should these be copies that point to the smr?
@@ -406,6 +434,33 @@ namespace Microsoft.Cci.Contracts {
 
       MethodContractAndMethodBody result = this.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
       var methodContract = result.MethodContract;
+
+      // If the method was generated for an auto-property, then need to see if a
+      // contract can be derived by mining the invariant.
+      if (ContractHelper.IsAutoPropertyMember(this.host, methodDefinition)) {
+
+        var tc = GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
+        if (tc != null) {
+          var derivedPreconditions = new List<IPrecondition>();
+          foreach (var i in tc.Invariants) {
+            derivedPreconditions.Add(
+              new Precondition() {
+                Condition = i.Condition,
+                Description = i.Description,
+                OriginalSource = i.OriginalSource,
+                Locations = new List<ILocation>(i.Locations),
+              });
+          }
+          if (0 < derivedPreconditions.Count) {
+            var derivedMethodContract = new MethodContract(){
+               Preconditions = derivedPreconditions,
+            };
+            ContractHelper.AddMethodContract(derivedMethodContract, methodContract);
+            methodContract = derivedMethodContract;
+          }
+        }
+      }
+
       if (methodContract == null) {
         this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract); // so we don't try to extract more than once
       } else {

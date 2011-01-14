@@ -332,13 +332,24 @@ namespace Microsoft.Cci.MutableContracts {
 
       int blockIndexOfNextContractCall;
       int stmtIndexOfNextContractCall;
+
       var found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, 0, 0, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
-      if (!found || !(blockIndexOfNextContractCall <= lastBlockIndex && stmtIndexOfNextContractCall <= lastStatementIndex)) return blockStatement;
+      if (!found || !BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) return blockStatement;
 
       var isOverrideOrImplementation = IsOverridingOrImplementingMethod(this.sourceMethodBody.MethodDefinition);
 
+      var localDeclarationStatements = new List<IStatement>();
+      var firstStatementIndex = 0;
+      while (firstStatementIndex < blockStatement.Statements.Count) {
+        var s = blockStatement.Statements[firstStatementIndex];
+        ILocalDeclarationStatement lds = s as ILocalDeclarationStatement;
+        if (lds == null || lds.InitialValue != null) break;
+        firstStatementIndex++;
+        localDeclarationStatements.Add(s);
+      }
+
       var currentBlockIndex = 0;
-      var currentStatementIndex = 0;
+      var currentStatementIndex = firstStatementIndex;
 
       if (this.extractingFromACtorInAClass) {
         // Find the expression statement that is a call to a ctor with its
@@ -348,14 +359,26 @@ namespace Microsoft.Cci.MutableContracts {
           var mc = IsMethodCall(s);
           return mc != null && mc.MethodToCall.ResolvedMethod.IsConstructor && mc.ThisArgument is IThisReference;
         }, linearBlockIndex, 0, // start at first block
-          0, // start at first statement
+          firstStatementIndex, // start at first statement after any local declaration statements
           out blockIndex, out stmtIndex);
         // TODO: Signal error if not foundCtorCall?
         System.Diagnostics.Debug.Assert(foundCtorCall);
-        newStmts.AddRange(ExtractClump(linearBlockIndex, 0, 0, blockIndex, stmtIndex));
+        newStmts.AddRange(ExtractClump(linearBlockIndex, 0, firstStatementIndex, blockIndex, stmtIndex));
         currentStatementIndex = stmtIndex + 1;
         var lastIndexInBlock = linearBlockIndex[blockIndex].Statements.Count-1;
-        if (currentStatementIndex == lastIndexInBlock && (linearBlockIndex[blockIndex].Statements[lastIndexInBlock] is IBlockStatement)) {
+        if (currentStatementIndex <= lastIndexInBlock) {
+          // if there is a closure in the ctor that captures a field, then just after the base ctor call
+          // there will be a statement "local := this"
+          var possibleAssignmentOfThis = linearBlockIndex[blockIndex].Statements[currentStatementIndex] as ExpressionStatement;
+          if (possibleAssignmentOfThis != null) {
+            IAssignment assign = possibleAssignmentOfThis.Expression as IAssignment;
+            if (assign != null && assign.Source is IThisReference) {
+              newStmts.Add(possibleAssignmentOfThis);
+              currentStatementIndex++;
+            }
+          }
+        }
+        if (currentStatementIndex >= lastIndexInBlock && (linearBlockIndex[blockIndex].Statements[lastIndexInBlock] is IBlockStatement)) {
           currentBlockIndex++;
           currentStatementIndex = 0;
         } else {
@@ -374,15 +397,16 @@ namespace Microsoft.Cci.MutableContracts {
           //TODO: Allow only an assignment to a local of the form "J jThis = this"
           // (Need to hold onto the type J and make sure "this" is the RHS of the assignment.)
           ILocalDeclarationStatement lds = linearBlockIndex[currentBlockIndex].Statements[currentStatementIndex] as ILocalDeclarationStatement;
-          if (lds != null) {
+          if (lds != null && lds.InitialValue is IThisReference) {
             contractLocalAliasingThis = lds.LocalVariable;
             currentStatementIndex++;
           }
         }
       }
-
-      while (found && (blockIndexOfNextContractCall <= lastBlockIndex && stmtIndexOfNextContractCall <= lastStatementIndex)) {
+      
+      while (found && BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) {
         var currentClump = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, blockIndexOfNextContractCall, stmtIndexOfNextContractCall);
+        currentClump = LocalBinder.CloseClump(this.host, currentClump);
         // Add current clump to current contract
         ExtractContract(currentClump);
         // Move pair to point to next statement
@@ -404,9 +428,16 @@ namespace Microsoft.Cci.MutableContracts {
 
       var lastBlock = linearBlockIndex[linearBlockIndex.Count - 1];
       var currentClump2 = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, linearBlockIndex.Count - 1, lastBlock.Statements.Count - 1);
+      if (0 < localDeclarationStatements.Count) {
+        currentClump2.InsertRange(0, localDeclarationStatements);
+      }
       newStmts.AddRange(currentClump2);
       blockStatement.Statements = newStmts;
       return blockStatement;
+    }
+
+    private static bool BlockStatementIndicesLessThanOrEqual(int b1, int s1, int b2, int s2) {
+      return ((b1 < b2) || (b1 == b2 && s1 <= s2));
     }
 
     private void ExtractContract(List<IStatement> currentClump) {
@@ -1337,6 +1368,58 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
+    private class LocalBinder : MethodBodyCodeMutator {
+      Dictionary<ILocalDefinition, ILocalDefinition> tableForLocalDefinition = new Dictionary<ILocalDefinition, ILocalDefinition>();
+      List<IStatement> localDeclarations = new List<IStatement>();
+      private int counter = 0;
+      private LocalBinder(IMetadataHost host) : base(host, true) { }
+
+      public static List<IStatement> CloseClump(IMetadataHost host, List<IStatement> clump) {
+        var cc = new LocalBinder(host);
+        cc.Visit(clump);
+        cc.localDeclarations.AddRange(clump);
+        return cc.localDeclarations;
+      }
+
+      private ILocalDefinition PossiblyReplaceLocal(ILocalDefinition localDefinition) {
+        ILocalDefinition localToUse;
+        if (!this.tableForLocalDefinition.TryGetValue(localDefinition, out localToUse)) {
+          localToUse = new LocalDefinition() {
+            MethodDefinition = localDefinition.MethodDefinition,
+            Name = this.host.NameTable.GetNameFor("loc" + counter),
+            Type = localDefinition.Type,
+          };
+          this.counter++;
+          this.tableForLocalDefinition.Add(localDefinition, localToUse);
+          this.localDeclarations.Add(
+            new LocalDeclarationStatement() {
+              InitialValue = null,
+              LocalVariable = localToUse,
+            });
+        }
+        return localToUse == null ? localDefinition : localToUse;
+      }
+
+      public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
+        // then we don't need to replace this local, so put a dummy value in the table
+        // so we don't muck with it.
+        this.tableForLocalDefinition.Add(localDeclarationStatement.LocalVariable, null);
+        return localDeclarationStatement;
+      }
+
+      /// <summary>
+      /// Need to have this override because the base class doesn't visit down into local definitions
+      /// (and besides, this is where this visitor is doing its work anyway).
+      /// </summary>
+      public override ILocalDefinition Visit(ILocalDefinition localDefinition) {
+        return PossiblyReplaceLocal(localDefinition);
+      }
+
+      public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
+        return PossiblyReplaceLocal(localDefinition);
+      }
+
+    }
 
   }
 

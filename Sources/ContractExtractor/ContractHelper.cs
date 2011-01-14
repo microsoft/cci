@@ -169,7 +169,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
         contractStatements.AddRange(existingStatements); // replaces assert/assume
         var newSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider) {
-          Block = new BlockStatement() {
+          Block = new BlockStatement(){
             Statements = contractStatements,
           },
           IsNormalized = false,
@@ -266,7 +266,7 @@ namespace Microsoft.Cci.MutableContracts {
         };
         return methodCall;
       }
-
+      
     }
 
     /// <summary>
@@ -475,6 +475,18 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
+    /// C# uses CompilerGenerated, VB uses DebuggerNonUserCode
+    /// </summary>
+    public static bool IsAutoPropertyMember(IMetadataHost host, ITypeDefinitionMember member) {
+      if (AttributeHelper.Contains(member.Attributes, host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return true;
+      if (systemDiagnosticsDebuggerNonUserCodeAttribute == null) {
+        systemDiagnosticsDebuggerNonUserCodeAttribute = CreateTypeReference(host, new AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.DebuggerNonUserCodeAttribute");
+      }
+      return AttributeHelper.Contains(member.Attributes, systemDiagnosticsDebuggerNonUserCodeAttribute);
+    }
+    private static INamespaceTypeReference systemDiagnosticsDebuggerNonUserCodeAttribute = null;
+
+    /// <summary>
     /// Returns true iff the type definition is a contract class for an interface or abstract class.
     /// </summary>
     public static bool IsContractClass(IMetadataHost host, ITypeDefinition typeDefinition) {
@@ -615,6 +627,7 @@ namespace Microsoft.Cci.MutableContracts {
             }
 
             overriddenContract = CopyContract(host, overriddenContract, methodDefinition, overriddenMethod);
+            overriddenContract = FilterUserMessage(host, overriddenContract, methodDefinition.ContainingTypeDefinition);
 
             if (specializedoverriddenMethod != null || overriddenMethod.IsGeneric) {
               SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedoverriddenMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
@@ -644,6 +657,7 @@ namespace Microsoft.Cci.MutableContracts {
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
         ifaceContract = CopyAndStuff(host, ifaceContract, methodDefinition, ifaceMethod);
+        ifaceContract = FilterUserMessage(host, ifaceContract, methodDefinition.ContainingTypeDefinition);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, ifaceContract);
         atLeastOneContract = true;
       }
@@ -655,6 +669,7 @@ namespace Microsoft.Cci.MutableContracts {
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
         ifaceContract = CopyAndStuff(host, ifaceContract, methodDefinition, ifaceMethod);
+        ifaceContract = FilterUserMessage(host, ifaceContract, methodDefinition.ContainingTypeDefinition);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, ifaceContract);
         atLeastOneContract = true;
       }
@@ -662,6 +677,130 @@ namespace Microsoft.Cci.MutableContracts {
       return atLeastOneContract ? cumulativeContract : null;
     }
 
+    private static MethodContract FilterUserMessage(IContractAwareHost host, IMethodContract contract, ITypeDefinition typeDefinition) {
+      var mc = new MethodContract() {
+        Allocates = new List<IExpression>(contract.Allocates),
+        Frees = new List<IExpression>(contract.Frees),
+        IsPure = contract.IsPure,
+        Locations = new List<ILocation>(contract.Locations),
+        ModifiedVariables = new List<IAddressableExpression>(contract.ModifiedVariables),
+        MustInline = contract.MustInline,
+        Postconditions = FilterUserMessage(host, contract.Postconditions, typeDefinition),
+        Preconditions = FilterUserMessage(host, contract.Preconditions, typeDefinition),
+        Reads = new List<IExpression>(contract.Reads),
+        ThrownExceptions = FilterUserMessage(host, contract.ThrownExceptions, typeDefinition),
+        Variants = new List<IMethodVariant>(contract.Variants),
+        Writes = new List<IExpression>(contract.Writes),
+      };
+      return mc;
+    }
+
+    private static List<IPostcondition> FilterUserMessage(IContractAwareHost host, IEnumerable<IPostcondition> postconditions, ITypeDefinition typeDefinition) {
+      int n = (int)IteratorHelper.EnumerableCount(postconditions);
+      var filteredPostconditions = new IPostcondition[n];
+      var i = 0;
+      foreach (var p in postconditions) {
+        filteredPostconditions[i] = p;
+        if (!(p.Description is ICompileTimeConstant)) {
+          bool cantAccess = false;
+          IMethodCall mc = p.Description as IMethodCall;
+          if (mc != null && !TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod))
+            cantAccess = true;
+          if (mc == null){
+            IFieldReference fr = p.Description as IFieldReference;
+            if (fr != null && !TypeHelper.CanAccess(typeDefinition, fr.ResolvedField))
+              cantAccess = true;
+          }
+          // there shouldn't be anything else other than a method call or field reference, but if
+          // there is, just null it out anyway. (TODO: see if this causes a silent error)
+          cantAccess = true;
+          if (cantAccess) {
+            filteredPostconditions[i] = new PostCondition() {
+              Condition = p.Condition,
+              Description = null,
+              IsModel = p.IsModel,
+              Locations = new List<ILocation>(p.Locations),
+              OriginalSource = p.OriginalSource,
+            };
+          }
+        }
+        System.Diagnostics.Debug.Assert(filteredPostconditions[i] != null);
+        i++;
+      }
+      return new List<IPostcondition>(filteredPostconditions);
+    }
+    private static List<IPrecondition> FilterUserMessage(IContractAwareHost host, IEnumerable<IPrecondition> preconditions, ITypeDefinition typeDefinition) {
+      int n = (int)IteratorHelper.EnumerableCount(preconditions);
+      var filteredPreconditions = new IPrecondition[n];
+      var i = 0;
+      foreach (var p in preconditions) {
+        filteredPreconditions[i] = p;
+        if (!(p.Description is ICompileTimeConstant)) {
+          bool cantAccess = false;
+          IMethodCall mc = p.Description as IMethodCall;
+          if (mc != null && !TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod))
+            cantAccess = true;
+          if (mc == null) {
+            IFieldReference fr = p.Description as IFieldReference;
+            if (fr != null && !TypeHelper.CanAccess(typeDefinition, fr.ResolvedField))
+              cantAccess = true;
+          }
+          // there shouldn't be anything else other than a method call or field reference, but if
+          // there is, just null it out anyway. (TODO: see if this causes a silent error)
+          cantAccess = true;
+          if (cantAccess) {
+            filteredPreconditions[i] = new Precondition() {
+              Condition = p.Condition,
+              Description = null,
+              IsModel = p.IsModel,
+              Locations = new List<ILocation>(p.Locations),
+              OriginalSource = p.OriginalSource,
+            };
+          }
+        }
+        System.Diagnostics.Debug.Assert(filteredPreconditions[i] != null);
+        i++;
+      }
+      return new List<IPrecondition>(filteredPreconditions);
+    }
+    private static List<IThrownException> FilterUserMessage(IContractAwareHost host, IEnumerable<IThrownException> thrownExceptions, ITypeDefinition typeDefinition) {
+      int n = (int)IteratorHelper.EnumerableCount(thrownExceptions);
+      var filteredThrownExceptions = new IThrownException[n];
+      var i = 0;
+      foreach (var te in thrownExceptions) {
+        filteredThrownExceptions[i] = te;
+        if (!(te.Postcondition.Description is ICompileTimeConstant)) {
+          bool cantAccess = false;
+          IMethodCall mc = te.Postcondition.Description as IMethodCall;
+          if (mc != null && !TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod))
+            cantAccess = true;
+          if (mc == null){
+            IFieldReference fr = te.Postcondition.Description as IFieldReference;
+            if (fr != null && !TypeHelper.CanAccess(typeDefinition, fr.ResolvedField))
+              cantAccess = true;
+          }
+          // there shouldn't be anything else other than a method call or field reference, but if
+          // there is, just null it out anyway. (TODO: see if this causes a silent error)
+          cantAccess = true;
+          if (cantAccess) {
+            var p = te.Postcondition;
+            filteredThrownExceptions[i] = new ThrownException() {
+              ExceptionType = te.ExceptionType,
+              Postcondition = new PostCondition() {
+                Condition = p.Condition,
+                Description = null,
+                IsModel = p.IsModel,
+                Locations = new List<ILocation>(p.Locations),
+                OriginalSource = p.OriginalSource,
+              },
+            };
+          }
+        }
+        i++;
+      }
+      return new List<IThrownException>(filteredThrownExceptions);
+    }
+    
     public static IMethodContract CopyAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
       var specializedFromMethod = fromMethod as ISpecializedMethodDefinition;
       if (specializedFromMethod != null) {
@@ -715,14 +854,20 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       //IMethodContract fromMethodContract = CopyContract(host, methodContract, toMethod, fromMethod);
-      List<INamedTypeDefinition> list;
-      var copier = new CodeAndContractCopier(host, null/*pdbReader*/, fromMethod, out list);
-      var mutator = new CodeMutatingVisitor(host, null/*pdbReader*/);
-      var mc = new MethodContract(methodContract);
-      IMethodContract fromMethodContract = copier.Substitute(mc);
+      //List<INamedTypeDefinition> list;
+      //var copier = new CodeAndContractCopier(host, null/*pdbReader*/, fromMethod, out list);
+      //var mutator = new CodeMutatingVisitor(host, null/*pdbReader*/);
+      //var mc = new MethodContract(methodContract);
+      //IMethodContract fromMethodContract = copier.Substitute(mc);
 
-      BetaReducer br = new BetaReducer(host, fromMethod, expressions);
-      fromMethodContract = br.Visit(fromMethodContract);
+      //var copier = new CodeAndContractCopier(host, null);
+      //var mc = new MethodContract(methodContract);
+      //IMethodContract fromMethodContract = copier.Substitute(mc);
+
+      var mc = new MethodContract(methodContract);
+      IMethodContract fromMethodContract = mc;
+      BetaReducer br = new BetaReducer(host, null, fromMethod, toMethod, expressions);
+      fromMethodContract = br.Substitute(fromMethodContract);
 
       IGenericMethodInstance gmi = fromMethod as IGenericMethodInstance;
       if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
@@ -789,23 +934,42 @@ namespace Microsoft.Cci.MutableContracts {
       public override ITypeReference Visit(ITypeReference typeReference) {
         ITypeReference mappedTo;
         if (this.typeRefMap.TryGetValue(typeReference.InternedKey, out mappedTo))
-          return mappedTo;
+            return mappedTo;
         else
           return base.Visit(typeReference);
       }
-      public override IMethodReference Visit(IMethodReference methodReference) {
-        if (methodReference.ContainingType.InternedKey == this.targetType.InternedKey) {
-          return new SpecializedMethodReference() {
-            CallingConvention = CallingConvention.HasThis, // REVIEW: This is *not* correct, need to get the calling convention
-            ContainingType = this.specializedTypeReference,
-            InternFactory = this.host.InternFactory,
-            Name = methodReference.Name,
-            Parameters = new List<IParameterTypeInformation>(methodReference.Parameters),
-            Type = this.Visit(methodReference.Type),
-            UnspecializedVersion = methodReference,
-          };
-        }
-        return base.Visit(methodReference);
+
+      public override SpecializedFieldReference Visit(SpecializedFieldReference specializedFieldReference) {
+        return new SpecializedFieldReference() {
+          ContainingType = this.Visit(specializedFieldReference.ContainingType),
+          Name = specializedFieldReference.Name,
+          Type = this.Visit(specializedFieldReference.Type),
+          UnspecializedVersion = specializedFieldReference.UnspecializedVersion,
+        };
+      }
+
+      public override SpecializedNestedTypeReference Visit(SpecializedNestedTypeReference specializedNestedTypeReference) {
+        return new SpecializedNestedTypeReference() {
+          ContainingType = this.Visit(specializedNestedTypeReference.ContainingType),
+          GenericParameterCount = specializedNestedTypeReference.GenericParameterCount,
+          InternFactory = this.host.InternFactory,
+          MangleName = true,
+          Name = specializedNestedTypeReference.Name,
+          PlatformType = specializedNestedTypeReference.PlatformType,
+          UnspecializedVersion = specializedNestedTypeReference.UnspecializedVersion,
+        };
+            
+      }
+      public override SpecializedMethodReference Visit(SpecializedMethodReference specializedMethodReference) {
+        return new SpecializedMethodReference() {
+          CallingConvention = specializedMethodReference.CallingConvention,
+          ContainingType = this.Visit(specializedMethodReference.ContainingType),
+          InternFactory = this.host.InternFactory,
+          Name = specializedMethodReference.Name,
+          Parameters = this.Visit(new List<IParameterTypeInformation>(specializedMethodReference.Parameters)),
+          Type = this.Visit(specializedMethodReference.Type),
+          UnspecializedVersion = specializedMethodReference.UnspecializedVersion,
+        };
       }
       /// <summary>
       /// Must override this method because the CodeMutator just returns a mutable copy of the local
@@ -936,22 +1100,111 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// Returns a deep copy of <paramref name="methodContract"/> which belongs to <paramref name="fromMethod"/> so that
     /// it is a method contract for <paramref name="toMethod"/>.
+    /// In addition to being a deep copy, all parameters from <paramref name="fromMethod"/> are replaced with the corresponding
+    /// parameters from <paramref name="toMethod"/>.
+    /// Any local definitions which are introduced in local declaration statements are modified so that the defining method
+    /// each local points to is <paramref name="toMethod"/> instead of <paramref name="fromMethod"/>
     /// </summary>
     public static IMethodContract CopyContract(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
-      List<INamedTypeDefinition> list;
-      var copier = new CodeAndContractCopier(host, null/*pdbReader*/, fromMethod, out list);
-      var mutator = new CodeMutatingVisitor(host, null/*pdbReader*/);
-      var mc = new MethodContract(methodContract);
-      var mc2 = copier.Substitute(mc);
+      var copier = new ContractCopier(host, null, toMethod, fromMethod);
+      return copier.Substitute(methodContract);
+    }
+    /// <summary>
+    /// A subtype of the Copier that substitutes parameters from one method with the parameters
+    /// from another method as it is copying. It also re-parents any locals so that they point
+    /// to the method the contract is being copied "into".
+    /// </summary>
+    private class ContractCopier : CodeAndContractCopier {
+      private IMethodDefinition targetMethod;
+      private IMethodDefinition sourceMethod;
+      private ITypeReference targetType;
+      private ITypeReference sourceType;
+      private IThisReference ThisReference;
 
-      // The parameters from "toMethod" should be substituted for the parameters from "fromMethod"
-      // wherever they occur in the contract.
-      var sps = new SubstituteParameters(host, fromMethod, toMethod);
-      mc = sps.Visit(mc2) as MethodContract;
-      return mc;
+      public ContractCopier(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IMethodDefinition toMethod, IMethodDefinition fromMethod)
+        : base(host, sourceLocationProvider) {
+        var fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
+        var toParameters = new List<IParameterDefinition>(toMethod.Parameters);
+        for (ushort i = 0; i < fromMethod.ParameterCount; i++) {
+          this.cache.Add(fromParameters[i], toParameters[i]);
+          this.cache.Add(toParameters[i], toParameters[i]);
+        }
+        this.targetMethod = toMethod;
+        this.targetType = toMethod.ContainingType;
+        this.sourceMethod = fromMethod;
+        this.sourceType = fromMethod.ContainingType;
+        this.ThisReference = new ThisReference() {
+          Type = this.targetType,
+        };
+      }
+
+      protected override LocalDefinition DeepCopy(LocalDefinition localDefinition) {
+        var loc = base.DeepCopy(localDefinition);
+        if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
+          loc.MethodDefinition = this.sourceMethod;
+        return loc;
+      }
+      protected override IExpression DeepCopy(ThisReference thisReference) {
+        var t = thisReference.Type;
+        var gt = t as IGenericTypeInstanceReference;
+        if (gt != null) t = gt.GenericType;
+        var k = t.InternedKey;
+        if (k == this.sourceType.InternedKey) {
+          ITypeReference st = this.targetType;
+          return new ThisReference() {
+            Type = TypeDefinition.SelfInstance(st.ResolvedType, this.host.InternFactory),
+          };
+        }
+        return base.DeepCopy(thisReference);
+      }
+      protected override IExpression DeepCopy(MethodCall methodCall) {
+        var x = base.DeepCopy(methodCall);
+        if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+          var mc = x as MethodCall;
+          if (mc != null) {
+            mc.ThisArgument =
+              new ThisReference() {
+                Type = MutableModelHelper.GetManagedPointerTypeReference(mc.ThisArgument.Type, this.host.InternFactory, mc.ThisArgument.Type)
+              };
+            x = mc;
+          }
+        }
+        return x;
+      }
+
+    }
+
+  }
+  /// <summary>
+  /// A mutator that reparents locals defined in the target method so that they point to the source method.
+  /// </summary>
+  internal sealed class ReparentLocals : MethodBodyCodeAndContractMutator {
+    private IMethodDefinition targetMethod;
+    private IMethodDefinition sourceMethod;
+
+    /// <summary>
+    /// Creates a mutator that reparents locals defined in the target method so that they point to the source method.
+    /// </summary>
+    public ReparentLocals(IMetadataHost host, IMethodDefinition targetMethodDefinition, IMethodDefinition sourceMethodDefinition)
+      : base(host, true) {
+      this.targetMethod = targetMethodDefinition;
+      this.sourceMethod = sourceMethodDefinition;
+    }
+
+    public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
+      if (localDeclarationStatement.LocalVariable.MethodDefinition.InternedKey == this.targetMethod.InternedKey) {
+        localDeclarationStatement.LocalVariable = this.Visit(localDeclarationStatement.LocalVariable);
+        return localDeclarationStatement;
+      } else {
+        return localDeclarationStatement;
+      }
+    }
+    public override LocalDefinition Visit(LocalDefinition localDefinition) {
+      if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
+        localDefinition.MethodDefinition = this.sourceMethod;
+      return localDefinition;
     }
   }
-
   /// <summary>
   /// A mutator that substitutes parameters defined in the target method with those from the source method
   /// (including the "this" parameter).
@@ -1031,7 +1284,7 @@ namespace Microsoft.Cci.MutableContracts {
   /// <summary>
   /// A mutator that substitutes expressions for parameters in the expression/code/contract.
   /// </summary>
-  public sealed class BetaReducer : MethodBodyCodeAndContractMutator {
+  public sealed class BetaReducer2 : MethodBodyCodeAndContractMutator {
 
     uint methodDefinitionInternedKey;
     IExpression[] expressions;
@@ -1039,13 +1292,13 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// Creates a mutator that replaces all occurrences of parameters with expressions.
     /// </summary>
-    public BetaReducer(IMetadataHost host, IMethodDefinition methodDefinition, List<IExpression> expressions)
+    public BetaReducer2(IMetadataHost host, IMethodDefinition methodDefinition, List<IExpression> expressions)
       : base(host, true) {
       //^ Contract.Requires(expressions.Count == IteratorHelper.EnumerableCount(methodDefinition.Parameters));
       this.methodDefinitionInternedKey = methodDefinition.InternedKey;
       this.expressions = new IExpression[methodDefinition.ParameterCount];
       var i = 0;
-      foreach (var p in methodDefinition.Parameters) {
+      foreach (var p in methodDefinition.Parameters){
         this.expressions[i] = expressions[i];
         i++;
       }
@@ -1077,7 +1330,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="boundExpression">The bound expression.</param>
     public override IExpression Visit(BoundExpression boundExpression) {
       ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
-      if (par != null) {
+      if (par != null){
         var md = par.ContainingSignature as IMethodDefinition;
         if (md != null && md.InternedKey == this.methodDefinitionInternedKey) {
           return this.expressions[par.Index];
@@ -1095,6 +1348,80 @@ namespace Microsoft.Cci.MutableContracts {
     //}
 
   }
+
+  /// <summary>
+  /// A subtype of the Copier that substitutes parameters from one method with the parameters
+  /// from another method as it is copying. It also re-parents any locals so that they point
+  /// to the method the contract is being copied "into".
+  /// </summary>
+  public class BetaReducer : CodeAndContractCopier {
+    private IMethodDefinition targetMethod;
+    private IMethodDefinition sourceMethod;
+    private ITypeReference targetType;
+    private ITypeReference sourceType;
+    private IThisReference ThisReference;
+    private Dictionary<object, IExpression> values = new Dictionary<object, IExpression>();
+
+    public BetaReducer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IMethodDefinition fromMethod, IMethodDefinition toMethod, List<IExpression> expressions)
+      : base(host, sourceLocationProvider) {
+      var fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
+      for (ushort i = 0; i < fromMethod.ParameterCount; i++) {
+        this.values.Add(fromParameters[i], expressions[i]);
+      }
+      this.targetMethod = toMethod;
+      this.targetType = toMethod.ContainingType;
+      this.sourceMethod = fromMethod;
+      this.sourceType = fromMethod.ContainingType;
+      this.ThisReference = new ThisReference() {
+        Type = this.targetType,
+      };
+    }
+
+    protected override LocalDefinition DeepCopy(LocalDefinition localDefinition) {
+      var loc = base.DeepCopy(localDefinition);
+      if (localDefinition.MethodDefinition.InternedKey == this.sourceMethod.InternedKey)
+        loc.MethodDefinition = this.sourceMethod;
+      return loc;
+    }
+    protected override IExpression DeepCopy(ThisReference thisReference) {
+      var t = thisReference.Type;
+      var gt = t as IGenericTypeInstanceReference;
+      if (gt != null) t = gt.GenericType;
+      var k = t.InternedKey;
+      if (k == this.sourceType.InternedKey) {
+        ITypeReference st = this.targetType;
+        return new ThisReference() {
+          Type = TypeDefinition.SelfInstance(st.ResolvedType, this.host.InternFactory),
+        };
+      }
+      return base.DeepCopy(thisReference);
+    }
+    protected override IExpression DeepCopy(MethodCall methodCall) {
+      var x = base.DeepCopy(methodCall);
+      if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+        var mc = x as MethodCall;
+        if (mc != null) {
+          mc.ThisArgument =
+            new ThisReference() {
+              Type = MutableModelHelper.GetManagedPointerTypeReference(mc.ThisArgument.Type, this.host.InternFactory, mc.ThisArgument.Type)
+            };
+          x = mc;
+        }
+      }
+      return x;
+    }
+
+    protected override IExpression DeepCopy(BoundExpression boundExpression) {
+      IExpression v;
+      if (this.values.TryGetValue(boundExpression.Definition, out v)) {
+        return v;
+      }
+      return base.DeepCopy(boundExpression);
+    }
+
+
+  }
+
 
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
@@ -1201,6 +1528,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="loadPDBs">Whether PDB files should be loaded by the extractors attached to each unit.</param>
     public CodeContractAwareHostEnvironment(IEnumerable<string> searchPaths, bool searchInGAC, bool loadPDBs)
       : base(new NameTable(), new InternFactory(), 0, searchPaths, searchInGAC) {
+      this.peReader = new PeReader(this);
       this.AllowExtractorsToUsePdbs = loadPDBs;
     }
 
@@ -1236,6 +1564,7 @@ namespace Microsoft.Cci.MutableContracts {
       : base(nameTable, new InternFactory(), pointerSize, null, false)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
+      this.peReader = new PeReader(this);
       this.AllowExtractorsToUsePdbs = loadPDBs;
     }
     #endregion Constructors
