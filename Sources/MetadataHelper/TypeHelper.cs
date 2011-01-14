@@ -482,6 +482,77 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// True if the given type member may be accessed by (code in) the type definition.
+    /// For example, if the member is private and the type definition is the containing type of the member,
+    /// or is a nested type of the containing type of the member, the result is true.
+    /// If the member is internal and the type is defined in a different assembly, then the result is false.
+    /// </summary>
+    /// <param name="typeDefinition">The type definition from which one wants to access the <paramref name="member"/>.</param>
+    /// <param name="member">The type member to check.</param>
+    public static bool CanAccess(ITypeDefinition typeDefinition, ITypeDefinitionMember member) {
+      if (TypeHelper.TypesAreEquivalent(typeDefinition, member.ContainingTypeDefinition)) return true;
+      if (typeDefinition.IsGeneric && TypeHelper.TypesAreEquivalent(typeDefinition.InstanceType, member.ContainingType))
+        return true;
+      var geninst = member.ContainingTypeDefinition as IGenericTypeInstance;
+      if (geninst != null && TypeHelper.TypesAreEquivalent(typeDefinition, geninst.GenericType.ResolvedType)) return true;
+      if (!CanAccess(typeDefinition, member.ContainingTypeDefinition)) return false;
+      switch (member.Visibility) {
+        case TypeMemberVisibility.Assembly:
+          return TypeHelper.GetDefiningUnit(typeDefinition).UnitIdentity.Equals(TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition).UnitIdentity);
+        //TODO: friend assemblies
+        case TypeMemberVisibility.Family:
+          return TypeHelper.Type1DerivesFromOrIsTheSameAsType2(typeDefinition, member.ContainingTypeDefinition);
+        case TypeMemberVisibility.FamilyAndAssembly:
+          return TypeHelper.GetDefiningUnit(typeDefinition).UnitIdentity.Equals(TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition).UnitIdentity) &&
+            TypeHelper.Type1DerivesFromOrIsTheSameAsType2(typeDefinition, member.ContainingType);
+        //TODO: friend assemblies
+        case TypeMemberVisibility.FamilyOrAssembly:
+          return TypeHelper.GetDefiningUnit(typeDefinition).UnitIdentity.Equals(TypeHelper.GetDefiningUnit(member.ContainingTypeDefinition)) ||
+            TypeHelper.Type1DerivesFromOrIsTheSameAsType2(typeDefinition, member.ContainingType);
+        //TODO: friend assemblies
+        case TypeMemberVisibility.Public:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    /// <summary>
+    /// True if the given type <paramref name="typeDefinition"/> (i.e., code within that type) may access the type <paramref name="otherTypeDefinition"/>.
+    /// </summary>
+    /// <param name="typeDefinition">The type definition from which one wants to access the <paramref name="otherTypeDefinition"/>.</param>
+    /// <param name="otherTypeDefinition">The type to check.</param>
+    public static bool CanAccess(ITypeDefinition typeDefinition, ITypeDefinition otherTypeDefinition) {
+      if (TypeHelper.TypesAreEquivalent(typeDefinition, otherTypeDefinition)) return true;
+      if (typeDefinition.IsGeneric && TypeHelper.TypesAreEquivalent(typeDefinition.InstanceType, typeDefinition))
+        return true;
+      var nsTypeDef = otherTypeDefinition as INamespaceTypeDefinition;
+      if (nsTypeDef != null) {
+        if (nsTypeDef.IsPublic) return true;
+        return TypeHelper.GetDefiningUnit(nsTypeDef).Equals(TypeHelper.GetDefiningUnit(typeDefinition)); //TODO: worry about /addmodule
+      }
+      INestedTypeDefinition/*?*/ nestedTypeDef = otherTypeDefinition as INestedTypeDefinition;
+      if (nestedTypeDef != null) return CanAccess(typeDefinition, (ITypeDefinitionMember)nestedTypeDef);
+      IManagedPointerType/*?*/ managedPointerType = otherTypeDefinition as IManagedPointerType;
+      if (managedPointerType != null) return CanAccess(typeDefinition, managedPointerType.TargetType.ResolvedType);
+      IPointerType/*?*/ pointerType = otherTypeDefinition as IPointerType;
+      if (pointerType != null) return CanAccess(typeDefinition, pointerType.TargetType.ResolvedType);
+      IArrayType/*?*/ arrayType = otherTypeDefinition as IArrayType;
+      if (arrayType != null) return CanAccess(typeDefinition, arrayType.ElementType.ResolvedType);
+      IGenericTypeInstance/*?*/ genericTypeInstance = otherTypeDefinition as IGenericTypeInstance;
+      if (genericTypeInstance != null) {
+        if (!CanAccess(typeDefinition, genericTypeInstance.GenericType.ResolvedType)) return false;
+        foreach (var typeRef in genericTypeInstance.GenericArguments) {
+          if (!CanAccess(typeDefinition, typeRef.ResolvedType)) return false;
+        }
+        return true;
+      }
+      IGenericTypeParameter/*?*/ genericParameter = otherTypeDefinition as IGenericTypeParameter;
+      if (genericParameter != null) return TypeHelper.TypesAreEquivalent(genericParameter.DefiningType, typeDefinition);
+      return false;
+    }
+
+    /// <summary>
     /// Returns the most derived common base class that all types that satisfy the constraints of the given
     /// generic parameter must derive from.
     /// </summary>
