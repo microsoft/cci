@@ -552,10 +552,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
         var selfReference = boundField.Field.ContainingTypeDefinition as NestedTypeDefinition;
         if (selfReference == null) return boundExpression; // really "assert false" since no bound field belongs to a non-nested type
-        boundExpression.Instance = this.ClosureInstanceFor(selfReference);
-        boundExpression.Definition = this.GetSelfReference(boundField.Field);
-        boundExpression.Type = this.Visit(boundField.Type);
-        return boundExpression;
+        return new BoundExpression() {
+          Definition = this.GetSelfReference(boundField.Field),
+          Instance = this.ClosureInstanceFor(selfReference),
+          Type = this.Visit(boundField.Type),
+        };
       }
       return base.Visit(boundExpression);
     }
