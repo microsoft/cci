@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 //^ using Microsoft.Contracts;
 
 //  TODO: Sometime make the methods and properties of dummy objects Explicit impls so
@@ -25,7 +26,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.aliasForType == null)
-          Dummy.aliasForType = new DummyAliasForType();
+          Interlocked.CompareExchange(ref Dummy.aliasForType, new DummyAliasForType(), null);
         return Dummy.aliasForType;
       }
     }
@@ -35,7 +36,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.compilationHostEnvironment == null)
-          Dummy.compilationHostEnvironment = new DummyMetadataHost();
+          Interlocked.CompareExchange(ref Dummy.compilationHostEnvironment, new DummyMetadataHost(), null);
         return Dummy.compilationHostEnvironment;
       }
     }
@@ -45,7 +46,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.constant == null)
-          Dummy.constant = new DummyMetadataConstant();
+          Interlocked.CompareExchange(ref Dummy.constant, new DummyMetadataConstant(), null);
         return Dummy.constant;
       }
     }
@@ -55,7 +56,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.customModifier == null)
-          Dummy.customModifier = new DummyCustomModifier();
+          Interlocked.CompareExchange(ref Dummy.customModifier, new DummyCustomModifier(), null);
         return Dummy.customModifier;
       }
     }
@@ -75,7 +76,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.field == null)
-          Dummy.field = new DummyFieldDefinition();
+          Interlocked.CompareExchange(ref Dummy.field, new DummyFieldDefinition(), null);
         return Dummy.field;
       }
     }
@@ -85,7 +86,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.expression == null)
-          Dummy.expression = new DummyMetadataExpression();
+          Interlocked.CompareExchange(ref Dummy.expression, new DummyMetadataExpression(), null);
         return Dummy.expression;
       }
     }
@@ -95,7 +96,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.functionPointer == null)
-          Dummy.functionPointer = new DummyFunctionPointerType();
+          Interlocked.CompareExchange(ref Dummy.functionPointer, new DummyFunctionPointerType(), null);
         return Dummy.functionPointer;
       }
     }
@@ -105,7 +106,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.genericMethodParameter == null)
-          Dummy.genericMethodParameter = new DummyGenericMethodParameter();
+          Interlocked.CompareExchange(ref Dummy.genericMethodParameter, new DummyGenericMethodParameter(), null);
         return Dummy.genericMethodParameter;
       }
     }
@@ -117,7 +118,7 @@ namespace Microsoft.Cci {
         //^ ensures !result.IsGeneric;
       {
         if (Dummy.genericTypeInstance == null)
-          Dummy.genericTypeInstance = new DummyGenericTypeInstance();
+          Interlocked.CompareExchange(ref Dummy.genericTypeInstance, new DummyGenericTypeInstance(), null);
         DummyGenericTypeInstance result = Dummy.genericTypeInstance;
         //^ assume !result.IsGeneric; //the post condition says so
         return result;
@@ -128,7 +129,7 @@ namespace Microsoft.Cci {
     public static IGenericTypeParameter GenericTypeParameter {
       get {
         if (Dummy.genericTypeParameter == null)
-          Dummy.genericTypeParameter = new DummyGenericTypeParameter();
+          Interlocked.CompareExchange(ref Dummy.genericTypeParameter, new DummyGenericTypeParameter(), null);
         return Dummy.genericTypeParameter;
       }
     }
@@ -138,7 +139,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.method == null)
-          Dummy.method = new DummyMethodDefinition();
+          Interlocked.CompareExchange(ref Dummy.method, new DummyMethodDefinition(), null);
         return Dummy.method;
       }
     }
@@ -148,7 +149,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.methodBody == null)
-          Dummy.methodBody = new DummyMethodBody();
+          Interlocked.CompareExchange(ref Dummy.methodBody, new DummyMethodBody(), null);
         return Dummy.methodBody;
       }
     }
@@ -158,7 +159,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.name == null)
-          Dummy.name = new DummyName();
+          Interlocked.CompareExchange(ref Dummy.name, new DummyName(), null);
         return Dummy.name;
       }
     }
@@ -168,7 +169,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.namedArgument == null)
-          Dummy.namedArgument = new DummyNamedArgument();
+          Interlocked.CompareExchange(ref Dummy.namedArgument, new DummyNamedArgument(), null);
         return Dummy.namedArgument;
       }
     }
@@ -178,7 +179,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.nameTable == null)
-          Dummy.nameTable = new DummyNameTable();
+          Interlocked.CompareExchange(ref Dummy.nameTable, new DummyNameTable(), null);
         return Dummy.nameTable;
       }
     }
@@ -188,7 +189,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.nestedType == null)
-          Dummy.nestedType = new DummyNestedType();
+          Interlocked.CompareExchange(ref Dummy.nestedType, new DummyNestedType(), null);
         return Dummy.nestedType;
       }
     }
@@ -198,7 +199,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.platformType == null)
-          Dummy.platformType = new DummyPlatformType();
+          Interlocked.CompareExchange(ref Dummy.platformType, new DummyPlatformType(), null);
         return Dummy.platformType;
       }
     }
@@ -208,7 +209,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.property == null)
-          Dummy.property = new DummyPropertyDefinition();
+          Interlocked.CompareExchange(ref Dummy.property, new DummyPropertyDefinition(), null);
         return Dummy.property;
       }
     }
@@ -218,7 +219,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.type == null)
-          Dummy.type = new DummyType();
+          Interlocked.CompareExchange(ref Dummy.type, new DummyType(), null);
         return Dummy.type;
       }
     }
@@ -228,7 +229,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.typeReference == null)
-          Dummy.typeReference = new DummyTypeReference();
+          Interlocked.CompareExchange(ref Dummy.typeReference, new DummyTypeReference(), null);
         return Dummy.typeReference;
       }
     }
@@ -238,7 +239,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.unit == null)
-          Dummy.unit = new DummyUnit();
+          Interlocked.CompareExchange(ref Dummy.unit, new DummyUnit(), null);
         return Dummy.unit;
       }
     }
@@ -248,7 +249,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.rootUnitNamespace == null)
-          Dummy.rootUnitNamespace = new DummyRootUnitNamespace();
+          Interlocked.CompareExchange(ref Dummy.rootUnitNamespace, new DummyRootUnitNamespace(), null);
         return Dummy.rootUnitNamespace;
       }
     }
@@ -258,7 +259,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.nestedUnitNamespace == null)
-          Dummy.nestedUnitNamespace = new DummyNestedUnitNamespace();
+          Interlocked.CompareExchange(ref Dummy.nestedUnitNamespace, new DummyNestedUnitNamespace(), null);
         return Dummy.nestedUnitNamespace;
       }
     }
@@ -268,7 +269,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.unitSet == null)
-          Dummy.unitSet = new DummyUnitSet();
+          Interlocked.CompareExchange(ref Dummy.unitSet, new DummyUnitSet(), null);
         return Dummy.unitSet;
       }
     }
@@ -278,7 +279,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.rootUnitSetNamespace == null)
-          Dummy.rootUnitSetNamespace = new DummyRootUnitSetNamespace();
+          Interlocked.CompareExchange(ref Dummy.rootUnitSetNamespace, new DummyRootUnitSetNamespace(), null);
         return Dummy.rootUnitSetNamespace;
       }
     }
@@ -288,7 +289,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.module == null)
-          Dummy.module = new DummyModule();
+          Interlocked.CompareExchange(ref Dummy.module, new DummyModule(), null);
         return Dummy.module;
       }
     }
@@ -298,7 +299,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.assembly == null)
-          Dummy.assembly = new DummyAssembly();
+          Interlocked.CompareExchange(ref Dummy.assembly, new DummyAssembly(), null);
         return Dummy.assembly;
       }
     }
@@ -308,7 +309,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.methodReference == null)
-          Dummy.methodReference = new DummyMethodReference();
+          Interlocked.CompareExchange(ref Dummy.methodReference, new DummyMethodReference(), null);
         return Dummy.methodReference;
       }
     }
@@ -328,7 +329,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.customAttribute == null)
-          Dummy.customAttribute = new DummyCustomAttribute();
+          Interlocked.CompareExchange(ref Dummy.customAttribute, new DummyCustomAttribute(), null);
         return Dummy.customAttribute;
       }
     }
@@ -338,7 +339,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.fileReference == null)
-          Dummy.fileReference = new DummyFileReference();
+          Interlocked.CompareExchange(ref Dummy.fileReference, new DummyFileReference(), null);
         return Dummy.fileReference;
       }
     }
@@ -348,7 +349,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.resource == null)
-          Dummy.resource = new DummyResource();
+          Interlocked.CompareExchange(ref Dummy.resource, new DummyResource(), null);
         return Dummy.resource;
       }
     }
@@ -358,7 +359,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.moduleReference == null)
-          Dummy.moduleReference = new DummyModuleReference();
+          Interlocked.CompareExchange(ref Dummy.moduleReference, new DummyModuleReference(), null);
         return Dummy.moduleReference;
       }
     }
@@ -368,7 +369,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.assemblyReference == null)
-          Dummy.assemblyReference = new DummyAssemblyReference();
+          Interlocked.CompareExchange(ref Dummy.assemblyReference, new DummyAssemblyReference(), null);
         return Dummy.assemblyReference;
       }
     }
@@ -378,7 +379,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.marshallingInformation == null)
-          Dummy.marshallingInformation = new DummyMarshallingInformation();
+          Interlocked.CompareExchange(ref Dummy.marshallingInformation, new DummyMarshallingInformation(), null);
         return Dummy.marshallingInformation;
       }
     }
@@ -388,7 +389,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.securityAttribute == null)
-          Dummy.securityAttribute = new DummySecurityAttribute();
+          Interlocked.CompareExchange(ref Dummy.securityAttribute, new DummySecurityAttribute(), null);
         return Dummy.securityAttribute;
       }
     }
@@ -398,7 +399,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.parameterTypeInformation == null)
-          Dummy.parameterTypeInformation = new DummyParameterTypeInformation();
+          Interlocked.CompareExchange(ref Dummy.parameterTypeInformation, new DummyParameterTypeInformation(), null);
         return Dummy.parameterTypeInformation;
       }
     }
@@ -408,7 +409,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.namespaceTypeDefinition == null)
-          Dummy.namespaceTypeDefinition = new DummyNamespaceTypeDefinition();
+          Interlocked.CompareExchange(ref Dummy.namespaceTypeDefinition, new DummyNamespaceTypeDefinition(), null);
         return Dummy.namespaceTypeDefinition;
       }
     }
@@ -418,7 +419,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.namespaceTypeReference == null)
-          Dummy.namespaceTypeReference = new DummyNamespaceTypeReference();
+          Interlocked.CompareExchange(ref Dummy.namespaceTypeReference, new DummyNamespaceTypeReference(), null);
         return Dummy.namespaceTypeReference;
       }
     }
@@ -428,7 +429,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.specializedNestedTypeDefinition == null)
-          Dummy.specializedNestedTypeDefinition = new DummySpecializedNestedTypeDefinition();
+          Interlocked.CompareExchange(ref Dummy.specializedNestedTypeDefinition, new DummySpecializedNestedTypeDefinition(), null);
         return Dummy.specializedNestedTypeDefinition;
       }
     }
@@ -438,7 +439,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.specializedFieldDefinition == null)
-          Dummy.specializedFieldDefinition = new DummySpecializedFieldDefinition();
+          Interlocked.CompareExchange(ref Dummy.specializedFieldDefinition, new DummySpecializedFieldDefinition(), null);
         return Dummy.specializedFieldDefinition;
       }
     }
@@ -448,7 +449,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.specializedMethodDefinition == null)
-          Dummy.specializedMethodDefinition = new DummySpecializedMethodDefinition();
+          Interlocked.CompareExchange(ref Dummy.specializedMethodDefinition, new DummySpecializedMethodDefinition(), null);
         return Dummy.specializedMethodDefinition;
       }
     }
@@ -458,7 +459,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.specializedPropertyDefinition == null)
-          Dummy.specializedPropertyDefinition = new DummySpecializedPropertyDefinition();
+          Interlocked.CompareExchange(ref Dummy.specializedPropertyDefinition, new DummySpecializedPropertyDefinition(), null);
         return Dummy.specializedPropertyDefinition;
       }
     }
@@ -468,7 +469,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.localVariable == null)
-          Dummy.localVariable = new DummyLocalVariable();
+          Interlocked.CompareExchange(ref Dummy.localVariable, new DummyLocalVariable(), null);
         return Dummy.localVariable;
       }
     }
@@ -478,7 +479,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.fieldReference == null)
-          Dummy.fieldReference = new DummyFieldReference();
+          Interlocked.CompareExchange(ref Dummy.fieldReference, new DummyFieldReference(), null);
         return Dummy.fieldReference;
       }
     }
@@ -488,7 +489,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.parameterDefinition == null)
-          Dummy.parameterDefinition = new DummyParameterDefinition();
+          Interlocked.CompareExchange(ref Dummy.parameterDefinition, new DummyParameterDefinition(), null);
         return Dummy.parameterDefinition;
       }
     }
@@ -498,7 +499,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.sectionBlock == null)
-          Dummy.sectionBlock = new DummySectionBlock();
+          Interlocked.CompareExchange(ref Dummy.sectionBlock, new DummySectionBlock(), null);
         return Dummy.sectionBlock;
       }
     }
@@ -508,7 +509,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.platformInvokeInformation == null)
-          Dummy.platformInvokeInformation = new DummyPlatformInvokeInformation();
+          Interlocked.CompareExchange(ref Dummy.platformInvokeInformation, new DummyPlatformInvokeInformation(), null);
         return Dummy.platformInvokeInformation;
       }
     }
@@ -518,7 +519,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.globalMethodDefinition == null)
-          Dummy.globalMethodDefinition = new DummyGlobalMethodDefinition();
+          Interlocked.CompareExchange(ref Dummy.globalMethodDefinition, new DummyGlobalMethodDefinition(), null);
         return Dummy.globalMethodDefinition;
       }
     }
@@ -528,7 +529,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.globalFieldDefinition == null)
-          Dummy.globalFieldDefinition = new DummyGlobalFieldDefinition();
+          Interlocked.CompareExchange(ref Dummy.globalFieldDefinition, new DummyGlobalFieldDefinition(), null);
         return Dummy.globalFieldDefinition;
       }
     }
@@ -538,7 +539,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.operation == null)
-          Dummy.operation = new DummyOperation();
+          Interlocked.CompareExchange(ref Dummy.operation, new DummyOperation(), null);
         return Dummy.operation;
       }
     }
@@ -548,7 +549,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.location == null)
-          Dummy.location = new DummyLocation();
+          Interlocked.CompareExchange(ref Dummy.location, new DummyLocation(), null);
         return Dummy.location;
       }
     }
@@ -558,7 +559,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.document == null)
-          Dummy.document = new DummyDocument();
+          Interlocked.CompareExchange(ref Dummy.document, new DummyDocument(), null);
         return Dummy.document;
       }
     }
@@ -568,7 +569,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.operationExceptionInformation == null)
-          Dummy.operationExceptionInformation = new DummyOperationExceptionInformation();
+          Interlocked.CompareExchange(ref Dummy.operationExceptionInformation, new DummyOperationExceptionInformation(), null);
         return Dummy.operationExceptionInformation;
       }
     }
@@ -578,7 +579,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.internFactory == null)
-          Dummy.internFactory = new DummyInternFactory();
+          Interlocked.CompareExchange(ref Dummy.internFactory, new DummyInternFactory(), null);
         return Dummy.internFactory;
       }
     }
@@ -588,7 +589,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (Dummy.arrayType == null)
-          Dummy.arrayType = new DummyArrayType();
+          Interlocked.CompareExchange(ref Dummy.arrayType, new DummyArrayType(), null);
         return Dummy.arrayType;
       }
     }
