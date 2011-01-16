@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci {
@@ -23,7 +24,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.addressableExpression == null)
-          CodeDummy.addressableExpression = new DummyAddressableExpression();
+          Interlocked.CompareExchange(ref CodeDummy.addressableExpression, new DummyAddressableExpression(), null);
         return CodeDummy.addressableExpression;
       }
     }
@@ -33,7 +34,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.assignment == null)
-          CodeDummy.assignment = new DummyAssignment();
+          Interlocked.CompareExchange(ref CodeDummy.assignment, new DummyAssignment(), null);
         return CodeDummy.assignment;
       }
     }
@@ -43,7 +44,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.block == null)
-          CodeDummy.block = new DummyBlock();
+          Interlocked.CompareExchange(ref CodeDummy.block, new DummyBlock(), null);
         return CodeDummy.block;
       }
     }
@@ -53,7 +54,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.constant == null)
-          CodeDummy.constant = new DummyCompileTimeConstant();
+          Interlocked.CompareExchange(ref CodeDummy.constant, new DummyCompileTimeConstant(), null);
         return CodeDummy.constant;
       }
     }
@@ -63,7 +64,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.createArray == null)
-          CodeDummy.createArray = new DummyCreateArray();
+          Interlocked.CompareExchange(ref CodeDummy.createArray, new DummyCreateArray(), null);
         return CodeDummy.createArray;
       }
     }
@@ -73,7 +74,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.expression == null)
-          CodeDummy.expression = new DummyExpression();
+          Interlocked.CompareExchange(ref CodeDummy.expression, new DummyExpression(), null);
         return CodeDummy.expression;
       }
     }
@@ -83,7 +84,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.gotoStatement == null)
-          CodeDummy.gotoStatement = new DummyGotoStatement();
+          Interlocked.CompareExchange(ref CodeDummy.gotoStatement, new DummyGotoStatement(), null);
         return CodeDummy.gotoStatement;
       }
     }
@@ -93,7 +94,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.labeledStatement == null)
-          CodeDummy.labeledStatement = new DummyLabeledStatement();
+          Interlocked.CompareExchange(ref CodeDummy.labeledStatement, new DummyLabeledStatement(), null);
         return CodeDummy.labeledStatement;
       }
     }
@@ -103,7 +104,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.methodCall == null)
-          CodeDummy.methodCall = new DummyMethodCall();
+          Interlocked.CompareExchange(ref CodeDummy.methodCall, new DummyMethodCall(), null);
         return CodeDummy.methodCall;
       }
     }
@@ -113,7 +114,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.switchCase == null)
-          CodeDummy.switchCase = new DummySwitchCase();
+          Interlocked.CompareExchange(ref CodeDummy.switchCase, new DummySwitchCase(), null);
         return CodeDummy.switchCase;
       }
     }
@@ -123,7 +124,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.switchStatement == null)
-          CodeDummy.switchStatement = new DummySwitchStatement();
+          Interlocked.CompareExchange(ref CodeDummy.switchStatement, new DummySwitchStatement(), null);
         return CodeDummy.switchStatement;
       }
     }
@@ -133,7 +134,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (CodeDummy.targetExpression == null)
-          CodeDummy.targetExpression = new DummyTargetExpression();
+          Interlocked.CompareExchange(ref CodeDummy.targetExpression, new DummyTargetExpression(), null);
         return CodeDummy.targetExpression;
       }
     }
