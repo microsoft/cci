@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci {
@@ -23,7 +24,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (SourceDummy.compilation == null)
-          SourceDummy.compilation = new DummyCompilation();
+          Interlocked.CompareExchange(ref SourceDummy.compilation, new DummyCompilation(), null);
         return SourceDummy.compilation;
       }
     }
@@ -33,7 +34,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (SourceDummy.primarySourceDocument == null)
-          SourceDummy.primarySourceDocument = new DummyPrimarySourceDocument();
+          Interlocked.CompareExchange(ref SourceDummy.primarySourceDocument, new DummyPrimarySourceDocument(), null);
         return SourceDummy.primarySourceDocument;
       }
     }
@@ -43,7 +44,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (SourceDummy.primarySourceLocation == null)
-          SourceDummy.primarySourceLocation = new DummyPrimarySourceLocation();
+          Interlocked.CompareExchange(ref SourceDummy.primarySourceLocation, new DummyPrimarySourceLocation(), null);
         return SourceDummy.primarySourceLocation;
       }
     }
@@ -53,7 +54,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (SourceDummy.sourceDocument == null)
-          SourceDummy.sourceDocument = new DummySourceDocument();
+          Interlocked.CompareExchange(ref SourceDummy.sourceDocument, new DummySourceDocument(), null);
         return SourceDummy.sourceDocument;
       }
     }
@@ -63,7 +64,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (SourceDummy.sourceDocumentEdit == null)
-          SourceDummy.sourceDocumentEdit = new DummySourceDocumentEdit();
+          Interlocked.CompareExchange(ref SourceDummy.sourceDocumentEdit, new DummySourceDocumentEdit(), null);
         return SourceDummy.sourceDocumentEdit;
       }
     }
@@ -73,7 +74,7 @@ namespace Microsoft.Cci {
       [DebuggerNonUserCode]
       get {
         if (SourceDummy.sourceLocation == null)
-          SourceDummy.sourceLocation = new DummySourceLocation();
+          Interlocked.CompareExchange(ref SourceDummy.sourceLocation, new DummySourceLocation(), null);
         return SourceDummy.sourceLocation;
       }
     }
