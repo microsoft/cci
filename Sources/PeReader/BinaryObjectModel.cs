@@ -4208,6 +4208,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal class FieldReference : MemberReference, IModuleFieldReference {
     protected bool signatureLoaded;
     protected IModuleTypeReference/*?*/ typeReference;
+    internal bool isStatic;
     internal FieldReference(
       PEFileToObjectModel peFileToObjectModel,
       uint memberRefRowId,
@@ -4248,6 +4249,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
 
     #region IFieldReference Members
+
+    public bool IsStatic {
+      get { return this.isStatic; }
+    }
 
     public virtual IFieldDefinition ResolvedField {
       get {

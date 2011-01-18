@@ -803,10 +803,14 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           case OperationCode.Ldfld:
           case OperationCode.Ldflda:
           case OperationCode.Stfld:
+            value = this.GetField(memReader.ReadUInt32());
+            break;
           case OperationCode.Ldsfld:
           case OperationCode.Ldsflda:
           case OperationCode.Stsfld:
             value = this.GetField(memReader.ReadUInt32());
+            var fieldRef = value as FieldReference;
+            if (fieldRef != null) fieldRef.isStatic = true;
             break;
           case OperationCode.Stobj:
             value = this.GetType(memReader.ReadUInt32());

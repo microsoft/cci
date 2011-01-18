@@ -475,6 +475,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    /// <value></value>
+    public bool IsStatic {
+      get { return this.isStatic; }
+      set { this.isStatic = value; }
+    }
+    bool isStatic;
+
+    /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>

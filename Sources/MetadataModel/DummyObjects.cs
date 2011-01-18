@@ -1285,10 +1285,6 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public bool IsStatic {
-      get { return false; }
-    }
-
     public ISectionBlock FieldMapping {
       get { return Dummy.SectionBlock; }
     }
@@ -1376,6 +1372,10 @@ namespace Microsoft.Cci {
     #endregion
 
     #region IFieldReference Members
+
+    public bool IsStatic {
+      get { return false; }
+    }
 
     public IFieldDefinition ResolvedField {
       get { return this; }
@@ -6738,6 +6738,10 @@ namespace Microsoft.Cci {
 
   internal sealed class DummyFieldReference : Dummy, IFieldReference {
     #region IFieldReference Members
+
+    public bool IsStatic {
+      get { return false; }
+    }
 
     public new ITypeReference Type {
       get { return Dummy.TypeReference; }

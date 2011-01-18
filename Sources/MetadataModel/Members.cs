@@ -186,11 +186,6 @@ namespace Microsoft.Cci {
     bool IsSpecialName { get; }
 
     /// <summary>
-    /// This field is static (shared by all instances of its declaring type).
-    /// </summary>
-    bool IsStatic { get; }
-
-    /// <summary>
     /// Specifies how this field is marshalled when it is accessed from unmanaged code.
     /// </summary>
     IMarshallingInformation MarshallingInformation {
@@ -220,6 +215,11 @@ namespace Microsoft.Cci {
   /// A reference to a field.
   /// </summary>
   public interface IFieldReference : ITypeMemberReference { //TODO: add custom modifiers
+
+    /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    bool IsStatic { get; }
 
     /// <summary>
     /// The type of value that is stored in this field.
