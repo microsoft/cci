@@ -290,6 +290,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       GotoStatement/*?*/ gotoAfterElse = conditionalStatement.FalseBranch as GotoStatement;
       if (gotoAfterElse == null) return false;
       BasicBlock afterThen = this.ExtractBasicBlockUpto(b, i, gotoAfterElse.TargetStatement);
+      this.Visit(afterThen);
       conditionalStatement.FalseBranch = conditionalStatement.TrueBranch; //empty statement
       conditionalStatement.TrueBranch = afterThen;
       return true;
