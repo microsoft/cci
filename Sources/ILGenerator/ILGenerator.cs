@@ -449,8 +449,13 @@ namespace Microsoft.Cci {
         ILGeneratorLabel handlerEnd = new ILGeneratorLabel(false);
         this.MarkLabel(handlerEnd);
         for (int i = this.handlers.Count-1; i >= 0; i--) {
-          if (this.handlers[i].HandlerEnd == null) {
-            this.handlers[i].HandlerEnd = handlerEnd;
+          var handler = this.handlers[i];
+          if (handler.HandlerEnd == null) {
+            handler.HandlerEnd = handlerEnd;
+            if (i < this.handlers.Count-1) {
+              this.handlers.RemoveAt(i);
+              this.handlers.Add(handler);
+            }
             break;
           }
         }
@@ -862,7 +867,7 @@ namespace Microsoft.Cci {
       this.length = offset - this.offset;
     }
 
-    
+
     /// <summary>
     /// The local definitions (constants) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
     /// point that falls inside this scope.)
