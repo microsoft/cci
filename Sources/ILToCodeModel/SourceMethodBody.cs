@@ -31,6 +31,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal List<ILocalDefinition> localVariables;
     internal List<ITypeDefinition> privateHelperTypesToRemove;
     internal Dictionary<uint, IMethodDefinition> privateHelperMethodsToRemove;
+    internal Dictionary<IFieldDefinition, IFieldDefinition> privateHelperFieldsToRemove;
     ISourceLocation/*?*/ lastSourceLocation;
     ILocation/*?*/ lastLocation;
     bool sawReadonly;

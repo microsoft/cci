@@ -71,7 +71,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var result = replacer.Visit(module); //Makes a mutable copy of module and simultaneously replaces the method bodies with bodies that can decompile the IL
       var finder = new HelperTypeFinder();
       finder.Visit(result);
-      var remover = new RemoveUnnecessaryTypes(finder.helperTypes, finder.helperMethods);
+      var remover = new RemoveUnnecessaryTypes(finder.helperTypes, finder.helperMethods, finder.helperFields);
       remover.Visit(result);
       result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
       return result;
@@ -138,11 +138,18 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal Dictionary<uint, ITypeDefinition> helperTypes = new Dictionary<uint, ITypeDefinition>();
 
     /// <summary>
-    /// Contains an entry for every method that has been introduced by the compiler in order to implement "non closure" anonymous delegates.
+    /// Contains an entry for every method that has been introduced by the compiler in order to implement anonymous delegates.
     /// Since decompilation re-introduces the anonymous delegates and iterators, these members should be removed from member lists.
-    /// They stick around as PrivateHelperMembers of the methods containing the "non closure" anonymous delegates.
+    /// They stick around as PrivateHelperMembers of the methods containing the anonymous delegates.
     /// </summary>
     internal Dictionary<uint, IMethodDefinition> helperMethods = new Dictionary<uint, IMethodDefinition>();
+
+    /// <summary>
+    /// Contains an entry for every field that has been introduced by the compiler in order to implement anonymous delegates.
+    /// Since decompilation re-introduces the anonymous delegates and iterators, these members should be removed from member lists.
+    /// They stick around as PrivateHelperMembers of the methods containing the anonymous delegates.
+    /// </summary>
+    internal Dictionary<IFieldDefinition, IFieldDefinition> helperFields = new Dictionary<IFieldDefinition, IFieldDefinition>();
 
     /// <summary>
     /// Traverses only the namespace root of the given assembly, removing any type from the model that have the same
@@ -189,6 +196,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         foreach (var helperMethod in mutableBody.privateHelperMethodsToRemove.Values)
           this.helperMethods.Add(helperMethod.InternedKey, helperMethod);
       }
+      if (mutableBody.privateHelperFieldsToRemove != null) {
+        foreach (var helperField in mutableBody.privateHelperFieldsToRemove.Values)
+          this.helperFields.Add(helperField, helperField);
+      }
     }
 
   }
@@ -206,20 +217,30 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<uint, ITypeDefinition> helperTypes;
 
     /// <summary>
-    /// Contains an entry for every method that has been introduced by the compiler in order to implement "non closure" anonymous delegates.
+    /// Contains an entry for every method that has been introduced by the compiler in order to implement anonymous delegates.
     /// Since decompilation re-introduces the anonymous delegates and iterators, these members should be removed from member lists.
-    /// They stick around as PrivateHelperMembers of the methods containing the "non closure" anonymous delegates.
+    /// They stick around as PrivateHelperMembers of the methods containing the anonymous delegates.
     /// </summary>
     Dictionary<uint, IMethodDefinition> helperMethods;
+
+    /// <summary>
+    /// Contains an entry for every field that has been introduced by the compiler in order to implement anonymous delegates.
+    /// Since decompilation re-introduces the anonymous delegates and iterators, these members should be removed from member lists.
+    /// They stick around as PrivateHelperMembers of the methods containing the anonymous delegates.
+    /// </summary>
+    Dictionary<IFieldDefinition, IFieldDefinition> helperFields;
 
     /// <summary>
     /// Allocatates a traverser for a mutable code model that removes a specified set of types from the model.
     /// </summary>
     /// <param name="helperTypes">A dictionary whose keys are the interned keys of the types to remove from member lists.</param>
     /// <param name="helperMethods">A dictionary whose keys are the interned keys of the methods to remove from member lists.</param>
-    internal RemoveUnnecessaryTypes(Dictionary<uint, ITypeDefinition> helperTypes, Dictionary<uint, IMethodDefinition> helperMethods) {
+    /// <param name="helperFields">A dictionary whose keys are the interned keys of the methods to remove from member lists.</param>
+    internal RemoveUnnecessaryTypes(Dictionary<uint, ITypeDefinition> helperTypes, Dictionary<uint, IMethodDefinition> helperMethods,
+      Dictionary<IFieldDefinition, IFieldDefinition> helperFields) {
       this.helperTypes = helperTypes;
       this.helperMethods = helperMethods;
+      this.helperFields = helperFields;
     }
 
     /// <summary>
@@ -248,6 +269,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         var helperMethod = mutableTypeDefinition.Methods[i];
         if (this.helperMethods.ContainsKey(helperMethod.InternedKey)) {
           mutableTypeDefinition.Methods.RemoveAt(i);
+          i--;
+        }
+      }
+      for (int i = 0; i < mutableTypeDefinition.Fields.Count; i++) {
+        var helperField = mutableTypeDefinition.Fields[i];
+        if (this.helperFields.ContainsKey(helperField)) {
+          mutableTypeDefinition.Fields.RemoveAt(i);
           i--;
         }
       }

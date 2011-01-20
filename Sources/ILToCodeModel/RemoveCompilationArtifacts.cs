@@ -151,7 +151,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (thisReference == null) {
             IBoundExpression/*?*/ binding = assignment.Source as IBoundExpression;
             if (binding != null && (binding.Definition is IParameterDefinition || binding.Definition is ILocalDefinition)) {
-              this.remover.capturedLocalOrParameter.Add(closureField.Name.Value, binding.Definition);
+              this.remover.capturedLocalOrParameter[closureField.Name.Value] = binding.Definition;
             } else {
               // Corner case: csc generated closure class captures a local that does not appear in the original method.
               // Assume this local is always holding a constant;
@@ -165,11 +165,14 @@ namespace Microsoft.Cci.ILToCodeModel {
                   LocalVariable = localDefinition, InitialValue = ctc
                 };
                 statements.Insert(j, localDeclStatement); j++;
-                this.remover.capturedLocalOrParameter.Add(closureField.Name.Value, localDefinition);
+                this.remover.capturedLocalOrParameter[closureField.Name.Value] = localDefinition;
+                if (this.remover.sourceMethodBody.privateHelperFieldsToRemove == null)
+                  this.remover.sourceMethodBody.privateHelperFieldsToRemove = new Dictionary<IFieldDefinition, IFieldDefinition>();
+                this.remover.sourceMethodBody.privateHelperFieldsToRemove[closureField.ResolvedField] = closureField.ResolvedField;
               } else continue;
             }
           } else {
-            this.remover.capturedLocalOrParameter.Add(closureField.Name.Value, thisReference);
+            this.remover.capturedLocalOrParameter[closureField.Name.Value] = thisReference;
           }
           statements.RemoveAt(j--);
         }
@@ -181,6 +184,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           };
           var newLocalDecl = new LocalDeclarationStatement() { LocalVariable = newLocal };
           statements.Insert(i-1, newLocalDecl);
+          if (this.remover.sourceMethodBody.privateHelperFieldsToRemove == null)
+            this.remover.sourceMethodBody.privateHelperFieldsToRemove = new Dictionary<IFieldDefinition, IFieldDefinition>();
+          this.remover.sourceMethodBody.privateHelperFieldsToRemove[field] = field;
           this.remover.capturedLocalOrParameter.Add(field.Name.Value, newLocal);
         }
         goto tryAgain;
@@ -578,7 +584,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
         return CodeDummy.Block;
       else
-        return localDeclarationStatement;
+        return base.Visit(localDeclarationStatement);
     }
 
     class FindAssignmentToCachedDelegateStaticFieldOrLocal : BaseCodeTraverser {
