@@ -518,6 +518,11 @@ namespace Microsoft.Cci {
     uint GetAssemblyInternedKey(AssemblyIdentity assemblyIdentity);
 
     /// <summary>
+    /// Returns the interned key corresponding to the referenced field.
+    /// </summary>
+    uint GetFieldInternedKey(IFieldReference fieldReference);
+
+    /// <summary>
     /// Returns the interned key corresponding to the referenced method.
     /// </summary>
     uint GetMethodInternedKey(IMethodReference methodReference);

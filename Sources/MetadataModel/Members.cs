@@ -217,6 +217,12 @@ namespace Microsoft.Cci {
   public interface IFieldReference : ITypeMemberReference { //TODO: add custom modifiers
 
     /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    uint InternedKey { get; }
+
+    /// <summary>
     /// This field is static (shared by all instances of its declaring type).
     /// </summary>
     bool IsStatic { get; }
@@ -947,8 +953,8 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a key that is computed from the information in this reference and that uniquely identifies
-    /// this.ResolvedMethod.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
     uint InternedKey { get; }
 

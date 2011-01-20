@@ -1084,7 +1084,8 @@ namespace Microsoft.Cci {
     IAliasForType AliasForType { get; }
 
     /// <summary>
-    /// Returns the unique interned key associated with the type. This takes unification/aliases/custom modifiers into account.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedType from all other types obtained from the same metadata host.
     /// </summary>
     uint InternedKey { get; }
 

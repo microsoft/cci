@@ -1373,6 +1373,10 @@ namespace Microsoft.Cci {
 
     #region IFieldReference Members
 
+    public uint InternedKey {
+      get { return 0; }
+    }
+
     public bool IsStatic {
       get { return false; }
     }
@@ -5948,6 +5952,10 @@ namespace Microsoft.Cci {
 
     #region IFieldReference Members
 
+    public uint InternedKey {
+      get { return 0; }
+    }
+
     public IFieldDefinition ResolvedField {
       get { return Dummy.Field; }
     }
@@ -6739,6 +6747,10 @@ namespace Microsoft.Cci {
   internal sealed class DummyFieldReference : Dummy, IFieldReference {
     #region IFieldReference Members
 
+    public uint InternedKey {
+      get { return 0; }
+    }
+
     public bool IsStatic {
       get { return false; }
     }
@@ -7407,6 +7419,10 @@ namespace Microsoft.Cci {
 
     #region IFieldReference Members
 
+    public uint InternedKey {
+      get { return 0; }
+    }
+
     public IFieldDefinition ResolvedField {
       get { return this; }
     }
@@ -7523,6 +7539,10 @@ namespace Microsoft.Cci {
     }
 
     public uint GetModuleInternedKey(ModuleIdentity moduleIdentity) {
+      return 0;
+    }
+
+    public uint GetFieldInternedKey(IFieldReference fieldReference) {
       return 0;
     }
 

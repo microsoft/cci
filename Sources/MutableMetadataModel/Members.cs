@@ -155,6 +155,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public FieldDefinition() {
       this.compileTimeValue = Dummy.Constant;
       this.fieldMapping = Dummy.SectionBlock;
+      this.internFactory = Dummy.InternFactory;
       this.marshallingInformation = Dummy.MarshallingInformation;
       this.bitLength = -1;
       this.offset = 0;
@@ -191,6 +192,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.sequenceNumber = fieldDefinition.SequenceNumber;
       else
         this.sequenceNumber = 0;
+      this.internFactory = internFactory;
       this.type = fieldDefinition.Type;
       //^ base;
       this.IsNotSerialized = fieldDefinition.IsNotSerialized;
@@ -246,6 +248,25 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     ISectionBlock fieldMapping;
+
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
+    public IInternFactory InternFactory {
+      get { return this.internFactory; }
+      set { this.internFactory = value; }
+    }
+    IInternFactory internFactory;
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get { return this.InternFactory.GetFieldInternedKey(this); }
+    }
 
     /// <summary>
     /// The field is aligned on a bit boundary and uses only the BitLength number of least significant bits of the representation of a Type value.
@@ -428,6 +449,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public FieldReference() {
       this.attributes = new List<ICustomAttribute>();
       this.containingType = Dummy.TypeReference;
+      this.internFactory = Dummy.InternFactory;
       this.locations = new List<ILocation>();
       this.name = Dummy.Name;
       this.type = Dummy.TypeReference;
@@ -441,6 +463,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(IFieldReference fieldReference, IInternFactory internFactory) {
       this.attributes = new List<ICustomAttribute>(fieldReference.Attributes);
       this.containingType = fieldReference.ContainingType;
+      this.internFactory = internFactory;
       this.locations = new List<ILocation>(fieldReference.Locations);
       this.name = fieldReference.Name;
       this.type = fieldReference.Type;
@@ -472,6 +495,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
+    public IInternFactory InternFactory {
+      get { return this.internFactory; }
+      set { this.internFactory = value; }
+    }
+    IInternFactory internFactory;
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get { return this.InternFactory.GetFieldInternedKey(this); }
     }
 
     /// <summary>
@@ -1283,12 +1325,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     IInternFactory internFactory;
 
     /// <summary>
-    /// Returns a key that is computed from the information in this reference and that uniquely identifies
-    /// this.ResolvedMethod.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
-    /// <value></value>
     public uint InternedKey {
-      get { return this.internFactory.GetMethodInternedKey(this); }
+      get { return this.InternFactory.GetMethodInternedKey(this); }
     }
 
     /// <summary>
@@ -1933,10 +1974,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     IInternFactory internFactory;
 
     /// <summary>
-    /// Returns a key that is computed from the information in this reference and that uniquely identifies
-    /// this.ResolvedMethod.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
-    /// <value></value>
     public uint InternedKey {
       get { return this.internFactory.GetMethodInternedKey(this); }
     }

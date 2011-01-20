@@ -554,10 +554,9 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a key that is computed from the information in this reference and that uniquely identifies
-    /// this.ResolvedMethod.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
-    /// <value></value>
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
@@ -822,10 +821,9 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a key that is computed from the information in this reference and that uniquely identifies
-    /// this.ResolvedMethod.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
-    /// <value></value>
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
@@ -1168,7 +1166,7 @@ namespace Microsoft.Cci {
     /// <param name="partiallySpecializedTypeReference">A type reference obtained from some part of this.unspecializedVersion.</param>
     private ITypeReference SpecializeIfConstructed(ITypeReference partiallySpecializedTypeReference) {
       SpecializedNestedTypeDefinition specializedParent = this.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
-      if (specializedParent != null) 
+      if (specializedParent != null)
         partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReference(partiallySpecializedTypeReference, specializedParent, this.ContainingGenericTypeInstance.InternFactory);
       return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
     }
@@ -1218,6 +1216,19 @@ namespace Microsoft.Cci {
     }
 
     readonly IFieldDefinition partiallySpecializedVersion;
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.ContainingGenericTypeInstance.InternFactory.GetFieldInternedKey(this);
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
 
     /// <summary>
     /// The type of value that is stored in this field.
@@ -1660,7 +1671,7 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get {
-        if (this.type == null) 
+        if (this.type == null)
           this.type = this.CopyAndSpecialize(this.partiallySpecializedVersion.Type);
         return this.type;
       }
@@ -1907,10 +1918,9 @@ namespace Microsoft.Cci {
     #region IMethodReference Members
 
     /// <summary>
-    /// Returns a key that is computed from the information in this reference and that uniquely identifies
-    /// this.ResolvedMethod.
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
-    /// <value></value>
     public uint InternedKey {
       get {
         if (this.internedKey == 0)
@@ -2059,15 +2069,13 @@ namespace Microsoft.Cci {
     //^ invariant containingSignature is IGenericMethodInstance || containingSignature is SpecializedMethodDefinition || containingSignature is SpecializedPropertyDefinition;
 
     private IParameterDefinition partiallySpecializedParameter;
-      /// <summary>
-      /// Partially specialized version of the parameter.
-      /// </summary>
-    public IParameterDefinition PartiallySpecializedParameter
-    {
-        get
-        {
-            return this.partiallySpecializedParameter;
-        }
+    /// <summary>
+    /// Partially specialized version of the parameter.
+    /// </summary>
+    public IParameterDefinition PartiallySpecializedParameter {
+      get {
+        return this.partiallySpecializedParameter;
+      }
     }
     /// <summary>
     /// 

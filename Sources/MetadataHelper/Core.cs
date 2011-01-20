@@ -1034,6 +1034,7 @@ namespace Microsoft.Cci {
     uint CurrentParameterTypeListInternValue;
     uint CurrentSignatureInternValue;
     uint CurrentMethodReferenceInternValue;
+    uint CurrentFieldReferenceInternValue;
     IMethodReference CurrentMethodReference; //The method reference currently being interned
     readonly MultiHashtable<AssemblyStore> AssemblyHashtable;
     readonly MultiHashtable<ModuleStore> ModuleHashtable;
@@ -1056,6 +1057,7 @@ namespace Microsoft.Cci {
     readonly Hashtable FunctionTypeHashTable;
     readonly DoubleHashtable ModifiedTypeHashtable;
     readonly Hashtable<MultiHashtable<SignatureStore>> MethodReferenceHashtable;
+    readonly DoubleHashtable FieldReferenceHashtable;
 
     /// <summary>
     /// 
@@ -1070,6 +1072,7 @@ namespace Microsoft.Cci {
       this.CurrentCustomModifierInternValue = 0x00000001;
       this.CurrentCustomModifierListInternValue = 0x00000001;
       this.CurrentMethodReferenceInternValue = 0x00000001;
+      this.CurrentFieldReferenceInternValue = 0x00000001;
       this.CurrentParameterTypeInternValue = 0x00000001;
       this.CurrentParameterTypeListInternValue = 0x00000001;
       this.CurrentSignatureInternValue = 0x00000001;
@@ -1094,6 +1097,7 @@ namespace Microsoft.Cci {
       this.FunctionTypeHashTable = new Hashtable();
       this.ModifiedTypeHashtable = new DoubleHashtable();
       this.MethodReferenceHashtable = new Hashtable<MultiHashtable<SignatureStore>>();
+      this.FieldReferenceHashtable = new DoubleHashtable();
     }
 
     AssemblyStore GetAssemblyStore(AssemblyIdentity assemblyIdentity) {
@@ -1432,6 +1436,19 @@ namespace Microsoft.Cci {
       return signatureStore1.InternedId;
     }
 
+    uint GetFieldReferenceInternedId(
+      IFieldReference fieldReference
+    ) {
+      uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(fieldReference.ContainingType);
+      uint fieldNameId = (uint)fieldReference.Name.UniqueKey;
+      uint result = this.FieldReferenceHashtable.Find(containingTypeReferenceInternedId, fieldNameId);
+      if (result == 0) {
+        result = this.CurrentFieldReferenceInternValue++;
+        this.FieldReferenceHashtable.Add(containingTypeReferenceInternedId, fieldNameId, result);
+      }
+      return result;
+    }
+
     uint GetFunctionPointerTypeReferenceInternId(
       CallingConvention callingConvention,
       IEnumerable<IParameterTypeInformation> parameters,
@@ -1594,6 +1611,12 @@ namespace Microsoft.Cci {
       lock (GlobalLock.LockingObject) {
         AssemblyStore assemblyStore = this.GetAssemblyStore(assemblyIdentity);
         return assemblyStore.InternedId;
+      }
+    }
+
+    uint IInternFactory.GetFieldInternedKey(IFieldReference methodReference) {
+      lock (GlobalLock.LockingObject) {
+        return this.GetFieldReferenceInternedId(methodReference);
       }
     }
 

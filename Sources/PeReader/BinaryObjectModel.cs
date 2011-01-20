@@ -1345,6 +1345,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0) {
+          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFieldInternedKey(this);
+        }
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
     public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
       GenericTypeInstance genericTypeInstance
     ) {
@@ -2901,6 +2911,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IFieldReference Members
 
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0) {
+          this.internedKey = this.RawTemplateModuleField.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFieldInternedKey(this);
+        }
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
     public IFieldDefinition ResolvedField {
       get { return this; }
     }
@@ -4229,6 +4249,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.typeReference = fieldSignature.TypeReference;
       this.signatureLoaded = true;
     }
+
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0) {
+          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFieldInternedKey(this);
+        }
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
 
     public override ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { return this.ResolvedField; }
