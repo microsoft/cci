@@ -1289,6 +1289,20 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0) {
+          this.internedKey = this.Declaration.CompilationPart.Compilation.HostEnvironment.InternFactory.GetFieldInternedKey(this);
+        }
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    /// <summary>
     /// The field is aligned on a bit boundary and uses only the BitLength number of least significant bits of the representation of a Type value.
     /// </summary>
     public bool IsBitField {
@@ -2352,6 +2366,20 @@ namespace Microsoft.Cci.Ast {
     }
     List<GlobalFieldDeclaration>/*?*/ globalFieldDeclarations;
     //^ invariant globalFieldDeclaration == null <==> globalFieldDeclarations != null && globalFieldDeclarations.Count > 1;
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0) {
+          this.internedKey = this.GlobalFieldDeclaration.CompilationPart.Compilation.HostEnvironment.InternFactory.GetFieldInternedKey(this);
+        }
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
 
     /// <summary>
     /// The field is aligned on a bit boundary and uses only the BitLength number of least significant bits of the representation of a Type value.

@@ -1190,6 +1190,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (!this.method.IsStatic) {
         FieldDefinition field = new FieldDefinition();
         // TODO: naming convention should use csc's.
+        field.InternFactory = this.host.InternFactory;
         field.Name = this.host.NameTable.GetNameFor("<>__" + "this");
         //ITypeReference typeRef;
         //if (TypeHelper.TryGetFullyInstantiatedSpecializedTypeReference(method.ContainingTypeDefinition, out typeRef))
@@ -1205,6 +1206,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       foreach (IParameterDefinition parameter in this.method.Parameters) {
         FieldDefinition field = new FieldDefinition();
+        field.InternFactory = this.host.InternFactory;
         field.Name = parameter.Name;
         field.Type = this.copyTypeToClosure.Visit(parameter.Type);
         field.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
@@ -1216,6 +1218,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Create fields of the closure class: Locals
       foreach (ILocalDefinition local in this.allLocals) {
         FieldDefinition field = new FieldDefinition();
+        field.InternFactory = this.host.InternFactory;
         field.Name = this.host.NameTable.GetNameFor("<>__" + local.Name.Value + this.privateHelperTypes.Count);
         field.Type = this.copyTypeToClosure.Visit(local.Type);
         field.Visibility = TypeMemberVisibility.Public;
@@ -1226,6 +1229,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       // Create fields: current, state, and l_initialThreadId
       FieldDefinition current = new FieldDefinition();
+      current.InternFactory = this.host.InternFactory;
       current.Name = this.host.NameTable.GetNameFor("<>__" + "current");
       current.Type = iteratorClosure.ElementType;
       current.Visibility = TypeMemberVisibility.Private;
@@ -1233,6 +1237,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       iteratorClosure.CurrentField = current;
 
       FieldDefinition state = new FieldDefinition();
+      state.InternFactory = this.host.InternFactory;
       state.Name = this.host.NameTable.GetNameFor("<>__" + "state");
       state.Type = this.host.PlatformType.SystemInt32;
       state.Visibility = TypeMemberVisibility.Private;
@@ -1240,6 +1245,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       iteratorClosure.StateField = state;
 
       FieldDefinition initialThreadId = new FieldDefinition();
+      initialThreadId.InternFactory = this.host.InternFactory;
       initialThreadId.Name = this.host.NameTable.GetNameFor("<>__" + "l_initialThreadId");
       initialThreadId.Type = this.host.PlatformType.SystemInt32;
       initialThreadId.Visibility = TypeMemberVisibility.Private;

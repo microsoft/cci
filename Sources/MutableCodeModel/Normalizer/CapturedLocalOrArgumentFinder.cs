@@ -141,11 +141,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       if (name == null) return;
 
-      FieldDefinition field = new FieldDefinition();
-      field.ContainingTypeDefinition = containingClass;
-      field.Name = name;
-      field.Type = this.copyTypeToClosure.Visit(type);
-      field.Visibility = TypeMemberVisibility.Public;
+      FieldDefinition field = new FieldDefinition() {
+        ContainingTypeDefinition = containingClass,
+        InternFactory = this.host.InternFactory,
+        Name = name,
+        Type = this.copyTypeToClosure.Visit(type),
+        Visibility = TypeMemberVisibility.Public
+      };
       containingClass.Fields.Add(field);
       BoundField be = new BoundField(field, field.Type);
       this.fieldForCapturedLocalOrParameter.Add(definition, be);
@@ -231,6 +233,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         // enclosing closure classes.
         var outerClosureField = new FieldDefinition() {
           ContainingTypeDefinition = closureClass,
+          InternFactory = this.host.InternFactory,
           Name = this.host.NameTable.GetNameFor("__outerClosure"),
           //Type = TypeDefinition.SelfInstance(savedCurrentClosureClass,this.host.InternFactory),
           Type = TypeDefinition.SelfInstance(this.classList[nestingDepth - 1], this.host.InternFactory),
