@@ -521,33 +521,24 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IStatement Visit(ConditionalStatement conditionalStatement) {
-      var boundExpression = conditionalStatement.Condition as IBoundExpression;
-      if (boundExpression == null) goto JustVisit;
-      var fieldReference = boundExpression.Definition as IFieldReference;
-      if (fieldReference != null) {
-        if (this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value)) {
-          IGotoStatement gto = conditionalStatement.TrueBranch as IGotoStatement;
-          if (gto != null) {
-            this.deletedLabels.Add(gto.TargetStatement.Label.UniqueKey, true);
+      var logicalNot = conditionalStatement.Condition as ILogicalNot;
+      if (logicalNot != null) {
+        var boundExpression = logicalNot.Operand as IBoundExpression;
+        if (boundExpression != null) {
+          var fieldReference = boundExpression.Definition as IFieldReference;
+          if (fieldReference != null) {
+            if (this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value)) {
+              return CodeDummy.Block;
+            }
           }
-          return CodeDummy.Block;
-        } else {
-          return conditionalStatement;
+          var localDefinition = boundExpression.Definition as ILocalDefinition;
+          if (localDefinition != null) {
+            if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) {
+              return CodeDummy.Block;
+            }
+          }
         }
       }
-      var localDefinition = boundExpression.Definition as ILocalDefinition;
-      if (localDefinition != null) {
-        if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) {
-          IGotoStatement gto = conditionalStatement.TrueBranch as IGotoStatement;
-          if (gto != null) {
-            this.deletedLabels.Add(gto.TargetStatement.Label.UniqueKey, true);
-          }
-          return CodeDummy.Block;
-        } else {
-          return conditionalStatement;
-        }
-      }
-    JustVisit:
       return base.Visit(conditionalStatement);
     }
 

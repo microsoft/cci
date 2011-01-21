@@ -47,7 +47,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private void Visit(BasicBlock b) {
       this.blockLocalVariables = b.LocalVariables;
       for (int i = 0; i < b.Statements.Count; i++) {
-        DeleteGotoNextStatement(b.Statements, i);
+        this.DeleteGotoNextStatement(b.Statements, i);
         this.ReplaceLocalArrayInitializerPattern(b.Statements, i);
         this.ReplaceShortCircuitPattern(b.Statements, i);
         this.ReplaceShortCircuitPattern2(b.Statements, i);
@@ -101,7 +101,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       statements.RemoveRange(i, count);
     }
 
-    private static void DeleteGotoNextStatement(List<IStatement> statements, int i) {
+    private void DeleteGotoNextStatement(List<IStatement> statements, int i) {
       if (i > statements.Count-2) return;
       GotoStatement/*?*/ gotoStatement = statements[i] as GotoStatement;
       if (gotoStatement == null) return;
@@ -109,6 +109,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (basicBlock == null) return;
       if (basicBlock.Statements.Count < 1) return;
       if (gotoStatement.TargetStatement != basicBlock.Statements[0]) return;
+      var predecessors = this.predecessors[gotoStatement.TargetStatement];
+      predecessors.Remove(gotoStatement);
       statements.RemoveAt(i);
     }
 
