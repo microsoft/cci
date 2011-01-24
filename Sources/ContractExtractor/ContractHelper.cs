@@ -678,20 +678,10 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     private static MethodContract FilterUserMessage(IContractAwareHost host, IMethodContract contract, ITypeDefinition typeDefinition) {
-      var mc = new MethodContract() {
-        Allocates = new List<IExpression>(contract.Allocates),
-        Frees = new List<IExpression>(contract.Frees),
-        IsPure = contract.IsPure,
-        Locations = new List<ILocation>(contract.Locations),
-        ModifiedVariables = new List<IAddressableExpression>(contract.ModifiedVariables),
-        MustInline = contract.MustInline,
-        Postconditions = FilterUserMessage(host, contract.Postconditions, typeDefinition),
-        Preconditions = FilterUserMessage(host, contract.Preconditions, typeDefinition),
-        Reads = new List<IExpression>(contract.Reads),
-        ThrownExceptions = FilterUserMessage(host, contract.ThrownExceptions, typeDefinition),
-        Variants = new List<IMethodVariant>(contract.Variants),
-        Writes = new List<IExpression>(contract.Writes),
-      };
+      var mc = new MethodContract(contract);
+      mc.Postconditions = FilterUserMessage(host, contract.Postconditions, typeDefinition);
+      mc.Preconditions = FilterUserMessage(host, contract.Preconditions, typeDefinition);
+      mc.ThrownExceptions = FilterUserMessage(host, contract.ThrownExceptions, typeDefinition);
       return mc;
     }
 
@@ -700,31 +690,13 @@ namespace Microsoft.Cci.MutableContracts {
       var filteredPostconditions = new IPostcondition[n];
       var i = 0;
       foreach (var p in postconditions) {
-        filteredPostconditions[i] = p;
-        if (!(p.Description is ICompileTimeConstant)) {
-          bool cantAccess = false;
-          IMethodCall mc = p.Description as IMethodCall;
-          if (mc != null && !TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod))
-            cantAccess = true;
-          if (mc == null){
-            IFieldReference fr = p.Description as IFieldReference;
-            if (fr != null && !TypeHelper.CanAccess(typeDefinition, fr.ResolvedField))
-              cantAccess = true;
-          }
-          // there shouldn't be anything else other than a method call or field reference, but if
-          // there is, just null it out anyway. (TODO: see if this causes a silent error)
-          cantAccess = true;
-          if (cantAccess) {
-            filteredPostconditions[i] = new PostCondition() {
-              Condition = p.Condition,
-              Description = null,
-              IsModel = p.IsModel,
-              Locations = new List<ILocation>(p.Locations),
-              OriginalSource = p.OriginalSource,
-            };
-          }
+        if (CanAccess(p.Description, typeDefinition)){
+          filteredPostconditions[i] = p;
+        } else {
+          var newP = new PostCondition(p);
+            newP.Description = null;
+            filteredPostconditions[i] = newP;
         }
-        System.Diagnostics.Debug.Assert(filteredPostconditions[i] != null);
         i++;
       }
       return new List<IPostcondition>(filteredPostconditions);
@@ -734,31 +706,13 @@ namespace Microsoft.Cci.MutableContracts {
       var filteredPreconditions = new IPrecondition[n];
       var i = 0;
       foreach (var p in preconditions) {
-        filteredPreconditions[i] = p;
-        if (!(p.Description is ICompileTimeConstant)) {
-          bool cantAccess = false;
-          IMethodCall mc = p.Description as IMethodCall;
-          if (mc != null && !TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod))
-            cantAccess = true;
-          if (mc == null) {
-            IFieldReference fr = p.Description as IFieldReference;
-            if (fr != null && !TypeHelper.CanAccess(typeDefinition, fr.ResolvedField))
-              cantAccess = true;
-          }
-          // there shouldn't be anything else other than a method call or field reference, but if
-          // there is, just null it out anyway. (TODO: see if this causes a silent error)
-          cantAccess = true;
-          if (cantAccess) {
-            filteredPreconditions[i] = new Precondition() {
-              Condition = p.Condition,
-              Description = null,
-              IsModel = p.IsModel,
-              Locations = new List<ILocation>(p.Locations),
-              OriginalSource = p.OriginalSource,
-            };
-          }
+        if (CanAccess(p.Description, typeDefinition)) {
+          filteredPreconditions[i] = p;
+        } else {
+          var newP = new Precondition(p);
+          newP.Description = null;
+          filteredPreconditions[i] = newP;
         }
-        System.Diagnostics.Debug.Assert(filteredPreconditions[i] != null);
         i++;
       }
       return new List<IPrecondition>(filteredPreconditions);
@@ -768,37 +722,29 @@ namespace Microsoft.Cci.MutableContracts {
       var filteredThrownExceptions = new IThrownException[n];
       var i = 0;
       foreach (var te in thrownExceptions) {
-        filteredThrownExceptions[i] = te;
-        if (!(te.Postcondition.Description is ICompileTimeConstant)) {
-          bool cantAccess = false;
-          IMethodCall mc = te.Postcondition.Description as IMethodCall;
-          if (mc != null && !TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod))
-            cantAccess = true;
-          if (mc == null){
-            IFieldReference fr = te.Postcondition.Description as IFieldReference;
-            if (fr != null && !TypeHelper.CanAccess(typeDefinition, fr.ResolvedField))
-              cantAccess = true;
-          }
-          // there shouldn't be anything else other than a method call or field reference, but if
-          // there is, just null it out anyway. (TODO: see if this causes a silent error)
-          cantAccess = true;
-          if (cantAccess) {
-            var p = te.Postcondition;
-            filteredThrownExceptions[i] = new ThrownException() {
-              ExceptionType = te.ExceptionType,
-              Postcondition = new PostCondition() {
-                Condition = p.Condition,
-                Description = null,
-                IsModel = p.IsModel,
-                Locations = new List<ILocation>(p.Locations),
-                OriginalSource = p.OriginalSource,
-              },
-            };
-          }
+        if (CanAccess(te.Postcondition.Description, typeDefinition)) {
+          filteredThrownExceptions[i] = te;
+        } else {
+          var newP = new PostCondition(te.Postcondition);
+          newP.Description = null;
+          filteredThrownExceptions[i] = new ThrownException() {
+            ExceptionType = te.ExceptionType,
+            Postcondition = newP,
+          };
         }
         i++;
       }
       return new List<IThrownException>(filteredThrownExceptions);
+    }
+    private static bool CanAccess(IExpression expression, ITypeDefinition typeDefinition) {
+      if (expression is ICompileTimeConstant) return true;
+      IMethodCall mc = expression as IMethodCall;
+      if (mc != null) return TypeHelper.CanAccess(typeDefinition, mc.MethodToCall.ResolvedMethod);
+      IFieldReference fr = expression as IFieldReference;
+      if (fr != null) return TypeHelper.CanAccess(typeDefinition, fr.ResolvedField);
+      // there shouldn't be anything else other than a method call or field reference, but if
+      // there is, just return false. (TODO: see if this causes a silent error)
+      return false;
     }
     
     public static IMethodContract CopyAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
