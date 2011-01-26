@@ -38,7 +38,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       this.RecursivelyFindCapturedLocals(blockStatement);
       IBlockStatement result = this.Visit(blockStatement);
-      new CachedDelegateRemover(this.sourceMethodBody).Visit(result);
+      result = CachedDelegateRemover.RemoveCachedDelegates(this.host, result);
       return result;
     }
 
@@ -503,24 +503,21 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal class CachedDelegateRemover : MethodBodyCodeMutator {
 
-    internal CachedDelegateRemover(SourceMethodBody sourceMethodBody)
-      : base(sourceMethodBody.host, true) {
-      this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
-      this.sourceMethodBody = sourceMethodBody;
-    }
-
-    ITypeDefinition containingType;
-    SourceMethodBody sourceMethodBody;
-    Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals = new Dictionary<string, AnonymousDelegate>();
-    static string CachedDelegateId = "CachedAnonymousMethodDelegate";
-    Dictionary<int, bool> deletedLabels = new Dictionary<int, bool>();
-
-    public override IBlockStatement Visit(BlockStatement blockStatement) {
-      var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal(this.cachedDelegateFieldsOrLocals);
+    public static IBlockStatement RemoveCachedDelegates(IMetadataHost host, IBlockStatement blockStatement) {
+      var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal();
       finder.Visit(blockStatement);
-      if (this.cachedDelegateFieldsOrLocals.Count == 0) return blockStatement;
-      return base.Visit(blockStatement);
+      if (finder.cachedDelegateFieldsOrLocals.Count == 0) return blockStatement;
+      var mutator = new CachedDelegateRemover(host, finder.cachedDelegateFieldsOrLocals);
+      return mutator.Visit(blockStatement);
     }
+
+    private CachedDelegateRemover(IMetadataHost host, Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals)
+      : base(host, true) {
+        this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
+    }
+
+    Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals;
+    static string CachedDelegateId = "CachedAnonymousMethodDelegate";
 
     public override IExpression Visit(BoundExpression boundExpression) {
       var fieldReference = boundExpression.Definition as IFieldReference;
@@ -583,12 +580,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         return expressionStatement;
     }
 
-    public override IStatement Visit(LabeledStatement labeledStatement) {
-      if (this.deletedLabels.ContainsKey(labeledStatement.Label.UniqueKey))
-        return CodeDummy.Block;
-      return base.Visit(labeledStatement);
-    }
-
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
       var localDefinition = localDeclarationStatement.LocalVariable;
       if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value))
@@ -599,11 +590,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     class FindAssignmentToCachedDelegateStaticFieldOrLocal : BaseCodeTraverser {
 
-      public Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals;
-
-      public FindAssignmentToCachedDelegateStaticFieldOrLocal(Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals) {
-        this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
-      }
+      public Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals = new Dictionary<string, AnonymousDelegate>();
 
       /// <summary>
       /// Need to look for the pattern "if (!loc) then {loc = lambda;} else nop;" (or field instead of "loc")
