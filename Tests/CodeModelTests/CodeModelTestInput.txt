@@ -406,11 +406,6 @@ namespace CodeModelTestInput
 
         public System.Collections.Generic.IEnumerable<int> Method20(int x)
         {
-            {
-                goto IL_0011;
-            }
-            goto IL_0057;
-        IL_0011:
             if ((x > 0))
             {
                 x = 2;
