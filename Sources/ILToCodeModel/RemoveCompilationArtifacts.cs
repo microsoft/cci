@@ -63,6 +63,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(addressableExpression);
     }
 
+    public override IExpression Visit(Assignment assignment) {
+      var ld = assignment.Target.Definition as ILocalDefinition;
+      if (ld != null && this.currentClosureLocals.ContainsKey(ld))
+        return CodeDummy.Expression;
+      return base.Visit(assignment);
+    }
+
     public override ITargetExpression Visit(TargetExpression targetExpression) {
       var field = targetExpression.Definition as IFieldReference;
       if (field != null) {
@@ -100,7 +107,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
 
       private void FindCapturedLocals(List<IStatement> statements) {
-      tryAgain:
+        tryAgain:
         ILocalDefinition/*?*/ locDef = null;
         INestedTypeReference/*?*/ closureType = null;
         int i = 0;
@@ -385,9 +392,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       ILocalDefinition local = localDeclarationStatement.LocalVariable;
       if (0 < this.currentClosureLocals.Count) {
         //if this temp was introduced to hold a copy of the closure local, then delete it
+        var deleteIt = false;
         foreach (var currentClosureLocal in this.currentClosureLocals.Keys) {
-          if (TypeHelper.TypesAreEquivalent(currentClosureLocal.Type, local.Type))
-            return CodeDummy.Block;
+          if (TypeHelper.TypesAreEquivalent(currentClosureLocal.Type, local.Type)) {
+            deleteIt = true;
+            break;
+          }
           // Or it might be that we are visiting the method that is being turned back into a lambda
           // and it might be a temp introduced to hold "this" because of decompilation inadequacies.
           // (E.g., if there was "f++" operator in the lambda for a captured local/parameter, then
@@ -395,8 +405,18 @@ namespace Microsoft.Cci.ILToCodeModel {
           // "t1 := this; t2 := t1; t1.f := t2.f + 1".
           ITypeReference t1 = UnspecializedMethods.AsUnspecializedTypeReference(currentClosureLocal.Type);
           ITypeReference t2 = UnspecializedMethods.AsUnspecializedTypeReference(local.Type);
-          if (t1 == t2)
-            return CodeDummy.Block;
+          if (t1 == t2) {
+            deleteIt = true;
+            break;
+          }
+        }
+        if (deleteIt) {
+          if (localDeclarationStatement.InitialValue == null) {
+            // then need to delete all assignments to this local because they are the
+            // real initialization.
+            this.currentClosureLocals[local] = true;
+          }
+          return CodeDummy.Block;
         }
 
       }
@@ -521,21 +541,20 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IStatement Visit(ConditionalStatement conditionalStatement) {
+      var boundExpression = conditionalStatement.Condition as IBoundExpression;
       var logicalNot = conditionalStatement.Condition as ILogicalNot;
-      if (logicalNot != null) {
-        var boundExpression = logicalNot.Operand as IBoundExpression;
-        if (boundExpression != null) {
-          var fieldReference = boundExpression.Definition as IFieldReference;
-          if (fieldReference != null) {
-            if (this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value)) {
-              return CodeDummy.Block;
-            }
+      if (logicalNot != null) boundExpression = logicalNot.Operand as IBoundExpression;
+      if (boundExpression != null) {
+        var fieldReference = boundExpression.Definition as IFieldReference;
+        if (fieldReference != null) {
+          if (this.cachedDelegateFieldsOrLocals.ContainsKey(fieldReference.Name.Value)) {
+            return CodeDummy.Block;
           }
-          var localDefinition = boundExpression.Definition as ILocalDefinition;
-          if (localDefinition != null) {
-            if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) {
-              return CodeDummy.Block;
-            }
+        }
+        var localDefinition = boundExpression.Definition as ILocalDefinition;
+        if (localDefinition != null) {
+          if (this.cachedDelegateFieldsOrLocals.ContainsKey(localDefinition.Name.Value)) {
+            return CodeDummy.Block;
           }
         }
       }
@@ -586,9 +605,22 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
       }
 
-      public override void Visit(IAssignment assignment) {
+      /// <summary>
+      /// Need to look for the pattern "if (!loc) then {loc = lambda;} else nop;" (or field instead of "loc")
+      /// instead of looking for just assignments of lambdas to locals (or fields). The latter leads to the
+      /// mis-identification of user-written code that assigns labmdas to locals (or fields).
+      /// </summary>
+      public override void Visit(IConditionalStatement conditionalStatement) {
+        if (!(conditionalStatement.FalseBranch is IEmptyStatement)) goto JustVisit;
+        var b = conditionalStatement.TrueBranch as BlockStatement;
+        if (b == null) goto JustVisit;
+        if (b.Statements.Count != 1) goto JustVisit;
+        var s = b.Statements[0] as IExpressionStatement;
+        if (s == null) goto JustVisit;
+        var assignment = s.Expression as IAssignment;
+        if (assignment == null) goto JustVisit;
         AnonymousDelegate lambda = assignment.Source as AnonymousDelegate;
-        if (lambda == null) return;
+        if (lambda == null) goto JustVisit;
         IFieldReference/*?*/ fieldReference = assignment.Target.Definition as IFieldReference;
         if (fieldReference != null) {
           if (UnspecializedMethods.IsCompilerGenerated(fieldReference)
@@ -600,7 +632,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         ILocalDefinition/*?*/ localDefinition = assignment.Target.Definition as ILocalDefinition;
         if (localDefinition != null) {
           this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value] = lambda;
+          return;
         }
+      JustVisit:
+        base.Visit(conditionalStatement);
+
       }
     }
   }

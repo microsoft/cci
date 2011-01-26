@@ -1088,5 +1088,13 @@ namespace CodeModelTestInput {
     }
   }
 
+  public class ClassThatCausesTempHoldingClosureClassToBeGenerated {
+    int x;
+    public ClassThatCausesTempHoldingClosureClassToBeGenerated(bool b) {
+      Action act1 = () => { Console.WriteLine(x); }; // lambda that captures only instance data (i.e., field)
+      Action act2 = () => { if (b) act1(); }; // lambda that captures local data (e.g., parameter)
+    }
+  }
+
   #endregion 
 }

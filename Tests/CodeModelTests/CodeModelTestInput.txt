@@ -1822,4 +1822,36 @@ namespace CodeModelTestInput
 
         internal string name;
     }
+
+    public class ClassThatCausesTempHoldingClosureClassToBeGenerated
+    {
+        public ClassThatCausesTempHoldingClosureClassToBeGenerated(bool b)
+        {
+            CodeModelTestInput.ClassThatCausesTempHoldingClosureClassToBeGenerated <>4__this;
+            this.object();
+            <>4__this = this;
+            {
+                System.Action act2;
+                System.Action act1;
+                <>4__this = this;
+                act1 = delegate () {
+                    System.Console.WriteLine(this.x);
+                    return;
+
+                };
+                act2 = delegate () {
+                    if (b)
+                    {
+                        act1.Invoke();
+                    }
+                    return;
+
+                };
+                return;
+
+            }
+        }
+
+        private int x;
+    }
 }
