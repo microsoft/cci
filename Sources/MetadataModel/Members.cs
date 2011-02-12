@@ -215,6 +215,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a field.
   /// </summary>
+  [ContractClass(typeof(IFieldReferenceContract))]
   public interface IFieldReference : ITypeMemberReference {
 
     /// <summary>
@@ -251,6 +252,68 @@ namespace Microsoft.Cci {
     /// </summary>
     IFieldDefinition ResolvedField { get; }
 
+  }
+
+  [ContractClassFor(typeof(IFieldReference))]
+  abstract class IFieldReferenceContract : IFieldReference {
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get {
+        Contract.Requires(this.IsModified);
+        Contract.Ensures(Contract.Result<IEnumerable<IFieldReferenceContract>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IFieldReferenceContract>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IFieldDefinition ResolvedField {
+      get {
+        Contract.Ensures(Contract.Result<IFieldDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -974,6 +1037,7 @@ namespace Microsoft.Cci {
   /// A property is a member that provides access to an attribute of an object or a class.
   /// This interface models the metadata representation of a property.
   /// </summary>
+  [ContractClass(typeof(IPropertyDefinitionContract))]
   public interface IPropertyDefinition : ISignature, ITypeDefinitionMember, IMetadataConstantContainer {
 
     /// <summary>
@@ -1025,6 +1089,132 @@ namespace Microsoft.Cci {
     IMethodReference/*?*/ Setter { get; }
 
   }
+
+  [ContractClassFor(typeof(IPropertyDefinition))]
+  abstract class IPropertyDefinitionContract : IPropertyDefinition {
+    public IEnumerable<IMethodReference> Accessors {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IMethodReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMetadataConstant DefaultValue {
+      get {
+        Contract.Requires(this.HasDefaultValue);
+        Contract.Ensures(Contract.Result<IMetadataConstant>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMethodReference Getter {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDefaultValue {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IParameterDefinition> Parameters {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IParameterDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IParameterDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMethodReference Setter {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public CallingConvention CallingConvention {
+      get { throw new NotImplementedException(); }
+    }
+
+    IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsByRef {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ContainingTypeDefinition {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeMemberVisibility Visibility {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IScope<ITypeDefinitionMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMetadataConstant Constant {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
 
   /// <summary>
   /// The parameters and return type that makes up a method or property signature.
@@ -1110,6 +1300,7 @@ namespace Microsoft.Cci {
   /// A member of a type definition, such as a field or a method.
   /// This interface models the metadata representation of a type member.
   /// </summary>
+  [ContractClass(typeof(ITypeDefinitionMemberContract))]
   public interface ITypeDefinitionMember : ITypeMemberReference, IDefinition, IContainerMember<ITypeDefinition>, IScopeMember<IScope<ITypeDefinitionMember>> {
 
     /// <summary>
@@ -1123,6 +1314,51 @@ namespace Microsoft.Cci {
     TypeMemberVisibility Visibility { get; }
   }
 
+  [ContractClassFor(typeof(ITypeDefinitionMember))]
+  abstract class ITypeDefinitionMemberContract : ITypeDefinitionMember {
+    public ITypeDefinition ContainingTypeDefinition {
+      get {
+        Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public TypeMemberVisibility Visibility {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IScope<ITypeDefinitionMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+  }
 
   /// <summary>
   /// A reference to a member of a type, such as a field or a method.

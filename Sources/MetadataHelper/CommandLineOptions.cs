@@ -10,11 +10,13 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Text;
 
 /// <summary>
 /// Subclass this class and define private fields for options
 /// </summary>
+[ContractVerification(false)]
 public abstract class OptionParsing {
 
   /// <summary>

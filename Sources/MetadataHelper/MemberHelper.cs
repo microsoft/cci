@@ -31,6 +31,8 @@ namespace Microsoft.Cci {
     public static uint ComputeFieldOffset(ITypeDefinitionMember item, ITypeDefinition containingTypeDefinition)
       //^ requires !field.IsStatic; 
     {
+      Contract.Requires(item != null);
+      Contract.Requires(containingTypeDefinition != null);
 
       uint result = 0;
       ushort bitFieldAlignment = 0;
@@ -90,6 +92,10 @@ namespace Microsoft.Cci {
     /// no resolving is needed to find them.
     /// </remarks>
     public static IEnumerable<IMethodReference> GetExplicitlyOverriddenMethods(IMethodDefinition overridingMethod) {
+      Contract.Requires(overridingMethod != null);
+      Contract.Ensures(Contract.Result<IEnumerable<IMethodReference>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodReference>>(), x => x != null));
+
       foreach (IMethodImplementation methodImplementation in overridingMethod.ContainingTypeDefinition.ExplicitImplementationOverrides) {
         if (overridingMethod.InternedKey == methodImplementation.ImplementingMethod.InternedKey)
           yield return methodImplementation.ImplementedMethod;
@@ -103,6 +109,9 @@ namespace Microsoft.Cci {
     public static uint GetFieldBitOffset(IFieldDefinition field)
       //^ requires field.IsBitField;
     {
+      Contract.Requires(field != null);
+      Contract.Requires(field.IsBitField);
+
       ITypeDefinition typeDefinition = field.ContainingTypeDefinition;
       uint result = 0;
       ushort bitFieldAlignment = 0;
@@ -156,6 +165,9 @@ namespace Microsoft.Cci {
     public static uint GetFieldOffset(IFieldDefinition field)
       //^ requires !field.IsStatic; 
     {
+      Contract.Requires(field != null);
+      Contract.Requires(!field.IsStatic);
+
       ITypeDefinition typeDefinition = field.ContainingTypeDefinition;
       if (typeDefinition.Layout == LayoutKind.Explicit)
         return field.Offset;
@@ -167,6 +179,9 @@ namespace Microsoft.Cci {
     /// if they are equivalent modulo method generic type parameters (if they are both generic).
     /// </summary>
     public static bool MethodsAreEquivalent(IMethodDefinition m1, IMethodDefinition m2) {
+      Contract.Requires(m1 != null);
+      Contract.Requires(m2 != null);
+
       if (m1.IsGeneric)
         return m1.GenericParameterCount == m2.GenericParameterCount && MemberHelper.GenericMethodSignaturesAreEqual(m1, m2);
       else
@@ -183,6 +198,10 @@ namespace Microsoft.Cci {
     /// without resolving the interface references to their definitions.
     /// </remarks>
     public static IEnumerable<IMethodDefinition> GetImplicitlyImplementedInterfaceMethods(IMethodDefinition implementingMethod) {
+      Contract.Requires(implementingMethod != null);
+      Contract.Ensures(Contract.Result<IEnumerable<IMethodDefinition>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodDefinition>>(), x => x != null));
+
       if (!implementingMethod.IsVirtual) yield break;
       List<uint> explicitImplementations = null;
       foreach (IMethodImplementation methodImplementation in implementingMethod.ContainingTypeDefinition.ExplicitImplementationOverrides) {
@@ -202,12 +221,14 @@ namespace Microsoft.Cci {
       }
     }
 
-
     /// <summary>
     /// Returns the method from the closest base class that is overridden by the given method.
     /// If no such method exists, Dummy.Method is returned.
     /// </summary>
     public static IMethodDefinition GetImplicitlyOverriddenBaseClassMethod(IMethodDefinition derivedClassMethod) {
+      Contract.Requires(derivedClassMethod != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       if (!derivedClassMethod.IsVirtual || derivedClassMethod.IsNewSlot) return Dummy.Method;
       foreach (ITypeReference baseClassReference in derivedClassMethod.ContainingTypeDefinition.BaseClasses) {
         IMethodDefinition overriddenMethod = GetImplicitlyOverriddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
@@ -217,6 +238,10 @@ namespace Microsoft.Cci {
     }
 
     private static IMethodDefinition GetImplicitlyOverriddenBaseClassMethod(IMethodDefinition derivedClassMethod, ITypeDefinition baseClass) {
+      Contract.Requires(derivedClassMethod != null);
+      Contract.Requires(baseClass != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       foreach (ITypeDefinitionMember baseMember in baseClass.GetMembersNamed(derivedClassMethod.Name, false)) {
         IMethodDefinition/*?*/ baseMethod = baseMember as IMethodDefinition;
         if (baseMethod == null) continue;
@@ -244,6 +269,10 @@ namespace Microsoft.Cci {
     /// If no such method exists, Dummy.Method is returned.
     /// </summary>
     public static IMethodDefinition GetImplicitlyOverridingDerivedClassMethod(IMethodDefinition baseClassMethod, ITypeDefinition derivedClass) {
+      Contract.Requires(baseClassMethod != null);
+      Contract.Requires(derivedClass != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       foreach (ITypeDefinitionMember derivedMember in derivedClass.GetMembersNamed(baseClassMethod.Name, false)) {
         IMethodDefinition/*?*/ derivedMethod = derivedMember as IMethodDefinition;
         if (derivedMethod == null) continue;
@@ -262,6 +291,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static string GetMemberSignature(ITypeMemberReference member, NameFormattingOptions formattingOptions) {
+      Contract.Requires(member != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return new SignatureFormatter().GetMemberSignature(member, formattingOptions);
     }
 
@@ -270,6 +302,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions) {
+      Contract.Requires(method != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return new SignatureFormatter().GetMethodSignature(method, formattingOptions);
     }
 
@@ -284,6 +319,8 @@ namespace Microsoft.Cci {
     /// should probably be done only by tools that are checking security properties).
     /// </summary>
     public static bool IsVisibleOutsideAssembly(ITypeDefinitionMember typeDefinitionMember) {
+      Contract.Requires(typeDefinitionMember != null);
+
       var containingTypeDefinition = typeDefinitionMember.ContainingTypeDefinition;
       if (!TypeHelper.IsVisibleOutsideAssembly(containingTypeDefinition)) return false;
       switch (typeDefinitionMember.Visibility) {
@@ -330,6 +367,8 @@ namespace Microsoft.Cci {
     /// <param name="methodReference">A possibly null reference to a method.</param>
     /// <param name="containingTypeDefinition">The type definition that contains the type member that is or contains the method reference.</param>
     private static bool IsExplicitImplementationVisible(IMethodReference/*?*/ methodReference, ITypeDefinition containingTypeDefinition) {
+      Contract.Requires(containingTypeDefinition != null);
+
       if (methodReference == null) return false;
       foreach (IMethodImplementation methodImpl in containingTypeDefinition.ExplicitImplementationOverrides) {
         if (methodImpl.ImplementingMethod.InternedKey != methodReference.InternedKey) continue;
@@ -350,6 +389,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="field">The field to inspect for the System.Runtime.CompilerServices.IsVolatile modifier.</param>
     public static bool IsVolatile(IFieldDefinition field) {
+      Contract.Requires(field != null);
+
       IModifiedTypeReference/*?*/ modifiedTypeReference = field.Type as IModifiedTypeReference;
       if (modifiedTypeReference == null) return false;
       uint isVolatileKey = modifiedTypeReference.PlatformType.SystemRuntimeCompilerServicesIsVolatile.InternedKey;
@@ -363,6 +404,9 @@ namespace Microsoft.Cci {
     /// Returns true if the two signatures match according to the criteria of the CLR loader.
     /// </summary>
     public static bool SignaturesAreEqual(ISignature signature1, ISignature signature2) {
+      Contract.Requires(signature1 != null);
+      Contract.Requires(signature2 != null);
+
       if (signature1.CallingConvention != signature2.CallingConvention) return false;
       if (signature1.ReturnValueIsByRef != signature2.ReturnValueIsByRef) return false;
       if (signature1.ReturnValueIsModified != signature2.ReturnValueIsModified) return false;
@@ -374,6 +418,9 @@ namespace Microsoft.Cci {
     /// Returns true if the two generic method signatures match according to the criteria of the CLR loader.
     /// </summary>
     public static bool GenericMethodSignaturesAreEqual(IMethodDefinition method1, IMethodDefinition method2) {
+      Contract.Requires(method1 != null);
+      Contract.Requires(method2 != null);
+
       if (method1.CallingConvention != method2.CallingConvention) return false;
       if (method1.ReturnValueIsByRef != method2.ReturnValueIsByRef) return false;
       if (method1.ReturnValueIsModified != method2.ReturnValueIsModified) return false;
@@ -409,6 +456,13 @@ namespace Microsoft.Cci {
     /// <param name="parameterTypes">Zero or more references the types of the parameters of the referenced method.</param>
     public MethodReference(IMetadataHost host, ITypeReference containingType, CallingConvention callingConvention,
       ITypeReference returnType, IName name, ushort genericParameterCount, params ITypeReference[] parameterTypes) {
+      Contract.Requires(host != null);
+      Contract.Requires(containingType != null);
+      Contract.Requires(returnType != null);
+      Contract.Requires(name != null);
+      Contract.Requires(parameterTypes != null);
+      Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
+
       this.host = host;
       this.containingType = containingType;
       this.callingConvention = callingConvention;
@@ -437,6 +491,15 @@ namespace Microsoft.Cci {
     public MethodReference(IMetadataHost host, ITypeReference containingType, CallingConvention callingConvention,
       ITypeReference returnType, IName name, ushort genericParameterCount,
       IEnumerable<IParameterTypeInformation> parameters, params ITypeReference[] extraParameterTypes) {
+      Contract.Requires(host != null);
+      Contract.Requires(containingType != null);
+      Contract.Requires(returnType != null);
+      Contract.Requires(name != null);
+      Contract.Requires(parameters != null);
+      Contract.Requires(Contract.ForAll(parameters, x => x != null));
+      Contract.Requires(extraParameterTypes != null);
+      Contract.Requires(Contract.ForAll(extraParameterTypes, x => x != null));
+
       this.host = host;
       this.containingType = containingType;
       this.callingConvention = callingConvention;
@@ -572,6 +635,9 @@ namespace Microsoft.Cci {
     /// that matches this method reference and returns the method. Returns Dummy.Method is no matching method can be found.
     /// </summary>
     private IMethodDefinition Resolve(ITypeDefinition typeToSearch) {
+      Contract.Requires(typeToSearch != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       IMethodDefinition result = TypeHelper.GetMethod(typeToSearch, this);
       if (result != null) return result;
       foreach (ITypeReference baseClass in typeToSearch.BaseClasses) {
@@ -640,6 +706,9 @@ namespace Microsoft.Cci {
     /// <param name="index">The position in the parameter list where the described parameter can be found.</param>
     /// <param name="type">The type of argument value that corresponds to the described parameter.</param>
     public SimpleParameterTypeInformation(ISignature containingSignature, ushort index, ITypeReference type) {
+      Contract.Requires(containingSignature != null);
+      Contract.Requires(type != null);
+
       this.containingSignature = containingSignature;
       this.index = index;
       this.type = type;
@@ -693,6 +762,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two instances if IParameterTypeInformation are equivalent.
     /// </summary>
     public bool Equals(IParameterDefinition x, IParameterDefinition y) {
+      if (x == null) return y == null;
       if (x.Index != y.Index) return false;
       if (x.IsByReference != y.IsByReference) return false;
       if (x.IsModified != y.IsModified) return false;
@@ -704,6 +774,7 @@ namespace Microsoft.Cci {
     /// Returns a hash code that is the same for any two equivalent instances of IParameterTypeInformation.
     /// </summary>
     public int GetHashCode(IParameterDefinition parameterTypeInformation) {
+      if (parameterTypeInformation == null) return 0;
       return (int)parameterTypeInformation.Type.InternedKey;
     }
 
@@ -718,6 +789,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two instances if IParameterTypeInformation are equivalent.
     /// </summary>
     public bool Equals(IParameterTypeInformation x, IParameterTypeInformation y) {
+      if (x == null) return y == null;
       if (x.Index != y.Index) return false;
       if (x.IsByReference != y.IsByReference) return false;
       if (x.IsModified != y.IsModified) return false;
@@ -729,6 +801,7 @@ namespace Microsoft.Cci {
     /// Returns a hash code that is the same for any two equivalent instances of IParameterTypeInformation.
     /// </summary>
     public int GetHashCode(IParameterTypeInformation parameterTypeInformation) {
+      if (parameterTypeInformation == null) return 0;
       return (int)parameterTypeInformation.Type.InternedKey;
     }
 
@@ -759,6 +832,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="typeNameFormatter">The type name formatter object to use for formatting the type references that occur in the signatures.</param>
     public SignatureFormatter(TypeNameFormatter typeNameFormatter) {
+      Contract.Requires(typeNameFormatter != null);
       this.typeNameFormatter = typeNameFormatter;
     }
 
@@ -767,6 +841,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetEventSignature(IEventDefinition eventDef, NameFormattingOptions formattingOptions) {
+      Contract.Requires(eventDef != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
         sb.Append("E:");
@@ -788,6 +865,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetFieldSignature(IFieldReference field, NameFormattingOptions formattingOptions) {
+      Contract.Requires(field != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
         sb.Append("F:");
@@ -809,6 +889,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetMemberSignature(ITypeMemberReference member, NameFormattingOptions formattingOptions) {
+      Contract.Requires(member != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       IMethodReference/*?*/ method = member as IMethodReference;
       if (method != null) return this.GetMethodSignature(method, formattingOptions);
       ITypeReference/*?*/ type = member as ITypeReference;
@@ -829,6 +912,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions) {
+      Contract.Requires(method != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       this.AppendReturnTypeSignature(method, formattingOptions, sb);
       this.AppendMethodName(method, formattingOptions, sb);
@@ -850,6 +936,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetPropertySignature(IPropertyDefinition property, NameFormattingOptions formattingOptions) {
+      Contract.Requires(property != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       this.AppendPropertyName(property, formattingOptions, sb);
       this.AppendPropertyParameters(property.Parameters, formattingOptions, sb);
@@ -860,6 +949,9 @@ namespace Microsoft.Cci {
     /// Appends a formatted string of type arguments. Enclosed in angle brackets and comma-delimited.
     /// </summary>
     protected virtual void AppendGenericArguments(IGenericMethodInstanceReference method, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(method != null);
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.OmitTypeArguments) != 0) return;
       sb.Append("<");
       bool first = true;
@@ -875,6 +967,9 @@ namespace Microsoft.Cci {
     /// Appends a formatted string of type parameters. Enclosed in angle brackets and comma-delimited.
     /// </summary>
     protected virtual void AppendGenericParameters(IMethodReference method, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(method != null);
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.TypeParameters) == 0) return;
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
         sb.Append("``");
@@ -895,6 +990,10 @@ namespace Microsoft.Cci {
     /// Appends a formatted string of parameters. Enclosed in parentheses and comma-delimited.
     /// </summary>
     protected virtual void AppendMethodParameters(IEnumerable<IParameterTypeInformation> parameters, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(parameters != null);
+      Contract.Requires(Contract.ForAll(parameters, x => x != null));
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.Signature) == 0 || ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 && !IteratorHelper.EnumerableIsNotEmpty<IParameterTypeInformation>(parameters))) return;
       sb.Append('(');
       bool first = true;
@@ -910,6 +1009,9 @@ namespace Microsoft.Cci {
     /// Appends the method name, optionally including the containing type name and using special names for methods with IsSpecialName set to true.
     /// </summary>
     protected virtual void AppendMethodName(IMethodReference method, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(method != null);
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
         sb.Append("M:");
       }
@@ -940,6 +1042,9 @@ namespace Microsoft.Cci {
     /// Appends a formatted parameters.
     /// </summary>
     protected virtual void AppendParameter(IParameterTypeInformation param, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(param != null);
+      Contract.Requires(sb != null);
+
       IParameterDefinition def = param as IParameterDefinition;
       if (def != null && (formattingOptions & NameFormattingOptions.ParameterModifiers) != 0) {
         if (def.IsOut) sb.Append("out ");
@@ -960,6 +1065,9 @@ namespace Microsoft.Cci {
     /// Appends the method name, optionally including the containing type name.
     /// </summary>
     protected virtual void AppendPropertyName(IPropertyDefinition property, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(property != null);
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
         sb.Append("P:");
       }
@@ -979,6 +1087,10 @@ namespace Microsoft.Cci {
     /// Appends a formatted string of parameters. Enclosed in square brackets and comma-delimited.
     /// </summary>
     protected virtual void AppendPropertyParameters(IEnumerable<IParameterDefinition> parameters, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(parameters != null);
+      Contract.Requires(Contract.ForAll(parameters, x => x != null));
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.Signature) == 0) return;
       bool isNotEmpty = IteratorHelper.EnumerableIsNotEmpty(parameters);
       if (isNotEmpty) sb.Append((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? '(' : '[');
@@ -994,6 +1106,9 @@ namespace Microsoft.Cci {
     /// Formats the return type of a signature
     /// </summary>
     protected virtual void AppendReturnTypeSignature(ISignature sig, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(sig != null);
+      Contract.Requires(sb != null);
+
       if ((formattingOptions & NameFormattingOptions.ReturnType) == 0) return;
       sb.Append(this.typeNameFormatter.GetTypeName(sig.Type, formattingOptions));
       sb.Append(' ');
@@ -1003,6 +1118,9 @@ namespace Microsoft.Cci {
     /// Replaces characters that are not allowed in a documentation id with legal characters.
     /// </summary>
     protected virtual string MapToDocumentationIdName(string name) {
+      Contract.Requires(name != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       char[] c = name.ToCharArray();
       for (int i = 0; i < c.Length; i++) {
         if (c[i] == '.') c[i] = '#';

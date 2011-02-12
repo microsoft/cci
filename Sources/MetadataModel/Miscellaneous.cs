@@ -93,6 +93,11 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<TargetType> GetConversionEnumerable<SourceType, TargetType>(IEnumerable<SourceType> sourceEnumeration) where SourceType : TargetType {
+      Contract.Requires(sourceEnumeration != null);
+      Contract.Requires(Contract.ForAll(sourceEnumeration, x => x != null));
+      Contract.Ensures(Contract.Result<IEnumerable<TargetType>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<TargetType>>(), x => x != null));
+
       foreach (SourceType s in sourceEnumeration) {
         yield return s;
       }
@@ -681,6 +686,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// The name of an entity. Typically name instances come from a common pool. Within the pool no two distinct instances will have the same Value or UniqueKey.
   /// </summary>
+  [ContractClass(typeof(INameContract))]
   public interface IName {
     /// <summary>
     /// An integer that is unique within the pool from which the name instance has been allocated. Useful as a hashtable key.
@@ -705,6 +711,31 @@ namespace Microsoft.Cci {
     /// </summary>
     string Value { get; }
   }
+
+  [ContractClassFor(typeof(IName))]
+  abstract class INameContract : IName {
+    public int UniqueKey {
+      get {
+        Contract.Ensures(Contract.Result<int>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    public int UniqueKeyIgnoringCase {
+      get {
+        Contract.Ensures(Contract.Result<int>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    public string Value {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+  }
+
 
   /// <summary>
   /// Implemented by any entity that has a name.

@@ -657,6 +657,7 @@ namespace Microsoft.Cci {
     byte GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(ITypeReference reference);
 
   }
+
   /// <summary>
   /// A base class for an object provided by the application hosting the metadata reader. The object allows the host application
   /// to control how assembly references are unified, where files are found and so on. The object also controls the lifetime

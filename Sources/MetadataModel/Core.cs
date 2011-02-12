@@ -428,12 +428,25 @@ namespace Microsoft.Cci {
   /// Implemented by types that contain a collection of members of type MemberType. For example a namespace contains a collection of INamespaceMember instances.
   /// </summary>
   /// <typeparam name="MemberType">The type of member contained by the Members collection of this container.</typeparam>
+  [ContractClass(typeof(IContainerContract<>))]
   public interface IContainer<MemberType>
     where MemberType : class {
     /// <summary>
     /// The collection of contained members.
     /// </summary>
     IEnumerable<MemberType> Members { get; }
+  }
+
+  [ContractClassFor(typeof(IContainer<>))]
+  abstract class IContainerContract<MemberType> : IContainer<MemberType>
+    where MemberType : class {
+    public IEnumerable<MemberType> Members {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<MemberType>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
   }
 
   /// <summary>

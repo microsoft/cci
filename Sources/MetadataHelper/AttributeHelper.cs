@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -23,6 +24,8 @@ namespace Microsoft.Cci {
     /// Returns true if the type definition is an attribute. Typedefinition is said to be attribute when it inherits from [mscorlib]System.Attribute
     /// </summary>
     public static bool IsAttributeType(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       return TypeHelper.Type1DerivesFromType2(typeDefinition, typeDefinition.PlatformType.SystemAttribute);
     }
 
@@ -30,6 +33,10 @@ namespace Microsoft.Cci {
     /// Returns true if the given collection of attributes contains an attribute of the given type.
     /// </summary>
     public static bool Contains(IEnumerable<ICustomAttribute> attributes, ITypeReference attributeType) {
+      Contract.Requires(attributes != null);
+      Contract.Requires(Contract.ForAll(attributes, x => x != null));
+      Contract.Requires(attributeType != null);
+
       foreach (ICustomAttribute attribute in attributes) {
         if (TypeHelper.TypesAreEquivalent(attribute.Type, attributeType)) return true;
       }
@@ -41,6 +48,9 @@ namespace Microsoft.Cci {
     /// This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public static bool AllowMultiple(ITypeDefinition attributeType, INameTable nameTable) {
+      Contract.Requires(attributeType != null);
+      Contract.Requires(nameTable != null);
+
       foreach (ICustomAttribute ca in attributeType.Attributes) {
         if (!TypeHelper.TypesAreEquivalent(ca.Type, attributeType.PlatformType.SystemAttributeUsageAttribute))
           continue;
@@ -62,6 +72,9 @@ namespace Microsoft.Cci {
     /// This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public static bool Inherited(ITypeDefinition attributeType, INameTable nameTable) {
+      Contract.Requires(attributeType != null);
+      Contract.Requires(nameTable != null);
+
       foreach (ICustomAttribute ca in attributeType.Attributes) {
         if (!TypeHelper.TypesAreEquivalent(ca.Type, attributeType.PlatformType.SystemAttributeUsageAttribute))
           continue;
@@ -83,6 +96,8 @@ namespace Microsoft.Cci {
     /// This information is obtained from an attribute on the attribute type definition.
     /// </summary>
     public static AttributeTargets ValidOn(ITypeDefinition attributeType) {
+      Contract.Requires(attributeType != null);
+
       foreach (ICustomAttribute ca in attributeType.Attributes) {
         if (!TypeHelper.TypesAreEquivalent(ca.Type, attributeType.PlatformType.SystemAttributeUsageAttribute))
           continue;

@@ -498,6 +498,9 @@ namespace Microsoft.Cci {
     /// <param name="typeDefinition">The type definition from which one wants to access the <paramref name="member"/>.</param>
     /// <param name="member">The type member to check.</param>
     public static bool CanAccess(ITypeDefinition typeDefinition, ITypeDefinitionMember member) {
+      Contract.Requires(typeDefinition != null);
+      Contract.Requires(member != null);
+
       if (TypeHelper.TypesAreEquivalent(typeDefinition, member.ContainingTypeDefinition)) return true;
       if (typeDefinition.IsGeneric && TypeHelper.TypesAreEquivalent(typeDefinition.InstanceType, member.ContainingType))
         return true;
@@ -531,6 +534,9 @@ namespace Microsoft.Cci {
     /// <param name="typeDefinition">The type definition from which one wants to access the <paramref name="otherTypeDefinition"/>.</param>
     /// <param name="otherTypeDefinition">The type to check.</param>
     public static bool CanAccess(ITypeDefinition typeDefinition, ITypeDefinition otherTypeDefinition) {
+      Contract.Requires(typeDefinition != null);
+      Contract.Requires(otherTypeDefinition != null);
+
       if (TypeHelper.TypesAreEquivalent(typeDefinition, otherTypeDefinition)) return true;
       if (typeDefinition.IsGeneric && TypeHelper.TypesAreEquivalent(typeDefinition.InstanceType, typeDefinition))
         return true;
@@ -630,6 +636,8 @@ namespace Microsoft.Cci {
     /// Such values need not be stored in memory in order to be representable. For example, they can appear as part of a CLR instruction.
     /// </summary>
     public static bool IsCompileTimeConstantType(ITypeReference type) {
+      Contract.Requires(type != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
         case PrimitiveTypeCode.Char:
@@ -654,6 +662,8 @@ namespace Microsoft.Cci {
     /// Returns true if the CLR allows integer operators to be applied to values of the given type.
     /// </summary>
     public static bool IsPrimitiveInteger(ITypeReference type) {
+      Contract.Requires(type != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Char:
         case PrimitiveTypeCode.Int16:
@@ -674,6 +684,8 @@ namespace Microsoft.Cci {
     /// Returns true if the CLR allows signed integer operators to be applied to values of the given type.
     /// </summary>
     public static bool IsSignedPrimitiveInteger(ITypeReference type) {
+      Contract.Requires(type != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Int16:
         case PrimitiveTypeCode.Int32:
@@ -689,6 +701,8 @@ namespace Microsoft.Cci {
     /// Returns true if the CLR allows signed comparison operators to be applied to values of the given type.
     /// </summary>
     public static bool IsSignedPrimitive(ITypeReference type) {
+      Contract.Requires(type != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Int16:
         case PrimitiveTypeCode.Int32:
@@ -707,6 +721,8 @@ namespace Microsoft.Cci {
     /// Returns true if the CLR allows unsigned integer operators to be applied to values of the given type.
     /// </summary>
     public static bool IsUnsignedPrimitiveInteger(ITypeReference type) {
+      Contract.Requires(type != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Char:
         case PrimitiveTypeCode.UInt16:
@@ -723,6 +739,8 @@ namespace Microsoft.Cci {
     /// Returns true if the CLR allows unsigned comparison operators to be applied to values of the given type.
     /// </summary>
     public static bool IsUnsignedPrimitive(ITypeReference type) {
+      Contract.Requires(type != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Char:
         case PrimitiveTypeCode.UInt16:
@@ -740,6 +758,8 @@ namespace Microsoft.Cci {
     /// Decides if the given type definition is visible to assemblies other than the assembly it is defined in (and other than its friends).
     /// </summary>
     public static bool IsVisibleOutsideAssembly(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       var nestedType = typeDefinition as INestedTypeDefinition;
       if (nestedType != null && !TypeHelper.IsVisibleOutsideAssembly(nestedType.ContainingTypeDefinition)) return false;
       switch (TypeHelper.TypeVisibilityAsTypeMemberVisibility(typeDefinition)) {
@@ -756,6 +776,10 @@ namespace Microsoft.Cci {
     /// Otherwise it returns either type1, or type2 or System.Object, depending on how much is known about either type.
     /// </summary>
     public static ITypeReference MergedType(ITypeReference type1, ITypeReference type2) {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       if (TypesAreEquivalent(type1, type2)) return type1;
       var typeDef1 = type1.ResolvedType;
       var typeDef2 = type2.ResolvedType;
@@ -774,6 +798,10 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static ITypeDefinition MergedType(ITypeDefinition type1, ITypeDefinition type2) {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+
       if (TypeHelper.TypesAreAssignmentCompatible(type1, type2))
         return type2;
       if (TypeHelper.TypesAreAssignmentCompatible(type2, type1))
@@ -791,6 +819,9 @@ namespace Microsoft.Cci {
     /// Generic type instances are treated as having a visibility that is the intersection of the generic type's visibility and all of the type arguments' visibilities.
     /// </summary>
     public static TypeMemberVisibility GenericInstanceVisibilityAsTypeMemberVisibility(TypeMemberVisibility templateVisibility, IEnumerable<ITypeReference> typeArguments) {
+      Contract.Requires(typeArguments != null);
+      Contract.Requires(Contract.ForAll(typeArguments, x => x != null));
+
       TypeMemberVisibility result = templateVisibility & TypeMemberVisibility.Mask;
       foreach (ITypeReference typeArgument in typeArguments) {
         TypeMemberVisibility argumentVisibility = TypeVisibilityAsTypeMemberVisibility(typeArgument.ResolvedType);
@@ -806,6 +837,8 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static TypeMemberVisibility TypeVisibilityAsTypeMemberVisibility(ITypeDefinition type) {
+      Contract.Requires(type != null);
+
       TypeMemberVisibility result = TypeMemberVisibility.Public; // supposedly the only thing that doesn't meet any of the below tests are type parameters and their "default" is public.
       INamespaceTypeDefinition/*?*/ nsType = type as INamespaceTypeDefinition;
       if (nsType != null)
@@ -909,6 +942,8 @@ namespace Microsoft.Cci {
     /// the defining unit of the element type, or in the case of a generic type instance, the definining type of the generic template type.
     /// </summary>
     public static IUnit/*?*/ GetDefiningUnit(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       INestedTypeDefinition/*?*/ nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
       while (nestedTypeDefinition != null) {
         typeDefinition = nestedTypeDefinition.ContainingTypeDefinition;
@@ -932,6 +967,8 @@ namespace Microsoft.Cci {
     /// then the result is null.
     /// </summary>
     public static IUnitReference/*?*/ GetDefiningUnitReference(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+
       if (typeReference is ISpecializedNestedTypeReference) return null;
       INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
       while (nestedTypeReference != null) {
@@ -950,6 +987,9 @@ namespace Microsoft.Cci {
     /// <param name="declaringType">The type thats declares the field.</param>
     /// <param name="fieldName">The name of the field.</param>
     public static IFieldDefinition GetField(ITypeDefinition declaringType, IName fieldName) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(fieldName != null);
+
       foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(fieldName, false)) {
         IFieldDefinition/*?*/ field = member as IFieldDefinition;
         if (field != null) return field;
@@ -964,6 +1004,10 @@ namespace Microsoft.Cci {
     /// <param name="declaringType">The type thats declares the field.</param>
     /// <param name="fieldReference">A reference to the field.</param>
     public static IFieldDefinition GetField(ITypeDefinition declaringType, IFieldReference fieldReference) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(fieldReference != null);
+      Contract.Ensures(Contract.Result<IFieldDefinition>() != null);
+
       foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(fieldReference.Name, false)) {
         IFieldDefinition/*?*/ field = member as IFieldDefinition;
         if (field == null) continue;
@@ -991,6 +1035,12 @@ namespace Microsoft.Cci {
     /// <param name="parameterTypes">A list of types that should correspond to the parameter types of the returned method.</param>
     [Pure]
     public static IMethodDefinition GetMethod(ITypeDefinition declaringType, IName methodName, params ITypeReference[] parameterTypes) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(methodName != null);
+      Contract.Requires(parameterTypes != null);
+      Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       return TypeHelper.GetMethod(declaringType.GetMembersNamed(methodName, false), methodName, parameterTypes);
     }
 
@@ -1003,6 +1053,13 @@ namespace Microsoft.Cci {
     /// <param name="parameterTypes">A list of types that should correspond to the parameter types of the returned method.</param>
     [Pure]
     public static IMethodDefinition GetMethod(IEnumerable<ITypeDefinitionMember> members, IName methodName, params ITypeReference[] parameterTypes) {
+      Contract.Requires(members != null);
+      Contract.Requires(Contract.ForAll(members, x => x != null));
+      Contract.Requires(methodName != null);
+      Contract.Requires(parameterTypes != null);
+      Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       foreach (ITypeDefinitionMember member in members) {
         IMethodDefinition/*?*/ meth = member as IMethodDefinition;
         if (meth != null && meth.Name.UniqueKey == methodName.UniqueKey && meth.ParameterCount == parameterTypes.Length) {
@@ -1024,7 +1081,6 @@ namespace Microsoft.Cci {
       return Dummy.Method;
     }
 
-
     /// <summary>
     /// Returns a method of the given declaring type that matches the given method reference.
     /// If no such method can be found, Dummy.Method is returned.
@@ -1033,6 +1089,10 @@ namespace Microsoft.Cci {
     /// <param name="methodReference">A method reference whose name and signature matches that of the desired result.</param>
     /// <returns></returns>
     public static IMethodDefinition GetMethod(ITypeDefinition declaringType, IMethodReference methodReference) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(methodReference != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       IMethodDefinition result = TypeHelper.GetMethod(declaringType.GetMembersNamed(methodReference.Name, false), methodReference);
       if (result == Dummy.Method) {
         foreach (ITypeDefinitionMember member in declaringType.PrivateHelperMembers) {
@@ -1055,6 +1115,11 @@ namespace Microsoft.Cci {
     public static IMethodDefinition GetInvokeMethod(ITypeDefinition delegateType, IMetadataHost host)
       //^ requires delegateType.IsDelegate;
     {
+      Contract.Requires(delegateType != null);
+      Contract.Requires(host != null);
+      Contract.Requires(delegateType.IsDelegate);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       foreach (ITypeDefinitionMember member in delegateType.GetMembersNamed(host.NameTable.Invoke, false)) {
         IMethodDefinition/*?*/ method = member as IMethodDefinition;
         if (method != null) return method;
@@ -1070,6 +1135,11 @@ namespace Microsoft.Cci {
     /// <param name="methodSignature">A method whose signature matches that of the desired result.</param>
     /// <returns></returns>
     public static IMethodDefinition GetMethod(IEnumerable<ITypeDefinitionMember> members, IMethodReference methodSignature) {
+      Contract.Requires(members != null);
+      Contract.Requires(Contract.ForAll(members, x => x != null));
+      Contract.Requires(methodSignature != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
       foreach (ITypeDefinitionMember member in members) {
         IMethodDefinition/*?*/ meth = member as IMethodDefinition;
         if (meth == null) continue;
@@ -1085,6 +1155,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static string GetNamespaceName(IUnitSetNamespace namespaceDefinition, NameFormattingOptions formattingOptions) {
+      Contract.Requires(namespaceDefinition != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return (new TypeNameFormatter()).GetNamespaceName(namespaceDefinition, formattingOptions);
     }
 
@@ -1093,6 +1166,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static string GetNamespaceName(IUnitNamespaceReference namespaceReference, NameFormattingOptions formattingOptions) {
+      Contract.Requires(namespaceReference != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return (new TypeNameFormatter()).GetNamespaceName(namespaceReference, formattingOptions);
     }
 
@@ -1105,6 +1181,10 @@ namespace Microsoft.Cci {
     /// <param name="genericParameterCount">The number of generic parameters. Zero if the type is not generic, larger than zero otherwise.</param>
     /// <returns></returns>
     public static INestedTypeDefinition GetNestedType(ITypeDefinition declaringType, IName typeName, int genericParameterCount) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(typeName != null);
+      Contract.Ensures(Contract.Result<INestedTypeDefinition>() != null);
+
       foreach (var member in declaringType.GetMembersNamed(typeName, false)) {
         var nestedType = member as INestedTypeDefinition;
         if (nestedType == null) continue;
@@ -1126,6 +1206,9 @@ namespace Microsoft.Cci {
     /// <returns>True if the instantiation succeeded. False if typeDefinition is a nested type and we cannot find such a nested type definition 
     /// in its parent's self instance.</returns>
     public static bool TryGetFullyInstantiatedSpecializedTypeReference(ITypeDefinition typeDefinition, out ITypeReference result) {
+      Contract.Requires(typeDefinition != null);
+      Contract.Ensures(Contract.ValueAtReturn<ITypeReference>(out result) != null);
+
       result = typeDefinition;
       if (typeDefinition.IsGeneric) {
         result = typeDefinition.InstanceType;
@@ -1152,7 +1235,10 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static string GetTypeName(ITypeReference type) {
+      Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<string>() != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return TypeHelper.GetTypeName(type, NameFormattingOptions.None);
     }
 
@@ -1161,7 +1247,10 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
+      Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<string>() != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return (new TypeNameFormatter()).GetTypeName(type, formattingOptions);
     }
 
@@ -1317,6 +1406,11 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool ParameterListsAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2) {
+      Contract.Requires(paramList1 != null);
+      Contract.Requires(Contract.ForAll(paramList1, x => x != null));
+      Contract.Requires(paramList2 != null);
+      Contract.Requires(Contract.ForAll(paramList2, x => x != null));
+
       IEnumerator<IParameterTypeInformation> parameterEnumerator2 = paramList2.GetEnumerator();
       foreach (IParameterTypeInformation parameter1 in paramList1) {
         if (!parameterEnumerator2.MoveNext()) {
@@ -1336,6 +1430,11 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool ParameterListsAreEquivalent(IEnumerable<IParameterDefinition> paramList1, IEnumerable<IParameterDefinition> paramList2) {
+      Contract.Requires(paramList1 != null);
+      Contract.Requires(Contract.ForAll(paramList1, x => x != null));
+      Contract.Requires(paramList2 != null);
+      Contract.Requires(Contract.ForAll(paramList2, x => x != null));
+
       IEnumerator<IParameterDefinition> parameterEnumerator2 = paramList2.GetEnumerator();
       foreach (IParameterDefinition parameter1 in paramList1) {
         if (!parameterEnumerator2.MoveNext()) {
@@ -1357,6 +1456,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="type">The type whose size is wanted. If not a reference to a primitive type, this type must be resolvable.</param>
     public static uint SizeOfType(ITypeReference type) {
+      Contract.Requires(type != null);
+
       return SizeOfType(type, true);
     }
 
@@ -1368,10 +1469,15 @@ namespace Microsoft.Cci {
     /// as the result of this routine if not 0. Remember to specify false for this parameter when using this routine in the implementation
     /// of the ITypeDefinition.SizeOf property.</param>
     public static uint SizeOfType(ITypeReference type, bool mayUseSizeOfProperty) {
+      Contract.Requires(type != null);
+
       return SizeOfType(type, type, mayUseSizeOfProperty);
     }
 
     private static uint SizeOfType(ITypeReference type, ITypeReference rootType, bool mayUseSizeOfProperty) {
+      Contract.Requires(type != null);
+      Contract.Requires(rootType != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           return sizeof(Boolean);
@@ -1406,7 +1512,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.Invalid:
           return 1;
         default:
-          if (type.IsEnum) {
+          if (type.IsEnum && type.ResolvedType.IsEnum) {
             if (TypeHelper.TypesAreEquivalent(rootType, type.ResolvedType.UnderlyingType)) return 0;
             return TypeHelper.SizeOfType(type.ResolvedType.UnderlyingType);
           }
@@ -1417,11 +1523,13 @@ namespace Microsoft.Cci {
             List<IFieldDefinition> fields = new List<IFieldDefinition>(IteratorHelper.GetFilterEnumerable<ITypeDefinitionMember, IFieldDefinition>(members));
             fields.Sort(delegate(IFieldDefinition f1, IFieldDefinition f2) { return f1.SequenceNumber - f2.SequenceNumber; });
             members = IteratorHelper.GetConversionEnumerable<IFieldDefinition, ITypeDefinitionMember>(fields);
+            Contract.Assume(members != null);
           }
           //Sum up the bit sizes
           result = 0;
           uint bitOffset = 0;
           ushort bitFieldAlignment = 0;
+          Contract.Assume(members != null);
           foreach (ITypeDefinitionMember member in members) {
             IFieldDefinition/*?*/ field = member as IFieldDefinition;
             if (field == null || field.IsStatic) continue;
@@ -1463,6 +1571,9 @@ namespace Microsoft.Cci {
     /// integers for the purposes of verifying that stack state merges are safe.
     /// </summary>
     public static ITypeReference StackType(ITypeReference type) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
         case PrimitiveTypeCode.Char:
@@ -1493,6 +1604,9 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="type">The type whose size is wanted. If not a reference to a primitive type, this type must be resolvable.</param>
     public static ushort TypeAlignment(ITypeReference type) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<ushort>() > 0);
+
       return TypeAlignment(type, true);
     }
 
@@ -1504,10 +1618,17 @@ namespace Microsoft.Cci {
     /// as the result of this routine if not 0. Rembmer to specify false for this parameter when using this routine in the implementation
     /// of the ITypeDefinition.Alignment property.</param>
     public static ushort TypeAlignment(ITypeReference type, bool mayUseAlignmentProperty) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<ushort>() > 0);
+
       return TypeAlignment(type, type, mayUseAlignmentProperty);
     }
 
     private static ushort TypeAlignment(ITypeReference type, ITypeReference rootType, bool mayUseAlignmentProperty) {
+      Contract.Requires(type != null);
+      Contract.Requires(rootType != null);
+      Contract.Ensures(Contract.Result<ushort>() > 0);
+
       switch (type.TypeCode) {
         case PrimitiveTypeCode.Boolean:
           return sizeof(Boolean);
@@ -1542,7 +1663,7 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.Invalid:
           return 1;
         default:
-          if (type.IsEnum) {
+          if (type.IsEnum && type.ResolvedType.IsEnum) {
             if (TypeHelper.TypesAreEquivalent(rootType, type.ResolvedType.UnderlyingType)) return 1;
             return TypeHelper.TypeAlignment(type.ResolvedType.UnderlyingType, rootType, mayUseAlignmentProperty);
           }
@@ -1612,6 +1733,8 @@ namespace Microsoft.Cci {
     /// Returns true if the given type extends System.Attribute.
     /// </summary>
     public static bool IsAttributeType(ITypeDefinition type) {
+      Contract.Requires(type != null);
+
       foreach (ITypeReference baseClass in type.BaseClasses) {
         if (baseClass.InternedKey == type.PlatformType.SystemAttribute.InternedKey) return true;
       }
@@ -1729,7 +1852,6 @@ namespace Microsoft.Cci {
     /// Returns true if the given two types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    //^ [Confined]
     public static bool TypesAreEquivalent(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2) {
       if (type1 == null || type2 == null) return false;
       if (type1 == type2) return true;
@@ -1741,7 +1863,6 @@ namespace Microsoft.Cci {
     /// TypeHelper.TypesAreEquivalent in that two generic method type parameters are considered equivalent if their parameter list indices are the same.
     /// </summary>
     [Pure]
-    //^ [Confined]
     public static bool TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2) {
       if (type1 == null || type2 == null) return false;
       if (type1 == type2) return true;
@@ -1811,6 +1932,7 @@ namespace Microsoft.Cci {
       /// true if the specified objects are equal; otherwise, false.
       /// </returns>
       public bool Equals(ITypeReference x, ITypeReference y) {
+        if (x == null) return y == null;
         return TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(x, y);
       }
 
@@ -1833,6 +1955,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool Type1DerivesFromOrIsTheSameAsType2(ITypeDefinition type1, ITypeReference type2) {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+
       if (TypeHelper.TypesAreEquivalent(type1, type2)) return true;
       return TypeHelper.Type1DerivesFromType2(type1, type2);
     }
@@ -1842,6 +1967,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool Type1DerivesFromType2(ITypeDefinition type1, ITypeReference type2) {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+
       foreach (ITypeReference baseClass in type1.BaseClasses) {
         if (TypeHelper.TypesAreEquivalent(baseClass, type2)) return true;
         if (TypeHelper.Type1DerivesFromType2(baseClass.ResolvedType, type2)) return true;
@@ -1855,6 +1983,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool Type1ImplementsType2(ITypeDefinition type1, ITypeReference type2) {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+
       foreach (ITypeReference implementedInterface in type1.Interfaces) {
         ITypeDefinition iface = implementedInterface.ResolvedType;
         if (TypeHelper.TypesAreEquivalent(iface, type2)) return true;
@@ -1871,6 +2002,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool Type1IsCovariantWithType2(ITypeDefinition type1, ITypeReference type2) {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+
       IArrayTypeReference/*?*/ arrType1 = type1 as IArrayTypeReference;
       IArrayTypeReference/*?*/ arrType2 = type2 as IArrayTypeReference;
       if (arrType1 == null || arrType2 == null) return false;
@@ -1885,6 +2019,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool TypesAreAssignmentCompatible(ITypeDefinition sourceType, ITypeDefinition targetType) {
+      Contract.Requires(sourceType != null);
+      Contract.Requires(targetType != null);
+
       if (TypeHelper.TypesAreEquivalent(sourceType, targetType)) return true;
       if (sourceType.IsReferenceType && TypeHelper.Type1DerivesFromOrIsTheSameAsType2(sourceType, targetType)) return true;
       if (targetType.IsInterface && TypeHelper.Type1ImplementsType2(sourceType, targetType)) return true;
@@ -1899,6 +2036,9 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="typeReference">A reference to a type.</param>
     public static ITypeReference UnsignedEquivalent(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       switch (typeReference.TypeCode) {
         case PrimitiveTypeCode.Int8: return typeReference.PlatformType.SystemUInt8;
         case PrimitiveTypeCode.Int16: return typeReference.PlatformType.SystemUInt16;
@@ -1927,6 +2067,10 @@ namespace Microsoft.Cci {
     /// <param name="formattingOptions">A set of flags that specify how the type name is to be formatted.</param>
     /// <param name="typeName">The unmangled, unaugmented name of the type.</param>
     protected virtual string AddGenericParametersIfNeeded(ITypeReference type, ushort genericParameterCount, NameFormattingOptions formattingOptions, string typeName) {
+      Contract.Requires(type != null);
+      Contract.Requires(typeName != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0 && genericParameterCount > 0 && type.ResolvedType != Dummy.Type) {
         StringBuilder sb = new StringBuilder(typeName);
         sb.Append("<");
@@ -1952,6 +2096,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetArrayTypeName(IArrayTypeReference arrayType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(arrayType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       ITypeReference elementType = arrayType.ElementType;
       IArrayTypeReference elementAsArray = elementType as IArrayTypeReference;
@@ -1969,6 +2116,9 @@ namespace Microsoft.Cci {
     /// <example>For example, this appends the "[][,]" part of an array like "int[][,]".</example>
     /// </summary>
     protected virtual void AppendArrayDimensions(IArrayTypeReference arrayType, StringBuilder sb, NameFormattingOptions formattingOptions) {
+      Contract.Requires(arrayType != null);
+      Contract.Requires(sb != null);
+
       IArrayTypeReference/*?*/ elementArrayType = arrayType.ElementType as IArrayTypeReference;
       bool formattingForDocumentationId = (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0;
       if (formattingForDocumentationId && elementArrayType != null) { //Append the outer dimensions of the array first
@@ -2005,6 +2155,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetGenericMethodParameterName(IGenericMethodParameterReference genericMethodParameter, NameFormattingOptions formattingOptions) {
+      Contract.Requires(genericMethodParameter != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "``" + genericMethodParameter.Index;
       return genericMethodParameter.Name.Value;
     }
@@ -2014,6 +2167,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetGenericTypeParameterName(IGenericTypeParameterReference genericTypeParameter, NameFormattingOptions formattingOptions) {
+      Contract.Requires(genericTypeParameter != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "`" + genericTypeParameter.Index;
       return genericTypeParameter.Name.Value;
     }
@@ -2023,15 +2179,20 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetManagedPointerTypeName(IManagedPointerTypeReference pointerType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(pointerType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return this.GetTypeName(pointerType.TargetType, formattingOptions) + "&";
     }
-
 
     /// <summary>
     /// Returns a C#-like string that corresponds to a source expression that would bind to the given modified type when appearing in an appropriate context.
     /// C# does not actually have such an expression, but the components of this made up expression corresponds to C# syntax.
     /// </summary>
     protected virtual string GetModifiedTypeName(IModifiedTypeReference modifiedType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(modifiedType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       sb.Append(this.GetTypeName(modifiedType.UnmodifiedType, formattingOptions));
       if ((formattingOptions & NameFormattingOptions.OmitCustomModifiers) == 0) {
@@ -2048,6 +2209,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetNamespaceTypeName(INamespaceTypeReference nsType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(nsType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       string tname = this.AddGenericParametersIfNeeded(nsType, nsType.GenericParameterCount, formattingOptions, nsType.Name.Value);
       if ((formattingOptions & NameFormattingOptions.OmitContainingNamespace) == 0 && !(nsType.ContainingUnitNamespace is IRootUnitNamespaceReference))
         tname = this.GetNamespaceName(nsType.ContainingUnitNamespace, formattingOptions) + "." + tname;
@@ -2063,6 +2227,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetNamespaceName(IUnitSetNamespace namespaceDefinition, NameFormattingOptions formattingOptions) {
+      Contract.Requires(namespaceDefinition != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       INestedUnitSetNamespace/*?*/ nestedUnitSetNamespace = namespaceDefinition as INestedUnitSetNamespace;
       if (nestedUnitSetNamespace != null) {
         if (nestedUnitSetNamespace.ContainingNamespace.Name.Value.Length == 0 || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
@@ -2078,6 +2245,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetNamespaceName(IUnitNamespaceReference unitNamespace, NameFormattingOptions formattingOptions) {
+      Contract.Requires(unitNamespace != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       INestedUnitNamespaceReference/*?*/ nestedUnitNamespace = unitNamespace as INestedUnitNamespaceReference;
       if (nestedUnitNamespace != null) {
         if (nestedUnitNamespace.ContainingUnitNamespace is IRootUnitNamespaceReference || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
@@ -2093,6 +2263,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetNestedTypeName(INestedTypeReference nestedType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(nestedType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       string tname = this.AddGenericParametersIfNeeded(nestedType, nestedType.GenericParameterCount, formattingOptions, nestedType.Name.Value);
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
         string delim = ((formattingOptions & NameFormattingOptions.UseReflectionStyleForNestedTypeNames) == 0) ? "." : "+";
@@ -2108,6 +2281,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetPointerTypeName(IPointerTypeReference pointerType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(pointerType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       return this.GetTypeName(pointerType.TargetType, formattingOptions) + "*";
     }
 
@@ -2116,7 +2292,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public virtual string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
+      Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<string>() != null);
+
       if ((formattingOptions & NameFormattingOptions.UseTypeKeywords) != 0) {
         switch (type.TypeCode) {
           case PrimitiveTypeCode.Boolean: return "bool";
@@ -2168,6 +2346,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetTypeKind(ITypeReference type) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       ITypeDefinition typeDefinition = type.ResolvedType;
       if (typeDefinition.IsDelegate) return "delegate";
       if (typeDefinition.IsEnum) return "enum";
@@ -2182,6 +2363,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetFunctionPointerTypeName(IFunctionPointerTypeReference functionPointerType, NameFormattingOptions formattingOptions) {
+      Contract.Requires(functionPointerType != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       sb.Append("function ");
       sb.Append(this.GetTypeName(functionPointerType.Type, formattingOptions));
@@ -2201,6 +2385,9 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     protected virtual string GetGenericTypeInstanceName(IGenericTypeInstanceReference genericTypeInstance, NameFormattingOptions formattingOptions) {
+      Contract.Requires(genericTypeInstance != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       ITypeReference genericType = genericTypeInstance.GenericType;
       if ((formattingOptions & NameFormattingOptions.ContractNullable) != 0) {
         if (TypeHelper.TypesAreEquivalent(genericType, genericTypeInstance.PlatformType.SystemNullable)) {

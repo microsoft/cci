@@ -11,6 +11,7 @@
 using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -22,6 +23,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Contains helper routines to query the GAC for the presence and locations of assemblies.
   /// </summary>
+  [ContractVerification(false)]
   public static class GlobalAssemblyCache {
 #if !COMPACTFX
     private static bool FusionLoaded;
