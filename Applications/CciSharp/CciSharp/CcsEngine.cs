@@ -12,6 +12,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System.IO;
 using CciSharp.Framework;
 using Microsoft.Cci.Contracts;
+using System.Diagnostics;
 
 namespace CciSharp
 {

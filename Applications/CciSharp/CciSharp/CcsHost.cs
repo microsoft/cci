@@ -61,7 +61,8 @@ namespace CciSharp
             if (!this.TryGetPdbReader(assembly, out pdbReader))
                 pdbReader = null;
             
-            return Decompiler.GetCodeModelFromMetadataModel(this, assembly, pdbReader);
+            var decompiled = Decompiler.GetCodeModelFromMetadataModel(this, assembly, pdbReader);
+            return CodeCopier.DeepCopy(this, decompiled, pdbReader);
         }
            
         public bool TryGetPdbReader(IAssembly assembly, out PdbReader reader)
@@ -143,12 +144,7 @@ namespace CciSharp
             // Extract contracts (side effect: removes them from the method bodies)
             var contractProvider = Microsoft.Cci.MutableContracts.ContractHelper.ExtractContracts(this, assembly, this._mutatedPdbReader, this._mutatedPdbReader);
 
-            var copier = new CodeAndContractMutator(this, false, this._mutatedPdbReader, contractProvider);
-            var assemblyCopy = copier.Visit(assembly);
-
-            this.MutatedAssembly = assemblyCopy;
-          //TODO: This should be a *copy* of the contract provider! There shouldn't be sharing
-          // among the different mutators that see this.
+            this.MutatedAssembly = assembly;
             this.MutatedContracts = contractProvider;
         }
     }

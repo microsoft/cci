@@ -80,7 +80,7 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            public override PropertyDefinition Visit(PropertyDefinition propertyDefinition)
+            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
@@ -264,6 +264,7 @@ namespace CciSharp.Mutators
 
                 resultFieldDefinition = new FieldDefinition {
                   ContainingTypeDefinition = declaringType,
+                  InternFactory = this.Host.InternFactory,
                   Type = propertyDefinition.Type,
                   Visibility = TypeMemberVisibility.Private,
                   Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Value")
@@ -273,6 +274,7 @@ namespace CciSharp.Mutators
                 declaringType.Fields.Add(resultFieldDefinition);
                 resultInitializedFieldDefinition = new FieldDefinition {
                   ContainingTypeDefinition = declaringType,
+                  InternFactory = this.Host.InternFactory,
                   Type = booleanType,
                   Visibility = TypeMemberVisibility.Private,
                   Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name + "$Init")

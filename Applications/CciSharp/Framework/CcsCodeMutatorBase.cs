@@ -20,7 +20,7 @@ namespace CciSharp.Framework
     /// Abstract base class for mutator that will be run as a post build step
     /// </summary>
     public abstract class CcsCodeMutatorBase<TMutator>
-        : CodeAndContractMutator
+        : CodeAndContractMutatingVisitor
         where TMutator : CcsMutatorBase
     {
         /// <summary>
@@ -33,7 +33,7 @@ namespace CciSharp.Framework
             TMutator owner, 
             ISourceLocationProvider sourceLocationProvider,
             ContractProvider contractProvider)
-            : base(owner.Host, true, sourceLocationProvider, contractProvider)
+            : base(owner.Host, sourceLocationProvider, contractProvider)
         {
             Contract.Requires(owner != null);
             Contract.Requires(contractProvider != null);

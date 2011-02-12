@@ -198,7 +198,17 @@ namespace CciSharp.Mutators
             public int MutationCount { get; private set; }
 
             BlockStatement _cctorBody;
-            protected override void Visit(TypeDefinition typeDefinition)
+            public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) 
+            {
+                this.CollectCandidates(namespaceTypeDefinition);
+                return namespaceTypeDefinition;
+            }
+            public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition)
+            {
+                this.CollectCandidates(nestedTypeDefinition);
+                return nestedTypeDefinition;
+            }
+            void CollectCandidates(ITypeDefinition typeDefinition)
             {
                 // collect candidates
                 this._cctorBody = null;
@@ -207,7 +217,7 @@ namespace CciSharp.Mutators
                     this._cctorBody = null;
             }
 
-            public override PropertyDefinition Visit(PropertyDefinition propertyDefinition)
+            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
@@ -261,6 +271,7 @@ namespace CciSharp.Mutators
                 {
                     Type = this.dependencyPropertyType,
                     Name = this.Host.NameTable.GetNameFor(propertyDefinition.Name.Value + "Property"),
+                    InternFactory = this.Host.InternFactory,
                     IsStatic = true,
                     Visibility = TypeMemberVisibility.Public,
                     IsReadOnly = true,
@@ -441,6 +452,7 @@ namespace CciSharp.Mutators
                     {
                         Type = this.booleanType,
                         Name = this.Host.NameTable.GetNameFor("Validate" + propertyDefinition.Name.Value + "$Proxy"),
+                        InternFactory = this.Host.InternFactory,
                         IsStatic = true,
                         Visibility = TypeMemberVisibility.Private,
                         CallingConvention = CallingConvention.Default,

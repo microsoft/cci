@@ -74,7 +74,7 @@ namespace CciSharp.Mutators
             public readonly Dictionary<uint, Setter> Properties 
                 = new Dictionary<uint, Setter>();
 
-            public override PropertyDefinition Visit(PropertyDefinition propertyDefinition)
+            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as IMethodDefinition;
                 var setter = propertyDefinition.Setter as IMethodDefinition;
@@ -183,10 +183,10 @@ namespace CciSharp.Mutators
             }
 
             MethodDefinition currentMethod = null;
-            public override MethodDefinition Visit(MethodDefinition methodDefinition)
+            public override MethodDefinition Mutate(MethodDefinition methodDefinition)
             {
                 currentMethod = methodDefinition;
-                var result = base.Visit(methodDefinition);
+                var result = base.Mutate(methodDefinition);
                 currentMethod = null;
                 return result;
             }
@@ -222,7 +222,17 @@ namespace CciSharp.Mutators
                 return methodCall;
             }
 
-            protected override void Visit(TypeDefinition typeDefinition)
+            public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition)
+            {
+              this.DeleteMethods(namespaceTypeDefinition);
+              return base.Mutate(namespaceTypeDefinition);
+            }
+            public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition)
+            {
+              this.DeleteMethods(nestedTypeDefinition);
+              return base.Mutate(nestedTypeDefinition);
+            }
+            protected void DeleteMethods(TypeDefinition typeDefinition)
             {
                 var methods = new List<IMethodDefinition>();
                 foreach (var method in typeDefinition.Methods)
@@ -232,7 +242,6 @@ namespace CciSharp.Mutators
                     methods.Add(method);
                 }
                 typeDefinition.Methods = methods;
-                base.Visit(typeDefinition);
             }
         }
     }

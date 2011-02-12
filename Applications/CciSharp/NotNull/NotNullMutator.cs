@@ -57,36 +57,47 @@ namespace CciSharp.Mutators {
       public int MutationCount { get; private set; }
 
 
-      public override Assembly Visit(Assembly assembly) {
+      public override Assembly Mutate(Assembly assembly) {
         ICustomAttribute attribute;
         bool hasAttribute = CcsHelper.TryGetAttributeByName(assembly.Attributes, "NotNullAttribute", out attribute);
         bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(assembly.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        var result = base.Visit(assembly);
+        var result = base.Mutate(assembly);
         this.notNullsContext.Pop();
         return result;
       }
 
-      public override Module Visit(Module module) {
+      public override Module Mutate(Module module) {
         ICustomAttribute attribute;
         bool hasAttribute = CcsHelper.TryGetAttributeByName(module.Attributes, "NotNullAttribute", out attribute);
         bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(module.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        var result = base.Visit(module);
+        var result = base.Mutate(module);
         this.notNullsContext.Pop();
         return result;
       }
 
-      protected override void Visit(TypeDefinition typeDefinition) {
+      public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition) {
         ICustomAttribute attribute;
-        bool hasAttribute = CcsHelper.TryGetAttributeByName(typeDefinition.Attributes, "NotNullAttribute", out attribute);
-        bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(typeDefinition.Attributes, "MaybeNullAttribute", out attribute);
+        bool hasAttribute = CcsHelper.TryGetAttributeByName(namespaceTypeDefinition.Attributes, "NotNullAttribute", out attribute);
+        bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(namespaceTypeDefinition.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        base.Visit(typeDefinition);
+        var result = base.Mutate(namespaceTypeDefinition);
         this.notNullsContext.Pop();
+        return result;
       }
 
-      public override MethodDefinition Visit(MethodDefinition methodDefinition) {
+      public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition) {
+        ICustomAttribute attribute;
+        bool hasAttribute = CcsHelper.TryGetAttributeByName(nestedTypeDefinition.Attributes, "NotNullAttribute", out attribute);
+        bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(nestedTypeDefinition.Attributes, "MaybeNullAttribute", out attribute);
+        this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
+        var result = base.Mutate(nestedTypeDefinition);
+        this.notNullsContext.Pop();
+        return result;
+      }
+
+      public override MethodDefinition Mutate(MethodDefinition methodDefinition) {
         if (methodDefinition.IsAbstract) {
           // not supported yet
           return methodDefinition;
@@ -176,12 +187,12 @@ namespace CciSharp.Mutators {
         }
 
         // Visit the parameters so any attributes are removed
-        this.Visit(methodDefinition.Parameters);
+        methodDefinition.Parameters = this.Mutate(methodDefinition.Parameters);
 
         return methodDefinition;
       }
 
-      public override List<ICustomAttribute> Visit(List<ICustomAttribute> customAttributes) {
+      public override List<ICustomAttribute> Mutate(List<ICustomAttribute> customAttributes) {
         customAttributes.RemoveAll(a => 
           CcsHelper.AttributeMatchesByName(a, "NotNullAttribute")
           ||

@@ -80,7 +80,19 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            protected override void Visit(TypeDefinition typeDefinition)
+            public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition)
+            {
+                this.AddCodeToSetDefaultValues(namespaceTypeDefinition);
+                return base.Mutate(namespaceTypeDefinition);
+            }
+
+            public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition)
+            {
+                this.AddCodeToSetDefaultValues(nestedTypeDefinition);
+                return base.Mutate(nestedTypeDefinition);
+            }
+
+            private void AddCodeToSetDefaultValues(TypeDefinition typeDefinition)
             {
                 // find the properties that need a default value
                 var properties = new List<KeyValuePair<IPropertyDefinition, IMetadataConstant>>();
@@ -100,7 +112,6 @@ namespace CciSharp.Mutators
                             this.SetDefaultValue(method, properties);
                     }
                 }
-                base.Visit(typeDefinition);
             }
 
             private bool TryGetDefaultValue(IPropertyDefinition propertyDefinition, out IMetadataConstant value)

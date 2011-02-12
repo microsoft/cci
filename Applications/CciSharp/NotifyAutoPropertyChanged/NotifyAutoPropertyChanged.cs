@@ -55,7 +55,17 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            protected override void Visit(TypeDefinition typeDefinition)
+            public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition) 
+            {
+                this.FindOrCreateOnNotifyPropertyChangedMethod(namespaceTypeDefinition);
+                return base.Mutate(namespaceTypeDefinition);
+            }
+            public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition)
+            {
+                this.FindOrCreateOnNotifyPropertyChangedMethod(nestedTypeDefinition);
+                return base.Mutate(nestedTypeDefinition);
+            }
+            void FindOrCreateOnNotifyPropertyChangedMethod(ITypeDefinition typeDefinition)
             {
                 if (!typeDefinition.IsInterface &&
                     TypeHelper.Type1ImplementsType2(
@@ -71,11 +81,10 @@ namespace CciSharp.Mutators
                         return;
                     }
                 }
-                base.Visit(typeDefinition);
             }
 
             private bool TryFindOrCreateOnNotifyPropertyChangedMethod(
-                TypeDefinition typeDefinition, 
+                ITypeDefinition typeDefinition, 
                 out IMethodDefinition onNotifyPropertyChangedMethod)
             {
                 for (ITypeDefinition t = typeDefinition; t != null; t = TypeHelper.BaseClass(t))

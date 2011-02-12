@@ -92,7 +92,7 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            public override PropertyDefinition Visit(PropertyDefinition propertyDefinition)
+            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
@@ -312,7 +312,8 @@ namespace CciSharp.Mutators
                 {
                     Type = this.Owner.weakReferenceType,
                     Visibility = TypeMemberVisibility.Private,
-                    Name = this.Host.NameTable.GetNameFor("_" + propertyDefinition.Name + "$Weak")
+                    Name = this.Host.NameTable.GetNameFor("_" + propertyDefinition.Name + "$Weak"),
+                    InternFactory = this.Host.InternFactory,
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
