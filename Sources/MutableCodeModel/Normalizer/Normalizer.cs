@@ -39,25 +39,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     Dictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
 
     /// <summary>
-    /// 
+    /// Given a method definition and a block of statements that represents the Block property of the body of the method,
+    /// returns a SourceMethod with a body that no longer has any yield statements or anonymous delegate expressions.
+    /// The given block of statements is mutated in place.
     /// </summary>
     /// <param name="method"></param>
     /// <param name="body"></param>
     /// <returns></returns>
-    public ISourceMethodBody GetNormalizedSourceMethodBodyFor(IMethodDefinition method, IBlockStatement body) {
+    public SourceMethodBody GetNormalizedSourceMethodBodyFor(IMethodDefinition method, IBlockStatement body) {
 
-      var FieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
+      var fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
       var privateHelperTypes = new List<ITypeDefinition>();
 
-      var finder = new ClosureFinder(method,
-        FieldForCapturedLocalOrParameter,
-        this.host,
-        privateHelperTypes.Count);
+      var finder = new ClosureFinder(method, fieldForCapturedLocalOrParameter, this.host);
       finder.Visit(body);
 
       if (finder.foundAnonymousDelegate) {
         body = InjectClosureFields.GetBodyAfterInjectingClosureFields(
-          method, FieldForCapturedLocalOrParameter,
+          method, fieldForCapturedLocalOrParameter,
           finder.classList,
           finder.outerClosures,
           this.host,
@@ -431,6 +430,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (genericInstanceRef != null || specializedNestedTypeRef != null) {
         fieldReference = new SpecializedFieldReference() {
           ContainingType = typeReference,
+          InternFactory = this.host.InternFactory,
           Name = fieldDefinition.Name,
           UnspecializedVersion = fieldDefinition,
           Type = fieldDefinition.Type
@@ -459,7 +459,6 @@ namespace Microsoft.Cci.MutableCodeModel {
           Type = methodDefinition.Type,
           Name = methodDefinition.Name,
           CallingConvention = methodDefinition.CallingConvention,
-          IsGeneric = methodDefinition.IsGeneric,
           Parameters = new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).Parameters),
           ExtraParameters = new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).ExtraParameters),
           ReturnValueIsByRef = methodDefinition.ReturnValueIsByRef,
@@ -554,6 +553,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     private void CreateIteratorClosureConstructor(IteratorClosureInformation iteratorClosure) {
       MethodDefinition constructor = new MethodDefinition();
+      constructor.InternFactory = this.host.InternFactory;
       // Parameter
       ParameterDefinition stateParameter = new ParameterDefinition() {
         ContainingSignature = constructor,
@@ -631,6 +631,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateMoveNextMethod(IteratorClosureInformation /*!*/ iteratorClosure, BlockStatement blockStatement) {
       // Method definition and metadata.
       MethodDefinition moveNext = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("MoveNext")
       };
       moveNext.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
@@ -726,6 +727,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateResetMethod(IteratorClosureInformation iteratorClosure) {
       // System.Collections.IEnumerator.Reset: Simply throws an exception
       MethodDefinition reset = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("Reset")
       };
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute() { Constructor = this.DebuggerHiddenCtor };
@@ -774,6 +776,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     private void CreateDisposeMethod(IteratorClosureInformation iteratorClosure) {
       MethodDefinition disposeMethod = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("Dispose")
       };
       disposeMethod.Attributes.Add(new CustomAttribute() { Constructor = this.debuggerHiddenCtor });
@@ -870,6 +873,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateGetEnumeratorMethodGeneric(IteratorClosureInformation iteratorClosure) {
       // Metadata
       MethodDefinition genericGetEnumerator = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.Generic.IEnumerable<" + iteratorClosure.ElementType.ToString()+">.GetEnumerator")
       };
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute() { Constructor = this.DebuggerHiddenCtor };
@@ -1021,6 +1025,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // GetEnumerator non-generic version, which delegates to the generic version. 
       // Metadata
       MethodDefinition nongenericGetEnumerator = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.IEnumerable.GetEnumerator")
       };
       nongenericGetEnumerator.Attributes.Add(
@@ -1075,6 +1080,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateIteratorClosureProperties(IteratorClosureInformation iteratorClosure) {
       // Non-generic version of the get_Current, which returns the generic version of get_Current. 
       MethodDefinition getterNonGenericCurrent = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.IEnumerator.get_Current")
       };
       CustomAttribute debuggerHiddenAttribute = new CustomAttribute();
@@ -1137,6 +1143,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       // Create generic version of get_Current, the body of which is simply returning this.current.
       MethodDefinition getterGenericCurrent = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.Generic.IEnumerator<" + iteratorClosure.ElementType.ToString() +">.get_Current")
       };
       getterGenericCurrent.Attributes.Add(debuggerHiddenAttribute);

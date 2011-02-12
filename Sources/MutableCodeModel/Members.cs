@@ -55,7 +55,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IBlockStatement Block {
       get { return this.block; }
-      set { this.block = value; }
+      set { this.block = value; this.ilWasGenerated = false; }
     }
     IBlockStatement block;
 

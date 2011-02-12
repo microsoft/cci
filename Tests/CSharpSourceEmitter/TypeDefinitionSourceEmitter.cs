@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -114,7 +114,8 @@ namespace CSharpSourceEmitter {
       // If it's abstract and sealed and has no ctors, then it's a static class
       if (typeDefinition.IsStatic) {
         PrintKeywordStatic();
-      } else {
+      }
+      else {
         if (typeDefinition.IsAbstract && !typeDefinition.IsInterface)
           PrintKeywordAbstract();
 

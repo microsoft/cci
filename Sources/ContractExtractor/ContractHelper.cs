@@ -48,22 +48,32 @@ namespace Microsoft.Cci.MutableContracts {
       cci.Visit(module);
     }
 
-    private class ContractCallInjector : CodeAndContractMutator {
+    private class ContractCallInjector : CodeAndContractMutatingVisitor {
 
       private readonly ITypeReference systemVoid;
 
       public ContractCallInjector(IMetadataHost host, ContractProvider contractProvider, ISourceLocationProvider sourceLocationProvider)
-        : base(host, true, sourceLocationProvider, contractProvider) {
+        : base(host, sourceLocationProvider, contractProvider) {
         this.systemVoid = host.PlatformType.SystemVoid;
       }
 
       private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
 
+      public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+        this.VisitTypeDefinition(namespaceTypeDefinition);
+        return namespaceTypeDefinition;
+      }
+
+      public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
+        this.VisitTypeDefinition(nestedTypeDefinition);
+        return nestedTypeDefinition;
+      }
+
       /// <summary>
       /// If the <paramref name="typeDefinition"/> has a type contract, generate a
       /// contract invariant method and add it to the Methods of the <paramref name="typeDefinition"/>.
       /// </summary>
-      protected override void Visit(TypeDefinition typeDefinition) {
+      private void VisitTypeDefinition(ITypeDefinition typeDefinition) {
         ITypeContract typeContract = this.contractProvider.GetTypeContractFor(typeDefinition);
         if (typeContract != null) {
           #region Define the method
@@ -115,6 +125,7 @@ namespace Microsoft.Cci.MutableContracts {
             CallingConvention = CallingConvention.HasThis,
             ContainingType = contractInvariantMethodType,
             GenericParameterCount = 0,
+            InternFactory = this.host.InternFactory,
             Name = host.NameTable.Ctor,
             Type = host.PlatformType.SystemVoid,
           };
@@ -122,13 +133,13 @@ namespace Microsoft.Cci.MutableContracts {
           contractInvariantMethodAttribute.Constructor = contractInvariantMethodCtor;
           attributes.Add(contractInvariantMethodAttribute);
           #endregion
-          typeDefinition.Methods.Add(m);
+          ((TypeDefinition)typeDefinition).Methods.Add(m);
           #endregion Define the method
         }
         base.Visit(typeDefinition);
       }
 
-      public override MethodDefinition Visit(MethodDefinition methodDefinition) {
+      public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
         IMethodContract methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
         if (methodContract == null) return methodDefinition;
         ISourceMethodBody sourceMethodBody = methodDefinition.Body as ISourceMethodBody;
@@ -169,14 +180,14 @@ namespace Microsoft.Cci.MutableContracts {
         }
         contractStatements.AddRange(existingStatements); // replaces assert/assume
         var newSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider) {
-          Block = new BlockStatement(){
+          Block = new BlockStatement() {
             Statements = contractStatements,
           },
           IsNormalized = false,
           LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed,
           MethodDefinition = methodDefinition,
         };
-        methodDefinition.Body = newSourceMethodBody;
+        ((MethodDefinition)methodDefinition).Body = newSourceMethodBody;
         return methodDefinition;
       }
 
@@ -266,7 +277,7 @@ namespace Microsoft.Cci.MutableContracts {
         };
         return methodCall;
       }
-      
+
     }
 
     /// <summary>
@@ -690,12 +701,12 @@ namespace Microsoft.Cci.MutableContracts {
       var filteredPostconditions = new IPostcondition[n];
       var i = 0;
       foreach (var p in postconditions) {
-        if (CanAccess(p.Description, typeDefinition)){
+        if (CanAccess(p.Description, typeDefinition)) {
           filteredPostconditions[i] = p;
         } else {
           var newP = new PostCondition(p);
-            newP.Description = null;
-            filteredPostconditions[i] = newP;
+          newP.Description = null;
+          filteredPostconditions[i] = newP;
         }
         i++;
       }
@@ -746,7 +757,7 @@ namespace Microsoft.Cci.MutableContracts {
       // there is, just return false. (TODO: see if this causes a silent error)
       return false;
     }
-    
+
     public static IMethodContract CopyAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
       var specializedFromMethod = fromMethod as ISpecializedMethodDefinition;
       if (specializedFromMethod != null) {
@@ -847,7 +858,7 @@ namespace Microsoft.Cci.MutableContracts {
       return mc;
     }
 
-    private class CodeSpecializer : CodeAndContractMutator {
+    private class CodeSpecializer : CodeAndContractMutatingVisitor {
       Dictionary<uint, ITypeReference> typeRefMap = new Dictionary<uint, ITypeReference>();
       private ITypeDefinition targetType;
       ITypeReference specializedTypeReference;
@@ -858,7 +869,7 @@ namespace Microsoft.Cci.MutableContracts {
         IEnumerable<IGenericMethodParameter> targetMethodTypeParameters,
         IEnumerable<IGenericMethodParameter> sourceMethodTypeParameters
         )
-        : base(host, true) {
+        : base(host) {
         this.targetType = targetType;
         var b = TypeHelper.TryGetFullyInstantiatedSpecializedTypeReference(targetType, out this.specializedTypeReference);
 
@@ -880,14 +891,15 @@ namespace Microsoft.Cci.MutableContracts {
       public override ITypeReference Visit(ITypeReference typeReference) {
         ITypeReference mappedTo;
         if (this.typeRefMap.TryGetValue(typeReference.InternedKey, out mappedTo))
-            return mappedTo;
+          return mappedTo;
         else
           return base.Visit(typeReference);
       }
 
-      public override SpecializedFieldReference Visit(SpecializedFieldReference specializedFieldReference) {
+      public override SpecializedFieldReference Mutate(SpecializedFieldReference specializedFieldReference) {
         return new SpecializedFieldReference() {
           ContainingType = this.Visit(specializedFieldReference.ContainingType),
+          InternFactory = this.host.InternFactory,
           Name = specializedFieldReference.Name,
           Type = this.Visit(specializedFieldReference.Type),
           UnspecializedVersion = specializedFieldReference.UnspecializedVersion,
@@ -904,33 +916,18 @@ namespace Microsoft.Cci.MutableContracts {
           PlatformType = specializedNestedTypeReference.PlatformType,
           UnspecializedVersion = specializedNestedTypeReference.UnspecializedVersion,
         };
-            
+
       }
-      public override SpecializedMethodReference Visit(SpecializedMethodReference specializedMethodReference) {
+      public override SpecializedMethodReference Mutate(SpecializedMethodReference specializedMethodReference) {
         return new SpecializedMethodReference() {
           CallingConvention = specializedMethodReference.CallingConvention,
           ContainingType = this.Visit(specializedMethodReference.ContainingType),
           InternFactory = this.host.InternFactory,
           Name = specializedMethodReference.Name,
-          Parameters = this.Visit(new List<IParameterTypeInformation>(specializedMethodReference.Parameters)),
+          Parameters = this.Mutate(specializedMethodReference.Parameters),
           Type = this.Visit(specializedMethodReference.Type),
           UnspecializedVersion = specializedMethodReference.UnspecializedVersion,
         };
-      }
-      /// <summary>
-      /// Must override this method because the CodeMutator just returns a mutable copy of the local
-      /// and doesn't visit its type. Of course, this mutator's reason for living is to modify
-      /// types.
-      /// </summary>
-      public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
-        //The referrer must refer to the same copy of the local definition that was (or will be) produced by a visit to the actual definition.
-        LocalDefinition ld = localDefinition as LocalDefinition;
-        if (ld != null) {
-          ld.Type = this.Visit(ld.Type);
-          return ld;
-        } else {
-          return this.GetMutableCopy(localDefinition);
-        }
       }
 
     }
@@ -945,36 +942,28 @@ namespace Microsoft.Cci.MutableContracts {
       var contractMethods = new ContractMethods(host);
       var cp = new Microsoft.Cci.MutableContracts.ContractProvider(contractMethods, module);
       var extractor = new SeparateContractsFromCode(host, pdbReader, localScopeProvider, cp);
-      module = extractor.Visit(module);
+      extractor.Visit(module);
       return cp;
     }
 
     /// <summary>
-    /// A mutator that extracts the contracts from each method.
-    /// A client retrieves the extractor from the field after using
-    /// this to visit a module.
+    /// A traverser that extracts contracts from methods and updates a given contract provider with these contracts.
     /// </summary>
-    private class SeparateContractsFromCode : CodeMutator {
+    private class SeparateContractsFromCode : BaseCodeTraverser {
 
-      private Microsoft.Cci.MutableContracts.ContractProvider contractProvider;
-      PdbReader/*?*/ pdbReader;
-      ILocalScopeProvider/*?*/ localScopeProvider;
+      private ContractProvider contractProvider;
+      private PdbReader/*?*/ pdbReader;
+      private ILocalScopeProvider/*?*/ localScopeProvider;
       private IContractAwareHost contractAwareHost;
 
-      internal SeparateContractsFromCode(
-        IContractAwareHost host,
-        PdbReader/*?*/ pdbReader,
-        ILocalScopeProvider/*?*/ localScopeProvider,
-        Microsoft.Cci.MutableContracts.ContractProvider contractProvider
-        )
-        : base(host, true, pdbReader) {
+      internal SeparateContractsFromCode(IContractAwareHost host, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider, ContractProvider contractProvider) {
         this.contractAwareHost = host;
         this.pdbReader = pdbReader;
         this.localScopeProvider = localScopeProvider;
         this.contractProvider = contractProvider;
       }
 
-      protected override void Visit(TypeDefinition typeDefinition) {
+      public override void Visit(ITypeDefinition typeDefinition) {
         var contract = ContractExtractor.GetObjectInvariant(this.contractAwareHost, typeDefinition, this.pdbReader, this.localScopeProvider);
         if (contract != null) {
           this.contractProvider.AssociateTypeWithContract(typeDefinition, contract);
@@ -983,18 +972,15 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       /// <summary>
-      /// For each method body, use the extractor to split it into the code
-      /// and contract. Returns a new mutable source method body with the
-      /// residual code.
+      /// For each method body, use the extractor to split it into the codeand contract.
       /// </summary>
-      public override IMethodBody Visit(IMethodBody methodBody) {
+      public override void Visit(IMethodBody methodBody) {
         ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
         if (sourceMethodBody != null) {
-          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody, this.pdbReader, this.localScopeProvider);
+          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody, 
+            this.pdbReader, this.localScopeProvider);
           this.contractProvider.AssociateMethodWithContract(methodBody.MethodDefinition, codeAndContractPair.MethodContract);
-          return sourceMethodBody;
         }
-        return base.Visit(methodBody);
       }
 
     }
@@ -1137,17 +1123,12 @@ namespace Microsoft.Cci.MutableContracts {
       this.sourceMethod = sourceMethodDefinition;
     }
 
-    public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      if (localDeclarationStatement.LocalVariable.MethodDefinition.InternedKey == this.targetMethod.InternedKey) {
-        localDeclarationStatement.LocalVariable = this.Visit(localDeclarationStatement.LocalVariable);
-        return localDeclarationStatement;
-      } else {
-        return localDeclarationStatement;
+    public override ILocalDefinition Visit(ILocalDefinition localDefinition) {
+      if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey) {
+        var mutableLocalDefinition = localDefinition as LocalDefinition;
+        if (mutableLocalDefinition != null)
+          mutableLocalDefinition.MethodDefinition = this.sourceMethod;
       }
-    }
-    public override LocalDefinition Visit(LocalDefinition localDefinition) {
-      if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
-        localDefinition.MethodDefinition = this.sourceMethod;
       return localDefinition;
     }
   }
@@ -1244,7 +1225,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.methodDefinitionInternedKey = methodDefinition.InternedKey;
       this.expressions = new IExpression[methodDefinition.ParameterCount];
       var i = 0;
-      foreach (var p in methodDefinition.Parameters){
+      foreach (var p in methodDefinition.Parameters) {
         this.expressions[i] = expressions[i];
         i++;
       }
@@ -1276,7 +1257,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="boundExpression">The bound expression.</param>
     public override IExpression Visit(BoundExpression boundExpression) {
       ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
-      if (par != null){
+      if (par != null) {
         var md = par.ContainingSignature as IMethodDefinition;
         if (md != null && md.InternedKey == this.methodDefinitionInternedKey) {
           return this.expressions[par.Index];

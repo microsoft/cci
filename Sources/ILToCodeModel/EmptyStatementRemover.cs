@@ -25,7 +25,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       for (int i = n - 1; 0 <= i; i--) {
         IEmptyStatement emptyStatement = statements[i] as IEmptyStatement;
         if (emptyStatement == null) continue;
-        //if (IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations)) continue; //TODO: have to remove this while the iterator decompiler depends on the removal.
+        if (IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations)) continue;
         statements.RemoveAt(i);
       }
       return;

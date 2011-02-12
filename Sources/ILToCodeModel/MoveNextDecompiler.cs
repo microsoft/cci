@@ -88,12 +88,17 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// The containing type of the MoveNext method, that is, the closure class. May be specialized.
     /// </summary>
-    ITypeDefinition containingType;
+    internal ITypeDefinition containingType;
+
     /// <summary>
     /// Unspecialized version of the containing type is used often. Keep a cached value here. 
     /// </summary>
-    ITypeReference unspecializedContainingType;
+    internal ITypeReference unspecializedContainingType;
+
     IMetadataHost host;
+
+    internal ILocalDefinition stateLocal;
+    internal Dictionary<ILocalDefinition, bool> returnLocals;
 
     /// <summary>
     /// Decompile of a MoveNext method body and transform the result into the body of the original iterator method. 
@@ -121,15 +126,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     internal IBlockStatement Decompile(BlockStatement block) {
       RemovePossibleTryCatchBlock(block);
-      // A list of locals that holds the value of the state field of the closure instance, which
-      // will collected in RemoveAssignmentsByOrToThisDotState, and will be used later on when
-      // removing the switch statement over the state. 
-      ILocalDefinition localForThisDotState;
-      this.RemoveAssignmentsFromOrToThisDotState(block, out localForThisDotState);
+      this.RemoveAssignmentsFromOrToThisDotState(block);
       this.ReplaceReturnWithYield(block);
-      this.RemoveToplevelSwitch(block, localForThisDotState);
-      RemoveUnreferencedTempVariables(block);
-      (new RemoveDummyStatements()).Visit(block);
+      this.RemoveToplevelSwitch(block);
+      this.RemoveCompilerIntroducedLocals(block);
+      this.RemoveDummyStatements(block);
       return block;
     }
 
@@ -148,11 +149,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// value of the state field of the closure instance. 
     /// </summary>
     /// <param name="blockStatement">A BlockStatement representing the body of MoveNext.</param>
-    /// <param name="thisDotStateLocal">Locals that hold the value of thisDotState</param>
-    private void RemoveAssignmentsFromOrToThisDotState(BlockStatement blockStatement, out ILocalDefinition thisDotStateLocal) {
+    private void RemoveAssignmentsFromOrToThisDotState(BlockStatement blockStatement) {
       var Remover = new RemoveStateFieldAccessAndMFinallyCall(this);
       Remover.Visit(blockStatement);
-      thisDotStateLocal = Remover.thisDotStateLocal;
+      this.stateLocal = Remover.thisDotStateLocal;
     }
 
     /// <summary>
@@ -164,6 +164,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       //             which are useful in inserting yield breaks. 
       var yieldInserter = new ProcessCurrentAndReturn(this);
       yieldInserter.Visit(blockStatement);
+      this.returnLocals = yieldInserter.returnLocals;
 
       // Second pass: remove goto statement to the label before return statement
       //              remove assignment to locals that holds the return value and replace it with yield break if source of 
@@ -175,10 +176,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <summary>
     /// Remove the switch statement, if any, on <code>this.&lt;&gt;?_state</code>
     /// </summary>
-    private void RemoveToplevelSwitch(BlockStatement blockStatement, ILocalDefinition localForThisDotState) {
+    private void RemoveToplevelSwitch(BlockStatement blockStatement) {
       // First: collect the goto statements in the switch case bodies.
       List<IGotoStatement> gotosFromSwitchCases = new List<IGotoStatement>();
-      var pass1 = new RemoveSwitchAndCollectGotos(localForThisDotState, gotosFromSwitchCases);
+      var pass1 = new RemoveSwitchAndCollectGotos(this.stateLocal, gotosFromSwitchCases);
       pass1.Visit(blockStatement);
       // Second, follow the link from gotos in switch cases, find and remove the gotoes whose targets are either
       // the starting point of the iterator method, a yield break, or a label that is internal to the state machine
@@ -193,35 +194,55 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    private void RemoveCompilerIntroducedLocals(BlockStatement block) {
+      var remover = new RemoveCompilerIntroducedLocals(this);
+      remover.Visit(block);
+    }
+
     /// <summary>
-    /// Remove unreferenced locals. 
+    /// Remove any statements that were marked as dummy.
     /// </summary>
-    /// <param name="blockStatement"></param>
-    private static void RemoveUnreferencedTempVariables(BlockStatement blockStatement) {
-      var localReferencer = new LocalReferencer();
-      localReferencer.Visit(blockStatement);
-      var localRemover = new RemoveUnreferencedLocal(localReferencer.ReferencedLocals);
-      localRemover.Visit(blockStatement);
+    /// <param name="block"></param>
+    private void RemoveDummyStatements(BlockStatement block) {
+      var remover = new RemoveDummyStatements();
+      remover.Visit(block);
     }
 
     /// <summary>
     /// Test whether a field is the state field of the iterator closure.
     /// </summary>
     internal bool IsClosureStateField(IFieldReference closureField) {
-      ITypeReference closure = UnspecializedMethods.AsUnspecializedTypeReference(closureField.ContainingType);
-      if (!TypeHelper.TypesAreEquivalent(closure, this.unspecializedContainingType))
-        return false;
-      return (closureField != null && closureField.Name.Value.StartsWith(closureFieldPrefix, System.StringComparison.Ordinal) && closureField.Name.Value.EndsWith(stateFieldPostfix, System.StringComparison.Ordinal));
+      if (this.closureStateField == null) {
+        ITypeReference closure = UnspecializedMethods.AsUnspecializedTypeReference(closureField.ContainingType);
+        if (!TypeHelper.TypesAreEquivalent(closure, this.unspecializedContainingType))
+          return false;
+        if (closureField == null || !closureField.Name.Value.StartsWith(closureFieldPrefix, System.StringComparison.Ordinal) || 
+          !closureField.Name.Value.EndsWith(stateFieldPostfix, System.StringComparison.Ordinal)) 
+          return false;
+        this.closureStateField = closureField;
+        return true;
+      }
+      if (closureField.InternedKey == this.closureStateField.InternedKey) return true;
+      return false;
     }
+    IFieldReference/*?*/ closureStateField;
 
     /// <summary>
     /// Test whether a field is the current field of the iterator closure.
     /// </summary>
     internal bool IsClosureCurrentField(IFieldReference closureField) {
-      ITypeReference closure = UnspecializedMethods.AsUnspecializedTypeReference(closureField.ContainingType);
-      if (!TypeHelper.TypesAreEquivalent(closure, this.unspecializedContainingType)) return false;
-      return (closureField != null && closureField.Name.Value.StartsWith(closureFieldPrefix, System.StringComparison.Ordinal) && closureField.Name.Value.EndsWith(currentFieldPostfix, System.StringComparison.Ordinal));
+      if (this.closureCurrentField == null) {
+        ITypeReference closure = UnspecializedMethods.AsUnspecializedTypeReference(closureField.ContainingType);
+        if (!TypeHelper.TypesAreEquivalent(closure, this.unspecializedContainingType)) return false;
+        if (closureField == null || !closureField.Name.Value.StartsWith(closureFieldPrefix, System.StringComparison.Ordinal) ||
+          !closureField.Name.Value.EndsWith(currentFieldPostfix, System.StringComparison.Ordinal))
+          return false;
+        this.closureCurrentField = closureField;
+        return true;
+      }
+      return this.closureCurrentField.InternedKey == closureField.InternedKey;
     }
+    IFieldReference/*?*/ closureCurrentField;
 
     /// <summary>
     /// Test whether a constant is zero (as an int) or false (as a boolean). Return false for anything else. 
@@ -229,12 +250,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal bool IsZeroConstant(IExpression expression) {
       ICompileTimeConstant constant = expression as ICompileTimeConstant;
       if (constant == null) return false;
-      if (constant.Type.TypeCode == PrimitiveTypeCode.Boolean) {
-        return !(bool)constant.Value;
-      }
-      if (TypeHelper.TypesAreEquivalent(constant.Type, this.host.PlatformType.SystemInt32)) {
-        return ((int)constant.Value == 0);
-      }
+      var typeCode = constant.Type.TypeCode;
+      if (typeCode == PrimitiveTypeCode.Boolean) return !(bool)constant.Value;
+      if (typeCode == PrimitiveTypeCode.Int32) return ((int)constant.Value == 0);
       return false;
     }
   }
@@ -373,6 +391,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     private static Dictionary<IGenericTypeParameter, IGenericMethodParameter> GetGenericParameterMapping(IMethodDefinition iteratorMethod, ITypeDefinition closureType) {
       var result = new Dictionary<IGenericTypeParameter, IGenericMethodParameter>();
+      if (!iteratorMethod.IsGeneric) return result;
       var itor1 = iteratorMethod.GenericParameters.GetEnumerator();
       var itor2 = closureType.GenericParameters.GetEnumerator();
       while (itor1.MoveNext() && itor2.MoveNext()) {
@@ -603,6 +622,16 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
     }
+
+    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      var boundExpression = localDeclarationStatement.InitialValue as IBoundExpression;
+      if (boundExpression != null) {
+        var closureField = boundExpression.Definition as IFieldReference;
+        if (closureField != null && this.decompiler.IsClosureStateField(closureField)) {
+          this.thisDotStateLocal = localDeclarationStatement.LocalVariable;
+        }
+      }
+    }
   }
 
   /// <summary>
@@ -688,8 +717,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var boundExpression = returnStatement.Expression as IBoundExpression;
         if (boundExpression != null) {
           var localDefinition = boundExpression.Definition as ILocalDefinition;
-          if (!this.returnLocals.ContainsKey(localDefinition))
-            this.returnLocals.Add(localDefinition, true);
+          if (localDefinition != null) this.returnLocals[localDefinition] = true;
         } else {
           var ctc = returnStatement.Expression as ICompileTimeConstant;
           if (this.decompiler.IsZeroConstant(ctc)) {
@@ -912,80 +940,41 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
   }
 
-  /// <summary>
-  /// Find locals that are referenced in a piece of code traversed by an instance of the class.
-  /// </summary>
-  internal class LocalReferencer : BaseCodeTraverser {
-    List<ILocalDefinition> referencedLocals = new List<ILocalDefinition>();
+  internal class RemoveCompilerIntroducedLocals : BaseCodeTraverser {
 
-    /// <summary>
-    /// The collection of locals referenced in the code fragment(s) traversed by an instance of this class.
-    /// </summary>
-    internal List<ILocalDefinition> ReferencedLocals {
-      get { return referencedLocals; }
+    MoveNextDecompiler decompiler;
+
+    internal RemoveCompilerIntroducedLocals(MoveNextDecompiler decompiler) {
+      this.decompiler = decompiler;
     }
 
-    /// <summary>
-    /// Collect locals refered to in AddressableExpressions.
-    /// </summary>
-    public override void Visit(IAddressableExpression addressableExpression) {
-      ILocalDefinition localdef = addressableExpression.Instance as ILocalDefinition;
-      if (localdef != null && !this.referencedLocals.Contains(localdef)) this.referencedLocals.Add(localdef);
-      base.Visit(addressableExpression);
-    }
-
-    /// <summary>
-    /// Collect locals refered to in BoundExpressions.
-    /// </summary>
-    public override void Visit(IBoundExpression boundExpression) {
-      ILocalDefinition localdef = boundExpression.Instance as ILocalDefinition;
-      if (localdef != null && !this.referencedLocals.Contains(localdef)) this.referencedLocals.Add(localdef);
-      base.Visit(boundExpression);
-    }
-
-    /// <summary>
-    /// Collect locals refered to in TargetExpressions
-    /// </summary>
-    public override void Visit(ITargetExpression targetExpression) {
-      ILocalDefinition localdef = targetExpression.Instance as ILocalDefinition;
-      if (localdef != null && !this.referencedLocals.Contains(localdef))
-        this.referencedLocals.Add(localdef);
-      base.Visit(targetExpression);
-    }
-  }
-
-  /// <summary>
-  /// Helper class to remove unreferenced locals. Code review: why here? Similar functionality should be provided by any decompilation. 
-  /// </summary>
-  internal class RemoveUnreferencedLocal : BaseCodeTraverser {
-    /// <summary>
-    /// Locals that have been referenced.
-    /// </summary>
-    private List<ILocalDefinition> referencedLocals;
-
-    /// <summary>
-    /// Helper class to remove unreferenced locals. Code review: why here? Similar functionality should be provided by any decompilation. 
-    /// </summary>
-    internal RemoveUnreferencedLocal(List<ILocalDefinition>/*!*/ referencedLocals) {
-      this.referencedLocals = referencedLocals;
-    }
-
-    /// <summary>
-    /// Remove unreferenced locals. 
-    /// </summary>
     public override void Visit(IBlockStatement block) {
       var blockStatement = (BlockStatement)block;
       var statements = blockStatement.Statements;
-      for (int i = 0; i < statements.Count; i++) {
+      for (int i = 0, n = statements.Count; i < n; i++) {
         var statement = statements[i];
-        base.Visit(statement);
-        ILocalDeclarationStatement localDeclarationStatement = statement as ILocalDeclarationStatement;
-        if (localDeclarationStatement != null && !this.referencedLocals.Contains(localDeclarationStatement.LocalVariable)) {
-          statements[i] = CodeDummy.LabeledStatement; // Use a dummy label to mark the statement to be removed.
+        var localDecl = statement as LocalDeclarationStatement;
+        if (localDecl != null) {
+          if (localDecl.LocalVariable == this.decompiler.stateLocal || this.decompiler.returnLocals.ContainsKey(localDecl.LocalVariable) ||
+            TypeHelper.TypesAreEquivalent(UnspecializedMethods.AsUnspecializedTypeReference(localDecl.LocalVariable.Type), this.decompiler.unspecializedContainingType))
+            statements[i] = CodeDummy.LabeledStatement;
           continue;
         }
+        var expressionStatement = statement as ExpressionStatement;
+        if (expressionStatement != null) {
+          var assignment = expressionStatement.Expression as Assignment;
+          if (assignment != null) {
+            var targetLocal = assignment.Target.Definition as ILocalDefinition;
+            if (targetLocal != null && (targetLocal == this.decompiler.stateLocal || this.decompiler.returnLocals.ContainsKey(targetLocal) ||
+            TypeHelper.TypesAreEquivalent(UnspecializedMethods.AsUnspecializedTypeReference(targetLocal.Type), this.decompiler.unspecializedContainingType)))
+              statements[i] = CodeDummy.LabeledStatement;
+          }
+          continue;
+        }
+        this.Visit(statement);
       }
     }
+
   }
 
   /// <summary>
@@ -996,6 +985,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// the statement list to avoid O(n^2) complexity.
   /// </summary>
   internal class RemoveDummyStatements : BaseCodeTraverser {
+
     /// <summary>
     /// Remove all the null elements in a statement list. Time complexity is O(n). 
     /// </summary>

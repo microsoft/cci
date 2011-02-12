@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -19,7 +19,8 @@ namespace CSharpSourceEmitter {
       if (fieldDefinition.ContainingType.IsEnum && fieldDefinition.IsRuntimeSpecial && fieldDefinition.IsSpecialName)
         return; // implicit value field of an enum
 
-      if (AttributeHelper.Contains(fieldDefinition.Attributes, fieldDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+      if (!this.printCompilerGeneratedMembers &&
+        AttributeHelper.Contains(fieldDefinition.Attributes, fieldDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return; // eg. a cached anonymous delegate - may have invalid symbols
 
       foreach (var e in fieldDefinition.ContainingTypeDefinition.Events) {
@@ -37,10 +38,11 @@ namespace CSharpSourceEmitter {
         PrintPseudoCustomAttribute(fieldDefinition, "System.Runtime.InteropServices.FieldOffset", fieldDefinition.Offset.ToString(), true, null);
 
       PrintToken(CSharpToken.Indent);
-
+      
       if (fieldDefinition.IsCompileTimeConstant && fieldDefinition.ContainingType.IsEnum) {
         PrintFieldDefinitionEnumValue(fieldDefinition);
-      } else {
+      }
+      else {
         PrintFieldDefinitionVisibility(fieldDefinition);
         PrintFieldDefinitionModifiers(fieldDefinition);
 
@@ -52,7 +54,8 @@ namespace CSharpSourceEmitter {
             sourceEmitterOutput.Write(" = ");
             PrintFieldDefinitionValue(fieldDefinition);
           }
-        } else {
+        }
+        else {
           PrintFieldDefinitionFixedBuffer(fieldDefinition, fixedBufferAttr);
         }
         PrintToken(CSharpToken.Semicolon);
@@ -92,8 +95,8 @@ namespace CSharpSourceEmitter {
       } else if (TypeHelper.TypesAreEquivalent(fieldDefinition.ContainingTypeDefinition, fieldType) && 
         (fieldType.TypeCode == PrimitiveTypeCode.Int32 || fieldType.TypeCode == PrimitiveTypeCode.UInt32 ||
          fieldType.TypeCode == PrimitiveTypeCode.Int64 || fieldType.TypeCode == PrimitiveTypeCode.UInt64)) {
-        // Defining a core integral system type, can't reference the symbolic names, use constants
-        sourceEmitterOutput.Write(fieldDefinition.CompileTimeValue.Value.ToString());
+          // Defining a core integral system type, can't reference the symbolic names, use constants
+          sourceEmitterOutput.Write(fieldDefinition.CompileTimeValue.Value.ToString());
       } else {
         this.Visit(fieldDefinition.CompileTimeValue);
       }
@@ -154,7 +157,7 @@ namespace CSharpSourceEmitter {
       var val = fieldDefinition.CompileTimeValue.Value;
       bool isFlags = (Utils.FindAttribute(fieldDefinition.ContainingTypeDefinition.Attributes, SpecialAttribute.Flags) != null);
       bool castNeeded = false;
-      if (isFlags) {
+       if (isFlags) {
         // Add cast if necessary
         var type = fieldDefinition.CompileTimeValue.Type;
         long lv = Convert.ToInt64(val);
@@ -166,10 +169,10 @@ namespace CSharpSourceEmitter {
         }
       }
       // Output flags values in hex, non-flags in decimal
-      if (isFlags)
-        this.sourceEmitterOutput.Write(String.Format("0x{0:X}", val));
-      else
-        Visit(fieldDefinition.CompileTimeValue);
+       if (isFlags)
+         this.sourceEmitterOutput.Write(String.Format("0x{0:X}", val));
+       else
+         Visit(fieldDefinition.CompileTimeValue);
       if (castNeeded)
         PrintToken(CSharpToken.RightParenthesis);
       PrintToken(CSharpToken.Comma);

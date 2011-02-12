@@ -25,6 +25,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
   /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
   /// </summary>
+  /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
+  /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
+  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
+  /// The new classes CodeCopier and CodeMutatingVisitor are meant to facilitate such scenarios.
+  /// </remarks>
+  [Obsolete("This class has been superceded by CodeCopier and CodeMutatingVisitor, used in combination. It will go away after May 2011")]
   public class CodeMutator : MetadataMutator {
 
     private CreateMutableType createMutableType;
@@ -722,7 +728,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodBody">The method body.</param>
     public override IMethodBody Visit(IMethodBody methodBody) {
-      bool hadLocals = IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables);
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
         SourceMethodBody mutableSourceMethodBody = null;
@@ -731,16 +736,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (mutableSourceMethodBody == null)
           mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
+        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
-        if (hadLocals)
-          // If the method had locals before the CodeMutator morphed it, then we retain the original initialization flag.
-          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
-        else if (IteratorHelper.EnumerableIsNotEmpty(mutableSourceMethodBody.LocalVariables))
-          // if CodeMutator introduced locals, then let us make sure they are initialized so that verification is not affected. 
-          mutableSourceMethodBody.LocalsAreZeroed = true;
-        else
-          // If there were no locals and none introduced by the CodeMutator we will just retain the original initialization flag. 
-          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         return mutableSourceMethodBody;
       }
       return base.Visit(methodBody);
@@ -1091,6 +1088,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       tryCatchFilterFinallyStatement.CatchClauses = Visit(tryCatchFilterFinallyStatement.CatchClauses);
       if (tryCatchFilterFinallyStatement.FinallyBody != null)
         tryCatchFilterFinallyStatement.FinallyBody = Visit(tryCatchFilterFinallyStatement.FinallyBody);
+      if (tryCatchFilterFinallyStatement.FaultBody != null)
+        tryCatchFilterFinallyStatement.FaultBody = Visit(tryCatchFilterFinallyStatement.FaultBody);
       return tryCatchFilterFinallyStatement;
     }
 
@@ -2199,6 +2198,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
   /// Also visits and mutates the associated code contracts and establishes associations with new copies.
   /// </summary>
+  /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
+  /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
+  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
+  /// The new classes CodeAndContractCopier and CodeAndContractMutatingVisitor are meant to facilitate such scenarios.
+  /// </remarks>
+  [Obsolete("This class has been superceded by CodeAndContractCopier and CodeAndContractMutatingVisitor, used in combination. It will go away after April 2011")]
   public class CodeAndContractMutator : CodeMutator {
 
     /// <summary>
@@ -2681,12 +2686,358 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
+  /// 
+  /// </summary>
+  public class CodeAndContractMutatingVisitor : CodeMutatingVisitor {
+    /// <summary>
+    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
+    /// </summary>
+    protected readonly ContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public CodeAndContractMutatingVisitor(IMetadataHost host)
+      : base(host) { 
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    public CodeAndContractMutatingVisitor(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider) {
+      this.contractProvider = contractProvider;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CodeAndContractMutator"/> class.
+    /// </summary>
+    /// <param name="template">The template.</param>
+    protected CodeAndContractMutatingVisitor(CodeAndContractMutatingVisitor template)
+      : base(template.host, template.sourceLocationProvider) {
+      this.contractProvider = template.contractProvider;
+    }
+
+    /// <summary>
+    /// Visits the specified addressable expressions.
+    /// </summary>
+    /// <param name="addressableExpressions">The addressable expressions.</param>
+    /// <returns></returns>
+    public virtual List<IAddressableExpression> Visit(List<IAddressableExpression> addressableExpressions) {
+      if (this.stopTraversal) return addressableExpressions;
+      for (int i = 0, n = addressableExpressions.Count; i < n; i++)
+        addressableExpressions[i] = this.Visit(addressableExpressions[i]);
+      return addressableExpressions;
+    }
+
+    /// <summary>
+    /// Visits the specified triggers.
+    /// </summary>
+    /// <param name="triggers">The triggers.</param>
+    /// <returns></returns>
+    public virtual IEnumerable<IEnumerable<IExpression>> Visit(IEnumerable<IEnumerable<IExpression>> triggers) {
+      if (this.stopTraversal) return triggers;
+      var newTriggers = new List<IEnumerable<IExpression>>(triggers);
+      for (int i = 0, n = newTriggers.Count; i < n; i++)
+        newTriggers[i] = this.Visit(new List<IExpression>(newTriggers[i])).AsReadOnly();
+      return newTriggers.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Visits the specified expression.
+    /// </summary>
+    /// <param name="expression">The expression.</param>
+    /// <returns></returns>
+    public override IExpression Visit(IExpression expression) {
+      if (this.stopTraversal) return expression;
+      var result = base.Visit(expression);
+      if (this.contractProvider != null && expression is IMethodCall) {
+        IEnumerable<IEnumerable<IExpression>>/*?*/ triggers = this.contractProvider.GetTriggersFor(expression);
+        if (triggers != null)
+          this.contractProvider.AssociateTriggersWithQuantifier(result, this.Visit(triggers));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified loop contract.
+    /// </summary>
+    /// <param name="loopContract">The loop contract.</param>
+    /// <returns></returns>
+    public virtual ILoopContract Visit(ILoopContract loopContract) {
+      if (this.stopTraversal) return loopContract;
+      LoopContract mutableLoopContract = loopContract as LoopContract;
+      if (mutableLoopContract == null) return loopContract;
+      mutableLoopContract.Invariants = this.Visit(mutableLoopContract.Invariants);
+      mutableLoopContract.Writes = this.Visit(mutableLoopContract.Writes);
+      return mutableLoopContract;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariants.
+    /// </summary>
+    /// <param name="loopInvariants">The loop invariants.</param>
+    /// <returns></returns>
+    public virtual List<ILoopInvariant> Visit(List<ILoopInvariant> loopInvariants) {
+      if (this.stopTraversal) return loopInvariants;
+      for (int i = 0, n = loopInvariants.Count; i < n; i++)
+        loopInvariants[i] = this.Visit(loopInvariants[i]);
+      return loopInvariants;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant">The loop invariant.</param>
+    /// <returns></returns>
+    public virtual ILoopInvariant Visit(ILoopInvariant loopInvariant) {
+      if (this.stopTraversal) return loopInvariant;
+      LoopInvariant mutableLoopInvariant = loopInvariant as LoopInvariant;
+      if (mutableLoopInvariant == null) return loopInvariant;
+      mutableLoopInvariant.Condition = this.Visit(mutableLoopInvariant.Condition);
+      if (mutableLoopInvariant.Description != null)
+        mutableLoopInvariant.Description = this.Visit(mutableLoopInvariant.Description);
+      return mutableLoopInvariant;
+    }
+
+    /// <summary>
+    /// Visits the method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
+    public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
+      if (this.stopTraversal) return methodDefinition;
+      var result = base.Visit(methodDefinition);
+      if (this.contractProvider != null) {
+        //Visit the contract before visiting the method body so that it is all fixed up before
+        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
+        if (methodContract != null)
+          this.contractProvider.AssociateMethodWithContract(methodDefinition, this.Visit(methodContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
+    /// <returns></returns>
+    public virtual IMethodContract Visit(IMethodContract methodContract) {
+      if (this.stopTraversal) return methodContract;
+      MethodContract mutableMethodContract = methodContract as MethodContract;
+      if (mutableMethodContract == null) return methodContract;
+      mutableMethodContract.Allocates = this.Visit(mutableMethodContract.Allocates);
+      mutableMethodContract.Frees = this.Visit(mutableMethodContract.Frees);
+      mutableMethodContract.ModifiedVariables = this.Visit(mutableMethodContract.ModifiedVariables);
+      mutableMethodContract.Postconditions = this.Visit(mutableMethodContract.Postconditions);
+      mutableMethodContract.Preconditions = this.Visit(mutableMethodContract.Preconditions);
+      mutableMethodContract.Reads = this.Visit(mutableMethodContract.Reads);
+      mutableMethodContract.ThrownExceptions = this.Visit(mutableMethodContract.ThrownExceptions);
+      mutableMethodContract.Writes = this.Visit(mutableMethodContract.Writes);
+      return mutableMethodContract;
+    }
+
+    /// <summary>
+    /// Visits the specified post conditions.
+    /// </summary>
+    /// <param name="postConditions">The post conditions.</param>
+    /// <returns></returns>
+    public virtual List<IPostcondition> Visit(List<IPostcondition> postConditions) {
+      if (this.stopTraversal) return postConditions;
+      for (int i = 0, n = postConditions.Count; i < n; i++)
+        postConditions[i] = this.Visit(postConditions[i]);
+      return postConditions;
+    }
+
+    /// <summary>
+    /// Visits the specified post condition.
+    /// </summary>
+    /// <param name="postCondition">The post condition.</param>
+    public virtual IPostcondition Visit(IPostcondition postCondition) {
+      if (this.stopTraversal) return postCondition;
+      PostCondition mutablePostCondition = postCondition as PostCondition;
+      if (mutablePostCondition == null) return postCondition;
+      mutablePostCondition.Condition = this.Visit(mutablePostCondition.Condition);
+      if (mutablePostCondition.Description != null)
+        mutablePostCondition.Description = this.Visit(mutablePostCondition.Description);
+      return mutablePostCondition;
+    }
+
+    /// <summary>
+    /// Visits the specified preconditions.
+    /// </summary>
+    /// <param name="preconditions">The preconditions.</param>
+    public virtual List<IPrecondition> Visit(List<IPrecondition> preconditions) {
+      if (this.stopTraversal) return preconditions;
+      for (int i = 0, n = preconditions.Count; i < n; i++)
+        preconditions[i] = this.Visit(preconditions[i]);
+      return preconditions;
+    }
+
+    /// <summary>
+    /// Visits the specified precondition.
+    /// </summary>
+    /// <param name="precondition">The precondition.</param>
+    public virtual IPrecondition Visit(IPrecondition precondition) {
+      if (this.stopTraversal) return precondition;
+      Precondition mutablePrecondition = precondition as Precondition;
+      if (mutablePrecondition == null) return precondition;
+      mutablePrecondition.Condition = this.Visit(mutablePrecondition.Condition);
+      if (mutablePrecondition.Description != null)
+        mutablePrecondition.Description = this.Visit(mutablePrecondition.Description);
+      if (mutablePrecondition.ExceptionToThrow != null)
+        mutablePrecondition.ExceptionToThrow = this.Visit(mutablePrecondition.ExceptionToThrow);
+      return mutablePrecondition;
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public override IStatement Visit(IStatement statement) {
+      if (this.stopTraversal) return statement;
+      IStatement result = base.Visit(statement);
+      if (this.contractProvider != null) {
+        ILoopContract/*?*/ loopContract = this.contractProvider.GetLoopContractFor(statement);
+        if (loopContract != null)
+          this.contractProvider.AssociateLoopWithContract(result, this.Visit(loopContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exceptions.
+    /// </summary>
+    /// <param name="thrownExceptions">The thrown exceptions.</param>
+    public virtual List<IThrownException> Visit(List<IThrownException> thrownExceptions) {
+      if (this.stopTraversal) return thrownExceptions;
+      for (int i = 0, n = thrownExceptions.Count; i < n; i++)
+        thrownExceptions[i] = this.Visit(thrownExceptions[i]);
+      return thrownExceptions;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exception.
+    /// </summary>
+    /// <param name="thrownException">The thrown exception.</param>
+    public virtual IThrownException Visit(IThrownException thrownException) {
+      if (this.stopTraversal) return thrownException;
+      ThrownException mutableThrownException = thrownException as ThrownException;
+      if (mutableThrownException == null) return thrownException;
+      mutableThrownException.ExceptionType = this.Visit(mutableThrownException.ExceptionType);
+      mutableThrownException.Postcondition = this.Visit(mutableThrownException.Postcondition);
+      return mutableThrownException;
+    }
+
+    /// <summary>
+    /// Visits the specified type contract.
+    /// </summary>
+    /// <param name="typeContract">The type contract.</param>
+    public virtual ITypeContract Visit(ITypeContract typeContract) {
+      if (this.stopTraversal) return typeContract;
+      TypeContract mutableTypeContract = typeContract as TypeContract;
+      if (mutableTypeContract == null) return typeContract;
+      mutableTypeContract.ContractFields = this.Visit(mutableTypeContract.ContractFields);
+      mutableTypeContract.ContractMethods = this.Visit(mutableTypeContract.ContractMethods);
+      mutableTypeContract.Invariants = this.Visit(mutableTypeContract.Invariants);
+      return mutableTypeContract;
+    }
+
+    /// <summary>
+    /// Visits the specified field invariants.
+    /// </summary>
+    /// <param name="fieldInvariants">The field invariants.</param>
+    public virtual List<IFieldDefinition> Visit(List<IFieldDefinition> fieldInvariants) {
+      if (this.stopTraversal) return fieldInvariants;
+      for (int i = 0, n = fieldInvariants.Count; i < n; i++)
+        fieldInvariants[i] = this.Visit(fieldInvariants[i]);
+      return fieldInvariants;
+    }
+
+    /// <summary>
+    /// Visits the specified contract methods.
+    /// </summary>
+    /// <param name="contractMethods">The contract methods.</param>
+    public virtual List<IMethodDefinition> Visit(List<IMethodDefinition> contractMethods) {
+      if (this.stopTraversal) return contractMethods;
+      for (int i = 0, n = contractMethods.Count; i < n; i++)
+        contractMethods[i] = this.Visit(contractMethods[i]);
+      return contractMethods;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariants.
+    /// </summary>
+    /// <param name="typeInvariants">The type invariants.</param>
+    public virtual List<ITypeInvariant> Visit(List<ITypeInvariant> typeInvariants) {
+      if (this.stopTraversal) return typeInvariants;
+      for (int i = 0, n = typeInvariants.Count; i < n; i++)
+        typeInvariants[i] = this.Visit(typeInvariants[i]);
+      return typeInvariants;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariant.
+    /// </summary>
+    /// <param name="typeInvariant">The type invariant.</param>
+    public virtual ITypeInvariant Visit(ITypeInvariant typeInvariant) {
+      if (this.stopTraversal) return typeInvariant;
+      TypeInvariant mutableTypeInvariant = typeInvariant as TypeInvariant;
+      if (mutableTypeInvariant == null) return typeInvariant;
+      mutableTypeInvariant.Condition = this.Visit(mutableTypeInvariant.Condition);
+      if (mutableTypeInvariant.Description != null)
+        mutableTypeInvariant.Description = this.Visit(mutableTypeInvariant.Description);
+      return mutableTypeInvariant;
+    }
+
+    /// <summary>
+    /// Visits the specified namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
+    public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      if (this.stopTraversal) return namespaceTypeDefinition;
+      var result = base.Visit(namespaceTypeDefinition);
+      if (this.contractProvider != null) {
+        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(namespaceTypeDefinition);
+        if (typeContract != null)
+          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition">The nested type definition.</param>
+    public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
+      if (this.stopTraversal) return nestedTypeDefinition;
+      var result = base.Visit(nestedTypeDefinition);
+      if (this.contractProvider != null) {
+        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(nestedTypeDefinition);
+        if (typeContract != null)
+          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
+      }
+      return result;
+    }
+  }
+
+  /// <summary>
   /// Use this as a base class when you define a code mutator that mutates ONLY method bodies (in other words
   /// all metadata definitions, including parameter definitions and local definition remain unchanged).
   /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), 
   /// Visit(ITypeReference), VisitReferenceTo(ILocalDefinition) and VisitReferenceTo(IParameterDefinition) that make sure to not modify the references.
   /// </summary>
-  public class MethodBodyCodeMutator : CodeMutator {
+  public class MethodBodyCodeMutator : CodeMutatingVisitor {
 
     /// <summary>
     /// 
@@ -2703,7 +3054,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
     public MethodBodyCodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
-      : base(host, copyOnlyIfNotAlreadyMutable) { }
+      : base(host) { }
 
     /// <summary>
     /// 
@@ -2722,7 +3073,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
     public MethodBodyCodeMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider) { }
+      : base(host, sourceLocationProvider) { }
 
     #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
 
@@ -2777,7 +3128,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), and
   /// Visit(ITypeReference) that make sure to not modify the references.
   /// </summary>
-  public class MethodBodyCodeAndContractMutator : CodeAndContractMutator {
+  public class MethodBodyCodeAndContractMutator : CodeAndContractMutatingVisitor {
     /// <summary>
     /// 
     /// </summary>
@@ -2791,7 +3142,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host"></param>
     /// <param name="copyOnlyIfNotAlreadyMutable"></param>
     public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
-      : base(host, copyOnlyIfNotAlreadyMutable) { }
+      : base(host) { }
 
     /// <summary>
     /// 
@@ -2813,7 +3164,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="sourceLocationProvider"></param>
     /// <param name="contractProvider"></param>
     public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider, contractProvider) { }
+      : base(host, sourceLocationProvider, contractProvider) { }
 
     #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
     /// <summary>
@@ -2825,11 +3176,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits a reference to the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The referenced local definition to visit.</param>
+    /// <returns></returns>
+    public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
+      return localDefinition;
+    }
+
+    /// <summary>
     /// Visits the specified method reference.
     /// </summary>
     /// <param name="methodReference">The method reference.</param>
     public override IMethodReference Visit(IMethodReference methodReference) {
       return methodReference;
+    }
+
+    /// <summary>
+    /// Visits a parameter definition that is being referenced.
+    /// </summary>
+    /// <param name="parameterDefinition">The referenced parameter definition.</param>
+    public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
+      return parameterDefinition;
     }
 
     /// <summary>
@@ -2839,6 +3207,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override ITypeReference Visit(ITypeReference typeReference) {
       return typeReference;
     }
+
     #endregion All code mutators that are not mutating an entire assembly need to *not* modify certain references
   }
 
@@ -2882,17 +3251,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       createMutableType = new CreateMutableType(this);
     }
 
-    /// <summary>
-    /// Gets the mutable copy if it exists.
-    /// </summary>
-    /// <param name="parameterDefinition">The parameter definition.</param>
-    /// <returns></returns>
-    public virtual object GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
-      IReference/*?*/ cachedValue;
-      this.referenceCache.TryGetValue(parameterDefinition, out cachedValue);
-      return cachedValue != null ? cachedValue : parameterDefinition;
-    }
-
     #region Virtual methods for subtypes to override, one per type in MutableCodeModel
 
     /// <summary>
@@ -2913,11 +3271,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       object def = addressableExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
-        addressableExpression.Definition = this.Visit(loc);
+        addressableExpression.Definition = this.VisitReferenceTo(loc);
       else {
         IParameterDefinition/*?*/ par = def as IParameterDefinition;
         if (par != null)
-          addressableExpression.Definition = this.GetMutableCopyIfItExists(par);
+          addressableExpression.Definition = this.VisitReferenceTo(par);
         else {
           IFieldReference/*?*/ field = def as IFieldReference;
           if (field != null)
@@ -3093,11 +3451,11 @@ namespace Microsoft.Cci.MutableCodeModel {
         boundExpression.Instance = Visit(boundExpression.Instance);
       ILocalDefinition/*?*/ loc = boundExpression.Definition as ILocalDefinition;
       if (loc != null)
-        boundExpression.Definition = this.Visit(loc);
+        boundExpression.Definition = this.VisitReferenceTo(loc);
       else {
         IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
         if (par != null)
-          boundExpression.Definition = this.GetMutableCopyIfItExists(par);
+          boundExpression.Definition = this.VisitReferenceTo(par);
         else {
           IFieldReference/*?*/ field = boundExpression.Definition as IFieldReference;
           boundExpression.Definition = this.Visit(field);
@@ -3525,13 +3883,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodBody">The method body.</param>
     /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
-      ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
+      var sourceMethodBody = methodBody as SourceMethodBody;
       if (sourceMethodBody != null) {
-        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
-        mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
-        mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
-        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
-        return mutableSourceMethodBody;
+        sourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
+        sourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        sourceMethodBody.MethodDefinition = this.GetCurrentMethod();
+        return sourceMethodBody;
       }
       return base.Visit(methodBody);
     }
@@ -3808,11 +4165,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       object def = targetExpression.Definition;
       ILocalDefinition/*?*/ loc = def as ILocalDefinition;
       if (loc != null)
-        targetExpression.Definition = this.Visit(loc);
+        targetExpression.Definition = this.VisitReferenceTo(loc);
       else {
         IParameterDefinition/*?*/ par = targetExpression.Definition as IParameterDefinition;
         if (par != null)
-          targetExpression.Definition = this.GetMutableCopyIfItExists(par);
+          targetExpression.Definition = this.VisitReferenceTo(par);
         else {
           IFieldReference/*?*/ field = targetExpression.Definition as IFieldReference;
           if (field != null) {
@@ -3880,6 +4237,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       tryCatchFilterFinallyStatement.CatchClauses = Visit(tryCatchFilterFinallyStatement.CatchClauses);
       if (tryCatchFilterFinallyStatement.FinallyBody != null)
         tryCatchFilterFinallyStatement.FinallyBody = Visit(tryCatchFilterFinallyStatement.FinallyBody);
+      if (tryCatchFilterFinallyStatement.FaultBody != null)
+        tryCatchFilterFinallyStatement.FaultBody = Visit(tryCatchFilterFinallyStatement.FaultBody);
       return tryCatchFilterFinallyStatement;
     }
 

@@ -42,9 +42,9 @@ namespace PeToPe {
           //Construct a Code Model from the Metadata model via decompilation
           module = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
 
-          //Create a mutator for the CodeModel and run it over the module, producing a copy that could be different if the mutator
+          //Create a mutating visitor for the CodeModel and run it over the module, producing a copy that could be different if the mutator
           //were a subclass that made changes during the copy process.
-          var mutator = new CodeMutator(host, pdbReader);
+          var mutator = new CodeMutatingVisitor(host, pdbReader);
           module = mutator.Visit(module);
 
           //Write out the normalized Code Model, traversing it as the Metadata Model it also is.

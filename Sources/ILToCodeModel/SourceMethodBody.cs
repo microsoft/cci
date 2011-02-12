@@ -26,9 +26,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal readonly INameTable nameTable;
     internal readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
     internal readonly ILocalScopeProvider/*?*/ localScopeProvider;
+    internal readonly bool decompileIterators;
     private readonly PdbReader/*?*/ pdbReader;
     internal readonly IPlatformType platformType;
-    internal List<ILocalDefinition> localVariables;
+    internal List<ILocalDefinition> localVariablesAndTemporaries;
     internal List<ITypeDefinition> privateHelperTypesToRemove;
     internal Dictionary<uint, IMethodDefinition> privateHelperMethodsToRemove;
     internal Dictionary<IFieldDefinition, IFieldDefinition> privateHelperFieldsToRemove;
@@ -48,16 +49,18 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
+    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
+      ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators = false) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
       this.nameTable = host.NameTable;
       this.sourceLocationProvider = sourceLocationProvider;
       this.pdbReader = sourceLocationProvider as PdbReader;
       this.localScopeProvider = localScopeProvider;
+      this.decompileIterators = decompileIterators;
       this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
       this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
-      this.localVariables = new List<ILocalDefinition>(ilMethodBody.LocalVariables);
       if (IteratorHelper.EnumerableIsNotEmpty(ilMethodBody.LocalVariables))
         this.localsAreZeroed = ilMethodBody.LocalsAreZeroed;
       else
@@ -108,7 +111,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// The local variables of the method.
     /// </summary>
     public IEnumerable<ILocalDefinition> LocalVariables {
-      get { return this.localVariables.AsReadOnly(); }
+      get { return this.ilMethodBody.LocalVariables; }
     }
 
     /// <summary>
@@ -247,10 +250,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (exinfo.HandlerKind == HandlerKind.Filter) {
           bb = this.GetOrCreateBlock(exinfo.FilterDecisionStartOffset, false);
           this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
-          bb.Statements.Add(new Push() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
+          bb.Statements.Add(new PushStatement() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
         } else if (exinfo.HandlerKind == HandlerKind.Catch) {
           bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
-          bb.Statements.Add(new Push() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
+          bb.Statements.Add(new PushStatement() { ValueToPush = new Pop() { Type = exinfo.ExceptionType } });
         } else {
           bb = this.GetOrCreateBlock(exinfo.HandlerStartOffset, false);
         }
@@ -359,33 +362,34 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     /// <param name="rootBlock"></param>
     /// <returns></returns>
-    protected virtual IBlockStatement Transform(BasicBlock rootBlock) {
+    protected IBlockStatement Transform(BasicBlock rootBlock) {
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
       new RemoveBranchConditionLocals(this).Visit(rootBlock);
       new Unstacker(this).Visit(rootBlock);
       new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
+      new TryCatchDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
+      new IfThenElseDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
+      new SwitchDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
       new BlockRemover().Visit(rootBlock);
       new DeclarationAdder().Visit(this, rootBlock);
       new EmptyStatementRemover().Visit(rootBlock);
-      IBlockStatement result;
-      var iteratorBodyFromIL = rootBlock;
-      IMethodBody moveNextILBody = this.FindClosureMoveNext(iteratorBodyFromIL);
-      if (moveNextILBody == Dummy.MethodBody) {
-        result = iteratorBodyFromIL;
-      } else {
-        if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
-        this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
-        var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
-        result = moveNextBody.TransformedBlock;
+      IBlockStatement result = rootBlock;
+      if (this.decompileIterators) {
+        IMethodBody moveNextILBody = this.FindClosureMoveNext(rootBlock);
+        if (moveNextILBody != Dummy.MethodBody) {
+          if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
+          this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
+          var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
+          result = moveNextBody.TransformedBlock;
+        }
       }
       result = new CompilationArtifactRemover(this).RemoveCompilationArtifacts((BlockStatement)result);
       var bb = result as BasicBlock;
       if (bb != null) {
         new UnreferencedLabelRemover().Visit(bb);
+        new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(bb);
       }
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
       return result;
     }
 
@@ -399,7 +403,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           expressionStatement.Expression = operand;
           currentBlock.Statements.Insert(insertPoint, expressionStatement);
         } else {
-          Push push = new Push();
+          PushStatement push = new PushStatement();
           push.ValueToPush = operand;
           currentBlock.Statements.Insert(insertPoint, push);
         }
@@ -966,7 +970,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private Statement ParseDup() {
-      Push result = new Push();
+      PushStatement result = new PushStatement();
       result.ValueToPush = new Dup();
       return result;
     }
@@ -1054,8 +1058,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         if (this.sourceLocationProvider != null && this.lastSourceLocation == null) {
           foreach (var sourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(currentOperation.Location)) {
-            this.lastSourceLocation = sourceLocation;
-            break;
+            if (sourceLocation.StartLine != 0x00feefee) {
+              this.lastSourceLocation = sourceLocation;
+              break;
+            }
           }
         }
       }
@@ -1603,7 +1609,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// A metadata (IL) representation along with a source level representation of the body of an iterator method/property.
   /// </summary>
-  public class MoveNextSourceMethodBody : SourceMethodBody {
+  internal class MoveNextSourceMethodBody : SourceMethodBody {
 
     /// <summary>
     /// The method body of the original iterator method. 
@@ -1626,27 +1632,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Decompile the method body of the MoveNext, the results of which may be decompiled to and duplicated as the iterator method body.
-    /// </summary>
-    /// <param name="rootBlock">The root block of </param>
-    /// <returns></returns>
-    protected override IBlockStatement Transform(BasicBlock rootBlock) {
-      new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
-      new RemoveBranchConditionLocals(this).Visit(rootBlock);
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      new Unstacker(this).Visit(rootBlock);
-      new ControlFlowDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
-      new BlockRemover().Visit(rootBlock);
-      new DeclarationAdder().Visit(this, rootBlock);
-      new EmptyStatementRemover().Visit(rootBlock);
-      IBlockStatement result = new CompilationArtifactRemover(this).RemoveCompilationArtifacts(rootBlock);
-      return result;
-    }
-
-    /// <summary>
     /// Computes the method body of the iterator method of which the defining class of this MoveNext method is a closure class.
     /// </summary>
-    public IBlockStatement TransformedBlock {
+    internal IBlockStatement TransformedBlock {
       // TODO: check for the conditions that we have assumed, such as there must be a switch statement, and return a dummy
       // if such conditions are not satisfied. 
       get {

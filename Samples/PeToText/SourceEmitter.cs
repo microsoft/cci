@@ -1,6 +1,7 @@
-﻿//-----------------------------------------------------------------------------
+﻿
+//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -20,11 +21,12 @@ using Microsoft.Cci.Contracts;
 namespace PeToText {
   public class SourceEmitter : CSharpSourceEmitter.SourceEmitter {
 
-    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, bool noIL)
-      : base(sourceEmitterOutput) {
+    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, bool noIL, bool printCompilerGeneratedMembers)
+      : base (sourceEmitterOutput){
       this.host = host;
       this.pdbReader = pdbReader;
       this.noIL = noIL;
+      this.printCompilerGeneratedMembers = printCompilerGeneratedMembers;
     }
 
     IMetadataHost host;
@@ -36,7 +38,7 @@ namespace PeToText {
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null)
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, !this.printCompilerGeneratedMembers);
       if (this.noIL)
         this.Visit(sourceMethodBody.Block.Statements);
       else {

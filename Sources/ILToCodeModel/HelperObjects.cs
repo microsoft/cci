@@ -96,27 +96,6 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal sealed class PopAsUnsigned : Pop {
   }
 
-  internal sealed class Push : Statement, IPushStatement {
-
-    /// <summary>
-    /// Calls visitor.Visit((IPush)this).
-    /// </summary>
-    public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// A value that is to be pushed onto the implicit operand stack.
-    /// </summary>
-    /// <value></value>
-    public IExpression ValueToPush {
-      get { return this.valueToPush; }
-      set { this.valueToPush = value; }
-    }
-    private IExpression valueToPush;
-
-  }
-
   internal sealed class SwitchInstruction : Statement {
     internal IExpression switchExpression;
     internal readonly List<GotoStatement> switchCases = new List<GotoStatement>();
@@ -145,7 +124,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     /// <summary>
-    /// Get the unspecialized field definition of the given field definition, if it is specialized. Or the field 
+    /// Get the unspecialized version of the given field definition, if it is specialized. Or the field 
     /// definition itself, otherwise.
     /// </summary>
     /// <param name="fieldDefinition"></param>
@@ -154,6 +133,18 @@ namespace Microsoft.Cci.ILToCodeModel {
       ISpecializedFieldDefinition specializedFieldDefinition = fieldDefinition as ISpecializedFieldDefinition;
       if (specializedFieldDefinition != null) return specializedFieldDefinition.UnspecializedVersion;
       return fieldDefinition;
+    }
+
+    /// <summary>
+    /// Get the unspecialized version of the given field reference, if it is specialized. Or the field 
+    /// reference itself, otherwise.
+    /// </summary>
+    /// <param name="fieldReference"></param>
+    /// <returns></returns>
+    internal static IFieldReference UnspecializedFieldReference(IFieldReference fieldReference) {
+      ISpecializedFieldReference specializedFieldReference = fieldReference as ISpecializedFieldReference;
+      if (specializedFieldReference != null) return specializedFieldReference.UnspecializedVersion;
+      return fieldReference;
     }
 
     /// <summary>

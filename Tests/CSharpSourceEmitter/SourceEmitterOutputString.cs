@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -15,7 +15,7 @@ using System.IO;
 
 namespace CSharpSourceEmitter {
   public class SourceEmitterOutputString : SourceEmitterOutputTextWriter {
-    public SourceEmitterOutputString()
+    public SourceEmitterOutputString() 
       : base(new StringWriter()) {
     }
 
@@ -24,8 +24,8 @@ namespace CSharpSourceEmitter {
     }
 
     public string Data {
-      get {
-        return ((StringWriter)this.outputWriter).ToString();
+      get { 
+        return ((StringWriter)this.outputWriter).ToString(); 
       }
     }
 

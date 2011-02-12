@@ -122,7 +122,7 @@ namespace Microsoft.Cci.Contracts {
         return null;
       }
       var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
-      contract = cccc.Visit(contract);
+      cccc.Visit(contract);
       contract = ContractHelper.CopyContract(this.host, contract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
       if (specializedProxyMethod != null || proxyMethod.IsGeneric || proxyMethod.ContainingTypeDefinition.IsGeneric) {
         SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedProxyMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
@@ -195,57 +195,26 @@ namespace Microsoft.Cci.Contracts {
 
     #endregion
 
-    private class ConvertContractClassContract : CodeAndContractMutator {
+    private class ConvertContractClassContract : BaseCodeAndContractTraverser {
 
       private ITypeDefinition contractClass;
       private ITypeDefinition abstractType;
       private uint contractClassInternedKey;
+      IMetadataHost host;
 
       private Dictionary<uint, IMethodReference> correspondingAbstractMember = new Dictionary<uint, IMethodReference>();
 
       public ConvertContractClassContract(IMetadataHost host, ITypeDefinition contractClass, ITypeDefinition abstractType)
-        : base(host, true)
+        : base(null)
       {
         //^ Contract.Requires(contractClass.IsGeneric == abstractType.IsGeneric);
         this.contractClass = contractClass;
         this.contractClassInternedKey = this.contractClass.InternedKey;
         this.abstractType = abstractType;
+        this.host = host;
       }
 
-      /// <summary>
-      /// Parameters might be immutable and if so, then this mutator would end up creating
-      /// mutable copies. But then they are not object-equal to the parameter from the method
-      /// and downstream mutators/copiers (especially copiers) expect all references to a parameter
-      /// to be object-equal to the parameter reached from the method definition.
-      /// </summary>
-      public override IExpression Visit(BoundExpression boundExpression) {
-        IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
-        if (par != null)
-          return boundExpression;
-        return base.Visit(boundExpression);
-      }
-
-      //public override IExpression Visit(ThisReference thisReference) {
-      //  var t = thisReference.Type;
-      //  var gt = t as IGenericTypeInstanceReference;
-      //  if (gt != null) t = gt.GenericType;
-      //  var k = t.InternedKey;
-      //  if (k == this.contractClassInternedKey) {
-      //    ITypeReference st = this.abstractType;
-      //    if (gt != null) {
-      //      st = new GenericTypeInstanceReference() {
-      //        GenericArguments = new List<ITypeReference>(gt.GenericArguments),
-      //        GenericType = st,
-      //        InternFactory = this.host.InternFactory,
-      //      };
-      //    }
-      //    thisReference.Type = st;
-      //    return thisReference;
-      //  }
-      //  return base.Visit(thisReference);
-      //}
-
-      public override IExpression Visit(MethodCall methodCall) {
+      public override void Visit(IMethodCall methodCall) {
         var mtc = methodCall.MethodToCall;
         var smr = mtc as ISpecializedMethodReference;
         IMethodReference possiblyUnspecializedMethodReference = smr == null ? mtc : smr.UnspecializedVersion;
@@ -272,10 +241,11 @@ namespace Microsoft.Cci.Contracts {
             }
             this.correspondingAbstractMember.Add(possiblyUnspecializedMethodReference.InternedKey, abstractMember);
           }
-          methodCall.MethodToCall = abstractMember;
-          methodCall.IsVirtualCall = true;
+          var mutableMethodCall = (MethodCall)methodCall;
+          mutableMethodCall.MethodToCall = abstractMember;
+          mutableMethodCall.IsVirtualCall = true;
         }
-        return base.Visit(methodCall);
+        base.Visit(methodCall);
       }
 
       private IMethodReference/*?*/ FindCorrespondingMember(IMethodReference methodReference) {
@@ -559,9 +529,8 @@ namespace Microsoft.Cci.Contracts {
   /// be used on just small snippets of trees. A side effect is that all definitions
   /// are replaced by references so it doesn't preserve that aspect of the object model.
   /// </summary>
-  internal class MappingMutator : CodeAndContractMutator {
+  internal class MappingMutator : CodeAndContractMutatingVisitor {
 
-    private IUnit sourceUnit = null;
     private UnitIdentity sourceUnitIdentity;
     private IUnit targetUnit = null;
 
@@ -580,61 +549,17 @@ namespace Microsoft.Cci.Contracts {
     /// The unit from which references will be mapped into references from the <paramref name="targetUnit"/>
     /// </param>
     public MappingMutator(IMetadataHost host, IUnit targetUnit, IUnit sourceUnit)
-      : base(host, false) { // NB!! Must make this mutator *always* copy (i.e., pass false to the base ctor) or it screws up ASTs that shouldn't be changed
-      this.sourceUnit = sourceUnit;
+      : base(host) {
       this.sourceUnitIdentity = sourceUnit.UnitIdentity;
       this.targetUnit = targetUnit;
     }
 
-    #region Units
     public override IUnitReference Visit(IUnitReference unitReference) {
       if (unitReference.UnitIdentity.Equals(this.sourceUnitIdentity))
         return targetUnit;
       else
         return base.Visit(unitReference);
     }
-    #endregion Units
-
-    #region Namespaces
-    public override IRootUnitNamespaceReference Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
-      return this.Visit(this.GetMutableCopy(rootUnitNamespaceReference));
-    }
-    public override INestedUnitNamespaceReference Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
-      return this.Visit(this.GetMutableCopy(nestedUnitNamespaceReference));
-    }
-    #endregion Namespaces
-
-    #region Types
-    public override INamespaceTypeReference Visit(INamespaceTypeReference namespaceTypeReference) {
-      return this.Visit(this.GetMutableCopy(namespaceTypeReference));
-    }
-    public override INestedTypeReference Visit(INestedTypeReference nestedTypeReference) {
-      return this.Visit(this.GetMutableCopy(nestedTypeReference));
-    }
-    public override IGenericTypeParameterReference Visit(IGenericTypeParameterReference genericTypeParameterReference) {
-      return this.Visit(this.GetMutableCopy(genericTypeParameterReference));
-    }
-    public override IGenericMethodParameterReference Visit(IGenericMethodParameterReference genericMethodParameterReference) {
-      return this.Visit(this.GetMutableCopy(genericMethodParameterReference));
-    }
-    #endregion Types
-
-    #region Methods
-    public override IMethodReference Visit(IMethodReference methodReference) {
-      var a = ContractHelper.IsModel(methodReference);
-      var mutableMethodReference = this.GetMutableCopy(methodReference);
-      if (a != null) {
-        mutableMethodReference.Attributes.Add(a);
-      }
-      return this.Visit(mutableMethodReference);
-    }
-    #endregion Methods
-
-    #region Fields
-    public override IFieldReference Visit(IFieldReference fieldReference) {
-      return this.Visit(this.GetMutableCopy(fieldReference));
-    }
-    #endregion Fields
 
   }
 
@@ -762,7 +687,7 @@ namespace Microsoft.Cci.Contracts {
             if (methodReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
 
             MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-            var oobMethod = primaryToOobMapper.Visit(methodReference);
+            var oobMethod = primaryToOobMapper.Visit(MetadataCopier.DeepCopy(this.host, methodReference));
 
             if (oobMethod == null) continue;
 
@@ -771,7 +696,7 @@ namespace Microsoft.Cci.Contracts {
             if (oobContract == null) continue;
 
             MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
-            oobContract = oobToPrimaryMapper.Visit(oobContract);
+            oobContract = oobToPrimaryMapper.Visit(CodeAndContractCopier.DeepCopy(this.host, oobContract));
 
             var sps = new Microsoft.Cci.MutableContracts.SubstituteParameters(this.host, oobMethod.ResolvedMethod, methodReference.ResolvedMethod);
             oobContract = sps.Visit(oobContract);
@@ -829,7 +754,7 @@ namespace Microsoft.Cci.Contracts {
           if (typeReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
 
           MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-          var oobType = primaryToOobMapper.Visit(typeReference);
+          var oobType = primaryToOobMapper.Visit(MetadataCopier.DeepCopy(this.host, typeReference));
 
           if (oobType == null) continue;
 
@@ -838,7 +763,7 @@ namespace Microsoft.Cci.Contracts {
           if (oobContract == null) continue;
 
           MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
-          oobContract = oobToPrimaryMapper.Visit(oobContract);
+          oobContract = oobToPrimaryMapper.Visit(CodeAndContractCopier.DeepCopy(this.host, oobContract));
           ContractHelper.AddTypeContract(result, oobContract);
           found = true;
 

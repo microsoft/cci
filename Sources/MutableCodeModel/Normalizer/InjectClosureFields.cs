@@ -23,7 +23,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// NOTE: It must be instantiated for each body it visits, either an anonymous
   /// delegate or the original method body.
   /// </summary>  
-  internal class InjectClosureFields : CodeMutator {
+  internal class InjectClosureFields : CodeMutatingVisitor {
 
     #region Fields
 
@@ -126,7 +126,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Dictionary<IAnonymousDelegate, MethodDefinition> lambda2method,
       Dictionary<NestedTypeDefinition, MethodDefinition> constructorForClosureClass
       )
-      : base(host, true, sourceLocationProvider) {
+      : base(host, sourceLocationProvider) {
       this.method = method;
       this.classList = classList;
       this.nestingDepth = index;
@@ -176,7 +176,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Need to possibly instantiate "closure" because outer closure fields
       // will be generic *if* (and only if) outermost closure class is generic.
       var k = this.GetSelfReferenceForPrivateHelperTypes(closure).InternedKey;
-      for (int i = this.outerClosures.Count - 1; 0 <= i; i--) {
+      for (int i = this.outerClosures.Count - 1; 0 <= i; i--){
         var closureField = this.outerClosures[i];
         boundExpression.Definition = this.GetSelfReference(closureField);
         if (closureField.Type.InternedKey == k) {
@@ -287,15 +287,15 @@ namespace Microsoft.Cci.MutableCodeModel {
         );
       block = bodyFixer.Visit(block);
 
-      // For all methods except for the one in the innermost closure class,
-      // inject a preamble that creates an instance of the next inner closure
-      // class and stores the instance in a local variable. The preamble also
-      // stores any parameters of the method that have been captured in that instance:
-      //   local := new NestedClosure();
-      //   local.p := p; // for each parameter p that is captured
-      // NOTE: Can't make this the override for Visit(IBlockStatement) because
-      // if the decompiler isn't perfect --- and who is? --- then there may be
-      // nested blocks, but this should be done only for the top-level block.
+        // For all methods except for the one in the innermost closure class,
+        // inject a preamble that creates an instance of the next inner closure
+        // class and stores the instance in a local variable. The preamble also
+        // stores any parameters of the method that have been captured in that instance:
+        //   local := new NestedClosure();
+        //   local.p := p; // for each parameter p that is captured
+        // NOTE: Can't make this the override for Visit(IBlockStatement) because
+        // if the decompiler isn't perfect --- and who is? --- then there may be
+        // nested blocks, but this should be done only for the top-level block.
       if (bodyFixer.nestedClosure != null) {
         var result2 = block as BlockStatement;
         if (result2 != null) { // result2 is just an alias for result
@@ -332,9 +332,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       ITypeReference instanceOfClosureClass = closureClass;
 
-      instanceOfClosureClass = GenericTypeInstance.GetGenericTypeInstance(closureClass,
-        IteratorHelper.GetConversionEnumerable<IGenericMethodParameter, ITypeReference>(this.method.GenericParameters),
-        host.InternFactory);
+      if (closureClass.IsGeneric)
+        instanceOfClosureClass = GenericTypeInstance.GetGenericTypeInstance(closureClass,
+          IteratorHelper.GetConversionEnumerable<IGenericMethodParameter, ITypeReference>(this.method.GenericParameters),
+          host.InternFactory);
 
       var target = new TargetExpression() {
         Definition = closureTemp,
@@ -352,7 +353,13 @@ namespace Microsoft.Cci.MutableCodeModel {
         Source = construct,
         Type = this.GetSelfReferenceForPrivateHelperTypes(closureClass)
       };
-      return new ExpressionStatement() { Expression = assignment };
+      // This is going to end up being the first statement in the method body,
+      // and since it does not have a valid source context, mark it with FeeFee
+      // so that the debugger will step into the method.
+      return new ExpressionStatement() {
+        Expression = assignment, 
+        Locations = new List<ILocation>{SourceDummy.PrimarySourceLocation},
+      };
     }
 
     private MethodDefinition GetOrCreateDefaultConstructorFor(NestedTypeDefinition closureClass) {
@@ -374,6 +381,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       body.MethodDefinition = result;
       result.CallingConvention = CallingConvention.HasThis;
       result.ContainingTypeDefinition = closureClass;
+      result.InternFactory = this.host.InternFactory;
       result.IsCil = true;
       result.IsHiddenBySignature = true;
       result.IsRuntimeSpecial = true;
@@ -503,7 +511,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
       var originalLocalVariable = localDeclarationStatement.LocalVariable;
-      localDeclarationStatement.LocalVariable = this.VisitReferenceTo(originalLocalVariable);
+      localDeclarationStatement.LocalVariable = this.Visit(originalLocalVariable);
       if (localDeclarationStatement.InitialValue != null) {
         var source = this.Visit(localDeclarationStatement.InitialValue);
         BoundField/*?*/ boundField;

@@ -2182,6 +2182,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region DeepCopy methods
 
     /// <summary>
+    /// Returns a deep mutable copy of the given method contract.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="methodContract">The method contract to copy.</param>
+    public static MethodContract DeepCopy(IMetadataHost host, IMethodContract methodContract) {
+      return (MethodContract)new CodeAndContractCopier(host, null).Substitute(methodContract);
+    }
+
+    /// <summary>
+    /// Returns a deep mutable copy of the given type contract.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="typeContract">The type contract to copy.</param>
+    public static TypeContract DeepCopy(IMetadataHost host, ITypeContract typeContract) {
+      return (TypeContract)new CodeAndContractCopier(host, null).Substitute(typeContract);
+    }
+
+    /// <summary>
     /// Visits the specified addressable expressions.
     /// </summary>
     /// <param name="addressableExpressions">The addressable expressions.</param>

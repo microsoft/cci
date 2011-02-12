@@ -1259,6 +1259,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The list of custom modifiers, if any, associated with the field. Evaluate this property only if IsModified is true.
+    /// </summary>
+    /// <value></value>
+    public IEnumerable<CustomModifier> CustomModifiers {
+      get { return this.FieldDeclaration.CustomModifiers; }
+    }
+
+    /// <summary>
     /// The declaration that corresponds to this definition.
     /// </summary>
     /// <value></value>
@@ -1343,6 +1351,13 @@ namespace Microsoft.Cci.Ast {
       {
         return this.FieldDeclaration.IsMarshalledExplicitly;
       }
+    }
+
+    /// <summary>
+    /// This field has custom modifiers.
+    /// </summary>
+    public bool IsModified {
+      get { return this.FieldDeclaration.IsModified; }
     }
 
     /// <summary>
@@ -1465,6 +1480,11 @@ namespace Microsoft.Cci.Ast {
 
     #region IFieldReference Members
 
+    IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
+      get {
+        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
+      }
+    }
 
     /// <summary>
     /// The Field being referred to.
@@ -2305,6 +2325,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The list of custom modifiers, if any, associated with the field. Evaluate this property only if IsModified is true.
+    /// </summary>
+    /// <value></value>
+    public IEnumerable<CustomModifier> CustomModifiers {
+      get { return this.GlobalFieldDeclaration.CustomModifiers; }
+    }
+
+    /// <summary>
     /// Calls the visitor.Visit(IGlobalFieldDefinition) method.
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
@@ -2408,6 +2436,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public bool IsMarshalledExplicitly {
       get { return this.GlobalFieldDeclaration.IsMarshalledExplicitly; }
+    }
+
+    /// <summary>
+    /// This field has custom modifiers.
+    /// </summary>
+    public bool IsModified {
+      get { return this.GlobalFieldDeclaration.IsModified; }
     }
 
     /// <summary>
@@ -2535,6 +2570,12 @@ namespace Microsoft.Cci.Ast {
     #endregion
 
     #region IFieldReference Members
+
+    IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
+      get {
+        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
+      }
+    }
 
     IFieldDefinition IFieldReference.ResolvedField {
       get { return this; }

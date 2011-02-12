@@ -16,22 +16,24 @@ using Microsoft.Cci;
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
     public override void Visit(IMethodDefinition methodDefinition) {
-      if (methodDefinition.IsConstructor && methodDefinition.ParameterCount == 0 && 
+      if (!this.printCompilerGeneratedMembers) {
+        if (methodDefinition.IsConstructor && methodDefinition.ParameterCount == 0 && 
         AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-        return;
+          return;
 
-      // Skip if this is a method generated for use by a property or event
-      foreach (var p in methodDefinition.ContainingTypeDefinition.Properties)
-        if ((p.Getter != null && p.Getter.ResolvedMethod == methodDefinition) ||
+        // Skip if this is a method generated for use by a property or event
+        foreach (var p in methodDefinition.ContainingTypeDefinition.Properties)
+          if ((p.Getter != null && p.Getter.ResolvedMethod == methodDefinition) ||
           (p.Setter != null && p.Setter.ResolvedMethod == methodDefinition))
-          return;
-      foreach (var e in methodDefinition.ContainingTypeDefinition.Events)
-        if ((e.Adder != null && e.Adder.ResolvedMethod == methodDefinition) ||
+            return;
+        foreach (var e in methodDefinition.ContainingTypeDefinition.Events)
+          if ((e.Adder != null && e.Adder.ResolvedMethod == methodDefinition) ||
           (e.Remover != null && e.Remover.ResolvedMethod == methodDefinition))
-          return;
+            return;
 
-      if (AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-        return; // eg. an iterator helper - may have invalid identifier name
+        if (AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+          return; // eg. an iterator helper - may have invalid identifier name
+      }
 
       // Cctors should probably be outputted in some cases
       if (methodDefinition.IsStaticConstructor) return;
@@ -71,8 +73,8 @@ namespace CSharpSourceEmitter {
     public virtual void PrintMethodDefinitionVisibility(IMethodDefinition methodDefinition) {
       if (!IsDestructor(methodDefinition) &&
         !methodDefinition.ContainingTypeDefinition.IsInterface &&
-        IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)))
-        PrintTypeMemberVisibility(methodDefinition.Visibility);
+        IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition))) 
+          PrintTypeMemberVisibility(methodDefinition.Visibility);
     }
 
     public virtual bool IsMethodUnsafe(IMethodDefinition methodDefinition) {
@@ -135,10 +137,11 @@ namespace CSharpSourceEmitter {
 
       if (IsDestructor(methodDefinition))
         return;
-
+      
       if (methodDefinition.IsStatic) {
         PrintKeywordStatic();
-      } else if (methodDefinition.IsVirtual) {
+      }
+      else if (methodDefinition.IsVirtual) {
         if (methodDefinition.IsNewSlot && 
           (IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetImplicitlyImplementedInterfaceMethods(methodDefinition)) ||
             IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)))) {
@@ -147,11 +150,12 @@ namespace CSharpSourceEmitter {
             PrintKeywordAbstract();
           else if (!methodDefinition.IsSealed)
             PrintKeywordVirtual();
-        } else {
+        }
+        else {
           // Instance method on a class
           if (methodDefinition.IsAbstract)
             PrintKeywordAbstract();
-
+          
           if (methodDefinition.IsNewSlot) {
             // Only overrides (or interface impls) can be sealed in C#.  If this is
             // a new sealed virtual then just emit as non-virtual which is a similar thing.
@@ -181,13 +185,13 @@ namespace CSharpSourceEmitter {
         PrintTypeDefinitionName(methodDefinition.ContainingTypeDefinition);
       else if (IsOperator(methodDefinition)) {
         sourceEmitterOutput.Write(MapOperatorNameToCSharp(methodDefinition));
-      } else
+      } else 
         PrintIdentifier(methodDefinition.Name);
     }
 
     public virtual string MapOperatorNameToCSharp(IMethodDefinition methodDefinition) {
       // ^ requires IsOperator(methodDefinition)
-      switch (methodDefinition.Name.Value) {
+      switch(methodDefinition.Name.Value) {
         case "op_Decrement": return "operator --";
         case "op_Increment": return "operator ++";
         case "op_UnaryNegation": return "operator -";

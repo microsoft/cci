@@ -649,7 +649,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public BoundExpression() {
       this.alignment = 0;
-      this.definition = CodeDummy.Expression;
+      this.definition = Dummy.LocalVariable;
       this.instance = null;
       this.isVolatile = false;
     }

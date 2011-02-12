@@ -118,10 +118,12 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
   /// Copy a type reference used by an iterator method to a type reference used by the iterator closure. That is, replace
-  /// occurences of the generic method parameters with corresponding generic method parameters. 
+  /// occurences of the generic method parameters with corresponding generic type parameters. 
   /// </summary>
   internal class CopyTypeFromIteratorToClosure : MethodBodyMappingMutator {
+
     protected Dictionary<uint, IGenericTypeParameter> mapping;
+
     internal CopyTypeFromIteratorToClosure(IMetadataHost host, Dictionary<uint, IGenericTypeParameter> mapping)
       : base(host) {
       this.mapping = mapping;
@@ -135,17 +137,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override ITypeReference Visit(ITypeReference typeReference) {
       IGenericMethodParameterReference genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
       if (genericMethodParameterReference != null) {
-        var genericMethodParameter = genericMethodParameterReference.ResolvedType;
-        if (this.mapping.ContainsKey(genericMethodParameter.InternedKey))
-          return this.mapping[genericMethodParameter.InternedKey];
-      }
-      IGenericMethodParameter gmp = typeReference as IGenericMethodParameter;
-      if (gmp != null) {
         IGenericTypeParameter targetType;
-        if (this.mapping.TryGetValue(gmp.InternedKey, out targetType))
+        if (this.mapping.TryGetValue(genericMethodParameterReference.InternedKey, out targetType))
           return targetType;
       }
-
       return base.Visit(typeReference);
     }
   }
@@ -158,12 +153,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected Dictionary<uint, ITypeReference> typeMap;
     internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<uint, ITypeReference> internedKey2typeReference)
       : base(host) {
-      this.typeMap = internedKey2typeReference;
+        this.typeMap = internedKey2typeReference;
     }
     internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<uint, IGenericTypeParameter> internedKey2typeReference)
       : base(host) {
-      this.typeMap = new Dictionary<uint, ITypeReference>(internedKey2typeReference.Count);
-      foreach (var e in internedKey2typeReference) {
+        this.typeMap = new Dictionary<uint, ITypeReference>(internedKey2typeReference.Count);
+        foreach (var e in internedKey2typeReference) {
         this.typeMap.Add(e.Key, e.Value);
       }
     }
@@ -199,26 +194,9 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Use this as a base class when you try to mutate the method body of method M1 in class C1
   /// to be used as method body of method M2 in class C2. supporting the substitution of
   /// parameters as well as type parameters. 
-  /// 
-  /// TODO: CodeMutator is not suitable base class, as its default behavior is copying definitions. 
-  /// An immediate work item is to write a more suitable duplicator class. 
   /// </summary>
-  /// <remarks>
-  /// This class is the base class for copying a method body, the actual substitution is expected 
-  /// in subclasses. Copying in this class does the following to make the substitution possible. 
-  /// 1) Making copies of references. A general rule is that if a reference is a definition, copy 
-  /// the definition as a reference.
-  /// 2) Namespace Type Definition is given special treatment. Because if we copy it as a namespace
-  /// type reference using MetadataMutator's copy, the containing namespace is duplicated, resulting
-  /// in duplicated copies of definitions. We simply return the namespace type definition.
-  /// 3) SpecializedNestedTypeReference is copied here simply because MetadataMutator's copy 
-  /// of a type reference would treat it as a nestedtypereference. 
-  /// 4) Make sure we do not copy generic method parameters and generic type parameters. 
-  /// 
-  /// Typically we set copyOnlyIfNotAlreadyMutable to be false to make sure references are copied no matter
-  /// what. If one wants to set this flag to true, presumably one needs to copy those references by himself.
-  /// </remarks>
-  public class MethodBodyMappingMutator : CodeMutator {
+  public class MethodBodyMappingMutator : CodeMutatingVisitor {
+
     /// <summary>
     /// Use this as a base class when you try to mutate the method body of method M1 in class C1
     /// to be used as method body of method M2 in class C2. Anticipating the substitution of
@@ -228,83 +206,34 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     public MethodBodyMappingMutator(IMetadataHost host)
-      : base(host, false) { }
+      : base(host) { 
+    }
 
     /// <summary>
-    /// Visits the specified namespace type reference. If the type reference is a definition, return the definition. 
+    /// Leaves namespace type references alone since they cannot involve type parameters of the target class or method.
     /// </summary>
     /// <param name="namespaceTypeReference">The namespace type reference.</param>
     public override INamespaceTypeReference Visit(INamespaceTypeReference namespaceTypeReference) {
-      INamespaceTypeDefinition/*?*/ namespaceTypeDefinition = namespaceTypeReference as INamespaceTypeDefinition;
-      if (namespaceTypeDefinition != null)
-        return this.Visit(namespaceTypeDefinition);
-      return this.Visit(this.GetMutableCopy(namespaceTypeReference));
+      return namespaceTypeReference;
     }
+
     /// <summary>
-    /// Visits the specified nested type reference. Do not copy nested type definitions. If the nestedTypeReference is
-    /// a ISpecializedNestedTypeDefinition, it will be treated as a specializedNestedTypeReference, for which a new
-    /// reference is created and visited. 
+    /// Copies specialized nested type references since their containing types may involve type parameters, but
+    /// leaves other kinds of nested type references alone.
     /// </summary>
     /// <param name="nestedTypeReference">The nested type reference.</param>
     public override INestedTypeReference Visit(INestedTypeReference nestedTypeReference) {
-      INestedTypeDefinition/*?*/ nestedTypeDefinition = nestedTypeReference as INestedTypeDefinition;
-      if (nestedTypeDefinition != null)
-        return nestedTypeDefinition;
       ISpecializedNestedTypeReference/*?*/ specializedNestedTypeReference = nestedTypeReference as ISpecializedNestedTypeReference;
-      if (specializedNestedTypeReference != null) {
-        return this.Visit(this.GetMutableCopy(specializedNestedTypeReference));
-      }
-      return this.Visit(this.GetMutableCopy(nestedTypeReference));
-    }
-
-    /// <summary>
-    /// Visit a namespacetype definition.
-    /// </summary>
-    /// <param name="namespaceTypeDefinition"></param>
-    /// <returns></returns>
-    public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
-      return namespaceTypeDefinition;
-    }
-
-    /// <summary>
-    /// Visits the specified field reference. Do not copy field definitions.
-    /// </summary>
-    /// <param name="fieldReference">The field reference.</param>
-    public override IFieldReference Visit(IFieldReference fieldReference) {
-      if (this.stopTraversal) return fieldReference;
-      if (fieldReference == Dummy.FieldReference || fieldReference == Dummy.Field) return Dummy.FieldReference;
-      ISpecializedFieldReference/*?*/ specializedFieldReference = fieldReference as ISpecializedFieldReference;
-      if (specializedFieldReference != null)
-        return this.Visit(this.GetMutableCopy(specializedFieldReference));
-      return this.Visit(this.GetMutableCopy(fieldReference));
-    }
-
-    /// <summary>
-    /// Visits the specified method reference. Do not copy definition. 
-    /// </summary>
-    /// <param name="methodReference">The method reference.</param>
-    /// <returns></returns>
-    public override IMethodReference Visit(IMethodReference methodReference) {
-      if (this.stopTraversal) return methodReference;
-      if (methodReference == Dummy.MethodReference || methodReference == Dummy.Method) return Dummy.MethodReference;
-      ISpecializedMethodReference/*?*/ specializedMethodReference = methodReference as ISpecializedMethodReference;
-      if (specializedMethodReference != null)
-        return this.Visit(this.GetMutableCopy(specializedMethodReference));
-      IGenericMethodInstanceReference/*?*/ genericMethodInstanceReference = methodReference as IGenericMethodInstanceReference;
-      if (genericMethodInstanceReference != null)
-        return this.Visit(this.GetMutableCopy(genericMethodInstanceReference));
-      else {
-        return this.Visit(this.GetMutableCopy(methodReference));
-      }
+      if (specializedNestedTypeReference != null)
+        return this.Visit(specializedNestedTypeReference);
+      return nestedTypeReference;
     }
 
     /// <summary>
     /// Visit a genericTypeParameterReference. Do not copy if it is a generic type parameter. 
     /// </summary>
     public override IGenericTypeParameterReference Visit(IGenericTypeParameterReference genericTypeParameterReference) {
-      IGenericTypeParameter genericTypeParameter = genericTypeParameterReference as IGenericTypeParameter;
-      if (genericTypeParameter != null) return genericTypeParameter;
-      return base.Visit(genericTypeParameterReference);
+      return genericTypeParameterReference;
     }
 
     /// <summary>
@@ -313,9 +242,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="genericMethodParameterReference"></param>
     /// <returns></returns>
     public override IGenericMethodParameterReference Visit(IGenericMethodParameterReference genericMethodParameterReference) {
-      IGenericMethodParameter genericMethodParameter = genericMethodParameterReference as IGenericMethodParameter;
-      if (genericMethodParameter != null) return genericMethodParameter;
-      return base.Visit(genericMethodParameterReference);
+      return genericMethodParameterReference;
     }
   }
 }

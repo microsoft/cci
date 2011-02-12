@@ -24,6 +24,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<ILabeledStatement, StackOfLocals> stackFor = new Dictionary<ILabeledStatement, StackOfLocals>();
     bool visitedUnconditionalBranch;
     StackOfLocals operandStack;
+    int tempCounter;
 
     internal Unstacker(SourceMethodBody body)
       : base(body.host, true) {
@@ -52,7 +53,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     internal void Visit(BasicBlock block) {
-      if (this.block == null) this.block = block;
+      this.block = block;
       this.operandStack = new StackOfLocals(this.body);
       this.codePointsToAnalyze.Enqueue(new CodePoint() { statements = block.Statements, index = 0, operandStack = this.operandStack });
 
@@ -200,22 +201,38 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.stackFor.Add(labeledStatement, this.operandStack.Clone(this.block));
         return labeledStatement;
       }
-      Push/*?*/ push = statement as Push;
+      PushStatement/*?*/ push = statement as PushStatement;
       if (push != null) {
         push.ValueToPush = this.Visit(push.ValueToPush);
-        var temp = new TempVariable() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.body.localVariables.Count) };
+        if (this.body.localVariablesAndTemporaries == null) {
+          this.body.localVariablesAndTemporaries = new List<ILocalDefinition>(this.body.LocalVariables);
+          this.tempCounter = this.body.localVariablesAndTemporaries.Count;
+        }
+        var temp = new TempVariable() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.tempCounter++) };
         temp.Type = push.ValueToPush.Type;
         this.operandStack.Push(temp);
         this.body.numberOfReferences.Add(temp, 0);
+        var ctc = push.ValueToPush as ICompileTimeConstant;
+        // "push null" doesn't tell us enough to know what type it really is
+        if (ctc != null && ctc.Value == null) { // REVIEW: need to make sure the type is a reference type?
+          temp.isPolymorphic = true;
+        }
+        var be = push.ValueToPush as IBoundExpression;
+        if (be != null) {
+          var sourceLocal = be.Definition as TempVariable;
+          if (sourceLocal != null && sourceLocal.isPolymorphic) {
+            temp.isPolymorphic = true;
+          }
+        }
         if (push.ValueToPush.Type is IManagedPointerTypeReference) {
           temp.turnIntoPopValueExpression = true;
           return statement;
         }
-        this.body.localVariables.Add(temp);
+        this.body.localVariablesAndTemporaries.Add(temp);
         if (this.block.LocalVariables == null) this.block.LocalVariables = new List<ILocalDefinition>();
         this.block.LocalVariables.Add(temp);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() {
+        return new ExpressionStatement() { 
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -252,9 +269,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         IStatement newStatement;
-
+        
         newStatement = this.Visit(statement);
-
+        
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else
@@ -340,12 +357,25 @@ namespace Microsoft.Cci.ILToCodeModel {
         var sourceLocal = this.elements[i];
         var targetLocal = targetStack.elements[i];
         if (sourceLocal == targetLocal) continue;
-        this.body.numberOfReferences[sourceLocal]++;
-        this.body.numberOfAssignments[targetLocal]++;
-        var target = new TargetExpression() { Definition = targetLocal, Type = targetLocal.Type };
-        var source = new BoundExpression() { Definition = sourceLocal, Type = sourceLocal.Type };
-        var assigment = new Assignment() { Target = target, Source = source, Type = target.Type };
-        list.Add(new ExpressionStatement() { Expression = assigment });
+        if (targetLocal.turnIntoPopValueExpression) {
+          sourceLocal.turnIntoPopValueExpression = true;
+        } else if (sourceLocal.turnIntoPopValueExpression) {
+          targetLocal.turnIntoPopValueExpression = true;
+        } else {
+          this.body.numberOfReferences[sourceLocal]++;
+          this.body.numberOfAssignments[targetLocal]++;
+          var targetType = targetLocal.Type;
+          var sourceType = sourceLocal.Type;
+          var mergedType = TypeHelper.MergedType(TypeHelper.StackType(targetType), TypeHelper.StackType(sourceType));
+          if (targetType != mergedType) {
+            targetLocal.Type = mergedType;
+            targetType = mergedType;
+          }
+          var target = new TargetExpression() { Definition = targetLocal, Type = targetType };
+          var source = new BoundExpression() { Definition = sourceLocal, Type = sourceType };
+          var assigment = new Assignment() { Target = target, Source = source, Type = targetType };
+          list.Add(new ExpressionStatement() { Expression = assigment });
+        }
       }
     }
   }

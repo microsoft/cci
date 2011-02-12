@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -23,8 +23,8 @@ namespace CSharpSourceEmitter {
       this.CurrentLineEmpty = true;
     }
 
-    public SourceEmitterOutputTextWriter(TextWriter outputWriter)
-      : this(outputWriter, 4) {
+    public SourceEmitterOutputTextWriter(TextWriter outputWriter) : this(outputWriter, 4)
+    {
     }
 
     public virtual void WriteLine(string str, bool fIndent) {
@@ -64,7 +64,8 @@ namespace CSharpSourceEmitter {
 
     public event Action<ISourceEmitterOutput> LineStart;
 
-    protected virtual void OutputBegin(bool fIndent) {
+    protected virtual void OutputBegin(bool fIndent)
+    {
       if (fIndent) {
         if (LineStart != null)
           LineStart(this);
@@ -79,11 +80,13 @@ namespace CSharpSourceEmitter {
 
   public class SourceEmitterOutputConsole : SourceEmitterOutputTextWriter {
     public SourceEmitterOutputConsole(int indentSize) :
-      base(System.Console.Out, indentSize) {
+      base(System.Console.Out, indentSize)
+    {
     }
 
-    public SourceEmitterOutputConsole() :
-      base(System.Console.Out) {
+    public SourceEmitterOutputConsole() : 
+      base(System.Console.Out)
+    {
     }
   }
 }

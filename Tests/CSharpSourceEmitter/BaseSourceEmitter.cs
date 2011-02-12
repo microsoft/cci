@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -74,7 +74,7 @@ namespace CSharpSourceEmitter {
     This,
     Throw,
     True,
-    Try,
+    Try, 
     TypeOf,
     UInt,
     ULong,
@@ -96,14 +96,14 @@ namespace CSharpSourceEmitter {
   /// </remarks>
   public partial class SourceEmitter : ICSharpSourceEmitter {
     protected ISourceEmitterOutput sourceEmitterOutput;
+    protected bool printCompilerGeneratedMembers;
 
     public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost hostEnvironment) {
       this.sourceEmitterOutput = sourceEmitterOutput;
       this.LeftCurlyOnNewLine = true;
     }
 
-    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput)
-      : this(sourceEmitterOutput, null) {
+    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput) : this(sourceEmitterOutput, null) {
     }
 
     public bool LeftCurlyOnNewLine { get; set; }
@@ -123,7 +123,8 @@ namespace CSharpSourceEmitter {
     }
 
     public static string EscapeChar(char c, bool inString) {
-      switch (c) {
+      switch (c)
+      {
         case '\r': return @"\r";
         case '\n': return @"\n";
         case '\f': return @"\f";
@@ -155,83 +156,19 @@ namespace CSharpSourceEmitter {
     public static string EscapeIdentifier(string identifier) {
       // Check to see if this is a keyword, and if so escape it with '@' prefix
       switch (identifier) {
-        case "abstract":
-        case "as":
-        case "base":
-        case "bool":
-        case "break":
-        case "byte":
-        case "case":
-        case "catch":
-        case "char":
-        case "checked":
-        case "class":
-        case "const":
-        case "continue":
-        case "decimal":
-        case "default":
-        case "delegate":
-        case "do":
-        case "double":
-        case "else":
-        case "enum":
-        case "event":
-        case "explicit":
-        case "extern":
-        case "false":
-        case "finally":
-        case "fixed":
-        case "float":
-        case "for":
-        case "foreach":
-        case "goto":
-        case "if":
-        case "implicit":
-        case "in":
-        case "int":
-        case "interface":
-        case "internal":
-        case "is":
-        case "lock":
-        case "long":
-        case "namespace":
-        case "new":
-        case "null":
-        case "object":
-        case "operator":
-        case "out":
-        case "override":
-        case "params":
-        case "private":
-        case "protected":
-        case "public":
-        case "readonly":
-        case "ref":
-        case "return":
-        case "sbyte":
-        case "sealed":
-        case "short":
-        case "sizeof":
-        case "stackalloc":
-        case "static":
-        case "string":
-        case "struct":
-        case "switch":
-        case "this":
-        case "throw":
-        case "true":
-        case "try":
-        case "typeof":
-        case "uint":
-        case "ulong":
-        case "unchecked":
-        case "unsafe":
-        case "ushort":
-        case "using":
-        case "virtual":
-        case "void":
-        case "volatile":
-        case "while":
+        case "abstract":   case "as":          case "base":      case "bool":      case "break":
+        case "byte":       case "case":        case "catch":     case "char":      case "checked":     case "class":
+        case "const":      case "continue":    case "decimal":   case "default":   case "delegate":    case "do":
+        case "double":     case "else":        case "enum":      case "event":     case "explicit":    case "extern":
+        case "false":      case "finally":     case "fixed":     case "float":     case "for":         case "foreach":
+        case "goto":       case "if":          case "implicit":  case "in":        case "int":         case "interface":
+        case "internal":   case "is":          case "lock":      case "long":      case "namespace":   case "new":
+        case "null":       case "object":      case "operator":  case "out":       case "override":    case "params":
+        case "private":    case "protected":   case "public":    case "readonly":  case "ref":         case "return":
+        case "sbyte":      case "sealed":      case "short":     case "sizeof":    case "stackalloc":  case "static":
+        case "string":     case "struct":      case "switch":    case "this":      case "throw":       case "true":
+        case "try":        case "typeof":      case "uint":      case "ulong":     case "unchecked":   case "unsafe":
+        case "ushort":     case "using":       case "virtual":   case "void":      case "volatile":    case "while":
           return "@" + identifier;
       }
 

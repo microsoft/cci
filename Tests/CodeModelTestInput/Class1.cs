@@ -203,6 +203,16 @@ namespace CodeModelTestInput {
         Action t = () => i.Equals(i);
       }
     }
+
+    public IEnumerable<int> Method22() {
+      int flags = 1;
+      yield return flags &= 2;
+    }
+
+    static void Method23(out string x, out string y) {
+      x = y = null;
+    }
+
   }
 
   public class Class2 {

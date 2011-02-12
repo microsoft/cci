@@ -114,7 +114,7 @@
     <Compile Include="Mutator.cs" />
     <Compile Include="Normalizer\CapturedLocalOrArgumentFinder.cs" />
     <Compile Include="Normalizer\Duplicator.cs" />
-    <Compile Include="Normalizer\Helper.cs" />
+    <Compile Include="Normalizer\Helpers.cs" />
     <Compile Include="Normalizer\InjectClosureFields.cs" />
     <Compile Include="Normalizer\Normalizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

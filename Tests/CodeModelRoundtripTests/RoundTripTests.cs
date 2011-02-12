@@ -177,18 +177,18 @@ public class CodeModelRoundTripTests {
     this.RoundTripCopyRewriteAndExecute("TestClass1.exe", "TestClass1.pdb", true);
   }
 
-  CodeAndContractMutator CreateCodeMutator(IAssembly assembly, string pdbName) {
-    return new CodeAndContractMutator(host, pdbReader, null);
+  CodeAndContractMutatingVisitor CreateCodeMutator(IAssembly assembly, string pdbName) {
+    return new CodeAndContractMutatingVisitor(host, pdbReader, null);
   }
 
-  void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator) {
+  void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MutatingVisitor mutator) {
     this.VisitAndMutate(mutator, ref assembly);
     AssertWriteToPeFile(expectedResult, assembly);
   }
 
   void RoundTripWithILMutator(string assemblyName, string pdbName) {
     PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
-    RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataMutator(host));
+    RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MutatingVisitor(host));
   }
 
   void RoundTripWithCodeMutator(string assemblyName, string pdbName) {
@@ -217,8 +217,8 @@ public class CodeModelRoundTripTests {
     PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
   }
 
-  void VisitAndMutate(MetadataMutator mutator, ref IAssembly assembly) {
-    assembly = mutator.Visit(mutator.GetMutableCopy(assembly));
+  void VisitAndMutate(MutatingVisitor mutator, ref IAssembly assembly) {
+    assembly = mutator.Visit(assembly);
     Assert.NotNull(assembly);
   }
 
@@ -1308,7 +1308,7 @@ class NameChanger : CodeMutatingVisitor {
       if (this.InternedKeysOfChangedTypeDef.ContainsKey(result.InternedKey)) {
         var name = this.host.NameTable.GetNameFor(this.pattern.Replace(namespaceTypeReference.Name.Value, this.evaluator));
         if (name != namespaceTypeReference.Name) {
-          return MutableModelHelper.GetNamespaceTypeReference(result.ContainingUnitNamespace, result.GenericParameterCount, result.MangleName, result.Name, this.host.InternFactory, result);
+          return MutableModelHelper.GetNamespaceTypeReference(result.ContainingUnitNamespace, result.GenericParameterCount, result.MangleName, name, this.host.InternFactory, result);
         } else {
           Debug.Assert(false);
         }

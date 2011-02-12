@@ -1319,7 +1319,8 @@ namespace Microsoft.Cci {
       this.Visit(method.Parameters);
       if (method.IsPlatformInvoke)
         this.Visit(method.PlatformInvokeData);
-      this.Visit(method.Body);
+      if (!method.IsAbstract && !method.IsExternal)
+        this.Visit(method.Body);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -1828,6 +1829,8 @@ namespace Microsoft.Cci {
       this.Visit(tryCatchFilterFinallyStatement.CatchClauses);
       if (tryCatchFilterFinallyStatement.FinallyBody != null)
         this.Visit(tryCatchFilterFinallyStatement.FinallyBody);
+      if (tryCatchFilterFinallyStatement.FaultBody != null)
+        this.Visit(tryCatchFilterFinallyStatement.FaultBody);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }

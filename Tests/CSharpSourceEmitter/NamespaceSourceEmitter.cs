@@ -93,12 +93,13 @@ namespace CSharpSourceEmitter {
       // Try to sort in a way that preserves the original compiler order (captured in token value).
       // Put things with no tokens (eg. nested namespaces) after those with tokens, sorted by name
       var members = new List<INamespaceMember>(namespaceMembers);
-      members.Sort(new Comparison<INamespaceMember>((m1, m2) => {
+      members.Sort(new Comparison<INamespaceMember>((m1, m2) => 
+        {
           var t1 = m1 as IMetadataObjectWithToken;
           var t2 = m2 as IMetadataObjectWithToken;
 
           var tc = (t1 == null).CompareTo(t2 == null);
-          if (tc != 0)
+          if (tc != 0) 
             return tc;
 
           if (t1 != null)

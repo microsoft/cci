@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -40,7 +40,7 @@ namespace CSharpSourceEmitter {
         propertyDefinition.Getter.ResolvedMethod;
       if (!propertyDefinition.ContainingTypeDefinition.IsInterface && 
         IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(propMeth)))
-        PrintPropertyDefinitionVisibility(propertyDefinition);
+          PrintPropertyDefinitionVisibility(propertyDefinition);
       PrintPropertyDefinitionModifiers(propertyDefinition);
       PrintPropertyDefinitionReturnType(propertyDefinition);
       PrintToken(CSharpToken.Space);

@@ -68,6 +68,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (nestedTypeRef != null || genericTypeInstanceRef != null) {
         fieldReference = new SpecializedFieldReference() {
           ContainingType = typeReference,
+          InternFactory = this.host.InternFactory,
           Name = fieldDef.Name,
           UnspecializedVersion = fieldDef,
           Type = fieldDef.Type
@@ -245,7 +246,6 @@ namespace Microsoft.Cci.MutableCodeModel {
           Type = method.Type,
           Name = method.Name,
           CallingConvention = method.CallingConvention,
-          IsGeneric = method.IsGeneric,
           Parameters = new List<IParameterTypeInformation>(((IMethodReference)method).Parameters),
           ExtraParameters = new List<IParameterTypeInformation>(((IMethodReference)method).ExtraParameters),
           ReturnValueIsByRef = method.ReturnValueIsByRef,

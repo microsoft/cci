@@ -30,8 +30,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.Visit(rootBlock);
       //Now add declarations for any locals declared only on the body (for example temporary variables introduced by Unstacker).
       List<IStatement> prelude = new List<IStatement>();
-      this.AddDeclarationsWithInitialValues(body.LocalVariables, rootBlock);
-      foreach (var localDef in body.LocalVariables) {
+      var localsAndTemps = body.LocalVariables;
+      if (body.localVariablesAndTemporaries != null) localsAndTemps = body.localVariablesAndTemporaries;
+      this.AddDeclarationsWithInitialValues(localsAndTemps, rootBlock);
+      foreach (var localDef in localsAndTemps) {
         if (this.declaredLocals.ContainsKey(localDef)) continue;
         LocalDeclarationStatement localDecl = new LocalDeclarationStatement();
         localDecl.LocalVariable = localDef;

@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -86,11 +86,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (localDefinition2 == null) continue;
         if (localDefinition != localDefinition2) continue;
 
+        var newLocs = new List<ILocation>(expressionStatement.Locations);
+        newLocs.AddRange(conditional.Locations);
+
         statements[i + 1] = new ConditionalStatement() {
           Condition = assignmentStatement.Source,
           TrueBranch = conditional.TrueBranch,
           FalseBranch = conditional.FalseBranch,
-          Locations = new List<ILocation>(conditional.Locations)
+          Locations = newLocs,
         };
         this.sourceMethodBody.numberOfAssignments[localDefinition]--;
         this.sourceMethodBody.numberOfReferences[localDefinition]--;

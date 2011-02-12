@@ -61,16 +61,16 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (i > statements.Count - 2) return;
       //First identify count consecutive push statements
       int count = 0;
-      while (i+count < statements.Count-1 && statements[i+count] is Push) count++;
-      while (i > 1 && statements[i-1] is Push) { i--; count++; }
+      while (i+count < statements.Count-1 && statements[i+count] is PushStatement) count++;
+      while (i > 1 && statements[i-1] is PushStatement) { i--; count++; }
       if (count == 0) return;
       for (int j = 0; j < count; j++) {
-        if (((Push)statements[j+i]).ValueToPush is Dup) return;
+        if (((PushStatement)statements[j+i]).ValueToPush is Dup) return;
       }
       //If any of the push statements (other than the first one) contains pop expressions, replace them with the corresponding push values and remove the pushes.
       int pushcount = 1; //the number of push statements that are eligble for removal at this point.
       for (int j = i + 1; j < i + count; j++) {
-        Push st = (Push)statements[j];
+        PushStatement st = (PushStatement)statements[j];
         PopCounter pcc = new PopCounter();
         pcc.Visit(st.ValueToPush);
         int numberOfPushesToRemove = pushcount;
@@ -150,7 +150,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         gotoL1 = conditionalStatement.TrueBranch as GotoStatement;
       if (gotoL1 == null) return false;
 
-      Push/*?*/ push = statements[i+1] as Push;
+      PushStatement/*?*/ push = statements[i+1] as PushStatement;
       if (push == null) return false;
       GotoStatement/*?*/ gotoL2 = statements[i+2] as GotoStatement;
       if (gotoL2 == null) return false;
@@ -165,7 +165,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (this.predecessors.TryGetValue(l1, out branchesToThisLabel)) {
         if (branchesToThisLabel.Count > 1) return false;
       }
-      Push/*?*/ push2 = block.Statements[1] as Push;
+      PushStatement/*?*/ push2 = block.Statements[1] as PushStatement;
       if (push2 == null) return false;
 
       BasicBlock/*?*/ block2 = block.Statements[2] as BasicBlock;
@@ -187,6 +187,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfFalse = push.ValueToPush;
         }
       }
+      conditional.Type = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
       conditional.Locations = conditionalStatement.Locations;
 
       push.ValueToPush = conditional;
@@ -255,6 +256,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       conditional.Locations = conditionalStatement.Locations;
       conditional.ResultIfTrue = new CompileTimeConstant() { Value = 1, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
       conditional.ResultIfFalse = conditionalStatement2.Condition;
+      conditional.Type = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
       conditionalStatement2.Condition = conditional;
       statements.RemoveAt(i);
 
@@ -301,6 +303,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.Locations = conditionalStatement.Locations;
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
+        conditional.Type = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
         conditionalStatement2.Condition = conditional;
         statements.RemoveAt(i);
         //we now have:
@@ -318,6 +321,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.Locations = conditionalStatement.Locations;
         conditional.ResultIfTrue = conditionalStatement2.Condition;
         conditional.ResultIfFalse = new CompileTimeConstant() { Value = 0, Type = this.sourceMethodBody.MethodDefinition.Type.PlatformType.SystemInt32 };
+        conditional.Type = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
         conditionalStatement2.Condition = conditional;
         statements.RemoveAt(i);
         return true;
@@ -332,6 +336,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (logNot != null) return logNot.Operand;
       LogicalNot logicalNot = new LogicalNot();
       logicalNot.Operand = expression;
+      logicalNot.Type = expression.Type;
       logicalNot.Locations.AddRange(expression.Locations);
       return logicalNot;
     }
@@ -353,11 +358,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (result != null) {
         result.LeftOperand = binOp.LeftOperand;
         result.RightOperand = binOp.RightOperand;
+        result.Type = binOp.Type;
         result.Locations.AddRange(binOp.Locations);
         return result;
       }
       LogicalNot logicalNot = new LogicalNot();
       logicalNot.Operand = binOp;
+      logicalNot.Type = binOp.Type;
       logicalNot.Locations.AddRange(binOp.Locations);
       return logicalNot;
     }
@@ -374,7 +381,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (!this.ReplaceShortCircuitPatternCreatedByCCI2(statements, i + 1)) return false;
       }
       //if (!this.ReplaceShortCircuitPattern(statements, i+1)) return false;
-      Push/*?*/ push = statements[i+1] as Push;
+      PushStatement/*?*/ push = statements[i+1] as PushStatement;
       if (push == null) return false;
       Conditional/*?*/ chainedConditional = push.ValueToPush as Conditional;
       if (chainedConditional == null) return false;
@@ -411,7 +418,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (i > statements.Count - 4) return false;
       ConditionalStatement/*?*/ conditionalStatement = statements[i] as ConditionalStatement;
       if (conditionalStatement == null) return false;
-      Push/*?*/ push1 = statements[i + 1] as Push;
+      PushStatement/*?*/ push1 = statements[i + 1] as PushStatement;
       if (push1 == null) return false;
       GotoStatement/*?*/ Goto = statements[i + 2] as GotoStatement;
       if (Goto == null) return false;
@@ -426,7 +433,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       // TODO? Should we make sure that one of the branches in the conditionalStatement is
       // to label?
-      Push/*?*/ push2 = block1.Statements[1] as Push;
+      PushStatement/*?*/ push2 = block1.Statements[1] as PushStatement;
       if (push2 == null) return false;
       GotoStatement/*?*/ Goto2 = block1.Statements[2] as GotoStatement;
       if (Goto2 == null) return false;
@@ -438,6 +445,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         conditional.Condition = conditionalStatement.Condition;
         conditional.ResultIfTrue = push1.ValueToPush;
         conditional.ResultIfFalse = push2.ValueToPush;
+        conditional.Type = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
         push1.ValueToPush = conditional;
         push1.Locations = conditionalStatement.Locations;
         statements[i] = push1;
@@ -458,6 +466,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           conditional.ResultIfFalse = push1.ValueToPush;
         }
         conditional.Locations = conditionalStatement.Locations;
+        conditional.Type = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
         push1.ValueToPush = conditional;
         push1.Locations = conditionalStatement.Locations;
         statements[i] = push1;
@@ -471,9 +480,9 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private void ReplaceLocalArrayInitializerPattern(List<IStatement> statements, int i) {
       if (i > statements.Count - 4) return;
-      Push/*?*/ push = statements[i] as Push;
+      PushStatement/*?*/ push = statements[i] as PushStatement;
       if (push == null) return;
-      var pushDup = statements[i+1] as Push;
+      var pushDup = statements[i+1] as PushStatement;
       if (pushDup == null || !(pushDup.ValueToPush is Dup)) return;
       CreateArray/*?*/ createArray = push.ValueToPush as CreateArray;
       if (createArray == null) return;
@@ -595,7 +604,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Pop pop = expression as Pop;
       if (pop != null) {
         if (this.numberOfPopsToIgnore-- > 0) return expression;
-        Push push = (Push)this.statements[this.i++];
+        PushStatement push = (PushStatement)this.statements[this.i++];
         if (pop is PopAsUnsigned)
           return new ConvertToUnsigned(push.ValueToPush);
         else
@@ -608,6 +617,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal class TempVariable : LocalDefinition {
     internal bool turnIntoPopValueExpression;
+    internal bool isPolymorphic;
     internal TempVariable() {
     }
 

@@ -1888,7 +1888,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// This parameter has one or more custom modifiers associated with it.
+    /// This type has one or more custom modifiers associated with it.
     /// </summary>
     public bool IsModified {
       get { return false; }

@@ -1,23 +1,14 @@
-﻿//-----------------------------------------------------------------------------
-//
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
-// This code is licensed under the Microsoft Public License.
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//-----------------------------------------------------------------------------
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
 
-namespace CSharpSourceEmitter {
+namespace CSharpSourceEmitter{
 
   // Note that we currently require only .NET 2.0, so some of these are things that are available
   // in later versions of .NET
-  static class Utils {
+  static class Utils
+  {
     /// <summary>
     /// True if the specified type is defined in mscorlib and has the specified name
     /// </summary>
@@ -54,8 +45,9 @@ namespace CSharpSourceEmitter {
         if (derivedClassMethod.IsGeneric || baseMethod.IsGeneric) {
           if (derivedClassMethod.GenericParameterCount == baseMethod.GenericParameterCount &&
             IteratorHelper.EnumerablesAreEqual(derivedClassMethod.Parameters, baseMethod.Parameters, MemberHelper.GenericMethodParameterEqualityComparer))
-            return baseMethod;
-        } else if (IteratorHelper.EnumerablesAreEqual(((ISignature)derivedClassMethod).Parameters, ((ISignature)baseMethod).Parameters, MemberHelper.ParameterInformationComparer))
+              return baseMethod;
+        } 
+        else if (IteratorHelper.EnumerablesAreEqual(((ISignature)derivedClassMethod).Parameters, ((ISignature)baseMethod).Parameters, MemberHelper.ParameterInformationComparer))
           return baseMethod;
       }
       var bases = baseClass.IsInterface ? baseClass.Interfaces : baseClass.BaseClasses;
@@ -115,7 +107,8 @@ namespace CSharpSourceEmitter {
           case "System.Reflection.AssemblyKeyFileAttribute": return SpecialAttribute.AssemblyKeyFile;
           case "System.Reflection.AssemblyDelaySignAttribute": return SpecialAttribute.AssemblyDelaySign;
         }
-      } else if (attrUnit.Name.Value == "System.Core") {
+      }
+      else if (attrUnit.Name.Value == "System.Core") {
         switch (typeName) {
           case "System.Runtime.CompilerServices.ExtensionAttribute": return SpecialAttribute.Extension;
         }
@@ -137,7 +130,8 @@ namespace CSharpSourceEmitter {
   /// <summary>
   /// Identifiers for some common attribute types
   /// </summary>
-  public enum SpecialAttribute {
+  public enum SpecialAttribute
+  {
     None,
     Flags,
     Extension,

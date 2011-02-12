@@ -205,7 +205,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
       #endregion Set contract purity based on whether the method definition has the pure attribute
 
-      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.cache, this.referenceCache, this.contractClass);
+      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.referenceCache, this.contractClass);
 
       this.extractingFromACtorInAClass =
         sourceMethodBody.MethodDefinition.IsConstructor
@@ -221,7 +221,7 @@ namespace Microsoft.Cci.MutableContracts {
     private MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
       // Don't start with an empty contract because the ctor may have set some things in it
       var bs = this.Visit(blockStatement);
-      bs = new AssertAssumeExtractor(this, this.sourceMethodBody, this.host, this.sourceLocationProvider).Visit(bs);
+      bs = new AssertAssumeExtractor(this, this.sourceMethodBody, this.host, this.pdbReader).Visit(bs);
       if (this.currentMethodContract != null)
         this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition, this.currentMethodContract);
       return new MethodContractAndMethodBody(this.currentMethodContract, bs);
@@ -281,7 +281,13 @@ namespace Microsoft.Cci.MutableContracts {
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
       IMethodReference methodToCall = methodCall.MethodToCall;
       List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
-      List<ILocation> locations = new List<ILocation>(methodCall.Locations);
+      List<ILocation> locations = new List<ILocation>();
+      for (int i = lastIndex; 0 <= i; i--) {
+        if (IteratorHelper.EnumerableIsNotEmpty(clump[i].Locations)) {
+          locations.AddRange(clump[i].Locations);
+          break;
+        }
+      }
       int numArgs = arguments.Count;
 
       IExpression contractExpression;
@@ -312,7 +318,7 @@ namespace Microsoft.Cci.MutableContracts {
         Condition = this.Visit(contractExpression),
         Description = numArgs >= 2 ? arguments[1] : null,
         OriginalSource = origSource,
-        Locations = locations
+        Locations = locations,
       };
       return invariant;
     }
@@ -343,7 +349,8 @@ namespace Microsoft.Cci.MutableContracts {
       while (firstStatementIndex < blockStatement.Statements.Count) {
         var s = blockStatement.Statements[firstStatementIndex];
         ILocalDeclarationStatement lds = s as ILocalDeclarationStatement;
-        if (lds == null || lds.InitialValue != null) break;
+        var empty = s as IEmptyStatement;
+        if (empty == null && (lds == null || lds.InitialValue != null)) break;
         firstStatementIndex++;
         localDeclarationStatements.Add(s);
       }
@@ -363,6 +370,15 @@ namespace Microsoft.Cci.MutableContracts {
           out blockIndex, out stmtIndex);
         // TODO: Signal error if not foundCtorCall?
         System.Diagnostics.Debug.Assert(foundCtorCall);
+        // Need to also keep any nops with source contexts in the method body and not in the contract
+        int eb;
+        int es;
+        var foundNops = IndexOf(s => s is IEmptyStatement && IteratorHelper.EnumerableIsNotEmpty(s.Locations),
+          linearBlockIndex, blockIndex, stmtIndex, out eb, out es);
+        if (foundNops) {
+          blockIndex = eb;
+          stmtIndex = es;
+        }
         newStmts.AddRange(ExtractClump(linearBlockIndex, 0, firstStatementIndex, blockIndex, stmtIndex));
         currentStatementIndex = stmtIndex + 1;
         var lastIndexInBlock = linearBlockIndex[blockIndex].Statements.Count-1;
@@ -454,10 +470,19 @@ namespace Microsoft.Cci.MutableContracts {
           if (IsContractMethod(methodToCall)) {
             string mname = methodToCall.Name.Value;
             List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
-            List<ILocation> locations = new List<ILocation>(methodCall.Locations);
             int numArgs = arguments.Count;
             if (numArgs == 0 && mname == "EndContractBlock") return;
             if (!(numArgs == 1 || numArgs == 2 || numArgs == 3)) return;
+
+            var locations = new List<ILocation>(expressionStatement.Locations);
+            if (locations.Count == 0) {
+              for (int i = lastIndex; 0 <= i; i--) {
+                if (IteratorHelper.EnumerableIsNotEmpty(currentClump[i].Locations)) {
+                  locations.AddRange(currentClump[i].Locations);
+                  break;
+                }
+              }
+            }
 
             // Create expression for contract
             IExpression contractExpression;
@@ -496,7 +521,7 @@ namespace Microsoft.Cci.MutableContracts {
                 Description = description,
                 IsModel = isModel,
                 OriginalSource = origSource,
-                Locations = locations
+                Locations = locations,
               };
               this.CurrentMethodContract.Postconditions.Add(postcondition);
               this.CurrentMethodContract.Locations.AddRange(postcondition.Locations);
@@ -512,7 +537,7 @@ namespace Microsoft.Cci.MutableContracts {
                   Description = description,
                   IsModel = isModel,
                   OriginalSource = origSource,
-                  Locations = locations
+                  Locations = locations,
                 }
               };
               this.CurrentMethodContract.ThrownExceptions.Add(exceptionalPostcondition);
@@ -622,12 +647,12 @@ namespace Microsoft.Cci.MutableContracts {
       return clump;
     }
 
-    private class ContractLocalToThis : CodeAndContractMutator {
+    private class ContractLocalToThis : CodeAndContractMutatingVisitor {
       ITypeReference typeOfThis;
       ILocalDefinition local;
 
       public ContractLocalToThis(IMetadataHost host, ILocalDefinition local, ITypeReference typeOfThis) :
-        base(host, true) {
+        base(host) {
         this.local = local;
         this.typeOfThis = typeOfThis;
       }
@@ -974,7 +999,7 @@ namespace Microsoft.Cci.MutableContracts {
           Type = this.host.PlatformType.SystemBoolean,
         },
         ExceptionToThrow = failureBehavior,
-        Locations = new List<ILocation>(locations),
+        Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))), //new List<ILocation>(locations),
         OriginalSource = origSource,
       };
       this.CurrentMethodContract.Preconditions.Add(precondition);
@@ -1002,10 +1027,9 @@ namespace Microsoft.Cci.MutableContracts {
       ISourceMethodBody sourceMethodBody;
       ITypeReference contractClass;
       AnonymousDelegate/*?*/ currentAnonymousDelegate;
-      internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<object, object> cache, Dictionary<object, object> referenceCache, ITypeReference contractClass)
+      internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<IReference, IReference> referenceCache, ITypeReference contractClass)
         : base(host, true) {
         this.sourceMethodBody = sourceMethodBody;
-        this.cache = cache;
         this.referenceCache = referenceCache;
         this.contractClass = contractClass;
       }
@@ -1247,16 +1271,18 @@ namespace Microsoft.Cci.MutableContracts {
 
       ContractExtractor parent;
       ISourceMethodBody sourceMethodBody;
+      PdbReader/*?*/ pdbReader;
 
       internal AssertAssumeExtractor(
         ContractExtractor parent,
         ISourceMethodBody sourceMethodBody,
         IMetadataHost host,
-        ISourceLocationProvider/*?*/ sourceLocationProvider
+        PdbReader/*?*/ pdbReader
         )
-        : base(host, true, sourceLocationProvider) {
+        : base(host, true, pdbReader) {
         this.parent = parent;
         this.sourceMethodBody = sourceMethodBody;
+        this.pdbReader = pdbReader;
       }
 
       public override IStatement Visit(ExpressionStatement expressionStatement) {
@@ -1280,7 +1306,7 @@ namespace Microsoft.Cci.MutableContracts {
             Condition = this.Visit(arguments[0]),
             Description = numArgs >= 2? arguments[1] : null,
             OriginalSource = origSource,
-            Locations = locations,
+            Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))),
           };
           return assertStatement;
         }
@@ -1289,7 +1315,7 @@ namespace Microsoft.Cci.MutableContracts {
             Condition = this.Visit(arguments[0]),
             Description = numArgs >= 2 ? arguments[1] : null,
             OriginalSource = origSource,
-            Locations = locations,
+            Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))),
           };
           return assumeStatement;
         }
@@ -1329,11 +1355,11 @@ namespace Microsoft.Cci.MutableContracts {
       return methodContract;
     }
 
-    private class SubstitutePropertyGetterForField : CodeAndContractMutator {
+    private class SubstitutePropertyGetterForField : CodeAndContractMutatingVisitor {
       ITypeDefinition sourceType;
       Dictionary<IName, IMethodReference> substitution;
       public SubstitutePropertyGetterForField(IMetadataHost host, ITypeDefinition sourceType, Dictionary<IName, IMethodReference> substitutionTable)
-        : base(host, true) {
+        : base(host) {
         this.sourceType = sourceType;
         this.substitution = substitutionTable;
       }

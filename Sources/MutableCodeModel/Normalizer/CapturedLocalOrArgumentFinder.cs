@@ -70,16 +70,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     int nestingDepth;
 
-    internal ClosureFinder(
-      IMethodDefinition method,
-      Dictionary<object, BoundField> fieldForCapturedLocalOrParameter,
-      IMetadataHost host,
-      int counter) {
+    internal ClosureFinder(IMethodDefinition method, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMetadataHost host) {
       this.method = method;
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.host = host;
       this.nameTable = host.NameTable;
-      this.counter = counter;
+      this.counter = 0;
       this.classList.Add(method.ContainingTypeDefinition);
       this.nestingDepth = 1;
     }
@@ -184,25 +180,29 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (makeGeneric) {
         List<IGenericMethodParameter> genericMethodParameters = new List<IGenericMethodParameter>();
         ushort count = 0;
-        foreach (var genericMethodParameter in this.method.GenericParameters) {
-          genericMethodParameters.Add(genericMethodParameter);
-          GenericTypeParameter newTypeParam = new GenericTypeParameter() {
-            Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
-            Index = (count++),
-            InternFactory = this.host.InternFactory,
-          };
-          this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
-          newTypeParam.DefiningType = result;
-          result.GenericParameters.Add(newTypeParam);
+        if (this.method.IsGeneric) {
+          foreach (var genericMethodParameter in this.method.GenericParameters) {
+            genericMethodParameters.Add(genericMethodParameter);
+            GenericTypeParameter newTypeParam = new GenericTypeParameter() {
+              Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
+              Index = (count++),
+              InternFactory = this.host.InternFactory,
+            };
+            this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
+            newTypeParam.DefiningType = result;
+            result.GenericParameters.Add(newTypeParam);
+          }
         }
         this.copyTypeToClosure = new CopyTypeFromIteratorToClosure(this.host, genericTypeParameterMapping);
-        // Duplicate Constraints
-        foreach (var genericMethodParameter in genericMethodParameters) {
-          GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[genericMethodParameter.InternedKey];
-          if (genericMethodParameter.Constraints != null) {
-            correspondingTypeParameter.Constraints = new List<ITypeReference>();
-            foreach (ITypeReference t in genericMethodParameter.Constraints) {
-              correspondingTypeParameter.Constraints.Add(copyTypeToClosure.Visit(t));
+        if (this.method.IsGeneric) {
+          // Duplicate Constraints
+          foreach (var genericMethodParameter in genericMethodParameters) {
+            GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[genericMethodParameter.InternedKey];
+            if (genericMethodParameter.Constraints != null) {
+              correspondingTypeParameter.Constraints = new List<ITypeReference>();
+              foreach (ITypeReference t in genericMethodParameter.Constraints) {
+                correspondingTypeParameter.Constraints.Add(copyTypeToClosure.Visit(t));
+              }
             }
           }
         }
@@ -284,6 +284,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Then add it to map so that Normalizer can retrieve it and fill in
       // the rest of the definition.
       var L = new MethodDefinition();
+      L.InternFactory = this.host.InternFactory;
       L.ContainingTypeDefinition = closureClass;
       L.Name = this.host.NameTable.GetNameFor("__anonymous_method " + IteratorHelper.EnumerableCount(closureClass.Methods));
       closureClass.Methods.Add(L);

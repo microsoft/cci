@@ -658,7 +658,6 @@ namespace Microsoft.Cci.Contracts {
 
   public static class ContractDummy {
     public static IMethodContract MethodContract {
-      [DebuggerNonUserCode]
       get {
         if (ContractDummy.methodContract == null)
           ContractDummy.methodContract = new DummyMethodContract();
@@ -667,7 +666,6 @@ namespace Microsoft.Cci.Contracts {
     }
     private static IMethodContract/*?*/ methodContract;
     public static ITypeContract TypeContract {
-      [DebuggerNonUserCode]
       get {
         if (ContractDummy.typeContract == null)
           ContractDummy.typeContract = new DummyTypeContract();
@@ -676,7 +674,6 @@ namespace Microsoft.Cci.Contracts {
     }
     private static ITypeContract/*?*/ typeContract;
     public static IPostcondition Postcondition {
-      [DebuggerNonUserCode]
       get {
         if (ContractDummy.postcondition == null)
           ContractDummy.postcondition = new DummyPostcondition();

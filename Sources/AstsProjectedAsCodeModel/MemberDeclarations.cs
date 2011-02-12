@@ -830,6 +830,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    protected internal virtual IEnumerable<CustomModifier> CustomModifiers {
+      get { return IteratorHelper.GetEmptyEnumerable<CustomModifier>(); }
+    }
+
+    /// <summary>
     /// The symbol table object that represents the metadata for this event.
     /// </summary>
     public FieldDefinition FieldDefinition {
@@ -970,6 +977,13 @@ namespace Microsoft.Cci.Ast {
         this.marshallingInformation = null;
         return false;
       }
+    }
+
+    /// <summary>
+    /// This field has custom modifiers.
+    /// </summary>
+    internal protected virtual bool IsModified {
+      get { return false; } //TODO: compute this. For example volatile fields have modifiers.
     }
 
     /// <summary>

@@ -22,7 +22,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void Flatten(BasicBlock blockStatement, List<IStatement> flatListOfStatements) {
-      foreach (IStatement statement in blockStatement.Statements) {
+      foreach (IStatement statement in blockStatement.Statements){
         BasicBlock/*?*/ nestedBlock = statement as BasicBlock;
         if (nestedBlock != null) {
           if (nestedBlock.LocalVariables == null || nestedBlock.LocalVariables.Count == 0 || nestedBlock.Statements.Count == 0 || (nestedBlock.Statements.Count == 1 && nestedBlock.Statements[0] is BasicBlock))

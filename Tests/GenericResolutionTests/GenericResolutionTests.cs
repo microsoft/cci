@@ -85,24 +85,24 @@ namespace ResolutionTests {
           pdbReader = new PdbReader(pdbStream, host);
         }
 
-        //Create a mutator and run it over the module, producing a copy that could be different if the mutator
-        //were a subclass that made changes during the copy process.
-        MetadataMutator mutator = new MetadataMutator(host);
-        module = mutator.Visit(module);
-        TestMutator mutator1 = new TestMutator(host);
-        module = mutator1.Visit(module);
+        module = MetadataCopier.DeepCopy(host, module);
+        module = new MutatingVisitor(host).Visit(module);
+        TestResolution resolver = new TestResolution(host);
+        resolver.Visit(module);
 
-        string result = mutator1.Output.ToString();
+        string result = resolver.Output.ToString();
         Assert.True(!result.Contains("Dummy"));
       }
     }
 
-    public class TestMutator : CodeMutator {
-      public StringBuilder Output = new StringBuilder();
-      public TestMutator(IMetadataHost host)
-        : base(host, true) { }
+    public class TestResolution : BaseCodeVisitor {
 
-      public override IMethodReference Visit(IMethodReference methodReference) {
+      public StringBuilder Output = new StringBuilder();
+
+      public TestResolution(IMetadataHost host) {
+      }
+
+      public override void Visit(IMethodReference methodReference) {
         if (methodReference.Name.Value.StartsWith("bar")) {
           Output.AppendFormat(".... method {0}: {1} of {2}.", methodReference.ResolvedMethod.Name, methodReference, methodReference.ContainingType);
           var itor1 = methodReference.ResolvedMethod.Parameters.GetEnumerator();
@@ -116,18 +116,18 @@ namespace ResolutionTests {
             }
             Output.AppendFormat("     - parameter: {0} of {1}.", itor1.Current, typeString);
           }
-          return methodReference;
+          return;
         }
-        return base.Visit(methodReference);
+        base.Visit(methodReference);
       }
 
-      public override IFieldReference Visit(IFieldReference fieldReference) {
+      public override void Visit(IFieldReference fieldReference) {
         if (fieldReference.Name.Value.StartsWith("f")) {
           Output.AppendFormat(".... field {0}: {1} of {2}.", fieldReference.ResolvedField.Name, fieldReference, fieldReference.ContainingType);
           Output.AppendFormat("     - resolved field type: {0}", fieldReference.ResolvedField.Type.ResolvedType);
-          return fieldReference;
+          return;
         }
-        return base.Visit(fieldReference);
+        base.Visit(fieldReference);
       }
     }
   }

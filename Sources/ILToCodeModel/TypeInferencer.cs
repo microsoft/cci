@@ -328,6 +328,36 @@ namespace Microsoft.Cci.ILToCodeModel {
           ((TargetExpression)assignment.Target).Type = assignment.Source.Type;
         }
       }
+      var be = assignment.Source as IBoundExpression;
+      if (be != null) {
+        var loc = be.Definition as TempVariable;
+        if (loc != null) {
+          if (loc.isPolymorphic) {
+            loc.Type = assignment.Target.Type;
+          } else {
+            if (!TypeHelper.TypesAreEquivalent(loc.Type, assignment.Target.Type)) {
+              ((Assignment)assignment).Source = new Conversion() {
+                ValueToConvert = assignment.Source,
+                TypeAfterConversion = assignment.Target.Type,
+              };
+            }
+          }
+        }
+      }
+      var te = assignment.Target;
+      var loc2 = te.Definition as TempVariable;
+      if (loc2 != null) {
+        if (loc2.isPolymorphic) {
+          loc2.Type = assignment.Source.Type;
+        } else {
+          if (!TypeHelper.TypesAreEquivalent(loc2.Type, assignment.Source.Type)) {
+            ((Assignment)assignment).Source = new Conversion() {
+              ValueToConvert = assignment.Source,
+              TypeAfterConversion = assignment.Target.Type,
+            };
+          }
+        }
+      }
       ((Assignment)assignment).Type = assignment.Target.Type;
     }
 
@@ -402,7 +432,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(conditional);
       Conditional cond = (Conditional)conditional;
       cond.Condition = ConvertToBoolean(cond.Condition);
-      cond.Type = conditional.ResultIfTrue.Type;
+      var mergedType = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
+      cond.Type = mergedType;
     }
 
     private static IExpression ConvertToBoolean(IExpression expression) {
@@ -559,6 +590,17 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void Visit(IMethodCall methodCall) {
       base.Visit(methodCall);
+      var ps = new List<IParameterTypeInformation>(methodCall.MethodToCall.Parameters);
+      int i = 0;
+      foreach (var a in methodCall.Arguments) {
+        var p = ps[i++];
+        var ctc = a as ICompileTimeConstant;
+        if (ctc == null) continue;
+        if (p.Type.TypeCode == PrimitiveTypeCode.Boolean && ctc.Type.TypeCode == PrimitiveTypeCode.Int32) {
+          ((CompileTimeConstant)ctc).Value = ((int)ctc.Value) == 0 ? false : true;
+          ((CompileTimeConstant)ctc).Type = this.host.PlatformType.SystemBoolean;
+        }
+      }
       ((MethodCall)methodCall).Type = methodCall.MethodToCall.Type;
     }
 
@@ -672,7 +714,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

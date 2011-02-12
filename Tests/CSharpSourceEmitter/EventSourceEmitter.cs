@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -13,8 +13,10 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
 
-namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+namespace CSharpSourceEmitter
+{
+  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter
+  {
     public override void Visit(IEventDefinition eventDefinition) {
 
       PrintAttributes(eventDefinition);
@@ -24,7 +26,7 @@ namespace CSharpSourceEmitter {
         eventDefinition.Adder.ResolvedMethod;
       if (!eventDefinition.ContainingTypeDefinition.IsInterface && 
         IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(eventMeth)))
-        PrintEventDefinitionVisibility(eventDefinition);
+          PrintEventDefinitionVisibility(eventDefinition);
       PrintMethodDefinitionModifiers(eventMeth);
       PrintToken(CSharpToken.Event);
       PrintEventDefinitionDelegateType(eventDefinition);

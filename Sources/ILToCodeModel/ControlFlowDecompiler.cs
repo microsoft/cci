@@ -17,10 +17,10 @@ using System.Text;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class ControlFlowDecompiler : BaseCodeTraverser {
+  internal abstract class ControlFlowDecompiler : BaseCodeTraverser {
 
-    IPlatformType platformType;
-    Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors;
+    protected IPlatformType platformType;
+    protected Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors;
 
     internal ControlFlowDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors) {
       this.platformType = platformType;
@@ -33,13 +33,247 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.Visit(b);
     }
 
-    private void Visit(BasicBlock b) {
+    protected abstract void Visit(BasicBlock b);
+
+    protected static BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
+      BasicBlock result = new BasicBlock(b.StartOffset);
+      if (b.LocalVariables != null)
+        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
+      result.EndOffset = endOffset;
+      int n = b.Statements.Count;
+      for (int i = 0; i < n-1; i++) {
+        var s = b.Statements[i];
+        MoveTempIfNecessary(b, result, s);
+        result.Statements.Add(b.Statements[i]);
+      }
+      if (n > 0) {
+        b.Statements.RemoveRange(0, n-1);
+        BasicBlock bb = (BasicBlock)b.Statements[0];
+        if (bb.StartOffset < endOffset)
+          result.Statements.Add(GetBasicBlockUpto(bb, endOffset));
+      }
+      return result;
+    }
+
+    protected static BasicBlock GetBasicBlockStartingAt(BasicBlock bb, uint offset) {
+      while (bb.StartOffset < offset && bb.Statements.Count > 0) {
+        BasicBlock bbb = bb.Statements[bb.Statements.Count-1] as BasicBlock;
+        if (bbb == null) break;
+        if (bbb.StartOffset == offset) {
+          bb.Statements.RemoveAt(bb.Statements.Count-1);
+          return bbb;
+        }
+        bb = bbb;
+      }
+      return bb;
+    }
+
+    protected IStatement UnwrapSingletonBlock(IStatement statement) {
+      var bb = statement as BasicBlock;
+      if (bb != null && bb.Statements.Count == 1) return bb.Statements[0];
+      return statement;
+    }
+
+    protected LabeledStatement/*?*/ FindLabeledStatement(List<IStatement> statements, int i, IName name) {
+      while (i < statements.Count) {
+        BasicBlock/*?*/ bb = statements[i] as BasicBlock;
+        if (bb != null) return this.FindLabeledStatement(bb.Statements, 0, name);
+        LabeledStatement/*?*/ result = statements[i] as LabeledStatement;
+        if (result != null && result.Label == name) return result;
+        i++;
+      }
+      return null;
+    }
+
+    protected GotoStatement/*?*/ RemoveAndReturnLastGotoStatement(BasicBlock/*?*/ block) {
+      while (block != null) {
+        List<IStatement> statements = block.Statements;
+        var n = statements.Count;
+        if (n == 0) return null;
+        var lastStatementInBlock = statements[n-1];
+        var gotoStatement = lastStatementInBlock as GotoStatement;
+        if (gotoStatement != null) {
+          statements.RemoveAt(n-1);
+          return gotoStatement;
+        }
+        block = lastStatementInBlock as BasicBlock;
+      }
+      return null;
+    }
+
+    protected static BasicBlock ExtractAsBasicBlock(BasicBlock b, int i, int j) {
+      List<IStatement> statements = b.Statements;
+      BasicBlock result = new BasicBlock(0);
+      if (b.LocalVariables != null)
+        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
+      while (i < j) {
+        var s = statements[i++];
+        MoveTempIfNecessary(b, result, s);
+        result.Statements.Add(s);
+      }
+      return result;
+    }
+
+    private static void MoveTempIfNecessary(BasicBlock b, BasicBlock result, IStatement s) {
+      var exprS = s as IExpressionStatement;
+      if (exprS != null) {
+        var assignment = exprS.Expression as IAssignment;
+        if (assignment != null) {
+          var tempVar = assignment.Target.Definition as TempVariable;
+          if (tempVar != null && b.LocalVariables != null && b.LocalVariables.Contains(tempVar)) {
+            b.LocalVariables.Remove(tempVar);
+            if (result.LocalVariables == null) result.LocalVariables = new List<ILocalDefinition>();
+            result.LocalVariables.Add(tempVar);
+          }
+        }
+      }
+    }
+
+    protected BasicBlock ExtractBasicBlockUpto(BasicBlock b, int i, ILabeledStatement label) {
+      List<IStatement> statements = b.Statements;
+      int n = statements.Count;
+      if (i == n-1) {
+        var bb = statements[i] as BasicBlock;
+        if (bb != null) return this.ExtractBasicBlockUpto(bb, 0, label);
+      }
+      BasicBlock result = new BasicBlock(0);
+      if (b.LocalVariables != null)
+        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
+      for (int j = i; j < n; j++) {
+        IStatement s = statements[j];
+        if (s == label) {
+          statements.RemoveRange(i, j-i);
+          return result;
+        }
+        BasicBlock/*?*/ bb = s as BasicBlock;
+        if (bb == null) {
+          MoveTempIfNecessary(b, result, s);
+          result.Statements.Add(s);
+          continue;
+        }
+        BasicBlock bb2 = this.ExtractBasicBlockUpto(bb, 0, label);
+        if (bb2.Statements.Count > 0)
+          result.Statements.Add(bb2);
+        statements.RemoveRange(i, j-i);
+        return result;
+      }
+      return result;
+    }
+
+  }
+
+  internal class IfThenElseDecompiler : ControlFlowDecompiler {
+
+    internal IfThenElseDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
+      : base(platformType, predecessors){
+    }
+
+    protected override void Visit(BasicBlock b) {
       for (int i = 0; i < b.Statements.Count; i++) {
-        if (DecompileIfThenElseStatement(b, i)) continue;
-        this.DecompileIfThenStatement(b, i);
-        this.DecompileIfThenStatement2(b, i);
+        this.DecompileIfThenElseStatement(b, i);
+      }
+    }
+
+    private void DecompileIfThenElseStatement(BasicBlock b, int i) {
+      List<IStatement> statements = b.Statements;
+      if (i >= statements.Count) return;
+      ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
+      if (conditionalStatement == null) return;
+      IExpression condition;
+      var trueBranch = UnwrapSingletonBlock(conditionalStatement.TrueBranch);
+      GotoStatement/*?*/ gotoAfterThen = trueBranch as GotoStatement;
+      if (gotoAfterThen == null) {
+        gotoAfterThen = UnwrapSingletonBlock(conditionalStatement.FalseBranch) as GotoStatement;
+        if (gotoAfterThen == null || !(trueBranch is EmptyStatement)) return;
+        condition = conditionalStatement.Condition;
+      } else {
+        if (!(conditionalStatement.FalseBranch is EmptyStatement)) return;
+        LogicalNot not = new LogicalNot();
+        not.Operand = conditionalStatement.Condition;
+        condition = not;
+      }
+      //At this point we have:
+      //if (!condition) goto afterThen;
+      var afterThen = this.FindLabeledStatement(statements, i, gotoAfterThen.TargetStatement.Label);
+      if (afterThen == null) return;
+      List<IGotoStatement> branchesToThisLabel;
+      if (this.predecessors.TryGetValue(afterThen, out branchesToThisLabel))
+        branchesToThisLabel.Remove(gotoAfterThen);
+      BasicBlock ifBlock = this.ExtractBasicBlockUpto(b, i, afterThen);
+      GotoStatement/*?*/ gotoEndif = this.RemoveAndReturnLastGotoStatement(ifBlock);
+      this.Visit(ifBlock);
+      BasicBlock elseBlock = null;
+      if (gotoEndif != null) {
+        var endif = this.FindLabeledStatement(statements, i, gotoEndif.TargetStatement.Label);
+        if (endif != null) {
+          if (this.predecessors.TryGetValue(gotoEndif.TargetStatement, out branchesToThisLabel))
+            branchesToThisLabel.Remove(gotoEndif);
+          elseBlock = this.ExtractBasicBlockUpto(b, i, gotoEndif.TargetStatement);
+          elseBlock.Statements.Add(gotoEndif.TargetStatement);
+          this.Visit(elseBlock);
+          elseBlock.Statements.Remove(gotoEndif.TargetStatement);
+        } else {
+          ifBlock.Statements.Add(gotoEndif);
+        }
+      }
+      conditionalStatement.Condition = condition;
+      conditionalStatement.TrueBranch = ifBlock;
+      if (elseBlock != null)
+        conditionalStatement.FalseBranch = elseBlock;
+      else
+        conditionalStatement.FalseBranch = new EmptyStatement();
+      return;
+    }
+
+  }
+
+  internal class SwitchDecompiler : ControlFlowDecompiler {
+
+    internal SwitchDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
+      : base(platformType, predecessors) {
+    }
+
+    protected override void Visit(BasicBlock b) {
+      for (int i = 0; i < b.Statements.Count; i++) {
         this.DecompileSwitch(b.Statements, i);
       }
+    }
+
+    private void DecompileSwitch(List<IStatement> statements, int i) {
+      if (i >= statements.Count-1) return;
+      SwitchInstruction/*?*/ switchInstruction = statements[i] as SwitchInstruction;
+      if (switchInstruction == null) return;
+      SwitchStatement result = new SwitchStatement();
+      result.Expression = switchInstruction.switchExpression;
+      statements[i] = result;
+      for (int j = 0, n = switchInstruction.switchCases.Count; j < n; j++) {
+        CompileTimeConstant caseLabel = new CompileTimeConstant() { Value = j, Type = this.platformType.SystemInt32 };
+        var gotoCaseBody = switchInstruction.switchCases[j];
+        SwitchCase currentCase = new SwitchCase() { Expression = caseLabel };
+        result.Cases.Add(currentCase);
+        if (j < n-1 && gotoCaseBody.TargetStatement == switchInstruction.switchCases[j+1].TargetStatement) continue;
+        currentCase.Body.Add(gotoCaseBody);
+      }
+      if (i == statements.Count-1) return;
+      var gotoStatement = statements[i+1] as IGotoStatement;
+      if (gotoStatement != null) {
+        SwitchCase defaultCase = new SwitchCase() { }; // Default case is represented by a dummy Expression.
+        defaultCase.Body.Add(statements[i + 1]);
+        statements.RemoveAt(i + 1);
+        result.Cases.Add(defaultCase);
+      }
+    }
+
+
+  }
+
+  internal class TryCatchDecompiler : ControlFlowDecompiler {
+
+    internal TryCatchDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
+      : base(platformType, predecessors) {
+    }
+
+    protected override void Visit(BasicBlock b) {
       if (b.NumberOfTryBlocksStartingHere > 0) {
         BasicBlock firstHandler = null;
         TryCatchFinallyStatement/*?*/ tryStatement = new TryCatchFinallyStatement();
@@ -81,26 +315,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       b.Statements.Insert(startPoint, tryStatement);
-    }
-
-    private static BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
-      BasicBlock result = new BasicBlock(b.StartOffset);
-      if (b.LocalVariables != null)
-        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
-      result.EndOffset = endOffset;
-      int n = b.Statements.Count;
-      for (int i = 0; i < n-1; i++) {
-        var s = b.Statements[i];
-        MoveTempIfNecessary(b, result, s);
-        result.Statements.Add(b.Statements[i]);
-      }
-      if (n > 0) {
-        b.Statements.RemoveRange(0, n-1);
-        BasicBlock bb = (BasicBlock)b.Statements[0];
-        if (bb.StartOffset < endOffset)
-          result.Statements.Add(GetBasicBlockUpto(bb, endOffset));
-      }
-      return result;
     }
 
     private static void DecompileHandler(BasicBlock containingBlock, BasicBlock handlerBlock, TryCatchFinallyStatement tryStatement) {
@@ -179,200 +393,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private static BasicBlock GetBasicBlockStartingAt(BasicBlock bb, uint offset) {
-      while (bb.StartOffset < offset && bb.Statements.Count > 0) {
-        BasicBlock bbb = bb.Statements[bb.Statements.Count-1] as BasicBlock;
-        if (bbb == null) break;
-        if (bbb.StartOffset == offset) {
-          bb.Statements.RemoveAt(bb.Statements.Count-1);
-          return bbb;
-        }
-        bb = bbb;
-      }
-      return bb;
-    }
-
-    private bool DecompileIfThenElseStatement(BasicBlock b, int i) {
-      List<IStatement> statements = b.Statements;
-      if (i >= statements.Count) return false;
-      ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
-      if (conditionalStatement == null) return false;
-      GotoStatement/*?*/ gotoElse = conditionalStatement.TrueBranch as GotoStatement;
-      if (gotoElse == null) return false;
-      if (!(conditionalStatement.FalseBranch is EmptyStatement)) return false;
-      //At this point we have:
-      //if (cond) goto elseLab;
-      GotoStatement/*?*/ gotoEndif = null;
-      int j = i;
-      while (j < statements.Count) {
-        gotoEndif = statements[j++] as GotoStatement;
-        if (gotoEndif != null) break;
-      }
-      if (gotoEndif == null || j >= statements.Count) return false;
-      BasicBlock/*?*/ falseBlock = statements[j] as BasicBlock;
-      if (falseBlock == null || falseBlock.Statements.Count < 1) return false;
-      LabeledStatement/*?*/ elseLabel = falseBlock.Statements[0] as LabeledStatement;
-      if (elseLabel == null || gotoElse.TargetStatement != elseLabel) return false;
-      List<IGotoStatement> branchesToThisLabel;
-      if (this.predecessors.TryGetValue(elseLabel, out branchesToThisLabel)) {
-        if (1 < branchesToThisLabel.Count) return false;
-      }
-      BasicBlock/*?*/ blockAfterIf = null;
-      int k = 1;
-      while (k < falseBlock.Statements.Count) {
-        blockAfterIf = falseBlock.Statements[k] as BasicBlock;
-        if (blockAfterIf != null && blockAfterIf.Statements.Count > 0 && blockAfterIf.Statements[0] == gotoEndif.TargetStatement)
-          break;
-        k++;
-      }
-      if (blockAfterIf == null || k >= falseBlock.Statements.Count) return false;
-      ILabeledStatement labelAfterIf = blockAfterIf.Statements[0] as ILabeledStatement;
-      if (labelAfterIf == null) return false;
-      BasicBlock ifBlock = ExtractAsBasicBlock(b, i, j-1);
-      BasicBlock elseBlock = ExtractAsBasicBlock(falseBlock, 1, k);
-      LogicalNot not = new LogicalNot();
-      not.Operand = conditionalStatement.Condition;
-      conditionalStatement.Condition = not;
-      conditionalStatement.TrueBranch = ifBlock;
-      conditionalStatement.FalseBranch = elseBlock;
-      statements.RemoveRange(i, j-i);
-      falseBlock.Statements.RemoveRange(0, k);
-      if (this.predecessors.TryGetValue(labelAfterIf, out branchesToThisLabel)) {
-        if (branchesToThisLabel.Count <= 1)
-          blockAfterIf.Statements.RemoveAt(0);
-      }
-      return true;
-    }
-
-    private bool DecompileIfThenStatement(BasicBlock b, int i) {
-      List<IStatement> statements = b.Statements;
-      if (i >= statements.Count) return false;
-      ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
-      if (conditionalStatement == null) return false;
-      GotoStatement/*?*/ gotoAfterThen = conditionalStatement.TrueBranch as GotoStatement;
-      if (gotoAfterThen == null) return false;
-      if (!(conditionalStatement.FalseBranch is EmptyStatement)) return false;
-      IName afterThenLabelName = gotoAfterThen.TargetStatement.Label;
-      LabeledStatement/*?*/ afterThenLabel = this.FindLabeledStatement(statements, i, afterThenLabelName);
-      if (afterThenLabel == null) return false;
-      List<IGotoStatement> branchesToThisLabel;
-      if (this.predecessors.TryGetValue(afterThenLabel, out branchesToThisLabel)) {
-        if (1 < branchesToThisLabel.Count) return false;
-      }
-      // TODO? Check the putative ifBlock to make sure it is self-contained: i.e., it has no branches outside of itself
-      BasicBlock ifBlock = this.ExtractBasicBlockUpto(b, i, afterThenLabel);
-      this.Visit(ifBlock);
-      LogicalNot not = new LogicalNot();
-      not.Operand = conditionalStatement.Condition;
-      conditionalStatement.Condition = not;
-      conditionalStatement.TrueBranch = ifBlock;
-      conditionalStatement.FalseBranch = new EmptyStatement();
-      return true;
-    }
-
-    private LabeledStatement/*?*/ FindLabeledStatement(List<IStatement> statements, int i, IName name) {
-      while (i < statements.Count) {
-        BasicBlock/*?*/ bb = statements[i] as BasicBlock;
-        if (bb != null) return this.FindLabeledStatement(bb.Statements, 0, name);
-        LabeledStatement/*?*/ result = statements[i] as LabeledStatement;
-        if (result != null && result.Label == name) return result;
-        i++;
-      }
-      return null;
-    }
-
-    private bool DecompileIfThenStatement2(BasicBlock b, int i) {
-      List<IStatement> statements = b.Statements;
-      if (i >= statements.Count) return false;
-      ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
-      if (conditionalStatement == null) return false;
-      if (!(conditionalStatement.TrueBranch is EmptyStatement)) return false;
-      GotoStatement/*?*/ gotoAfterElse = conditionalStatement.FalseBranch as GotoStatement;
-      if (gotoAfterElse == null) return false;
-      BasicBlock afterThen = this.ExtractBasicBlockUpto(b, i, gotoAfterElse.TargetStatement);
-      this.Visit(afterThen);
-      conditionalStatement.FalseBranch = conditionalStatement.TrueBranch; //empty statement
-      conditionalStatement.TrueBranch = afterThen;
-      return true;
-    }
-
-    private void DecompileSwitch(List<IStatement> statements, int i) {
-      if (i >= statements.Count-1) return;
-      SwitchInstruction/*?*/ switchInstruction = statements[i] as SwitchInstruction;
-      if (switchInstruction == null) return;
-      SwitchStatement result = new SwitchStatement();
-      result.Expression = switchInstruction.switchExpression;
-      statements[i] = result;
-      for (int j = 0, n = switchInstruction.switchCases.Count; j < n; j++) {
-        CompileTimeConstant caseLabel = new CompileTimeConstant() { Value = j, Type = this.platformType.SystemInt32 };
-        var gotoCaseBody = switchInstruction.switchCases[j];
-        SwitchCase currentCase = new SwitchCase() { Expression = caseLabel };
-        result.Cases.Add(currentCase);
-        if (j < n-1 && gotoCaseBody.TargetStatement == switchInstruction.switchCases[j+1].TargetStatement) continue;
-        currentCase.Body.Add(gotoCaseBody);
-      }
-      if (i == statements.Count-1) return;
-      var gotoStatement = statements[i+1] as IGotoStatement;
-      if (gotoStatement != null) {
-        SwitchCase defaultCase = new SwitchCase() { }; // Default case is represented by a dummy Expression.
-        defaultCase.Body.Add(statements[i + 1]);
-        statements.RemoveAt(i + 1);
-        result.Cases.Add(defaultCase);
-      }
-    }
-
-    private static BasicBlock ExtractAsBasicBlock(BasicBlock b, int i, int j) {
-      List<IStatement> statements = b.Statements;
-      BasicBlock result = new BasicBlock(0);
-      if (b.LocalVariables != null)
-        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
-      while (i < j) {
-        var s = statements[i++];
-        MoveTempIfNecessary(b, result, s);
-        result.Statements.Add(s);
-      }
-      return result;
-    }
-
-    private static void MoveTempIfNecessary(BasicBlock b, BasicBlock result, IStatement s) {
-      var exprS = s as IExpressionStatement;
-      if (exprS != null) {
-        var assignment = exprS.Expression as IAssignment;
-        if (assignment != null) {
-          var tempVar = assignment.Target.Definition as TempVariable;
-          if (tempVar != null && b.LocalVariables != null && b.LocalVariables.Contains(tempVar)) {
-            b.LocalVariables.Remove(tempVar);
-            if (result.LocalVariables == null) result.LocalVariables = new List<ILocalDefinition>();
-            result.LocalVariables.Add(tempVar);
-          }
-        }
-      }
-    }
-
-    private BasicBlock ExtractBasicBlockUpto(BasicBlock b, int i, ILabeledStatement label) {
-      List<IStatement> statements = b.Statements;
-      BasicBlock result = new BasicBlock(0);
-      if (b.LocalVariables != null)
-        result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
-      for (int j = i, n = statements.Count; j < n; j++) {
-        IStatement s = statements[j];
-        if (s == label) {
-          statements.RemoveRange(i, j-i);
-          return result;
-        }
-        BasicBlock/*?*/ bb = s as BasicBlock;
-        if (bb == null) {
-          MoveTempIfNecessary(b, result, s);
-          result.Statements.Add(s);
-          continue;
-        }
-        BasicBlock bb2 = ExtractBasicBlockUpto(bb, 0, label);
-        result.Statements.Add(bb2);
-        statements.RemoveRange(i, j-i);
-        return result;
-      }
-      return result;
-    }
-
   }
+
 }

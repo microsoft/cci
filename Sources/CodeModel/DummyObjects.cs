@@ -21,7 +21,6 @@ namespace Microsoft.Cci {
   public static class CodeDummy {
 
     public static IAddressableExpression AddressableExpression {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.addressableExpression == null)
           Interlocked.CompareExchange(ref CodeDummy.addressableExpression, new DummyAddressableExpression(), null);
@@ -31,7 +30,6 @@ namespace Microsoft.Cci {
     private static IAddressableExpression/*?*/ addressableExpression;
 
     public static IAssignment Assignment {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.assignment == null)
           Interlocked.CompareExchange(ref CodeDummy.assignment, new DummyAssignment(), null);
@@ -41,7 +39,6 @@ namespace Microsoft.Cci {
     private static IAssignment/*?*/ assignment;
 
     public static IBlockStatement Block {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.block == null)
           Interlocked.CompareExchange(ref CodeDummy.block, new DummyBlock(), null);
@@ -51,7 +48,6 @@ namespace Microsoft.Cci {
     private static IBlockStatement/*?*/ block;
 
     public static ICompileTimeConstant Constant {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.constant == null)
           Interlocked.CompareExchange(ref CodeDummy.constant, new DummyCompileTimeConstant(), null);
@@ -61,7 +57,6 @@ namespace Microsoft.Cci {
     private static ICompileTimeConstant/*?*/ constant;
 
     public static ICreateArray CreateArray {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.createArray == null)
           Interlocked.CompareExchange(ref CodeDummy.createArray, new DummyCreateArray(), null);
@@ -71,7 +66,6 @@ namespace Microsoft.Cci {
     private static ICreateArray/*?*/ createArray;
 
     public static IExpression Expression {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.expression == null)
           Interlocked.CompareExchange(ref CodeDummy.expression, new DummyExpression(), null);
@@ -81,7 +75,6 @@ namespace Microsoft.Cci {
     private static IExpression/*?*/ expression;
 
     public static IGotoStatement GotoStatement {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.gotoStatement == null)
           Interlocked.CompareExchange(ref CodeDummy.gotoStatement, new DummyGotoStatement(), null);
@@ -91,7 +84,6 @@ namespace Microsoft.Cci {
     private static IGotoStatement/*?*/ gotoStatement;
 
     public static ILabeledStatement LabeledStatement {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.labeledStatement == null)
           Interlocked.CompareExchange(ref CodeDummy.labeledStatement, new DummyLabeledStatement(), null);
@@ -101,7 +93,6 @@ namespace Microsoft.Cci {
     private static ILabeledStatement/*?*/ labeledStatement;
 
     public static IMethodCall MethodCall {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.methodCall == null)
           Interlocked.CompareExchange(ref CodeDummy.methodCall, new DummyMethodCall(), null);
@@ -111,7 +102,6 @@ namespace Microsoft.Cci {
     private static IMethodCall/*?*/ methodCall;
 
     public static ISwitchCase SwitchCase {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.switchCase == null)
           Interlocked.CompareExchange(ref CodeDummy.switchCase, new DummySwitchCase(), null);
@@ -121,7 +111,6 @@ namespace Microsoft.Cci {
     private static ISwitchCase/*?*/ switchCase;
 
     public static ISwitchStatement SwitchStatement {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.switchStatement == null)
           Interlocked.CompareExchange(ref CodeDummy.switchStatement, new DummySwitchStatement(), null);
@@ -131,7 +120,6 @@ namespace Microsoft.Cci {
     private static ISwitchStatement/*?*/ switchStatement;
 
     public static ITargetExpression TargetExpression {
-      [DebuggerNonUserCode]
       get {
         if (CodeDummy.targetExpression == null)
           Interlocked.CompareExchange(ref CodeDummy.targetExpression, new DummyTargetExpression(), null);
