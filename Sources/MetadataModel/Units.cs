@@ -10,10 +10,9 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Text;
 using System.Globalization;
-
-//^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci {
   /// <summary>
@@ -49,6 +48,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents a .NET assembly.
   /// </summary>
+  [ContractClass(typeof(IAssemblyContract))]
   public interface IAssembly : IModule, IAssemblyReference {
 
     /// <summary>
@@ -100,9 +100,292 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IAssembly))]
+  abstract class IAssemblyContract : IAssembly {
+    public IEnumerable<ICustomAttribute> AssemblyAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IAliasForType> ExportedTypes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IAliasForType>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IAliasForType>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IFileReference> Files {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IFileReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IFileReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint Flags {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IModule> MemberModules {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IModule>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IModule>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<byte> PublicKey {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IResourceReference> Resources {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IResourceReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IResourceReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ISecurityAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ISecurityAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IAssemblyReference> AssemblyReferences {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ulong BaseAddress {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAssembly ContainingAssembly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort DllCharacteristics {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMethodReference EntryPoint {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint FileAlignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<string> GetStrings() {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<INamedTypeDefinition> GetAllTypes() {
+      throw new NotImplementedException();
+    }
+
+    public bool ILOnly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ModuleKind Kind {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte LinkerMajorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte LinkerMinorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte MetadataFormatMajorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte MetadataFormatMinorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> ModuleAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName ModuleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IModuleReference> ModuleReferences {
+      get { throw new NotImplementedException(); }
+    }
+
+    public Guid PersistentIdentifier {
+      get { throw new NotImplementedException(); }
+    }
+
+    public Machine Machine {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool RequiresAmdInstructionSet {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool RequiresStartupStub {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Requires32bits {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Requires64bits {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ulong SizeOfHeapCommit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ulong SizeOfHeapReserve {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ulong SizeOfStackCommit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ulong SizeOfStackReserve {
+      get { throw new NotImplementedException(); }
+    }
+
+    public string TargetRuntimeVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool TrackDebugData {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool UsePublicKeyTokensForAssemblyReferences {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IWin32Resource> Win32Resources {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity ContractAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity CoreAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public string Location {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IRootUnitNamespace UnitNamespaceRoot {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IUnitReference> UnitReferences {
+      get { throw new NotImplementedException(); }
+    }
+
+    public INamespaceDefinition NamespaceRoot {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IUnit ResolvedUnit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public UnitIdentity UnitIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    IAssemblyReference IModuleReference.ContainingAssembly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IModule ResolvedModule {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ModuleIdentity ModuleIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IName> Aliases {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAssembly ResolvedAssembly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public string Culture {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRetargetable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<byte> PublicKeyToken {
+      get { throw new NotImplementedException(); }
+    }
+
+    public Version Version {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity AssemblyIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity UnifiedAssemblyIdentity {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// A reference to a .NET assembly.
   /// </summary>
+  [ContractClass(typeof(IAssemblyReferenceContract))]
   public interface IAssemblyReference : IModuleReference {
 
     /// <summary>
@@ -152,6 +435,100 @@ namespace Microsoft.Cci {
     AssemblyIdentity UnifiedAssemblyIdentity { get; }
   }
 
+  [ContractClassFor(typeof(IAssemblyReference))]
+  abstract class IAssemblyReferenceContract : IAssemblyReference {
+    public IEnumerable<IName> Aliases {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IName>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IName>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAssembly ResolvedAssembly {
+      get {
+        Contract.Ensures(Contract.Result<IAssembly>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public string Culture {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsRetargetable {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<byte> PublicKeyToken {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public Version Version {
+      get {
+        Contract.Ensures(Contract.Result<Version>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public AssemblyIdentity AssemblyIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public AssemblyIdentity UnifiedAssemblyIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAssemblyReference ContainingAssembly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IModule ResolvedModule {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ModuleIdentity ModuleIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IUnit ResolvedUnit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public UnitIdentity UnitIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+  }
 
   /// <summary>
   /// Target CPU types.
@@ -496,6 +873,7 @@ namespace Microsoft.Cci {
   /// A unit of metadata stored as a single artifact and potentially produced and revised independently from other units.
   /// Examples of units include .NET assemblies and modules, as well C++ object files and compiled headers.
   /// </summary>
+  [ContractClass(typeof(IUnitContract))]
   public interface IUnit : INamespaceRootOwner, IUnitReference, IDefinition {
 
     /// <summary>
@@ -527,17 +905,87 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A root namespace that contains nested namespaces as well as top level types and anything else that implements INamespaceMember.
     /// </summary>
-    IRootUnitNamespace UnitNamespaceRoot {
-      get;
-      //^ ensures result.Unit == this;
-      //^ ensures result.RootOwner == this;
-    }
+    IRootUnitNamespace UnitNamespaceRoot { get; }
 
     /// <summary>
     /// A list of other units that are referenced by this unit. 
     /// </summary>
     IEnumerable<IUnitReference> UnitReferences { get; }
 
+  }
+
+  [ContractClassFor(typeof(IUnit))]
+  abstract class IUnitContract : IUnit {
+    public AssemblyIdentity ContractAssemblySymbolicIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public AssemblyIdentity CoreAssemblySymbolicIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IPlatformType PlatformType {
+      get {
+        Contract.Ensures(Contract.Result<IPlatformType>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public string Location {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IRootUnitNamespace UnitNamespaceRoot {
+      get {
+        Contract.Ensures(Contract.Result<IRootUnitNamespace>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IUnitReference> UnitReferences {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IUnitReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IUnitReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceDefinition NamespaceRoot {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IUnit ResolvedUnit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public UnitIdentity UnitIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -597,14 +1045,21 @@ namespace Microsoft.Cci {
     /// <param name="name">The name of the identified unit.</param>
     /// <param name="location">The location where the unit is stored. Can be the empty string if the location is not known. The location need not be a file path.</param>
     internal UnitIdentity(IName name, string location) {
+      Contract.Requires(name != null);
+      Contract.Requires(location != null);
       this.name = name;
       this.location = location;
+    }
+
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.location != null);
     }
 
     /// <summary>
     /// Returns true if the given object is an identifier that identifies the same object as this identifier.
     /// </summary>
-    //^ [Confined]
     public abstract override bool Equals(object/*?*/ obj);
 
     /// <summary>
@@ -627,7 +1082,10 @@ namespace Microsoft.Cci {
     /// An indication of the location where the unit is or will be stored. Can be the empty string if the location is not known. This need not be a file system path. 
     /// </summary>
     public string Location {
-      get { return this.location; }
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        return this.location;
+      }
     }
     readonly string location;
 
@@ -635,14 +1093,16 @@ namespace Microsoft.Cci {
     /// The name of the unit being identified.
     /// </summary>
     public IName Name {
-      get { return this.name; }
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        return this.name;
+      }
     }
     readonly IName name;
 
     /// <summary>
     /// Returns a string that contains the information in the identifier.
     /// </summary>
-    //^ [Confined]
     public abstract override string ToString();
   }
 
@@ -662,6 +1122,11 @@ namespace Microsoft.Cci {
     /// <param name="location">The location where the assembly is stored. Can be the empty string if the location is not known. The location need not be a file path.</param>
     public AssemblyIdentity(IName name, string culture, Version version, IEnumerable<byte> publicKeyToken, string location)
       : base(name, location) {
+      Contract.Requires(name != null);
+      Contract.Requires(culture != null);
+      Contract.Requires(version != null);
+      Contract.Requires(publicKeyToken != null);
+      Contract.Requires(location != null);
       this.culture = culture;
       this.version = version;
       this.publicKeyToken = publicKeyToken;
@@ -674,10 +1139,20 @@ namespace Microsoft.Cci {
     /// <param name="location">A location that should replace the location from the template.</param>
     public AssemblyIdentity(AssemblyIdentity template, string location)
       : base(template.Name, location) {
+      Contract.Requires(template != null);
+      Contract.Requires(location != null);
       this.culture = template.Culture;
       this.version = template.Version;
       this.publicKeyToken = template.PublicKeyToken;
     }
+
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.culture != null);
+      Contract.Invariant(this.publicKeyToken != null);
+      Contract.Invariant(this.version != null);
+    }
+
 
     /// <summary>
     /// The identity of the assembly to which the identified module belongs. May be null in the case of a module that is not part of an assembly.
@@ -693,7 +1168,10 @@ namespace Microsoft.Cci {
     /// Empty if not specified.
     /// </summary>
     public string Culture {
-      get { return this.culture; }
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        return this.culture;
+      }
     }
     readonly string culture;
 
@@ -742,7 +1220,10 @@ namespace Microsoft.Cci {
     /// The public part of the key used to sign the referenced assembly. Empty if not specified.
     /// </summary>
     public IEnumerable<byte> PublicKeyToken {
-      get { return this.publicKeyToken; }
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
+        return this.publicKeyToken;
+      }
     }
     readonly IEnumerable<byte> publicKeyToken;
 
@@ -777,6 +1258,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public Version Version {
       get {
+        Contract.Ensures(Contract.Result<Version>() != null);
         return this.version;
       }
     }
@@ -796,6 +1278,8 @@ namespace Microsoft.Cci {
     /// <param name="location">The location where the module is stored. Can be the empty string if the location is not known. The location need not be a file path.</param>
     public ModuleIdentity(IName name, string location)
       : base(name, location) {
+      Contract.Requires(name != null);
+      Contract.Requires(location != null);
     }
 
     /// <summary>
@@ -804,9 +1288,11 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="name">The name of the identified module.</param>
     /// <param name="location">The location where the module is stored. Can be the empty string if the location is not known. The location need not be a file path.</param>
-    /// <param name="containingAssembly">The identifier of the assembly to which the identified module belongs.</param>
-    public ModuleIdentity(IName name, string location, AssemblyIdentity containingAssembly)
+    /// <param name="containingAssembly">The identifier of the assembly to which the identified module belongs. May be null.</param>
+    public ModuleIdentity(IName name, string location, AssemblyIdentity/*?*/ containingAssembly)
       : base(name, location) {
+      Contract.Requires(name != null);
+      Contract.Requires(location != null);
       this.containingAssembly = containingAssembly;
     }
 

@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -321,12 +321,12 @@ namespace Microsoft.Cci {
           val = (val << 1)|1;
           this.WriteByte((byte)val);
         } else if (val >= -0x2000) {
-          val = 0x2000 - val;
+          val = 0x2000 + val;
           val = (val << 1)|1;
           this.WriteByte((byte)((val >> 8)|0x80));
           this.WriteByte((byte)(val & 0xff));
         } else if (val >= -0x20000000) {
-          val = 0x20000000 - val;
+          val = 0x20000000 + val;
           val = (val << 1)|1;
           this.WriteByte((byte)((val >> 24)|0xc0));
           this.WriteByte((byte)((val & 0xff0000)>>16));

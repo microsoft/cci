@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -259,7 +260,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type member definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static string GetMemberSignature(ITypeMemberReference member, NameFormattingOptions formattingOptions) {
       return new SignatureFormatter().GetMemberSignature(member, formattingOptions);
     }
@@ -267,7 +268,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given method definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions) {
       return new SignatureFormatter().GetMethodSignature(method, formattingOptions);
     }
@@ -311,11 +312,11 @@ namespace Microsoft.Cci {
       var methodDefinition = typeDefinitionMember as IMethodDefinition;
       if (methodDefinition != null)
         return IsExplicitImplementationVisible(methodDefinition, containingTypeDefinition);
-      
+
       var propertyDefinition = typeDefinitionMember as IPropertyDefinition;
       if (propertyDefinition != null)
         return IsExplicitImplementationVisible(propertyDefinition.Getter, containingTypeDefinition) || IsExplicitImplementationVisible(propertyDefinition.Setter, containingTypeDefinition);
-      
+
       var eventDefinition = typeDefinitionMember as IEventDefinition;
       if (eventDefinition != null)
         return IsExplicitImplementationVisible(eventDefinition.Adder, containingTypeDefinition) || IsExplicitImplementationVisible(eventDefinition.Remover, containingTypeDefinition);
@@ -764,7 +765,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the signature of the given event definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetEventSignature(IEventDefinition eventDef, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
@@ -785,7 +786,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the signature of the given field and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetFieldSignature(IFieldReference field, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
@@ -806,7 +807,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type member definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetMemberSignature(ITypeMemberReference member, NameFormattingOptions formattingOptions) {
       IMethodReference/*?*/ method = member as IMethodReference;
       if (method != null) return this.GetMethodSignature(method, formattingOptions);
@@ -826,7 +827,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the signature of the given method and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       this.AppendReturnTypeSignature(method, formattingOptions, sb);
@@ -847,7 +848,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the signature of the given property definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetPropertySignature(IPropertyDefinition property, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       this.AppendPropertyName(property, formattingOptions, sb);
@@ -948,7 +949,7 @@ namespace Microsoft.Cci {
       sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
       if (def != null && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
         if (def.IsByReference) sb.Append("@");
-      } 
+      }
       if (def != null && (formattingOptions & NameFormattingOptions.ParameterName) != 0) {
         sb.Append(" ");
         sb.Append(def.Name.Value);

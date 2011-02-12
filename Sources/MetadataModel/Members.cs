@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -214,13 +215,26 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a field.
   /// </summary>
-  public interface IFieldReference : ITypeMemberReference { //TODO: add custom modifiers
+  public interface IFieldReference : ITypeMemberReference {
+
+    /// <summary>
+    /// Custom modifiers associated with the referenced field.
+    /// </summary>
+    IEnumerable<ICustomModifier> CustomModifiers {
+      get;
+      //^ requires this.IsModified;
+    }
 
     /// <summary>
     /// Returns a key that is computed from the information in this reference and that distinguishes
     /// this.ResolvedField from all other fields obtained from the same metadata host.
     /// </summary>
     uint InternedKey { get; }
+
+    /// <summary>
+    /// The referenced field has custom modifiers.
+    /// </summary>
+    bool IsModified { get; }
 
     /// <summary>
     /// This field is static (shared by all instances of its declaring type).
@@ -436,6 +450,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// This interface models the metadata representation of a method.
   /// </summary>
+  [ContractClass(typeof(IMethodDefinitionContract))]
   public interface IMethodDefinition : ITypeDefinitionMember, IMethodReference {
     /// <summary>
     /// A container for a list of IL instructions providing the implementation (if any) of this method.
@@ -628,6 +643,270 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IMethodDefinition))]
+  abstract class IMethodDefinitionContract : IMethodDefinition {
+    public IMethodBody Body {
+      get {
+        Contract.Requires(!this.IsAbstract && !this.IsExternal);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IGenericMethodParameter> GenericParameters {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IGenericMethodParameter>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IGenericMethodParameter>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasExplicitThisParameter {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAccessCheckedOnOverride {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsCil {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsConstructor {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsExternal {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsForwardReference {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsHiddenBySignature {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsNativeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsNewSlot {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsNeverInlined {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsNeverOptimized {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsPlatformInvoke {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeImplemented {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeInternal {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStaticConstructor {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSynchronized {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsVirtual {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || !this.IsStatic);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsUnmanaged {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IParameterDefinition> Parameters {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IParameterDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IParameterDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool PreserveSignature {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformInvokeInformation PlatformInvokeData {
+      get {
+        Contract.Requires(this.IsPlatformInvoke);
+        Contract.Ensures(Contract.Result<IPlatformInvokeInformation>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool RequiresSecurityObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool ReturnValueIsMarshalledExplicitly {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMarshallingInformation ReturnValueMarshallingInformation {
+      get {
+        Contract.Requires(this.ReturnValueIsMarshalledExplicitly);
+        Contract.Ensures(Contract.Result<IMarshallingInformation>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ISecurityAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ISecurityAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeDefinition ContainingTypeDefinition {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeMemberVisibility Visibility {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IScope<ITypeDefinitionMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool AcceptsExtraArguments {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort ParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMethodDefinition ResolvedMethod {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public CallingConvention CallingConvention {
+      get { throw new NotImplementedException(); }
+    }
+
+    IEnumerable<IParameterTypeInformation> ISignature.Parameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsByRef {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
+
   /// <summary>
   /// This interface models the metadata representation of a method or property parameter.
   /// </summary>
@@ -751,6 +1030,7 @@ namespace Microsoft.Cci {
   /// The parameters and return type that makes up a method or property signature.
   /// This interface models the metadata representation of a signature.
   /// </summary>
+  [ContractClass(typeof(ISignatureContract))]
   public interface ISignature {
 
     /// <summary>
@@ -788,6 +1068,44 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(ISignature))]
+  abstract class ISignatureContract : ISignature {
+    public CallingConvention CallingConvention {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IParameterTypeInformation> Parameters {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IParameterTypeInformation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IParameterTypeInformation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomModifier>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomModifier>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool ReturnValueIsByRef {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+  }
+
   /// <summary>
   /// A member of a type definition, such as a field or a method.
   /// This interface models the metadata representation of a type member.
@@ -810,6 +1128,7 @@ namespace Microsoft.Cci {
   /// A reference to a member of a type, such as a field or a method.
   /// This interface models the metadata representation of a type member reference.
   /// </summary>
+  [ContractClass(typeof(ITypeMemberReferenceContract))]
   public interface ITypeMemberReference : IReference, INamedEntity {
 
     /// <summary>
@@ -821,6 +1140,39 @@ namespace Microsoft.Cci {
     /// The type definition member this reference resolves to.
     /// </summary>
     ITypeDefinitionMember ResolvedTypeDefinitionMember { get; }
+  }
+
+  [ContractClassFor(typeof(ITypeMemberReference))]
+  abstract class ITypeMemberReferenceContract : ITypeMemberReference {
+    public ITypeReference ContainingType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get {
+        Contract.Ensures(Contract.Result<ITypeDefinitionMember>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -936,6 +1288,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a method.
   /// </summary>
+  [ContractClass(typeof(IMethodReferenceContract))]
   public interface IMethodReference : ISignature, ITypeMemberReference {
 
     /// <summary>
@@ -983,6 +1336,96 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IMethodReference))]
+  abstract class IMethodReferenceContract : IMethodReference {
+    public bool AcceptsExtraArguments {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort GenericParameterCount {
+      get {
+        Contract.Ensures(this.IsGeneric || Contract.Result<ushort>() == 0);
+        Contract.Ensures(!this.IsGeneric || Contract.Result<ushort>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort ParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMethodDefinition ResolvedMethod {
+      get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+        Contract.Ensures(!(this is IMethodDefinition) || Contract.Result<IMethodDefinition>() == (object)this);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IParameterTypeInformation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IParameterTypeInformation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public CallingConvention CallingConvention {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IParameterTypeInformation> Parameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsByRef {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+  }
 
   /// <summary>
   /// A generic method instantiated with a list of type arguments.

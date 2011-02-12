@@ -1185,6 +1185,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         fieldDefinition.CompileTimeValue = this.DeepCopy(this.GetMutableShallowCopy(fieldDefinition.CompileTimeValue));
       if (fieldDefinition.IsMapped)
         fieldDefinition.FieldMapping = this.DeepCopy(this.GetMutableShallowCopy(fieldDefinition.FieldMapping));
+      if (fieldDefinition.IsModified)
+        fieldDefinition.CustomModifiers = this.DeepCopy(fieldDefinition.CustomModifiers);
       if (fieldDefinition.IsMarshalledExplicitly)
         fieldDefinition.MarshallingInformation = this.DeepCopy(this.GetMutableShallowCopy(fieldDefinition.MarshallingInformation));
       fieldDefinition.Type = this.DeepCopy(fieldDefinition.Type);
@@ -1198,6 +1200,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     protected virtual FieldReference DeepCopy(FieldReference fieldReference) {
       fieldReference.Attributes = this.DeepCopy(fieldReference.Attributes);
+      if (fieldReference.IsModified)
+        fieldReference.CustomModifiers = this.DeepCopy(fieldReference.CustomModifiers);
       fieldReference.ContainingType = this.DeepCopy(fieldReference.ContainingType);
       fieldReference.Locations = this.DeepCopy(fieldReference.Locations);
       fieldReference.Type = this.DeepCopy(fieldReference.Type);
@@ -1665,7 +1669,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="customAttributes">The custom attributes.</param>
     /// <returns></returns>
-    protected virtual List<ICustomAttribute> DeepCopy(List<ICustomAttribute> customAttributes) {
+    protected virtual List<ICustomAttribute>/*?*/ DeepCopy(List<ICustomAttribute>/*?*/ customAttributes) {
+      if (customAttributes == null) return null;
       for (int i = 0, n = customAttributes.Count; i < n; i++)
         customAttributes[i] = this.DeepCopy(this.GetMutableShallowCopy(customAttributes[i]));
       return customAttributes;
@@ -1676,7 +1681,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="customModifiers">The custom modifiers.</param>
     /// <returns></returns>
-    protected virtual List<ICustomModifier> DeepCopy(List<ICustomModifier> customModifiers) {
+    protected virtual List<ICustomModifier>/*?*/ DeepCopy(List<ICustomModifier>/*?*/ customModifiers) {
+      if (customModifiers == null) return null;
       for (int i = 0, n = customModifiers.Count; i < n; i++)
         customModifiers[i] = this.DeepCopy(this.GetMutableShallowCopy(customModifiers[i]));
       return customModifiers;
@@ -1758,7 +1764,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="locations">The locations.</param>
     /// <returns></returns>
-    protected virtual List<ILocation> DeepCopy(List<ILocation> locations) {
+    protected virtual List<ILocation>/*?*/ DeepCopy(List<ILocation>/*?*/ locations) {
+      if (locations == null) return locations;
       for (int i = 0, n = locations.Count; i < n; i++)
         locations[i] = this.DeepCopy(locations[i]);
       return locations;
@@ -2131,7 +2138,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.DeepCopy(this.GetMutableShallowCopy(globalsType));
       }
       if (module.EntryPoint != Dummy.MethodReference)
-        module.EntryPoint = this.GetMutableCopyIfItExists(module.EntryPoint.ResolvedMethod);
+        module.EntryPoint = this.DeepCopy(module.EntryPoint);
       this.VisitPrivateHelperMembers(this.flatListOfTypes);
       this.flatListOfTypes.Sort(new TypeOrderPreserver(module.AllTypes));
       module.AllTypes = this.flatListOfTypes;
@@ -2328,7 +2335,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeReferences">The type references.</param>
     /// <returns></returns>
-    protected virtual List<ITypeReference> DeepCopy(List<ITypeReference> typeReferences) {
+    protected virtual List<ITypeReference>/*?*/ DeepCopy(List<ITypeReference>/*?*/ typeReferences) {
+      if (typeReferences == null) return null;
       for (int i = 0, n = typeReferences.Count; i < n; i++)
         typeReferences[i] = this.DeepCopy(typeReferences[i]);
       return typeReferences;
@@ -2584,7 +2592,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="parameterTypeInformationList">The parameter type information list.</param>
     /// <returns></returns>
-    protected virtual List<IParameterTypeInformation> DeepCopy(List<IParameterTypeInformation> parameterTypeInformationList) {
+    protected virtual List<IParameterTypeInformation>/*?*/ DeepCopy(List<IParameterTypeInformation>/*?*/ parameterTypeInformationList) {
+      if (parameterTypeInformationList == null) return null;
       for (int i = 0, n = parameterTypeInformationList.Count; i < n; i++)
         parameterTypeInformationList[i] = this.DeepCopy(this.GetMutableShallowCopy(parameterTypeInformationList[i]));
       return parameterTypeInformationList;
@@ -2858,10 +2867,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="localDefinition">The local definition.</param>
     /// <returns></returns>
-    protected virtual object GetMutableCopyIfItExists(ILocalDefinition localDefinition) {
+    protected virtual ILocalDefinition GetMutableCopyIfItExists(ILocalDefinition localDefinition) {
       object/*?*/ cachedValue;
       this.cache.TryGetValue(localDefinition, out cachedValue);
-      return cachedValue != null ? cachedValue : localDefinition;
+      var result = cachedValue as ILocalDefinition;
+      if (result == null) result = localDefinition;
+      return result;
     }
 
     /// <summary>
@@ -2901,7 +2912,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected virtual IParameterDefinition GetMutableCopyIfItExists(IParameterDefinition parameterDefinition) {
       object/*?*/ cachedValue;
       this.cache.TryGetValue(parameterDefinition, out cachedValue);
-      return (IParameterDefinition)cachedValue;
+      var result = cachedValue as IParameterDefinition;
+      if (result == null) result = parameterDefinition;
+      return result;
     }
 
     /// <summary>
@@ -3023,6 +3036,53 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #region Public copy methods
+
+    /// <summary>
+    /// Returns a mutable deep copy of the given assembly.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="assembly">The assembly to copied.</param>
+    public static Assembly DeepCopy(IMetadataHost host, IAssembly assembly) {
+      List<INamedTypeDefinition> newTypes;
+      return (Assembly)new MetadataCopier(host, assembly, out newTypes).Substitute(assembly);
+    }
+
+    /// <summary>
+    /// Returns a mutable deep copy of the given method reference.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="methodReference">The method reference to copied.</param>
+    public static MethodReference DeepCopy(IMetadataHost host, IMethodReference methodReference) {
+      return (MethodReference)new MetadataCopier(host).Substitute(methodReference);
+    }
+
+    /// <summary>
+    /// Returns a mutable deep copy of the given module.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="module">The module to copied.</param>
+    public static Module DeepCopy(IMetadataHost host, IModule module) {
+      List<INamedTypeDefinition> newTypes;
+      return (Module)new MetadataCopier(host, module, out newTypes).Substitute(module);
+    }
+
+    /// <summary>
+    /// Returns a mutable deep copy of the given type reference.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="typeReference">The type reference to copied.</param>
+    public static TypeReference DeepCopy(IMetadataHost host, ITypeReference typeReference) {
+      return (TypeReference)new MetadataCopier(host).Substitute(typeReference);
+    }
+
     /// <summary>
     /// Makes a deep copy of the specified alias for type.
     /// </summary>
@@ -3682,6 +3742,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.DeepCopy(this.GetMutableShallowCopy(win32Resource));
     }
     #endregion public copy methods
+
   }
 
   /// <summary>

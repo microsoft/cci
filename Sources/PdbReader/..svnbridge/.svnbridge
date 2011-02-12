@@ -5,4 +5,13 @@ obj
 Build
 obj
 *.user
+</Value></Property><Property><Name>svn:ignore</Name><Value>bin
+Build
+obj
+*.user
+[Bb]in
+[Dd]ebug
+[Rr]elease
+*.aps
+*.eto
 </Value></Property></Properties></ItemProperties>

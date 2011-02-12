@@ -69,6 +69,10 @@
       <Project>{F0453DA7-61CF-4BF4-B90C-C3AF2EA82A46}</Project>
       <Name>MetadataModelCF</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
+      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
+      <Name>Microsoft.Contracts</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
   <ProjectExtensions>

@@ -112,6 +112,10 @@
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
+      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
+      <Name>Microsoft.Contracts</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

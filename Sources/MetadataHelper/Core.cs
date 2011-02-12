@@ -16,6 +16,7 @@ using System.Threading;
 using System.IO;
 using System.Globalization;
 using Microsoft.Cci.UtilityDataStructures;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -346,7 +347,6 @@ namespace Microsoft.Cci {
     /// A table used to intern strings used as names.
     /// </summary>
     public INameTable NameTable {
-      [DebuggerNonUserCode]
       get { return this.nameTable; }
     }
     readonly INameTable nameTable;
@@ -437,7 +437,7 @@ namespace Microsoft.Cci {
     /// Looks for the referenced assembly first in the same directory as the referring unit, then
     /// in any search paths provided to the constructor, then finally the GAC.
     /// </remarks>
-    //^ [Pure]
+    [Pure]
     public virtual AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
       // probe for in the same directory as the referring unit
       var referringDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
@@ -501,7 +501,7 @@ namespace Microsoft.Cci {
     /// <remarks>
     /// Default implementation of ProbeModuleReference. Override this method to change the behavior.
     /// </remarks>
-    //^ [Pure]
+    [Pure]
     public virtual ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
       return new ModuleIdentity(referencedModule.Name, "unknown://location", referencedModule.ContainingAssembly);
     }
@@ -1765,7 +1765,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    //^ [Pure]
+    [Pure]
     public IName GetNameFor(string name)
       //^^ ensures result.Value == name;
     {

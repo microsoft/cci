@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci.UtilityDataStructures;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -370,7 +371,7 @@ namespace Microsoft.Cci {
     /// The referenced module, or Dummy.Module if the reference cannot be resolved.
     /// </summary>
     public IModule ResolvedModule {
-      get { 
+      get {
         if (this.resolvedModule == null)
           this.resolvedModule = this.host.LoadModule(this.ModuleIdentity);
         return this.resolvedModule;
@@ -717,7 +718,6 @@ namespace Microsoft.Cci {
     /// A reference to the class that contains the standard contract methods, such as System.Diagnostics.Contracts.Contract.Requires.
     /// </summary>
     public INamespaceTypeReference SystemDiagnosticsContractsContract {
-      [DebuggerNonUserCode]
       get {
         if (this.systemDiagnosticsContractsContract == null) {
           this.systemDiagnosticsContractsContract = this.CreateReference(this.ContractAssemblyRef, "System", "Diagnostics", "Contracts", "Contract");
@@ -739,7 +739,6 @@ namespace Microsoft.Cci {
     /// System.ArgIterator
     /// </summary>
     public INamespaceTypeReference SystemArgIterator {
-      [DebuggerNonUserCode]
       get {
         if (this.systemArgIterator == null) {
           this.systemArgIterator = this.CreateReference(this.CoreAssemblyRef, true, "System", "ArgIterator");
@@ -754,7 +753,6 @@ namespace Microsoft.Cci {
     /// System.Array
     /// </summary>
     public INamespaceTypeReference SystemArray {
-      [DebuggerNonUserCode]
       get {
         if (this.systemArray == null) {
           this.systemArray = this.CreateReference(this.CoreAssemblyRef, "System", "Array");
@@ -768,7 +766,6 @@ namespace Microsoft.Cci {
     /// System.AsyncCallBack
     /// </summary>
     public INamespaceTypeReference SystemAsyncCallback {
-      [DebuggerNonUserCode]
       get {
         if (this.systemAsyncCallback == null) {
           this.systemAsyncCallback = this.CreateReference(this.CoreAssemblyRef, "System", "AsyncCallback");
@@ -782,7 +779,6 @@ namespace Microsoft.Cci {
     /// System.Attribute
     /// </summary>
     public INamespaceTypeReference SystemAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemAttribute == null) {
           this.systemAttribute = this.CreateReference(this.CoreAssemblyRef, "System", "Attribute");
@@ -796,7 +792,6 @@ namespace Microsoft.Cci {
     /// System.AttributeUsageAttribute
     /// </summary>
     public INamespaceTypeReference SystemAttributeUsageAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemAttributeUsageAttribute == null) {
           this.systemAttributeUsageAttribute = this.CreateReference(this.CoreAssemblyRef, "System", "AttributeUsageAttribute");
@@ -810,7 +805,6 @@ namespace Microsoft.Cci {
     /// System.Boolean
     /// </summary>
     public INamespaceTypeReference SystemBoolean {
-      [DebuggerNonUserCode]
       get {
         if (this.systemBoolean == null) {
           this.systemBoolean = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Boolean, "System", "Boolean");
@@ -824,7 +818,6 @@ namespace Microsoft.Cci {
     /// System.Char
     /// </summary>
     public INamespaceTypeReference SystemChar {
-      [DebuggerNonUserCode]
       get {
         if (this.systemChar == null) {
           this.systemChar = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Char, "System", "Char");
@@ -838,7 +831,6 @@ namespace Microsoft.Cci {
     /// System.Collections.Generic.Dictionary
     /// </summary>
     public INamespaceTypeReference SystemCollectionsGenericDictionary {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsGenericDictionary == null) {
           this.systemCollectionsGenericDictionary = this.CreateReference(this.CoreAssemblyRef, 2, "System", "Collections", "Generic", "Dictionary");
@@ -852,7 +844,6 @@ namespace Microsoft.Cci {
     /// System.Collections.Generic.ICollection
     /// </summary>
     public INamespaceTypeReference SystemCollectionsGenericICollection {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsGenericICollection == null) {
           this.systemCollectionsGenericICollection = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "ICollection");
@@ -866,7 +857,6 @@ namespace Microsoft.Cci {
     /// System.Collections.Generic.IEnumerable
     /// </summary>
     public INamespaceTypeReference SystemCollectionsGenericIEnumerable {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsGenericIEnumerable == null) {
           this.systemCollectionsGenericIEnumerable = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "IEnumerable");
@@ -880,7 +870,6 @@ namespace Microsoft.Cci {
     /// System.Collections.Generic.IEnumerator
     /// </summary>
     public INamespaceTypeReference SystemCollectionsGenericIEnumerator {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsGenericIEnumerator == null) {
           this.systemCollectionsGenericIEnumerator = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "IEnumerator");
@@ -894,7 +883,6 @@ namespace Microsoft.Cci {
     /// System.Collections.Generic.IList
     /// </summary>
     public INamespaceTypeReference SystemCollectionsGenericIList {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsGenericIList == null) {
           this.systemCollectionsGenericIList = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "IList");
@@ -908,7 +896,6 @@ namespace Microsoft.Cci {
     /// System.Collections.ICollection
     /// </summary>
     public INamespaceTypeReference SystemCollectionsICollection {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsICollection == null) {
           this.systemCollectionsICollection = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "ICollection");
@@ -922,7 +909,6 @@ namespace Microsoft.Cci {
     /// System.Collections.IEnumerable
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIEnumerable {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsIEnumerable == null) {
           this.systemCollectionsIEnumerable = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IEnumerable");
@@ -936,7 +922,6 @@ namespace Microsoft.Cci {
     /// System.Collections.IEnumerator
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIEnumerator {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsIEnumerator == null) {
           this.systemCollectionsIEnumerator = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IEnumerator");
@@ -950,7 +935,6 @@ namespace Microsoft.Cci {
     /// System.Collections.IList
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIList {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsIList == null) {
           this.systemCollectionsIList = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IList");
@@ -964,7 +948,6 @@ namespace Microsoft.Cci {
     /// System.Collections.IList
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIStructuralComparable {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsIStructuralComparable == null) {
           this.systemCollectionsIStructuralComparable = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IStructuralComparable");
@@ -978,7 +961,6 @@ namespace Microsoft.Cci {
     /// System.Collections.IList
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIStructuralEquatable {
-      [DebuggerNonUserCode]
       get {
         if (this.systemCollectionsIStructuralEquatable == null) {
           this.systemCollectionsIStructuralEquatable = this.CreateReference(this.CoreAssemblyRef, "System", "Collections", "IStructuralEquatable");
@@ -992,7 +974,6 @@ namespace Microsoft.Cci {
     /// System.DateTime
     /// </summary>
     public INamespaceTypeReference SystemDateTime {
-      [DebuggerNonUserCode]
       get {
         if (this.systemDateTime == null) {
           this.systemDateTime = this.CreateReference(this.CoreAssemblyRef, true, "System", "DateTime");
@@ -1006,7 +987,6 @@ namespace Microsoft.Cci {
     /// System.Decimal
     /// </summary>
     public INamespaceTypeReference SystemDecimal {
-      [DebuggerNonUserCode]
       get {
         if (this.systemDecimal == null) {
           this.systemDecimal = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.NotPrimitive, "System", "Decimal");
@@ -1020,7 +1000,6 @@ namespace Microsoft.Cci {
     /// System.Delegate
     /// </summary>
     public INamespaceTypeReference SystemDelegate {
-      [DebuggerNonUserCode]
       get {
         if (this.systemDelegate == null) {
           this.systemDelegate = this.CreateReference(this.CoreAssemblyRef, "System", "Delegate");
@@ -1034,7 +1013,6 @@ namespace Microsoft.Cci {
     /// System.DBNull
     /// </summary>
     public INamespaceTypeReference SystemDBNull {
-      [DebuggerNonUserCode]
       get {
         if (this.systemDBNull == null) {
           this.systemDBNull = this.CreateReference(this.CoreAssemblyRef, true, "System", "DBNull");
@@ -1048,7 +1026,6 @@ namespace Microsoft.Cci {
     /// System.Enum
     /// </summary>
     public INamespaceTypeReference SystemEnum {
-      [DebuggerNonUserCode]
       get {
         if (this.systemEnum == null) {
           this.systemEnum = this.CreateReference(this.CoreAssemblyRef, "System", "Enum");
@@ -1062,7 +1039,6 @@ namespace Microsoft.Cci {
     /// System.Float32
     /// </summary>
     public INamespaceTypeReference SystemFloat32 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemFloat32 == null) {
           this.systemFloat32 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Float32, "System", "Single");
@@ -1076,7 +1052,6 @@ namespace Microsoft.Cci {
     /// System.Float64
     /// </summary>
     public INamespaceTypeReference SystemFloat64 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemFloat64 == null) {
           this.systemFloat64 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Float64, "System", "Double");
@@ -1090,7 +1065,6 @@ namespace Microsoft.Cci {
     /// System.IAsyncResult
     /// </summary>
     public INamespaceTypeReference SystemIAsyncResult {
-      [DebuggerNonUserCode]
       get {
         if (this.systemIAsyncResult == null) {
           this.systemIAsyncResult = this.CreateReference(this.CoreAssemblyRef, "System", "IAsyncResult");
@@ -1104,7 +1078,6 @@ namespace Microsoft.Cci {
     /// System.ICloneable
     /// </summary>
     public INamespaceTypeReference SystemICloneable {
-      [DebuggerNonUserCode]
       get {
         if (this.systemICloneable == null) {
           this.systemICloneable = this.CreateReference(this.CoreAssemblyRef, "System", "ICloneable");
@@ -1118,7 +1091,6 @@ namespace Microsoft.Cci {
     /// System.Int16
     /// </summary>
     public INamespaceTypeReference SystemInt16 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemInt16 == null) {
           this.systemInt16 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Int16, "System", "Int16");
@@ -1132,7 +1104,6 @@ namespace Microsoft.Cci {
     /// System.Int32
     /// </summary>
     public INamespaceTypeReference SystemInt32 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemInt32 == null) {
           this.systemInt32 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Int32, "System", "Int32");
@@ -1146,7 +1117,6 @@ namespace Microsoft.Cci {
     /// System.Int64
     /// </summary>
     public INamespaceTypeReference SystemInt64 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemInt64 == null) {
           this.systemInt64 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Int64, "System", "Int64");
@@ -1160,7 +1130,6 @@ namespace Microsoft.Cci {
     /// System.Int8
     /// </summary>
     public INamespaceTypeReference SystemInt8 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemInt8 == null) {
           this.systemInt8 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Int8, "System", "SByte");
@@ -1174,7 +1143,6 @@ namespace Microsoft.Cci {
     /// System.IntPtr
     /// </summary>
     public INamespaceTypeReference SystemIntPtr {
-      [DebuggerNonUserCode]
       get {
         if (this.systemIntPtr == null) {
           this.systemIntPtr = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.IntPtr, "System", "IntPtr");
@@ -1188,7 +1156,6 @@ namespace Microsoft.Cci {
     /// System.MulticastDelegate
     /// </summary>
     public INamespaceTypeReference SystemMulticastDelegate {
-      [DebuggerNonUserCode]
       get {
         if (this.systemMulticastDelegate == null) {
           this.systemMulticastDelegate = this.CreateReference(this.CoreAssemblyRef, "System", "MulticastDelegate");
@@ -1202,7 +1169,6 @@ namespace Microsoft.Cci {
     /// System.Nullable&lt;T&gt;
     /// </summary>
     public INamespaceTypeReference SystemNullable {
-      [DebuggerNonUserCode]
       get {
         if (this.systemNullable == null) {
           this.systemNullable = this.CreateReference(this.CoreAssemblyRef, true, 1, PrimitiveTypeCode.NotPrimitive, "System", "Nullable");
@@ -1216,7 +1182,6 @@ namespace Microsoft.Cci {
     /// System.Object
     /// </summary>
     public INamespaceTypeReference SystemObject {
-      [DebuggerNonUserCode]
       get {
         if (this.systemObject == null) {
           this.systemObject = this.CreateReference(this.CoreAssemblyRef, "System", "Object");
@@ -1230,7 +1195,6 @@ namespace Microsoft.Cci {
     /// System.RuntimeArgumentHandle
     /// </summary>
     public INamespaceTypeReference SystemRuntimeArgumentHandle {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeArgumentHandle == null) {
           this.systemRuntimeArgumentHandle = this.CreateReference(this.CoreAssemblyRef, true, "System", "RuntimeArgumentHandle");
@@ -1244,7 +1208,6 @@ namespace Microsoft.Cci {
     /// System.RuntimeFieldHandle
     /// </summary>
     public INamespaceTypeReference SystemRuntimeFieldHandle {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeFieldHandle == null) {
           this.systemRuntimeFieldHandle = this.CreateReference(this.CoreAssemblyRef, true, "System", "RuntimeFieldHandle");
@@ -1258,7 +1221,6 @@ namespace Microsoft.Cci {
     /// System.RuntimeMethodHandle
     /// </summary>
     public INamespaceTypeReference SystemRuntimeMethodHandle {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeMethodHandle == null) {
           this.systemRuntimeMethodHandle = this.CreateReference(this.CoreAssemblyRef, true, "System", "RuntimeMethodHandle");
@@ -1272,7 +1234,6 @@ namespace Microsoft.Cci {
     /// System.RuntimeTypeHandle
     /// </summary>
     public INamespaceTypeReference SystemRuntimeTypeHandle {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeTypeHandle == null) {
           this.systemRuntimeTypeHandle = this.CreateReference(this.CoreAssemblyRef, true, "System", "RuntimeTypeHandle");
@@ -1286,7 +1247,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.CallConvCdecl
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesCallConvCdecl {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesCallConvCdecl == null) {
           this.systemRuntimeCompilerServicesCallConvCdecl = 
@@ -1301,7 +1261,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.CompilerGeneratedAttribute
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesCompilerGeneratedAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesCompilerGeneratedAttribute == null) {
           this.systemRuntimeCompilerServicesCompilerGeneratedAttribute = 
@@ -1316,7 +1275,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.ExtensionAttribute
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesExtensionAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesExtensionAttribute == null) {
           this.systemRuntimeCompilerServicesExtensionAttribute = 
@@ -1331,7 +1289,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.FriendAccessAllowedAttribute
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesFriendAccessAllowedAttribute == null) {
           this.systemRuntimeCompilerServicesFriendAccessAllowedAttribute =
@@ -1346,7 +1303,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.IsConst
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesIsConst {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesIsConst == null) {
           this.systemRuntimeCompilerServicesIsConst = 
@@ -1361,7 +1317,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.IsVolatile
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesIsVolatile {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesIsVolatile == null) {
           this.systemRuntimeCompilerServicesIsVolatile = 
@@ -1376,7 +1331,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.CompilerServices.ReferenceAssemblyAttribute
     /// </summary>
     public INamespaceTypeReference SystemRuntimeCompilerServicesReferenceAssemblyAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeCompilerServicesReferenceAssemblyAttribute == null) {
           this.systemRuntimeCompilerServicesReferenceAssemblyAttribute =
@@ -1391,7 +1345,6 @@ namespace Microsoft.Cci {
     /// System.Runtime.InteropServices.DllImportAttribute
     /// </summary>
     public INamespaceTypeReference SystemRuntimeInteropServicesDllImportAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemRuntimeInteropServicesDllImportAttribute == null) {
           this.systemRuntimeInteropServicesDllImportAttribute = 
@@ -1406,7 +1359,6 @@ namespace Microsoft.Cci {
     /// System.Security.Permissions.SecurityAction
     /// </summary>
     public INamespaceTypeReference SystemSecurityPermissionsSecurityAction {
-      [DebuggerNonUserCode]
       get {
         if (this.systemSecurityPermissionsSecurityAction == null) {
           this.systemSecurityPermissionsSecurityAction =
@@ -1421,7 +1373,6 @@ namespace Microsoft.Cci {
     /// System.Security.SecurityCriticalAttribute
     /// </summary>
     public INamespaceTypeReference SystemSecuritySecurityCriticalAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemSecuritySecurityCriticalAttribute == null) {
           this.systemSecuritySecurityCriticalAttribute =
@@ -1436,7 +1387,6 @@ namespace Microsoft.Cci {
     /// System.Security.SecuritySafeCriticalAttribute
     /// </summary>
     public INamespaceTypeReference SystemSecuritySecuritySafeCriticalAttribute {
-      [DebuggerNonUserCode]
       get {
         if (this.systemSecuritySecuritySafeCriticalAttribute == null) {
           this.systemSecuritySecuritySafeCriticalAttribute =
@@ -1451,7 +1401,6 @@ namespace Microsoft.Cci {
     /// System.String
     /// </summary>
     public INamespaceTypeReference SystemString {
-      [DebuggerNonUserCode]
       get {
         if (this.systemString == null) {
           this.systemString = this.CreateReference(this.CoreAssemblyRef, false, 0, PrimitiveTypeCode.String, "System", "String");
@@ -1465,7 +1414,6 @@ namespace Microsoft.Cci {
     /// System.Type
     /// </summary>
     public INamespaceTypeReference SystemType {
-      [DebuggerNonUserCode]
       get {
         if (this.systemType == null) {
           this.systemType = this.CreateReference(this.CoreAssemblyRef, "System", "Type");
@@ -1479,7 +1427,6 @@ namespace Microsoft.Cci {
     /// System.TypedReference
     /// </summary>
     public INamespaceTypeReference SystemTypedReference {
-      [DebuggerNonUserCode]
       get {
         if (this.systemTypedReference == null) {
           this.systemTypedReference = this.CreateReference(this.CoreAssemblyRef, true, "System", "TypedReference");
@@ -1493,7 +1440,6 @@ namespace Microsoft.Cci {
     /// System.UInt16
     /// </summary>
     public INamespaceTypeReference SystemUInt16 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemUInt16 == null) {
           this.systemUInt16 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.UInt16, "System", "UInt16");
@@ -1507,7 +1453,6 @@ namespace Microsoft.Cci {
     /// System.UInt32
     /// </summary>
     public INamespaceTypeReference SystemUInt32 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemUInt32 == null) {
           this.systemUInt32 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.UInt32, "System", "UInt32");
@@ -1521,7 +1466,6 @@ namespace Microsoft.Cci {
     /// System.UInt64
     /// </summary>
     public INamespaceTypeReference SystemUInt64 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemUInt64 == null) {
           this.systemUInt64 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.UInt64, "System", "UInt64");
@@ -1535,7 +1479,6 @@ namespace Microsoft.Cci {
     /// System.UInt8
     /// </summary>
     public INamespaceTypeReference SystemUInt8 {
-      [DebuggerNonUserCode]
       get {
         if (this.systemUInt8 == null) {
           this.systemUInt8 = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.UInt8, "System", "Byte");
@@ -1549,7 +1492,6 @@ namespace Microsoft.Cci {
     /// System.UIntPtr
     /// </summary>
     public INamespaceTypeReference SystemUIntPtr {
-      [DebuggerNonUserCode]
       get {
         if (this.systemUIntPtr == null) {
           this.systemUIntPtr = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.UIntPtr, "System", "UIntPtr");
@@ -1563,7 +1505,6 @@ namespace Microsoft.Cci {
     /// System.ValueType
     /// </summary>
     public INamespaceTypeReference SystemValueType {
-      [DebuggerNonUserCode]
       get {
         if (this.systemValueType == null) {
           this.systemValueType = this.CreateReference(this.CoreAssemblyRef, "System", "ValueType");
@@ -1577,7 +1518,6 @@ namespace Microsoft.Cci {
     /// System.Void
     /// </summary>
     public INamespaceTypeReference SystemVoid {
-      [DebuggerNonUserCode]
       get {
         if (this.systemVoid == null) {
           this.systemVoid = this.CreateReference(this.CoreAssemblyRef, PrimitiveTypeCode.Void, "System", "Void");
@@ -1591,7 +1531,6 @@ namespace Microsoft.Cci {
     /// System.Void*
     /// </summary>
     public IPointerTypeReference SystemVoidPtr {
-      [DebuggerNonUserCode]
       get {
         if (this.systemVoidPtr == null)
           this.systemVoidPtr = PointerType.GetPointerType(this.SystemVoid, this.host.InternFactory);
@@ -1603,7 +1542,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Maps a PrimitiveTypeCode value (other than Pointer, Reference and NotPrimitive) to a corresponding ITypeDefinition instance.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public INamespaceTypeReference GetTypeFor(PrimitiveTypeCode typeCode)
       //^^ requires typeCode != PrimitiveTypeCode.Pointer && typeCode != PrimitiveTypeCode.Reference && typeCode != PrimitiveTypeCode.NotPrimitive;
     {

@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Text;
 using System.Globalization;
@@ -29,24 +30,28 @@ namespace Microsoft.Cci {
     /// <param name="metadataHost"></param>
     /// <returns></returns>
     public static AssemblyIdentity GetAssemblyIdentity(System.Reflection.AssemblyName assemblyName, IMetadataHost metadataHost) {
+      Contract.Requires(assemblyName != null);
+      Contract.Requires(metadataHost != null);
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+
       string culture = assemblyName.CultureInfo == null || assemblyName.CultureInfo == System.Globalization.CultureInfo.InvariantCulture ? "neutral" : assemblyName.CultureInfo.ToString();
-      string/*?*/ name = assemblyName.Name;
-      //^ assume name != null;
-      Version/*?*/ version = assemblyName.Version;
-      //^ assume version != null;
-      byte[]/*?*/ token = assemblyName.GetPublicKeyToken();
-      //^ assume token != null;
+      string name = assemblyName.Name;
+      Contract.Assume(name != null);
+      Version version = assemblyName.Version;
+      Contract.Assume(version != null);
+      byte[] token = assemblyName.GetPublicKeyToken();
+      Contract.Assume(token != null);
       return new AssemblyIdentity(metadataHost.NameTable.GetNameFor(name), culture, version, token, assemblyName.CodeBase == null ? "" : assemblyName.CodeBase);
     }
-
 
     /// <summary>
     /// Allocates an object that identifies a .NET assembly, using the IAssembly object
     /// </summary>
     /// <param name="assembly"></param>
-    public static AssemblyIdentity GetAssemblyIdentity(
-      IAssembly assembly
-    ) {
+    public static AssemblyIdentity GetAssemblyIdentity(IAssembly assembly) {
+      Contract.Requires(assembly != null);
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+
       byte[] pKey = new List<byte>(assembly.PublicKey).ToArray();
       if (pKey.Length != 0) {
         return new AssemblyIdentity(assembly.Name, assembly.Culture, assembly.Version, UnitHelper.ComputePublicKeyToken(pKey), assembly.Location);
@@ -60,9 +65,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="module">Module for which the identity is desired.</param>
     /// <returns>The module identity corresponding to the passed module.</returns>
-    public static ModuleIdentity GetModuleIdentity(
-      IModule module
-    ) {
+    public static ModuleIdentity GetModuleIdentity(IModule module) {
+      Contract.Requires(module != null);
+      Contract.Ensures(Contract.Result<ModuleIdentity>() != null);
+
       if (module.ContainingAssembly != null) {
         return new ModuleIdentity(module.Name, module.Location, UnitHelper.GetAssemblyIdentity(module.ContainingAssembly));
       } else {
@@ -75,9 +81,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="publicKey"></param>
     /// <returns></returns>
-    public static byte[] ComputePublicKeyToken(
-      IEnumerable<byte> publicKey
-    ) {
+    public static byte[] ComputePublicKeyToken(IEnumerable<byte> publicKey) {
+      Contract.Requires(publicKey != null);
+      Contract.Ensures(Contract.Result<byte[]>() != null);
+
       byte[] pKey = new List<byte>(publicKey).ToArray();
       if (pKey.Length == 0)
         return pKey;
@@ -85,8 +92,8 @@ namespace Microsoft.Cci {
       byte[] hash = sha1Algo.ComputeHash(pKey);
       byte[] publicKeyToken = new byte[8];
       int startIndex = hash.Length - 8;
-      //^ assume 0 <= startIndex && startIndex < hash.Length;
-      //^ assume startIndex + 8 <= hash.GetLowerBound(0) + hash.Length;
+      Contract.Assume(0 <= startIndex && startIndex < hash.Length);
+      Contract.Assert(startIndex + 8 <= hash.GetLowerBound(0) + hash.Length);
       Array.Copy(hash, startIndex, publicKeyToken, 0, 8);
       Array.Reverse(publicKeyToken, 0, 8);
       return publicKeyToken;
@@ -96,6 +103,9 @@ namespace Microsoft.Cci {
     /// Computes the string representing the strong name of the given assembly reference.
     /// </summary>
     public static string StrongName(IAssemblyReference assemblyReference) {
+      Contract.Requires(assemblyReference != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
       StringBuilder sb = new StringBuilder();
       sb.Append(assemblyReference.Name.Value);
       sb.AppendFormat(CultureInfo.InvariantCulture, ", Version={0}.{1}.{2}.{3}", assemblyReference.Version.Major, assemblyReference.Version.Minor, assemblyReference.Version.Build, assemblyReference.Version.Revision);
@@ -124,6 +134,11 @@ namespace Microsoft.Cci {
     /// <param name="unit">The unit of metadata to search for the type.</param>
     /// <param name="typeName">A string containing the fully qualified type name, using C# formatting conventions.</param>
     public static INamedTypeDefinition FindType(INameTable nameTable, IUnit unit, string typeName) {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(unit != null);
+      Contract.Requires(typeName != null);
+      Contract.Ensures(Contract.Result<INamedTypeDefinition>() != null);
+
       int offset = 0;
       INamedTypeDefinition/*?*/ result = GetType(nameTable, unit.UnitNamespaceRoot, typeName, 0, ref offset);
       if (result != null) return result;
@@ -141,6 +156,12 @@ namespace Microsoft.Cci {
     /// <param name="typeName">A string containing the fully qualified type name, using C# formatting conventions.</param>
     /// <param name="genericParameterCount">The number of generic parameters the returned type should have.</param>
     public static INamedTypeDefinition FindType(INameTable nameTable, IUnit unit, string typeName, int genericParameterCount) {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(unit != null);
+      Contract.Requires(typeName != null);
+      Contract.Requires(genericParameterCount >= 0);
+      Contract.Ensures(Contract.Result<INamedTypeDefinition>() != null);
+
       int offset = 0;
       INamedTypeDefinition/*?*/ result = GetType(nameTable, unit.UnitNamespaceRoot, typeName, genericParameterCount, ref offset);
       if (result != null) return result;
@@ -148,6 +169,13 @@ namespace Microsoft.Cci {
     }
 
     private static INamedTypeDefinition/*?*/ GetType(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, int genericParameterCount, ref int offset) {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(namespaceDefinition != null);
+      Contract.Requires(typeName != null);
+      Contract.Requires(genericParameterCount >= 0);
+      Contract.Requires(offset >= 0);
+      Contract.Ensures(offset >= 0);
+
       int savedOffset = offset;
       var nestedNamespaceDefinition = GetNamespace(nameTable, namespaceDefinition, typeName, ref offset);
       if (nestedNamespaceDefinition != null) {
@@ -162,10 +190,17 @@ namespace Microsoft.Cci {
     }
 
     private static INestedUnitNamespace/*?*/ GetNamespace(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, ref int offset) {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(namespaceDefinition != null);
+      Contract.Requires(typeName != null);
+      Contract.Requires(offset >= 0);
+      Contract.Ensures(offset >= 0);
+
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
       if (dotPos < 0) return null;
+      Contract.Assume(dotPos >= offset); //if a dot has been found, it must be at offset or later
       IName neName = nameTable.GetNameFor(typeName.Substring(offset, dotPos-offset));
       foreach (var member in namespaceDefinition.GetMembersNamed(neName, false)) {
         var nestedNamespace = member as INestedUnitNamespace;
@@ -177,9 +212,17 @@ namespace Microsoft.Cci {
     }
 
     private static INamespaceTypeDefinition/*?*/ GetNamespaceType(INameTable nameTable, INamespaceDefinition namespaceDefinition, string typeName, int genericParameterCount, ref int offset) {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(namespaceDefinition != null);
+      Contract.Requires(typeName != null);
+      Contract.Requires(genericParameterCount >= 0);
+      Contract.Requires(offset >= 0);
+      Contract.Ensures(offset >= 0);
+
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
+      Contract.Assume(dotPos < 0 || (dotPos >= offset && dotPos < len));
       if (dotPos < 0) dotPos = len;
       IName tName = nameTable.GetNameFor(typeName.Substring(offset, dotPos-offset));
       foreach (var member in namespaceDefinition.GetMembersNamed(tName, false)) {
@@ -193,9 +236,17 @@ namespace Microsoft.Cci {
     }
 
     private static INestedTypeDefinition/*?*/ GetNestedType(INameTable nameTable, ITypeDefinition typeDefinition, string typeName, int genericParameterCount, ref int offset) {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(typeDefinition != null);
+      Contract.Requires(typeName != null);
+      Contract.Requires(genericParameterCount >= 0);
+      Contract.Requires(offset >= 0);
+      Contract.Ensures(offset >= 0);
+
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
+      Contract.Assume(dotPos < 0 || (dotPos >= offset && dotPos < len));
       if (dotPos < 0) dotPos = len;
       IName tName = nameTable.GetNameFor(typeName.Substring(offset, dotPos-offset));
       foreach (var member in typeDefinition.GetMembersNamed(tName, false)) {
@@ -213,6 +264,9 @@ namespace Microsoft.Cci {
     /// Searches for the resource with given name in the given assembly.
     /// </summary>
     public static IResourceReference/*?*/ FindResourceNamed(IAssembly assembly, IName resourceName) {
+      Contract.Requires(assembly != null);
+      Contract.Requires(resourceName != null);
+
       foreach (IResourceReference resourceRef in assembly.Resources) {
         if (resourceRef.Name.UniqueKey == resourceName.UniqueKey)
           return resourceRef;
@@ -257,7 +311,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two unit references are to be considered equivalent.
     /// </summary>
-    public static bool UnitsAreEquivalent(IUnitReference unit1, IUnitReference unit2) {
+    public static bool UnitsAreEquivalent(IUnitReference/*?*/ unit1, IUnitReference/*?*/ unit2) {
       if (unit1 == null || unit2 == null)
         return false;
       if (unit1 == unit2)
@@ -272,7 +326,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two unit references are to be considered equivalent as containers.
     /// </summary>
-    public static bool UnitsAreContainmentEquivalent(IUnitReference unit1, IUnitReference unit2) {
+    public static bool UnitsAreContainmentEquivalent(IUnitReference/*?*/ unit1, IUnitReference/*?*/ unit2) {
       if (unit1 == null || unit2 == null)
         return false;
       if (unit1 == unit2)

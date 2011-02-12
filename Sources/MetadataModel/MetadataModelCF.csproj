@@ -47,6 +47,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
+    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
+      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
+      <Name>Microsoft.Contracts</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

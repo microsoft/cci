@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -265,7 +265,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
     internal unsafe struct MemoryBlockEnumerator : IEnumerator<byte> {
       IBinaryDocumentMemoryBlock BinaryDocumentMemoryBlock;
-      byte *pointer;
+      byte* pointer;
       int length;
       int currentOffset;
       internal MemoryBlockEnumerator(

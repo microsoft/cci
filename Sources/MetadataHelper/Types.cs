@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 #pragma warning disable 1591
@@ -29,7 +30,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.PlatformType.SystemArray); }
     }
 
-    //^ [Pure]
+    [Pure]
     public override bool Contains(ITypeDefinitionMember member) {
       foreach (ITypeDefinitionMember mem in this.Members)
         if (mem == member) return true;
@@ -48,15 +49,18 @@ namespace Microsoft.Cci {
     }
     readonly ITypeReference elementType;
 
-    //  Issue: Array type does not have to give these as they are indirectly inherited from System.Array?!?
     protected virtual IEnumerable<ITypeReference> GetInterfaceList() {
+      var coreAssembly = TypeHelper.GetDefiningUnitReference(this.PlatformType.SystemArray) as IAssemblyReference;
+      var version = coreAssembly == null ? new Version(4, 0) : coreAssembly.AssemblyIdentity.Version;
       List<ITypeReference> interfaces = new List<ITypeReference>(6);
       interfaces.Add(this.PlatformType.SystemICloneable);
       interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
       interfaces.Add(this.PlatformType.SystemCollectionsICollection);
       interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      if (version.Major >= 2) {
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      }
       return interfaces.AsReadOnly();
     }
 
@@ -168,17 +172,17 @@ namespace Microsoft.Cci {
 
     #region IScope<ITypeDefinitionMember> Members
 
-    //^ [Pure]
+    [Pure]
     IEnumerable<ITypeDefinitionMember> IScope<ITypeDefinitionMember>.GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
+    [Pure]
     IEnumerable<ITypeDefinitionMember> IScope<ITypeDefinitionMember>.GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
+    [Pure]
     IEnumerable<ITypeDefinitionMember> IScope<ITypeDefinitionMember>.GetMembersNamed(IName name, bool ignoreCase) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
@@ -351,6 +355,7 @@ namespace Microsoft.Cci {
       //^ requires genericType.ResolvedType.IsGeneric;
       //^ ensures !result.IsGeneric;
     {
+      Contract.Ensures(Contract.Result<GenericTypeInstance>() != null);
       return new GenericTypeInstance(genericType, genericArguments, internFactory);
     }
 
@@ -894,6 +899,7 @@ namespace Microsoft.Cci {
     }
 
     public static ManagedPointerType GetManagedPointerType(ITypeReference targetType, IInternFactory internFactory) {
+      Contract.Ensures(Contract.Result<ManagedPointerType>() != null);
       ManagedPointerType result = new ManagedPointerType(targetType, internFactory);
       return result;
     }
@@ -977,10 +983,12 @@ namespace Microsoft.Cci {
     }
 
     public static Matrix GetMatrix(ITypeReference elementType, uint rank, IInternFactory internFactory) {
+      Contract.Ensures(Contract.Result<Matrix>() != null);
       return new Matrix(elementType, rank, null, null, internFactory);
     }
 
     public static Matrix GetMatrix(ITypeReference elementType, uint rank, IEnumerable<int>/*?*/ lowerBounds, IEnumerable<ulong>/*?*/ sizes, IInternFactory internFactory) {
+      Contract.Ensures(Contract.Result<Matrix>() != null);
       return new Matrix(elementType, rank, lowerBounds, sizes, internFactory);
     }
 
@@ -1082,6 +1090,7 @@ namespace Microsoft.Cci {
     }
 
     public static PointerType GetPointerType(ITypeReference targetType, IInternFactory internFactory) {
+      Contract.Ensures(Contract.Result<PointerType>() != null);
       return new PointerType(targetType, internFactory);
     }
 
@@ -1495,7 +1504,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Return true if the given member instance is a member of this scope.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public bool Contains(MemberType/*!*/ member)
       // ^ ensures result == exists{MemberType mem in this.Members; mem == member};
     {
@@ -1507,7 +1516,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the list of members with the given name that also satisfy the given predicate.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public IEnumerable<MemberType> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<MemberType, bool> predicate) {
       foreach (MemberType member in this.GetMembersNamed(name, ignoreCase))
         if (predicate(member)) yield return member;
@@ -1516,7 +1525,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the list of members that satisfy the given predicate.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public IEnumerable<MemberType> GetMatchingMembers(Function<MemberType, bool> predicate)
       // ^ ensures forall{MemberType member in result; member.Name.UniqueKey == name.UniqueKey && predicate(member) && this.Contains(member)};
       // ^ ensures forall{MemberType member in this.Members; member.Name.UniqueKey == name.UniqueKey && predicate(member) ==> 
@@ -1531,7 +1540,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="name">The name of the members to retrieve.</param>
     /// <param name="ignoreCase">True if the case of the name must be ignored when retrieving the members.</param>
-    //^ [Pure]
+    [Pure]
     public IEnumerable<MemberType> GetMembersNamed(IName name, bool ignoreCase)
       // ^ ensures forall{MemberType member in result; member.Name.UniqueKey == name.UniqueKey && this.Contains(member)};
       // ^ ensures forall{MemberType member in this.Members; member.Name.UniqueKey == name.UniqueKey ==> 
@@ -2006,17 +2015,16 @@ namespace Microsoft.Cci {
 
     #region IScope<ITypeDefinitionMember> Members
 
-    //^ [Pure]
     /// <summary>
     /// Return true if the given member instance is a member of this scope.
     /// </summary>
     /// <param name="member"></param>
     /// <returns></returns>
+    [Pure]
     public bool Contains(ITypeDefinitionMember member) {
       return false;
     }
 
-    //^ [Pure]
     /// <summary>
     /// Returns the list of members with the given name that also satisfy the given predicate.
     /// </summary>
@@ -2024,27 +2032,28 @@ namespace Microsoft.Cci {
     /// <param name="ignoreCase"></param>
     /// <param name="predicate"></param>
     /// <returns></returns>
+    [Pure]
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
     /// <summary>
     /// Returns the list of members that satisfy the given predicate.
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
+    [Pure]
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
     /// <summary>
     /// Returns the list of members with the given name.
     /// </summary>
     /// <param name="name"></param>
     /// <param name="ignoreCase"></param>
     /// <returns></returns>
+    [Pure]
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
@@ -3066,7 +3075,7 @@ namespace Microsoft.Cci {
 
     #region IScope<ITypeDefinitionMember> Members
 
-    //^ [Pure]
+    [Pure]
     public virtual bool Contains(ITypeDefinitionMember member) {
       return false;
     }
@@ -3083,17 +3092,17 @@ namespace Microsoft.Cci {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
+    [Pure]
     IEnumerable<ITypeDefinitionMember> IScope<ITypeDefinitionMember>.GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
+    [Pure]
     IEnumerable<ITypeDefinitionMember> IScope<ITypeDefinitionMember>.GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
 
-    //^ [Pure]
+    [Pure]
     IEnumerable<ITypeDefinitionMember> IScope<ITypeDefinitionMember>.GetMembersNamed(IName name, bool ignoreCase) {
       return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
     }
@@ -3296,17 +3305,23 @@ namespace Microsoft.Cci {
     }
 
     protected override IEnumerable<ITypeReference> GetInterfaceList() {
+      var coreAssembly = TypeHelper.GetDefiningUnitReference(this.PlatformType.SystemArray) as IAssemblyReference;
+      var version = coreAssembly == null ? new Version(4, 0) : coreAssembly.AssemblyIdentity.Version;
       List<ITypeReference> interfaces = new List<ITypeReference>(9);
       interfaces.Add(this.PlatformType.SystemICloneable);
       interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
       interfaces.Add(this.PlatformType.SystemCollectionsICollection);
       interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
-      var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
-      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));
-      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, this.InternFactory));
-      interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, this.InternFactory));
+      if (version.Major >= 4) {
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      }
+      if (version.Major >= 2) {
+        var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
+        interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));
+        interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, this.InternFactory));
+        interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, this.InternFactory));
+      }
       return interfaces.AsReadOnly();
     }
 
@@ -3329,6 +3344,8 @@ namespace Microsoft.Cci {
     }
 
     public static Vector GetVector(ITypeReference elementType, IInternFactory internFactory) {
+      Contract.Ensures(Contract.Result<Vector>() != null);
+
       return new Vector(elementType, internFactory);
     }
 

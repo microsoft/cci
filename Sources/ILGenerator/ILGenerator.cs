@@ -92,11 +92,11 @@ namespace Microsoft.Cci {
               label.Offset = operation.offset;
               continue;
             }
+            // REVIEW: Do we really want to do this? Should it be an optimization that is made upstream?
             if (label.labelsReturnInstruction && (operation.OperationCode == OperationCode.Br || operation.OperationCode == OperationCode.Br_S)) {
               numberOfAdjustments++;
               adjustment -= (operation.OperationCode == OperationCode.Br ? 4 : 1);
-              operation.operationCode = OperationCode.Ret;
-              operation.value = null;
+              this.operations[i] = new Operation(OperationCode.Ret, operation.offset, label.locationOfReturnInstruction, null);
               continue;
             }
             //For backward branches, this test will compare the new offset of the label with the old offset of the current
@@ -104,7 +104,7 @@ namespace Microsoft.Cci {
             bool isForwardBranch = label.Offset >= oldOffset;
             // Short offsets are calculated from the start of the instruction *after* the current instruction, which takes up 2 bytes
             // (1 for the opcode and 1 for the signed byte).
-            bool shortOffsetOk = isForwardBranch ? label.Offset-oldOffset <= 129 : oldOffset-label.Offset <= 126;
+            bool shortOffsetOk = isForwardBranch ? label.Offset-oldOffset <= 129 : newOffset-label.Offset <= 126;
             OperationCode oldOpCode = operation.OperationCode;
             if (shortOffsetOk) {
               operation.operationCode = ShortVersionOf(operation.OperationCode);
@@ -240,6 +240,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="opcode">The Intermediate Language (IL) instruction to be put onto the stream.</param>
     public void Emit(OperationCode opcode) {
+      var loc = this.GetCurrentSequencePoint();
       if (opcode == OperationCode.Ret) {
         int i = this.operations.Count;
         while (--i >= 0) {
@@ -247,9 +248,10 @@ namespace Microsoft.Cci {
           if (previousOp.OperationCode != (OperationCode)int.MaxValue) break;
           ILGeneratorLabel labelOfBranch = (ILGeneratorLabel)previousOp.value;
           labelOfBranch.labelsReturnInstruction = true;
+          labelOfBranch.locationOfReturnInstruction = loc;
         }
       }
-      this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), null));
+      this.operations.Add(new Operation(opcode, this.offset, loc, null));
       this.offset += SizeOfOperationCode(opcode);
     }
 
@@ -708,6 +710,10 @@ namespace Microsoft.Cci {
     internal ILGeneratorLabel/*?*/ alias;
     internal bool mayAlias;
     internal bool labelsReturnInstruction;
+    /// <summary>
+    /// Non-null only when labelsReturnInstruction is true.
+    /// </summary>
+    internal ILocation/*?*/ locationOfReturnInstruction;
   }
 
   /// <summary>

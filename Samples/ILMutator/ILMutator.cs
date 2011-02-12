@@ -26,12 +26,12 @@ namespace ILMutator {
       }
 
       using (var host = new PeReader.DefaultHost()) {
-
         IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
         if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
           Console.WriteLine(args[0] + " is not a PE file containing a CLR assembly, or an error occurred when loading it.");
           return 1;
         }
+        module = MetadataCopier.DeepCopy(host, module);
 
         PdbReader/*?*/ pdbReader = null;
         string pdbFile = Path.ChangeExtension(module.Location, "pdb");
@@ -60,8 +60,8 @@ namespace ILMutator {
             PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
           }
         }
+        return 0; // success
       }
-      return 0; // success
     }
   }
 
@@ -72,7 +72,7 @@ namespace ILMutator {
   /// This is meant to distinguish programmer-defined locals from
   /// those introduced by the compiler.
   /// </summary>
-  public class ILMutator : MetadataMutator {
+  public class ILMutator : MutatingVisitor {
 
     PdbReader/*?*/ pdbReader = null;
     IMethodReference consoleDotWriteLine;
@@ -101,7 +101,7 @@ namespace ILMutator {
     }
 
     List<ILocalDefinition> currentLocals;
-    public override MethodBody Visit(MethodBody methodBody) {
+    public override MethodBody Mutate(MethodBody methodBody) {
       IMethodDefinition currentMethod = this.GetCurrentMethod();
       methodBody.MethodDefinition = currentMethod;
       this.currentLocals = new List<ILocalDefinition>(methodBody.LocalVariables);

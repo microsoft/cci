@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -230,36 +231,52 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a function pointer type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class FunctionPointerTypeReference : TypeReference, IFunctionPointerTypeReference, ICopyFrom<IFunctionPointerTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a function pointer type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public FunctionPointerTypeReference() {
       this.callingConvention = (CallingConvention)0;
-      this.extraArgumentTypes = new List<IParameterTypeInformation>();
-      this.parameters = new List<IParameterTypeInformation>();
-      this.returnValueCustomModifiers = new List<ICustomModifier>();
-      this.returnValueIsByRef = false;
       this.type = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.type != null);
+      Contract.Invariant(this.resolvedFunctionPointer == null || this.IsFrozen);
+      //Contract.Invariant(this.resolvedFunctionPointer == null || this.resolvedFunctionPointer.InternedKey == this.InternedKey);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="functionPointerTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="functionPointerTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IFunctionPointerTypeReference functionPointerTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(functionPointerTypeReference, internFactory);
       this.callingConvention = functionPointerTypeReference.CallingConvention;
-      this.extraArgumentTypes = new List<IParameterTypeInformation>(functionPointerTypeReference.ExtraArgumentTypes);
-      this.parameters = new List<IParameterTypeInformation>(functionPointerTypeReference.Parameters);
+      if (IteratorHelper.EnumerableIsNotEmpty(functionPointerTypeReference.ExtraArgumentTypes))
+        this.extraArgumentTypes = new List<IParameterTypeInformation>(functionPointerTypeReference.ExtraArgumentTypes);
+      else
+        this.extraArgumentTypes = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(functionPointerTypeReference.Parameters))
+        this.parameters = new List<IParameterTypeInformation>(functionPointerTypeReference.Parameters);
+      else
+        this.parameters = null;
       if (functionPointerTypeReference.ReturnValueIsModified)
         this.returnValueCustomModifiers = new List<ICustomModifier>(functionPointerTypeReference.ReturnValueCustomModifiers);
       else
-        this.returnValueCustomModifiers = new List<ICustomModifier>(0);
+        this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = functionPointerTypeReference.ReturnValueIsByRef;
       this.type = functionPointerTypeReference.Type;
     }
@@ -270,59 +287,87 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.callingConvention; }
-      set { this.callingConvention = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.callingConvention = value;
+      }
     }
     CallingConvention callingConvention;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IFunctionPointerTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
     /// <summary>
-    /// The types and modifiers of extra arguments that the caller will pass to the methods that are pointed to by this pointer.
+    /// The types and modifiers of extra arguments that the caller will pass to the methods that are pointed to by this pointer. May be null.
     /// </summary>
-    /// <value></value>
-    public List<IParameterTypeInformation> ExtraArgumentTypes {
+    public List<IParameterTypeInformation>/*?*/ ExtraArgumentTypes {
       get { return this.extraArgumentTypes; }
-      set { this.extraArgumentTypes = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.extraArgumentTypes = value;
+      }
     }
-    List<IParameterTypeInformation> extraArgumentTypes;
+    List<IParameterTypeInformation>/*?*/ extraArgumentTypes;
 
     /// <summary>
-    /// The parameters forming part of this signature.
+    /// The parameters forming part of this signature. May be null.
     /// </summary>
-    /// <value></value>
-    public List<IParameterTypeInformation> Parameters {
+    public List<IParameterTypeInformation>/*?*/ Parameters {
       get { return this.parameters; }
-      set { this.parameters = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.parameters = value;
+      }
     }
-    List<IParameterTypeInformation> parameters;
+    List<IParameterTypeInformation>/*?*/ parameters;
 
     /// <summary>
     /// The type definition being referred to.
-    /// In case this type was alias, this is also the type of the aliased type
     /// </summary>
-    /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get {
-        return new FunctionPointerType(this.callingConvention, this.returnValueIsByRef, this.type, this.returnValueCustomModifiers.AsReadOnly(), this.parameters.AsReadOnly(),
-        this.extraArgumentTypes.AsReadOnly(), this.InternFactory);
-      }
+      get { return this.ResolvedFunctionPointer; }
     }
 
     /// <summary>
+    /// The function pointer type being referred to. Note that function pointers are structural types and that two separate instances with the
+    /// same structure will be equivalent and thus have the same value for InternedKey.
+    /// </summary>
+    public IFunctionPointer ResolvedFunctionPointer {
+      get {
+        Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+        //Contract.Ensures(Contract.Result<ITypeDefinition>() == Dummy.Type || this.IsAlias ||
+        //    Contract.Result<ITypeDefinition>().InternedKey == this.InternedKey);
+        Contract.Ensures(this.IsFrozen);
+
+        if (this.resolvedFunctionPointer == null) {
+          this.isFrozen = true;
+          var self = (IFunctionPointerTypeReference)this;
+          this.resolvedFunctionPointer = new FunctionPointerType(this.callingConvention, this.returnValueIsByRef, this.type, self.ReturnValueCustomModifiers, self.Parameters,
+          self.ExtraArgumentTypes, this.InternFactory);
+          //Contract.Assume(this.resolvedFunctionPointer.InternedKey == this.InternedKey);
+        }
+        return this.resolvedFunctionPointer;
+      }
+    }
+    IFunctionPointer/*?*/ resolvedFunctionPointer;
+
+    /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// May be null.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> ReturnValueCustomModifiers {
+    public List<ICustomModifier>/*?*/ ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
-      set { this.returnValueCustomModifiers = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.returnValueCustomModifiers = value;
+      }
     }
-    List<ICustomModifier> returnValueCustomModifiers;
+    List<ICustomModifier>/*?*/ returnValueCustomModifiers;
 
     /// <summary>
     /// True if the return value is passed by reference (using a managed pointer).
@@ -330,7 +375,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.returnValueIsByRef; }
-      set { this.returnValueIsByRef = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.returnValueIsByRef = value;
+      }
     }
     bool returnValueIsByRef;
 
@@ -339,7 +387,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
-      get { return this.returnValueCustomModifiers.Count > 0; }
+      get { return this.returnValueCustomModifiers != null && this.returnValueCustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -348,39 +396,57 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
-      set { this.type = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.type = value;
+      }
     }
     ITypeReference type;
 
     #region IFunctionPointerTypeReference Members
 
     IEnumerable<IParameterTypeInformation> IFunctionPointerTypeReference.ExtraArgumentTypes {
-      get { return this.extraArgumentTypes.AsReadOnly(); }
+      [ContractVerification(false)]
+      get {
+        if (this.extraArgumentTypes == null) return Dummy.FunctionPointer.ExtraArgumentTypes;
+        return this.extraArgumentTypes.AsReadOnly();
+      }
     }
 
     #endregion
 
     #region ISignature Members
 
-
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return this.parameters.AsReadOnly(); }
+      [ContractVerification(false)]
+      get {
+        if (this.parameters == null) return Dummy.FunctionPointer.Parameters;
+        return this.parameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return this.returnValueCustomModifiers.AsReadOnly(); }
+      [ContractVerification(false)]
+      get {
+        if (this.returnValueCustomModifiers == null) return Dummy.FunctionPointer.ReturnValueCustomModifiers;
+        return this.returnValueCustomModifiers.AsReadOnly();
+      }
     }
 
     #endregion
   }
 
   /// <summary>
-  /// 
+  /// A reference to a generic method parameter type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class GenericMethodParameterReference : TypeReference, IGenericMethodParameterReference, ICopyFrom<IGenericMethodParameterReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a generic method parameter type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericMethodParameterReference() {
       this.definingMethod = Dummy.MethodReference;
@@ -388,11 +454,23 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.index = 0;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.definingMethod != null);
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+    }
+
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="genericMethodParameterReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="genericMethodParameterReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IGenericMethodParameterReference genericMethodParameterReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(genericMethodParameterReference, internFactory);
       this.definingMethod = genericMethodParameterReference.DefiningMethod;
@@ -406,14 +484,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IMethodReference DefiningMethod {
       get { return this.definingMethod; }
-      set { this.definingMethod = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.definingMethod = value;
+      }
     }
     IMethodReference definingMethod;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericMethodParameterReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -424,7 +505,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.name = value;
+      }
     }
     IName name;
 
@@ -434,11 +519,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ushort Index {
       get { return this.index; }
-      set { this.index = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.index = value;
+      }
     }
     ushort index;
 
     private IGenericMethodParameter Resolve() {
+      Contract.Ensures(this.IsFrozen);
+      this.isFrozen = true;
       IMethodDefinition definingMethod = this.definingMethod.ResolvedMethod;
       if (definingMethod.IsGeneric && definingMethod.GenericParameterCount > this.index) {
         foreach (IGenericMethodParameter par in definingMethod.GenericParameters) {
@@ -450,6 +540,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IGenericMethodParameter IGenericMethodParameterReference.ResolvedType {
       get {
+        Contract.Ensures(this.IsFrozen);
         if (this.resolvedType == null)
           this.resolvedType = this.Resolve();
         return this.resolvedType;
@@ -488,10 +579,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this type be a shallow copy of the given type.
     /// </summary>
-    /// <param name="genericParameter"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="genericParameter">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IGenericParameter genericParameter, IInternFactory internFactory) {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(genericParameter, internFactory);
       this.constraints = new List<ITypeReference>(genericParameter.Constraints);
@@ -652,23 +747,38 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a generic type instance. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class GenericTypeInstanceReference : TypeReference, IGenericTypeInstanceReference, ICopyFrom<IGenericTypeInstanceReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a generic type instance. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericTypeInstanceReference() {
-      this.genericArguments = new List<ITypeReference>();
       this.genericType = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.genericType != null);
+      //Contract.Invariant(this.genericType.ResolvedType == Dummy.Type || this.genericType.ResolvedType.IsGeneric);
+      //Contract.Invariant(this.genericArguments == null || Contract.ForAll(genericArguments, x => x != null));
+      Contract.Invariant(this.IsFrozen || this.resolvedGenericTypeInstance == null);
+    }
+
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="genericTypeInstanceReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="genericTypeInstanceReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IGenericTypeInstanceReference genericTypeInstanceReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(genericTypeInstanceReference, internFactory);
       this.genericArguments = new List<ITypeReference>(genericTypeInstanceReference.GenericArguments);
@@ -676,9 +786,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericTypeInstanceReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -688,10 +797,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<ITypeReference> GenericArguments {
-      get { return this.genericArguments; }
-      set { this.genericArguments = value; }
+      get {
+        if (this.genericArguments == null)
+          this.genericArguments = new List<ITypeReference>();
+        return this.genericArguments;
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.genericArguments = value;
+      }
     }
-    List<ITypeReference> genericArguments;
+    List<ITypeReference>/*?*/ genericArguments;
 
     /// <summary>
     /// Returns the generic type of which this type is an instance.
@@ -699,21 +816,37 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference GenericType {
       get { return this.genericType; }
-      set { this.genericType = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        //Contract.Requires(value.ResolvedType == Dummy.Type || value.ResolvedType.IsGeneric);
+        this.genericType = value;
+      }
     }
     ITypeReference genericType;
 
-    IGenericTypeInstance ResolvedGenericTypeInstance {
+    /// <summary>
+    /// The generic type instance being referred to. Note that generic type instances are structural types and that two separate instances with the
+    /// same structure will be equivalent and thus have the same value for InternedKey.
+    /// </summary>
+    public IGenericTypeInstance ResolvedGenericTypeInstance {
       get {
-        return GenericTypeInstance.GetGenericTypeInstance(this.genericType, this.genericArguments.AsReadOnly(), this.InternFactory);
+        Contract.Ensures(Contract.Result<IGenericTypeInstance>() != null);
+        Contract.Ensures(this.IsFrozen);
+        if (this.resolvedGenericTypeInstance == null) {
+          this.isFrozen = true;
+          var self = (IGenericTypeInstanceReference)this;
+          this.resolvedGenericTypeInstance = GenericTypeInstance.GetGenericTypeInstance(this.genericType, self.GenericArguments, this.InternFactory);
+        }
+        return this.resolvedGenericTypeInstance;
       }
     }
+    IGenericTypeInstance/*?*/ resolvedGenericTypeInstance;
 
     /// <summary>
     /// The type definition being referred to.
     /// In case this type was alias, this is also the type of the aliased type
     /// </summary>
-    /// <value></value>
     public override ITypeDefinition ResolvedType {
       get { return this.ResolvedGenericTypeInstance; }
     }
@@ -721,7 +854,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IGenericTypeInstanceReference Members
 
     IEnumerable<ITypeReference> IGenericTypeInstanceReference.GenericArguments {
-      get { return this.genericArguments.AsReadOnly(); }
+      [ContractVerification(false)]
+      get {
+        if (this.genericArguments == null) return Dummy.GenericTypeInstance.GenericArguments;
+        return this.genericArguments.AsReadOnly();
+      }
     }
 
     #endregion
@@ -743,10 +880,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this type be a shallow copy of the given type.
     /// </summary>
-    /// <param name="genericTypeParameter"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="genericTypeParameter">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IGenericTypeParameter genericTypeParameter, IInternFactory internFactory) {
       ((ICopyFrom<IGenericParameter>)this).Copy(genericTypeParameter, internFactory);
       this.definingType = genericTypeParameter.DefiningType;
@@ -763,9 +904,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     ITypeDefinition definingType;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericTypeParameter).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -784,12 +924,15 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a type parameter of a generic type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class GenericTypeParameterReference : TypeReference, IGenericTypeParameterReference, ICopyFrom<IGenericTypeParameterReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a type parameter of a generic type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericTypeParameterReference() {
       this.definingType = Dummy.TypeReference;
@@ -797,11 +940,23 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.index = 0;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.definingType != null);
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+    }
+
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="genericTypeParameterReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="genericTypeParameterReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IGenericTypeParameterReference genericTypeParameterReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(genericTypeParameterReference, internFactory);
       this.definingType = genericTypeParameterReference.DefiningType;
@@ -815,14 +970,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference DefiningType {
       get { return this.definingType; }
-      set { this.definingType = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.definingType = value;
+      }
     }
     ITypeReference definingType;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericTypeParameterReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -833,7 +991,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.name = value;
+      }
     }
     IName name;
 
@@ -843,11 +1005,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ushort Index {
       get { return this.index; }
-      set { this.index = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.index = value;
+      }
     }
     ushort index;
 
     private IGenericTypeParameter Resolve() {
+      Contract.Ensures(this.IsFrozen);
+      Contract.Ensures(Contract.Result<IGenericTypeParameter>() != null);
+
+      this.isFrozen = true;
       ITypeDefinition definingType = this.definingType.ResolvedType;
       if (definingType.IsGeneric && definingType.GenericParameterCount > this.index) {
         foreach (IGenericTypeParameter par in definingType.GenericParameters) {
@@ -857,8 +1026,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       return Dummy.GenericTypeParameter;
     }
 
+
     IGenericTypeParameter IGenericTypeParameterReference.ResolvedType {
       get {
+        Contract.Ensures(this.IsFrozen);
         if (this.resolvedType == null)
           this.resolvedType = this.Resolve();
         return this.resolvedType;
@@ -878,31 +1049,44 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a managed pointer type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class ManagedPointerTypeReference : TypeReference, IManagedPointerTypeReference, ICopyFrom<IManagedPointerTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a managed pointer type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public ManagedPointerTypeReference() {
       this.targetType = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.targetType != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+    }
+
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="managedPointerTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="managedPointerTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IManagedPointerTypeReference managedPointerTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(managedPointerTypeReference, internFactory);
       this.targetType = managedPointerTypeReference.TargetType;
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IManagedPointerTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -913,8 +1097,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value>The type of the resolved pointer.</value>
     IManagedPointerType ResolvedManagedPointerType {
       get {
-        if (this.resolvedType == null)
+        Contract.Ensures(Contract.Result<IManagedPointerType>() != null);
+        Contract.Ensures(this.IsFrozen);
+        if (this.resolvedType == null) {
+          this.isFrozen = true;
           this.resolvedType = ManagedPointerType.GetManagedPointerType(this.targetType, this.InternFactory);
+        }
         return this.resolvedType;
       }
     }
@@ -935,44 +1123,65 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference TargetType {
       get { return this.targetType; }
-      set { this.targetType = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.targetType = value;
+      }
     }
     ITypeReference targetType;
 
   }
 
   /// <summary>
-  /// 
+  /// A reference to a multi-dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class MatrixTypeReference : TypeReference, IArrayTypeReference, ICopyFrom<IArrayTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a multi-dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public MatrixTypeReference() {
       this.elementType = Dummy.TypeReference;
-      this.lowerBounds = new List<int>();
-      this.rank = 0;
-      this.sizes = new List<ulong>();
+      this.rank = 1;
+    }
+
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.elementType != null);
+      Contract.Invariant(this.rank > 0);
+      Contract.Invariant(this.resolvedArrayType == null || this.IsFrozen);
     }
 
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="matrixTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="matrixTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IArrayTypeReference matrixTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(matrixTypeReference, internFactory);
       this.elementType = matrixTypeReference.ElementType;
-      this.lowerBounds = new List<int>(matrixTypeReference.LowerBounds);
+      if (IteratorHelper.EnumerableIsNotEmpty(matrixTypeReference.LowerBounds))
+        this.lowerBounds = new List<int>(matrixTypeReference.LowerBounds);
+      else
+        this.lowerBounds = null;
       this.rank = matrixTypeReference.Rank;
-      this.sizes = new List<ulong>(matrixTypeReference.Sizes);
+      if (IteratorHelper.EnumerableIsNotEmpty(matrixTypeReference.Sizes))
+        this.sizes = new List<ulong>(matrixTypeReference.Sizes);
+      else
+        this.sizes = null;
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IArrayTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -982,8 +1191,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public ITypeReference ElementType {
-      get { return this.elementType; }
-      set { this.elementType = value; }
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        return this.elementType;
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.elementType = value;
+      }
     }
     ITypeReference elementType;
 
@@ -1000,11 +1216,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
     /// </summary>
     /// <value></value>
-    public List<int> LowerBounds {
+    public List<int>/*?*/ LowerBounds {
       get { return this.lowerBounds; }
-      set { this.lowerBounds = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.lowerBounds = value;
+      }
     }
-    List<int> lowerBounds;
+    List<int>/*?*/ lowerBounds;
 
     /// <summary>
     /// The number of array dimensions.
@@ -1012,7 +1231,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public uint Rank {
       get { return this.rank; }
-      set { this.rank = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value > 0);
+        this.rank = value;
+      }
     }
     uint rank;
 
@@ -1022,11 +1245,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// An unspecified upper bound means that instances of this type can have an arbitrary upper bound for that dimension.
     /// </summary>
     /// <value></value>
-    public List<ulong> Sizes {
+    public List<ulong>/*?*/ Sizes {
       get { return this.sizes; }
-      set { this.sizes = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.sizes = value;
+      }
     }
-    List<ulong> sizes;
+    List<ulong>/*?*/ sizes;
 
     /// <summary>
     /// Gets the type of the resolved array.
@@ -1034,9 +1260,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value>The type of the resolved array.</value>
     IArrayType ResolvedArrayType {
       get {
-        return Matrix.GetMatrix(this.ElementType, this.Rank, this.lowerBounds.AsReadOnly(), this.sizes.AsReadOnly(), this.InternFactory);
+        Contract.Ensures(Contract.Result<IArrayType>() != null);
+        Contract.Ensures(this.IsFrozen);
+        if (this.resolvedArrayType == null) {
+          this.isFrozen = true;
+          var self = (IArrayTypeReference)this;
+          this.resolvedArrayType = Matrix.GetMatrix(this.ElementType, this.Rank, self.LowerBounds, self.Sizes, this.InternFactory);
+        }
+        return this.resolvedArrayType;
       }
     }
+    IArrayType/*?*/ resolvedArrayType;
 
     /// <summary>
     /// The type definition being referred to.
@@ -1047,16 +1281,21 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.ResolvedArrayType; }
     }
 
-
     #region IArrayTypeReference Members
 
 
     IEnumerable<int> IArrayTypeReference.LowerBounds {
-      get { return this.lowerBounds.AsReadOnly(); }
+      get {
+        if (this.lowerBounds == null) return Dummy.ArrayType.LowerBounds;
+        return this.lowerBounds.AsReadOnly();
+      }
     }
 
     IEnumerable<ulong> IArrayTypeReference.Sizes {
-      get { return this.sizes.AsReadOnly(); }
+      get {
+        if (this.sizes == null) return Dummy.ArrayType.Sizes;
+        return this.sizes.AsReadOnly();
+      }
     }
 
     #endregion
@@ -1078,10 +1317,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this implementation be a shallow copy of the given implementation.
     /// </summary>
-    /// <param name="methodImplementation"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="methodImplementation">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IMethodImplementation methodImplementation, IInternFactory internFactory) {
       this.containingType = methodImplementation.ContainingType;
       this.implementedMethod = methodImplementation.ImplementedMethod;
@@ -1144,10 +1387,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
 
     /// <summary>
-    /// 
+    /// Makes this alias be a shallow copy of the given alias.
     /// </summary>
-    /// <param name="namespaceAliasForType"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="namespaceAliasForType">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INamespaceAliasForType namespaceAliasForType, IInternFactory internFactory) {
       ((ICopyFrom<IAliasForType>)this).Copy(namespaceAliasForType, internFactory);
       this.containingNamespace = namespaceAliasForType.ContainingNamespace;
@@ -1166,9 +1413,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     INamespaceDefinition containingNamespace;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(INamespaceAliasForType).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1217,10 +1463,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this type be a shallow copy of the given type.
     /// </summary>
-    /// <param name="namespaceTypeDefinition"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="namespaceTypeDefinition">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INamespaceTypeDefinition namespaceTypeDefinition, IInternFactory internFactory) {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(namespaceTypeDefinition, internFactory);
       this.containingUnitNamespace = namespaceTypeDefinition.ContainingUnitNamespace;
@@ -1238,9 +1488,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     IUnitNamespace containingUnitNamespace;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(INamespaceTypeDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1298,12 +1547,15 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a namespace type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class NamespaceTypeReference : TypeReference, INamespaceTypeReference, ICopyFrom<INamespaceTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a namespace type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public NamespaceTypeReference() {
       this.containingUnitNamespace = Dummy.RootUnitNamespace;
@@ -1312,11 +1564,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.name = Dummy.Name;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.containingUnitNamespace != null);
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="namespaceTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="namespaceTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INamespaceTypeReference namespaceTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(namespaceTypeReference, internFactory);
       this.containingUnitNamespace = namespaceTypeReference.ContainingUnitNamespace;
@@ -1331,14 +1594,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IUnitNamespaceReference ContainingUnitNamespace {
       get { return this.containingUnitNamespace; }
-      set { this.containingUnitNamespace = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.containingUnitNamespace = value;
+      }
     }
     IUnitNamespaceReference containingUnitNamespace;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(INamespaceTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1349,11 +1615,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ushort GenericParameterCount {
       get { return this.genericParameterCount; }
-      set { this.genericParameterCount = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.genericParameterCount = value;
+      }
     }
     ushort genericParameterCount;
 
     private INamespaceTypeDefinition Resolve() {
+      Contract.Ensures(this.IsFrozen);
+      this.isFrozen = true;
       foreach (INamespaceMember member in this.containingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
         INamespaceTypeDefinition/*?*/ nsType = member as INamespaceTypeDefinition;
         if (nsType != null && nsType.GenericParameterCount == this.genericParameterCount) return nsType;
@@ -1365,9 +1636,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The type definition being referred to.
     /// In case this type was alias, this is also the type of the aliased type
     /// </summary>
-    /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get { return ((INamespaceTypeReference)this).ResolvedType; }
+      get {
+        if (this.resolvedType == null)
+          this.resolvedType = this.Resolve();
+        return this.resolvedType;
+      }
     }
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
@@ -1399,7 +1673,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.name = value;
+      }
     }
     IName name;
 
@@ -1420,10 +1698,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this alias be a shallow copy of the given alias.
     /// </summary>
-    /// <param name="nestedAliasForType"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="nestedAliasForType">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INestedAliasForType nestedAliasForType, IInternFactory internFactory) {
       ((ICopyFrom<IAliasForType>)this).Copy(nestedAliasForType, internFactory);
       this.containingAlias = nestedAliasForType.ContainingAlias;
@@ -1442,9 +1724,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     IAliasForType containingAlias;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(INestedAliasForType).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1493,10 +1774,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this type be a shallow copy of the given type.
     /// </summary>
-    /// <param name="nestedTypeDefinition"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="nestedTypeDefinition">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INestedTypeDefinition nestedTypeDefinition, IInternFactory internFactory) {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(nestedTypeDefinition, internFactory);
       this.containingTypeDefinition = nestedTypeDefinition.ContainingTypeDefinition;
@@ -1526,9 +1811,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(INestedTypeDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1579,12 +1863,15 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a nested type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public class NestedTypeReference : TypeReference, INestedTypeReference, ICopyFrom<INestedTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a nested type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public NestedTypeReference() {
       this.containingType = Dummy.TypeReference;
@@ -1593,11 +1880,23 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.name = Dummy.Name;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.containingType != null);
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+    }
+
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="nestedTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="nestedTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INestedTypeReference nestedTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(nestedTypeReference, internFactory);
       this.containingType = nestedTypeReference.ContainingType;
@@ -1612,14 +1911,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference ContainingType {
       get { return this.containingType; }
-      set { this.containingType = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.containingType = value;
+      }
     }
     ITypeReference containingType;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(INestedTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1630,7 +1932,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ushort GenericParameterCount {
       get { return this.genericParameterCount; }
-      set { this.genericParameterCount = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.genericParameterCount = value;
+      }
     }
     ushort genericParameterCount;
 
@@ -1640,7 +1945,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool MangleName {
       get { return this.mangleName; }
-      set { this.mangleName = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.mangleName = value;
+      }
     }
     bool mangleName;
 
@@ -1650,11 +1958,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.name = value;
+      }
     }
     IName name;
 
     private INestedTypeDefinition Resolve() {
+      Contract.Ensures(Contract.Result<INestedTypeDefinition>() != null);
+      Contract.Ensures(this.IsFrozen);
+      this.isFrozen = true;
       foreach (ITypeDefinitionMember member in this.containingType.ResolvedType.GetMembersNamed(this.name, false)) {
         INestedTypeDefinition/*?*/ neType = member as INestedTypeDefinition;
         if (neType != null && neType.GenericParameterCount == this.genericParameterCount) return neType;
@@ -1668,7 +1983,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get { return ((INestedTypeReference)this).ResolvedType; }
+      [ContractVerification(false)]
+      get {
+        if (this.resolvedType == null)
+          this.resolvedType = this.Resolve();
+        Contract.Assume(!(this is ITypeDefinition));
+        return this.resolvedType;
+      }
     }
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
@@ -1676,9 +1997,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     INestedTypeDefinition INestedTypeReference.ResolvedType {
+      [ContractVerification(false)]
       get {
         if (this.resolvedType == null)
           this.resolvedType = this.Resolve();
+        Contract.Assume(!(this is ITypeDefinition));
         return this.resolvedType;
       }
     }
@@ -1699,31 +2022,43 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a pointer to unmanaged type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class PointerTypeReference : TypeReference, IPointerTypeReference, ICopyFrom<IPointerTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a pointer to unmanaged type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public PointerTypeReference() {
       this.targetType = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.targetType != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="pointerTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="pointerTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IPointerTypeReference pointerTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(pointerTypeReference, internFactory);
       this.targetType = pointerTypeReference.TargetType;
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IPointerTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -1734,8 +2069,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value>The type of the resolved pointer.</value>
     IPointerType ResolvedPointerType {
       get {
-        if (this.resolvedType == null)
+        Contract.Ensures(Contract.Result<IPointerType>() != null);
+        if (this.resolvedType == null) {
+          this.isFrozen = true;
           this.resolvedType = PointerType.GetPointerType(this.targetType, this.InternFactory);
+        }
         return this.resolvedType;
       }
     }
@@ -1756,29 +2094,45 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference TargetType {
       get { return this.targetType; }
-      set { this.targetType = value; this.resolvedType = null; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.targetType = value;
+      }
     }
     ITypeReference targetType;
 
   }
 
   /// <summary>
-  /// 
+  /// A reference to a specialized nested type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class SpecializedNestedTypeReference : NestedTypeReference, ISpecializedNestedTypeReference, ICopyFrom<ISpecializedNestedTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a specialized nested type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public SpecializedNestedTypeReference() {
       this.unspecializedVersion = Dummy.NestedType;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.unspecializedVersion != null);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="specializedNestedTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="specializedNestedTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(ISpecializedNestedTypeReference specializedNestedTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<INestedTypeReference>)this).Copy(specializedNestedTypeReference, internFactory);
       this.unspecializedVersion = specializedNestedTypeReference.UnspecializedVersion;
@@ -1792,7 +2146,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public INestedTypeReference UnspecializedVersion {
       get { return this.unspecializedVersion; }
-      set { this.unspecializedVersion = value; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.unspecializedVersion = value;
+      }
     }
     INestedTypeReference unspecializedVersion;
 
@@ -1834,10 +2192,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes this type be a shallow copy of the given type.
     /// </summary>
-    /// <param name="typeDefinition"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="typeDefinition">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(INamedTypeDefinition typeDefinition, IInternFactory internFactory) {
       this.alignment = typeDefinition.Alignment;
       this.attributes = new List<ICustomAttribute>(typeDefinition.Attributes);
@@ -2653,10 +3015,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Returns the unique interned key associated with the type. This takes unification/aliases/custom modifiers into account.
     /// </summary>
-    /// <value></value>
     public uint InternedKey {
-      get { return this.InternFactory.GetTypeReferenceInternedKey(this); }
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.InternFactory.GetTypeReferenceInternedKey(this);
+        return this.internedKey;
+      }
     }
+    uint internedKey;
 
     ITypeDefinition ITypeReference.ResolvedType {
       get { return this.ResolvedType; }
@@ -2678,23 +3044,36 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A modified reference to a type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class ModifiedTypeReference : TypeReference, IModifiedTypeReference, ICopyFrom<IModifiedTypeReference> {
 
     /// <summary>
-    /// 
+    /// A modified reference to a type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public ModifiedTypeReference() {
-      this.customModifiers = new List<ICustomModifier>();
+      this.customModifiers = new List<ICustomModifier>(1);
       this.unmodifiedType = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.customModifiers != null);
+      Contract.Invariant(this.unmodifiedType != null);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="modifiedTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="modifiedTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IModifiedTypeReference modifiedTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(modifiedTypeReference, internFactory);
       this.customModifiers = new List<ICustomModifier>(modifiedTypeReference.CustomModifiers);
@@ -2707,14 +3086,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ICustomModifier> CustomModifiers {
       get { return this.customModifiers; }
-      set { this.customModifiers = value; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.customModifiers = value;
+      }
     }
     List<ICustomModifier> customModifiers;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IModifiedTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2725,7 +3107,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get { return this.unmodifiedType.ResolvedType; }
+      get {
+        this.isFrozen = true;
+        return this.unmodifiedType.ResolvedType;
+      }
     }
 
     /// <summary>
@@ -2734,13 +3119,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference UnmodifiedType {
       get { return this.unmodifiedType; }
-      set { this.unmodifiedType = value; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.unmodifiedType = value;
+      }
     }
     ITypeReference unmodifiedType;
 
     #region IModifiedTypeReference Members
 
     IEnumerable<ICustomModifier> IModifiedTypeReference.CustomModifiers {
+      [ContractVerification(false)]
       get { return this.customModifiers.AsReadOnly(); }
     }
 
@@ -2749,16 +3139,20 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractClass(typeof(TypeReference.TypeReferenceAbstractMethodContracts))]
+  [ContractVerification(true)]
   public abstract class TypeReference : ITypeReference, ICopyFrom<ITypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     internal TypeReference() {
       this.aliasForType = Dummy.AliasForType;
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
       this.internFactory = Dummy.InternFactory;
       this.isEnum = false;
       this.isValueType = false;
@@ -2767,22 +3161,40 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.typeCode = PrimitiveTypeCode.Invalid;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.aliasForType != null);
+      Contract.Invariant(this.internFactory != null);
+      Contract.Invariant(this.platformType != null);
+      Contract.Invariant(this.internedKey == 0 || this.IsFrozen);
+      //Contract.Invariant(this.IsAlias || this.AliasForType.AliasedType.ResolvedType == this.ResolvedType);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="typeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="typeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(ITypeReference typeReference, IInternFactory internFactory) {
       this.aliasForType = typeReference.AliasForType;
       if (typeReference is ITypeDefinition)
-        this.attributes = new List<ICustomAttribute>(); //the attributes of a type definition are not the same as the attributes of a type reference
+        this.attributes = null; //the attributes of a type definition are not the same as the attributes of a type reference
       //so when a definition is being copied as a reference, it should get not attributes of its own.
-      else
+      else if (IteratorHelper.EnumerableIsNotEmpty(typeReference.Attributes))
         this.attributes = new List<ICustomAttribute>(typeReference.Attributes);
+      else
+        this.attributes = null;
       this.internFactory = internFactory;
       this.isEnum = typeReference.IsEnum;
       this.isValueType = typeReference.IsValueType;
-      this.locations = new List<ILocation>(typeReference.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeReference.Locations))
+        this.locations = new List<ILocation>(typeReference.Locations);
+      else
+        this.locations = null;
       this.platformType = typeReference.PlatformType;
       this.typeCode = typeReference.TypeCode;
       this.originalReference = typeReference;
@@ -2795,28 +3207,49 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public IAliasForType AliasForType {
-      get { return this.aliasForType; }
-      set { this.aliasForType = value; }
+      get {
+        return this.aliasForType;
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        //Contract.Requires(this.IsAlias || value.AliasedType.ResolvedType == this.ResolvedType);
+        this.aliasForType = value;
+      }
     }
     IAliasForType aliasForType;
 
     /// <summary>
-    /// A collection of metadata custom attributes that are associated with this definition.
+    /// A collection of metadata custom attributes that are associated with this definition. May be null.
     /// </summary>
-    /// <value></value>
-    public List<ICustomAttribute> Attributes {
-      get { return this.attributes; }
-      set { this.attributes = value; }
+    public List<ICustomAttribute>/*?*/ Attributes {
+      get {
+        return this.attributes;
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.attributes = value;
+      }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
     /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
-    /// <param name="visitor"></param>
+    /// <param name="visitor">
+    /// An instance of a class that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of
+    /// a subset of the nodes in the graph. Contains a specialized Visit routine for each standard type of object defined in this object model. 
+    /// </param>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    [ContractClassFor(typeof(TypeReference))]
+    abstract partial class TypeReferenceAbstractMethodContracts : TypeReference {
+      public override void Dispatch(IMetadataVisitor visitor) {
+        Contract.Requires(visitor != null);
+      }
+    }
 
     /// <summary>
     /// A collection of methods that associate unique integers with metadata model entities.
@@ -2824,8 +3257,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// references to the given metadata model objects.
     /// </summary>
     public IInternFactory InternFactory {
-      get { return this.internFactory; }
-      set { this.internFactory = value; }
+      get {
+        Contract.Ensures(Contract.Result<IInternFactory>() != null);
+        return this.internFactory;
+      }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.internFactory = value;
+      }
     }
     IInternFactory internFactory;
 
@@ -2834,15 +3274,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public uint InternedKey {
-      get { return this.internFactory.GetTypeReferenceInternedKey(this); }
+      get {
+        Contract.Ensures(this.IsFrozen);
+        if (this.internedKey == 0) {
+          this.isFrozen = true;
+          this.internedKey = this.InternFactory.GetTypeReferenceInternedKey(this);
+        }
+        return this.internedKey;
+      }
     }
+    uint internedKey;
 
     /// <summary>
     /// Indicates if this type reference resolved to an alias rather than a type
     /// </summary>
-    /// <value></value>
     public bool IsAlias {
-      get { return this.aliasForType != Dummy.AliasForType; }
+      get {
+        Contract.Assume(!(this is ITypeDefinition));
+        return this.aliasForType != Dummy.AliasForType;
+      }
     }
 
     /// <summary>
@@ -2851,9 +3301,31 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool IsEnum {
       get { return this.isEnum; }
-      set { this.isEnum = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.isEnum = value;
+      }
     }
     bool isEnum;
+
+    /// <summary>
+    /// True if the reference has been frozen and can no longer be modified. A reference becomes frozen
+    /// as soon as it is resolved or interned. An unfrozen reference can also explicitly be set to be frozen.
+    /// It is recommended that any code constructing a type reference freezes it immediately after construction is complete.
+    /// </summary>
+    public bool IsFrozen {
+      get { return this.isFrozen; }
+      set {
+        Contract.Requires(!this.IsFrozen && value);
+        this.isFrozen = value;
+      }
+    }
+    /// <summary>
+    /// True if the reference has been frozen and can no longer be modified. A reference becomes frozen
+    /// as soon as it is resolved or interned. An unfrozen reference can also explicitly be set to be frozen.
+    /// It is recommended that any code constructing a type reference freezes it immediately after construction is complete.
+    /// </summary>
+    protected bool isFrozen;
 
     /// <summary>
     /// True if the type is a value type.
@@ -2867,6 +3339,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         return this.isValueType;
       }
       set {
+        Contract.Requires(!this.IsFrozen);
         this.originalReference = null;
         this.isValueType = value;
       }
@@ -2875,22 +3348,37 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// The type definition being referred to.
-    /// In case this type was alias, this is also the type of the aliased type
+    /// In case this type was alias, this is also the type of the aliased type.
+    /// If the type reference cannot be resolved, the result is Dummy.Type.
     /// </summary>
-    /// <value></value>
     public abstract ITypeDefinition ResolvedType {
       get;
     }
 
+    partial class TypeReferenceAbstractMethodContracts : TypeReference {
+      public override ITypeDefinition ResolvedType {
+        get {
+          Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+          //Contract.Ensures(Contract.Result<ITypeDefinition>() == Dummy.Type || this.IsAlias ||
+          //  Contract.Result<ITypeDefinition>().InternedKey == this.InternedKey);
+          Contract.Ensures(this.IsFrozen);
+          throw new NotImplementedException();
+        }
+      }
+    }
+
     /// <summary>
-    /// A potentially empty collection of locations that correspond to this instance.
+    /// A potentially null, potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
-      set { this.locations = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.locations = value;
+      }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// A way to get to platform types such as System.Object.
@@ -2898,7 +3386,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IPlatformType PlatformType {
       get { return this.platformType; }
-      set { this.platformType = value; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(!this.IsFrozen);
+        this.platformType = value;
+      }
     }
     IPlatformType platformType;
 
@@ -2916,52 +3408,73 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Unless the value of TypeCode is PrimitiveTypeCode.NotPrimitive, the type corresponds to a "primitive" CLR type (such as System.Int32) and
     /// the type code identifies which of the primitive types it corresponds to.
     /// </summary>
-    /// <value></value>
     public virtual PrimitiveTypeCode TypeCode {
       get { return this.typeCode; }
-      set { this.typeCode = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.typeCode = value;
+      }
     }
     PrimitiveTypeCode typeCode;
 
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.attributes == null) return Dummy.TypeReference.Attributes;
+        return this.attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.locations == null) return Dummy.TypeReference.Locations;
+        return this.locations.AsReadOnly();
+      }
     }
 
     #endregion
   }
 
   /// <summary>
-  /// 
+  /// A reference to a zero based single dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+  /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class VectorTypeReference : TypeReference, IArrayTypeReference, ICopyFrom<IArrayTypeReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a zero based single dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public VectorTypeReference() {
       this.elementType = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.elementType != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+      //Contract.Invariant(this.resolvedType == null || this.resolvedType.InternedKey == this.InternedKey);
+    }
+
     /// <summary>
-    /// 
+    /// Makes this reference be a shallow copy of the given type reference.
     /// </summary>
-    /// <param name="vectorTypeReference"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="vectorTypeReference">The type referenced to shallow copy onto this reference.</param>
+    /// <param name="internFactory">
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.   
+    /// </param>
     public void Copy(IArrayTypeReference vectorTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(vectorTypeReference, internFactory);
       this.elementType = vectorTypeReference.ElementType;
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IArrayTypeReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -2969,17 +3482,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// The type of the elements of this array.
     /// </summary>
-    /// <value></value>
     public ITypeReference ElementType {
       get { return this.elementType; }
-      set { this.elementType = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.elementType = value;
+      }
     }
     ITypeReference elementType;
 
     /// <summary>
     /// This type of array is a single dimensional array with zero lower bound for index values.
     /// </summary>
-    /// <value></value>
     public bool IsVector {
       get { return true; }
     }
@@ -2988,17 +3503,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A possibly empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
     /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
     /// </summary>
-    /// <value></value>
     public IEnumerable<int> LowerBounds {
-      get { return IteratorHelper.GetEmptyEnumerable<int>(); }
+      get {
+        Contract.Ensures(IteratorHelper.EnumerableIsEmpty(Contract.Result<IEnumerable<int>>()));
+        Contract.Assume(IteratorHelper.EnumerableIsEmpty(Dummy.ArrayType.LowerBounds));
+        Contract.Assume(IteratorHelper.EnumerableCount(Dummy.ArrayType.LowerBounds) == 0);
+        return Dummy.ArrayType.LowerBounds;
+      }
     }
 
     /// <summary>
     /// The number of array dimensions.
     /// </summary>
-    /// <value></value>
     public uint Rank {
-      get { return 1; }
+      get {
+        Contract.Ensures(Contract.Result<uint>() == 1);
+        return 1;
+      }
     }
 
     /// <summary>
@@ -3008,7 +3529,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public IEnumerable<ulong> Sizes {
-      get { return IteratorHelper.GetEmptyEnumerable<ulong>(); }
+      get {
+        Contract.Ensures(IteratorHelper.EnumerableIsEmpty(Contract.Result<IEnumerable<ulong>>()));
+        Contract.Assume(IteratorHelper.EnumerableIsEmpty(Dummy.ArrayType.Sizes));
+        Contract.Assume(IteratorHelper.EnumerableCount(Dummy.ArrayType.Sizes) == 0);
+        return Dummy.ArrayType.Sizes;
+      }
     }
 
     /// <summary>
@@ -3016,17 +3542,27 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value>The type of the resolved.</value>
     public override ITypeDefinition ResolvedType {
-      get { return this.ResolvedArrayType; }
+      get {
+        return this.ResolvedArrayType;
+      }
     }
 
     /// <summary>
     /// Gets the type of the resolved array.
     /// </summary>
     /// <value>The type of the resolved array.</value>
-    IArrayType ResolvedArrayType {
+    public IArrayType ResolvedArrayType {
       get {
-        if (this.resolvedType == null)
+        Contract.Ensures(Contract.Result<IArrayType>() != null);
+        //Contract.Ensures(Contract.Result<IArrayType>() == Dummy.Type || this.IsAlias ||
+        //    Contract.Result<ITypeDefinition>().InternedKey == this.InternedKey);
+        Contract.Ensures(this.IsFrozen);
+
+        if (this.resolvedType == null) {
+          this.isFrozen = true;
           this.resolvedType = Vector.GetVector(this.ElementType, this.InternFactory);
+          //Contract.Assert(this.resolvedType.InternedKey == this.InternedKey);
+        }
         return this.resolvedType;
       }
     }

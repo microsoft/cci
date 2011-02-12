@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -95,11 +96,11 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
     }
 
-    //^ [Pure]
     /// <summary>
     /// The number of generic parameters of the method. Zero if the referenced method is not generic.
     /// </summary>
     /// <value></value>
+    [Pure]
     public ushort GenericParameterCount {
       get { return 0; }
     }
@@ -676,11 +677,11 @@ namespace Microsoft.Cci {
     readonly IMethodReference genericMethod;
     //^ invariant genericMethod.IsGeneric;
 
-    //^ [Pure]
     /// <summary>
     /// The number of generic parameters of the method. Zero if the referenced method is not generic.
     /// </summary>
     /// <value></value>
+    [Pure]
     public ushort GenericParameterCount {
       get { return 0; }
     }
@@ -1218,6 +1219,20 @@ namespace Microsoft.Cci {
     readonly IFieldDefinition partiallySpecializedVersion;
 
     /// <summary>
+    /// Custom modifiers associated with the referenced field.
+    /// </summary>
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return this.UnspecializedVersion.CustomModifiers; }
+    }
+
+    /// <summary>
+    /// The referenced field has custom modifiers.
+    /// </summary>
+    public bool IsModified {
+      get { return this.UnspecializedVersion.IsModified; }
+    }
+
+    /// <summary>
     /// Returns a key that is computed from the information in this reference and that distinguishes
     /// this.ResolvedField from all other fields obtained from the same metadata host.
     /// </summary>
@@ -1584,11 +1599,11 @@ namespace Microsoft.Cci {
 
 
 
-    //^ [Pure] 
     /// <summary>
     /// The number of generic parameters of the method. Zero if the referenced method is not generic.
     /// </summary>
     /// <value></value>
+    [Pure]
     public ushort GenericParameterCount {
       get { return this.UnspecializedVersion.GenericParameterCount; }
     }

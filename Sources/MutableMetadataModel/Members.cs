@@ -154,6 +154,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public FieldDefinition() {
       this.compileTimeValue = Dummy.Constant;
+      this.customModifiers = null;
       this.fieldMapping = Dummy.SectionBlock;
       this.internFactory = Dummy.InternFactory;
       this.marshallingInformation = Dummy.MarshallingInformation;
@@ -176,6 +177,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.bitLength = -1;
       this.compileTimeValue = fieldDefinition.CompileTimeValue;
       this.IsCompileTimeConstant = fieldDefinition.IsCompileTimeConstant;
+      if (fieldDefinition.IsModified)
+        this.customModifiers = new List<ICustomModifier>(fieldDefinition.CustomModifiers);
+      else
+        this.customModifiers = null;
       if (fieldDefinition.IsMapped)
         this.fieldMapping = fieldDefinition.FieldMapping;
       else
@@ -228,6 +233,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMetadataConstant compileTimeValue;
 
     /// <summary>
+    /// Custom modifiers associated with the referenced field.
+    /// </summary>
+    public List<ICustomModifier>/*?*/ CustomModifiers {
+      get { return this.customModifiers; }
+      set { this.customModifiers = value; }
+    }
+    List<ICustomModifier>/*?*/ customModifiers;
+
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="visitor"></param>
@@ -265,8 +279,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// this.ResolvedField from all other fields obtained from the same metadata host.
     /// </summary>
     public uint InternedKey {
-      get { return this.InternFactory.GetFieldInternedKey(this); }
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.InternFactory.GetFieldInternedKey(this);
+        return this.internedKey;
+      }
     }
+    uint internedKey;
 
     /// <summary>
     /// The field is aligned on a bit boundary and uses only the BitLength number of least significant bits of the representation of a Type value.
@@ -306,10 +325,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The field does not have to be serialized when its containing instance is serialized.
+    /// The referenced field has custom modifiers.
     /// </summary>
-    /// <value></value>
-    public bool IsNotSerialized {
+    public bool IsModified {
       get { return (this.flags & 0x20000000) != 0; }
       set {
         if (value)
@@ -320,10 +338,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// This field can only be read. Initialization takes place in a constructor.
+    /// The field does not have to be serialized when its containing instance is serialized.
     /// </summary>
     /// <value></value>
-    public bool IsReadOnly {
+    public bool IsNotSerialized {
       get { return (this.flags & 0x10000000) != 0; }
       set {
         if (value)
@@ -334,14 +352,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// True if the field gets special treatment from the runtime.
+    /// This field can only be read. Initialization takes place in a constructor.
     /// </summary>
     /// <value></value>
-    public bool IsRuntimeSpecial {
+    public bool IsReadOnly {
       get { return (this.flags & 0x08000000) != 0; }
-      set
-        //^ requires !value || this.IsSpecialName;
-      {
+      set {
         if (value)
           this.flags |= 0x08000000;
         else
@@ -350,12 +366,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// This field is special in some way, as specified by the name.
+    /// True if the field gets special treatment from the runtime.
     /// </summary>
     /// <value></value>
-    public bool IsSpecialName {
+    public bool IsRuntimeSpecial {
       get { return (this.flags & 0x04000000) != 0; }
-      set {
+      set
+        //^ requires !value || this.IsSpecialName;
+      {
         if (value)
           this.flags |= 0x04000000;
         else
@@ -364,16 +382,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// This field is static (shared by all instances of its declaring type).
+    /// This field is special in some way, as specified by the name.
     /// </summary>
     /// <value></value>
-    public bool IsStatic {
+    public bool IsSpecialName {
       get { return (this.flags & 0x02000000) != 0; }
       set {
         if (value)
           this.flags |= 0x02000000;
         else
           this.flags &= ~0x02000000;
+      }
+    }
+
+    /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    /// <value></value>
+    public bool IsStatic {
+      get { return (this.flags & 0x01000000) != 0; }
+      set {
+        if (value)
+          this.flags |= 0x01000000;
+        else
+          this.flags &= ~0x01000000;
       }
     }
 
@@ -419,6 +451,13 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IFieldReference Members
 
+    IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
+      get {
+        if (this.customModifiers == null) return Dummy.FieldReference.CustomModifiers;
+        return this.customModifiers.AsReadOnly();
+      }
+    }
+
     /// <summary>
     /// The Field being referred to.
     /// </summary>
@@ -447,10 +486,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public FieldReference() {
-      this.attributes = new List<ICustomAttribute>();
       this.containingType = Dummy.TypeReference;
       this.internFactory = Dummy.InternFactory;
-      this.locations = new List<ILocation>();
       this.name = Dummy.Name;
       this.type = Dummy.TypeReference;
     }
@@ -461,10 +498,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="fieldReference"></param>
     /// <param name="internFactory"></param>
     public void Copy(IFieldReference fieldReference, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(fieldReference.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(fieldReference.Attributes))
+        this.attributes = new List<ICustomAttribute>(fieldReference.Attributes);
+      else
+        this.attributes = null;
       this.containingType = fieldReference.ContainingType;
+      if (fieldReference.IsModified)
+        this.customModifiers = new List<ICustomModifier>(fieldReference.CustomModifiers);
+      else
+        this.customModifiers = null;
       this.internFactory = internFactory;
-      this.locations = new List<ILocation>(fieldReference.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(fieldReference.Locations))
+        this.locations = new List<ILocation>(fieldReference.Locations);
+      else
+        this.locations = null;
       this.name = fieldReference.Name;
       this.type = fieldReference.Type;
     }
@@ -473,11 +520,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// A reference to the containing type of the referenced type member.
@@ -490,7 +537,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     ITypeReference containingType;
 
     /// <summary>
-    /// 
+    /// Custom modifiers associated with the referenced field.
+    /// </summary>
+    public List<ICustomModifier>/*?*/ CustomModifiers {
+      get { return this.customModifiers; }
+      set { this.customModifiers = value; }
+    }
+    List<ICustomModifier>/*?*/ customModifiers;
+
+    /// <summary>
+    /// Calls visitor.Visit(IFieldReference).
     /// </summary>
     /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
@@ -513,8 +569,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// this.ResolvedField from all other fields obtained from the same metadata host.
     /// </summary>
     public uint InternedKey {
-      get { return this.InternFactory.GetFieldInternedKey(this); }
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.InternFactory.GetFieldInternedKey(this);
+        return this.internedKey;
+      }
     }
+    uint internedKey;
+
+    /// <summary>
+    /// The referenced field has custom modifiers.
+    /// </summary>
+    public bool IsModified {
+      get { return this.isModified; }
+      set { this.isModified = value; }
+    }
+    bool isModified;
 
     /// <summary>
     /// This field is static (shared by all instances of its declaring type).
@@ -530,11 +600,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The name of the entity.
@@ -582,15 +652,27 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     ITypeReference type;
 
+    IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
+      get {
+        if (this.customModifiers == null) return Dummy.FieldReference.CustomModifiers;
+        return this.CustomModifiers.AsReadOnly();
+      }
+    }
 
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.attributes == null) return Dummy.FieldReference.Attributes;
+        return this.attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.locations == null) return Dummy.FieldReference.Locations;
+        return this.locations.AsReadOnly();
+      }
     }
 
     #endregion
@@ -1329,8 +1411,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
     public uint InternedKey {
-      get { return this.InternFactory.GetMethodInternedKey(this); }
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.InternFactory.GetMethodInternedKey(this);
+        return this.internedKey;
+      }
     }
+    uint internedKey;
 
     /// <summary>
     /// True if the method does not provide an implementation.
@@ -1859,7 +1946,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.extraParameters = new List<IParameterTypeInformation>();
       this.genericParameterCount = 0;
       this.internFactory = Dummy.InternFactory;
-      this.isGeneric = false;
       this.locations = new List<ILocation>();
       this.name = Dummy.Name;
       this.parameters = new List<IParameterTypeInformation>();
@@ -1881,7 +1967,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.extraParameters = new List<IParameterTypeInformation>(methodReference.ExtraParameters);
       this.genericParameterCount = methodReference.GenericParameterCount;
       this.internFactory = internFactory;
-      this.isGeneric = methodReference.IsGeneric;
       this.locations = new List<ILocation>(methodReference.Locations);
       this.name = methodReference.Name;
       this.parameters = new List<IParameterTypeInformation>(methodReference.Parameters);
@@ -1978,18 +2063,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// this.ResolvedMethod from all other methods obtained from the same metadata host.
     /// </summary>
     public uint InternedKey {
-      get { return this.internFactory.GetMethodInternedKey(this); }
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.InternFactory.GetMethodInternedKey(this);
+        return this.internedKey;
+      }
     }
+    uint internedKey;
 
     /// <summary>
     /// True if the method has generic parameters;
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
-      get { return this.isGeneric; }
-      set { this.isGeneric = value; }
+      get { return this.genericParameterCount > 0; }
     }
-    bool isGeneric;
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.

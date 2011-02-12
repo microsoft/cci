@@ -5,22 +5,22 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</ProjectGuid>
+    <ProjectGuid>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Cci.Pdb</RootNamespace>
-    <AssemblyName>Microsoft.Cci.PdbReader</AssemblyName>
+    <RootNamespace>Microsoft.Contracts</RootNamespace>
+    <AssemblyName>Microsoft.Contracts</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>
-    </SccProjectName>
-    <SccLocalPath>
-    </SccLocalPath>
-    <SccAuxPath>
-    </SccAuxPath>
-    <SccProvider>
-    </SccProvider>
+    <StartupObject>
+    </StartupObject>
     <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>InterimKey.snk</AssemblyOriginatorKeyFile>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -45,10 +45,35 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>649</NoWarn>
-    <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
-    <DocumentationFile>bin\Debug\Microsoft.Cci.PdbReader.XML</DocumentationFile>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
+    <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
+    <CodeContractsRuntimeThrowOnFailure>False</CodeContractsRuntimeThrowOnFailure>
+    <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
+    <CodeContractsRunCodeAnalysis>False</CodeContractsRunCodeAnalysis>
+    <CodeContractsNonNullObligations>False</CodeContractsNonNullObligations>
+    <CodeContractsBoundsObligations>False</CodeContractsBoundsObligations>
+    <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
+    <CodeContractsPointerObligations>False</CodeContractsPointerObligations>
+    <CodeContractsRedundantAssumptions>False</CodeContractsRedundantAssumptions>
+    <CodeContractsRunInBackground>True</CodeContractsRunInBackground>
+    <CodeContractsShowSquigglies>False</CodeContractsShowSquigglies>
+    <CodeContractsUseBaseLine>False</CodeContractsUseBaseLine>
+    <CodeContractsEmitXMLDocs>False</CodeContractsEmitXMLDocs>
+    <CodeContractsCustomRewriterAssembly>
+    </CodeContractsCustomRewriterAssembly>
+    <CodeContractsCustomRewriterClass>
+    </CodeContractsCustomRewriterClass>
+    <CodeContractsLibPaths>
+    </CodeContractsLibPaths>
+    <CodeContractsPlatformPath>
+    </CodeContractsPlatformPath>
+    <CodeContractsExtraAnalysisOptions>
+    </CodeContractsExtraAnalysisOptions>
+    <CodeContractsBaseLineFile>
+    </CodeContractsBaseLineFile>
+    <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
+    <CodeContractsReferenceAssembly>DoNotBuild</CodeContractsReferenceAssembly>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -58,57 +83,32 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>649</NoWarn>
-    <DocumentationFile>bin\Release\Microsoft.Cci.PdbReader.XML</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'FastpathSim|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\FastpathSim\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\common\include\version.cs">
-      <Link>Build\version.cs</Link>
-    </Compile>
-    <Compile Include="BitAccess.cs" />
-    <Compile Include="BitSet.cs" />
-    <Compile Include="CvInfo.cs" />
-    <Compile Include="DataStream.cs" />
-    <Compile Include="DbiDbgHdr.cs" />
-    <Compile Include="DbiHeader.cs" />
-    <Compile Include="DbiModuleInfo.cs" />
-    <Compile Include="DbiSecCon.cs" />
-    <Compile Include="IntHashTable.cs" />
-    <Compile Include="MsfDirectory.cs" />
-    <Compile Include="PdbConstant.cs" />
-    <Compile Include="PdbDebugException.cs" />
-    <Compile Include="PdbException.cs" />
-    <Compile Include="PdbFile.cs" />
-    <Compile Include="PdbFileHeader.cs" />
-    <Compile Include="PdbFunction.cs" />
-    <Compile Include="PdbLine.cs" />
-    <Compile Include="PdbLines.cs" />
-    <Compile Include="PdbReader.cs" />
-    <Compile Include="PdbScope.cs" />
-    <Compile Include="PdbSlot.cs" />
-    <Compile Include="PdbSource.cs" />
+    <Compile Include="Contracts.cs" />
+    <Compile Include="ContractsEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SourceLocationProvider.cs" />
+    <Compile Include="RuntimeContracts.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MetadataModel\MetadataModel.csproj">
-      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
-      <Name>MetadataModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
-      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
-      <Name>Microsoft.Contracts</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PeReader\PeReader.csproj">
-      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
-      <Name>PeReader</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SourceModel\SourceModel.csproj">
-      <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
-      <Name>SourceModel</Name>
-    </ProjectReference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="InterimKey.snk" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

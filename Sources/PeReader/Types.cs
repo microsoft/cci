@@ -4068,18 +4068,23 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IEnumerable<ITypeReference> interfaces;
 
     private IEnumerable<ITypeReference> GetInterfaceList() {
+      var version = this.PEFileToObjectModel.CoreAssemblySymbolicIdentity.Version;
       var internFactory = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory;
       List<ITypeReference> interfaces = new List<ITypeReference>(9);
       interfaces.Add(this.PlatformType.SystemICloneable);
       interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
       interfaces.Add(this.PlatformType.SystemCollectionsICollection);
       interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
-      var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
-      interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, internFactory));
-      interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, internFactory));
-      interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, internFactory));
+      if (version.Major >= 4) {
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      }
+      if (version.Major >= 2) {
+        var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
+        interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, internFactory));
+        interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, internFactory));
+        interfaces.Add(Microsoft.Cci.GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, internFactory));
+      }
       return interfaces.AsReadOnly();
     }
 
@@ -4204,13 +4209,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IEnumerable<ITypeReference> interfaces;
 
     private IEnumerable<ITypeReference> GetInterfaceList() {
+      var version = this.PEFileToObjectModel.CoreAssemblySymbolicIdentity.Version;
       List<ITypeReference> interfaces = new List<ITypeReference>(6);
       interfaces.Add(this.PlatformType.SystemICloneable);
       interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
       interfaces.Add(this.PlatformType.SystemCollectionsICollection);
       interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
-      interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      if (version.Major >= 4) {
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
+        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
+      }
       return interfaces.AsReadOnly();
     }
 

@@ -21,7 +21,6 @@ namespace Microsoft.Cci {
   public static class SourceDummy {
 
     public static ICompilation Compilation {
-      [DebuggerNonUserCode]
       get {
         if (SourceDummy.compilation == null)
           Interlocked.CompareExchange(ref SourceDummy.compilation, new DummyCompilation(), null);
@@ -31,7 +30,6 @@ namespace Microsoft.Cci {
     private static ICompilation/*?*/ compilation;
 
     public static IPrimarySourceDocument PrimarySourceDocument {
-      [DebuggerNonUserCode]
       get {
         if (SourceDummy.primarySourceDocument == null)
           Interlocked.CompareExchange(ref SourceDummy.primarySourceDocument, new DummyPrimarySourceDocument(), null);
@@ -40,8 +38,15 @@ namespace Microsoft.Cci {
     }
     private static IPrimarySourceDocument/*?*/ primarySourceDocument;
 
+    /// <summary>
+    /// This source location behaves as the notorious FeeFee: a source
+    /// context which exists in the PDB file, but which debuggers do not
+    /// stop at. It is needed, e.g., to mark the first IL operation in a
+    /// method body if it does not have any real source location (such as
+    /// compiler generated closure initialization code). Without that, the
+    /// debugger appears to not step into method calls.
+    /// </summary>
     public static IPrimarySourceLocation PrimarySourceLocation {
-      [DebuggerNonUserCode]
       get {
         if (SourceDummy.primarySourceLocation == null)
           Interlocked.CompareExchange(ref SourceDummy.primarySourceLocation, new DummyPrimarySourceLocation(), null);
@@ -51,7 +56,6 @@ namespace Microsoft.Cci {
     private static IPrimarySourceLocation/*?*/ primarySourceLocation;
 
     public static ISourceDocument SourceDocument {
-      [DebuggerNonUserCode]
       get {
         if (SourceDummy.sourceDocument == null)
           Interlocked.CompareExchange(ref SourceDummy.sourceDocument, new DummySourceDocument(), null);
@@ -61,7 +65,6 @@ namespace Microsoft.Cci {
     private static ISourceDocument/*?*/ sourceDocument;
 
     public static ISourceDocumentEdit SourceDocumentEdit {
-      [DebuggerNonUserCode]
       get {
         if (SourceDummy.sourceDocumentEdit == null)
           Interlocked.CompareExchange(ref SourceDummy.sourceDocumentEdit, new DummySourceDocumentEdit(), null);
@@ -71,7 +74,6 @@ namespace Microsoft.Cci {
     private static ISourceDocumentEdit/*?*/ sourceDocumentEdit;
 
     public static ISourceLocation SourceLocation {
-      [DebuggerNonUserCode]
       get {
         if (SourceDummy.sourceLocation == null)
           Interlocked.CompareExchange(ref SourceDummy.sourceLocation, new DummySourceLocation(), null);
@@ -192,6 +194,14 @@ namespace Microsoft.Cci {
 
   }
 
+  /// <summary>
+  /// Instances of this class behave as the notorious FeeFee: a source
+  /// context which exists in the PDB file, but which debuggers do not
+  /// stop at. It is needed, e.g., to mark the first IL operation in a
+  /// method body if it does not have any real source location (such as
+  /// compiler generated closure initialization code). Without that, the
+  /// debugger appears to not step into method calls.
+  /// </summary>
   internal sealed class DummyPrimarySourceLocation : IPrimarySourceLocation {
 
     #region IPrimarySourceLocation Members
@@ -201,7 +211,7 @@ namespace Microsoft.Cci {
     }
 
     int IPrimarySourceLocation.EndLine {
-      get { return 0; }
+      get { return 0x00feefee; }
     }
 
     IPrimarySourceDocument IPrimarySourceLocation.PrimarySourceDocument {
@@ -213,7 +223,7 @@ namespace Microsoft.Cci {
     }
 
     int IPrimarySourceLocation.StartLine {
-      get { return 0; }
+      get { return 0x00feefee; }
     }
 
     #endregion

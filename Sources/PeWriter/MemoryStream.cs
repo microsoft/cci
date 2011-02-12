@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -19,7 +19,7 @@ namespace Microsoft.Cci {
       this.Buffer = new byte[64];
     }
 
-    internal MemoryStream(uint initialSize) 
+    internal MemoryStream(uint initialSize)
       //^ requires initialSize > 0;
     {
       this.Buffer = new byte[initialSize];
@@ -42,8 +42,8 @@ namespace Microsoft.Cci {
     internal uint Length;
 
     internal uint Position {
-      get { 
-        return this.position; 
+      get {
+        return this.position;
       }
       set {
         byte[] myBuffer = this.Buffer;
@@ -69,7 +69,7 @@ namespace Microsoft.Cci {
       return result;
     }
 
-    internal void Write(byte[] buffer, uint index, uint count)  {
+    internal void Write(byte[] buffer, uint index, uint count) {
       uint p = this.position;
       this.Position = p + count;
       byte[] myBuffer = this.Buffer;

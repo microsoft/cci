@@ -13,6 +13,7 @@ using Microsoft.Cci;
 using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -129,6 +130,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
   /// </summary>
+  [ContractClass(typeof(IMetadataHostContract))]
   public interface IMetadataHost {
 
     /// <summary>
@@ -248,7 +250,7 @@ namespace Microsoft.Cci {
     /// for the location of an assembly when you already know its location.</param>
     /// <returns>An assembly identity that matches the given referenced assembly identity, but which includes a location.
     /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".</returns>
-    //^ [Pure]
+    [Pure]
     AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly);
 
     /// <summary>
@@ -260,7 +262,7 @@ namespace Microsoft.Cci {
     /// <param name="referencedModule">Module being referenced.</param>
     /// <returns>A module identity that matches the given referenced module identity, but which includes a location.
     /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".</returns>
-    //^ [Pure]
+    [Pure]
     ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule);
 
     /// <summary>
@@ -273,13 +275,153 @@ namespace Microsoft.Cci {
     /// from assembly B, unless the host declares that any reference to version 1 of assembly should be treated as if it were a reference to 
     /// version 2 of assembly C. This call is how the host gets to make this declaration.
     /// </remarks>
-    //^ [Pure]
+    [Pure]
     AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity);
 
     /// <summary>
     /// True if IL locations should be preserved up into the code model by decompilers using this host.
     /// </summary>
     bool PreserveILLocations { get; }
+  }
+
+  [ContractClassFor(typeof(IMetadataHost))]
+  abstract class IMetadataHostContract : IMetadataHost {
+    public event EventHandler<ErrorEventArgs> Errors;
+
+    public AssemblyIdentity ContractAssemblySymbolicIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        if (this.Errors == null)
+          throw new NotImplementedException();
+        else
+          throw new NotImplementedException();
+      }
+    }
+
+    public AssemblyIdentity CoreAssemblySymbolicIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public AssemblyIdentity SystemCoreAssemblySymbolicIdentity {
+      get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAssembly FindAssembly(AssemblyIdentity assemblyIdentity) {
+      Contract.Requires(assemblyIdentity != null);
+      Contract.Ensures(Contract.Result<IAssembly>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IModule FindModule(ModuleIdentity moduleIdentity) {
+      Contract.Requires(moduleIdentity != null);
+      Contract.Ensures(Contract.Result<IModule>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IUnit FindUnit(UnitIdentity unitIdentity) {
+      Contract.Requires(unitIdentity != null);
+      Contract.Ensures(Contract.Result<IUnit>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IInternFactory InternFactory {
+      get {
+        Contract.Ensures(Contract.Result<IInternFactory>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IPlatformType PlatformType {
+      get {
+        Contract.Ensures(Contract.Result<IPlatformType>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAssembly LoadAssembly(AssemblyIdentity assemblyIdentity) {
+      Contract.Requires(assemblyIdentity != null);
+      Contract.Ensures(Contract.Result<IAssembly>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IModule LoadModule(ModuleIdentity moduleIdentity) {
+      Contract.Requires(moduleIdentity != null);
+      Contract.Ensures(Contract.Result<IModule>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IUnit LoadUnit(UnitIdentity unitIdentity) {
+      Contract.Requires(unitIdentity != null);
+      Contract.Ensures(Contract.Result<IUnit>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IUnit LoadUnitFrom(string location) {
+      Contract.Requires(location != null);
+      Contract.Ensures(Contract.Result<IUnit>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IUnit> LoadedUnits {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IUnit>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INameTable NameTable {
+      get {
+        Contract.Ensures(Contract.Result<INameTable>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public byte PointerSize {
+      get {
+        Contract.Ensures(Contract.Result<byte>() == 4 || Contract.Result<byte>() == 8);
+        throw new NotImplementedException();
+      }
+    }
+
+    public void ReportErrors(ErrorEventArgs errorEventArguments) {
+      Contract.Requires(errorEventArguments != null);
+      throw new NotImplementedException();
+    }
+
+    public void ReportError(IErrorMessage error) {
+      Contract.Requires(error != null);
+      throw new NotImplementedException();
+    }
+
+    public AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      Contract.Requires(referringUnit != null);
+      Contract.Requires(referencedAssembly != null);
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+      throw new NotImplementedException();
+    }
+
+    public ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
+      Contract.Requires(referringUnit != null);
+      Contract.Requires(referencedModule != null);
+      Contract.Ensures(Contract.Result<ModuleIdentity>() != null);
+      throw new NotImplementedException();
+    }
+
+    public AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
+      Contract.Requires(assemblyIdentity != null);
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+      throw new NotImplementedException();
+    }
+
+    public bool PreserveILLocations {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -413,29 +555,30 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A collection of named members, with routines to search the collection.
   /// </summary>
+  [ContractClass(typeof(ISCopeContract<>))]
   public interface IScope<MemberType>
     where MemberType : class, INamedEntity {
 
     /// <summary>
     /// Return true if the given member instance is a member of this scope.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     bool Contains(MemberType/*!*/ member);
     // ^ ensures result == exists{MemberType mem in this.Members; mem == member};
 
     /// <summary>
     /// Returns the list of members with the given name that also satisfy the given predicate.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     IEnumerable<MemberType> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<MemberType, bool> predicate);
-    // ^ ensures forall{MemberType member in result; member.Name.UniqueKey == name.UniqueKey && predicate(member) && this.Contains(member)};
-    // ^ ensures forall{MemberType member in this.Members; member.Name.UniqueKey == name.UniqueKey && predicate(member) ==> 
+    // ^ ensures forall{MemberType member in result; member.Name == name && predicate(member) && this.Contains(member)};
+    // ^ ensures forall{MemberType member in this.Members; member.Name == name && predicate(member) ==> 
     // ^                                                            exists{INamespaceMember mem in result; mem == member}};
 
     /// <summary>
     /// Returns the list of members that satisfy the given predicate.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     IEnumerable<MemberType> GetMatchingMembers(Function<MemberType, bool> predicate);
     // ^ ensures forall{MemberType member in result; predicate(member) && this.Contains(member)};
     // ^ ensures forall{MemberType member in this.Members; predicate(member) ==> exists{MemberType mem in result; mem == member}};
@@ -443,10 +586,10 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the list of members with the given name.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     IEnumerable<MemberType> GetMembersNamed(IName name, bool ignoreCase);
-    // ^ ensures forall{MemberType member in result; member.Name.UniqueKey == name.UniqueKey && this.Contains(member)};
-    // ^ ensures forall{MemberType member in this.Members; member.Name.UniqueKey == name.UniqueKey ==> 
+    // ^ ensures forall{MemberType member in result; member.Name == name && this.Contains(member)};
+    // ^ ensures forall{MemberType member in this.Members; member.Name == name ==> 
     // ^                                                            exists{INamespaceMember mem in result; mem == member}};
 
     /// <summary>
@@ -454,6 +597,57 @@ namespace Microsoft.Cci {
     /// </summary>
     IEnumerable<MemberType> Members { get; }
   }
+
+  [ContractClassFor(typeof(IScope<>))]
+  abstract class ISCopeContract<MemberType> : IScope<MemberType>
+    where MemberType : class, INamedEntity {
+
+    public bool Contains(MemberType member) {
+      //Contract.Ensures(!Contract.Result<bool>() || Contract.Exists(this.Members, x => x == (object)this));
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<MemberType> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<MemberType, bool> predicate) {
+      Contract.Requires(name != null);
+      Contract.Requires(predicate != null);
+      Contract.Ensures(Contract.Result<IEnumerable<MemberType>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => x != null));
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => this.Contains(x)));
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(),
+        x => ignoreCase ? x.Name.UniqueKeyIgnoringCase == x.Name.UniqueKeyIgnoringCase : x.Name == name));
+      //Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => predicate(x)));
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<MemberType> GetMatchingMembers(Function<MemberType, bool> predicate) {
+      Contract.Requires(predicate != null);
+      Contract.Ensures(Contract.Result<IEnumerable<MemberType>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => x != null));
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => this.Contains(x)));
+      //Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => predicate(x)));
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<MemberType> GetMembersNamed(IName name, bool ignoreCase) {
+      Contract.Requires(name != null);
+      Contract.Ensures(Contract.Result<IEnumerable<MemberType>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => x != null));
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => this.Contains(x)));
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(),
+        x => ignoreCase ? x.Name.UniqueKeyIgnoringCase == x.Name.UniqueKeyIgnoringCase : x.Name == name));
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<MemberType> Members {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<MemberType>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => x != null));
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<MemberType>>(), x => this.Contains(x)));
+        throw new NotImplementedException();
+      }
+    }
+  }
+
 
   /// <summary>
   /// Implemented by types whose instances belong to a specific type of scope (see IScope&lt;MemberType&gt;).

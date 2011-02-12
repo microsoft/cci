@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -26,6 +27,7 @@ namespace Microsoft.Cci {
   //  aliasfortype(C.D).AliasedType == typereference(E.F)
   //  typereference(E.F).IsAlias == false
   //  Also, typereference(A.B).ResolvedType == typereference(C.D).ResolvedType == typereference(E.F).ResolvedType
+  [ContractClass(typeof(IAliasForTypeContract))]
   public interface IAliasForType : IContainer<IAliasMember>, IDefinition, IScope<IAliasMember> {
     /// <summary>
     /// Type reference of the type for which this is the alias
@@ -40,6 +42,57 @@ namespace Microsoft.Cci {
     }
   }
 
+  [ContractClassFor(typeof(IAliasForType))]
+  abstract class IAliasForTypeContract : IAliasForType {
+    public ITypeReference AliasedType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    IEnumerable<IAliasMember> IAliasForType.Members {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IAliasMember>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IAliasMember> Members {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(IAliasMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IAliasMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<IAliasMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IAliasMember> GetMatchingMembers(Function<IAliasMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IAliasMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+  }
+
   /// <summary>
   /// This interface models the metadata representation of an array type.
   /// </summary>
@@ -49,7 +102,8 @@ namespace Microsoft.Cci {
   /// <summary>
   /// This interface models the metadata representation of an array type reference.
   /// </summary>
-  public interface IArrayTypeReference : ITypeReference {
+  [ContractClass(typeof(IArrayTypeReferenceContract))]
+  public interface IArrayTypeReference : ITypeReference { //TODO: expose element type custom modifiers
 
     /// <summary>
     /// The type of the elements of this array.
@@ -93,6 +147,92 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IArrayTypeReference))]
+  abstract class IArrayTypeReferenceContract : IArrayTypeReference {
+
+    public ITypeReference ElementType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsVector {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || this.Rank == 1);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<int> LowerBounds {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<int>>() != null);
+        //Contract.Ensures(IteratorHelper.EnumerableCount(Contract.Result<IEnumerable<int>>()) <= this.Rank);
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint Rank {
+      get {
+        Contract.Ensures(Contract.Result<uint>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ulong> Sizes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<int>>() != null);
+        //Contract.Ensures(IteratorHelper.EnumerableCount(Contract.Result<IEnumerable<int>>()) <= this.Rank);
+        throw new NotImplementedException();
+      }
+    }
+
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// Modifies the set of allowed values for a type, or the semantics of operations allowed on those values. 
   /// Custom modifiers are not associated directly with types, but rather with typed storage locations for values.
@@ -114,6 +254,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Information that describes a method or property parameter, but does not include all the information in a IParameterDefinition.
   /// </summary>
+  [ContractClass(typeof(IParameterTypeInformationContract))]
   public interface IParameterTypeInformation : IParameterListEntry {
 
     /// <summary>
@@ -147,6 +288,44 @@ namespace Microsoft.Cci {
     }
   }
 
+  [ContractClassFor(typeof(IParameterTypeInformation))]
+  abstract class IParameterTypeInformationContract : IParameterTypeInformation {
+    public ISignature ContainingSignature {
+      get {
+        Contract.Ensures(Contract.Result<ISignature>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get {
+        Contract.Requires(this.IsModified);
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomModifier>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomModifier>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsByReference {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort Index {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// This interface models the metadata representation of a function pointer type.
   /// </summary>
@@ -156,6 +335,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// This interface models the metadata representation of a function pointer type reference.
   /// </summary>
+  [ContractClass(typeof(IFunctionPointerTypeReferenceContract))]
   public interface IFunctionPointerTypeReference : ITypeReference, ISignature {
 
     /// <summary>
@@ -165,9 +345,89 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IFunctionPointerTypeReference))]
+  abstract class IFunctionPointerTypeReferenceContract : IFunctionPointerTypeReference {
+    public IEnumerable<IParameterTypeInformation> ExtraArgumentTypes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IParameterTypeInformation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IParameterTypeInformation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public CallingConvention CallingConvention {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IParameterTypeInformation> Parameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsByRef {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool ReturnValueIsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// The definition of a type parameter of a generic type or method.
   /// </summary>
+  [ContractClass(typeof(IGenericParameterContract))]
   public interface IGenericParameter : INamedTypeDefinition, IParameterListEntry, INamedEntity {
     /// <summary>
     /// A list of classes or interfaces. All type arguments matching this parameter must be derived from all of the classes and implement all of the interfaces.
@@ -206,6 +466,252 @@ namespace Microsoft.Cci {
     TypeParameterVariance Variance { get; }
   }
 
+  [ContractClassFor(typeof(IGenericParameter))]
+  abstract class IGenericParameterContract : IGenericParameter {
+    public IEnumerable<ITypeReference> Constraints {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ITypeReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustBeReferenceType {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || !this.MustBeValueType);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool MustBeValueType {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || !this.MustBeReferenceType);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool MustHaveDefaultConstructor {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeParameterVariance Variance {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Index {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// A reference to the definition of a type parameter of a generic type or method.
   /// </summary>
@@ -230,6 +736,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a type parameter of a generic method.
   /// </summary>
+  [ContractClass(typeof(IGenericMethodParameterReferenceContract))]
   public interface IGenericMethodParameterReference : IGenericParameterReference, IParameterListEntry {
 
     /// <summary>
@@ -243,6 +750,75 @@ namespace Microsoft.Cci {
     new IGenericMethodParameter ResolvedType { get; }
   }
 
+  [ContractClassFor(typeof(IGenericMethodParameterReference))]
+  abstract class IGenericMethodParameterReferenceContract : IGenericMethodParameterReference {
+    public IMethodReference DefiningMethod {
+      get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IGenericMethodParameter ResolvedType {
+      get {
+        Contract.Ensures(Contract.Result<IGenericMethodParameter>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Index {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// A generic type instantiated with a list of type arguments
   /// </summary>
@@ -252,6 +828,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A generic type instantiated with a list of type arguments
   /// </summary>
+  [ContractClass(typeof(IGenericTypeInstanceReferenceContract))]
   public interface IGenericTypeInstanceReference : ITypeReference {
 
     /// <summary>
@@ -267,9 +844,72 @@ namespace Microsoft.Cci {
     /// </summary>
     ITypeReference GenericType {
       get;
-      //^ ensures result.ResolvedType.IsGeneric;
+      //^ ensures result.ResolveType == Dummy.Type || result.ResolvedType.IsGeneric;
     }
 
+  }
+
+  [ContractClassFor(typeof(IGenericTypeInstanceReference))]
+  abstract class IGenericTypeInstanceReferenceContract : IGenericTypeInstanceReference {
+    public IEnumerable<ITypeReference> GenericArguments {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ITypeReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeReference GenericType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        //Contract.Ensures(Contract.Result<ITypeReference>().ResolvedType == Dummy.Type || Contract.Result<ITypeReference>().ResolvedType.IsGeneric);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -287,6 +927,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a type parameter of a generic type.
   /// </summary>
+  [ContractClass(typeof(IGenericTypeParameterReferenceContract))]
   public interface IGenericTypeParameterReference : IGenericParameterReference, IParameterListEntry {
 
     /// <summary>
@@ -299,6 +940,76 @@ namespace Microsoft.Cci {
     /// </summary>
     new IGenericTypeParameter ResolvedType { get; }
 
+  }
+
+  [ContractClassFor(typeof(IGenericTypeParameterReference))]
+  abstract class IGenericTypeParameterReferenceContract : IGenericTypeParameterReference {
+    public ITypeReference DefiningType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IGenericTypeParameter ResolvedType {
+      get {
+        Contract.Ensures(Contract.Result<IGenericTypeParameter>() != null);
+        Contract.Ensures(!(this is IGenericTypeParameter) || Contract.Result<IGenericTypeParameter>() == this);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Index {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -365,6 +1076,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a type definition that is a member of a namespace definition.
   /// </summary>
+  [ContractClass(typeof(INamespaceTypeReferenceContract))]
   public interface INamespaceTypeReference : INamedTypeReference {
 
     /// <summary>
@@ -382,6 +1094,84 @@ namespace Microsoft.Cci {
     /// </summary>
     new INamespaceTypeDefinition ResolvedType { get; }
 
+  }
+
+  [ContractClassFor(typeof(INamespaceTypeReference))]
+  abstract class INamespaceTypeReferenceContract : INamespaceTypeReference {
+    public IUnitNamespaceReference ContainingUnitNamespace {
+      get {
+        Contract.Ensures(Contract.Result<IUnitNamespaceReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public INamespaceTypeDefinition ResolvedType {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -408,6 +1198,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A type definition that is a member of another type definition.
   /// </summary>
+  [ContractClass(typeof(INestedTypeReferenceContract))]
   public interface INestedTypeReference : INamedTypeReference, ITypeMemberReference {
 
     /// <summary>
@@ -420,6 +1211,86 @@ namespace Microsoft.Cci {
     /// </summary>
     new INestedTypeDefinition ResolvedType { get; }
 
+  }
+
+  [ContractClassFor(typeof(INestedTypeReference))]
+  abstract class INestedTypeReferenceContract : INestedTypeReference {
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public INestedTypeDefinition ResolvedType {
+      get {
+        Contract.Ensures(Contract.Result<INestedTypeDefinition>() != null);
+        Contract.Ensures(!(this is ITypeDefinition) || Contract.Result<ITypeDefinition>() == this);
+        throw new NotImplementedException();
+      }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -449,6 +1320,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a type definition that is a specialized nested type.
   /// </summary>
+  [ContractClass(typeof(ISpecializedNestedTypeReferenceContract))]
   public interface ISpecializedNestedTypeReference : INestedTypeReference {
 
     /// <summary>
@@ -456,10 +1328,93 @@ namespace Microsoft.Cci {
     /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
     /// corresponds to a definition that is not obtained via specialization.)
     /// </summary>
-    INestedTypeReference/*!*/ UnspecializedVersion {
+    INestedTypeReference UnspecializedVersion {
       get;
     }
 
+  }
+
+  [ContractClassFor(typeof(ISpecializedNestedTypeReference))]
+  abstract class ISpecializedNestedTypeReferenceContract : ISpecializedNestedTypeReference {
+    public INestedTypeReference UnspecializedVersion {
+      get {
+        Contract.Ensures(Contract.Result<INestedTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public INestedTypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -493,6 +1448,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A type reference that has custom modifiers associated with it. For example a reference to the target type of a managed pointer to a constant.
   /// </summary>
+  [ContractClass(typeof(IModifiedTypeReferenceContract))]
   public interface IModifiedTypeReference : ITypeReference {
 
     /// <summary>
@@ -507,9 +1463,72 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IModifiedTypeReference))]
+  abstract class IModifiedTypeReferenceContract : IModifiedTypeReference {
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomModifier>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomModifier>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeReference UnmodifiedType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// A collection of references to types from the core platform, such as System.Object and System.String.
   /// </summary>
+  [ContractClass(typeof(IPlatformTypeContract))]
   public interface IPlatformType {
 
     /// <summary>
@@ -732,6 +1751,11 @@ namespace Microsoft.Cci {
     INamespaceTypeReference SystemRuntimeCompilerServicesCompilerGeneratedAttribute { get; }
 
     /// <summary>
+    /// System.Runtime.CompilerServices.ExtensionAttribute
+    /// </summary>
+    INamespaceTypeReference SystemRuntimeCompilerServicesExtensionAttribute { get; }
+
+    /// <summary>
     /// System.Runtime.CompilerServices.FriendAccessAllowedAttribute
     /// </summary>
     INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute { get; }
@@ -747,7 +1771,7 @@ namespace Microsoft.Cci {
     INamespaceTypeReference SystemRuntimeCompilerServicesIsVolatile { get; }
 
     /// <summary>
-    /// System.Runtime.CompilerServices.IsVolatile
+    /// System.Runtime.CompilerServices.ReferenceAssemblyAttribute
     /// </summary>
     INamespaceTypeReference SystemRuntimeCompilerServicesReferenceAssemblyAttribute { get; }
 
@@ -829,6 +1853,449 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IPlatformType))]
+  abstract class IPlatformTypeContract : IPlatformType {
+    public INamespaceTypeReference SystemDiagnosticsContractsContract {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public byte PointerSize {
+      get {
+        Contract.Ensures(Contract.Result<byte>() == 4 || Contract.Result<byte>() == 8);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemArgIterator {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemArray {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemAsyncCallback {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemAttributeUsageAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemBoolean {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemChar {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsGenericDictionary {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsGenericICollection {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsGenericIEnumerable {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsGenericIEnumerator {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsGenericIList {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsICollection {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsIEnumerable {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsIEnumerator {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsIList {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsIStructuralComparable {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemCollectionsIStructuralEquatable {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemDateTime {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemDecimal {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemDelegate {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemDBNull {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemEnum {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemFloat32 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemFloat64 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemIAsyncResult {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemICloneable {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemInt16 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemInt32 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemInt64 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemInt8 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemIntPtr {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemMulticastDelegate {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemNullable {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemObject {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeArgumentHandle {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeFieldHandle {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeMethodHandle {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeTypeHandle {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesCallConvCdecl {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesCompilerGeneratedAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesExtensionAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesIsConst {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesIsVolatile {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeCompilerServicesReferenceAssemblyAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeInteropServicesDllImportAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemSecurityPermissionsSecurityAction {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemSecuritySecurityCriticalAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemSecuritySecuritySafeCriticalAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemString {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemType {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemTypedReference {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemUInt16 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemUInt32 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemUInt64 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemUInt8 {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemUIntPtr {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemValueType {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemVoid {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference GetTypeFor(PrimitiveTypeCode typeCode) {
+      Contract.Requires(typeCode != PrimitiveTypeCode.Pointer && typeCode != PrimitiveTypeCode.Reference && typeCode != PrimitiveTypeCode.NotPrimitive);
+      Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+      throw new NotImplementedException();
+    }
+  }
+
   /// <summary>
   /// This interface models the metadata representation of a pointer to a location in unmanaged memory.
   /// </summary>
@@ -838,6 +2305,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// This interface models the metadata representation of a pointer to a location in unmanaged memory.
   /// </summary>
+  [ContractClass(typeof(IPointerTypeReferenceContract))]
   public interface IPointerTypeReference : ITypeReference {
 
     /// <summary>
@@ -845,6 +2313,60 @@ namespace Microsoft.Cci {
     /// </summary>
     ITypeReference TargetType { get; }
 
+  }
+
+  [ContractClassFor(typeof(IPointerTypeReference))]
+  abstract class IPointerTypeReferenceContract : IPointerTypeReference {
+    public ITypeReference TargetType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -860,6 +2382,7 @@ namespace Microsoft.Cci {
   /// Remark: This should be only used in attributes. For other objects like Local variables etc
   /// there is explicit IsReference field that should be used.
   /// </summary>
+  [ContractClass(typeof(IManagedPointerTypeReferenceContract))]
   public interface IManagedPointerTypeReference : ITypeReference {
 
     /// <summary>
@@ -869,9 +2392,64 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(IManagedPointerTypeReference))]
+  abstract class IManagedPointerTypeReferenceContract : IManagedPointerTypeReference {
+    public ITypeReference TargetType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// This interface models the metadata representation of a type.
   /// </summary>
+  [ContractClass(typeof(ITypeDefinitionContract))]
   public interface ITypeDefinition : IContainer<ITypeDefinitionMember>, IDefinition, IScope<ITypeDefinitionMember>, ITypeReference {
 
     /// <summary>
@@ -914,7 +2492,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The number of generic parameters. Zero if the type is not generic.
     /// </summary>
-    ushort GenericParameterCount { //TODO: remove this
+    ushort GenericParameterCount {
       get;
       //^ ensures !this.IsGeneric ==> result == 0;
       //^ ensures this.IsGeneric ==> result > 0;
@@ -937,7 +2515,6 @@ namespace Microsoft.Cci {
     IGenericTypeInstanceReference InstanceType {
       get;
       //^ requires this.IsGeneric;
-      //^ ensures !result.IsGeneric;
     }
 
     /// <summary>
@@ -1073,9 +2650,271 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractClassFor(typeof(ITypeDefinition))]
+  abstract class ITypeDefinitionContract : ITypeDefinition {
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ITypeReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeReference>>(), x => x != null));
+        //Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeReference>>(), x => x.ResolvedType.IsClass));
+
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IEventDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IEventDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IMethodImplementation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodImplementation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IFieldDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IFieldDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IGenericTypeParameter>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IGenericTypeParameter>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort GenericParameterCount {
+      get {
+        Contract.Ensures(this.IsGeneric || Contract.Result<ushort>() == 0);
+        Contract.Ensures(!this.IsGeneric || Contract.Result<ushort>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ITypeReference>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeReference>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get {
+        Contract.Requires(this.IsGeneric);
+        Contract.Ensures(Contract.Result<IGenericTypeInstanceReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get {
+        //Contract.Ensures(Contract.Result<IEnumerable<ITypeDefinitionMember>>() != null);
+        //Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeDefinitionMember>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IMethodDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<INestedTypeDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<INestedTypeDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ITypeDefinitionMember>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeDefinitionMember>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IPropertyDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IPropertyDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ISecurityAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ISecurityAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get {
+        Contract.Requires(this.IsEnum);
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
   /// <summary>
   /// A reference to a type.
   /// </summary>
+  [ContractClass(typeof(ITypeReferenceContract))]
   public interface ITypeReference : IReference {
 
     /// <summary>
@@ -1131,6 +2970,83 @@ namespace Microsoft.Cci {
     PrimitiveTypeCode TypeCode { get; }
 
   }
+
+  [ContractClassFor(typeof(ITypeReference))]
+  abstract class ITypeReferenceContract : ITypeReference {
+
+    public IAliasForType AliasForType {
+      get {
+        Contract.Ensures(Contract.Result<IAliasForType>() != null);
+        //Contract.Ensures(this.IsAlias || Contract.Result<IAliasForType>().AliasedType.ResolvedType == this.ResolvedType);
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint InternedKey {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsAlias {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || !(this is ITypeDefinition));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsEnum {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsValueType {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IPlatformType PlatformType {
+      get {
+        Contract.Ensures(Contract.Result<IPlatformType>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+        Contract.Ensures(!(this is ITypeDefinition) || Contract.Result<ITypeDefinition>() == this);
+        //Contract.Ensures(Contract.Result<ITypeDefinition>() == Dummy.Type || this.IsAlias ||
+        //    Contract.Result<ITypeDefinition>().InternedKey == this.InternedKey);
+        throw new NotImplementedException();
+      }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+  }
+
 
   /// <summary>
   /// A enumeration of all of the value types that are built into the Runtime (and thus have specialized IL instructions that manipulate them).

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Diagnostics.Contracts;
 //^ using Microsoft.Contracts;
 
 //  TODO: Sometime make the methods and properties of dummy objects Explicit impls so
@@ -20,21 +21,23 @@ namespace Microsoft.Cci {
 
 #pragma warning disable 1591
 
+  [ContractVerification(false)]
   public abstract class Dummy {
 
     public static IAliasForType AliasForType {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IAliasForType>() != null);
         if (Dummy.aliasForType == null)
           Interlocked.CompareExchange(ref Dummy.aliasForType, new DummyAliasForType(), null);
+        Contract.Assume(Dummy.aliasForType != null);
         return Dummy.aliasForType;
       }
     }
     private static IAliasForType/*?*/ aliasForType;
 
     public static IMetadataHost CompilationHostEnvironment {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMetadataHost>() != null);
         if (Dummy.compilationHostEnvironment == null)
           Interlocked.CompareExchange(ref Dummy.compilationHostEnvironment, new DummyMetadataHost(), null);
         return Dummy.compilationHostEnvironment;
@@ -43,8 +46,8 @@ namespace Microsoft.Cci {
     private static IMetadataHost/*?*/ compilationHostEnvironment;
 
     public static IMetadataConstant Constant {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMetadataConstant>() != null);
         if (Dummy.constant == null)
           Interlocked.CompareExchange(ref Dummy.constant, new DummyMetadataConstant(), null);
         return Dummy.constant;
@@ -53,8 +56,8 @@ namespace Microsoft.Cci {
     private static IMetadataConstant/*?*/ constant;
 
     public static ICustomModifier CustomModifier {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ICustomModifier>() != null);
         if (Dummy.customModifier == null)
           Interlocked.CompareExchange(ref Dummy.customModifier, new DummyCustomModifier(), null);
         return Dummy.customModifier;
@@ -63,8 +66,8 @@ namespace Microsoft.Cci {
     private static ICustomModifier/*?*/ customModifier;
 
     public static IEventDefinition Event {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IEventDefinition>() != null);
         if (Dummy.@event == null)
           Dummy.@event = new DummyEventDefinition();
         return Dummy.@event;
@@ -73,8 +76,8 @@ namespace Microsoft.Cci {
     private static IEventDefinition/*?*/ @event;
 
     public static IFieldDefinition Field {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IFieldDefinition>() != null);
         if (Dummy.field == null)
           Interlocked.CompareExchange(ref Dummy.field, new DummyFieldDefinition(), null);
         return Dummy.field;
@@ -83,8 +86,8 @@ namespace Microsoft.Cci {
     private static IFieldDefinition/*?*/ field;
 
     public static IMetadataExpression Expression {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMetadataExpression>() != null);
         if (Dummy.expression == null)
           Interlocked.CompareExchange(ref Dummy.expression, new DummyMetadataExpression(), null);
         return Dummy.expression;
@@ -93,8 +96,8 @@ namespace Microsoft.Cci {
     private static IMetadataExpression/*?*/ expression;
 
     public static IFunctionPointer FunctionPointer {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IFunctionPointer>() != null);
         if (Dummy.functionPointer == null)
           Interlocked.CompareExchange(ref Dummy.functionPointer, new DummyFunctionPointerType(), null);
         return Dummy.functionPointer;
@@ -103,8 +106,8 @@ namespace Microsoft.Cci {
     private static IFunctionPointer/*?*/ functionPointer;
 
     public static IGenericMethodParameter GenericMethodParameter {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IGenericMethodParameter>() != null);
         if (Dummy.genericMethodParameter == null)
           Interlocked.CompareExchange(ref Dummy.genericMethodParameter, new DummyGenericMethodParameter(), null);
         return Dummy.genericMethodParameter;
@@ -113,10 +116,10 @@ namespace Microsoft.Cci {
     private static DummyGenericMethodParameter/*?*/ genericMethodParameter;
 
     public static IGenericTypeInstance GenericTypeInstance {
-      [DebuggerNonUserCode]
       get
         //^ ensures !result.IsGeneric;
       {
+        Contract.Ensures(Contract.Result<IGenericTypeInstance>() != null);
         if (Dummy.genericTypeInstance == null)
           Interlocked.CompareExchange(ref Dummy.genericTypeInstance, new DummyGenericTypeInstance(), null);
         DummyGenericTypeInstance result = Dummy.genericTypeInstance;
@@ -128,6 +131,7 @@ namespace Microsoft.Cci {
 
     public static IGenericTypeParameter GenericTypeParameter {
       get {
+        Contract.Ensures(Contract.Result<IGenericTypeParameter>() != null);
         if (Dummy.genericTypeParameter == null)
           Interlocked.CompareExchange(ref Dummy.genericTypeParameter, new DummyGenericTypeParameter(), null);
         return Dummy.genericTypeParameter;
@@ -136,8 +140,8 @@ namespace Microsoft.Cci {
     private static IGenericTypeParameter/*?*/ genericTypeParameter;
 
     public static IMethodDefinition Method {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
         if (Dummy.method == null)
           Interlocked.CompareExchange(ref Dummy.method, new DummyMethodDefinition(), null);
         return Dummy.method;
@@ -146,8 +150,8 @@ namespace Microsoft.Cci {
     private static IMethodDefinition/*?*/ method;
 
     public static IMethodBody MethodBody {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMethodBody>() != null);
         if (Dummy.methodBody == null)
           Interlocked.CompareExchange(ref Dummy.methodBody, new DummyMethodBody(), null);
         return Dummy.methodBody;
@@ -156,8 +160,8 @@ namespace Microsoft.Cci {
     private static IMethodBody/*?*/ methodBody;
 
     public static IName Name {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IName>() != null);
         if (Dummy.name == null)
           Interlocked.CompareExchange(ref Dummy.name, new DummyName(), null);
         return Dummy.name;
@@ -166,8 +170,8 @@ namespace Microsoft.Cci {
     private static IName/*?*/ name;
 
     public static IMetadataNamedArgument NamedArgument {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMetadataNamedArgument>() != null);
         if (Dummy.namedArgument == null)
           Interlocked.CompareExchange(ref Dummy.namedArgument, new DummyNamedArgument(), null);
         return Dummy.namedArgument;
@@ -176,8 +180,8 @@ namespace Microsoft.Cci {
     private static IMetadataNamedArgument/*?*/ namedArgument;
 
     public static INameTable NameTable {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<INameTable>() != null);
         if (Dummy.nameTable == null)
           Interlocked.CompareExchange(ref Dummy.nameTable, new DummyNameTable(), null);
         return Dummy.nameTable;
@@ -186,8 +190,8 @@ namespace Microsoft.Cci {
     private static INameTable/*?*/ nameTable;
 
     public static INestedTypeDefinition NestedType {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<INestedTypeDefinition>() != null);
         if (Dummy.nestedType == null)
           Interlocked.CompareExchange(ref Dummy.nestedType, new DummyNestedType(), null);
         return Dummy.nestedType;
@@ -196,8 +200,8 @@ namespace Microsoft.Cci {
     private static INestedTypeDefinition/*?*/ nestedType;
 
     public static IPlatformType PlatformType {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IPlatformType>() != null);
         if (Dummy.platformType == null)
           Interlocked.CompareExchange(ref Dummy.platformType, new DummyPlatformType(), null);
         return Dummy.platformType;
@@ -206,8 +210,8 @@ namespace Microsoft.Cci {
     private static IPlatformType/*?*/ platformType;
 
     public static IPropertyDefinition Property {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IPropertyDefinition>() != null);
         if (Dummy.property == null)
           Interlocked.CompareExchange(ref Dummy.property, new DummyPropertyDefinition(), null);
         return Dummy.property;
@@ -216,8 +220,8 @@ namespace Microsoft.Cci {
     private static IPropertyDefinition/*?*/ property;
 
     public static ITypeDefinition Type {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
         if (Dummy.type == null)
           Interlocked.CompareExchange(ref Dummy.type, new DummyType(), null);
         return Dummy.type;
@@ -226,8 +230,8 @@ namespace Microsoft.Cci {
     private static ITypeDefinition/*?*/ type;
 
     public static ITypeReference TypeReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
         if (Dummy.typeReference == null)
           Interlocked.CompareExchange(ref Dummy.typeReference, new DummyTypeReference(), null);
         return Dummy.typeReference;
@@ -236,8 +240,8 @@ namespace Microsoft.Cci {
     private static ITypeReference/*?*/ typeReference;
 
     public static IUnit Unit {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IUnit>() != null);
         if (Dummy.unit == null)
           Interlocked.CompareExchange(ref Dummy.unit, new DummyUnit(), null);
         return Dummy.unit;
@@ -246,8 +250,8 @@ namespace Microsoft.Cci {
     private static IUnit/*?*/ unit;
 
     public static IRootUnitNamespace RootUnitNamespace {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IRootUnitNamespace>() != null);
         if (Dummy.rootUnitNamespace == null)
           Interlocked.CompareExchange(ref Dummy.rootUnitNamespace, new DummyRootUnitNamespace(), null);
         return Dummy.rootUnitNamespace;
@@ -256,8 +260,8 @@ namespace Microsoft.Cci {
     private static IRootUnitNamespace/*?*/ rootUnitNamespace;
 
     public static INestedUnitNamespace NestedUnitNamespace {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<INestedUnitNamespace>() != null);
         if (Dummy.nestedUnitNamespace == null)
           Interlocked.CompareExchange(ref Dummy.nestedUnitNamespace, new DummyNestedUnitNamespace(), null);
         return Dummy.nestedUnitNamespace;
@@ -266,8 +270,8 @@ namespace Microsoft.Cci {
     private static INestedUnitNamespace/*?*/ nestedUnitNamespace;
 
     public static IUnitSet UnitSet {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IUnitSet>() != null);
         if (Dummy.unitSet == null)
           Interlocked.CompareExchange(ref Dummy.unitSet, new DummyUnitSet(), null);
         return Dummy.unitSet;
@@ -276,8 +280,8 @@ namespace Microsoft.Cci {
     private static IUnitSet/*?*/ unitSet;
 
     public static IRootUnitSetNamespace RootUnitSetNamespace {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IRootUnitSetNamespace>() != null);
         if (Dummy.rootUnitSetNamespace == null)
           Interlocked.CompareExchange(ref Dummy.rootUnitSetNamespace, new DummyRootUnitSetNamespace(), null);
         return Dummy.rootUnitSetNamespace;
@@ -286,8 +290,8 @@ namespace Microsoft.Cci {
     private static IRootUnitSetNamespace/*?*/ rootUnitSetNamespace;
 
     public static IModule Module {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IModule>() != null);
         if (Dummy.module == null)
           Interlocked.CompareExchange(ref Dummy.module, new DummyModule(), null);
         return Dummy.module;
@@ -296,8 +300,8 @@ namespace Microsoft.Cci {
     private static IModule/*?*/ module;
 
     public static IAssembly Assembly {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IAssembly>() != null);
         if (Dummy.assembly == null)
           Interlocked.CompareExchange(ref Dummy.assembly, new DummyAssembly(), null);
         return Dummy.assembly;
@@ -306,8 +310,8 @@ namespace Microsoft.Cci {
     private static IAssembly/*?*/ assembly;
 
     public static IMethodReference MethodReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
         if (Dummy.methodReference == null)
           Interlocked.CompareExchange(ref Dummy.methodReference, new DummyMethodReference(), null);
         return Dummy.methodReference;
@@ -316,8 +320,8 @@ namespace Microsoft.Cci {
     private static IMethodReference/*?*/ methodReference;
 
     public static Version Version {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<Version>() != null);
         if (Dummy.version == null)
           Dummy.version = new Version(0, 0);
         return Dummy.version;
@@ -326,8 +330,8 @@ namespace Microsoft.Cci {
     private static Version/*?*/ version;
 
     public static ICustomAttribute CustomAttribute {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ICustomAttribute>() != null);
         if (Dummy.customAttribute == null)
           Interlocked.CompareExchange(ref Dummy.customAttribute, new DummyCustomAttribute(), null);
         return Dummy.customAttribute;
@@ -336,8 +340,8 @@ namespace Microsoft.Cci {
     private static ICustomAttribute/*?*/ customAttribute;
 
     public static IFileReference FileReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IFileReference>() != null);
         if (Dummy.fileReference == null)
           Interlocked.CompareExchange(ref Dummy.fileReference, new DummyFileReference(), null);
         return Dummy.fileReference;
@@ -346,8 +350,8 @@ namespace Microsoft.Cci {
     private static IFileReference/*?*/ fileReference;
 
     public static IResource Resource {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IResource>() != null);
         if (Dummy.resource == null)
           Interlocked.CompareExchange(ref Dummy.resource, new DummyResource(), null);
         return Dummy.resource;
@@ -356,8 +360,8 @@ namespace Microsoft.Cci {
     private static IResource/*?*/ resource;
 
     public static IModuleReference ModuleReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IModuleReference>() != null);
         if (Dummy.moduleReference == null)
           Interlocked.CompareExchange(ref Dummy.moduleReference, new DummyModuleReference(), null);
         return Dummy.moduleReference;
@@ -366,8 +370,8 @@ namespace Microsoft.Cci {
     private static IModuleReference/*?*/ moduleReference;
 
     public static IAssemblyReference AssemblyReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IAssemblyReference>() != null);
         if (Dummy.assemblyReference == null)
           Interlocked.CompareExchange(ref Dummy.assemblyReference, new DummyAssemblyReference(), null);
         return Dummy.assemblyReference;
@@ -376,8 +380,8 @@ namespace Microsoft.Cci {
     private static IAssemblyReference/*?*/ assemblyReference;
 
     public static IMarshallingInformation MarshallingInformation {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IMarshallingInformation>() != null);
         if (Dummy.marshallingInformation == null)
           Interlocked.CompareExchange(ref Dummy.marshallingInformation, new DummyMarshallingInformation(), null);
         return Dummy.marshallingInformation;
@@ -386,8 +390,8 @@ namespace Microsoft.Cci {
     private static IMarshallingInformation/*?*/ marshallingInformation;
 
     public static ISecurityAttribute SecurityAttribute {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ISecurityAttribute>() != null);
         if (Dummy.securityAttribute == null)
           Interlocked.CompareExchange(ref Dummy.securityAttribute, new DummySecurityAttribute(), null);
         return Dummy.securityAttribute;
@@ -396,8 +400,8 @@ namespace Microsoft.Cci {
     private static ISecurityAttribute/*?*/ securityAttribute;
 
     public static IParameterTypeInformation ParameterTypeInformation {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IParameterTypeInformation>() != null);
         if (Dummy.parameterTypeInformation == null)
           Interlocked.CompareExchange(ref Dummy.parameterTypeInformation, new DummyParameterTypeInformation(), null);
         return Dummy.parameterTypeInformation;
@@ -406,8 +410,8 @@ namespace Microsoft.Cci {
     private static IParameterTypeInformation/*?*/ parameterTypeInformation;
 
     public static INamespaceTypeDefinition NamespaceTypeDefinition {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<INamespaceTypeDefinition>() != null);
         if (Dummy.namespaceTypeDefinition == null)
           Interlocked.CompareExchange(ref Dummy.namespaceTypeDefinition, new DummyNamespaceTypeDefinition(), null);
         return Dummy.namespaceTypeDefinition;
@@ -416,8 +420,8 @@ namespace Microsoft.Cci {
     private static INamespaceTypeDefinition/*?*/ namespaceTypeDefinition;
 
     public static INamespaceTypeReference NamespaceTypeReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
         if (Dummy.namespaceTypeReference == null)
           Interlocked.CompareExchange(ref Dummy.namespaceTypeReference, new DummyNamespaceTypeReference(), null);
         return Dummy.namespaceTypeReference;
@@ -426,8 +430,8 @@ namespace Microsoft.Cci {
     private static INamespaceTypeReference/*?*/ namespaceTypeReference;
 
     public static ISpecializedNestedTypeDefinition SpecializedNestedTypeDefinition {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ISpecializedNestedTypeDefinition>() != null);
         if (Dummy.specializedNestedTypeDefinition == null)
           Interlocked.CompareExchange(ref Dummy.specializedNestedTypeDefinition, new DummySpecializedNestedTypeDefinition(), null);
         return Dummy.specializedNestedTypeDefinition;
@@ -436,8 +440,8 @@ namespace Microsoft.Cci {
     private static ISpecializedNestedTypeDefinition/*?*/ specializedNestedTypeDefinition;
 
     public static ISpecializedFieldDefinition SpecializedFieldDefinition {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ISpecializedFieldDefinition>() != null);
         if (Dummy.specializedFieldDefinition == null)
           Interlocked.CompareExchange(ref Dummy.specializedFieldDefinition, new DummySpecializedFieldDefinition(), null);
         return Dummy.specializedFieldDefinition;
@@ -446,8 +450,8 @@ namespace Microsoft.Cci {
     private static ISpecializedFieldDefinition/*?*/ specializedFieldDefinition;
 
     public static ISpecializedMethodDefinition SpecializedMethodDefinition {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ISpecializedMethodDefinition>() != null);
         if (Dummy.specializedMethodDefinition == null)
           Interlocked.CompareExchange(ref Dummy.specializedMethodDefinition, new DummySpecializedMethodDefinition(), null);
         return Dummy.specializedMethodDefinition;
@@ -456,8 +460,8 @@ namespace Microsoft.Cci {
     private static ISpecializedMethodDefinition/*?*/ specializedMethodDefinition;
 
     public static ISpecializedPropertyDefinition SpecializedPropertyDefinition {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ISpecializedPropertyDefinition>() != null);
         if (Dummy.specializedPropertyDefinition == null)
           Interlocked.CompareExchange(ref Dummy.specializedPropertyDefinition, new DummySpecializedPropertyDefinition(), null);
         return Dummy.specializedPropertyDefinition;
@@ -466,8 +470,8 @@ namespace Microsoft.Cci {
     private static ISpecializedPropertyDefinition/*?*/ specializedPropertyDefinition;
 
     public static ILocalDefinition LocalVariable {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
         if (Dummy.localVariable == null)
           Interlocked.CompareExchange(ref Dummy.localVariable, new DummyLocalVariable(), null);
         return Dummy.localVariable;
@@ -476,8 +480,8 @@ namespace Microsoft.Cci {
     private static ILocalDefinition/*?*/ localVariable;
 
     public static IFieldReference FieldReference {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IFieldReference>() != null);
         if (Dummy.fieldReference == null)
           Interlocked.CompareExchange(ref Dummy.fieldReference, new DummyFieldReference(), null);
         return Dummy.fieldReference;
@@ -486,8 +490,8 @@ namespace Microsoft.Cci {
     private static IFieldReference/*?*/ fieldReference;
 
     public static IParameterDefinition ParameterDefinition {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IParameterDefinition>() != null);
         if (Dummy.parameterDefinition == null)
           Interlocked.CompareExchange(ref Dummy.parameterDefinition, new DummyParameterDefinition(), null);
         return Dummy.parameterDefinition;
@@ -496,8 +500,8 @@ namespace Microsoft.Cci {
     private static IParameterDefinition/*?*/ parameterDefinition;
 
     public static ISectionBlock SectionBlock {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ISectionBlock>() != null);
         if (Dummy.sectionBlock == null)
           Interlocked.CompareExchange(ref Dummy.sectionBlock, new DummySectionBlock(), null);
         return Dummy.sectionBlock;
@@ -506,8 +510,8 @@ namespace Microsoft.Cci {
     private static ISectionBlock/*?*/ sectionBlock;
 
     public static IPlatformInvokeInformation PlatformInvokeInformation {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IPlatformInvokeInformation>() != null);
         if (Dummy.platformInvokeInformation == null)
           Interlocked.CompareExchange(ref Dummy.platformInvokeInformation, new DummyPlatformInvokeInformation(), null);
         return Dummy.platformInvokeInformation;
@@ -516,8 +520,8 @@ namespace Microsoft.Cci {
     private static IPlatformInvokeInformation/*?*/ platformInvokeInformation;
 
     public static IGlobalMethodDefinition GlobalMethod {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IGlobalMethodDefinition>() != null);
         if (Dummy.globalMethodDefinition == null)
           Interlocked.CompareExchange(ref Dummy.globalMethodDefinition, new DummyGlobalMethodDefinition(), null);
         return Dummy.globalMethodDefinition;
@@ -526,8 +530,8 @@ namespace Microsoft.Cci {
     private static IGlobalMethodDefinition/*?*/ globalMethodDefinition;
 
     public static IGlobalFieldDefinition GlobalField {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IGlobalFieldDefinition>() != null);
         if (Dummy.globalFieldDefinition == null)
           Interlocked.CompareExchange(ref Dummy.globalFieldDefinition, new DummyGlobalFieldDefinition(), null);
         return Dummy.globalFieldDefinition;
@@ -536,8 +540,8 @@ namespace Microsoft.Cci {
     private static IGlobalFieldDefinition/*?*/ globalFieldDefinition;
 
     public static IOperation Operation {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IOperation>() != null);
         if (Dummy.operation == null)
           Interlocked.CompareExchange(ref Dummy.operation, new DummyOperation(), null);
         return Dummy.operation;
@@ -546,8 +550,8 @@ namespace Microsoft.Cci {
     private static IOperation/*?*/ operation;
 
     public static ILocation Location {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<ILocation>() != null);
         if (Dummy.location == null)
           Interlocked.CompareExchange(ref Dummy.location, new DummyLocation(), null);
         return Dummy.location;
@@ -556,8 +560,8 @@ namespace Microsoft.Cci {
     private static ILocation/*?*/ location;
 
     public static IDocument Document {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IDocument>() != null);
         if (Dummy.document == null)
           Interlocked.CompareExchange(ref Dummy.document, new DummyDocument(), null);
         return Dummy.document;
@@ -566,8 +570,8 @@ namespace Microsoft.Cci {
     private static IDocument/*?*/ document;
 
     public static IOperationExceptionInformation OperationExceptionInformation {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IOperationExceptionInformation>() != null);
         if (Dummy.operationExceptionInformation == null)
           Interlocked.CompareExchange(ref Dummy.operationExceptionInformation, new DummyOperationExceptionInformation(), null);
         return Dummy.operationExceptionInformation;
@@ -576,8 +580,8 @@ namespace Microsoft.Cci {
     private static IOperationExceptionInformation/*?*/ operationExceptionInformation;
 
     public static IInternFactory InternFactory {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IInternFactory>() != null);
         if (Dummy.internFactory == null)
           Interlocked.CompareExchange(ref Dummy.internFactory, new DummyInternFactory(), null);
         return Dummy.internFactory;
@@ -586,8 +590,8 @@ namespace Microsoft.Cci {
     private static IInternFactory/*?*/ internFactory;
 
     public static IArrayType ArrayType {
-      [DebuggerNonUserCode]
       get {
+        Contract.Ensures(Contract.Result<IArrayType>() != null);
         if (Dummy.arrayType == null)
           Interlocked.CompareExchange(ref Dummy.arrayType, new DummyArrayType(), null);
         return Dummy.arrayType;
@@ -596,6 +600,7 @@ namespace Microsoft.Cci {
     private static IArrayType/*?*/ arrayType;
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyAliasForType : Dummy, IAliasForType {
     #region IAliasForType Members
 
@@ -649,6 +654,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyAssembly : Dummy, IAssembly {
     #region IAssembly Members
 
@@ -955,6 +961,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMetadataHost : Dummy, IMetadataHost {
 
     #region ICompilationHostEnvironment Members
@@ -1021,17 +1028,17 @@ namespace Microsoft.Cci {
     public void ReportError(IErrorMessage error) {
     }
 
-    //^ [Pure]
+    [Pure]
     public AssemblyIdentity ProbeAssemblyReference(IUnit unit, AssemblyIdentity referedAssemblyIdentity) {
       return referedAssemblyIdentity;
     }
 
-    //^ [Pure]
+    [Pure]
     public ModuleIdentity ProbeModuleReference(IUnit unit, ModuleIdentity referedModuleIdentity) {
       return referedModuleIdentity;
     }
 
-    //^ [Pure]
+    [Pure]
     public AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
       return assemblyIdentity;
     }
@@ -1051,6 +1058,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMetadataConstant : Dummy, IMetadataConstant {
 
     #region IMetadataConstant Members
@@ -1078,6 +1086,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyCustomAttribute : Dummy, ICustomAttribute {
     #region ICustomAttribute Members
 
@@ -1105,6 +1114,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyCustomModifier : Dummy, ICustomModifier {
 
     #region ICustomModifier Members
@@ -1121,6 +1131,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyEventDefinition : Dummy, IEventDefinition {
 
     #region IEventDefinition Members
@@ -1223,6 +1234,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMetadataExpression : Dummy, IMetadataExpression {
 
     #region IMetadataExpression Members
@@ -1245,6 +1257,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyFieldDefinition : Dummy, IFieldDefinition {
 
     #region IFieldDefinition Members
@@ -1257,6 +1270,10 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+    }
+
     public bool IsCompileTimeConstant {
       get { return false; }
     }
@@ -1266,6 +1283,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsMarshalledExplicitly {
+      get { return false; }
+    }
+
+    public bool IsModified {
       get { return false; }
     }
 
@@ -1408,6 +1429,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyFileReference : Dummy, IFileReference {
     #region IFileReference Members
 
@@ -1431,6 +1453,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyGenericTypeInstance : Dummy, IGenericTypeInstance {
 
     #region IGenericTypeInstance Members
@@ -1667,6 +1690,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyGenericTypeParameter : Dummy, IGenericTypeParameter {
 
     #region IGenericTypeParameter Members
@@ -1956,6 +1980,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyGenericMethodParameter : Dummy, IGenericMethodParameter {
     #region IGenericMethodParameter Members
 
@@ -2247,6 +2272,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMethodBody : Dummy, IMethodBody {
 
     #region IMethodBody Members
@@ -2299,6 +2325,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMethodDefinition : Dummy, IMethodDefinition {
 
     #region IMethodDefinition Members
@@ -2577,6 +2604,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMethodReference : Dummy, IMethodReference {
     #region IMethodReference Members
 
@@ -2680,6 +2708,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyModule : Dummy, IModule {
     #region IModule Members
 
@@ -2911,6 +2940,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyModuleReference : Dummy, IModuleReference {
 
     #region IUnitReference Members
@@ -2973,6 +3003,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyName : Dummy, IName {
 
     #region IName Members
@@ -2993,6 +3024,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyNamedArgument : Dummy, IMetadataNamedArgument {
     #region IMetadataNamedArgument Members
 
@@ -3030,6 +3062,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyNamespaceTypeDefinition : Dummy, INamespaceTypeDefinition {
     #region INamespaceTypeDefinition Members
 
@@ -3315,6 +3348,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyNamespaceTypeReference : Dummy, INamespaceTypeReference {
 
     #region INamespaceTypeReference Members
@@ -3408,6 +3442,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyNameTable : Dummy, INameTable {
 
     #region INameTable Members
@@ -3468,7 +3503,7 @@ namespace Microsoft.Cci {
       get { return Dummy.Name; }
     }
 
-    //^ [Pure]
+    [Pure]
     public IName GetNameFor(string name) {
       //^ assume false;
       return Dummy.Name;
@@ -3925,6 +3960,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyNestedType : Dummy, INestedTypeDefinition {
 
     #region ITypeDefinition Members
@@ -4213,6 +4249,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyPlatformType : Dummy, IPlatformType {
 
     #region IPlatformType Members
@@ -4389,6 +4426,10 @@ namespace Microsoft.Cci {
       get { return Dummy.NamespaceTypeReference; }
     }
 
+    public INamespaceTypeReference SystemRuntimeCompilerServicesExtensionAttribute {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
     public INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute {
       get { return Dummy.NamespaceTypeReference; }
     }
@@ -4468,6 +4509,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyPropertyDefinition : Dummy, IPropertyDefinition {
 
     #region IPropertyDefinition Members
@@ -4621,6 +4663,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyType : Dummy, ITypeDefinition {
 
     #region ITypeDefinition Members
@@ -4838,6 +4881,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyTypeReference : Dummy, ITypeReference {
 
     #region ITypeReference Members
@@ -4882,19 +4926,22 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return this.attributes; }
     }
+    IEnumerable<ICustomAttribute> attributes = IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
 
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return this.locations; }
     }
+    IEnumerable<ILocation> locations = IteratorHelper.GetEmptyEnumerable<ILocation>();
 
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyUnit : Dummy, IUnit {
 
     #region IUnit Members
@@ -4977,6 +5024,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyRootUnitNamespace : Dummy, IRootUnitNamespace {
 
     #region IUnitNamespace Members
@@ -5055,6 +5103,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyNestedUnitNamespace : Dummy, INestedUnitNamespace {
 
     #region IUnitNamespace Members
@@ -5177,6 +5226,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyUnitSet : Dummy, IUnitSet {
 
     #region IUnitSet Members
@@ -5211,6 +5261,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyRootUnitSetNamespace : Dummy, IRootUnitSetNamespace {
 
     #region IUnitSetNamespace Members
@@ -5277,6 +5328,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyResource : Dummy, IResource {
     #region IResource Members
 
@@ -5316,6 +5368,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyAssemblyReference : Dummy, IAssemblyReference {
     #region IAssemblyReference Members
 
@@ -5409,6 +5462,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyMarshallingInformation : Dummy, IMarshallingInformation {
     #region IMarshallingInformation Members
 
@@ -5459,6 +5513,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySecurityAttribute : Dummy, ISecurityAttribute {
     #region ISecurityAttribute Members
 
@@ -5473,6 +5528,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyParameterTypeInformation : Dummy, IParameterTypeInformation {
     #region IParameterTypeInformation Members
 
@@ -5507,6 +5563,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySpecializedNestedTypeDefinition : Dummy, ISpecializedNestedTypeDefinition {
     #region ISpecializedNestedTypeDefinition Members
 
@@ -5813,12 +5870,17 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySpecializedFieldDefinition : Dummy, ISpecializedFieldDefinition {
 
     #region IFieldDefinition Members
 
     public uint BitLength {
       get { return 0; }
+    }
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
     }
 
     public bool IsBitField {
@@ -5838,6 +5900,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsMarshalledExplicitly {
+      get { return false; }
+    }
+
+    public bool IsModified {
       get { return false; }
     }
 
@@ -5984,6 +6050,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySpecializedMethodDefinition : Dummy, ISpecializedMethodDefinition {
     #region ISpecializedMethodDefinition Members
 
@@ -6015,7 +6082,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
     }
 
-    //^ [Pure]
+    [Pure]
     public ushort GenericParameterCount {
       get {
         //^ assume false;
@@ -6279,6 +6346,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySpecializedPropertyDefinition : Dummy, ISpecializedPropertyDefinition {
     #region ISpecializedPropertyDefinition Members
 
@@ -6439,6 +6507,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyFunctionPointerType : Dummy, IFunctionPointer {
     #region IFunctionPointer Members
 
@@ -6692,6 +6761,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyLocalVariable : Dummy, ILocalDefinition {
 
     #region ILocalDefinition Members
@@ -6744,11 +6814,20 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyFieldReference : Dummy, IFieldReference {
     #region IFieldReference Members
 
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+    }
+
     public uint InternedKey {
       get { return 0; }
+    }
+
+    public bool IsModified {
+      get { return false; }
     }
 
     public bool IsStatic {
@@ -6801,6 +6880,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyParameterDefinition : Dummy, IParameterDefinition {
     #region IParameterDefinition Members
 
@@ -6907,6 +6987,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySectionBlock : Dummy, ISectionBlock {
     #region ISectionBlock Members
 
@@ -6929,6 +7010,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyPlatformInvokeInformation : Dummy, IPlatformInvokeInformation {
 
     #region IPlatformInvokeInformation Members
@@ -6968,6 +7050,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyGlobalMethodDefinition : Dummy, IGlobalMethodDefinition {
 
     #region ISignature Members
@@ -7051,7 +7134,7 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
     }
 
-    //^ [Pure]
+    [Pure]
     public ushort GenericParameterCount {
       get {
         //^ assume false;
@@ -7267,6 +7350,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyGlobalFieldDefinition : Dummy, IGlobalFieldDefinition {
 
     #region INamedEntity Members
@@ -7318,6 +7402,10 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+    }
+
     public bool IsBitField {
       get { return false; }
     }
@@ -7335,6 +7423,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsMarshalledExplicitly {
+      get { return false; }
+    }
+
+    public bool IsModified {
       get { return false; }
     }
 
@@ -7451,6 +7543,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyOperation : Dummy, IOperation {
     #region IOperation Members
 
@@ -7473,6 +7566,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyDocument : Dummy, IDocument {
     #region IDocument Members
 
@@ -7487,6 +7581,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyLocation : Dummy, ILocation {
     #region ILocation Members
 
@@ -7497,6 +7592,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyOperationExceptionInformation : Dummy, IOperationExceptionInformation {
     #region IOperationExceptionInformation Members
 
@@ -7531,6 +7627,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyInternFactory : Dummy, IInternFactory {
     #region IInternFactory Members
 
@@ -7601,6 +7698,7 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  [ContractVerification(false)]
   internal sealed class DummyArrayType : Dummy, IArrayType {
 
     #region ITypeDefinition Members
@@ -7828,16 +7926,18 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<int> LowerBounds {
-      get { return IteratorHelper.GetEmptyEnumerable<int>(); }
+      get { return this.lowerBounds; }
     }
+    IEnumerable<int> lowerBounds = IteratorHelper.GetEmptyEnumerable<int>();
 
     public uint Rank {
       get { return 0; }
     }
 
     public IEnumerable<ulong> Sizes {
-      get { return IteratorHelper.GetEmptyEnumerable<ulong>(); }
+      get { return this.sizes; }
     }
+    IEnumerable<ulong> sizes = IteratorHelper.GetEmptyEnumerable<ulong>();
 
     #endregion
   }

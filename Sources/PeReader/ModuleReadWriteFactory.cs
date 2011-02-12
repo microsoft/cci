@@ -137,7 +137,7 @@ namespace Microsoft.Cci {
 
     internal Assembly/*?*/ CoreAssembly {
       get {
-        if (this.coreAssembly == null) 
+        if (this.coreAssembly == null)
           this.coreAssembly = this.LookupAssembly(null, this.metadataReaderHost.CoreAssemblySymbolicIdentity) as Assembly;
         if (this.coreAssembly == Dummy.Assembly)
           return null;
@@ -509,7 +509,7 @@ namespace Microsoft.Cci {
       /// environment to co-exist while agreeing on how to map strings to IName instances.
       /// </param>
       public DefaultHost(INameTable nameTable)
-      : base(nameTable, new InternFactory(), 0, null, false) {
+        : base(nameTable, new InternFactory(), 0, null, false) {
         this.peReader = new PeReader(this);
       }
 

@@ -73,6 +73,10 @@
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
+      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
+      <Name>Microsoft.Contracts</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
   <ProjectExtensions>

@@ -58,7 +58,7 @@ namespace Microsoft.Cci {
     MemoryStream emptyStream = new MemoryStream(0);
     Dictionary<uint, uint> exportedTypeIndex = new Dictionary<uint, uint>();
     List<ITypeReference> exportedTypeList = new List<ITypeReference>();
-    Dictionary<IFieldDefinition, uint> fieldDefIndex = new Dictionary<IFieldDefinition, uint>();
+    Dictionary<uint, uint> fieldDefIndex = new Dictionary<uint, uint>();
     List<IFieldDefinition> fieldDefList = new List<IFieldDefinition>();
     //List<IFieldReference> fieldRefList = new List<IFieldReference>();
     Dictionary<IFieldReference, uint> fieldSignatureIndex = new Dictionary<IFieldReference, uint>();
@@ -76,7 +76,7 @@ namespace Microsoft.Cci {
     internal List<ITypeMemberReference> memberRefList = new List<ITypeMemberReference>();
     MemoryStream metadataStream = new MemoryStream(16*1024);
     Dictionary<IMethodDefinition, uint> methodBodyIndex = new Dictionary<IMethodDefinition, uint>();
-    Dictionary<IMethodDefinition, uint> methodDefIndex = new Dictionary<IMethodDefinition, uint>();
+    Dictionary<uint, uint> methodDefIndex = new Dictionary<uint, uint>();
     internal List<IMethodDefinition> methodDefList = new List<IMethodDefinition>();
     List<IMethodImplementation> methodImplList = new List<IMethodImplementation>();
     Dictionary<IGenericMethodInstanceReference, uint> methodInstanceSignatureIndex = new Dictionary<IGenericMethodInstanceReference, uint>();
@@ -251,7 +251,7 @@ namespace Microsoft.Cci {
       writer.WriteRelocSection();
 
       if (pdbWriter != null) {
-        if (module.EntryPoint.ResolvedMethod != Dummy.Method)
+        if (module.EntryPoint != Dummy.MethodReference)
           pdbWriter.SetEntryPoint(writer.GetMethodToken(module.EntryPoint));
       }
     }
@@ -447,7 +447,7 @@ namespace Microsoft.Cci {
         this.eventDefList.Add(eventDef);
       foreach (IFieldDefinition fieldDef in typeDef.Fields) {
         this.fieldDefList.Add(fieldDef);
-        this.fieldDefIndex.Add(fieldDef, (uint)this.fieldDefList.Count);
+        this.fieldDefIndex.Add(fieldDef.InternedKey, (uint)this.fieldDefList.Count);
       }
       foreach (IMethodDefinition methodDef in typeDef.Methods)
         this.CreateIndicesFor(methodDef);
@@ -467,7 +467,7 @@ namespace Microsoft.Cci {
           IFieldDefinition/*?*/ fieldDef = helperMember as IFieldDefinition;
           if (fieldDef != null) {
             this.fieldDefList.Add(fieldDef);
-            this.fieldDefIndex.Add(fieldDef, (uint)this.fieldDefList.Count);
+            this.fieldDefIndex.Add(fieldDef.InternedKey, (uint)this.fieldDefList.Count);
           } else {
             IMethodDefinition/*?*/ methodDef = helperMember as IMethodDefinition;
             if (methodDef != null) {
@@ -518,7 +518,7 @@ namespace Microsoft.Cci {
           this.genericParameterList.Add(genericParameter);
       }
       this.methodDefList.Add(methodDef);
-      this.methodDefIndex.Add(methodDef, (uint)this.methodDefList.Count);
+      this.methodDefIndex.Add(methodDef.InternedKey, (uint)this.methodDefList.Count);
     }
 
     private IEnumerable<IGenericTypeParameter>/*?*/ GetConsolidatedTypeParameters(ITypeDefinition typeDef) {
@@ -593,7 +593,7 @@ namespace Microsoft.Cci {
       ClrHeader clrHeader = this.clrHeader;
       clrHeader.codeManagerTable.RelativeVirtualAddress = 0;
       clrHeader.codeManagerTable.Size = 0;
-      if (this.module.EntryPoint.ResolvedMethod == Dummy.Method)
+      if (this.module.EntryPoint == Dummy.MethodReference)
         clrHeader.entryPointToken = 0;
       else
         clrHeader.entryPointToken = this.GetMethodToken(this.module.EntryPoint);
@@ -830,12 +830,9 @@ namespace Microsoft.Cci {
     }
 
     private uint GetCustomAttributeTypeCodedIndex(IMethodReference methodReference) {
-      IMethodDefinition/*?*/ methodDef = null;
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
-        methodDef = methodReference.ResolvedMethod;
-      if (methodDef != null)
-        return (this.GetMethodDefIndex(methodDef) << 3)|2;
+        return (this.GetMethodDefIndex(methodReference) << 3)|2;
       else
         return (this.GetMemberRefIndex(methodReference) << 3)|3;
     }
@@ -878,8 +875,8 @@ namespace Microsoft.Cci {
       return result;
     }
 
-    private uint GetFieldDefIndex(IFieldDefinition field) {
-      return this.fieldDefIndex[field];
+    private uint GetFieldDefIndex(IFieldReference field) {
+      return this.fieldDefIndex[field.InternedKey];
     }
 
     private static ushort GetFieldFlags(IFieldDefinition fieldDef) {
@@ -910,12 +907,9 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetFieldToken(IFieldReference fieldReference) {
-      IFieldDefinition/*?*/ fieldDef = null;
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(fieldReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
-        fieldDef = fieldReference.ResolvedField;
-      if (fieldDef != null)
-        return 0x04000000 | this.GetFieldDefIndex(fieldDef);
+        return 0x04000000 | this.GetFieldDefIndex(fieldReference);
       else
         return 0x0A000000 | this.GetMemberRefIndex(fieldReference);
     }
@@ -1054,7 +1048,7 @@ namespace Microsoft.Cci {
         if (methodRef != null) {
           if (methodRef.AcceptsExtraArguments) {
             uint methodIndex = 0;
-            if (this.methodDefIndex.TryGetValue(methodRef.ResolvedMethod, out methodIndex))
+            if (this.methodDefIndex.TryGetValue(methodRef.InternedKey, out methodIndex))
               return (methodIndex << 3)|3;
           }
           return parentTypeDefIndex << 3;
@@ -1068,8 +1062,8 @@ namespace Microsoft.Cci {
         return (this.GetTypeSpecIndex(memberRef.ContainingType) << 3)|4;
     }
 
-    private uint GetMethodDefIndex(IMethodDefinition method) {
-      return this.methodDefIndex[method];
+    private uint GetMethodDefIndex(IMethodReference method) {
+      return this.methodDefIndex[method.InternedKey];
     }
 
     private static bool IsTypeSpecification(ITypeReference typeReference) {
@@ -1079,12 +1073,9 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetMethodDefOrRefCodedIndex(IMethodReference methodReference) {
-      IMethodDefinition/*?*/ methodDef = null;
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
-        methodDef = methodReference.ResolvedMethod;
-      if (methodDef != null)
-        return this.GetMethodDefIndex(methodDef) << 1;
+        return this.GetMethodDefIndex(methodReference) << 1;
       else
         return (this.GetMemberRefIndex(methodReference) << 1)|1;
     }
@@ -1202,20 +1193,14 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetMethodToken(IMethodReference methodReference) {
-      uint methodDefIndex = 0;
-      IMethodDefinition/*?*/ methodDef = null;
+      IGenericMethodInstanceReference/*?*/ methodSpec = methodReference as IGenericMethodInstanceReference;
+      if (methodSpec != null)
+        return 0x2B000000 | this.GetMethodSpecIndex(methodSpec);
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
-      if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
-        methodDef = methodReference.ResolvedMethod;
-      if (methodDef != null && (methodReference == methodDef || !methodReference.AcceptsExtraArguments) && this.methodDefIndex.TryGetValue(methodDef, out methodDefIndex))
-        return 0x06000000 | methodDefIndex;
-      else {
-        IGenericMethodInstanceReference/*?*/ methodSpec = methodReference as IGenericMethodInstanceReference;
-        if (methodSpec != null)
-          return 0x2B000000 | this.GetMethodSpecIndex(methodSpec);
-        else
-          return 0x0A000000 | this.GetMemberRefIndex(methodReference);
-      }
+      if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity) && !methodReference.AcceptsExtraArguments)
+        return 0x06000000 | this.GetMethodDefIndex(methodReference);
+      else
+        return 0x0A000000 | this.GetMemberRefIndex(methodReference);
     }
 
     private static ushort GetParameterFlags(IParameterDefinition parDef) {
@@ -1416,7 +1401,7 @@ namespace Microsoft.Cci {
         return this.typeDefIndex[genTypePar.DefiningType.InternedKey] << 1;
       IGenericMethodParameter/*?*/ genMethPar = genPar as IGenericMethodParameter;
       if (genMethPar != null)
-        return (this.methodDefIndex[genMethPar.DefiningMethod] << 1)|1;
+        return (this.methodDefIndex[genMethPar.DefiningMethod.InternedKey] << 1)|1;
       //TODO: error
       return 0;
     }
@@ -2345,7 +2330,7 @@ namespace Microsoft.Cci {
             r.Semantic = 0x0002;
           else
             r.Semantic = 0x0004;
-          r.Method = this.methodDefIndex[accessorMethod.ResolvedMethod];
+          r.Method = this.methodDefIndex[accessorMethod.InternedKey];
           r.OriginalIndex = i++;
           this.methodSemanticsTable.Add(r);
         }
@@ -2364,7 +2349,7 @@ namespace Microsoft.Cci {
             r.Semantic = 0x0010;
           else if (accessorMethod == eventDef.Caller)
             r.Semantic = 0x0020;
-          r.Method = this.methodDefIndex[accessorMethod.ResolvedMethod];
+          r.Method = this.methodDefIndex[accessorMethod.InternedKey];
           r.OriginalIndex = i++;
           this.methodSemanticsTable.Add(r);
         }
@@ -3451,9 +3436,9 @@ namespace Microsoft.Cci {
 
     private void SerializeFieldSignature(IFieldReference fieldReference, BinaryWriter writer) {
       writer.WriteByte(0x06);
-      if (fieldReference.Type is IModifiedTypeReference) {
-        //  foreach (ICustomModifier customModifier in fieldReference.Type.CustomModifiers)
-        //    this.SerializeCustomModifier(customModifier, writer);
+      if (fieldReference.IsModified) {
+        foreach (ICustomModifier customModifier in fieldReference.CustomModifiers)
+          this.SerializeCustomModifier(customModifier, writer);
       }
       this.SerializeTypeReference(fieldReference.Type, writer);
     }
@@ -5390,6 +5375,11 @@ namespace Microsoft.Cci {
 
     public override void Visit(IUnitNamespaceReference unitNamespaceReference) {
       //No need to do anything with namespace references
+    }
+
+    public override void VisitMethodReturnAttributes(IEnumerable<ICustomAttribute> customAttributes) {
+      if (this.traverseAttributes)
+        base.VisitMethodReturnAttributes(customAttributes);
     }
 
   }

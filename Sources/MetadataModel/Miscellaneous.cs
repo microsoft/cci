@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 
 //^ using Microsoft.Contracts;
@@ -58,6 +59,7 @@ namespace Microsoft.Cci {
     /// <param name="right">An enumeration of elements. The enumeration may be null, but the elements may not.</param>
     /// <param name="comparer">An object that compares two enumeration elements for equality.</param>
     public static bool EnumerablesAreEqual<T>(IEnumerable<T/*!*/>/*?*/ left, IEnumerable<T/*!*/>/*?*/ right, IEqualityComparer<T> comparer) {
+      Contract.Requires(comparer != null);
       if (left == null) return right == null || !right.GetEnumerator().MoveNext();
       IEnumerator<T/*!*/> leftEnum = left.GetEnumerator();
       if (right == null) return !leftEnum.MoveNext();
@@ -129,16 +131,18 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the given enumerable is not null and contains at least one element.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool EnumerableIsNotEmpty<T>(IEnumerable<T>/*?*/ enumerable) {
       if (enumerable == null) return false;
+      var collection = enumerable as ICollection<T>;
+      if (collection != null) return collection.Count > 0;
       return enumerable.GetEnumerator().MoveNext();
     }
 
     /// <summary>
     /// True if the given enumerable is null or contains no elements
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool EnumerableIsEmpty<T>(IEnumerable<T>/*?*/ enumerable) {
       return !EnumerableIsNotEmpty<T>(enumerable);
     }
@@ -146,7 +150,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the given enumerable is not null and contains the given element.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool EnumerableContains<T>(IEnumerable<T>/*?*/ enumerable, T element)
       where T : class
       // ^ ensures enumerable == null ==> result == false;
@@ -161,7 +165,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the number of elements in the given enumerable. A null enumerable is allowed and results in 0.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static uint EnumerableCount<T>(IEnumerable<T>/*?*/ enumerable)
       //^ ensures result >= 0;
     {
@@ -176,7 +180,7 @@ namespace Microsoft.Cci {
     /// Returns true if the number of elements in the given enumerable equals the specified length. A null enumerable is allowed and
     /// has length 0.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool EnumerableHasLength<T>(IEnumerable<T>/*?*/ enumerable, ulong length) {
       if (enumerable == null) return (length == 0);
       IEnumerator<T> enumerator = enumerable.GetEnumerator();
@@ -196,6 +200,8 @@ namespace Microsoft.Cci {
     public static T Single<T>(IEnumerable<T> enumerable)
       //^ requires IteratorHelper.EnumerableHasLength(enumerable, 1);
     {
+      Contract.Requires(enumerable != null);
+      Contract.Requires(IteratorHelper.EnumerableHasLength(enumerable, 1));
       var e = enumerable.GetEnumerator();
       e.MoveNext();
       return e.Current;
@@ -210,6 +216,8 @@ namespace Microsoft.Cci {
     public static T First<T>(IEnumerable<T> enumerable)
       //^ requires IteratorHelper.EnumerableIsNotEmpty(enumerable);
     {
+      Contract.Requires(enumerable != null);
+      Contract.Requires(IteratorHelper.EnumerableIsNotEmpty(enumerable));
       var e = enumerable.GetEnumerator();
       e.MoveNext();
       return e.Current;
@@ -223,6 +231,8 @@ namespace Microsoft.Cci {
     /// <param name="pred">The predicate to apply.</param>
     /// <returns>true if and only if pred was true for at least one element</returns>
     public static bool Any<T>(IEnumerable<T> enumerable, Predicate<T> pred) {
+      Contract.Requires(enumerable != null);
+      Contract.Requires(pred != null);
       foreach (var t in enumerable)
         if (pred(t))
           return true;
@@ -256,6 +266,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="s">The string to hash.</param>
     public static int CaseInsensitiveStringHash(string s) {
+      Contract.Requires(s != null);
       int hashCode = 0;
       for (int i = 0, n = s.Length; i < n; i++) {
         char ch = s[i];
@@ -270,6 +281,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="s">The string to hash.</param>
     public static int CaseSensitiveStringHash(string s) {
+      Contract.Requires(s != null);
       int hashCode = 0;
       for (int i = 0, n = s.Length; i < n; i++) {
         char ch = s[i];
@@ -395,6 +407,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to an IResource instance.
   /// </summary>
+  [ContractClass(typeof(IResourceReferenceContract))]
   public interface IResourceReference {
 
     /// <summary>
@@ -421,6 +434,42 @@ namespace Microsoft.Cci {
     /// The referenced resource.
     /// </summary>
     IResource Resource { get; }
+  }
+
+  [ContractClassFor(typeof(IResourceReference))]
+  abstract class IResourceReferenceContract : IResourceReference {
+    public IEnumerable<ICustomAttribute> Attributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAssemblyReference DefiningAssembly {
+      get {
+        Contract.Ensures(Contract.Result<IAssemblyReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsPublic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IResource Resource {
+      get {
+        Contract.Ensures(Contract.Result<IResource>() != null);
+        throw new NotImplementedException();
+      }
+    }
   }
 
   /// <summary>
@@ -660,6 +709,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Implemented by any entity that has a name.
   /// </summary>
+  [ContractClass(typeof(INamedEntityContract))]
   public interface INamedEntity {
     /// <summary>
     /// The name of the entity.
@@ -667,9 +717,21 @@ namespace Microsoft.Cci {
     IName Name { get; }
   }
 
+  [ContractClassFor(typeof(INamedEntity))]
+  abstract class INamedEntityContract : INamedEntity {
+    public IName Name {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+  }
+
+
   /// <summary>
   /// A collection of IName instances that represent names that are commonly used during compilation.
   /// </summary>
+  [ContractClass(typeof(INameTableContract))]
   public interface INameTable {
 
     /// <summary>
@@ -681,7 +743,7 @@ namespace Microsoft.Cci {
     /// Gets a cached IName instance corresponding to the given string. If no cached instance exists, a new instance is created.
     /// The method is only available to fully trusted code since it allows the caller to cause new objects to be added to the cache.
     /// </summary>
-    //^ [Pure]
+    [Pure]
 #if !COMPACTFX
     [System.Security.Permissions.SecurityPermission(global::System.Security.Permissions.SecurityAction.LinkDemand)]
 #endif
@@ -1315,6 +1377,897 @@ namespace Microsoft.Cci {
     /// </summary>
     IName Nullable { get; }
 
+  }
+
+  [ContractClassFor(typeof(INameTable))]
+  abstract class INameTableContract : INameTable {
+    public IName EmptyName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName GetNameFor(string name) {
+      Contract.Ensures(Contract.Result<IName>() != null);
+      Contract.Ensures(Contract.Result<IName>().Value == name);
+      throw new NotImplementedException();
+    }
+
+    public IName Address {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName AllowMultiple {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName BoolOpBool {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Combine {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Concat {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName DecimalOpDecimal {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName DelegateOpDelegate {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName EnumOpEnum {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName EnumOpNum {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public new IName Equals {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Float32OpFloat32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Float64OpFloat64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Get {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName global {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName HasValue {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Inherited {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Invoke {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int16OpInt16 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int32OpInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int32OpUInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int64OpInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int64OpUInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int64OpUInt64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int64OpInt64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int8OpInt8 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName NullCoalescing {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName NumOpEnum {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName ObjectOpObject {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName ObjectOpString {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpAddition {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpBitwiseAnd {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpBitwiseOr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpEnum {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpEquality {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpExplicit {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpImplicit {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpInequality {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpInt8 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpInt16 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpInt64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpComma {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpConcatentation {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpDivision {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpExclusiveOr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpExponentiation {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpFalse {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpFloat32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpFloat64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpGreaterThan {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpGreaterThanOrEqual {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpIntegerDivision {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpLeftShift {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpLessThan {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpLessThanOrEqual {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpLike {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpLogicalNot {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpLogicalOr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpModulus {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpMultiply {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpOnesComplement {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpBoolean {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpChar {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpDecimal {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpDecrement {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpIncrement {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpRightShift {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpSubtraction {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpTrue {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpUInt8 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpUInt16 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpUInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpUInt64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpUnaryNegation {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName OpUnaryPlus {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName StringOpString {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName StringOpObject {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UIntPtrOpUIntPtr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt32OpInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt32OpUInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt64OpInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt64OpUInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt64OpUInt64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName value {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName System {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Void {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName VoidPtrOpVoidPtr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Boolean {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Cctor {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Char {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Ctor {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Byte {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName SByte {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int16 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt16 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt32 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Int64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UInt64 {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName String {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName IntPtr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName UIntPtr {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Object {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Remove {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Result {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Set {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Single {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Double {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName TypedReference {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Enum {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Length {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName LongLength {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName MulticastDelegate {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName ValueType {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Type {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Array {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Attribute {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName AttributeUsageAttribute {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName DateTime {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName DebuggerHiddenAttribute {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Decimal {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Delegate {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Diagnostics {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName DBNull {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Nullable {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
   }
 
   /// <summary>

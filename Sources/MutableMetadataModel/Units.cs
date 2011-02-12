@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Text;
 
 //^ using Microsoft.Contracts;
@@ -1193,12 +1194,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IRootUnitNamespace UnitNamespaceRoot {
       get { return this.unitNamespaceRoot; }
-      set
-        //^ requires value.Unit == this;
-        //^ requires value.RootOwner == this;
-      {
-        this.unitNamespaceRoot = value;
-      }
+      set { this.unitNamespaceRoot = value; }
     }
     IRootUnitNamespace unitNamespaceRoot;
 

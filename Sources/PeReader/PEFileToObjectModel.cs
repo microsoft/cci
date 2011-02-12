@@ -3914,6 +3914,7 @@ namespace Microsoft.Cci.MetadataReader {
   internal sealed class FieldSignatureConverter : SignatureConverter {
     internal readonly byte FirstByte;
     internal readonly IModuleTypeReference/*?*/ TypeReference;
+    internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ModuleCustomModifiers;
     //^ [NotDelayed]
     internal FieldSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
@@ -3927,6 +3928,8 @@ namespace Microsoft.Cci.MetadataReader {
       if (!SignatureHeader.IsFieldSignature(this.FirstByte)) {
         //  Error...
       }
+      bool isPinned;
+      this.ModuleCustomModifiers = this.GetCustomModifiers(out isPinned);
       this.TypeReference = this.GetTypeReference();
     }
   }

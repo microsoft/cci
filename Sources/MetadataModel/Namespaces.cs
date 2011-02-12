@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -35,7 +36,7 @@ namespace Microsoft.Cci {
     /// </summary>
     INamespaceDefinition NamespaceRoot {
       get;
-        //^ ensures result.RootOwner == this;
+      //^ ensures result.RootOwner == this;
     }
   }
 
@@ -129,6 +130,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to an unit namespace.
   /// </summary>
+  [ContractClass(typeof(IUnitNamespaceReferenceContract))]
   public interface IUnitNamespaceReference : IReference {
 
     /// <summary>
@@ -143,6 +145,36 @@ namespace Microsoft.Cci {
     /// </summary>
     IUnitNamespace ResolvedUnitNamespace { get; }
   }
+
+  [ContractClassFor(typeof(IUnitNamespaceReference))]
+  abstract class IUnitNamespaceReferenceContract : IUnitNamespaceReference {
+    public IUnitReference Unit {
+      get {
+        Contract.Ensures(Contract.Result<IUnitReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IUnitNamespace ResolvedUnitNamespace {
+      get {
+        Contract.Ensures(Contract.Result<IUnitNamespace>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+  }
+
 
   /// <summary>
   /// A named collection of namespace members, with routines to search and maintain the collection. The collection of members

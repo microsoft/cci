@@ -1309,6 +1309,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal class FieldDefinition : TypeMember, IFieldDefinition, IModuleFieldReference {
     internal readonly uint FieldDefRowId;
     FieldFlags FieldFlags;
+    EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ moduleCustomModifiers;
     IModuleTypeReference/*?*/ fieldType;
     //^ invariant ((this.FieldFlags & FieldFlags.FieldLoaded) == FieldFlags.FieldLoaded) ==> this.FieldType != null;
 
@@ -1340,6 +1341,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldSignature(this);
           this.fieldType = fieldSignature.TypeReference;
+          this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
           this.FieldFlags |= FieldFlags.FieldLoaded;
         }
       }
@@ -1482,6 +1484,24 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
 
     #region IFieldReference Members
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get {
+        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
+          this.InitFieldSignature();
+        }
+        return this.moduleCustomModifiers;
+      }
+    }
+
+    public bool IsModified {
+      get {
+        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
+          this.InitFieldSignature();
+        }
+        return this.moduleCustomModifiers.RawArray.Length > 0;
+      }
+    }
 
     public IFieldDefinition ResolvedField {
       get { return this; }
@@ -2911,6 +2931,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IFieldReference Members
 
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return this.RawTemplateModuleField.CustomModifiers; }
+    }
+
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
@@ -2920,6 +2944,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
     uint internedKey;
+
+    public bool IsModified {
+      get { return this.RawTemplateModuleField.IsModified; }
+    }
 
     public IFieldDefinition ResolvedField {
       get { return this; }
@@ -4227,6 +4255,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal class FieldReference : MemberReference, IModuleFieldReference {
     protected bool signatureLoaded;
+    protected EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers;
     protected IModuleTypeReference/*?*/ typeReference;
     internal bool isStatic;
     internal FieldReference(
@@ -4247,6 +4276,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     {
       FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldRefSignature(this);
       this.typeReference = fieldSignature.TypeReference;
+      this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
       this.signatureLoaded = true;
     }
 
@@ -4279,6 +4309,24 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
 
     #region IFieldReference Members
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get {
+        if (!this.signatureLoaded) {
+          this.InitFieldSignature();
+        }
+        return this.moduleCustomModifiers;
+      }
+    }
+
+    public bool IsModified {
+      get {
+        if (!this.signatureLoaded) {
+          this.InitFieldSignature();
+        }
+        return this.moduleCustomModifiers.RawArray.Length > 0;
+      }
+    }
 
     public bool IsStatic {
       get { return this.isStatic; }
@@ -4333,6 +4381,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       if (fieldSignature.TypeReference != null) {
         this.typeReference = fieldSignature.TypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
       }
+      this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
+      this.signatureLoaded = true;
     }
 
     public override IFieldDefinition ResolvedField {
@@ -4395,6 +4445,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       if (fieldSignature.TypeReference != null) {
         this.typeReference = fieldSignature.TypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
       }
+      this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
+      this.signatureLoaded = true;
     }
 
     public override IFieldDefinition ResolvedField {

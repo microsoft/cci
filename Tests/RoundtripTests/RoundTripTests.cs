@@ -99,7 +99,7 @@ public class RoundTripTests {
         RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb", true);
     }
 
-    void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataMutator mutator, string pdbPath) {
+    void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MutatingVisitor mutator, string pdbPath) {
         this.VisitAndMutate(mutator, ref assembly);
         AssertWriteToPeFile(expectedResult, assembly, pdbPath);
     }
@@ -110,7 +110,7 @@ public class RoundTripTests {
 
     void RoundTripWithILMutator(string assemblyName, string pdbPath, bool verificationMayFail) {
         PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName, verificationMayFail);
-        RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataMutator(host), pdbPath);
+        RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MutatingVisitor(host), pdbPath);
     }
 
     void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly, string pdbPath) {
@@ -134,9 +134,9 @@ public class RoundTripTests {
         PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location, true));
     }
 
-    void VisitAndMutate(MetadataMutator mutator, ref IAssembly assembly) {
-        assembly = mutator.Visit(mutator.GetMutableCopy(assembly));
-        Assert.NotNull(assembly);
+    void VisitAndMutate(MutatingVisitor mutator, ref IAssembly assembly) {
+      assembly = mutator.Visit(assembly);
+      Assert.NotNull(assembly);
     }
 
     static int StartAndWaitForResult(string fileName, string arguments, ref string stdOut, ref string stdErr) {

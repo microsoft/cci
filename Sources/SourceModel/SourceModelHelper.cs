@@ -21,8 +21,7 @@ namespace Microsoft.Cci {
   /// A provider that aggregates a set of providers in order to
   /// map offsets in an IL stream to source locations.
   /// </summary>
-  public sealed class AggregatingSourceLocationProvider : ISourceLocationProvider, IDisposable
-    {
+  public sealed class AggregatingSourceLocationProvider : ISourceLocationProvider, IDisposable {
 
     Dictionary<IUnit, ISourceLocationProvider> unit2Provider = new Dictionary<IUnit, ISourceLocationProvider>();
 

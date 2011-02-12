@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -25,17 +25,17 @@ namespace Microsoft.Cci.MetadataReader.Errors {
     /// <summary>
     /// The binary document corresponding to the PE File.
     /// </summary>
-    IBinaryDocument BinaryDocument { get;}
+    IBinaryDocument BinaryDocument { get; }
 
     /// <summary>
     /// The name of the directory of the PE File.
     /// </summary>
-    string DirectoryName { get;}
+    string DirectoryName { get; }
 
     /// <summary>
     /// Offset into the directory.
     /// </summary>
-    uint Offset { get;}
+    uint Offset { get; }
   }
 
   /// <summary>
@@ -45,17 +45,17 @@ namespace Microsoft.Cci.MetadataReader.Errors {
     /// <summary>
     /// The binary document corresponding to the metadata stream.
     /// </summary>
-    IBinaryDocument BinaryDocument { get;}
+    IBinaryDocument BinaryDocument { get; }
 
     /// <summary>
     /// The name of the metadata stream corresponding to the location.
     /// </summary>
-    string StreamName { get;}
+    string StreamName { get; }
 
     /// <summary>
     /// Offset into the IL Stream.
     /// </summary>
-    uint Offset { get;}
+    uint Offset { get; }
   }
 
   /// <summary>
@@ -65,17 +65,17 @@ namespace Microsoft.Cci.MetadataReader.Errors {
     /// <summary>
     /// The binary document corresponding to the metadata tables.
     /// </summary>
-    IBinaryDocument BinaryDocument { get;}
+    IBinaryDocument BinaryDocument { get; }
 
     /// <summary>
     /// The name of the table represented by the location.
     /// </summary>
-    string TableName { get;}
+    string TableName { get; }
 
     /// <summary>
     /// The row number corresponding to the location.
     /// </summary>
-    int RowId { get;}
+    int RowId { get; }
   }
 
   internal sealed class DirectoryLocation : IDirectoryLocation {

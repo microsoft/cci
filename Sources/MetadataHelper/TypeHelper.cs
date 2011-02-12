@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -67,6 +68,9 @@ namespace Microsoft.Cci {
     public static ClrOperandStackType ClrOperandStackTypeFor(ITypeReference typeReference)
       //^ ensures result >= ClrOperandStackType.Int32 && result <= ClrOperandStackType.Invalid;
     {
+      Contract.Requires(typeReference != null);
+      Contract.Ensures(Contract.Result<ClrOperandStackType>() >= ClrOperandStackType.Int32 && Contract.Result<ClrOperandStackType>() <= ClrOperandStackType.Invalid);
+
       var typeDefinition = typeReference.ResolvedType;
       if (typeDefinition.IsEnum) //should only be true for types that can be resolved
         return ClrOperandStackTypeFor(typeDefinition.UnderlyingType.TypeCode);
@@ -82,6 +86,8 @@ namespace Microsoft.Cci {
     public static ClrOperandStackType ClrOperandStackTypeFor(PrimitiveTypeCode typeCode)
       //^ ensures result >= ClrOperandStackType.Int32 && result <= ClrOperandStackType.Invalid;
     {
+      Contract.Ensures(Contract.Result<ClrOperandStackType>() >= ClrOperandStackType.Int32 && Contract.Result<ClrOperandStackType>() < ClrOperandStackType.Invalid);
+
       switch (typeCode) {
         case PrimitiveTypeCode.Boolean:
         case PrimitiveTypeCode.Char:
@@ -468,16 +474,18 @@ namespace Microsoft.Cci {
     /// Returns the Base class. If there is no base type it returns null.
     /// </summary>
     /// <param name="typeDef">The type whose base class is to be returned.</param>
-    //^ [Confined]
     public static ITypeDefinition/*?*/ BaseClass(ITypeDefinition typeDef)
       //^ ensures result == null || result.IsClass;
     {
+      Contract.Requires(typeDef != null);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() == null || Contract.Result<ITypeDefinition>().IsClass);
+
       foreach (ITypeReference baseClass in typeDef.BaseClasses) {
         ITypeDefinition bc = baseClass.ResolvedType;
         if (bc.IsClass) return bc;
       }
       //TODO: what about types with more than one base class?
-      //Need some way to tell managed types from unmanged types.
+      //Need some way to tell managed types from unmanaged types.
       return null;
     }
 
@@ -556,21 +564,24 @@ namespace Microsoft.Cci {
     /// Returns the most derived common base class that all types that satisfy the constraints of the given
     /// generic parameter must derive from.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static ITypeDefinition EffectiveBaseClass(IGenericParameter genericParameter)
-      //^ ensures result.IsClass;
+      //^ ensures result == Dummy.Type || result.IsClass;
     {
+      Contract.Requires(genericParameter != null);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() == Dummy.Type || Contract.Result<ITypeDefinition>().IsClass);
+
       ITypeDefinition result = Dummy.Type;
       if (genericParameter.MustBeValueType) {
         result = genericParameter.PlatformType.SystemValueType.ResolvedType;
-        //^ assume result.IsClass;
+        Contract.Assume(result == Dummy.Type || result.IsClass);
         return result;
       }
-      //^ assert result == Dummy.Type || result.IsClass;
-      foreach (ITypeReference cref in genericParameter.Constraints)
-      // ^ invariant result == Dummy.Type || result.IsClass; //TODO: figure out why assertions hold, but invariant does not
-      {
-        //^ assume result == Dummy.Type || result.IsClass;
+
+      Contract.Assert(result == Dummy.Type || result.IsClass);
+      foreach (ITypeReference cref in genericParameter.Constraints) {
+        Contract.Assert(result == Dummy.Type || result.IsClass);
         ITypeDefinition constraint = cref.ResolvedType;
         ITypeDefinition baseClass;
         if (constraint.IsClass) {
@@ -578,35 +589,39 @@ namespace Microsoft.Cci {
         } else {
           IGenericParameter/*?*/ tpConstraint = constraint as IGenericParameter;
           if (tpConstraint == null) {
-            //^ assume result == Dummy.Type || result.IsClass;
+            Contract.Assert(result == Dummy.Type || result.IsClass);
             continue;
           }
           baseClass = TypeHelper.EffectiveBaseClass(tpConstraint);
-          //^ assert baseClass.IsClass;
+          Contract.Assert(baseClass == Dummy.Type || baseClass.IsClass);
           if (TypeHelper.TypesAreEquivalent(baseClass, genericParameter.PlatformType.SystemObject)) {
-            //^ assume result == Dummy.Type || result.IsClass;
+            Contract.Assert(result == Dummy.Type || result.IsClass);
             continue;
           }
-          //^ assume baseClass.IsClass; //TODO: figure out why above statement invalidates the assertion
         }
-        //^ assume result == Dummy.Type || result.IsClass;
-        //^ assert baseClass.IsClass;
+        Contract.Assert(result == Dummy.Type || result.IsClass);
+        Contract.Assert(baseClass == Dummy.Type || baseClass.IsClass);
         if (result == Dummy.Type) {
-          //^ assume baseClass.IsClass; //TODO: figure out why above statement invalidates the assertion
           result = baseClass;
-        } else {
+          Contract.Assert(result == Dummy.Type || result.IsClass);
+        } else if (baseClass != Dummy.Type) {
+          Contract.Assert(result == Dummy.Type || result.IsClass);
           ITypeDefinition/*?*/ bc = TypeHelper.MostDerivedCommonBaseClass(result, baseClass);
-          //^ assume bc != null; //Should be the case since both result and baseClass are classes and thus have System.Object in common
-          result = bc;
+          Contract.Assert(bc == null || bc.IsClass); //Could be null if System.Object cannot be resolved
+          Contract.Assert(result == Dummy.Type || result.IsClass);
+          if (bc != null) {
+            Contract.Assert(bc.IsClass);
+            result = bc;
+          }
+          Contract.Assert(result == Dummy.Type || result.IsClass);
         }
-        //^ assert result.IsClass;
+        Contract.Assert(result == Dummy.Type || result.IsClass);
       }
-      //^ assume result == Dummy.Type || result.IsClass;
+      Contract.Assert(result == Dummy.Type || result.IsClass);
       if (result == Dummy.Type) {
         result = genericParameter.PlatformType.SystemObject.ResolvedType;
-        //^ assume result.IsClass;
+        Contract.Assume(result == Dummy.Type || result.IsClass);
       }
-      //^ assume result.IsClass;
       return result;
     }
 
@@ -737,9 +752,27 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// If both type references can be resolved, this returns the merged type of two types as per the verification algorithm in CLR.
+    /// Otherwise it returns either type1, or type2 or System.Object, depending on how much is known about either type.
+    /// </summary>
+    public static ITypeReference MergedType(ITypeReference type1, ITypeReference type2) {
+      if (TypesAreEquivalent(type1, type2)) return type1;
+      var typeDef1 = type1.ResolvedType;
+      var typeDef2 = type2.ResolvedType;
+      if (typeDef1 != Dummy.Type && typeDef2 != Dummy.Type)
+        return MergedType(typeDef1, typeDef2);
+      if (typeDef1 != Dummy.Type) {
+        if (Type1ImplementsType2(typeDef1, type2)) return type2;
+      } else if (typeDef2 != Dummy.Type) {
+        if (Type1ImplementsType2(typeDef2, type1)) return type1;
+      }
+      return type1.PlatformType.SystemObject;
+    }
+
+    /// <summary>
     /// Returns the merged type of two types as per the verification algorithm in CLR.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static ITypeDefinition MergedType(ITypeDefinition type1, ITypeDefinition type2) {
       if (TypeHelper.TypesAreAssignmentCompatible(type1, type2))
         return type2;
@@ -771,7 +804,7 @@ namespace Microsoft.Cci {
     /// Namespace types are treated as being TypeMemberVisibility.Public or TypeMemberVisibility.Assembly.
     /// Generic type instances are treated as having a visibility that is the intersection of the generic type's visibility and all of the type arguments' visibilities.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static TypeMemberVisibility TypeVisibilityAsTypeMemberVisibility(ITypeDefinition type) {
       TypeMemberVisibility result = TypeMemberVisibility.Public; // supposedly the only thing that doesn't meet any of the below tests are type parameters and their "default" is public.
       INamespaceTypeDefinition/*?*/ nsType = type as INamespaceTypeDefinition;
@@ -794,7 +827,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a TypeMemberVisibility value that is as accessible as possible while being no more accessible than either of the two given visibilities.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static TypeMemberVisibility VisibilityIntersection(TypeMemberVisibility visibility1, TypeMemberVisibility visibility2) {
       TypeMemberVisibility result = TypeMemberVisibility.Default;
       switch (visibility1) {
@@ -956,7 +989,7 @@ namespace Microsoft.Cci {
     /// <param name="declaringType">The type that declares the method to be returned.</param>
     /// <param name="methodName">The name of the method.</param>
     /// <param name="parameterTypes">A list of types that should correspond to the parameter types of the returned method.</param>
-    //^ [Pure]
+    [Pure]
     public static IMethodDefinition GetMethod(ITypeDefinition declaringType, IName methodName, params ITypeReference[] parameterTypes) {
       return TypeHelper.GetMethod(declaringType.GetMembersNamed(methodName, false), methodName, parameterTypes);
     }
@@ -968,7 +1001,7 @@ namespace Microsoft.Cci {
     /// <param name="members">A list of type members.</param>
     /// <param name="methodName">The name of the method.</param>
     /// <param name="parameterTypes">A list of types that should correspond to the parameter types of the returned method.</param>
-    //^ [Pure]
+    [Pure]
     public static IMethodDefinition GetMethod(IEnumerable<ITypeDefinitionMember> members, IName methodName, params ITypeReference[] parameterTypes) {
       foreach (ITypeDefinitionMember member in members) {
         IMethodDefinition/*?*/ meth = member as IMethodDefinition;
@@ -1050,7 +1083,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given namespace definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static string GetNamespaceName(IUnitSetNamespace namespaceDefinition, NameFormattingOptions formattingOptions) {
       return (new TypeNameFormatter()).GetNamespaceName(namespaceDefinition, formattingOptions);
     }
@@ -1058,7 +1091,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given namespace definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static string GetNamespaceName(IUnitNamespaceReference namespaceReference, NameFormattingOptions formattingOptions) {
       return (new TypeNameFormatter()).GetNamespaceName(namespaceReference, formattingOptions);
     }
@@ -1117,64 +1150,82 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to a source expression that would bind to the given type definition when appearing in an appropriate context.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static string GetTypeName(ITypeReference type) {
+      Contract.Ensures(Contract.Result<string>() != null);
       return TypeHelper.GetTypeName(type, NameFormattingOptions.None);
     }
 
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
+      Contract.Ensures(Contract.Result<string>() != null);
       return (new TypeNameFormatter()).GetTypeName(type, formattingOptions);
     }
 
     /// <summary>
     /// Returns the most derived base class that both given types have in common. Returns null if no such class exists.
     /// For example: if either or both are interface types, then the result is null.
+    /// A class is considered its own base class for this algorithm, so if type1 derives from type2 the result is type2
+    /// and if type2 derives from type1 the result is type1.
     /// </summary>
-    //^ [Confined]
+    [Pure]
     public static ITypeDefinition/*?*/ MostDerivedCommonBaseClass(ITypeDefinition type1, ITypeDefinition type2)
       //^ ensures result == null || result.IsClass;
     {
+      Contract.Requires(type1 != null);
+      Contract.Requires(type2 != null);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() == null || Contract.Result<ITypeDefinition>().IsClass);
+
+      if (!type1.IsInterface || !type2.IsInterface) return null;
+      if (type1.IsClass && TypeHelper.TypesAreEquivalent(type1, type2)) return type1;
+
+      ITypeDefinition/*?*/ typeIter = TypeHelper.BaseClass(type1);
+      if (typeIter == null) return null; //type1 has no base classes
+      if (TypeHelper.TypesAreEquivalent(typeIter, type2)) return typeIter; //type1 is derived from type2.
       int depth1 = 0;
-      ITypeDefinition/*?*/ typeIter = type1;
       while (typeIter != null) {
         typeIter = TypeHelper.BaseClass(typeIter);
         depth1++;
       }
+      Contract.Assert(depth1 > 0);
+
+      typeIter = TypeHelper.BaseClass(type2);
+      if (typeIter == null) return null; //type2 has no base classes
+      if (TypeHelper.TypesAreEquivalent(typeIter, type1)) return typeIter; //type2 is derived from type1.
       int depth2 = 0;
-      typeIter = type2;
       while (typeIter != null) {
         typeIter = TypeHelper.BaseClass(typeIter);
         depth2++;
       }
+      Contract.Assert(depth2 > 0);
+
       while (depth1 > depth2) {
-        typeIter = TypeHelper.BaseClass(type1);
-        //^ assume typeIter != null;
-        type1 = typeIter;
+        type1 = TypeHelper.BaseClass(type1);
+        Contract.Assume(type1 != null); //Because depth2 > 0 and we were able to call TypeHelper.BaseClass depth1 times before getting null.
         depth1--;
       }
+      Contract.Assert(depth1 > 0);
+
       while (depth2 > depth1) {
-        typeIter = TypeHelper.BaseClass(type2);
-        //^ assume typeIter != null;
-        type2 = typeIter;
+        type2 = TypeHelper.BaseClass(type2);
+        Contract.Assume(type2 != null); //Because depth1 > 0 and we were able to call TypeHelper.BaseClass depth2 times before getting null.
         depth2--;
       }
-      //^ assume type1.IsClass && type2.IsClass;
-      while (depth1 > 0)
-      //^ invariant type1.IsClass && type2.IsClass;
-      {
-        if (TypeHelper.TypesAreEquivalent(type1, type2))
+      Contract.Assert(depth2 > 0);
+
+      Contract.Assume(depth1 == depth2);
+
+      while (depth1 > 0) {
+        //If type1 and type2 at method entry were both structs, depth1 == depth2 == 1 and neither type1 nor type2 is a class during the first iteration of the loop
+        if (type1.IsClass && TypeHelper.TypesAreEquivalent(type1, type2))
           return type1;
-        typeIter = TypeHelper.BaseClass(type1);
-        //^ assume typeIter != null;
-        type1 = typeIter;
-        typeIter = TypeHelper.BaseClass(type2);
-        //^ assume type1.IsClass;
-        //^ assume typeIter != null;
-        type2 = typeIter;
+        type1 = TypeHelper.BaseClass(type1);
+        Contract.Assume(type1 != null); //Because depth1 > 0 and we were able to call TypeHelper.BaseClass depth1 times before getting null.
+        type2 = TypeHelper.BaseClass(type2);
+        Contract.Assume(type2 != null); //Because depth1 > 0 and we were able to call TypeHelper.BaseClass depth1 times before getting null.
         depth1--;
       }
       return null;
@@ -1183,17 +1234,17 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if two parameters are equivalent.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool ParametersAreEquivalent(IParameterTypeInformation param1, IParameterTypeInformation param2) {
-      if (
-        param1.IsByReference != param2.IsByReference
-        || !TypeHelper.TypesAreEquivalent(param1.Type, param2.Type)
-        || param1.IsModified != param1.IsModified
-      ) {
+      Contract.Requires(param1 != null);
+      Contract.Requires(param2 != null);
+
+      if (param1.IsByReference != param2.IsByReference || param1.IsModified != param1.IsModified || !TypeHelper.TypesAreEquivalent(param1.Type, param2.Type))
         return false;
-      }
+
       if (param1.IsModified) {
-        if (!param2.IsModified) return false;
+        Contract.Assert(param1.IsModified == param1.IsModified);
+        Contract.Assume(param2.IsModified);
         IEnumerator<ICustomModifier> customModifier2enumerator = param2.CustomModifiers.GetEnumerator();
         foreach (ICustomModifier customModifier1 in param1.CustomModifiers) {
           if (!customModifier2enumerator.MoveNext())
@@ -1211,17 +1262,18 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if two parameters are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool ParametersAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IParameterTypeInformation param1, IParameterTypeInformation param2) {
-      if (
-        param1.IsByReference != param2.IsByReference
-        || !TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(param1.Type, param2.Type)
-        || param1.IsModified != param1.IsModified
-      ) {
+      Contract.Requires(param1 != null);
+      Contract.Requires(param2 != null);
+
+      if (param1.IsByReference != param2.IsByReference || param1.IsModified != param1.IsModified || 
+        !TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(param1.Type, param2.Type))
         return false;
-      }
+
       if (param1.IsModified) {
-        if (!param2.IsModified) return false;
+        Contract.Assert(param1.IsModified == param1.IsModified);
+        Contract.Assume(param2.IsModified);
         IEnumerator<ICustomModifier> customModifier2enumerator = param2.CustomModifiers.GetEnumerator();
         foreach (ICustomModifier customModifier1 in param1.CustomModifiers) {
           if (!customModifier2enumerator.MoveNext())
@@ -1239,8 +1291,13 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if two parameter lists are equivalent.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool ParameterListsAreEquivalent(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2) {
+      Contract.Requires(paramList1 != null);
+      Contract.Requires(paramList2 != null);
+      Contract.Requires(Contract.ForAll(paramList1, x => x != null));
+      Contract.Requires(Contract.ForAll(paramList2, x => x != null));
+
       IEnumerator<IParameterTypeInformation> parameterEnumerator2 = paramList2.GetEnumerator();
       foreach (IParameterTypeInformation parameter1 in paramList1) {
         if (!parameterEnumerator2.MoveNext()) {
@@ -1258,7 +1315,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if two parameter lists are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool ParameterListsAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2) {
       IEnumerator<IParameterTypeInformation> parameterEnumerator2 = paramList2.GetEnumerator();
       foreach (IParameterTypeInformation parameter1 in paramList1) {
@@ -1277,7 +1334,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if two parameter lists of type IParameterDefinition are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool ParameterListsAreEquivalent(IEnumerable<IParameterDefinition> paramList1, IEnumerable<IParameterDefinition> paramList2) {
       IEnumerator<IParameterDefinition> parameterEnumerator2 = paramList2.GetEnumerator();
       foreach (IParameterDefinition parameter1 in paramList1) {
@@ -1401,6 +1458,35 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns the stack state type used by the CLR verification algorithm when merging control flow
+    /// paths. For example, both signed and unsigned 16-bit integers are treated as the same as signed 32-bit
+    /// integers for the purposes of verifying that stack state merges are safe.
+    /// </summary>
+    public static ITypeReference StackType(ITypeReference type) {
+      switch (type.TypeCode) {
+        case PrimitiveTypeCode.Boolean:
+        case PrimitiveTypeCode.Char:
+        case PrimitiveTypeCode.Int16:
+        case PrimitiveTypeCode.Int32:
+        case PrimitiveTypeCode.Int8:
+        case PrimitiveTypeCode.UInt16:
+        case PrimitiveTypeCode.UInt32:
+        case PrimitiveTypeCode.UInt8:
+          return type.PlatformType.SystemInt32;
+        case PrimitiveTypeCode.Int64:
+        case PrimitiveTypeCode.UInt64:
+          return type.PlatformType.SystemInt64;
+        case PrimitiveTypeCode.Float32:
+        case PrimitiveTypeCode.Float64:
+          return type.PlatformType.SystemFloat64;
+        case PrimitiveTypeCode.IntPtr:
+        case PrimitiveTypeCode.UIntPtr:
+          return type.PlatformType.SystemIntPtr;
+      }
+      return type;
+    }
+
+    /// <summary>
     /// Returns the byte alignment that values of the given type ought to have. The result is a power of two and greater than zero.
     /// May call the Alignment property of the type.
     /// Use TypeAlignment(ITypeDefinition, bool) to suppress the use of the Alignment property.    
@@ -1409,7 +1495,6 @@ namespace Microsoft.Cci {
     public static ushort TypeAlignment(ITypeReference type) {
       return TypeAlignment(type, true);
     }
-
 
     /// <summary>
     /// Returns the byte alignment that values of the given type ought to have. The result is a power of two and greater than zero.
@@ -1482,7 +1567,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two array types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool ArrayTypesAreEquivalent(IArrayTypeReference/*?*/ arrayTypeRef1, IArrayTypeReference/*?*/ arrayTypeRef2) {
       if (arrayTypeRef1 == null || arrayTypeRef2 == null)
         return false;
@@ -1504,7 +1589,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two generic instance types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool GenericTypeInstancesAreEquivalent(IGenericTypeInstanceReference/*?*/ genericTypeInstRef1, IGenericTypeInstanceReference/*?*/ genericTypeInstRef2) {
       if (genericTypeInstRef1 == null || genericTypeInstRef2 == null)
         return false;
@@ -1536,7 +1621,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool PointerTypesAreEquivalent(IPointerTypeReference/*?*/ pointerTypeRef1, IPointerTypeReference/*?*/ pointerTypeRef2) {
       if (pointerTypeRef1 == null || pointerTypeRef2 == null)
         return false;
@@ -1548,7 +1633,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two generic type parameters are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool GenericTypeParametersAreEquivalent(IGenericTypeParameterReference/*?*/ genericTypeParam1, IGenericTypeParameterReference/*?*/ genericTypeParam2) {
       if (genericTypeParam1 == null || genericTypeParam2 == null)
         return false;
@@ -1562,7 +1647,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two generic method parameter are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool GenericMethodParametersAreEquivalent(IGenericMethodParameterReference/*?*/ genericMethodParam1, IGenericMethodParameterReference/*?*/ genericMethodParam2) {
       if (genericMethodParam1 == null || genericMethodParam2 == null)
         return false;
@@ -1574,7 +1659,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool FunctionPointerTypesAreEquivalent(IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2) {
       if (functionPointer1 == null || functionPointer2 == null)
         return false;
@@ -1595,7 +1680,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on,
     /// assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool FunctionPointerTypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(
       IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2) {
       if (functionPointer1 == null || functionPointer2 == null)
@@ -1616,7 +1701,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool NamespaceTypesAreEquivalent(INamespaceTypeReference/*?*/ nsType1, INamespaceTypeReference/*?*/ nsType2) {
       if (nsType1 == null || nsType2 == null)
         return false;
@@ -1629,7 +1714,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool NestedTypesAreEquivalent(INestedTypeReference/*?*/ nstType1, INestedTypeReference/*?*/ nstType2) {
       if (nstType1 == null || nstType2 == null)
         return false;
@@ -1643,7 +1728,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the given two types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     //^ [Confined]
     public static bool TypesAreEquivalent(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2) {
       if (type1 == null || type2 == null) return false;
@@ -1655,7 +1740,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two types are to be considered equivalent for the purpose of generic method signature matching. This differs from
     /// TypeHelper.TypesAreEquivalent in that two generic method type parameters are considered equivalent if their parameter list indices are the same.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     //^ [Confined]
     public static bool TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2) {
       if (type1 == null || type2 == null) return false;
@@ -1746,7 +1831,7 @@ namespace Microsoft.Cci {
     /// Returns true if type1 is the same as type2 or if it is derives from type2.
     /// Type1 derives from type2 if the latter is a direct or indirect base class.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool Type1DerivesFromOrIsTheSameAsType2(ITypeDefinition type1, ITypeReference type2) {
       if (TypeHelper.TypesAreEquivalent(type1, type2)) return true;
       return TypeHelper.Type1DerivesFromType2(type1, type2);
@@ -1755,7 +1840,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Type1 derives from type2 if the latter is a direct or indirect base class.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool Type1DerivesFromType2(ITypeDefinition type1, ITypeReference type2) {
       foreach (ITypeReference baseClass in type1.BaseClasses) {
         if (TypeHelper.TypesAreEquivalent(baseClass, type2)) return true;
@@ -1768,7 +1853,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given type definition, or one of its base types, implements the given interface or an interface
     /// that derives from the given interface.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool Type1ImplementsType2(ITypeDefinition type1, ITypeReference type2) {
       foreach (ITypeReference implementedInterface in type1.Interfaces) {
         ITypeDefinition iface = implementedInterface.ResolvedType;
@@ -1784,7 +1869,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if Type1 is CovariantWith Type2 as per CLR.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool Type1IsCovariantWithType2(ITypeDefinition type1, ITypeReference type2) {
       IArrayTypeReference/*?*/ arrType1 = type1 as IArrayTypeReference;
       IArrayTypeReference/*?*/ arrType2 = type2 as IArrayTypeReference;
@@ -1798,7 +1883,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if a CLR supplied implicit reference conversion is available to convert a value of the given source type to a corresponding value of the given target type.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool TypesAreAssignmentCompatible(ITypeDefinition sourceType, ITypeDefinition targetType) {
       if (TypeHelper.TypesAreEquivalent(sourceType, targetType)) return true;
       if (sourceType.IsReferenceType && TypeHelper.Type1DerivesFromOrIsTheSameAsType2(sourceType, targetType)) return true;
@@ -1865,7 +1950,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type reference and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetArrayTypeName(IArrayTypeReference arrayType, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       ITypeReference elementType = arrayType.ElementType;
@@ -1918,7 +2003,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetGenericMethodParameterName(IGenericMethodParameterReference genericMethodParameter, NameFormattingOptions formattingOptions) {
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "``" + genericMethodParameter.Index;
       return genericMethodParameter.Name.Value;
@@ -1927,7 +2012,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetGenericTypeParameterName(IGenericTypeParameterReference genericTypeParameter, NameFormattingOptions formattingOptions) {
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "`" + genericTypeParameter.Index;
       return genericTypeParameter.Name.Value;
@@ -1936,7 +2021,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to a source expression that would bind to the given managed pointer when appearing in an appropriate context.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetManagedPointerTypeName(IManagedPointerTypeReference pointerType, NameFormattingOptions formattingOptions) {
       return this.GetTypeName(pointerType.TargetType, formattingOptions) + "&";
     }
@@ -1961,7 +2046,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetNamespaceTypeName(INamespaceTypeReference nsType, NameFormattingOptions formattingOptions) {
       string tname = this.AddGenericParametersIfNeeded(nsType, nsType.GenericParameterCount, formattingOptions, nsType.Name.Value);
       if ((formattingOptions & NameFormattingOptions.OmitContainingNamespace) == 0 && !(nsType.ContainingUnitNamespace is IRootUnitNamespaceReference))
@@ -1976,7 +2061,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given unit set namespace definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetNamespaceName(IUnitSetNamespace namespaceDefinition, NameFormattingOptions formattingOptions) {
       INestedUnitSetNamespace/*?*/ nestedUnitSetNamespace = namespaceDefinition as INestedUnitSetNamespace;
       if (nestedUnitSetNamespace != null) {
@@ -1991,7 +2076,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given referenced namespace definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetNamespaceName(IUnitNamespaceReference unitNamespace, NameFormattingOptions formattingOptions) {
       INestedUnitNamespaceReference/*?*/ nestedUnitNamespace = unitNamespace as INestedUnitNamespaceReference;
       if (nestedUnitNamespace != null) {
@@ -2006,7 +2091,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetNestedTypeName(INestedTypeReference nestedType, NameFormattingOptions formattingOptions) {
       string tname = this.AddGenericParametersIfNeeded(nestedType, nestedType.GenericParameterCount, formattingOptions, nestedType.Name.Value);
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
@@ -2021,7 +2106,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetPointerTypeName(IPointerTypeReference pointerType, NameFormattingOptions formattingOptions) {
       return this.GetTypeName(pointerType.TargetType, formattingOptions) + "*";
     }
@@ -2029,8 +2114,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public virtual string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
+      Contract.Ensures(Contract.Result<string>() != null);
       if ((formattingOptions & NameFormattingOptions.UseTypeKeywords) != 0) {
         switch (type.TypeCode) {
           case PrimitiveTypeCode.Boolean: return "bool";
@@ -2080,7 +2166,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that identifies the kind of the given type definition. For example, "class" or "delegate".
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetTypeKind(ITypeReference type) {
       ITypeDefinition typeDefinition = type.ResolvedType;
       if (typeDefinition.IsDelegate) return "delegate";
@@ -2094,7 +2180,7 @@ namespace Microsoft.Cci {
     /// Returns a C#-like string that corresponds to a source expression that would bind to the given funcion pointer type instance when appearing in an appropriate context,
     /// if course, C# actually had a function pointer type.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetFunctionPointerTypeName(IFunctionPointerTypeReference functionPointerType, NameFormattingOptions formattingOptions) {
       StringBuilder sb = new StringBuilder();
       sb.Append("function ");
@@ -2113,7 +2199,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a C#-like string that corresponds to a source expression that would bind to the given generic type instance when appearing in an appropriate context.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     protected virtual string GetGenericTypeInstanceName(IGenericTypeInstanceReference genericTypeInstance, NameFormattingOptions formattingOptions) {
       ITypeReference genericType = genericTypeInstance.GenericType;
       if ((formattingOptions & NameFormattingOptions.ContractNullable) != 0) {

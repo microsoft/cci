@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -253,6 +253,8 @@ namespace Microsoft.Cci {
       this.path.Push(fieldDefinition);
       if (fieldDefinition.IsCompileTimeConstant)
         this.Visit((IMetadataExpression)fieldDefinition.CompileTimeValue);
+      if (fieldDefinition.IsModified)
+        this.Visit(fieldDefinition.CustomModifiers);
       if (fieldDefinition.IsMarshalledExplicitly)
         this.Visit(fieldDefinition.MarshallingInformation);
       this.Visit(fieldDefinition.Type);
@@ -267,7 +269,14 @@ namespace Microsoft.Cci {
     public virtual void Visit(IFieldReference fieldReference)
       //^ ensures this.path.Count == old(this.path.Count);
     {
+      if (this.stopTraversal) return;
       this.Visit((ITypeMemberReference)fieldReference);
+      //^ int oldCount = this.path.Count;
+      this.path.Push(fieldReference);
+      if (fieldReference.IsModified)
+        this.Visit(fieldReference.CustomModifiers);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
     }
 
     /// <summary>
