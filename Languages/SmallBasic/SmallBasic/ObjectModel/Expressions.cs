@@ -36,7 +36,7 @@ namespace Microsoft.Cci.SmallBasic {
       if (createDelegate != null) {
         QualifiedName/*?*/ qualName = this.Target.Expression as QualifiedName;
         if (qualName != null) {
-          IEventDefinition/*?*/ ev = qualName.Resolve() as IEventDefinition;
+          IEventDefinition/*?*/ ev = qualName.Resolve(false) as IEventDefinition;
           if (ev != null) {
             List<Expression> arguments = new List<Expression>(1);
             arguments.Add(createDelegate);
