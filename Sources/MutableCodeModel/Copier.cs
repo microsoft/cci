@@ -103,6 +103,32 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region DeepCopy methods
 
     /// <summary>
+    /// Returns a mutable deep copy of the given assembly.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="assembly">The assembly to copied.</param>
+    /// <param name="sourceLocationProvider"></param>
+    public static Assembly DeepCopy(IMetadataHost host, IAssembly assembly, ISourceLocationProvider sourceLocationProvider = null) {
+      List<INamedTypeDefinition> newTypes;
+      return (Assembly)new CodeCopier(host, sourceLocationProvider, assembly, out newTypes).Substitute(assembly);
+    }
+
+    /// <summary>
+    /// Returns a mutable deep copy of the given module.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
+    /// table for interning is what is needed.</param>
+    /// <param name="module">The module to copied.</param>
+    /// <param name="sourceLocationProvider"></param>
+    public static Module DeepCopy(IMetadataHost host, IModule module, ISourceLocationProvider sourceLocationProvider = null) {
+      List<INamedTypeDefinition> newTypes;
+      return (Module)new CodeCopier(host, null, module, out newTypes).Substitute(module);
+    }
+
+    /// <summary>
     /// Visit a list of statements. 
     /// </summary>
     /// <param name="statements"></param>
