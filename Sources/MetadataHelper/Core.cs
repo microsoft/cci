@@ -1058,7 +1058,7 @@ namespace Microsoft.Cci {
     readonly Hashtable FunctionTypeHashTable;
     readonly DoubleHashtable ModifiedTypeHashtable;
     readonly Hashtable<MultiHashtable<SignatureStore>> MethodReferenceHashtable;
-    readonly DoubleHashtable FieldReferenceHashtable;
+    readonly Hashtable<DoubleHashtable> FieldReferenceHashtable;
 
     /// <summary>
     /// 
@@ -1098,7 +1098,7 @@ namespace Microsoft.Cci {
       this.FunctionTypeHashTable = new Hashtable();
       this.ModifiedTypeHashtable = new DoubleHashtable();
       this.MethodReferenceHashtable = new Hashtable<MultiHashtable<SignatureStore>>();
-      this.FieldReferenceHashtable = new DoubleHashtable();
+      this.FieldReferenceHashtable = new Hashtable<DoubleHashtable>();
     }
 
     AssemblyStore GetAssemblyStore(AssemblyIdentity assemblyIdentity) {
@@ -1441,11 +1441,17 @@ namespace Microsoft.Cci {
       IFieldReference fieldReference
     ) {
       uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(fieldReference.ContainingType);
+      uint fieldTypeInternedId = this.GetTypeReferenceInternId(fieldReference.Type);
       uint fieldNameId = (uint)fieldReference.Name.UniqueKey;
-      uint result = this.FieldReferenceHashtable.Find(containingTypeReferenceInternedId, fieldNameId);
+      var fieldsForType = this.FieldReferenceHashtable.Find(containingTypeReferenceInternedId);
+      if (fieldsForType == null) {
+        fieldsForType = new DoubleHashtable();
+        this.FieldReferenceHashtable.Add(containingTypeReferenceInternedId, fieldsForType);
+      }
+      uint result = fieldsForType.Find(fieldNameId, fieldTypeInternedId);
       if (result == 0) {
         result = this.CurrentFieldReferenceInternValue++;
-        this.FieldReferenceHashtable.Add(containingTypeReferenceInternedId, fieldNameId, result);
+        fieldsForType.Add(fieldNameId, fieldTypeInternedId, result);
       }
       return result;
     }

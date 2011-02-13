@@ -502,7 +502,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
     /// <summary>
-    /// Find element in the Hashtable
+    /// Find element in the Hashtable. Returns null if the element is not found.
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
