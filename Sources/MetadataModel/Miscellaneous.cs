@@ -92,6 +92,7 @@ namespace Microsoft.Cci {
     /// Returns an enumerable that acts like cast on enumeration.
     /// </summary>
     /// <returns></returns>
+    [ContractVerification(false)]
     public static IEnumerable<TargetType> GetConversionEnumerable<SourceType, TargetType>(IEnumerable<SourceType> sourceEnumeration) where SourceType : TargetType {
       Contract.Requires(sourceEnumeration != null);
       Contract.Requires(Contract.ForAll(sourceEnumeration, x => x != null));
