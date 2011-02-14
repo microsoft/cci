@@ -206,7 +206,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (push != null) {
         push.ValueToPush = this.Visit(push.ValueToPush);
         if (this.body.localVariablesAndTemporaries == null) {
-          this.body.localVariablesAndTemporaries = new List<ILocalDefinition>(this.body.LocalVariables);
+          this.body.localVariablesAndTemporaries = new List<ILocalDefinition>(this.body.ilMethodBody.LocalVariables);
           this.tempCounter = this.body.localVariablesAndTemporaries.Count;
         }
         var temp = new TempVariable() { Name = this.body.host.NameTable.GetNameFor("__temp_"+this.tempCounter++) };

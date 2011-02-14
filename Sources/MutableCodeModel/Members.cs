@@ -20,7 +20,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// A metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
   /// </summary>
-  public sealed class SourceMethodBody : ISourceMethodBody {
+  public class SourceMethodBody : ISourceMethodBody {
 
     /// <summary>
     /// Allocates an object that provides a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
@@ -29,7 +29,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider) {
-      this.Block = CodeDummy.Block;
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
     }
@@ -42,7 +41,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
     public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
-      this.Block = CodeDummy.Block;
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
       this.iteratorLocalCount = iteratorLocalCount;
@@ -54,10 +52,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public IBlockStatement Block {
-      get { return this.block; }
+      get {
+        if (this.block == null)
+          this.block = this.GetBlock();
+        return this.block;
+      }
       set { this.block = value; this.ilWasGenerated = false; }
     }
-    IBlockStatement block;
+    IBlockStatement/*?*/ block;
+
+    /// <summary>
+    /// If no value has been provided for the Block property, make one.
+    /// </summary>
+    /// <returns></returns>
+    protected virtual IBlockStatement GetBlock() {
+      return CodeDummy.Block;
+    }
 
     IMetadataHost host;
     ISourceLocationProvider/*?*/ sourceLocationProvider;

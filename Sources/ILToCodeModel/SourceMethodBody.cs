@@ -19,7 +19,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// A metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
   /// </summary>
-  public class SourceMethodBody : ISourceMethodBody {
+  public class SourceMethodBody : Microsoft.Cci.MutableCodeModel.SourceMethodBody {
 
     internal readonly IMetadataHost host;
 
@@ -52,7 +52,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
     /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
-      ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators = false) {
+      ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators = false)
+      : base(host, sourceLocationProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
       this.nameTable = host.NameTable;
@@ -63,9 +64,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
       this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
       if (IteratorHelper.EnumerableIsNotEmpty(ilMethodBody.LocalVariables))
-        this.localsAreZeroed = ilMethodBody.LocalsAreZeroed;
+        this.LocalsAreZeroed = ilMethodBody.LocalsAreZeroed;
       else
-        this.localsAreZeroed = true;
+        this.LocalsAreZeroed = true;
+      this.MethodDefinition = ilMethodBody.MethodDefinition;
     }
 
     [ContractInvariantMethod]
@@ -82,92 +84,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Invariant(this.targetStatementFor != null);
       Contract.Invariant(this.predecessors != null);
     }
-
-
-    /// <summary>
-    /// The collection of statements making up the body.
-    /// This is produced by either language parser or through decompilation of the Instructions.
-    /// </summary>
-    public IBlockStatement Block {
-      get {
-        if (this.block == null) {
-          this.block = this.CreateDecompiledBlock();
-        }
-        return this.block;
-      }
-    }
-    IBlockStatement/*?*/ block;
-
-    #region IMethodBody Members
-
-    /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
-    /// </summary>
-    public void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// A list exception data within the method body IL.
-    /// </summary>
-    public System.Collections.Generic.IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
-      get { return this.ilMethodBody.OperationExceptionInformation; }
-    }
-
-    /// <summary>
-    /// True if the locals are initialized by zeroeing the stack upon method entry.
-    /// </summary>
-    public bool LocalsAreZeroed {
-      get { return this.localsAreZeroed; }
-    }
-    bool localsAreZeroed;
-
-    /// <summary>
-    /// The local variables of the method.
-    /// </summary>
-    public IEnumerable<ILocalDefinition> LocalVariables {
-      get { return this.ilMethodBody.LocalVariables; }
-    }
-
-    /// <summary>
-    /// The definition of the method whose body this is.
-    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
-    /// </summary>
-    public IMethodDefinition MethodDefinition {
-      get { return this.ilMethodBody.MethodDefinition; }
-    }
-
-    /// <summary>
-    /// A list CLR IL operations that implement this method body.
-    /// </summary>
-    public IEnumerable<IOperation> Operations {
-      get { return this.ilMethodBody.Operations; }
-    }
-
-    /// <summary>
-    /// The maximum number of elements on the evaluation stack during the execution of the method.
-    /// </summary>
-    public ushort MaxStack {
-      get { return this.ilMethodBody.MaxStack; }
-    }
-
-    /// <summary>
-    /// Any types that are implicitly defined in order to implement the body semantics.
-    /// In case of AST to instructions conversion this lists the types produced.
-    /// In case of instructions to AST decompilation this should ideally be list of all types
-    /// which are local to method.
-    /// </summary>
-    public IEnumerable<ITypeDefinition> PrivateHelperTypes {
-      get {
-        var x = this.privateHelperTypesToRemove;
-        return x == null ? SourceMethodBody.emptyPrivateHelperTypes : x;
-      }
-    }
-    static IEnumerable<ITypeDefinition> emptyPrivateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
-
-    #endregion
 
     private Dictionary<uint, BasicBlock> blockFor = new Dictionary<uint, BasicBlock>();
 
@@ -289,7 +205,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private IBlockStatement CreateDecompiledBlock() {
+    /// <summary>
+    /// Decompile the IL operations of this method body into a block of statements.
+    /// </summary>
+    protected override IBlockStatement GetBlock() {
       this.CreateBlocksForLexicalScopes();
       this.CreateBlocksForBranchTargets();
       this.CreateBlocksForExceptionHandlers();

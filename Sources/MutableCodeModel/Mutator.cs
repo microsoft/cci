@@ -3884,16 +3884,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public override IMethodBody Visit(IMethodBody methodBody) {
       var sourceMethodBody = methodBody as SourceMethodBody;
-      if (sourceMethodBody == null) {
-        var isourceMethodBody = methodBody as ISourceMethodBody;
-        if (isourceMethodBody != null) {
-          SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
-          mutableSourceMethodBody.Block = this.Visit(isourceMethodBody.Block);
-          mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();
-          mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
-          return mutableSourceMethodBody;
-        }
-      }
       if (sourceMethodBody != null) {
         sourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         sourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
