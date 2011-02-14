@@ -3842,7 +3842,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="customModifiers">The custom modifiers.</param>
     /// <returns></returns>
     public virtual List<ICustomModifier> Mutate(List<ICustomModifier> customModifiers) {
-      if (this.stopTraversal) return customModifiers;
+      if (this.stopTraversal || customModifiers == null) return customModifiers;
       for (int i = 0, n = customModifiers.Count; i < n; i++)
         customModifiers[i] = this.Visit(customModifiers[i]);
       return customModifiers;

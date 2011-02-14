@@ -386,6 +386,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that represents a local variable or constant.
   /// </summary>
+  [ContractClass(typeof(ILocalDefinitionContract))]
   public interface ILocalDefinition : INamedEntity, IObjectWithLocations {
 
     /// <summary>
@@ -436,6 +437,71 @@ namespace Microsoft.Cci {
     /// </summary>
     ITypeReference Type { get; }
 
+  }
+
+  [ContractClassFor(typeof(ILocalDefinition))]
+  abstract class ILocalDefinitionContract : ILocalDefinition {
+    public IMetadataConstant CompileTimeValue {
+      get {
+        Contract.Requires(this.IsConstant);
+        Contract.Ensures(Contract.Result<IMetadataConstant>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get {
+        Contract.Requires(this.IsModified);
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomModifier>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsConstant {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsModified {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsPinned {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsReference {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMethodDefinition MethodDefinition {
+      get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeReference Type {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>

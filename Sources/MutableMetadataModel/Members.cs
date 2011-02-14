@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -928,15 +929,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public LocalDefinition() {
       this.compileTimeValue = Dummy.Constant;
-      this.customModifiers = new List<ICustomModifier>();
+      this.customModifiers = null;
       this.isModified = false;
       this.isPinned = false;
       this.isReference = false;
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.methodDefinition = Dummy.Method;
       this.name = Dummy.Name;
       this.type = Dummy.TypeReference;
     }
+
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.compileTimeValue != null);
+      Contract.Invariant(this.methodDefinition != null);
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.type != null);
+    }
+
 
     /// <summary>
     /// Makes this mutable local definition a copy of the given immutable local definition.
@@ -948,14 +958,17 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.compileTimeValue = localVariableDefinition.CompileTimeValue;
       else
         this.compileTimeValue = Dummy.Constant;
-      if (localVariableDefinition.IsModified)
+      if (localVariableDefinition.IsModified && IteratorHelper.EnumerableIsNotEmpty(localVariableDefinition.CustomModifiers))
         this.customModifiers = new List<ICustomModifier>(localVariableDefinition.CustomModifiers);
       else
-        this.customModifiers = new List<ICustomModifier>();
+        this.customModifiers = null;
       this.isModified = localVariableDefinition.IsModified;
       this.isPinned = localVariableDefinition.IsPinned;
       this.isReference = localVariableDefinition.IsReference;
-      this.locations = new List<ILocation>(localVariableDefinition.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(localVariableDefinition.Locations))
+        this.locations = new List<ILocation>(localVariableDefinition.Locations);
+      else
+        this.locations = null;
       this.methodDefinition = localVariableDefinition.MethodDefinition;
       this.name = localVariableDefinition.Name;
       this.type = localVariableDefinition.Type;
@@ -975,11 +988,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Custom modifiers associated with local variable definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> CustomModifiers {
+    public List<ICustomModifier>/*?*/ CustomModifiers {
       get { return this.customModifiers; }
       set { this.customModifiers = value; }
     }
-    List<ICustomModifier> customModifiers;
+    List<ICustomModifier>/*?*/ customModifiers;
 
     /// <summary>
     /// True if this local definition is readonly and initialized with a compile time constant value.
@@ -1033,11 +1046,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The definition of the method in which this local is defined.
@@ -1061,11 +1074,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region ILocalDefinition Members
 
     IEnumerable<ICustomModifier> ILocalDefinition.CustomModifiers {
-      get { return this.customModifiers.AsReadOnly(); }
+      get {
+        if (this.customModifiers == null) return Dummy.LocalVariable.CustomModifiers;
+        return this.customModifiers.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.locations == null) return Dummy.LocalVariable.Locations;
+        return this.locations.AsReadOnly();
+      }
     }
 
     #endregion
