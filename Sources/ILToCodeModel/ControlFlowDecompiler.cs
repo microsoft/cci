@@ -165,7 +165,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class IfThenElseDecompiler : ControlFlowDecompiler {
 
     internal IfThenElseDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
-      : base(platformType, predecessors){
+      : base(platformType, predecessors) {
     }
 
     protected override void Visit(BasicBlock b) {
@@ -339,9 +339,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private static void RemoveEndFinally(BasicBlock handlerBlock) {
-      int i = handlerBlock.Statements.Count-1;
-      if (i >= 0 && handlerBlock.Statements[i] is EndFinally)
-        handlerBlock.Statements.RemoveAt(i);
+      while (handlerBlock != null) {
+        int i = handlerBlock.Statements.Count-1;
+        if (i < 0) return;
+        if (handlerBlock.Statements[i] is EndFinally) {
+          handlerBlock.Statements.RemoveAt(i);
+          return;
+        } else {
+          handlerBlock = handlerBlock.Statements[i] as BasicBlock;
+        }
+      }
     }
 
     private static IExpression ExtractFilterCondition(BasicBlock handlerBlock) {
