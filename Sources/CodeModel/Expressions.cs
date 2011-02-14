@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -169,6 +170,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A binary operation performed on a left and right operand.
   /// </summary>
+  [ContractClass(typeof(IBinaryOperationContract))]
   public interface IBinaryOperation : IExpression {
     /// <summary>
     /// The left operand.
@@ -179,6 +181,35 @@ namespace Microsoft.Cci {
     /// The right operand.
     /// </summary>
     IExpression RightOperand { get; }
+  }
+
+  [ContractClassFor(typeof(IBinaryOperation))]
+  abstract class IBinaryOperationContract : IBinaryOperation {
+    public IExpression LeftOperand {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IExpression RightOperand {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -465,6 +496,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression results in a value of some type.
   /// </summary>
+  [ContractClass(typeof(IExpressionContract))]
   public interface IExpression : IObjectWithLocations {
 
     /// <summary>
@@ -479,6 +511,28 @@ namespace Microsoft.Cci {
     /// </summary>
     ITypeReference Type { get; }
 
+  }
+
+  [ContractClassFor(typeof(IExpression))]
+  abstract class IExpressionContract : IExpression {
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ILocation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ILocation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
   }
 
   /// <summary>

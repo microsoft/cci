@@ -13,6 +13,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -28,13 +29,24 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.platformType = containingType.PlatformType;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.containingType != null);
+      Contract.Invariant(this.host != null);
+      Contract.Invariant(this.platformType != null);
+    }
+
+
     private ITypeReference GetBinaryNumericOperationType(IBinaryOperation binaryOperation, bool operandsAreTreatedAsUnsigned) {
+      Contract.Requires(binaryOperation != null);
       var result = this.GetBinaryNumericOperationType(binaryOperation);
       if (operandsAreTreatedAsUnsigned) result = TypeHelper.UnsignedEquivalent(result);
       return result;
     }
 
     private ITypeReference GetBinaryNumericOperationType(IBinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
+
       PrimitiveTypeCode leftTypeCode = binaryOperation.LeftOperand.Type.TypeCode;
       PrimitiveTypeCode rightTypeCode = binaryOperation.RightOperand.Type.TypeCode;
       switch (leftTypeCode) {
@@ -72,7 +84,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               return this.platformType.SystemFloat64;
 
             default:
-              return binaryOperation.RightOperand.Type;
+              return Dummy.TypeReference;
           }
 
         case PrimitiveTypeCode.Int8:
@@ -111,7 +123,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               return this.platformType.SystemFloat64;
 
             default:
-              return binaryOperation.RightOperand.Type;
+              return Dummy.TypeReference;
           }
 
         case PrimitiveTypeCode.UInt64:
@@ -143,7 +155,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               return this.platformType.SystemFloat64;
 
             default:
-              return binaryOperation.RightOperand.Type;
+              return Dummy.TypeReference;
           }
 
         case PrimitiveTypeCode.Int64:
@@ -173,7 +185,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               return this.platformType.SystemFloat64;
 
             default:
-              return binaryOperation.RightOperand.Type;
+              return Dummy.TypeReference;
           }
 
         case PrimitiveTypeCode.UIntPtr:
@@ -201,7 +213,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               return this.platformType.SystemFloat64;
 
             default:
-              return binaryOperation.RightOperand.Type;
+              return Dummy.TypeReference;
           }
 
         case PrimitiveTypeCode.IntPtr:
@@ -229,7 +241,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               return this.platformType.SystemFloat64;
 
             default:
-              return binaryOperation.RightOperand.Type;
+              return Dummy.TypeReference;
           }
 
         case PrimitiveTypeCode.Float32:
@@ -243,11 +255,11 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.Reference:
               return this.platformType.SystemIntPtr;
             default:
-              return binaryOperation.LeftOperand.Type;
+              return Dummy.TypeReference;
           }
 
         default:
-          return binaryOperation.RightOperand.Type;
+          return Dummy.TypeReference;
       }
     }
 
@@ -714,7 +726,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

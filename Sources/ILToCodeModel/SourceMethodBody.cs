@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using System.Text;
 
@@ -66,6 +67,22 @@ namespace Microsoft.Cci.ILToCodeModel {
       else
         this.localsAreZeroed = true;
     }
+
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.host != null);
+      Contract.Invariant(this.nameTable != null);
+      Contract.Invariant(this.platformType != null);
+      Contract.Invariant(this.localVariablesAndTemporaries != null);
+      Contract.Invariant(this.privateHelperMethodsToRemove != null);
+      Contract.Invariant(this.privateHelperFieldsToRemove != null);
+      Contract.Invariant(this.blockFor != null);
+      Contract.Invariant(this.operandStack != null);
+      Contract.Invariant(this.numberOfReferences != null);
+      Contract.Invariant(this.targetStatementFor != null);
+      Contract.Invariant(this.predecessors != null);
+    }
+
 
     /// <summary>
     /// The collection of statements making up the body.
@@ -754,7 +771,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       ifStatement.FalseBranch = new EmptyStatement();
       return ifStatement;
     }
-
 
     private Expression ParseBoundExpression(IOperation currentOperation) {
       if (currentOperation.Value == null)

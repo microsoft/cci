@@ -13,6 +13,7 @@ using Microsoft.Cci.MutableCodeModel;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -232,7 +233,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.block.LocalVariables == null) this.block.LocalVariables = new List<ILocalDefinition>();
         this.block.LocalVariables.Add(temp);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() { 
+        return new ExpressionStatement() {
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -269,9 +270,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         IStatement newStatement;
-        
+
         newStatement = this.Visit(statement);
-        
+
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else
@@ -322,6 +323,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.body = template.body;
     }
 
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.body != null);
+      Contract.Invariant(this.top < 0 || this.elements != null);
+      Contract.Invariant(this.top < 0 || this.top < this.elements.Length);
+      Contract.Invariant(this.top < 0 || Contract.ForAll(0, this.top+1, i => this.elements[i] != null));
+    }
+
     internal StackOfLocals Clone(BasicBlock block) {
       if (block.LocalVariables != null) {
         for (int i = 0; i <= this.top; i++) {
@@ -352,17 +361,30 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.elements[++this.top] = local;
     }
 
+    [ContractVerification(false)]
     internal void TransferTo(StackOfLocals targetStack, List<IStatement> list) {
+      Contract.Requires(targetStack != null);
+      Contract.Requires(list != null);
+      Contract.Requires(Contract.ForAll(list, x => x != null));
+
       for (int i = 0; i <= this.top && i <= targetStack.top; i++) {
+        Contract.Assert(this.top >= 0);
+        Contract.Assert(this.top < this.elements.Length);
         var sourceLocal = this.elements[i];
+        Contract.Assert(targetStack.top >= 0);
+        Contract.Assume(targetStack.elements != null);
+        Contract.Assume(targetStack.top < targetStack.elements.Length);
         var targetLocal = targetStack.elements[i];
+        Contract.Assume(targetLocal != null);
         if (sourceLocal == targetLocal) continue;
         if (targetLocal.turnIntoPopValueExpression) {
           sourceLocal.turnIntoPopValueExpression = true;
         } else if (sourceLocal.turnIntoPopValueExpression) {
           targetLocal.turnIntoPopValueExpression = true;
         } else {
+          Contract.Assume(this.body.numberOfReferences != null);
           this.body.numberOfReferences[sourceLocal]++;
+          Contract.Assume(this.body.numberOfAssignments != null);
           this.body.numberOfAssignments[targetLocal]++;
           var targetType = targetLocal.Type;
           var sourceType = sourceLocal.Type;
@@ -370,6 +392,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (targetType != mergedType) {
             targetLocal.Type = mergedType;
             targetType = mergedType;
+            if (targetType is Dummy || sourceType is Dummy) targetLocal.isPolymorphic = true;
           }
           var target = new TargetExpression() { Definition = targetLocal, Type = targetType };
           var source = new BoundExpression() { Definition = sourceLocal, Type = sourceType };
@@ -377,6 +400,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           list.Add(new ExpressionStatement() { Expression = assigment });
         }
       }
+      //Contract.Assume(this.top < 0 || Contract.ForAll(0, this.top+1, i => this.elements[i] != null));
     }
   }
 
