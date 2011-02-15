@@ -69,7 +69,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEventDefinition>() != null);
         if (Dummy.@event == null)
-          Dummy.@event = new DummyEventDefinition();
+          Interlocked.CompareExchange(ref Dummy.@event, new DummyEventDefinition(), null);
         return Dummy.@event;
       }
     }
@@ -323,7 +323,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<Version>() != null);
         if (Dummy.version == null)
-          Dummy.version = new Version(0, 0);
+          Interlocked.CompareExchange(ref Dummy.version, new Version(0, 0), null);
         return Dummy.version;
       }
     }
@@ -708,7 +708,7 @@ namespace Microsoft.Cci {
 
     public AssemblyIdentity AssemblyIdentity {
       get {
-        return new AssemblyIdentity(Dummy.Name, string.Empty, new Version(0, 0), new byte[0], string.Empty);
+        return new AssemblyIdentity(Dummy.Name, string.Empty, Dummy.Version, new byte[0], string.Empty);
       }
     }
 
