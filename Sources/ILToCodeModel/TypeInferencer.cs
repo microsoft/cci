@@ -370,6 +370,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
       }
+      if (assignment.Target.Type.TypeCode == PrimitiveTypeCode.Boolean && assignment.Source.Type.TypeCode == PrimitiveTypeCode.Int32)
+        ((Assignment)assignment).Source = ConvertToBoolean(assignment.Source);
       ((Assignment)assignment).Type = assignment.Target.Type;
     }
 
@@ -444,13 +446,30 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(conditional);
       Conditional cond = (Conditional)conditional;
       cond.Condition = ConvertToBoolean(cond.Condition);
-      var mergedType = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
-      cond.Type = mergedType;
+      if (!TypeHelper.TypesAreEquivalent(conditional.ResultIfTrue.Type, conditional.ResultIfFalse.Type)) {
+        var mergedType = TypeHelper.MergedType(TypeHelper.StackType(conditional.ResultIfTrue.Type), TypeHelper.StackType(conditional.ResultIfFalse.Type));
+        if (mergedType.TypeCode == PrimitiveTypeCode.Int32) {
+          if (conditional.ResultIfTrue.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+            cond.ResultIfFalse = ConvertToBoolean(cond.ResultIfFalse);
+            mergedType = cond.ResultIfTrue.Type;
+          } else if (cond.ResultIfFalse.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+            cond.ResultIfTrue = ConvertToBoolean(cond.ResultIfTrue);
+            mergedType = cond.ResultIfFalse.Type;
+          }
+        }
+        cond.Type = mergedType;
+      }
     }
 
     private static IExpression ConvertToBoolean(IExpression expression) {
-      object/*?*/ val = null;
       IPlatformType platformType = expression.Type.PlatformType;
+      var cc = expression as CompileTimeConstant;
+      if (cc != null && cc.Value is int) {
+        cc.Value = !ExpressionHelper.IsIntegralZero(cc);
+        cc.Type = platformType.SystemBoolean;
+        return cc;
+      }
+      object/*?*/ val = null;
       ITypeReference type = platformType.SystemObject;
       ITypeReference expressionType = expression.Type;
       IExpression rightOperand = null; // zero or null, but has to be type-specific
@@ -726,7 +745,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.Visit(thisReference);
       ITypeDefinition typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
+        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = TypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

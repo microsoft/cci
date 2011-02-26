@@ -76,6 +76,50 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(assignment);
     }
 
+    public override IExpression Visit(Conversion conversion) {
+      conversion.ValueToConvert = this.Visit(conversion.ValueToConvert);
+      if (TypeHelper.TypesAreEquivalent(conversion.TypeAfterConversion, conversion.ValueToConvert.Type))
+        return conversion.ValueToConvert;
+      else {
+        var cc = conversion.ValueToConvert as CompileTimeConstant;
+        if (cc != null) {
+          if (cc.Value == null) {
+            cc.Type = conversion.TypeAfterConversion;
+            return cc;
+          }
+          if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Boolean && conversion.ValueToConvert.Type.TypeCode == PrimitiveTypeCode.Int32 && cc.Value is int) {
+            cc.Value = ((int)cc.Value) != 0;
+            cc.Type = conversion.TypeAfterConversion;
+            return cc;
+          }
+        } else if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Boolean) {
+          var conditional = conversion.ValueToConvert as Conditional;
+          if (conditional != null) {
+            conditional.ResultIfFalse = this.ConvertToBoolean(conditional.ResultIfFalse);
+            conditional.ResultIfTrue = this.ConvertToBoolean(conditional.ResultIfTrue);
+            conditional.Type = conversion.TypeAfterConversion;
+            return conditional;
+          }
+        }
+        return conversion;
+      }
+    }
+
+    private IExpression ConvertToBoolean(IExpression expression) {
+      if (expression.Type.TypeCode == PrimitiveTypeCode.Boolean) return expression;
+      var cc = expression as CompileTimeConstant;
+      if (cc != null && cc.Value is int) {
+        cc.Value = ((int)cc.Value) != 0;
+        cc.Type = expression.Type.PlatformType.SystemBoolean;
+        return cc;
+      }
+      return new Conversion() {
+        ValueToConvert = expression,
+        TypeAfterConversion = expression.Type.PlatformType.SystemBoolean,
+        Type = expression.Type.PlatformType.SystemBoolean
+      };
+    }
+
     public override ITargetExpression Visit(TargetExpression targetExpression) {
       var closureField = targetExpression.Definition as IFieldReference;
       if (closureField != null) {
@@ -555,8 +599,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!this.sourceMethodBody.numberOfAssignments.TryGetValue(local, out numberOfAssignments) || numberOfAssignments > 1)
         return localDeclarationStatement;
       int numReferences = 0;
-      if (!this.sourceMethodBody.numberOfReferences.TryGetValue(local, out numReferences) || numReferences > 1)
-        return localDeclarationStatement;
+      this.sourceMethodBody.numberOfReferences.TryGetValue(local, out numReferences);
       if (this.sourceMethodBody.sourceLocationProvider != null) {
         bool isCompilerGenerated = false;
         this.sourceMethodBody.sourceLocationProvider.GetSourceNameFor(local, out isCompilerGenerated);

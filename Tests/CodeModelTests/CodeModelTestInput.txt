@@ -47,7 +47,7 @@ namespace CodeModelTestInput
             local_19[0] = 97;
             char[] Chars = local_19;
             bool[] local_20 = new bool[1];
-            local_20[0] = 1;
+            local_20[0] = true;
             bool[] Bools = local_20;
             decimal[] local_21 = new decimal[1];
             local_21[0] = new decimal(11, 0, 0, 0, 1);
@@ -185,13 +185,13 @@ namespace CodeModelTestInput
                     goto IL_0025;
             }
         IL_001d:
-            local_0 = 0;
+            local_0 = false;
             goto IL_0029;
         IL_0021:
-            local_0 = 1;
+            local_0 = true;
             goto IL_0029;
         IL_0025:
-            local_0 = 0;
+            local_0 = false;
         IL_0029:
             return local_0;
 
@@ -325,7 +325,7 @@ namespace CodeModelTestInput
             bool local_0;
             if (!(A && B))
             {
-                __temp_1 = (C && D);
+                __temp_1 = ((int)(C && D));
             }
             else
             {
@@ -473,11 +473,8 @@ namespace CodeModelTestInput
         {
             push x;
             push y;
-            string __temp_3 = null;
-            string __temp_4 = __temp_3;
-            string local_0 = __temp_4;
-            pop = __temp_3;
-            pop = local_0;
+            pop = null;
+            pop = null;
             return;
 
         }
@@ -675,7 +672,6 @@ namespace CodeModelTestInput
 
             public System.Collections.Generic.IEnumerable<T> Test1h<T>(System.Collections.Generic.IEnumerable<T> input, int x, int y)
             {
-                T local_2;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, delegate (T t) {
                     bool local_0 = (t.Value() > x);
                     return local_0;
@@ -691,7 +687,7 @@ namespace CodeModelTestInput
                 {
                 IL_00ba:
                     T <t>5__30 = <>7__wrap31.Current.get();
-                    local_2 = <t>5__30;
+                    T local_2 = <t>5__30;
                     yield return local_2.IncrementBy(y);
 
                 IL_0104:
@@ -863,7 +859,7 @@ namespace CodeModelTestInput
     {
         public Class3(System.Collections.Generic.List<int> xs)
         {
-            this.fieldJustForCtorTest = 0;
+            this.fieldJustForCtorTest = false;
             this.list = new System.Collections.Generic.List<int>();
             this.object();
             System.Collections.Generic.List<int> __temp_1 = xs;
@@ -1134,7 +1130,7 @@ namespace CodeModelTestInput
             public Class3Inner1(System.Collections.Generic.List<T2> xs)
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
-                this.fieldJustForCtorTest = 0;
+                this.fieldJustForCtorTest = false;
                 this.object();
                 System.Collections.Generic.List<T2> __temp_1 = xs;
                 this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (T2 i) {
@@ -1198,7 +1194,7 @@ namespace CodeModelTestInput
             public Class3Inner1(System.Collections.Generic.List<int> xs)
             {
                 this.list_inner = new System.Collections.Generic.List<int>();
-                this.fieldJustForCtorTest = 0;
+                this.fieldJustForCtorTest = false;
                 this.object();
                 System.Collections.Generic.List<int> __temp_1 = xs;
                 this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (int i) {
@@ -1317,7 +1313,7 @@ namespace CodeModelTestInput
     {
         public Class4(System.Collections.Generic.List<T> xs)
         {
-            this.fieldJustForCtorTest = 0;
+            this.fieldJustForCtorTest = false;
             this.object();
             System.Collections.Generic.List<T> __temp_1 = xs;
             this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (T i) {
@@ -1614,7 +1610,7 @@ namespace CodeModelTestInput
                 System.Collections.Generic.List<T2> __temp_2;
                 int __temp_3;
                 this.list_inner = new System.Collections.Generic.List<T2>();
-                this.fieldJustForCtorTest = 0;
+                this.fieldJustForCtorTest = false;
                 this.object();
                 System.Collections.Generic.List<T> __temp_1 = xs;
                 if (__temp_1.TrueForAll(delegate (T i) {
@@ -1691,7 +1687,7 @@ namespace CodeModelTestInput
             public Class4Inner2(System.Collections.Generic.List<T> xs)
             {
                 this.list_inner = new System.Collections.Generic.List<T>();
-                this.fieldJustForCtorTest = 0;
+                this.fieldJustForCtorTest = false;
                 this.object();
                 System.Collections.Generic.List<T> __temp_1 = xs;
                 this.fieldJustForCtorTest = __temp_1.TrueForAll(delegate (T i) {

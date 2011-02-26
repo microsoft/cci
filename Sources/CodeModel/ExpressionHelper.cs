@@ -244,7 +244,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong or ushort that is not equal to 0.
+    /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort or bool that is not equal to 0.
     /// </summary>
     //^ [Pure]
     public static bool IsIntegralNonzero(ICompileTimeConstant constExpression) {
@@ -259,12 +259,13 @@ namespace Microsoft.Cci {
         case System.TypeCode.UInt16: return ic.ToUInt16(null) != 0;
         case System.TypeCode.UInt32: return ic.ToUInt32(null) != 0;
         case System.TypeCode.UInt64: return ic.ToUInt64(null) != 0;
+        case System.TypeCode.Boolean: return ic.ToBoolean(null);
       }
       return false;
     }
 
     /// <summary>
-    /// True if the given expression is a compile time constant with a value that is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// True if the given expression is a compile time constant with a value that is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
     //^ [Pure]
     public static bool IsIntegralOne(IExpression expression) {
@@ -274,7 +275,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// True if the value is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// True if the value is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
     //^ [Pure]
     public static bool IsIntegralOne(ICompileTimeConstant constExpression) {
@@ -289,12 +290,13 @@ namespace Microsoft.Cci {
         case System.TypeCode.UInt16: return ic.ToUInt16(null) == 1;
         case System.TypeCode.UInt32: return ic.ToUInt32(null) == 1;
         case System.TypeCode.UInt64: return ic.ToUInt64(null) == 1;
+        case System.TypeCode.Boolean: return ic.ToBoolean(null);
       }
       return false;
     }
 
     /// <summary>
-    /// True if the given expression is a compile time constant with a value that is a boxed zero of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// True if the given expression is a compile time constant with a value that is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
     //^ [Pure]
     public static bool IsIntegralZero(IExpression expression) {
@@ -304,7 +306,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
     //^ [Pure]
     public static bool IsIntegralZero(ICompileTimeConstant constExpression) {
@@ -319,6 +321,7 @@ namespace Microsoft.Cci {
         case System.TypeCode.UInt16: return ic.ToUInt16(null) == 0;
         case System.TypeCode.UInt32: return ic.ToUInt32(null) == 0;
         case System.TypeCode.UInt64: return ic.ToUInt64(null) == 0;
+        case System.TypeCode.Boolean: return !ic.ToBoolean(null);
       }
       return false;
     }
