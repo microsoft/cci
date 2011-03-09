@@ -1300,13 +1300,14 @@ namespace Microsoft.Cci.MutableContracts {
         string/*?*/ origSource = null;
         this.parent.TryGetConditionText(locations, numArgs, out origSource);
 
-
+        var locations2 = this.pdbReader == null ? new List<ILocation>() :
+          new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations)));
         if (mname == "Assert") {
           AssertStatement assertStatement = new AssertStatement() {
             Condition = this.Visit(arguments[0]),
             Description = numArgs >= 2? arguments[1] : null,
             OriginalSource = origSource,
-            Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))),
+            Locations = locations2,
           };
           return assertStatement;
         }
@@ -1315,7 +1316,7 @@ namespace Microsoft.Cci.MutableContracts {
             Condition = this.Visit(arguments[0]),
             Description = numArgs >= 2 ? arguments[1] : null,
             OriginalSource = origSource,
-            Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))),
+            Locations = locations2,
           };
           return assumeStatement;
         }
