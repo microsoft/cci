@@ -3162,7 +3162,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// The value, if any, to assign to the local as its initial value. May be null.
     /// </summary>
-    public Expression/*?*/ InitialValue {
+    public virtual Expression/*?*/ InitialValue {
       get { return this.initialValue; }
     }
     readonly Expression/*?*/ initialValue;
