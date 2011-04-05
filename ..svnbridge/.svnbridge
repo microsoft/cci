@@ -5,4 +5,9 @@
 </Value></Property><Property><Name>svn:ignore</Name><Value>*.sln.cache
 *.suo
 bin
+</Value></Property><Property><Name>svn:ignore</Name><Value>*.sln.cache
+*.suo
+bin
+*.user
+</Value></Property><Property><Name>svn:externals</Name><Value>Metadata https://ccimetadata.svn.codeplex.com/svn
 </Value></Property></Properties></ItemProperties>
