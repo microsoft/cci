@@ -1,0 +1,35 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask 
+    TaskName="Microsoft.Cci.MsBuild.WriteFile" 
+    AssemblyFile="Microsoft.Cci.MsBuild.dll" />
+
+  <PropertyGroup>
+    <BuildVersion>$(CCNetLabel)</BuildVersion>
+    <VersionFileSource>..\Sources\common\include\version.cs</VersionFileSource>
+    <VersionFileMetadata>..\Metadata\Sources\common\include\version.cs</VersionFileMetadata>
+    <VersionSource>
+<![CDATA[// ==++==
+//
+//   Copyright (c) Microsoft Corporation.  All rights reserved.
+//
+// ==--==
+// Warning: Automatically generated file. DO NOT EDIT
+// Generated at $(CCNetBuildDate)
+
+using System.Reflection;
+[assembly: AssemblyVersion("$(BuildVersion)")]
+[assembly: AssemblyFileVersion("$(BuildVersion)")]
+[assembly: AssemblyCompany("Microsoft Corporation")]
+[assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+]]>
+    </VersionSource>
+  </PropertyGroup>
+  
+  <Target Name="CreateVersion">
+    <Message Text="Writing version files $(VersionFileSource) with $(VersionSource)" />
+    <WriteFile File="$(VersionFileSource)" Content="$(VersionSource)" />    
+    <Message Text="Writing version files $(VersionFileMetadata) with $(VersionSource)" />
+    <WriteFile File="$(VersionFileMetadata)" Content="$(VersionSource)" />    
+  </Target>
+</Project>
