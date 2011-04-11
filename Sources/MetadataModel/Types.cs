@@ -17,7 +17,9 @@ using System.Diagnostics.Contracts;
 namespace Microsoft.Cci {
 
   /// <summary>
-  /// Alias type to represent exported types and typedef.
+  /// Alias types represent exported and forwarded types, and correspond to entries in the Exported Type table in the ECMA-335 metadata format.
+  /// An exported type is an alias for a type defined a member module of the assembly containing the type table, whereas a forwarded type
+  /// is an alias for a type defined in another assembly.
   /// </summary>
   //  Consider A.B aliases to C.D, and C.D aliases to E.F.
   //  Then:
@@ -30,14 +32,14 @@ namespace Microsoft.Cci {
   [ContractClass(typeof(IAliasForTypeContract))]
   public interface IAliasForType : IContainer<IAliasMember>, IDefinition, IScope<IAliasMember> {
     /// <summary>
-    /// Type reference of the type for which this is the alias
+    /// A reference to the type for which this is an alias.
     /// </summary>
     ITypeReference AliasedType { get; }
 
     /// <summary>
     /// The collection of member objects comprising the type.
     /// </summary>
-    new IEnumerable<IAliasMember> Members {
+    new IEnumerable<IAliasMember> Members { //TODO: this seems to actually be a collection of INestedAliasForType objects.
       get;
     }
   }
@@ -89,6 +91,10 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IAliasMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       throw new NotImplementedException();
     }
   }
@@ -230,6 +236,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ILocation> Locations {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -421,6 +431,10 @@ namespace Microsoft.Cci {
 
     public ITypeReference Type {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -710,6 +724,10 @@ namespace Microsoft.Cci {
     public ushort Index {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -721,6 +739,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// The definition of a type parameter of a generic method.
   /// </summary>
+  [ContractClass(typeof(IGenericMethodParameterContract))]
   public interface IGenericMethodParameter : IGenericParameter, IGenericMethodParameterReference {
 
     /// <summary>
@@ -731,6 +750,261 @@ namespace Microsoft.Cci {
       //^ ensures result.IsGeneric;
     }
 
+  }
+
+  [ContractClassFor(typeof(IGenericMethodParameter))]
+  abstract class IGenericMethodParameterContract : IGenericMethodParameter {
+    public IMethodDefinition DefiningMethod {
+      get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ITypeReference> Constraints {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustBeReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustBeValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustHaveDefaultConstructor {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeParameterVariance Variance {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Index {
+      get { throw new NotImplementedException(); }
+    }
+
+    IMethodReference IGenericMethodParameterReference.DefiningMethod {
+      get { throw new NotImplementedException(); }
+    }
+
+    IGenericMethodParameter IGenericMethodParameterReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -817,6 +1091,10 @@ namespace Microsoft.Cci {
     public ushort Index {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -842,9 +1120,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns the generic type of which this type is an instance.
     /// </summary>
-    ITypeReference GenericType {
+    INamedTypeReference GenericType {
       get;
-      //^ ensures result.ResolveType == Dummy.Type || result.ResolvedType.IsGeneric;
+      //^ ensures result.ResolveType == Dummy.NamedTypeDefinition || result.ResolvedType.IsGeneric;
     }
 
   }
@@ -859,10 +1137,10 @@ namespace Microsoft.Cci {
       }
     }
 
-    public ITypeReference GenericType {
+    public INamedTypeReference GenericType {
       get {
         Contract.Ensures(Contract.Result<ITypeReference>() != null);
-        //Contract.Ensures(Contract.Result<ITypeReference>().ResolvedType == Dummy.Type || Contract.Result<ITypeReference>().ResolvedType.IsGeneric);
+        //Contract.Ensures(Contract.Result<ITypeReference>().ResolvedType == Dummy.NamedTypeDefinition || Contract.Result<ITypeReference>().ResolvedType.IsGeneric);
         throw new NotImplementedException();
       }
     }
@@ -909,6 +1187,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ILocation> Locations {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1010,6 +1292,10 @@ namespace Microsoft.Cci {
     public ushort Index {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -1054,7 +1340,14 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A type definition that is a member of a namespace definition.
   /// </summary>
+  [ContractClass(typeof(INamespaceTypeDefinitionContract))]
   public interface INamespaceTypeDefinition : INamedTypeDefinition, INamespaceMember, INamespaceTypeReference {
+
+    /// <summary>
+    /// Returns a potentially empty enumeration of custom attributes that describe how this type implements the given interface.
+    /// </summary>
+    IEnumerable<ICustomAttribute> AttributesFor(ITypeReference implementedInterface);
+    //^ requires IteratorHelper.EnumerableContains(this.Interfaces, implementedInterface);
 
     /// <summary>
     /// The number of generic parameters. Zero if the type is not generic.
@@ -1071,6 +1364,318 @@ namespace Microsoft.Cci {
     /// </summary>
     bool IsPublic { get; }
 
+    /// <summary>
+    /// True if objects of this type are neither COM objects nor native to the CLR and are accessed via some kind of interoperation mechanism.
+    /// </summary>
+    bool IsForeignObject { get; }
+
+  }
+
+  [ContractClassFor(typeof(INamespaceTypeDefinition))]
+  abstract class INamespaceTypeDefinitionContract : INamespaceTypeDefinition {
+    #region INamespaceTypeDefinition Members
+
+    public IEnumerable<ICustomAttribute> AttributesFor(ITypeReference implementedInterface) {
+      Contract.Requires(IteratorHelper.EnumerableContains(this.Interfaces, implementedInterface));
+      Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
+      throw new NotImplementedException();
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IUnitNamespace ContainingUnitNamespace {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsPublic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsForeignObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region ITypeDefinition Members
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IScope<ITypeDefinitionMember> Members
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region ITypeReference Members
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool KeepDistinctFromDefinition {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedTypeReference Members
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamespaceMember Members
+
+    public INamespaceDefinition ContainingNamespace {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IContainerMember<INamespaceDefinition> Members
+
+    public INamespaceDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IScopeMember<IScope<INamespaceMember>> Members
+
+    public IScope<INamespaceMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamespaceTypeReference Members
+
+    IUnitNamespaceReference INamespaceTypeReference.ContainingUnitNamespace {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamespaceTypeDefinition INamespaceTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
   }
 
   /// <summary>
@@ -1094,6 +1699,21 @@ namespace Microsoft.Cci {
     /// </summary>
     new INamespaceTypeDefinition ResolvedType { get; }
 
+    /// <summary>
+    /// True if this reference should be kept distinct from the definition it refers to. That is, when copied or persisted,
+    /// this object should not be unified with the referenced type, even if the referenced type is defined in the same
+    /// module as the reference to the type.
+    /// </summary>
+    /// <remarks>
+    /// This is a somewhat strange property and there is no corresponding bit in the metadata. It serves to
+    /// constrain the way in which metadata is persisted in order to enable a particular implementation technique for
+    /// substituting one type for another at runtime. This bit needs to be set only if there is a need to exploit this
+    /// implementation technique. Metadata readers will set it whenever they encounter a distinct reference (a TypeRef token)
+    /// when the definition (a TypeDef token) could have been used instead. Metadata writers will not substitute
+    /// TypeDef tokens when they persist references with this property set to true.
+    /// </remarks>
+    bool KeepDistinctFromDefinition { get; }
+
   }
 
   [ContractClassFor(typeof(INamespaceTypeReference))]
@@ -1116,6 +1736,9 @@ namespace Microsoft.Cci {
       }
     }
 
+    public bool KeepDistinctFromDefinition {
+      get { throw new NotImplementedException(); }
+    }
 
     public bool MangleName {
       get { throw new NotImplementedException(); }
@@ -1171,6 +1794,10 @@ namespace Microsoft.Cci {
 
     public IName Name {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1290,6 +1917,10 @@ namespace Microsoft.Cci {
 
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1415,6 +2046,10 @@ namespace Microsoft.Cci {
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -1522,6 +2157,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ILocation> Locations {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1756,9 +2395,9 @@ namespace Microsoft.Cci {
     INamespaceTypeReference SystemRuntimeCompilerServicesExtensionAttribute { get; }
 
     /// <summary>
-    /// System.Runtime.CompilerServices.FriendAccessAllowedAttribute
+    /// System.Runtime.CompilerServices.InternalsVisibleToAttribute
     /// </summary>
-    INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute { get; }
+    INamespaceTypeReference SystemRuntimeCompilerServicesInternalsVisibleToAttribute { get; }
 
     /// <summary>
     /// System.Runtime.CompilerServices.IsCont
@@ -1794,6 +2433,11 @@ namespace Microsoft.Cci {
     /// System.Security.SecuritySafeCriticalAttribute
     /// </summary>
     INamespaceTypeReference SystemSecuritySecuritySafeCriticalAttribute { get; }
+
+    /// <summary>
+    /// System.Security.SuppressUnmanagedCodeSecurityAttribute
+    /// </summary>
+    INamespaceTypeReference SystemSecuritySuppressUnmanagedCodeSecurityAttribute { get; }
 
     /// <summary>
     /// System.String
@@ -2163,7 +2807,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    public INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute {
+    public INamespaceTypeReference SystemRuntimeCompilerServicesInternalsVisibleToAttribute {
       get {
         Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
         throw new NotImplementedException();
@@ -2213,6 +2857,13 @@ namespace Microsoft.Cci {
     }
 
     public INamespaceTypeReference SystemSecuritySecuritySafeCriticalAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemSecuritySuppressUnmanagedCodeSecurityAttribute {
       get {
         Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
         throw new NotImplementedException();
@@ -2367,6 +3018,10 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocation> Locations {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -2443,6 +3098,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ILocation> Locations {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -2830,6 +3489,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ISecurityAttribute>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ISecurityAttribute>>(), x => x != null));
+        Contract.Ensures(this.HasDeclarativeSecurity || IteratorHelper.EnumerableIsEmpty(Contract.Result<IEnumerable<ISecurityAttribute>>()));
         throw new NotImplementedException();
       }
     }
@@ -2909,6 +3569,10 @@ namespace Microsoft.Cci {
     public PrimitiveTypeCode TypeCode {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -2918,7 +3582,10 @@ namespace Microsoft.Cci {
   public interface ITypeReference : IReference {
 
     /// <summary>
-    /// Gives the alias for the type
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
     /// </summary>
     IAliasForType AliasForType { get; }
 
@@ -2929,7 +3596,8 @@ namespace Microsoft.Cci {
     uint InternedKey { get; }
 
     /// <summary>
-    /// Indicates if this type reference resolved to an alias rather than a type
+    /// True if this reference can be resolved and it resolves to a type alias. The type alias can be retrieved
+    /// via the AliasForType property. The value of this.ResolvedType will be this.AliasForType.AliasedType.ResolvedType.
     /// </summary>
     bool IsAlias {
       get;
@@ -2938,14 +3606,45 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// True if the type is an enumeration (it extends System.Enum and is sealed). Corresponds to C# enum.
+    /// A type reference may report this value as false, even though the referenced type definition reports it as true.
+    /// However, any type reference used in a custom attribute must report the correct value for this property or the
+    /// resulting metadata would be invalid.
+    /// Important, do not cache this property. Its value may change from false to true (but not the other way round) in some situations.
+    /// To be on the safe side, resolve all type references whenever possible.
     /// </summary>
+    /// <remarks>
+    /// Metadata readers have trouble with this property because an ITypeReference instance is a model for the TypeRef table in the ECMA-335 metadata format.
+    /// Unfortunately, a TypeRef table entry does not distinguish between enum types and other types. The distinction is made in some signatures that
+    /// include TypeRef tokens. A more accurate model of the metadata format would encode the information obtained from those signatures in a separate property of
+    /// the object containing the type reference, or would introduce a new kind of type reference such as INamespaceEnumTypeReference and INestedEnumTypeReference.
+    /// However, for historical/usability reasons this object model oversimplifies the situation by pretending that all type references can tell if they refer to enum types
+    /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as it is token is encountered
+    /// in a signature that indicates that is is an enum type. In practise this means that a type reference encountered in a part of the object model where it is
+    /// important to know if the referenced type is an enum type, will get the right value from this property. However, if the value of this property is cached
+    /// as soon as it is encountered for the first time, the wrong value may get cached.
+    /// </remarks>
     bool IsEnum { get; }
 
     /// <summary>
     /// True if the type is a value type. 
     /// Value types are sealed and extend System.ValueType or System.Enum.
     /// A type parameter for which MustBeValueType (the struct constraint in C#) is true also returns true for this property.
+    /// A type reference may report this value as false, even though the referenced type definition reports it as true.
+    /// However, any type reference used in an IL instruction other than ldtoken (used for the C# typeof expression) must report the correct value.
+    /// Important, do not cache this property. Its value may change from false to true (but not the other way round) in some situations.
+    /// To be on the safe side, resolve all type references whenever possible.
     /// </summary>
+    /// <remarks>
+    /// Metadata readers have trouble with this property because an ITypeReference instance is a model for the TypeRef table in the ECMA-335 metadata format.
+    /// Unfortunately, a TypeRef table entry does not distinguish between value types and reference types. The distinction is made in some signatures that
+    /// include TypeRef tokens. A more accurate model of the metadata format would encode the information obtained from those signatures in a separate property of
+    /// the object containing the type reference, or would introduce a new kind of type reference such as INamespaceValueTypeReference and INestedValueTypeReference.
+    /// However, for historical/usability reasons this object model oversimplifies the situation by pretending that all type references can tell if they refer to value types
+    /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as it is token is encountered
+    /// in a signature that indicates that is is a value type. In practise this means that a type reference encountered in a part of the object model where it is
+    /// important to know if the referenced type is a value type, will get the right value from this property. However, if the value of this property is cached
+    /// as soon as it is encountered for the first time, the wrong value may get cached.
+    /// </remarks>
     bool IsValueType { get; }
 
     /// <summary>
@@ -2955,8 +3654,12 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// The type definition being referred to.
-    /// In case this type was alias, this is also the type of the aliased type
+    /// In case the reference is to an alias, then this is resolved type of the alias, which
+    /// could have a different InternedKey from this reference.
     /// </summary>
+    /// <remarks>
+    /// If this.IsAlias then this.ResolvedType == this.AliasForType.AliasedType.ResolvedType.
+    /// </remarks>
     ITypeDefinition ResolvedType {
       get;
       //^ ensures this.IsAlias ==> result == this.AliasForType.AliasedType.ResolvedType;
@@ -3044,6 +3747,10 @@ namespace Microsoft.Cci {
       get {
         throw new NotImplementedException();
       }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 

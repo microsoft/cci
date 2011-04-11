@@ -334,6 +334,7 @@ namespace Microsoft.Cci.MetadataReader {
         int argIteratorKey = peReader.ArgIterator.UniqueKey;
         int voidKey = nameTable.Void.UniqueKey;
         int mscorlibKey = peReader.Mscorlib.UniqueKey;
+        int systemRuntimeKey = peReader.System_Runtime.UniqueKey;
         TypeRefTableReader trTable = this.PEFileReader.TypeRefTable;
         for (uint i = 1; i <= trTable.NumberOfRows; i++) {
           TypeRefRow tr = trTable[i];
@@ -368,6 +369,13 @@ namespace Microsoft.Cci.MetadataReader {
           break;
         }
         AssemblyRefTableReader arTable = this.PEFileReader.AssemblyRefTable;
+        for (uint i = 1; i <= arTable.NumberOfRows; i++) {
+          AssemblyRefRow ar = arTable[i];
+          int key = this.GetNameFromOffset(ar.Name).UniqueKey;
+          if (key != systemRuntimeKey) continue;
+          var identity = this.AssemblyReferenceArray[i].AssemblyIdentity;
+          if (identity.Version.Major >= 4) return identity;
+        }
         for (uint i = 1; i <= arTable.NumberOfRows; i++) {
           AssemblyRefRow ar = arTable[i];
           int key = this.GetNameFromOffset(ar.Name).UniqueKey;
@@ -1740,6 +1748,12 @@ namespace Microsoft.Cci.MetadataReader {
         MemberRefRow mrr = this.PEFileReader.MemberRefTable[i];
         if ((mrr.Class & TokenTypeIds.TokenTypeMask) == TokenTypeIds.TypeSpec) continue;
         yield return this.GetModuleMemberReferenceAtRow(this.Module, i);
+      }
+    }
+
+    internal IEnumerable<ITypeReference> GetTypeReferences() {
+      for (uint i = 1; i <= this.PEFileReader.TypeRefTable.NumberOfRows; i++) {
+        yield return this.GetTypeRefReferenceAtRow(i);
       }
     }
 
@@ -3310,6 +3324,7 @@ namespace Microsoft.Cci.MetadataReader {
     }
     internal ICustomAttribute GetCustomAttributeAtRow(
       MetadataObject owningObject,
+      uint token,
       uint customAttributeRowId
     ) {
       if (customAttributeRowId == 0 || customAttributeRowId > this.PEFileReader.CustomAttributeTable.NumberOfRows) {
@@ -3320,7 +3335,7 @@ namespace Microsoft.Cci.MetadataReader {
         lock (GlobalLock.LockingObject) {
           if (this.CustomAttributeArray[customAttributeRowId] == null) {
             CustomAttributeRow customAttribute = this.PEFileReader.CustomAttributeTable[customAttributeRowId];
-            if (customAttribute.Parent == owningObject.TokenValue || (customAttribute.Parent == 1 && owningObject.TokenValue == TokenTypeIds.Assembly+1)) {
+            if (customAttribute.Parent == token || (customAttribute.Parent == 1 && token == TokenTypeIds.Assembly+1)) {
               uint ctorTokenType = customAttribute.Type & TokenTypeIds.TokenTypeMask;
               uint ctorRowId = customAttribute.Type & TokenTypeIds.RIDMask;
               IModuleMethodReference/*?*/ moduleMethodReference = null;
@@ -3349,7 +3364,7 @@ namespace Microsoft.Cci.MetadataReader {
                 if (!customAttrDecoder.decodeFailed)
                   this.ModuleReader.metadataReaderHost.WinGuessingGame();
                 //else
-                //TODO: error
+                  //TODO: error
                 this.CustomAttributeArray[customAttributeRowId] = customAttrDecoder.CustomAttribute;
               }
             } else {
@@ -3368,7 +3383,7 @@ namespace Microsoft.Cci.MetadataReader {
       uint customAttributeRowIdStart = this.PEFileReader.CustomAttributeTable.FindCustomAttributesForToken(TokenTypeIds.Module | (uint)0x00000001, out customAttributeCount);
       uint customAttributeRowIdEnd = customAttributeRowIdStart + customAttributeCount;
       for (uint customAttributeIter = customAttributeRowIdStart; customAttributeIter < customAttributeRowIdEnd; ++customAttributeIter) {
-        yield return this.GetCustomAttributeAtRow(this.Module, customAttributeIter);
+        yield return this.GetCustomAttributeAtRow(this.Module, this.Module.TokenValue, customAttributeIter);
       }
     }
     internal IEnumerable<ICustomAttribute> GetAssemblyCustomAttributes() {
@@ -3376,7 +3391,7 @@ namespace Microsoft.Cci.MetadataReader {
       uint customAttributeRowIdStart = this.PEFileReader.CustomAttributeTable.FindCustomAttributesForToken(TokenTypeIds.Assembly | (uint)0x00000001, out customAttributeCount);
       uint customAttributeRowIdEnd = customAttributeRowIdStart + customAttributeCount;
       for (uint customAttributeIter = customAttributeRowIdStart; customAttributeIter < customAttributeRowIdEnd; ++customAttributeIter) {
-        yield return this.GetCustomAttributeAtRow(this.Module, customAttributeIter);
+        yield return this.GetCustomAttributeAtRow(this.Module, this.Module.TokenValue, customAttributeIter);
       }
     }
     internal void GetSecurityAttributeInfo(
@@ -3434,11 +3449,12 @@ namespace Microsoft.Cci.MetadataReader {
       if (!securityAttrDecoder.decodeFailed)
         this.ModuleReader.metadataReaderHost.WinGuessingGame();
       //else
-      //TODO: error
+        //TODO: error
 
       return securityAttrDecoder.SecurityAttributes;
     }
     #endregion Attribute Information
+
 
   }
 
@@ -4040,9 +4056,9 @@ namespace Microsoft.Cci.MetadataReader {
         if (isReturnByReference) {
           paramFlag |= ParamFlags.ByReference;
         }
-        this.ReturnParameter = new ReturnParameter(this.PEFileToObjectModel, paramFlag, paramInfoArray[0].ParamRowId);
+        this.ReturnParameter = new ReturnParameter(this.PEFileToObjectModel, paramInfoArray[0].ParamName, paramFlag, paramInfoArray[0].ParamRowId);
       } else {
-        this.ReturnParameter = new ReturnParameter(this.PEFileToObjectModel, isReturnByReference ? ParamFlags.ByReference : 0, 0);
+        this.ReturnParameter = new ReturnParameter(this.PEFileToObjectModel, Dummy.Name, isReturnByReference ? ParamFlags.ByReference : 0, 0);
       }
       this.ParamInfoArray = paramInfoArray;
       if (paramCount > 0) {

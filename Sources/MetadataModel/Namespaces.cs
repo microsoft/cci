@@ -60,6 +60,10 @@ namespace Microsoft.Cci {
     public IScope<INamespaceMember> ContainingScope {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -179,6 +183,10 @@ namespace Microsoft.Cci {
     public INestedUnitNamespace ResolvedNestedUnitNamespace {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -236,6 +244,10 @@ namespace Microsoft.Cci {
 
     public IName Name {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -316,6 +328,10 @@ namespace Microsoft.Cci {
     public IScope<INamespaceMember> ContainingScope {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -386,6 +402,10 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       throw new NotImplementedException();
     }
   }
@@ -473,13 +493,16 @@ namespace Microsoft.Cci {
     public IUnitNamespace ResolvedUnitNamespace {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
   /// A reference to an unit namespace.
   /// </summary>
-  [ContractClass(typeof(IUnitNamespaceReferenceContract))]
-  public interface IUnitNamespaceReference : IReference {
+  public partial interface IUnitNamespaceReference : IReference {
 
     /// <summary>
     /// A reference to the unit that defines the referenced namespace.
@@ -492,6 +515,12 @@ namespace Microsoft.Cci {
     /// The namespace definition being referred to.
     /// </summary>
     IUnitNamespace ResolvedUnitNamespace { get; }
+  }
+
+  #region IUnitNamespaceReference contract binding
+  [ContractClass(typeof(IUnitNamespaceReferenceContract))]
+  public partial interface IUnitNamespaceReference {
+
   }
 
   [ContractClassFor(typeof(IUnitNamespaceReference))]
@@ -521,7 +550,13 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocation> Locations {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
+
+  #endregion
 
   /// <summary>
   /// A named collection of namespace members, with routines to search and maintain the collection. The collection of members
@@ -587,6 +622,10 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       throw new NotImplementedException();
     }
   }

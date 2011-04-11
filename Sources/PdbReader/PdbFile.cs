@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -224,7 +224,7 @@ namespace Microsoft.Cci.Pdb {
                   func = f;
                   funcIndex--;
                 }
-              } else {
+             } else {
                 while (funcIndex < funcs.Length-1 && func.lines != null) {
                   var f = funcs[funcIndex+1];
                   if (f.segment != sec.sec || f.address != sec.off) break;

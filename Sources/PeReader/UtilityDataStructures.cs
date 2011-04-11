@@ -265,7 +265,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
     internal unsafe struct MemoryBlockEnumerator : IEnumerator<byte> {
       IBinaryDocumentMemoryBlock BinaryDocumentMemoryBlock;
-      byte* pointer;
+      byte *pointer;
       int length;
       int currentOffset;
       internal MemoryBlockEnumerator(

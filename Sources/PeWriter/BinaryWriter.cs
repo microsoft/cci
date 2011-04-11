@@ -140,8 +140,10 @@ namespace Microsoft.Cci {
       MemoryStream m = this.BaseStream;
       uint i = m.Position;
       m.Position=i+8;
-      fixed (byte* b = m.Buffer)
-        *((double*)(b+i)) = value;
+      byte[] buffer = m.Buffer;
+      byte* d = (byte*)&value;
+      for (uint j = 0; j < 8; j++)
+        buffer[i+j] = *(d + j);
     }
 
     internal void WriteShort(short value) {
@@ -222,8 +224,10 @@ namespace Microsoft.Cci {
       MemoryStream m = this.BaseStream;
       uint i = m.Position;
       m.Position=i+4;
-      fixed (byte* b = m.Buffer)
-        *((float*)(b+i)) = value;
+      byte[] buffer = m.Buffer;
+      byte* f = (byte*)&value;
+      for (uint j = 0; j < 4; j++)
+        buffer[i+j] = *(f + j);
     }
 
     internal void WriteString(string str) {

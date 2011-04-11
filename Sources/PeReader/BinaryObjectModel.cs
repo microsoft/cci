@@ -66,12 +66,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         uint customAttributeRowIdEnd;
         this.PEFileToObjectModel.GetCustomAttributeInfo(this, out customAttributeRowIdStart, out customAttributeRowIdEnd);
         for (uint customAttributeIter = customAttributeRowIdStart; customAttributeIter < customAttributeRowIdEnd; ++customAttributeIter) {
-          yield return this.PEFileToObjectModel.GetCustomAttributeAtRow(this, customAttributeIter);
+          yield return this.PEFileToObjectModel.GetCustomAttributeAtRow(this, this.TokenValue, customAttributeIter);
         }
       }
     }
 
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     public virtual IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
@@ -278,6 +280,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IModuleReference)this);
+    }
+
     internal override uint TokenValue {
       get { return TokenTypeIds.Module | (uint)0x00000001; }
     }
@@ -428,6 +434,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return this.PEFileToObjectModel.GetAllTypes();
     }
 
+    IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
+      return this.PEFileToObjectModel.GetMemberReferences();
+    }
+
+    IEnumerable<ITypeReference> IModule.GetTypeReferences() {
+      return this.PEFileToObjectModel.GetTypeReferences();
+    }
+
     #endregion
 
     #region IUnit Members
@@ -560,8 +574,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IAssemblyReference)this);
+    }
+
     public bool IsRetargetable {
       get { return (this.AssemblyFlags & AssemblyFlags.Retargetable) != 0; }
+    }
+
+    public bool ContainsForeignTypes {
+      get { return (this.AssemblyFlags & AssemblyFlags.ContainsForeignTypes) != 0; }
     }
 
     internal override uint TokenValue {
@@ -723,6 +745,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     internal override uint TokenValue {
       get { return TokenTypeIds.ModuleRef | this.ModuleRefRowId; }
     }
@@ -813,6 +839,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     internal uint InternedId {
       get {
         if (this.internedId == 0) {
@@ -825,6 +855,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool IsRetargetable {
       get { return (this.AssemblyFlags & AssemblyFlags.Retargetable) != 0; }
+    }
+
+    public bool ContainsForeignTypes {
+      get { return (this.AssemblyFlags & AssemblyFlags.ContainsForeignTypes) != 0; }
     }
 
     internal IAssembly ResolvedAssembly {
@@ -1047,6 +1081,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IRootUnitNamespaceReference)this);
+    }
+
   }
 
   internal sealed class NestedNamespace : Namespace, INestedUnitNamespace {
@@ -1064,6 +1102,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((INestedUnitNamespaceReference)this);
     }
 
     #region INamespaceMember Members
@@ -1133,6 +1175,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return TypeHelper.GetNamespaceName(this, NameFormattingOptions.None);
     }
 
+    public sealed override void Dispatch(IMetadataVisitor visitor) {
+      this.DispatchAsReference(visitor);
+    }
+
     #region IUnitNamespaceReference Members
 
     public IUnitReference Unit {
@@ -1162,7 +1208,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, moduleReference, peFileToObjectModel.NameTable.EmptyName, peFileToObjectModel.NameTable.EmptyName) {
     }
 
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1187,7 +1233,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.ParentModuleNamespaceReference = parentModuleNamespaceReference;
     }
 
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1332,6 +1378,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IFieldReference)this);
     }
 
     void InitFieldSignature()
@@ -1490,7 +1540,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers;
+        return this.moduleCustomModifiers; 
       }
     }
 
@@ -1499,7 +1549,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers.RawArray.Length > 0;
+        return this.moduleCustomModifiers.RawArray.Length > 0; 
       }
     }
 
@@ -1541,6 +1591,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IFieldReference)this);
     }
 
     #region INamespaceMember Members
@@ -1608,6 +1662,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class ReturnParameter : MetadataObject {
+    private readonly IName name;
     internal readonly ParamFlags ReturnParamFlags;
     internal readonly uint ReturnParamRowId;
     internal override uint TokenValue {
@@ -1615,15 +1670,20 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
     internal ReturnParameter(
       PEFileToObjectModel peFileToObjectModel,
+      IName name,
       ParamFlags returnParamFlags,
       uint returnParamRowId
     )
       : base(peFileToObjectModel) {
+      this.name = name;
       this.ReturnParamFlags = returnParamFlags;
       this.ReturnParamRowId = returnParamRowId;
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
     }
 
     //^[Pure]
@@ -1635,6 +1695,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.GetMarshallingInformation(this); }
     }
 
+    public IName Name {
+      get { return this.name; }
+    }
   }
 
   internal sealed class PlatformInvokeInformation : IPlatformInvokeInformation {
@@ -1761,6 +1824,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IMethodReference)this);
     }
 
     public override TypeMemberVisibility Visibility {
@@ -1984,7 +2051,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         this.PEFileToObjectModel.GetCustomAttributeInfo(this.returnParameter, out customAttributeRowIdStart, out customAttributeRowIdEnd);
         for (uint customAttributeIter = customAttributeRowIdStart; customAttributeIter < customAttributeRowIdEnd; ++customAttributeIter) {
           //^ assert this.returnParameter != null;
-          yield return this.PEFileToObjectModel.GetCustomAttributeAtRow(this.returnParameter, customAttributeIter);
+          yield return this.PEFileToObjectModel.GetCustomAttributeAtRow(this.returnParameter, this.returnParameter.TokenValue, customAttributeIter);
         }
       }
     }
@@ -1998,6 +2065,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public IMarshallingInformation ReturnValueMarshallingInformation {
       get {
         return this.returnParameter == null ? Dummy.MarshallingInformation : this.returnParameter.MarshallingInformation;
+      }
+    }
+
+    public IName ReturnValueName {
+      get {
+        return this.returnParameter == null ? Dummy.Name : this.returnParameter.Name;
       }
     }
 
@@ -2192,6 +2265,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IMethodReference)this); 
+    }
+
     #region INamespaceMember Members
 
     public INamespaceDefinition ContainingNamespace {
@@ -2320,6 +2397,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IMethodReference)this);
+    }
+
     #region INamespaceMember Members
 
     public INamespaceDefinition ContainingNamespace {
@@ -2388,6 +2469,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     internal IMethodDefinition AdderMethod {
@@ -2535,6 +2620,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     public override TypeMemberVisibility Visibility {
@@ -2746,12 +2835,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.RawTemplateModuleTypeMember.Visibility; }
     }
 
-    /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
-    /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     #endregion
 
@@ -2822,7 +2908,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
+      visitor.Visit((ISpecializedFieldDefinition)this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((ISpecializedFieldReference)this);
     }
 
     #region IFieldDefinition Members
@@ -2989,6 +3079,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((ISpecializedMethodReference)this);
+    }
+
     //^ [Confined]
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters);
@@ -3116,6 +3210,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IMarshallingInformation ReturnValueMarshallingInformation {
       get { return this.RawTemplateModuleMethod.ReturnValueMarshallingInformation; }
+    }
+
+    public IName ReturnValueName {
+      get { return this.RawTemplateModuleMethod.ReturnValueName; }
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
@@ -3402,6 +3500,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
+    }
+
     #region IEventDefinition Members
 
     public IEnumerable<IMethodReference> Accessors {
@@ -3527,6 +3629,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     #region IPropertyDefinition Members
@@ -3664,6 +3770,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -4056,6 +4166,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.ModuleGenericMethodTemplate.ReturnValueIsModified; }
     }
 
+    public IName ReturnValueName {
+      get { return this.ModuleGenericMethodTemplate.ReturnValueName; }
+    }
+
     public ITypeReference Type {
       get {
         IModuleTypeReference/*?*/ moduleType = this.ReturnType;
@@ -4081,6 +4195,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericMethodInstanceReference)this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit((IGenericMethodInstanceReference)this);
     }
 
@@ -4220,6 +4338,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return MemberHelper.GetMemberSignature(this, NameFormattingOptions.None);
     }
 
+    public sealed override void Dispatch(IMetadataVisitor visitor) {
+      this.DispatchAsReference(visitor);
+    }
+
     #region IModuleMemberReference Members
 
     public IModuleTypeReference/*?*/ OwningTypeReference {
@@ -4267,7 +4389,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
     }
 
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -4315,17 +4437,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (!this.signatureLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers;
+        return this.moduleCustomModifiers; 
       }
     }
 
-    public bool IsModified {
+    public bool IsModified { 
       get {
         if (!this.signatureLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers.RawArray.Length > 0;
-      }
+        return this.moduleCustomModifiers.RawArray.Length > 0; 
+      } 
     }
 
     public bool IsStatic {
@@ -4372,6 +4494,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     )
       : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
       this.unspecializedVersion = new FieldReference(peFileToObjectModel, memberRefRowId, parentTypeReference.ModuleGenericTypeReference, name);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
     }
 
     protected override void InitFieldSignature() {
@@ -4429,6 +4555,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
       this.unspecializedVersion = new FieldReference(peFileToObjectModel, memberRefRowId, specializedParentTypeReference.UnspecializedModuleType, name);
       this.specializedParentTypeReference = specializedParentTypeReference;
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
     }
 
     protected override void InitFieldSignature() {
@@ -4499,7 +4629,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.FirstByte = firstByte;
     }
 
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -4695,6 +4825,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.unspecializedMethodReference = new MethodReference(peFileToObjectModel, memberRefRowId, parentTypeReference.ModuleGenericTypeReference, name, firstByte);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     protected override void InitMethodSignature() {
       lock (this) {
         if (this.returnCustomModifiers == null) {
@@ -4759,6 +4893,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name, firstByte) {
       this.unspecializedMethodReference = new MethodReference(peFileToObjectModel, memberRefRowId, specializedParentTypeReference.UnspecializedModuleType, name, firstByte);
       this.specializedParentTypeReference = specializedParentTypeReference;
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
     }
 
     protected override void InitMethodSignature() {
@@ -4838,10 +4976,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return string.Empty; }
     }
 
-    public uint ElementSize {
-      get { return 0; }
-    }
-
     public System.Runtime.InteropServices.UnmanagedType ElementType {
       get { return this.arrayElementType; }
     }
@@ -4870,10 +5004,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return Dummy.TypeReference; }
     }
 
-    public uint ElementSizeMultiplier {
-      get { return 0; }
-    }
-
     #endregion
   }
 
@@ -4894,10 +5024,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public string CustomMarshallerRuntimeArgument {
       get { return string.Empty; }
-    }
-
-    public uint ElementSize {
-      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {
@@ -4928,10 +5054,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return Dummy.TypeReference; }
     }
 
-    public uint ElementSizeMultiplier {
-      get { return 0; }
-    }
-
     #endregion
   }
 
@@ -4952,10 +5074,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public string CustomMarshallerRuntimeArgument {
       get { return string.Empty; }
-    }
-
-    public uint ElementSize {
-      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {
@@ -4986,10 +5104,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return Dummy.TypeReference; }
     }
 
-    public uint ElementSizeMultiplier {
-      get { return 0; }
-    }
-
     #endregion
   }
 
@@ -5012,10 +5126,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public string CustomMarshallerRuntimeArgument {
       get { return string.Empty; }
-    }
-
-    public uint ElementSize {
-      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {
@@ -5046,10 +5156,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return Dummy.TypeReference; }
     }
 
-    public uint ElementSizeMultiplier {
-      get { return 0; }
-    }
-
     #endregion
   }
 
@@ -5073,10 +5179,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public string CustomMarshallerRuntimeArgument {
       get { return string.Empty; }
-    }
-
-    public uint ElementSize {
-      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {
@@ -5107,10 +5209,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.safeArrayElementUserDefinedSubType; }
     }
 
-    public uint ElementSizeMultiplier {
-      get { return 0; }
-    }
-
     #endregion
   }
 
@@ -5131,10 +5229,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public string CustomMarshallerRuntimeArgument {
       get { return string.Empty; }
-    }
-
-    public uint ElementSize {
-      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {
@@ -5165,10 +5259,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return Dummy.TypeReference; }
     }
 
-    public uint ElementSizeMultiplier {
-      get { return 0; }
-    }
-
     #endregion
   }
 
@@ -5192,10 +5282,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public string CustomMarshallerRuntimeArgument {
       get { return this.MarshallerRuntimeArgument; }
-    }
-
-    public uint ElementSize {
-      get { return 0; }
     }
 
     public System.Runtime.InteropServices.UnmanagedType ElementType {
@@ -5224,10 +5310,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public ITypeReference SafeArrayElementUserDefinedSubtype {
       get { return Dummy.TypeReference; }
-    }
-
-    public uint ElementSizeMultiplier {
-      get { return 0; }
     }
 
     #endregion
@@ -5321,6 +5403,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     internal override uint TokenValue {
       get {
         return TokenTypeIds.File | this.FileRowId;
@@ -5375,6 +5461,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 

@@ -317,7 +317,8 @@ namespace Microsoft.Cci {
     }
 
     private uint ComputeSizeOfMetadata() {
-      uint result = 108; //Size of general metadata header
+      uint result = 96; //Size of general metadata header
+      result += this.ComputeSizeOfVersionString();
       result += Aligned(this.ComputeSizeOfMetadataTablesStream(), 4);
       result += Aligned(this.stringWriter.BaseStream.Length, 4);
       if (this.userStringWriter.BaseStream.Length == 1) this.GetUserStringToken(" ");
@@ -325,6 +326,22 @@ namespace Microsoft.Cci {
       result += Aligned(this.blobWriter.BaseStream.Length, 4);
       result += 16; //size of GUID
       return result;
+    }
+
+    private uint ComputeSizeOfVersionString() {
+      return ComputeSizeOfVersionString(Encoding.UTF8.GetBytes(this.module.TargetRuntimeVersion));
+    }
+
+    /// <summary>
+    /// returns a multiple 4 that is at least 12 and at most 256 and that is just big enough to hold the version string.
+    /// </summary>
+    private static uint ComputeSizeOfVersionString(byte[] versionStringData) {
+      uint versionStringSize = (uint)versionStringData.Length;
+      // CCI tradition is that a minimum of 12 bytes must be used for the version string.
+      // TODO: This is not supported by the standard or by the ILAsm book, so perhaps this is wrong.
+      if (versionStringData.Length < 12) return 12;
+      if (versionStringSize >= 256) return 256; //The standard says the maximum length of the string is 255, but the stored size is rounded up to multiple of 4.
+      return Aligned(versionStringSize, 4); 
     }
 
     private uint ComputeSizeOfMetadataTablesStream() {
@@ -412,8 +429,8 @@ namespace Microsoft.Cci {
       foreach (INamedTypeDefinition typeDef in this.module.GetAllTypes())
         this.CreateIndicesFor(typeDef);
       //Only the second pass is necessary. The first helps to make type reference tokens be more like C#.
-      this.module.Dispatch(new ReferenceIndexer(this, false));
-      this.module.Dispatch(new ReferenceIndexer(this, true));
+      new ReferenceIndexer(this, false).Traverse(this.module);
+      new ReferenceIndexer(this, true).Traverse(this.module);
     }
 
     private void CreateUserStringIndices() {
@@ -504,6 +521,8 @@ namespace Microsoft.Cci {
       if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal) && (methodDef.Body == Dummy.MethodBody)) return;
       this.parameterListIndex.Add(methodDef, (uint)this.parameterDefList.Count+1);
       if (methodDef.ReturnValueIsMarshalledExplicitly || IteratorHelper.EnumerableIsNotEmpty(methodDef.ReturnValueAttributes))
+        this.parameterDefList.Add(new DummyReturnValueParameter(methodDef));
+      if (methodDef.ReturnValueIsMarshalledExplicitly || IteratorHelper.EnumerableIsNotEmpty(methodDef.ReturnValueAttributes) || methodDef.ReturnValueName != Dummy.Name)
         this.parameterDefList.Add(new DummyReturnValueParameter(methodDef));
       foreach (IParameterDefinition parDef in methodDef.Parameters) {
         // No explicit param row is needed if param has no flags (other than optionally IN),
@@ -1039,21 +1058,24 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetMemberRefParentCodedIndex(ITypeMemberReference memberRef) {
-      uint parentTypeDefIndex = 0;
-      this.typeDefIndex.TryGetValue(memberRef.ContainingType.InternedKey, out parentTypeDefIndex);
-      if (parentTypeDefIndex > 0) {
-        IFieldReference/*?*/ fieldRef = memberRef as IFieldReference;
-        if (fieldRef != null) return parentTypeDefIndex << 3;
-        IMethodReference/*?*/ methodRef = memberRef as IMethodReference;
-        if (methodRef != null) {
-          if (methodRef.AcceptsExtraArguments) {
-            uint methodIndex = 0;
-            if (this.methodDefIndex.TryGetValue(methodRef.InternedKey, out methodIndex))
-              return (methodIndex << 3)|3;
+      var nsTr = memberRef.ContainingType as INamespaceTypeReference;
+      if (nsTr == null || !nsTr.KeepDistinctFromDefinition) {
+        uint parentTypeDefIndex = 0;
+        this.typeDefIndex.TryGetValue(memberRef.ContainingType.InternedKey, out parentTypeDefIndex);
+        if (parentTypeDefIndex > 0) {
+          IFieldReference/*?*/ fieldRef = memberRef as IFieldReference;
+          if (fieldRef != null) return parentTypeDefIndex << 3;
+          IMethodReference/*?*/ methodRef = memberRef as IMethodReference;
+          if (methodRef != null) {
+            if (methodRef.AcceptsExtraArguments) {
+              uint methodIndex = 0;
+              if (this.methodDefIndex.TryGetValue(methodRef.InternedKey, out methodIndex))
+                return (methodIndex << 3)|3;
+            }
+            return parentTypeDefIndex << 3;
           }
-          return parentTypeDefIndex << 3;
+          //TODO: error
         }
-        //TODO: error
       }
       //TODO: special treatment for global fields and methods. Object model support would be nice.
       if (!IsTypeSpecification(memberRef.ContainingType))
@@ -1368,14 +1390,20 @@ namespace Microsoft.Cci {
         return result;
       }
       INamespaceTypeDefinition/*?*/ nsTypeDef = typeDef as INamespaceTypeDefinition;
-      if (nsTypeDef != null && nsTypeDef.IsPublic) result |= 0x00000001;
+      if (nsTypeDef != null) {
+        if (nsTypeDef.IsPublic) result |= 0x00000001;
+        if (nsTypeDef.IsForeignObject) result |= 0x00004000;
+      }
       return result;
     }
 
     private uint GetTypeDefOrRefCodedIndex(ITypeReference typeReference) {
-      uint typeDefIndex = 0;
-      if (this.typeDefIndex.TryGetValue(typeReference.InternedKey, out typeDefIndex))
-        return (typeDefIndex << 2) | 0;
+      var nsTr = typeReference as INamespaceTypeReference;
+      if (nsTr == null || !nsTr.KeepDistinctFromDefinition) {
+        uint typeDefIndex = 0;
+        if (this.typeDefIndex.TryGetValue(typeReference.InternedKey, out typeDefIndex))
+          return (typeDefIndex << 2) | 0;
+      }
       if (!IsTypeSpecification(typeReference))
         return (this.GetTypeRefIndex(typeReference) << 2) | 1;
       else
@@ -1445,7 +1473,9 @@ namespace Microsoft.Cci {
 
     internal void RecordTypeReference(ITypeReference typeReference) {
       if (typeReference == Dummy.TypeReference) return;
-      if (this.typeDefIndex.ContainsKey(typeReference.InternedKey)) return;
+      var nsTr = typeReference as INamespaceTypeReference;
+      if ((nsTr == null || !nsTr.KeepDistinctFromDefinition) && this.typeDefIndex.ContainsKey(typeReference.InternedKey))
+        return;
       if (!IsTypeSpecification(typeReference))
         this.GetTypeRefIndex(typeReference);
       else
@@ -1454,9 +1484,12 @@ namespace Microsoft.Cci {
 
     internal uint GetTypeToken(ITypeReference typeReference) {
       if (typeReference == Dummy.TypeReference || typeReference == Dummy.Type) return 0;
-      uint typeDefIndex = 0;
-      if (this.typeDefIndex.TryGetValue(typeReference.InternedKey, out typeDefIndex))
-        return 0x02000000 | typeDefIndex;
+      var nsTr = typeReference as INamespaceTypeReference;
+      if (nsTr == null || !nsTr.KeepDistinctFromDefinition) {
+        uint typeDefIndex = 0;
+        if (this.typeDefIndex.TryGetValue(typeReference.InternedKey, out typeDefIndex))
+          return 0x02000000 | typeDefIndex;
+      }
       if (!IsTypeSpecification(typeReference))
         return 0x01000000 | this.GetTypeRefIndex(typeReference);
       else
@@ -1533,24 +1566,27 @@ namespace Microsoft.Cci {
       writer.WriteUshort(1); //metadata version major 6
       writer.WriteUshort(1); //metadata version minor 8
       writer.WriteUint(0); //reserved 12
-      writer.WriteUint(12); // version must be 12 chars long (TODO: this observation is not supported by the standard or the ILAsm book). 16
-      string targetRuntimeVersion = this.module.TargetRuntimeVersion;
-      int n = targetRuntimeVersion.Length;
-      for (int i = 0; i < 12 && i < n; i++) writer.WriteByte((byte)targetRuntimeVersion[i]);
-      for (int i = n; i < 12; i++) writer.WriteByte(0); //28
+
+      byte[] versionStringData = Encoding.UTF8.GetBytes(module.TargetRuntimeVersion);
+      uint versionStringSize = ComputeSizeOfVersionString(versionStringData);
+
+      writer.WriteUint(versionStringSize); // 16
+      int n = versionStringData.Length; //n may be less then versionStringSize because of alignment
+      for (int i = 0; i < versionStringSize && i < n; i++) writer.WriteByte(versionStringData[i]);
+      for (int i = n; i < versionStringSize; i++) writer.WriteByte(0); //16 + versionStringSize 
 
       //Storage header
-      writer.WriteByte(0); //flags 29
-      writer.WriteByte(0); //padding 30
-      writer.WriteUshort(5); //number of streams 32
+      writer.WriteByte(0); //flags                 16 + versionStringSize + 1
+      writer.WriteByte(0); //padding               16 + versionStringSize + 2
+      writer.WriteUshort(5); //number of streams   16 + versionStringSize + 4
 
       //Stream headers
-      uint offsetFromStartOfMetadata = 108;
-      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.tableStream.Length, "#~", writer);
-      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.stringWriter.BaseStream.Length, "#Strings", writer);
-      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.userStringWriter.BaseStream.Length, "#US", writer);
-      SerializeStreamHeader(ref offsetFromStartOfMetadata, 16, "#GUID", writer);
-      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.blobWriter.BaseStream.Length, "#Blob", writer);
+      uint offsetFromStartOfMetadata = 96 + versionStringSize; //16 + 4 + 12 + 20 + 12 + 16 + 16 + versionStringSize
+      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.tableStream.Length, "#~", writer); //12
+      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.stringWriter.BaseStream.Length, "#Strings", writer); //20
+      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.userStringWriter.BaseStream.Length, "#US", writer); //12
+      SerializeStreamHeader(ref offsetFromStartOfMetadata, 16, "#GUID", writer); //16
+      SerializeStreamHeader(ref offsetFromStartOfMetadata, this.blobWriter.BaseStream.Length, "#Blob", writer); //16
     }
 
     private static void SerializeStreamHeader(ref uint offsetFromStartOfMetadata, uint sizeOfStreamHeap, string streamName, BinaryWriter writer) {
@@ -1782,12 +1818,13 @@ namespace Microsoft.Cci {
         r.Name = this.GetStringIndex(assemblyRef.Name.Value);
         r.Culture = this.GetStringIndex(assemblyRef.Culture);
         r.IsRetargetable = assemblyRef.IsRetargetable;
+        r.ContainsForeignTypes = assemblyRef.ContainsForeignTypes;
         this.assemblyRefTable.Add(r);
       }
       this.tableSizes[(uint)TableIndices.AssemblyRef] = (uint)this.assemblyRefTable.Count;
     }
 
-    struct AssemblyRefTableRow { public Version Version; public uint PublicKeyToken; public StringIdx Name; public StringIdx Culture; public bool IsRetargetable;}
+    struct AssemblyRefTableRow { public Version Version; public uint PublicKeyToken; public StringIdx Name; public StringIdx Culture; public bool IsRetargetable; public bool ContainsForeignTypes; }
     List<AssemblyRefTableRow> assemblyRefTable = new List<AssemblyRefTableRow>();
 
     private void PopulateAssemblyTableRows() {
@@ -1874,7 +1911,7 @@ namespace Microsoft.Cci {
       //this.AddCustomAttributesToTable(this.typeRefList, 2);
       this.AddCustomAttributesToTable(this.typeDefList, 3);
       this.AddCustomAttributesToTable(this.parameterDefList, 4);
-      //TODO: attributes on interface implementation entries 5
+      this.AddCustomAttributesToTable(this.interfaceImplTable, 5);
       //TODO: attributes on member reference entries 6
       this.AddModuleAttributesToTable(this.module, 7);
       //TODO: declarative security entries 8
@@ -2253,17 +2290,30 @@ namespace Microsoft.Cci {
       uint typeDefIndex = 0;
       foreach (ITypeDefinition typeDef in this.typeDefList) {
         typeDefIndex++;
+        var nsTypeDef = typeDef as INamespaceTypeDefinition;
         foreach (ITypeReference interfaceRef in typeDef.Interfaces) {
           InterfaceImplRow r = new InterfaceImplRow();
           r.Class = typeDefIndex;
           r.Interface = this.GetTypeDefOrRefCodedIndex(interfaceRef);
+          if (nsTypeDef != null)
+            r.Attributes = nsTypeDef.AttributesFor(interfaceRef);
+          else
+            r.Attributes = Dummy.Type.Attributes;
           this.interfaceImplTable.Add(r);
         }
       }
       this.tableSizes[(uint)TableIndices.InterfaceImpl] = (uint)this.interfaceImplTable.Count;
     }
 
-    struct InterfaceImplRow { public uint Class; public uint Interface; }
+    struct InterfaceImplRow : IReference {
+      public uint Class;
+      public uint Interface;
+
+      public IEnumerable<ICustomAttribute> Attributes { get; set; }
+      public IEnumerable<ILocation> Locations { get { return Dummy.Type.Locations; } }
+      public void Dispatch(IMetadataVisitor visitor) { }
+      public void DispatchAsReference(IMetadataVisitor visitor) { }
+    }
     List<InterfaceImplRow> interfaceImplTable = new List<InterfaceImplRow>();
 
     private void PopulateManifestResourceTableRows() {
@@ -2539,7 +2589,10 @@ namespace Microsoft.Cci {
             //TODO: error
             continue;
           }
-          r.ResolutionScope = this.GetResolutionScopeCodedIndex(nsTypeRef.ContainingUnitNamespace.Unit);
+          if (nsTypeRef.KeepDistinctFromDefinition && nsTypeRef.ContainingUnitNamespace.Unit.UnitIdentity == this.module.ModuleIdentity)
+            r.ResolutionScope = 1<<2; //A coded module token for the current module.
+          else
+            r.ResolutionScope = this.GetResolutionScopeCodedIndex(nsTypeRef.ContainingUnitNamespace.Unit);
           r.Name = this.GetStringIndex(GetMangledName(nsTypeRef));
           INestedUnitNamespaceReference/*?*/ nestedUnitNamespaceReference = nsTypeRef.ContainingUnitNamespace as INestedUnitNamespaceReference;
           if (nestedUnitNamespaceReference == null)
@@ -2861,10 +2914,12 @@ namespace Microsoft.Cci {
         writer.WriteUshort((ushort)assemblyRef.Version.Build);
         writer.WriteUshort((ushort)assemblyRef.Version.Revision);
         //flags: reference has token, not full public key
+        uint flags = 0;
         if (assemblyRef.IsRetargetable)
-          writer.WriteUint(0x100);
-        else
-          writer.WriteUint(0);
+          flags |= 0x100;
+        if (assemblyRef.ContainsForeignTypes)
+          flags |= 0x200;
+        writer.WriteUint(flags);
         SerializeIndex(writer, assemblyRef.PublicKeyToken, this.blobIndexSize);
         this.SerializeIndex(writer, assemblyRef.Name, this.stringIndexSize);
         this.SerializeIndex(writer, assemblyRef.Culture, this.stringIndexSize);
@@ -4511,6 +4566,9 @@ namespace Microsoft.Cci {
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+    }
+
     public IEnumerable<IParameterTypeInformation> Parameters {
       get {
         ushort n = (ushort)this.arrayType.Rank;
@@ -4646,6 +4704,9 @@ namespace Microsoft.Cci {
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+    }
+
     public bool HasDefaultValue {
       get { return false; }
     }
@@ -4691,7 +4752,7 @@ namespace Microsoft.Cci {
     }
 
     public IName Name {
-      get { return Dummy.Name; }
+      get { return this.containingMethod.ReturnValueName; }
     }
 
     public ITypeReference ParamArrayElementType {
@@ -4901,6 +4962,9 @@ namespace Microsoft.Cci {
     public void Dispatch(IMetadataVisitor visitor) {
     }
 
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+    }
+
     public IEnumerable<ILocation> Locations {
       get { return this.parentParameter.Locations; }
     }
@@ -5108,9 +5172,8 @@ namespace Microsoft.Cci {
 
   }
 
-  internal class ReferenceIndexer : BaseMetadataTraverser {
+  internal class ReferenceIndexer : MetadataTraverser {
 
-    Dictionary<object, bool> alreadySeen = new Dictionary<object, bool>();
     Dictionary<object, bool> alreadyHasToken = new Dictionary<object, bool>();
     PeWriter peWriter;
     bool traverseAttributes;
@@ -5120,225 +5183,266 @@ namespace Microsoft.Cci {
     internal ReferenceIndexer(PeWriter peWriter, bool traverseAttributes) {
       this.peWriter = peWriter;
       this.traverseAttributes = traverseAttributes;
+      this.TraverseIntoMethodBodies = true;
     }
 
-    public override void Visit(IAssembly assembly) {
+    public override void TraverseChildren(IAssembly assembly) {
       this.module = assembly;
-      this.Visit(assembly.AssemblyAttributes);
-      this.Visit((IModule)assembly);
-      this.Visit(assembly.ExportedTypes);
-      this.Visit(assembly.Files);
-      this.Visit(assembly.Resources);
-      this.Visit(assembly.SecurityAttributes);
+      if (this.traverseAttributes)
+        this.Traverse(assembly.AssemblyAttributes);
+      this.Traverse(assembly.ExportedTypes);
+      this.Traverse(assembly.Files);
+      this.Traverse(assembly.Resources);
+      this.Traverse(assembly.SecurityAttributes);
+      this.Traverse(assembly.AssemblyReferences);
+      this.Traverse(assembly.ModuleReferences);
+      if (this.traverseAttributes)
+        this.Traverse(assembly.ModuleAttributes);
+      this.Traverse(assembly.GetAllTypes());
     }
 
-    public override void Visit(IAssemblyReference assemblyReference) {
+    public override void TraverseChildren(IAssemblyReference assemblyReference) {
       this.peWriter.GetAssemblyRefIndex(assemblyReference);
     }
 
-    public override void Visit(IAliasForType aliasForType) {
-      this.Visit(aliasForType.Attributes);
-      //do not visit the reference to aliased type, it does not get into the type ref table based only on its membership of the exported types collection.
-      //but DO visit the reference to assembly (if any) that defines the aliased type. That assembly might not already be in the assembly reference list.
-      var definingAssembly = TypeHelper.GetDefiningUnitReference(aliasForType.AliasedType) as IAssemblyReference;
-      if (definingAssembly != null) this.Visit(definingAssembly);
-    }
-
-    public override void Visit(ICustomModifier customModifier) {
-      this.typeReferenceNeedsToken = true;
-      this.Visit(customModifier.Modifier);
-    }
-
-    public override void Visit(IEnumerable<ICustomAttribute> customAttributes) {
+    public override void TraverseChildren(IAliasForType aliasForType) {
       if (this.traverseAttributes)
-        base.Visit(customAttributes);
+        this.Traverse(aliasForType.Attributes);
+      //do not traverse the reference to aliased type, it does not get into the type ref table based only on its membership of the exported types collection.
+      //but DO traverse the reference to assembly (if any) that defines the aliased type. That assembly might not already be in the assembly reference list.
+      var definingAssembly = TypeHelper.GetDefiningUnitReference(aliasForType.AliasedType) as IAssemblyReference;
+      if (definingAssembly != null) this.Traverse(definingAssembly);
     }
 
-    public override void Visit(ICustomAttribute customAttribute) {
-      this.Visit(customAttribute.Constructor);
-    }
-
-    public override void Visit(IEventDefinition eventDefinition) {
+    public override void TraverseChildren(ICustomModifier customModifier) {
       this.typeReferenceNeedsToken = true;
-      this.Visit(eventDefinition.Type);
+      this.Traverse(customModifier.Modifier);
+    }
+
+    public override void TraverseChildren(ICustomAttribute customAttribute) {
+      this.Traverse(customAttribute.Constructor);
+    }
+
+    public override void TraverseChildren(IEventDefinition eventDefinition) {
+      if (this.traverseAttributes)
+        this.Traverse(eventDefinition.Attributes);
+      this.Traverse(eventDefinition.Accessors);
+      this.Traverse(eventDefinition.Adder);
+      if (eventDefinition.Caller != null)
+        this.Traverse(eventDefinition.Caller);
+      this.Traverse(eventDefinition.Remover);
+      this.typeReferenceNeedsToken = true;
+      this.Traverse(eventDefinition.Type);
       Debug.Assert(!this.typeReferenceNeedsToken);
     }
 
-    public override void Visit(IFieldReference fieldReference) {
-      if (alreadySeen.ContainsKey(fieldReference)) return;
-      alreadySeen.Add(fieldReference, true);
+    public override void TraverseChildren(IFieldReference fieldReference) {
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(fieldReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity)) return;
-      this.Visit((ITypeMemberReference)fieldReference);
-      this.Visit(fieldReference.Type);
+      this.TraverseTypeMemberReference(fieldReference);
+      this.Traverse(fieldReference.Type);
       this.peWriter.GetFieldToken(fieldReference);
     }
 
-    public override void Visit(IFileReference fileReference) {
+    public override void TraverseChildren(IFileReference fileReference) {
       this.peWriter.GetFileRefIndex(fileReference);
     }
 
-    public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
-      this.Visit(genericMethodInstanceReference.GenericArguments);
-      this.Visit(genericMethodInstanceReference.GenericMethod);
+    public override void TraverseChildren(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      this.TraverseChildren((IMethodReference)genericMethodInstanceReference);
+      this.Traverse(genericMethodInstanceReference.GenericArguments);
+      this.Traverse(genericMethodInstanceReference.GenericMethod);
     }
 
-    public override void Visit(IGenericParameter genericParameter) {
+    public override void TraverseChildren(IGenericMethodParameter genericParameter) {
       if (this.traverseAttributes)
-        this.Visit(genericParameter.Attributes);
-      this.VisitTypeReferencesThatNeedTokens(genericParameter.Constraints);
+        this.Traverse(genericParameter.Attributes);
+      this.TraverseTypeReferencesThatNeedTokens(genericParameter.Constraints);
     }
 
-    public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      ISpecializedNestedTypeReference specializedNestedType = genericTypeInstanceReference.GenericType as ISpecializedNestedTypeReference;
-      if (specializedNestedType != null) {
-        this.Visit(specializedNestedType.ContainingType);
-        this.Visit(specializedNestedType.UnspecializedVersion);
-      } else
-        this.Visit(genericTypeInstanceReference.GenericType);
-      this.Visit(genericTypeInstanceReference.GenericArguments);
+    public override void TraverseChildren(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      if (this.typeReferenceNeedsToken) {
+        this.typeReferenceNeedsToken = false;
+        if (!this.alreadyHasToken.ContainsKey(genericTypeInstanceReference.InternedKey)) {
+          this.peWriter.RecordTypeReference(genericTypeInstanceReference);
+          this.alreadyHasToken.Add(genericTypeInstanceReference.InternedKey, true);
+        }
+      }
+      this.TraverseChildren((ITypeReference)genericTypeInstanceReference);
+      this.Traverse(genericTypeInstanceReference.GenericType);
+      this.Traverse(genericTypeInstanceReference.GenericArguments);
     }
 
-    public override void Visit(IMarshallingInformation marshallingInformation) {
+    public override void TraverseChildren(IGenericTypeParameter genericParameter) {
+      if (this.traverseAttributes)
+        this.Traverse(genericParameter.Attributes);
+      this.TraverseTypeReferencesThatNeedTokens(genericParameter.Constraints);
+    }
+
+    public override void TraverseChildren(IMarshallingInformation marshallingInformation) {
       //The type references in the marshalling information do not end up in tables, but are serialized as strings.
     }
 
-    public override void Visit(IMethodDefinition method) {
-      base.Visit(method);
+    public override void TraverseChildren(IMethodDefinition method) {
+      base.TraverseChildren(method);
       if (this.traverseAttributes && !method.IsAbstract && !method.IsExternal) {
-        this.Visit(method.Body);
-        foreach (ITypeDefinition helper in method.Body.PrivateHelperTypes)
-          this.Visit(helper);
+        this.Traverse(method.Body);
+        foreach (ITypeDefinition helper in method.Body.PrivateHelperTypes) {
+          this.TraverseChildren(helper);
+        }
       }
     }
 
-    public override void Visit(IMethodReference methodReference) {
-      IGenericMethodInstanceReference/*?*/ genericMethodInstanceReference = methodReference as IGenericMethodInstanceReference;
-      if (genericMethodInstanceReference != null) {
-        this.Visit(genericMethodInstanceReference);
-        return;
-      }
-      if (alreadySeen.ContainsKey(methodReference)) return;
-      alreadySeen.Add(methodReference, true);
+    public override void TraverseChildren(IMethodReference methodReference) {
       IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity)) return;
-      this.Visit((ITypeMemberReference)methodReference);
-      ISpecializedMethodReference/*?*/ specializedMethodReference = methodReference as ISpecializedMethodReference;
-      if (specializedMethodReference != null) {
-        IMethodReference unspecializedMethodReference = specializedMethodReference.UnspecializedVersion;
-        this.Visit(unspecializedMethodReference.Type);
-        this.Visit(unspecializedMethodReference.Parameters);
-        if (unspecializedMethodReference.ReturnValueIsModified)
-          this.Visit(unspecializedMethodReference.ReturnValueCustomModifiers);
-      } else {
-        this.Visit(methodReference.Type);
-        this.Visit(methodReference.Parameters);
-        if (methodReference.ReturnValueIsModified)
-          this.Visit(methodReference.ReturnValueCustomModifiers);
-      }
+      this.TraverseTypeMemberReference(methodReference);
+      this.Traverse(methodReference.Type);
+      this.Traverse(methodReference.Parameters);
+      if (methodReference.AcceptsExtraArguments)
+        this.Traverse(methodReference.ExtraParameters);
+      if (methodReference.ReturnValueIsModified)
+        this.Traverse(methodReference.ReturnValueCustomModifiers);
       this.peWriter.GetMethodToken(methodReference);
     }
 
-    public override void Visit(IModule module) {
+    public override void TraverseChildren(IModule module) {
       this.module = module;
-      this.Visit(module.AssemblyReferences);
-      this.Visit(module.ModuleReferences);
-      this.Visit(module.ModuleAttributes);
-      this.Visit(module.GetAllTypes());
+      this.Traverse(module.AssemblyReferences);
+      this.Traverse(module.ModuleReferences);
+      if (this.traverseAttributes)
+        this.Traverse(module.ModuleAttributes);
+      this.Traverse(module.GetAllTypes());
     }
 
-    public override void Visit(IModuleReference moduleReference) {
+    public override void TraverseChildren(IModuleReference moduleReference) {
       this.peWriter.GetModuleRefIndex(moduleReference);
     }
 
-    public override void Visit(INamespaceTypeReference namespaceTypeReference) {
-      if (!this.typeReferenceNeedsToken && namespaceTypeReference.TypeCode != PrimitiveTypeCode.NotPrimitive)
-        return;
+    public override void TraverseChildren(INamespaceTypeDefinition namespaceTypeDefinition) {
+      this.TraverseChildren((ITypeDefinition)namespaceTypeDefinition);
+      if (this.traverseAttributes) {
+        foreach (var iface in namespaceTypeDefinition.Interfaces)
+          this.Traverse(namespaceTypeDefinition.AttributesFor(iface));
+      }
+    }
+
+    public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
+      this.TraverseChildren((ITypeReference)namespaceTypeReference);
+      if (!this.typeReferenceNeedsToken && namespaceTypeReference.TypeCode != PrimitiveTypeCode.NotPrimitive) return;
+      this.typeReferenceNeedsToken = false;
+      if (this.alreadyHasToken.ContainsKey(namespaceTypeReference.InternedKey)) return;
       this.peWriter.RecordTypeReference(namespaceTypeReference);
+      this.alreadyHasToken.Add(namespaceTypeReference.InternedKey, true);
       var assemblyReference = namespaceTypeReference.ContainingUnitNamespace.Unit as IAssemblyReference;
-      if (assemblyReference != null) this.Visit(assemblyReference);
+      if (assemblyReference != null) this.Traverse(assemblyReference);
     }
 
-    public override void Visit(INestedTypeReference nestedTypeReference) {
-      if (!this.typeReferenceNeedsToken && nestedTypeReference is ISpecializedNestedTypeReference) return;
+    public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
+      this.TraverseChildren((ITypeReference)nestedTypeReference);
+      if (!this.typeReferenceNeedsToken) return;
+      this.typeReferenceNeedsToken = false;
+      if (this.alreadyHasToken.ContainsKey(nestedTypeReference.InternedKey)) return;
       this.peWriter.RecordTypeReference(nestedTypeReference);
+      this.alreadyHasToken.Add(nestedTypeReference.InternedKey, true);
+      this.typeReferenceNeedsToken = true;
+      this.Traverse(nestedTypeReference.ContainingType);
     }
 
-    public override void Visit(IOperation operation) {
+    public override void TraverseChildren(IOperation operation) {
       ITypeReference/*?*/ typeReference = operation.Value as ITypeReference;
       if (typeReference != null) {
         this.typeReferenceNeedsToken = true;
         if (operation.OperationCode == OperationCode.Newarr) {
           //^ assume operation.Value is IArrayTypeReference;
-          this.Visit(((IArrayTypeReference)operation.Value).ElementType);
+          this.Traverse(((IArrayTypeReference)operation.Value).ElementType);
         } else
-          this.Visit(typeReference);
+          this.Traverse(typeReference);
         Debug.Assert(!this.typeReferenceNeedsToken);
       } else {
         IFieldReference/*?*/ fieldReference = operation.Value as IFieldReference;
         if (fieldReference != null)
-          this.Visit(fieldReference);
+          this.Traverse(fieldReference);
         else {
           IMethodReference/*?*/ methodReference = operation.Value as IMethodReference;
           if (methodReference != null) {
-            this.Visit(methodReference);
+            this.Traverse(methodReference);
           }
         }
       }
     }
 
-    public override void Visit(IPropertyDefinition propertyDefinition) {
-      this.Visit(propertyDefinition.Parameters);
+    public override void TraverseChildren(IPropertyDefinition propertyDefinition) {
+      if (this.traverseAttributes) {
+        this.Traverse(propertyDefinition.Attributes);
+        this.Traverse(propertyDefinition.ReturnValueAttributes);
+      }
+      this.Traverse(propertyDefinition.Accessors);
+      if (propertyDefinition.HasDefaultValue)
+        this.Traverse(propertyDefinition.DefaultValue);
+      if (propertyDefinition.Getter != null)
+        this.Traverse(propertyDefinition.Getter);
+      this.Traverse(propertyDefinition.Parameters);
+      if (propertyDefinition.Setter != null)
+        this.Traverse(propertyDefinition.Setter);
     }
 
-    public override void Visit(IResourceReference resourceReference) {
+    public override void TraverseChildren(IResourceReference resourceReference) {
       if (this.traverseAttributes)
-        this.Visit(resourceReference.Attributes);
-      this.Visit(resourceReference.DefiningAssembly);
+        this.Traverse(resourceReference.Attributes);
+      this.Traverse(resourceReference.DefiningAssembly);
     }
 
-    public override void Visit(ISecurityAttribute securityAttribute) {
+    public override void TraverseChildren(ISecurityAttribute securityAttribute) {
     }
 
-    public override void Visit(ITypeDefinition typeDefinition) {
+    public override void TraverseChildren(ISpecializedMethodReference specializedMethodReference) {
+      this.TraverseChildren((IMethodReference)specializedMethodReference);
+      this.Traverse(specializedMethodReference.UnspecializedVersion);
+    }
+
+    public override void TraverseChildren(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      this.Traverse(specializedNestedTypeReference.UnspecializedVersion);
+      this.Traverse(specializedNestedTypeReference.ContainingType);
+    }
+
+    public override void TraverseChildren(ITypeDefinition typeDefinition) {
       if (this.traverseAttributes)
-        this.Visit(typeDefinition.Attributes);
-      this.VisitTypeReferencesThatNeedTokens(typeDefinition.BaseClasses);
-      this.Visit(typeDefinition.ExplicitImplementationOverrides);
+        this.Traverse(typeDefinition.Attributes);
+      this.TraverseTypeReferencesThatNeedTokens(typeDefinition.BaseClasses);
+      this.Traverse(typeDefinition.ExplicitImplementationOverrides);
       if (this.traverseAttributes && typeDefinition.HasDeclarativeSecurity)
-        this.Visit(typeDefinition.SecurityAttributes);
-      this.VisitTypeReferencesThatNeedTokens(typeDefinition.Interfaces);
+        this.Traverse(typeDefinition.SecurityAttributes);
+      this.TraverseTypeReferencesThatNeedTokens(typeDefinition.Interfaces);
       if (typeDefinition.IsGeneric)
-        this.Visit(typeDefinition.GenericParameters);
-      this.Visit(typeDefinition.Events);
-      this.Visit(typeDefinition.Fields);
-      this.Visit(typeDefinition.Methods);
-      this.Visit(typeDefinition.NestedTypes);
-      this.Visit(typeDefinition.Properties);
-      this.Visit(typeDefinition.PrivateHelperMembers);
+        this.Traverse(typeDefinition.GenericParameters);
+      this.Traverse(typeDefinition.Events);
+      this.Traverse(typeDefinition.Fields);
+      this.Traverse(typeDefinition.Methods);
+      this.Traverse(typeDefinition.NestedTypes);
+      this.Traverse(typeDefinition.Properties);
+      this.Traverse(typeDefinition.PrivateHelperMembers);
     }
 
-    private void VisitTypeReferencesThatNeedTokens(IEnumerable<ITypeReference> typeReferences) {
+    private void TraverseTypeReferencesThatNeedTokens(IEnumerable<ITypeReference> typeReferences) {
       foreach (ITypeReference typeReference in typeReferences) {
         this.typeReferenceNeedsToken = true;
-        this.Visit(typeReference);
+        this.Traverse(typeReference);
         Debug.Assert(!this.typeReferenceNeedsToken);
       }
     }
 
-    public override void Visit(ITypeMemberReference typeMemberReference) {
+    private void TraverseTypeMemberReference(ITypeMemberReference typeMemberReference) {
       this.peWriter.GetMemberRefIndex(typeMemberReference);
       if (this.traverseAttributes && !(typeMemberReference is IDefinition))
-        this.Visit(typeMemberReference.Attributes);
+        this.Traverse(typeMemberReference.Attributes);
       this.typeReferenceNeedsToken = true;
-      this.Visit(typeMemberReference.ContainingType);
+      this.Traverse(typeMemberReference.ContainingType);
       Debug.Assert(!this.typeReferenceNeedsToken);
     }
 
-    public override void Visit(ITypeReference typeReference) {
-      if (this.alreadySeen.ContainsKey(typeReference.InternedKey)) {
+    public new void Traverse(ITypeReference typeReference) {
+      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(typeReference)) {
         if (!this.typeReferenceNeedsToken) return;
         this.typeReferenceNeedsToken = false;
         if (this.alreadyHasToken.ContainsKey(typeReference.InternedKey)) return;
@@ -5346,40 +5450,13 @@ namespace Microsoft.Cci {
         this.alreadyHasToken.Add(typeReference.InternedKey, true);
         return;
       }
-      this.alreadySeen.Add(typeReference.InternedKey, true);
-      INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
-      if (this.typeReferenceNeedsToken || nestedTypeReference != null ||
-        (typeReference.TypeCode == PrimitiveTypeCode.NotPrimitive && typeReference is INamespaceTypeReference)) {
-        ISpecializedNestedTypeReference/*?*/ specializedNestedTypeReference = nestedTypeReference as ISpecializedNestedTypeReference;
-        if (specializedNestedTypeReference != null) {
-          INestedTypeReference unspecializedNestedTypeReference = specializedNestedTypeReference.UnspecializedVersion;
-          if (!this.alreadyHasToken.ContainsKey(unspecializedNestedTypeReference.InternedKey)) {
-            this.peWriter.RecordTypeReference(unspecializedNestedTypeReference);
-            this.alreadyHasToken.Add(unspecializedNestedTypeReference.InternedKey, true);
-          }
-        }
-        if (this.typeReferenceNeedsToken && !this.alreadyHasToken.ContainsKey(typeReference.InternedKey)) {
-          this.peWriter.RecordTypeReference(typeReference);
-          this.alreadyHasToken.Add(typeReference.InternedKey, true);
-        }
-        if (nestedTypeReference != null) {
-          this.typeReferenceNeedsToken = !(typeReference is ISpecializedNestedTypeReference);
-          this.Visit(nestedTypeReference.ContainingType);
-        }
-      }
-      if (this.traverseAttributes && !(typeReference is ITypeDefinition))
-        this.Visit(typeReference.Attributes);
+      base.Traverse(typeReference);
       this.typeReferenceNeedsToken = false;
-      this.DispatchAsReference(typeReference);
     }
 
-    public override void Visit(IUnitNamespaceReference unitNamespaceReference) {
-      //No need to do anything with namespace references
-    }
-
-    public override void VisitMethodReturnAttributes(IEnumerable<ICustomAttribute> customAttributes) {
-      if (this.traverseAttributes)
-        base.VisitMethodReturnAttributes(customAttributes);
+    public override void TraverseChildren(ITypeReference typeReference) {
+      if (this.traverseAttributes && !(typeReference is ITypeDefinition))
+        this.Traverse(typeReference.Attributes);
     }
 
   }

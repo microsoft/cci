@@ -62,6 +62,8 @@ namespace Microsoft.Cci {
     /// </summary>
     IEnumerable<IAliasForType> ExportedTypes { get; }
 
+    //TODO: introduce a separate collection for forwarded types.
+
     /// <summary>
     /// A list of the files that constitute the assembly. These are not the source language files that may have been
     /// used to compile the assembly, but the files that contain constituent modules of a multi-module assembly as well
@@ -106,7 +108,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -114,7 +116,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IAliasForType>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IAliasForType>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -134,14 +136,14 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IModule>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IModule>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public IEnumerable<byte> PublicKey {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -149,7 +151,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IResourceReference>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IResourceReference>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -157,7 +159,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ISecurityAttribute>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ISecurityAttribute>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -190,6 +192,14 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamedTypeDefinition> GetAllTypes() {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeReference> GetTypeReferences() {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeMemberReference> GetTypeMemberReferences() {
       throw new NotImplementedException();
     }
 
@@ -380,6 +390,14 @@ namespace Microsoft.Cci {
     public AssemblyIdentity UnifiedAssemblyIdentity {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public bool ContainsForeignTypes {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -408,6 +426,12 @@ namespace Microsoft.Cci {
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     bool IsRetargetable { get; }
+
+    /// <summary>
+    /// True if the referenced assembly contains types that describe objects that are neither COM objects nor objects that are managed by the CLR.
+    /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
+    /// </summary>
+    bool ContainsForeignTypes { get; }
 
     /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
@@ -465,6 +489,12 @@ namespace Microsoft.Cci {
       }
     }
 
+    public bool ContainsForeignTypes {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
     public IEnumerable<byte> PublicKeyToken {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
@@ -475,7 +505,7 @@ namespace Microsoft.Cci {
     public Version Version {
       get {
         Contract.Ensures(Contract.Result<Version>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -527,6 +557,10 @@ namespace Microsoft.Cci {
 
     public IName Name {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -637,7 +671,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// EFI Byte Code
     /// </summary>
-    EBC = 0x0EBC,
+    EBC = 0x0EBC, 
     /// <summary>
     /// AMD64 (K8)
     /// </summary>
@@ -706,6 +740,20 @@ namespace Microsoft.Cci {
     /// Returns all of the types defined in the current module. These are always named types, in other words: INamespaceTypeDefinition or INestedTypeDefinition instances.
     /// </summary>
     IEnumerable<INamedTypeDefinition> GetAllTypes();
+
+    /// <summary>
+    /// Returns zero or more type references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
+    /// of the type reference table. If the module is produced some other way, the method may return an empty enumeration or an enumeration that is a
+    /// subset of the type references actually used in the module. 
+    /// </summary>
+    IEnumerable<ITypeReference> GetTypeReferences();
+
+    /// <summary>
+    /// Returns zero or more type member references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
+    /// of the member reference table (which only contains entries for fields and methods). If the module is produced some other way, 
+    /// the method may return an empty enumeration or an enumeration that is a subset of the member references actually used in the module. 
+    /// </summary>
+    IEnumerable<ITypeMemberReference> GetTypeMemberReferences();
 
     /// <summary>
     /// True if the module contains only IL and is processor independent.
@@ -919,35 +967,35 @@ namespace Microsoft.Cci {
     public AssemblyIdentity ContractAssemblySymbolicIdentity {
       get {
         Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public AssemblyIdentity CoreAssemblySymbolicIdentity {
       get {
         Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public IPlatformType PlatformType {
       get {
         Contract.Ensures(Contract.Result<IPlatformType>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public string Location {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public IRootUnitNamespace UnitNamespaceRoot {
       get {
         Contract.Ensures(Contract.Result<IRootUnitNamespace>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -955,7 +1003,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IUnitReference>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IUnitReference>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -985,6 +1033,10 @@ namespace Microsoft.Cci {
 
     public IName Name {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1084,7 +1136,7 @@ namespace Microsoft.Cci {
     public string Location {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        return this.location;
+        return this.location; 
       }
     }
     readonly string location;
@@ -1170,7 +1222,7 @@ namespace Microsoft.Cci {
     public string Culture {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        return this.culture;
+        return this.culture; 
       }
     }
     readonly string culture;

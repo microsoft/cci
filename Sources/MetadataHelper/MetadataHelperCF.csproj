@@ -51,18 +51,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttributeHelper.cs" />
+    <Compile Include="CommandLineOptions.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="GlobalAssemblyCache.cs" />
     <Compile Include="MemberHelper.cs" />
     <Compile Include="Members.cs" />
     <Compile Include="PlatformTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TypeHelper.cs" />
     <Compile Include="Types.cs" />
+    <Compile Include="Visitors.cs" />
+    <Compile Include="TypeHelper.cs" />
     <Compile Include="UnitHelper.cs" />
     <Compile Include="UnmanagedFileIO.cs" />
     <Compile Include="UtilityDataStructures.cs" />
-    <Compile Include="Visitors.cs" />
+    <Compile Include="Validator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MetadataModel\MetadataModelCF.csproj">
@@ -73,6 +75,7 @@
       <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
       <Name>Microsoft.Contracts</Name>
     </ProjectReference>
+    <EmbeddedResource Include="MetadataHelperErrorMessages.resx" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
   <ProjectExtensions>

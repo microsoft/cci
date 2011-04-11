@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -99,6 +100,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression that represents a (name, value) pair and that is typically used in method calls, custom attributes and object initializers.
   /// </summary>
+  [ContractClass(typeof(IMetadataNamedArgumentContract))]
   public interface IMetadataNamedArgument : IMetadataExpression {
     /// <summary>
     /// The name of the parameter or property or field that corresponds to the argument.
@@ -117,10 +119,54 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Returns either null or the parameter or property or field that corresponds to this argument.
+    /// Obsolete, please do not use.
     /// </summary>
-    object/*?*/ ResolvedDefinition {
+    object/*?*/ ResolvedDefinition { //TODO: remove this
       get;
       //^ ensures result == null || (IsField <==> result is IFieldDefinition) || result is IPropertyDefinition;
+    }
+  }
+
+  [ContractClassFor(typeof(IMetadataNamedArgument))]
+  abstract class IMetadataNamedArgumentContract : IMetadataNamedArgument {
+    public IName ArgumentName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IMetadataExpression ArgumentValue {
+      get {
+        Contract.Ensures(Contract.Result<IMetadataExpression>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsField {
+      get { 
+        throw new NotImplementedException();
+      }
+    }
+
+    public object ResolvedDefinition {
+      get {
+        Contract.Ensures(Contract.Result<object>() == null || (this.IsField && Contract.Result<object>() is IFieldDefinition) ||
+          (!this.IsField && Contract.Result<object>() is IPropertyDefinition));
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
     }
   }
 

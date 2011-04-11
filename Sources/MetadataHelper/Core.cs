@@ -414,6 +414,8 @@ namespace Microsoft.Cci {
     private AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
       string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
       if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
+      path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".winmd");
+      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
       path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
       if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
       return null;
@@ -1406,6 +1408,8 @@ namespace Microsoft.Cci {
     uint GetMethodReferenceInternedId(
       IMethodReference methodReference
     ) {
+      var genInstanceRef = methodReference as IGenericMethodInstanceReference;
+      if (genInstanceRef != null) return this.GetGenericMethodInstanceReferenceInternedKey(genInstanceRef);
       uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(methodReference.ContainingType);
       uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(methodReference.Parameters.GetEnumerator());
       uint returnValueCustomModifiersInternedId = 0;
@@ -1435,6 +1439,19 @@ namespace Microsoft.Cci {
         this.CurrentMethodReferenceInternValue++);
       methods.Add((uint)methodReference.Name.UniqueKey, signatureStore1);
       return signatureStore1.InternedId;
+    }
+
+    uint GetGenericMethodInstanceReferenceInternedKey(
+      IGenericMethodInstanceReference genericMethodInstanceReference
+    ) {
+      var genericMethodInternedId = genericMethodInstanceReference.GenericMethod.InternedKey;
+      uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericMethodInstanceReference.GenericArguments.GetEnumerator());
+      uint value = this.GenericInstanceHashtable.Find(genericMethodInternedId, genericArgumentsInternedId);
+      if (value == 0) {
+        value = this.CurrentMethodReferenceInternValue++;
+        this.GenericInstanceHashtable.Add(genericMethodInternedId, genericArgumentsInternedId, value);
+      }
+      return value;
     }
 
     uint GetFieldReferenceInternedId(

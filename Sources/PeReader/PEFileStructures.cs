@@ -481,6 +481,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
 
     ImportImplementation = 0x00001000,
     SerializableImplementation = 0x00002000,
+    IsForeign = 0x00004000, 
     BeforeFieldInitImplementation = 0x00100000,
     ForwarderImplementation = 0x00200000,
 
@@ -667,7 +668,8 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
 
   internal enum AssemblyFlags : uint {
     PublicKey = 0x00000001,
-    Retargetable = 0x00000100
+    Retargetable = 0x00000100,
+    ContainsForeignTypes = 0x00000200
   }
 
   internal enum ManifestResourceFlags : uint {

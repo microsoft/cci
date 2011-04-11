@@ -483,10 +483,17 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    void DispatchAsReference(IMetadataVisitor visitor);
 
   }
 
@@ -676,6 +683,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Implemented by types whose instances are usually derived from documents.
   /// </summary>
+  [ContractClass(typeof(IObjectWithLocationsContract))]
   public interface IObjectWithLocations {
 
     /// <summary>
@@ -683,6 +691,17 @@ namespace Microsoft.Cci {
     /// </summary>
     IEnumerable<ILocation> Locations { get; }
 
+  }
+
+  [ContractClassFor(typeof(IObjectWithLocations))]
+  abstract class IObjectWithLocationsContract : IObjectWithLocations {
+    public IEnumerable<ILocation> Locations {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ILocation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ILocation>>(), x => x != null));
+        throw new NotImplementedException(); 
+      }
+    }
   }
 
   /// <summary>
@@ -806,10 +825,6 @@ namespace Microsoft.Cci {
   /// </summary>
   public interface IMetadataVisitor {
     /// <summary>
-    /// Performs some computation with the alias for type.
-    /// </summary>
-    void Visit(IAliasForType aliasForType);
-    /// <summary>
     /// Performs some computation with the given array type reference.
     /// </summary>
     void Visit(IArrayTypeReference arrayTypeReference);
@@ -881,6 +896,14 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given generic type parameter reference.
     /// </summary>
     void Visit(IGenericTypeParameterReference genericTypeParameterReference);
+    /// <summary>
+    /// Performs some computation with the given local definition.
+    /// </summary>
+    void Visit(ILocalDefinition localDefinition);
+    /// <summary>
+    /// Performs some computation with the given local definition.
+    /// </summary>
+    void VisitReference(ILocalDefinition localDefinition);
     /// <summary>
     /// Performs some computation with the given managed pointer type reference.
     /// </summary>
@@ -974,13 +997,30 @@ namespace Microsoft.Cci {
     /// </summary>
     void Visit(INestedUnitSetNamespace nestedUnitSetNamespace);
     /// <summary>
+    /// Performs some computation with the given IL operation.
+    /// </summary>
+    void Visit(IOperation operation);
+    /// <summary>
+    /// Performs some computation with the given IL operation exception information instance.
+    /// </summary>
+    /// <param name="operationExceptionInformation"></param>
+    void Visit(IOperationExceptionInformation operationExceptionInformation);
+    /// <summary>
     /// Performs some computation with the given parameter definition.
     /// </summary>
     void Visit(IParameterDefinition parameterDefinition);
     /// <summary>
+    /// Performs some computation with the given parameter definition.
+    /// </summary>
+    void VisitReference(IParameterDefinition parameterDefinition);
+    /// <summary>
     /// Performs some computation with the given parameter type information.
     /// </summary>
     void Visit(IParameterTypeInformation parameterTypeInformation);
+    /// <summary>
+    /// Performs some compuation with the given platoform invoke information.
+    /// </summary>
+    void Visit(IPlatformInvokeInformation platformInvokeInformation);
     /// <summary>
     /// Performs some computation with the given pointer type reference.
     /// </summary>
@@ -1009,6 +1049,38 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given security attribute.
     /// </summary>
     void Visit(ISecurityAttribute securityAttribute);
+    /// <summary>
+    /// Performs some computation with the given specialized event definition.
+    /// </summary>
+    void Visit(ISpecializedEventDefinition specializedEventDefinition);
+    /// <summary>
+    /// Performs some computation with the given specialized field definition.
+    /// </summary>
+    void Visit(ISpecializedFieldDefinition specializedFieldDefinition);
+    /// <summary>
+    /// Performs some computation with the given specialized field reference.
+    /// </summary>
+    void Visit(ISpecializedFieldReference specializedFieldReference);
+    /// <summary>
+    /// Performs some computation with the given specialized method definition.
+    /// </summary>
+    void Visit(ISpecializedMethodDefinition specializedMethodDefinition);
+    /// <summary>
+    /// Performs some computation with the given specialized method reference.
+    /// </summary>
+    void Visit(ISpecializedMethodReference specializedMethodReference);
+    /// <summary>
+    /// Performs some computation with the given specialized propperty definition.
+    /// </summary>
+    void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition);
+    /// <summary>
+    /// Performs some computation with the given specialized nested type definition.
+    /// </summary>
+    void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition);
+    /// <summary>
+    /// Performs some computation with the given specialized nested type reference.
+    /// </summary>
+    void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference);
     /// <summary>
     /// Performs some computation with the given unit set.
     /// </summary>

@@ -602,24 +602,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// The size of an element of the fixed sized umanaged array.
-    /// </summary>
-    uint ElementSize {
-      get;
-      //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray;
-    }
-
-    /// <summary>
-    /// A multiplier that must be applied to the value of the parameter specified by ParamIndex in order to work out the total size of the unmanaged array.
-    /// </summary>
-    uint ElementSizeMultiplier {
-      get;
-      //^ requires this.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray;
-      //^ requires this.ParamIndex != null;
-    }
-
-    /// <summary>
-    /// The unmanged element type of the unmanaged array.
+    /// The unmanaged element type of the unmanaged array.
     /// </summary>
     System.Runtime.InteropServices.UnmanagedType ElementType {
       get;
@@ -628,7 +611,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Specifies the index of the parameter that contains the value of the Inteface Identifier (IID) of the marshalled object.
+    /// Specifies the index of the parameter that contains the value of the Interface Identifier (IID) of the marshalled object.
     /// </summary>
     uint IidParameterIndex {
       get;

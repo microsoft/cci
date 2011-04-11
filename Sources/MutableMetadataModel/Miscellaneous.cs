@@ -188,8 +188,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     public MarshallingInformation() {
       this.customMarshaller = Dummy.TypeReference;
       this.customMarshallerRuntimeArgument = "";
-      this.elementSize = 0;
-      this.elementSizeMultiplier = 0;
       this.elementType = (UnmanagedType)0;
       this.iidParameterIndex = 0;
       this.numberOfElements = 0;
@@ -213,14 +211,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.customMarshallerRuntimeArgument = marshallingInformation.CustomMarshallerRuntimeArgument;
       else
         this.customMarshallerRuntimeArgument = "";
-      if (marshallingInformation.UnmanagedType == UnmanagedType.LPArray)
-        this.elementSize = marshallingInformation.ElementSize;
-      else
-        this.elementSize = 0;
-      if (marshallingInformation.UnmanagedType == UnmanagedType.LPArray && marshallingInformation.ParamIndex != null)
-        this.elementSizeMultiplier = marshallingInformation.ElementSizeMultiplier;
-      else
-        this.elementSizeMultiplier = 0;
       if (marshallingInformation.UnmanagedType == UnmanagedType.ByValArray || marshallingInformation.UnmanagedType == UnmanagedType.LPArray)
         this.elementType = marshallingInformation.ElementType;
       else
@@ -270,26 +260,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.customMarshallerRuntimeArgument = value; }
     }
     string customMarshallerRuntimeArgument;
-
-    /// <summary>
-    /// The size of an element of the fixed sized umanaged array.
-    /// </summary>
-    /// <value></value>
-    public uint ElementSize {
-      get { return this.elementSize; }
-      set { this.elementSize = value; }
-    }
-    uint elementSize;
-
-    /// <summary>
-    /// A multiplier that must be applied to the value of the parameter specified by ParamIndex in order to work out the total size of the unmanaged array.
-    /// </summary>
-    /// <value></value>
-    public uint ElementSizeMultiplier {
-      get { return this.elementSizeMultiplier; }
-      set { this.elementSizeMultiplier = value; }
-    }
-    uint elementSizeMultiplier;
 
     /// <summary>
     /// The unmanged element type of the unmanaged array.

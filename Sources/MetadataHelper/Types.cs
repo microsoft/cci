@@ -44,6 +44,13 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IArrayTypeReference)
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     public ITypeReference ElementType {
       get { return this.elementType; }
     }
@@ -297,6 +304,13 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IFunctionPointerTypeReference)
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     public IEnumerable<IParameterTypeInformation> ExtraArgumentTypes {
       get { return this.extraArgumentTypes; }
     }
@@ -351,17 +365,19 @@ namespace Microsoft.Cci {
 
   public class GenericTypeInstance : Scope<ITypeDefinitionMember>, IGenericTypeInstance {
 
-    public static GenericTypeInstance GetGenericTypeInstance(ITypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
+    public static GenericTypeInstance GetGenericTypeInstance(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
       //^ requires genericType.ResolvedType.IsGeneric;
       //^ ensures !result.IsGeneric;
     {
+      Contract.Requires(!(genericType is Dummy));
       Contract.Ensures(Contract.Result<GenericTypeInstance>() != null);
       return new GenericTypeInstance(genericType, genericArguments, internFactory);
     }
 
-    private GenericTypeInstance(ITypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
+    private GenericTypeInstance(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
       //^ requires genericType.ResolvedType.IsGeneric;
     {
+      Contract.Requires(!(genericType is Dummy));
       this.genericType = genericType;
       this.genericArguments = genericArguments;
       this.internFactory = internFactory;
@@ -384,7 +400,17 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Calls this.Visit(IGenericTypeInstanceReference).
+    /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls this.Visit(IGenericTypeInstanceReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -409,10 +435,10 @@ namespace Microsoft.Cci {
     }
     readonly IEnumerable<ITypeReference> genericArguments;
 
-    public ITypeReference GenericType {
+    public INamedTypeReference GenericType {
       get { return this.genericType; }
     }
-    readonly ITypeReference genericType; //^ invariant genericType.ResolvedType.IsGeneric;
+    readonly INamedTypeReference genericType; //^ invariant genericType.ResolvedType.IsGeneric;
 
     protected override void InitializeIfNecessary() {
       if (this.initialized) return;
@@ -522,7 +548,7 @@ namespace Microsoft.Cci {
     /// replace the occurrences of matching type parameters in <paramref name="genericTypeInstance"/>.</param>
     ///  /// <param name="internFactory">An intern factory. </param>
     internal static ITypeReference DeepCopyTypeReference(IGenericTypeInstanceReference genericTypeInstance, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
-      var copiedGenericType = TypeDefinition.DeepCopyTypeReference(genericTypeInstance.GenericType, targetContainer, internFactory);
+      var copiedGenericType = (INamedTypeReference)TypeDefinition.DeepCopyTypeReference(genericTypeInstance.GenericType, targetContainer, internFactory);
       List<ITypeReference>/*?*/ copiedArguments = null;
       int i = 0;
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
@@ -548,7 +574,7 @@ namespace Microsoft.Cci {
     /// corresponding values of containingMethodInstance.GenericArguments.
     /// </summary>
     public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(IGenericTypeInstanceReference genericTypeInstance, IGenericMethodInstanceReference containingMethodInstance, IInternFactory internFactory) {
-      var specializedGenericType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(genericTypeInstance.GenericType, containingMethodInstance, internFactory);
+      var specializedGenericType = (INamedTypeReference)TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(genericTypeInstance.GenericType, containingMethodInstance, internFactory);
       List<ITypeReference>/*?*/ specializedArguments = null;
       int i = 0;
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
@@ -573,7 +599,7 @@ namespace Microsoft.Cci {
     /// corresponding values of containingTypeInstance.GenericArguments.
     /// </summary>
     public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(IGenericTypeInstanceReference genericTypeInstance, IGenericTypeInstanceReference containingTypeInstance, IInternFactory internFactory) {
-      var specializedGenericType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(genericTypeInstance.GenericType, containingTypeInstance, internFactory);
+      var specializedGenericType = (INamedTypeReference)TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(genericTypeInstance.GenericType, containingTypeInstance, internFactory);
       List<ITypeReference>/*?*/ specializedArguments = null;
       int i = 0;
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
@@ -598,7 +624,7 @@ namespace Microsoft.Cci {
     /// specializedMethodDefinition.UnspecializedVersion with the corresponding values of specializedMethodDefinition.
     /// </summary>
     internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IGenericTypeInstanceReference genericTypeInstance, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
-      var specializedGenericType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeInstance.GenericType, specializedMethodDefinition, internFactory);
+      var specializedGenericType = (INamedTypeReference)TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeInstance.GenericType, specializedMethodDefinition, internFactory);
       List<ITypeReference>/*?*/ specializedArguments = null;
       int i = 0;
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
@@ -898,6 +924,13 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IManagedPointerTypeReference)
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
     public static ManagedPointerType GetManagedPointerType(ITypeReference targetType, IInternFactory internFactory) {
       Contract.Ensures(Contract.Result<ManagedPointerType>() != null);
       ManagedPointerType result = new ManagedPointerType(targetType, internFactory);
@@ -1086,6 +1119,13 @@ namespace Microsoft.Cci {
     /// Calls visitor.Visit(IPointerTypeReference)
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IPointerTypeReference)
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1454,7 +1494,17 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IModifiedTypeReference).
+    /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IModifiedTypeReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1982,10 +2032,17 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     #endregion
 
@@ -2206,6 +2263,13 @@ namespace Microsoft.Cci {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(IGenericTypeParameterReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericTypeParameterReference)this);
     }
 
     /// <summary>
@@ -2771,6 +2835,16 @@ namespace Microsoft.Cci {
       }
     }
 
+    /// <summary>
+    /// Returns a <see cref="System.String"/> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
+    public override string ToString() {
+      return TypeHelper.GetTypeName(this);
+    }
+
     #endregion
 
     #region IDefinition Members
@@ -2787,8 +2861,18 @@ namespace Microsoft.Cci {
 
     #region IDoubleDispatcher Members
 
+    /// <summary>
+    /// Calls visitor.Visit(INestedTypeDefinition).
+    /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(INestedTypeReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((ISpecializedNestedTypeReference)this);
     }
 
     #endregion
@@ -3065,7 +3149,19 @@ namespace Microsoft.Cci {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
     }
 
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference. The dispatch method does nothing else.
+    /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     public IEnumerable<ILocation> Locations {
       get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }

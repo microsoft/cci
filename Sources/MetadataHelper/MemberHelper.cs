@@ -203,6 +203,7 @@ namespace Microsoft.Cci {
       Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodDefinition>>(), x => x != null));
 
       if (!implementingMethod.IsVirtual) yield break;
+      if (implementingMethod.ContainingTypeDefinition.IsInterface) yield break;
       List<uint> explicitImplementations = null;
       foreach (IMethodImplementation methodImplementation in implementingMethod.ContainingTypeDefinition.ExplicitImplementationOverrides) {
         if (explicitImplementations == null) explicitImplementations = new List<uint>();
@@ -390,11 +391,10 @@ namespace Microsoft.Cci {
     /// <param name="field">The field to inspect for the System.Runtime.CompilerServices.IsVolatile modifier.</param>
     public static bool IsVolatile(IFieldDefinition field) {
       Contract.Requires(field != null);
+      if (!field.IsModified) return false;
 
-      IModifiedTypeReference/*?*/ modifiedTypeReference = field.Type as IModifiedTypeReference;
-      if (modifiedTypeReference == null) return false;
-      uint isVolatileKey = modifiedTypeReference.PlatformType.SystemRuntimeCompilerServicesIsVolatile.InternedKey;
-      foreach (ICustomModifier customModifier in modifiedTypeReference.CustomModifiers) {
+      uint isVolatileKey = field.Type.PlatformType.SystemRuntimeCompilerServicesIsVolatile.InternedKey;
+      foreach (ICustomModifier customModifier in field.CustomModifiers) {
         if (customModifier.Modifier.InternedKey == isVolatileKey) return true;
       }
       return false;
@@ -417,7 +417,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the two generic method signatures match according to the criteria of the CLR loader.
     /// </summary>
-    public static bool GenericMethodSignaturesAreEqual(IMethodDefinition method1, IMethodDefinition method2) {
+    public static bool GenericMethodSignaturesAreEqual(ISignature method1, ISignature method2) {
       Contract.Requires(method1 != null);
       Contract.Requires(method2 != null);
 
@@ -543,6 +543,13 @@ namespace Microsoft.Cci {
     /// Calls visitor.Visit(IMethodReference).
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IMethodReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -756,12 +763,12 @@ namespace Microsoft.Cci {
   /// An object that compares to instances of IParameterTypeInformation for equality using the assumption
   /// that two generic method type parameters are equivalent if their parameter list indices are the same.
   /// </summary>
-  public class GenericMethodParameterInformationComparer : IEqualityComparer<IParameterDefinition> {
+  public class GenericMethodParameterInformationComparer : IEqualityComparer<IParameterTypeInformation> {
 
     /// <summary>
     /// Returns true if the given two instances if IParameterTypeInformation are equivalent.
     /// </summary>
-    public bool Equals(IParameterDefinition x, IParameterDefinition y) {
+    public bool Equals(IParameterTypeInformation x, IParameterTypeInformation y) {
       if (x == null) return y == null;
       if (x.Index != y.Index) return false;
       if (x.IsByReference != y.IsByReference) return false;
@@ -773,7 +780,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a hash code that is the same for any two equivalent instances of IParameterTypeInformation.
     /// </summary>
-    public int GetHashCode(IParameterDefinition parameterTypeInformation) {
+    public int GetHashCode(IParameterTypeInformation parameterTypeInformation) {
       if (parameterTypeInformation == null) return 0;
       return (int)parameterTypeInformation.Type.InternedKey;
     }
@@ -923,7 +930,7 @@ namespace Microsoft.Cci {
         this.AppendGenericArguments(genericMethodInstance, formattingOptions, sb);
       else if (method.IsGeneric)
         this.AppendGenericParameters(method, formattingOptions, sb);
-      this.AppendMethodParameters(method.Parameters, formattingOptions, sb);
+      this.AppendMethodParameters(method, formattingOptions, sb);
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 && method.ResolvedMethod.IsSpecialName && (method.Name.Value.Contains("op_Explicit") || method.Name.Value.Contains("op_Implicit"))) {
         sb.Append('~');
         sb.Append(this.typeNameFormatter.GetTypeName(method.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
@@ -989,11 +996,11 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Appends a formatted string of parameters. Enclosed in parentheses and comma-delimited.
     /// </summary>
-    protected virtual void AppendMethodParameters(IEnumerable<IParameterTypeInformation> parameters, NameFormattingOptions formattingOptions, StringBuilder sb) {
-      Contract.Requires(parameters != null);
-      Contract.Requires(Contract.ForAll(parameters, x => x != null));
+    protected virtual void AppendMethodParameters(IMethodReference method, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(method != null);
       Contract.Requires(sb != null);
 
+      var parameters = method.Parameters;
       if ((formattingOptions & NameFormattingOptions.Signature) == 0 || ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 && !IteratorHelper.EnumerableIsNotEmpty<IParameterTypeInformation>(parameters))) return;
       sb.Append('(');
       bool first = true;
@@ -1001,6 +1008,10 @@ namespace Microsoft.Cci {
       foreach (IParameterTypeInformation par in parameters) {
         if (first) first = false; else sb.Append(delim);
         this.AppendParameter(par, formattingOptions, sb);
+      }
+      if (method.AcceptsExtraArguments) {
+        if (!first) sb.Append(delim);
+        sb.Append("__arglist");
       }
       sb.Append(')');
     }

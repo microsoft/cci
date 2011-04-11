@@ -24,6 +24,35 @@ namespace Microsoft.Cci {
   public static class UnitHelper {
 
     /// <summary>
+    /// True if assembly1 has an attribute that allows assembly2 to access internal members of assembly1.
+    /// </summary>
+    /// <param name="assembly1">The assembly whose attribute is to be inspected.</param>
+    /// <param name="assembly2">The assembly that must be mentioned in the attribute of assembly1.</param>
+    /// <returns></returns>
+    public static bool AssemblyOneAllowsAssemblyTwoToAccessItsInternals(IAssembly assembly1, IAssembly assembly2) {
+      var name2 = assembly2.Name.Value;
+      var name2Length = assembly2.Name.Value.Length;
+      foreach (var attribute in assembly1.AssemblyAttributes) {
+        if (!TypeHelper.TypesAreEquivalent(attribute.Type, assembly1.PlatformType.SystemRuntimeCompilerServicesInternalsVisibleToAttribute)) continue;
+        foreach (var argument in attribute.Arguments) {
+          var metadataConst = argument as IMetadataConstant;
+          if (metadataConst == null) break;
+          var assemblyName = metadataConst.Value as string;
+          if (assemblyName == null) break;
+          var assemblyNameLength = assemblyName.Length;
+          if (assemblyNameLength < name2Length) break;
+          if (assemblyNameLength > name2Length) {
+            var len = assemblyName.IndexOf(' ');
+            if (len < 0) len = assemblyName.IndexOf(',');
+            if (len != name2Length) break;
+          }
+          if (string.Compare(assemblyName, 0, assembly2.Name.Value, 0, name2Length, StringComparison.OrdinalIgnoreCase) == 0) return true;
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Returns the Assembly identity for the assembly name.
     /// </summary>
     /// <param name="assemblyName"></param>
@@ -36,12 +65,14 @@ namespace Microsoft.Cci {
 
       string culture = assemblyName.CultureInfo == null || assemblyName.CultureInfo == System.Globalization.CultureInfo.InvariantCulture ? "neutral" : assemblyName.CultureInfo.ToString();
       string name = assemblyName.Name;
-      Contract.Assume(name != null);
+      if (name == null) name = string.Empty;
       Version version = assemblyName.Version;
-      Contract.Assume(version != null);
+      if (version == null) version = Dummy.Version;
       byte[] token = assemblyName.GetPublicKeyToken();
-      Contract.Assume(token != null);
-      return new AssemblyIdentity(metadataHost.NameTable.GetNameFor(name), culture, version, token, assemblyName.CodeBase == null ? "" : assemblyName.CodeBase);
+      if (token == null) token = new byte[0];
+      var codeBase = assemblyName.CodeBase;
+      if (codeBase == null) codeBase = string.Empty;
+      return new AssemblyIdentity(metadataHost.NameTable.GetNameFor(name), culture, version, token, codeBase);
     }
 
     /// <summary>
@@ -175,7 +206,7 @@ namespace Microsoft.Cci {
       Contract.Requires(genericParameterCount >= 0);
       Contract.Requires(offset >= 0);
       Contract.Ensures(offset >= 0);
-
+    
       int savedOffset = offset;
       var nestedNamespaceDefinition = GetNamespace(nameTable, namespaceDefinition, typeName, ref offset);
       if (nestedNamespaceDefinition != null) {
@@ -195,7 +226,7 @@ namespace Microsoft.Cci {
       Contract.Requires(typeName != null);
       Contract.Requires(offset >= 0);
       Contract.Ensures(offset >= 0);
-
+     
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
@@ -242,7 +273,7 @@ namespace Microsoft.Cci {
       Contract.Requires(genericParameterCount >= 0);
       Contract.Requires(offset >= 0);
       Contract.Ensures(offset >= 0);
-
+      
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
@@ -358,6 +389,7 @@ namespace Microsoft.Cci {
         return false;
       return UnitHelper.UnitsAreContainmentEquivalent(unitNamespace1.Unit, unitNamespace2.Unit);
     }
+
   }
 
   /// <summary>
@@ -436,7 +468,7 @@ namespace Microsoft.Cci {
   public abstract class AggregatedNamespace<ContainerType, ContainerMemberType> : AggregatedScope<INamespaceMember, ContainerType, ContainerMemberType>, INamespaceDefinition
     where ContainerType : class, IContainer<ContainerMemberType>
     where ContainerMemberType : class, IContainerMember<ContainerType> {
-
+    
     /// <summary>
     /// Allocates a namespace definition whose members are aggregations of the members of a collection of containers of the given container type.
     /// </summary>
@@ -447,10 +479,17 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     #region INamespace Members
 
@@ -558,6 +597,13 @@ namespace Microsoft.Cci {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Throws an invalid operation exception since it makes no sense to have a reference to unit set namespace.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     /// <summary>
@@ -682,6 +728,13 @@ namespace Microsoft.Cci {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Throws an invalid operation exception since it makes no sense to have a reference to unit set namespace.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     /// <summary>

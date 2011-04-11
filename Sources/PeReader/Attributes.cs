@@ -271,6 +271,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
+    }
+
     internal override uint TokenValue {
       get { return TokenTypeIds.CustomAttribute | this.AttributeRowId; }
     }
@@ -366,6 +370,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     internal override uint TokenValue {
@@ -1336,7 +1344,7 @@ namespace Microsoft.Cci.MetadataReader {
             return this.ReadSerializedValue(underlyingType);
           }
         default:
-          if (type == this.PEFileToObjectModel.SystemType) {
+          if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.SystemType)) {
             string/*?*/ typeNameStr = this.GetSerializedString();
             if (typeNameStr == null) {
               return new ConstantExpression(this.PEFileToObjectModel.SystemType, null);
@@ -1378,7 +1386,7 @@ namespace Microsoft.Cci.MetadataReader {
               case 4: underlyingType = this.PEFileToObjectModel.SystemInt32; break;
               case 8: underlyingType = this.PEFileToObjectModel.SystemInt64; break;
               default:
-                this.decodeFailed = true; this.morePermutationsArePossible = false;
+                this.decodeFailed = true; this.morePermutationsArePossible = false; 
                 return new ConstantExpression(type, 0);
             }
             return new ConstantExpression(type, this.GetPrimitiveValue(underlyingType));

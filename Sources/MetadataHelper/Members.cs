@@ -62,10 +62,16 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericMethodInstanceReference)
     /// </summary>
-    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericMethodInstanceReference)this); 
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IGenericMethodInstanceReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit((IGenericMethodInstanceReference)this);
     }
 
@@ -450,6 +456,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// The name of the parameter to which the return value is marshalled.
+    /// </summary>
+    public IName ReturnValueName {
+      get { return this.GenericMethod.ReturnValueName; }
+    }
+
+    /// <summary>
     /// Declarative security actions for this method.
     /// </summary>
     /// <value></value>
@@ -651,11 +664,17 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericMethodInstanceReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit((IGenericMethodInstanceReference)this);
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IGenericMethodInstanceReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
     }
 
     /// <summary>
@@ -983,10 +1002,16 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericParameterReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IGenericParameterReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1125,6 +1150,13 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Throws an InvalidOperationException since valid metadata never refers directly to an event.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
+    }
+
     readonly IEventDefinition partiallySpecializedVersion;
 
     /// <summary>
@@ -1210,10 +1242,17 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(IFieldDefinition) method.
+    /// Calls the visitor.Visit(ISpecializedFieldDefinition) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(ISpecializedFieldReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((ISpecializedFieldReference)this);
     }
 
     readonly IFieldDefinition partiallySpecializedVersion;
@@ -1507,6 +1546,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Calls the visitor.Visit(IGenericMethodParameterReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericMethodParameterReference)this);
+    }
+
+    /// <summary>
     /// The generic method that defines this type parameter.
     /// </summary>
     /// <value></value>
@@ -1574,6 +1620,13 @@ namespace Microsoft.Cci {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(IMethodReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((ISpecializedMethodReference)this);
     }
 
     /// <summary>
@@ -1673,9 +1726,15 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// 
+    /// The name of the parameter to which the return value is marshalled.
     /// </summary>
-    /// <returns></returns>
+    public IName ReturnValueName {
+      get { return this.UnspecializedVersion.ReturnValueName; }
+    }
+
+    /// <summary>
+    /// Returns a method signature string for the method, including its return type and type parameters.
+    /// </summary>
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters);
     }
@@ -2092,12 +2151,19 @@ namespace Microsoft.Cci {
         return this.partiallySpecializedParameter;
       }
     }
+
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IParameterDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public virtual void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.VisitReference(IParameterDefinition).
+    /// </summary>
+    public virtual void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.VisitReference(this);
     }
 
     /// <summary>
@@ -2486,6 +2552,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Throws an InvalidOperationException since valid metadata never refers directly to a property.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
+    }
+
+    /// <summary>
     /// The method used to get the value of this property. May be absent (null).
     /// </summary>
     /// <value></value>
@@ -2708,11 +2781,17 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
 
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     /// <summary>
     /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.

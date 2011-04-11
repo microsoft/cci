@@ -107,7 +107,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The (delegate) type of the handlers that will handle the event.
     /// </summary>
-    ITypeReference Type { get; }
+    ITypeReference Type { get; } //TODO: this may be null
 
   }
 
@@ -115,6 +115,7 @@ namespace Microsoft.Cci {
   /// A field is a member that represents a variable associated with an object or class.
   /// This interface models the metadata representation of a field.
   /// </summary>
+  [ContractClass(typeof(IFieldDefinitionContract))]
   public interface IFieldDefinition : ITypeDefinitionMember, IFieldReference, IMetadataConstantContainer {
 
     /// <summary>
@@ -210,6 +211,169 @@ namespace Microsoft.Cci {
       //^ requires this.ContainingTypeDefinition.Layout == LayoutKind.Sequential;
     }
 
+  }
+
+  [ContractClassFor(typeof(IFieldDefinition))]
+  abstract class IFieldDefinitionContract : IFieldDefinition {
+    public uint BitLength {
+      get {
+        Contract.Requires(this.IsBitField);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMetadataConstant CompileTimeValue {
+      get {
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ISectionBlock FieldMapping {
+      get {
+        Contract.Requires(this.IsMapped);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsBitField {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsCompileTimeConstant {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsMapped {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || this.IsStatic);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool IsMarshalledExplicitly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsNotSerialized {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsReadOnly {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsSpecialName {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IMarshallingInformation MarshallingInformation {
+      get {
+        Contract.Requires(this.IsMarshalledExplicitly);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public uint Offset {
+      get {
+        Contract.Requires(this.ContainingTypeDefinition.Layout == LayoutKind.Explicit);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public int SequenceNumber {
+      get {
+        Contract.Requires(this.ContainingTypeDefinition.Layout == LayoutKind.Sequential);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ITypeDefinition ContainingTypeDefinition {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeMemberVisibility Visibility {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IScope<ITypeDefinitionMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsModified {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IFieldDefinition ResolvedField {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMetadataConstant Constant {
+      get { throw new NotImplementedException(); }
+    }
   }
 
   /// <summary>
@@ -313,6 +477,10 @@ namespace Microsoft.Cci {
 
     public IName Name {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -583,7 +751,13 @@ namespace Microsoft.Cci {
   public interface IMethodDefinition : ITypeDefinitionMember, IMethodReference {
     /// <summary>
     /// A container for a list of IL instructions providing the implementation (if any) of this method.
+    /// Note that each call to this property may result in a different object instance. All instances
+    /// produced by this property will identical in content.
     /// </summary>
+    /// <remarks>Since the bulk of the memory consumed by a metadata model is usually consumed by method bodies, the
+    /// object model used by the metadata reader does not cache method bodies, but produces them anew for every call.
+    /// If consumers do not hold on the bodies for long, the bodies can be garbage collected and the working set memory used by
+    /// the object model will be considerably reduced.</remarks>
     IMethodBody Body {
       get;
       //^ requires !this.IsAbstract && !this.IsExternal;
@@ -605,7 +779,8 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if this an instance method that explicitly declares the type and name of its first parameter (the instance).
     /// </summary>
-    bool HasExplicitThisParameter { get; }
+    bool HasExplicitThisParameter { get; } //TODO: get rid of this
+    //^ ensures result <==> (this.CallingConvention & CallingConvention.ExplicitThis) != 0;
 
     /// <summary>
     /// True if the method does not provide an implementation.
@@ -699,6 +874,7 @@ namespace Microsoft.Cci {
     /// True if the method does not require an instance of its declaring type as its first argument.
     /// </summary>
     bool IsStatic { get; }
+    //^ result <==> (this.CallingConvention & CallingConvention.HasThis) = 0;
 
     /// <summary>
     /// True if the method is a static constructor.
@@ -766,6 +942,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// The name of the parameter to which the return value is marshalled. Returns Dummy.Name if the name has not been specified.
+    /// </summary>
+    IName ReturnValueName { get; }
+
+    /// <summary>
     /// Declarative security actions for this method.
     /// </summary>
     IEnumerable<ISecurityAttribute> SecurityAttributes { get; }
@@ -794,7 +975,11 @@ namespace Microsoft.Cci {
     }
 
     public bool HasExplicitThisParameter {
-      get { throw new NotImplementedException(); }
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || (this.CallingConvention & CallingConvention.ExplicitThis) != 0);
+        Contract.Ensures(Contract.Result<bool>() || (this.CallingConvention & CallingConvention.ExplicitThis) == 0);
+        throw new NotImplementedException();
+      }
     }
 
     public bool IsAbstract {
@@ -866,7 +1051,11 @@ namespace Microsoft.Cci {
     }
 
     public bool IsStatic {
-      get { throw new NotImplementedException(); }
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || (this.CallingConvention & CallingConvention.HasThis) == 0);
+        Contract.Ensures(Contract.Result<bool>() || (this.CallingConvention & CallingConvention.HasThis) != 0);
+        throw new NotImplementedException(); 
+      }
     }
 
     public bool IsStaticConstructor {
@@ -930,6 +1119,13 @@ namespace Microsoft.Cci {
       get {
         Contract.Requires(this.ReturnValueIsMarshalledExplicitly);
         Contract.Ensures(Contract.Result<IMarshallingInformation>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName ReturnValueName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
         throw new NotImplementedException();
       }
     }
@@ -1032,6 +1228,10 @@ namespace Microsoft.Cci {
 
     public ITypeReference Type {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1279,6 +1479,10 @@ namespace Microsoft.Cci {
     public IMetadataConstant Constant {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
 
@@ -1424,6 +1628,10 @@ namespace Microsoft.Cci {
     public IScope<ITypeDefinitionMember> ContainingScope {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -1474,6 +1682,10 @@ namespace Microsoft.Cci {
 
     public IName Name {
       get { throw new NotImplementedException(); }
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
     }
   }
 
@@ -1727,6 +1939,10 @@ namespace Microsoft.Cci {
     public IName Name {
       get { throw new NotImplementedException(); }
     }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
   }
 
   /// <summary>
@@ -1758,7 +1974,6 @@ namespace Microsoft.Cci {
     }
 
   }
-
 
   /// <summary>
   /// Represents a global field in symbol table.

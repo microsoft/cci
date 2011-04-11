@@ -75,6 +75,7 @@ namespace Microsoft.Cci {
     internal readonly IName IEnumerable1;
     internal readonly IName Mscorlib;
     internal readonly IName System_Collections_Generic;
+    internal readonly IName System_Runtime;
     internal readonly IName _Deleted_;
     internal readonly IName _Module_;
 
@@ -113,6 +114,7 @@ namespace Microsoft.Cci {
       this.IEnumerable1 = nameTable.GetNameFor("IEnumerable`1");
       this.Mscorlib = nameTable.GetNameFor("mscorlib");
       this.System_Collections_Generic = nameTable.GetNameFor("System.Collections.Generic");
+      this.System_Runtime = nameTable.GetNameFor("System.Runtime");
       this._Deleted_ = nameTable.GetNameFor("_Deleted*");
       this._Module_ = nameTable.GetNameFor("<Module>");
     }

@@ -13,10 +13,3264 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Runtime.InteropServices;
-
-//^ using Microsoft.Contracts;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
+
+  /// <summary>
+  /// 
+  /// </summary>
+  public class MetadataShallowCopier {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    public MetadataShallowCopier(IMetadataHost targetHost) {
+      this.targetHost = targetHost;
+      this.internFactory = targetHost.InternFactory;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
+    public MetadataShallowCopier(IMetadataHost targetHost, IUnit targetUnit) {
+      this.targetHost = targetHost;
+      this.targetUnit = targetUnit;
+      this.internFactory = targetHost.InternFactory;
+    }
+
+    /// <summary>
+    /// An object representing the application that will host the copies made by this copier.
+    /// </summary>
+    protected IMetadataHost targetHost;
+
+    IUnit/*?*/ targetUnit;
+    IInternFactory internFactory;
+
+    MetadataDispatcher Dispatcher {
+      get {
+        if (this.dispatcher == null)
+          this.dispatcher = new MetadataDispatcher() { copier = this };
+        return this.dispatcher;
+      }
+    }
+    MetadataDispatcher dispatcher;
+
+#pragma warning disable 1591
+    protected class MetadataDispatcher : MetadataVisitor {
+      internal MetadataShallowCopier copier;
+      internal object result;
+
+      public override void Visit(IArrayTypeReference arrayTypeReference) {
+        this.result = this.copier.Copy(arrayTypeReference);
+      }
+
+      public override void Visit(IAssemblyReference assemblyReference) {
+        this.result = this.copier.Copy(assemblyReference);
+      }
+
+      public override void Visit(IEventDefinition eventDefinition) {
+        this.result = this.copier.CopyUnspecialized(eventDefinition);
+      }
+
+      public override void Visit(IFieldDefinition fieldDefinition) {
+        this.result = this.copier.CopyUnspecialized(fieldDefinition);
+      }
+
+      public override void Visit(IFieldReference fieldReference) {
+        this.result = this.copier.CopyUnspecialized(fieldReference);
+      }
+
+      public override void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+        this.result = this.copier.Copy(functionPointerTypeReference);
+      }
+
+      public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+        this.result = this.copier.Copy(genericMethodInstanceReference);
+      }
+
+      public override void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+        this.result = this.copier.Copy(genericMethodParameterReference);
+      }
+
+      public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+        this.result = this.copier.Copy(genericTypeInstanceReference);
+      }
+
+      public override void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+        this.result = this.copier.Copy(genericTypeParameterReference);
+      }
+
+      public override void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+        this.result = this.copier.Copy(globalFieldDefinition);
+      }
+
+      public override void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+        this.result = this.copier.Copy(globalMethodDefinition);
+      }
+
+      public override void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+        this.result = this.copier.Copy(managedPointerTypeReference);
+      }
+
+      public override void Visit(IMetadataConstant constant) {
+        this.result = this.copier.Copy(constant);
+      }
+
+      public override void Visit(IMetadataCreateArray createArray) {
+        this.result = this.copier.Copy(createArray);
+      }
+
+      public override void Visit(IMetadataNamedArgument namedArgument) {
+        this.result = this.copier.Copy(namedArgument);
+      }
+
+      public override void Visit(IMetadataTypeOf typeOf) {
+        this.result = this.copier.Copy(typeOf);
+      }
+
+      public override void Visit(IMethodDefinition method) {
+        this.result = this.copier.CopyUnspecialized(method);
+      }
+
+      public override void Visit(IMethodReference methodReference) {
+        this.result = this.copier.CopyUnspecialized(methodReference);
+      }
+
+      public override void Visit(IModifiedTypeReference modifiedTypeReference) {
+        this.result = this.copier.Copy(modifiedTypeReference);
+      }
+
+      public override void Visit(IModuleReference moduleReference) {
+        this.result = this.copier.Copy(moduleReference);
+      }
+
+      public override void Visit(INamespaceAliasForType namespaceAliasForType) {
+        this.result = this.copier.Copy(namespaceAliasForType);
+      }
+
+      public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+        this.result = this.copier.Copy(namespaceTypeDefinition);
+      }
+
+      public override void Visit(INamespaceTypeReference namespaceTypeReference) {
+        this.result = this.copier.Copy(namespaceTypeReference);
+      }
+
+      public override void Visit(INestedAliasForType nestedAliasForType) {
+        this.result = this.copier.Copy(nestedAliasForType);
+      }
+
+      public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
+        this.result = this.copier.CopyUnspecialized(nestedTypeDefinition);
+      }
+
+      public override void Visit(INestedTypeReference nestedTypeReference) {
+        this.result = this.copier.CopyUnspecialized(nestedTypeReference);
+      }
+
+      public override void Visit(INestedUnitNamespace nestedUnitNamespace) {
+        this.result = this.copier.Copy(nestedUnitNamespace);
+      }
+
+      public override void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+        this.result = this.copier.Copy(nestedUnitNamespaceReference);
+      }
+
+      public override void Visit(IPointerTypeReference pointerTypeReference) {
+        this.result = this.copier.Copy(pointerTypeReference);
+      }
+
+      public override void Visit(IPropertyDefinition propertyDefinition) {
+        this.result = this.copier.CopyUnspecialized(propertyDefinition);
+      }
+
+      public override void Visit(IRootUnitNamespace rootUnitNamespace) {
+        this.result = this.copier.Copy(rootUnitNamespace);
+      }
+
+      public override void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+        this.result = this.copier.Copy(rootUnitNamespaceReference);
+      }
+
+      public override void Visit(ISpecializedFieldReference specializedFieldReference) {
+        this.result = this.copier.Copy(specializedFieldReference);
+      }
+
+      public override void Visit(ISpecializedMethodReference specializedMethodReference) {
+        this.result = this.copier.Copy(specializedMethodReference);
+      }
+
+      public override void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+        this.result = this.copier.Copy(specializedNestedTypeDefinition);
+      }
+
+      public override void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+        this.result = this.copier.Copy(specializedNestedTypeReference);
+      }
+
+    }
+#pragma warning restore 1591
+
+    /// <summary>
+    /// Returns a shallow copy of the specified alias for type.
+    /// </summary>
+    public AliasForType Copy(IAliasForType aliasForType) {
+      aliasForType.Dispatch(this.Dispatcher);
+      return (AliasForType)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given array type reference.
+    /// </summary>
+    public ArrayTypeReference Copy(IArrayTypeReference arrayTypeReference) {
+      if (arrayTypeReference.IsVector) {
+        var copy = new VectorTypeReference();
+        copy.Copy(arrayTypeReference, this.internFactory);
+        return copy;
+      } else {
+        var copy = new MatrixTypeReference();
+        copy.Copy(arrayTypeReference, this.internFactory);
+        return copy;
+      }
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given assembly.
+    /// </summary>
+    public Assembly Copy(IAssembly assembly) {
+      var copy = new Assembly();
+      copy.Copy(assembly, this.internFactory);
+      this.targetUnit = copy;
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given assembly reference.
+    /// </summary>
+    public AssemblyReference Copy(IAssemblyReference assemblyReference) {
+      var copy = new AssemblyReference();
+      copy.Copy(assemblyReference, this.internFactory);
+      copy.Host = this.targetHost;
+      copy.ReferringUnit = this.targetUnit;
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given custom attribute.
+    /// </summary>
+    public CustomAttribute Copy(ICustomAttribute customAttribute) {
+      var copy = new CustomAttribute();
+      copy.Copy(customAttribute, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given custom modifier.
+    /// </summary>
+    public CustomModifier Copy(ICustomModifier customModifier) {
+      var copy = new CustomModifier();
+      copy.Copy(customModifier, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given event definition.
+    /// </summary>
+    public EventDefinition Copy(IEventDefinition eventDefinition) {
+      eventDefinition.Dispatch(this.Dispatcher);
+      return (EventDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given event definition.
+    /// </summary>
+    public EventDefinition CopyUnspecialized(IEventDefinition eventDefinition) {
+      var copy = new EventDefinition();
+      copy.Copy(eventDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given field definition.
+    /// </summary>
+    public FieldDefinition Copy(IFieldDefinition fieldDefinition) {
+      fieldDefinition.Dispatch(this.Dispatcher);
+      return (FieldDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given field definition.
+    /// </summary>
+    private FieldDefinition CopyUnspecialized(IFieldDefinition fieldDefinition) {
+      var copy = new FieldDefinition();
+      copy.Copy(fieldDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given field reference.
+    /// </summary>
+    public FieldReference Copy(IFieldReference fieldReference) {
+      fieldReference.DispatchAsReference(this.Dispatcher);
+      return (FieldReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given field reference.
+    /// </summary>
+    private FieldReference CopyUnspecialized(IFieldReference fieldReference) {
+      var copy = new FieldReference();
+      copy.Copy(fieldReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given file reference.
+    /// </summary>
+    public FileReference Copy(IFileReference fileReference) {
+      var copy = new FileReference();
+      copy.Copy(fileReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given function pointer type reference.
+    /// </summary>
+    public FunctionPointerTypeReference Copy(IFunctionPointerTypeReference functionPointerTypeReference) {
+      var copy = new FunctionPointerTypeReference();
+      copy.Copy(functionPointerTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given generic method instance reference.
+    /// </summary>
+    public GenericMethodInstanceReference Copy(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      var copy = new GenericMethodInstanceReference();
+      copy.Copy(genericMethodInstanceReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given generic method parameter.
+    /// </summary>
+    public GenericMethodParameter Copy(IGenericMethodParameter genericMethodParameter) {
+      var copy = new GenericMethodParameter();
+      copy.Copy(genericMethodParameter, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given generic method parameter reference.
+    /// </summary>
+    public GenericMethodParameterReference Copy(IGenericMethodParameterReference genericMethodParameterReference) {
+      var copy = new GenericMethodParameterReference();
+      copy.Copy(genericMethodParameterReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given generic type instance reference.
+    /// </summary>
+    public GenericTypeInstanceReference Copy(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      var copy = new GenericTypeInstanceReference();
+      copy.Copy(genericTypeInstanceReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given generic type parameter.
+    /// </summary>
+    public GenericTypeParameter Copy(IGenericTypeParameter genericTypeParameter) {
+      var copy = new GenericTypeParameter();
+      copy.Copy(genericTypeParameter, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given generic type parameter reference.
+    /// </summary>
+    public GenericTypeParameterReference Copy(IGenericTypeParameterReference genericTypeParameterReference) {
+      var copy = new GenericTypeParameterReference();
+      copy.Copy(genericTypeParameterReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given global field definition.
+    /// </summary>
+    public GlobalFieldDefinition Copy(IGlobalFieldDefinition globalFieldDefinition) {
+      var copy = new GlobalFieldDefinition();
+      copy.Copy(globalFieldDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given global method definition.
+    /// </summary>
+    public GlobalMethodDefinition Copy(IGlobalMethodDefinition globalMethodDefinition) {
+      var copy = new GlobalMethodDefinition();
+      copy.Copy(globalMethodDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified local definition.
+    /// </summary>
+    public LocalDefinition Copy(ILocalDefinition localDefinition) {
+      var copy = new LocalDefinition();
+      copy.Copy(localDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given managed pointer type reference.
+    /// </summary>
+    public ManagedPointerTypeReference Copy(IManagedPointerTypeReference managedPointerTypeReference) {
+      var copy = new ManagedPointerTypeReference();
+      copy.Copy(managedPointerTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given marshalling information.
+    /// </summary>
+    public MarshallingInformation Copy(IMarshallingInformation marshallingInformation) {
+      var copy = new MarshallingInformation();
+      copy.Copy(marshallingInformation, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given metadata constant.
+    /// </summary>
+    public MetadataConstant Copy(IMetadataConstant constant) {
+      var copy = new MetadataConstant();
+      copy.Copy(constant, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given metadata array creation expression.
+    /// </summary>
+    public MetadataCreateArray Copy(IMetadataCreateArray createArray) {
+      var copy = new MetadataCreateArray();
+      copy.Copy(createArray, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given metadata expression.
+    /// </summary>
+    public MetadataExpression Copy(IMetadataExpression expression) {
+      expression.Dispatch(this.Dispatcher);
+      return (MetadataExpression)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given metadata named argument expression.
+    /// </summary>
+    public MetadataNamedArgument Copy(IMetadataNamedArgument namedArgument) {
+      var copy = new MetadataNamedArgument();
+      copy.Copy(namedArgument, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given metadata typeof expression.
+    /// </summary>
+    public MetadataTypeOf Copy(IMetadataTypeOf typeOf) {
+      var copy = new MetadataTypeOf();
+      copy.Copy(typeOf, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method body.
+    /// </summary>
+    public MethodBody Copy(IMethodBody methodBody) {
+      var copy = new MethodBody();
+      copy.Copy(methodBody, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method definition.
+    /// </summary>
+    public MethodDefinition Copy(IMethodDefinition method) {
+      method.Dispatch(this.Dispatcher);
+      return (MethodDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method definition.
+    /// </summary>
+    private MethodDefinition CopyUnspecialized(IMethodDefinition method) {
+      var copy = new MethodDefinition();
+      copy.Copy(method, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method implementation.
+    /// </summary>
+    public MethodImplementation Copy(IMethodImplementation methodImplementation) {
+      var copy = new MethodImplementation();
+      copy.Copy(methodImplementation, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method reference.
+    /// </summary>
+    public MethodReference Copy(IMethodReference methodReference) {
+      methodReference.DispatchAsReference(this.Dispatcher);
+      return (MethodReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method reference.
+    /// </summary>
+    private MethodReference CopyUnspecialized(IMethodReference methodReference) {
+      var copy = new MethodReference();
+      copy.Copy(methodReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given modified type reference.
+    /// </summary>
+    public ModifiedTypeReference Copy(IModifiedTypeReference modifiedTypeReference) {
+      var copy = new ModifiedTypeReference();
+      copy.Copy(modifiedTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given module.
+    /// </summary>
+    public Module Copy(Module module) {
+      var assembly = module as IAssembly;
+      if (assembly != null) return this.Copy(assembly);
+      var copy = new Module();
+      copy.Copy(module, this.internFactory);
+      this.targetUnit = copy;
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given module reference.
+    /// </summary>
+    public ModuleReference Copy(IModuleReference moduleReference) {
+      var assemblyReference = moduleReference as IAssemblyReference;
+      if (assemblyReference != null) return this.Copy(assemblyReference);
+      var copy = new ModuleReference();
+      copy.Copy(moduleReference, this.internFactory);
+      copy.Host = this.targetHost;
+      copy.ReferringUnit = this.targetUnit;
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified named type definition.
+    /// </summary>
+    public NamedTypeDefinition Copy(INamedTypeDefinition typeDefinition) {
+      typeDefinition.Dispatch(this.Dispatcher);
+      return (NamedTypeDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given alias for a namespace type definition.
+    /// </summary>
+    public NamespaceAliasForType Copy(INamespaceAliasForType namespaceAliasForType) {
+      var copy = new NamespaceAliasForType();
+      copy.Copy(namespaceAliasForType, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified unit namespace.
+    /// </summary>
+    public UnitNamespace Copy(IUnitNamespace unitNamespace) {
+      unitNamespace.Dispatch(this.Dispatcher);
+      return (UnitNamespace)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified unit namespace.
+    /// </summary>
+    public UnitNamespaceReference Copy(IUnitNamespaceReference unitNamespace) {
+      unitNamespace.DispatchAsReference(this.Dispatcher);
+      return (UnitNamespaceReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given namespace type definition.
+    /// </summary>
+    public NamespaceTypeDefinition Copy(INamespaceTypeDefinition namespaceTypeDefinition) {
+      var copy = new NamespaceTypeDefinition();
+      copy.Copy(namespaceTypeDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given namespace type reference.
+    /// </summary>
+    public NamespaceTypeReference Copy(INamespaceTypeReference namespaceTypeReference) {
+      var copy = new NamespaceTypeReference();
+      copy.Copy(namespaceTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested type alias.
+    /// </summary>
+    public NestedAliasForType Copy(INestedAliasForType nestedAliasForType) {
+      var copy = new NestedAliasForType();
+      copy.Copy(nestedAliasForType, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested type definition.
+    /// </summary>
+    public NestedTypeDefinition Copy(INestedTypeDefinition nestedTypeDefinition) {
+      nestedTypeDefinition.Dispatch(this.Dispatcher);
+      return (NestedTypeDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested type definition.
+    /// </summary>
+    private NestedTypeDefinition CopyUnspecialized(INestedTypeDefinition nestedTypeDefinition) {
+      var copy = new NestedTypeDefinition();
+      copy.Copy(nestedTypeDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested type reference.
+    /// </summary>
+    public NestedTypeReference Copy(INestedTypeReference nestedTypeReference) {
+      nestedTypeReference.DispatchAsReference(this.Dispatcher);
+      return (NestedTypeReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested type reference.
+    /// </summary>
+    private NestedTypeReference CopyUnspecialized(INestedTypeReference nestedTypeReference) {
+      var copy = new NestedTypeReference();
+      copy.Copy(nestedTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested unit namespace.
+    /// </summary>
+    public NestedUnitNamespace Copy(INestedUnitNamespace nestedUnitNamespace) {
+      var copy = new NestedUnitNamespace();
+      copy.Copy(nestedUnitNamespace, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given nested unit namespace reference.
+    /// </summary>
+    public NestedUnitNamespaceReference Copy(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      var copy = new NestedUnitNamespaceReference();
+      copy.Copy(nestedUnitNamespaceReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified operation.
+    /// </summary>
+    public Operation Copy(IOperation operation) {
+      var copy = new Operation();
+      copy.Copy(operation, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified operation exception information.
+    /// </summary>
+    public OperationExceptionInformation Copy(IOperationExceptionInformation operationExceptionInformation) {
+      var copy = new OperationExceptionInformation();
+      copy.Copy(operationExceptionInformation, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given parameter definition.
+    /// </summary>
+    public ParameterDefinition Copy(IParameterDefinition parameterDefinition) {
+      var copy = new ParameterDefinition();
+      copy.Copy(parameterDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given parameter type information.
+    /// </summary>
+    public ParameterTypeInformation Copy(IParameterTypeInformation parameterTypeInformation) {
+      var copy = new ParameterTypeInformation();
+      copy.Copy(parameterTypeInformation, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified platform invoke information.
+    /// </summary>
+    public PlatformInvokeInformation Copy(IPlatformInvokeInformation platformInvokeInformation) {
+      var copy = new PlatformInvokeInformation();
+      copy.Copy(platformInvokeInformation, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given pointer type reference.
+    /// </summary>
+    public PointerTypeReference Copy(IPointerTypeReference pointerTypeReference) {
+      var copy = new PointerTypeReference();
+      copy.Copy(pointerTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given property definition.
+    /// </summary>
+    public PropertyDefinition Copy(IPropertyDefinition propertyDefinition) {
+      propertyDefinition.Dispatch(this.Dispatcher);
+      return (PropertyDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given property definition.
+    /// </summary>
+    private PropertyDefinition CopyUnspecialized(IPropertyDefinition propertyDefinition) {
+      var copy = new PropertyDefinition();
+      copy.Copy(propertyDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given root unit namespace.
+    /// </summary>
+    public RootUnitNamespace Copy(IRootUnitNamespace rootUnitNamespace) {
+      var copy = new RootUnitNamespace();
+      copy.Copy(rootUnitNamespace, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given root unit namespace.
+    /// </summary>
+    public RootUnitNamespaceReference Copy(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      var copy = new RootUnitNamespaceReference();
+      copy.Copy(rootUnitNamespaceReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given reference to a manifest resource.
+    /// </summary>
+    public ResourceReference Copy(IResourceReference resourceReference) {
+      var copy = new ResourceReference();
+      copy.Copy(resourceReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given security attribute.
+    /// </summary>
+    public SecurityAttribute Copy(ISecurityAttribute securityAttribute) {
+      var copy = new SecurityAttribute();
+      copy.Copy(securityAttribute, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given specialized field reference.
+    /// </summary>
+    public SpecializedFieldReference Copy(ISpecializedFieldReference fieldReference) {
+      var copy = new SpecializedFieldReference();
+      copy.Copy(fieldReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given specialized method reference.
+    /// </summary>
+    public SpecializedMethodReference Copy(ISpecializedMethodReference specializedMethodReference) {
+      var copy = new SpecializedMethodReference();
+      copy.Copy(specializedMethodReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given specialized nested type definition.
+    /// </summary>
+    public SpecializedNestedTypeDefinition Copy(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+      var copy = new SpecializedNestedTypeDefinition();
+      copy.Copy(specializedNestedTypeDefinition, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given specialized nested type reference.
+    /// </summary>
+    public SpecializedNestedTypeReference Copy(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      var copy = new SpecializedNestedTypeReference();
+      copy.Copy(specializedNestedTypeReference, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified type definition.
+    /// </summary>
+    public ITypeDefinition Copy(ITypeDefinition typeDefinition) {
+      typeDefinition.Dispatch(this.Dispatcher);
+      return (ITypeDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified type member.
+    /// </summary>
+    public TypeDefinitionMember Copy(ITypeDefinitionMember typeMember) {
+      typeMember.Dispatch(this.Dispatcher);
+      return (TypeDefinitionMember)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified type reference.
+    /// </summary>
+    public TypeReference Copy(ITypeReference typeReference) {
+      typeReference.DispatchAsReference(this.Dispatcher);
+      return (TypeReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the specified unit reference.
+    /// </summary>
+    public UnitReference Copy(IUnitReference unitReference) {
+      unitReference.DispatchAsReference(this.Dispatcher);
+      return (UnitReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given Win32 resource.
+    /// </summary>
+    public Win32Resource Copy(IWin32Resource win32Resource) {
+      var copy = new Win32Resource();
+      copy.Copy(win32Resource, this.internFactory);
+      return copy;
+    }
+
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
+  public class MetadataDeepCopier {
+
+    /// <summary>
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    public MetadataDeepCopier(IMetadataHost targetHost)
+      : this(targetHost, new MetadataShallowCopier(targetHost)) {
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
+    public MetadataDeepCopier(IMetadataHost targetHost, IUnit targetUnit)
+      : this(targetHost, new MetadataShallowCopier(targetHost, targetUnit)) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost"></param>
+    /// <param name="shallowCopier"></param>
+    protected MetadataDeepCopier(IMetadataHost targetHost, MetadataShallowCopier shallowCopier) {
+      this.targetHost = targetHost;
+      this.shallowCopier = shallowCopier;
+      this.internFactory = targetHost.InternFactory;
+    }
+
+    IMetadataHost targetHost;
+    MetadataShallowCopier shallowCopier;
+    IInternFactory internFactory;
+
+    Substitutor SubstituteCopiesForOriginals {
+      get {
+        if (this.substituteCopiesForOriginals == null)
+          this.substituteCopiesForOriginals = new Substitutor(targetHost, shallowCopier, this);
+        return this.substituteCopiesForOriginals;
+      }
+    }
+    Substitutor substituteCopiesForOriginals;
+
+    MetadataTraverser TraverseAndPopulateDefinitionCacheWithCopies {
+      get {
+        if (this.traverseAndPopulateDefinitionCacheWithCopies == null) {
+          var populator = new Populator(this.SubstituteCopiesForOriginals.shallowCopier, this.SubstituteCopiesForOriginals.DefinitionCache);
+          this.traverseAndPopulateDefinitionCacheWithCopies = new MetadataTraverser() { PreorderVisitor = populator };
+        }
+        return this.traverseAndPopulateDefinitionCacheWithCopies;
+      }
+    }
+    MetadataTraverser traverseAndPopulateDefinitionCacheWithCopies;
+
+    MetadataDispatcher Dispatcher {
+      get {
+        if (this.dispatcher == null)
+          this.dispatcher = new MetadataDispatcher() { copier = this };
+        return this.dispatcher;
+      }
+    }
+    MetadataDispatcher dispatcher;
+
+#pragma warning disable 1591
+    protected class MetadataDispatcher : MetadataVisitor {
+      internal MetadataDeepCopier copier;
+      internal object result;
+
+      public override void Visit(IArrayTypeReference arrayTypeReference) {
+        this.result = this.copier.Copy(arrayTypeReference);
+      }
+
+      public override void Visit(IEventDefinition eventDefinition) {
+        this.result = this.copier.Copy(eventDefinition);
+      }
+
+      public override void Visit(IFieldDefinition fieldDefinition) {
+        this.result = this.copier.Copy(fieldDefinition);
+      }
+
+      public override void Visit(IFieldReference fieldReference) {
+        this.result = this.copier.CopyUnspecialized(fieldReference);
+      }
+
+      public override void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+        this.result = this.copier.Copy(functionPointerTypeReference);
+      }
+
+      public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+        this.result = this.copier.Copy(genericMethodInstanceReference);
+      }
+
+      public override void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+        this.result = this.copier.Copy(genericMethodParameterReference);
+      }
+
+      public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+        this.result = this.copier.Copy(genericTypeInstanceReference);
+      }
+
+      public override void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+        this.result = this.copier.Copy(genericTypeParameterReference);
+      }
+
+      public override void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+        this.result = this.copier.Copy(globalFieldDefinition);
+      }
+
+      public override void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+        this.result = this.copier.Copy(globalMethodDefinition);
+      }
+
+      public override void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+        this.result = this.copier.Copy(managedPointerTypeReference);
+      }
+
+      public override void Visit(IMetadataConstant constant) {
+        this.result = this.copier.Copy(constant);
+      }
+
+      public override void Visit(IMetadataCreateArray createArray) {
+        this.result = this.copier.Copy(createArray);
+      }
+
+      public override void Visit(IMetadataNamedArgument namedArgument) {
+        this.result = this.copier.Copy(namedArgument);
+      }
+
+      public override void Visit(IMetadataTypeOf typeOf) {
+        this.result = this.copier.Copy(typeOf);
+      }
+
+      public override void Visit(IMethodDefinition method) {
+        this.result = this.copier.CopyUnspecialized(method);
+      }
+
+      public override void Visit(IMethodReference methodReference) {
+        this.result = this.copier.CopyUnspecialized(methodReference);
+      }
+
+      public override void Visit(IModifiedTypeReference modifiedTypeReference) {
+        this.result = this.copier.Copy(modifiedTypeReference);
+      }
+
+      public override void Visit(INamespaceAliasForType namespaceAliasForType) {
+        this.result = this.copier.Copy(namespaceAliasForType);
+      }
+
+      public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+        this.result = this.copier.Copy(namespaceTypeDefinition);
+      }
+
+      public override void Visit(INamespaceTypeReference namespaceTypeReference) {
+        this.result = this.copier.Copy(namespaceTypeReference);
+      }
+
+      public override void Visit(INestedAliasForType nestedAliasForType) {
+        this.result = this.copier.Copy(nestedAliasForType);
+      }
+
+      public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
+        this.result = this.copier.CopyUnspecialized(nestedTypeDefinition);
+      }
+
+      public override void Visit(INestedTypeReference nestedTypeReference) {
+        this.result = this.copier.CopyUnspecialized(nestedTypeReference);
+      }
+
+      public override void Visit(INestedUnitNamespace nestedUnitNamespace) {
+        this.result = this.copier.Copy(nestedUnitNamespace);
+      }
+
+      public override void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+        this.result = this.copier.Copy(nestedUnitNamespaceReference);
+      }
+
+      public override void Visit(IPointerTypeReference pointerTypeReference) {
+        this.result = this.copier.Copy(pointerTypeReference);
+      }
+
+      public override void Visit(IPropertyDefinition propertyDefinition) {
+        this.result = this.copier.Copy(propertyDefinition);
+      }
+
+      public override void Visit(IRootUnitNamespace rootUnitNamespace) {
+        this.result = this.copier.Copy(rootUnitNamespace);
+      }
+
+      public override void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+        this.result = this.copier.Copy(rootUnitNamespaceReference);
+      }
+
+      public override void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+        throw new InvalidOperationException();
+      }
+
+      public override void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+        this.result = this.copier.Copy((ISpecializedFieldReference)specializedFieldDefinition);
+      }
+
+      public override void Visit(ISpecializedFieldReference specializedFieldReference) {
+        this.result = this.copier.Copy(specializedFieldReference);
+      }
+
+      public override void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+        this.result = this.copier.CopyUnspecialized(specializedMethodDefinition);
+      }
+
+      public override void Visit(ISpecializedMethodReference specializedMethodReference) {
+        this.result = this.copier.Copy(specializedMethodReference);
+      }
+
+      public override void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+        throw new InvalidOperationException();
+      }
+
+      public override void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+        this.result = this.copier.CopyUnspecialized(specializedNestedTypeDefinition);
+      }
+
+      public override void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+        this.result = this.copier.Copy(specializedNestedTypeReference);
+      }
+
+    }
+#pragma warning restore 1591
+
+    /// <summary>
+    /// 
+    /// </summary>
+    class Populator : IMetadataVisitor {
+
+      internal Populator(MetadataShallowCopier shallowCopier, Dictionary<object, object> definitionCache) {
+        this.shallowCopier = shallowCopier;
+        this.definitionCache = definitionCache;
+      }
+
+      MetadataShallowCopier shallowCopier;
+      Dictionary<object, object> definitionCache;
+
+#pragma warning disable 1591
+
+      //Only copy and cache definitions during this pass. Method bodies are not visited.
+      //Only cache definitions that can be reached via more than one edge. (The others can be copied when their one and only instance in the graph is reached in the second pass.)
+
+      public void Visit(IArrayTypeReference arrayTypeReference) {
+      }
+
+      public void Visit(IAssembly assembly) {
+        if (this.definitionCache.ContainsKey(assembly)) return;
+        var copy = this.shallowCopier.Copy(assembly);
+        this.definitionCache.Add(assembly, copy);
+      }
+
+      public void Visit(IAssemblyReference assemblyReference) {
+      }
+
+      public void Visit(ICustomAttribute customAttribute) {
+      }
+
+      public void Visit(ICustomModifier customModifier) {
+      }
+
+      public void Visit(IEventDefinition eventDefinition) {
+      }
+
+      public void Visit(IFieldDefinition fieldDefinition) {
+        if (this.definitionCache.ContainsKey(fieldDefinition)) return;
+        var copy = this.shallowCopier.Copy(fieldDefinition);
+        this.definitionCache.Add(fieldDefinition, copy);
+      }
+
+      public void Visit(IFieldReference fieldReference) {
+      }
+
+      public void Visit(IFileReference fileReference) {
+      }
+
+      public void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+      }
+
+      public void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      }
+
+      public void Visit(IGenericMethodParameter genericMethodParameter) {
+        if (this.definitionCache.ContainsKey(genericMethodParameter)) return;
+        var copy = this.shallowCopier.Copy(genericMethodParameter);
+        this.definitionCache.Add(genericMethodParameter, copy);
+      }
+
+      public void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+      }
+
+      public void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      }
+
+      public void Visit(IGenericTypeParameter genericTypeParameter) {
+        if (this.definitionCache.ContainsKey(genericTypeParameter)) return;
+        var copy = this.shallowCopier.Copy(genericTypeParameter);
+        this.definitionCache.Add(genericTypeParameter, copy);
+      }
+
+      public void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+      }
+
+      public void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+        if (this.definitionCache.ContainsKey(globalFieldDefinition)) return;
+        var copy = this.shallowCopier.Copy(globalFieldDefinition);
+        this.definitionCache.Add(globalFieldDefinition, copy);
+      }
+
+      public void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+        if (this.definitionCache.ContainsKey(globalMethodDefinition)) return;
+        var copy = this.shallowCopier.Copy(globalMethodDefinition);
+        this.definitionCache.Add(globalMethodDefinition, copy);
+      }
+
+      public void Visit(ILocalDefinition localDefinition) {
+      }
+
+      public void VisitReference(ILocalDefinition localDefinition) {
+      }
+
+      public void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+      }
+
+      public void Visit(IMarshallingInformation marshallingInformation) {
+      }
+
+      public void Visit(IMetadataConstant constant) {
+      }
+
+      public void Visit(IMetadataCreateArray createArray) {
+      }
+
+      public void Visit(IMetadataExpression expression) {
+      }
+
+      public void Visit(IMetadataNamedArgument namedArgument) {
+      }
+
+      public void Visit(IMetadataTypeOf typeOf) {
+      }
+
+      public void Visit(IMethodBody methodBody) {
+      }
+
+      public void Visit(IMethodDefinition method) {
+        if (this.definitionCache.ContainsKey(method)) return;
+        var copy = this.shallowCopier.Copy(method);
+        this.definitionCache.Add(method, copy);
+      }
+
+      public void Visit(IMethodImplementation methodImplementation) {
+      }
+
+      public void Visit(IMethodReference methodReference) {
+      }
+
+      public void Visit(IModifiedTypeReference modifiedTypeReference) {
+      }
+
+      public void Visit(IModule module) {
+        if (this.definitionCache.ContainsKey(module)) return;
+        var copy = this.shallowCopier.Copy(module);
+        this.definitionCache.Add(module, copy);
+      }
+
+      public void Visit(IModuleReference moduleReference) {
+      }
+
+      public void Visit(INamespaceAliasForType namespaceAliasForType) {
+        if (this.definitionCache.ContainsKey(namespaceAliasForType)) return;
+        var copy = this.shallowCopier.Copy(namespaceAliasForType);
+        this.definitionCache.Add(namespaceAliasForType, copy);
+      }
+
+      public void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+        if (this.definitionCache.ContainsKey(namespaceTypeDefinition)) return;
+        var copy = this.shallowCopier.Copy(namespaceTypeDefinition);
+        this.definitionCache.Add(namespaceTypeDefinition, copy);
+      }
+
+      public void Visit(INamespaceTypeReference namespaceTypeReference) {
+      }
+
+      public void Visit(INestedAliasForType nestedAliasForType) {
+        if (this.definitionCache.ContainsKey(nestedAliasForType)) return;
+        var copy = this.shallowCopier.Copy(nestedAliasForType);
+        this.definitionCache.Add(nestedAliasForType, copy);
+      }
+
+      public void Visit(INestedTypeDefinition nestedTypeDefinition) {
+        if (this.definitionCache.ContainsKey(nestedTypeDefinition)) return;
+        var copy = this.shallowCopier.Copy(nestedTypeDefinition);
+        this.definitionCache.Add(nestedTypeDefinition, copy);
+      }
+
+      public void Visit(INestedTypeReference nestedTypeReference) {
+      }
+
+      public void Visit(INestedUnitNamespace nestedUnitNamespace) {
+        if (this.definitionCache.ContainsKey(nestedUnitNamespace)) return;
+        var copy = this.shallowCopier.Copy(nestedUnitNamespace);
+        this.definitionCache.Add(nestedUnitNamespace, copy);
+      }
+
+      public void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      }
+
+      public void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
+      }
+
+      public void Visit(IOperation operation) {
+      }
+
+      public void Visit(IOperationExceptionInformation operationExceptionInformation) {
+      }
+
+      public void Visit(IParameterDefinition parameterDefinition) {
+        if (this.definitionCache.ContainsKey(parameterDefinition)) return;
+        var copy = this.shallowCopier.Copy(parameterDefinition);
+        this.definitionCache.Add(parameterDefinition, copy);
+      }
+
+      public void VisitReference(IParameterDefinition parameterDefinition) {
+      }
+
+      public void Visit(IParameterTypeInformation parameterTypeInformation) {
+      }
+
+      public void Visit(IPlatformInvokeInformation platformInvokeInformation) {
+      }
+
+      public void Visit(IPointerTypeReference pointerTypeReference) {
+      }
+
+      public void Visit(IPropertyDefinition propertyDefinition) {
+        //properties are referenced by the parent pointers in their parameters.
+        if (this.definitionCache.ContainsKey(propertyDefinition)) return;
+        var copy = this.shallowCopier.Copy(propertyDefinition);
+        this.definitionCache.Add(propertyDefinition, copy);
+      }
+
+      public void Visit(IResourceReference resourceReference) {
+      }
+
+      public void Visit(IRootUnitNamespace rootUnitNamespace) {
+        if (this.definitionCache.ContainsKey(rootUnitNamespace)) return;
+        var copy = this.shallowCopier.Copy(rootUnitNamespace);
+        this.definitionCache.Add(rootUnitNamespace, copy);
+      }
+
+      public void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      }
+
+      public void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
+      }
+
+      public void Visit(ISecurityAttribute securityAttribute) {
+      }
+
+      public void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+      }
+
+      public void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+      }
+
+      public void Visit(ISpecializedFieldReference specializedFieldReference) {
+      }
+
+      public void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+      }
+
+      public void Visit(ISpecializedMethodReference specializedMethodReference) {
+      }
+
+      public void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+      }
+
+      public void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+      }
+
+      public void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      }
+
+      public void Visit(IUnitSet unitSet) {
+      }
+
+      public void Visit(IWin32Resource win32Resource) {
+      }
+#pragma warning restore 1591
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    class Substitutor {
+
+      internal Substitutor(IMetadataHost host, MetadataShallowCopier shallowCopier, MetadataDeepCopier deepCopier) {
+        this.host = host;
+        this.shallowCopier = shallowCopier;
+        this.deepCopier = deepCopier;
+      }
+
+      internal MetadataShallowCopier shallowCopier;
+
+      MetadataDeepCopier deepCopier;
+
+      /// <summary>
+      /// Unless a definition is outside the cone to be copied, it must have an entry in this table.
+      /// Consult this to find containing definitions.
+      /// </summary>
+      internal Dictionary<object, object> DefinitionCache {
+        get {
+          if (this.definitionCache == null)
+            this.definitionCache = new Dictionary<object, object>();
+          return this.definitionCache;
+        }
+      }
+      Dictionary<object, object> definitionCache;
+
+      /// <summary>
+      /// A cache of references that have already been encountered and copied. Once in the cache, the cached value is just returned unchanged.
+      /// </summary>
+      Dictionary<object, object> ReferenceCache {
+        get {
+          if (this.referenceCache == null)
+            this.referenceCache = new Dictionary<object, object>();
+          return this.referenceCache;
+        }
+      }
+      Dictionary<object, object> referenceCache;
+
+      /// <summary>
+      /// 
+      /// </summary>
+      IMetadataHost host;
+
+      MetadataDispatcher Dispatcher {
+        get {
+          if (this.dispatcher == null)
+            this.dispatcher = new MetadataDispatcher() { substitutor = this };
+          return this.dispatcher;
+        }
+      }
+      MetadataDispatcher dispatcher;
+
+      class MetadataDispatcher : MetadataVisitor {
+        internal Substitutor substitutor;
+
+        internal object result;
+
+        public override void Visit(IAliasForType aliasForType) {
+          this.result = this.substitutor.Substitute(aliasForType);
+        }
+
+        public override void Visit(IArrayTypeReference arrayTypeReference) {
+          this.result = this.substitutor.Substitute(arrayTypeReference);
+        }
+
+        public override void Visit(IAssembly assembly) {
+          this.result = this.substitutor.Substitute(assembly);
+        }
+
+        public override void Visit(IAssemblyReference assemblyReference) {
+          this.result = this.substitutor.Substitute(assemblyReference);
+        }
+
+        public override void Visit(IEventDefinition eventDefinition) {
+          this.result = this.substitutor.Substitute(eventDefinition);
+        }
+
+        public override void Visit(IFieldDefinition fieldDefinition) {
+          this.result = this.substitutor.Substitute(fieldDefinition);
+        }
+
+        public override void Visit(IFieldReference fieldReference) {
+          this.result = this.substitutor.Substitute(fieldReference);
+        }
+
+        public override void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+          this.result = this.substitutor.Substitute(functionPointerTypeReference);
+        }
+
+        public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+          this.result = this.substitutor.Substitute(genericMethodInstanceReference);
+        }
+
+        public override void Visit(IGenericMethodParameter genericMethodParameter) {
+          this.result = this.substitutor.Substitute(genericMethodParameter);
+        }
+
+        public override void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+          this.result = this.substitutor.Substitute(genericMethodParameterReference);
+        }
+
+        public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+          this.result = this.substitutor.Substitute(genericTypeInstanceReference);
+        }
+
+        public override void Visit(IGenericTypeParameter genericTypeParameter) {
+          this.result = this.substitutor.Substitute(genericTypeParameter);
+        }
+
+        public override void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+          this.result = this.substitutor.Substitute(genericTypeParameterReference);
+        }
+
+        public override void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+          this.result = this.substitutor.Substitute(globalFieldDefinition);
+        }
+
+        public override void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+          this.result = this.substitutor.Substitute(globalMethodDefinition);
+        }
+
+        public override void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+          this.result = this.substitutor.Substitute(managedPointerTypeReference);
+        }
+
+        public override void Visit(IMetadataConstant constant) {
+          this.result = this.substitutor.Substitute(constant);
+        }
+
+        public override void Visit(IMetadataCreateArray createArray) {
+          this.result = this.substitutor.Substitute(createArray);
+        }
+
+        public override void Visit(IMetadataNamedArgument namedArgument) {
+          this.result = this.substitutor.Substitute(namedArgument);
+        }
+
+        public override void Visit(IMetadataTypeOf typeOf) {
+          this.result = this.substitutor.Substitute(typeOf);
+        }
+
+        public override void Visit(IMethodDefinition method) {
+          this.result = this.substitutor.Substitute(method);
+        }
+
+        public override void Visit(IMethodReference methodReference) {
+          this.result = this.substitutor.Substitute(methodReference);
+        }
+
+        public override void Visit(IModifiedTypeReference modifiedTypeReference) {
+          this.result = this.substitutor.Substitute(modifiedTypeReference);
+        }
+
+        public override void Visit(IModule module) {
+          this.result = this.substitutor.Substitute(module);
+        }
+
+        public override void Visit(IModuleReference moduleReference) {
+          this.result = this.substitutor.Substitute(moduleReference);
+        }
+
+        public override void Visit(INamespaceAliasForType namespaceAliasForType) {
+          this.result = this.substitutor.Substitute(namespaceAliasForType);
+        }
+
+        public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+          this.result = this.substitutor.Substitute(namespaceTypeDefinition);
+        }
+
+        public override void Visit(INamespaceTypeReference namespaceTypeReference) {
+          this.result = this.substitutor.Substitute(namespaceTypeReference);
+        }
+
+        public override void Visit(INestedAliasForType nestedAliasForType) {
+          this.result = this.substitutor.Substitute(nestedAliasForType);
+        }
+
+        public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
+          this.result = this.substitutor.Substitute(nestedTypeDefinition);
+        }
+
+        public override void Visit(INestedTypeReference nestedTypeReference) {
+          this.result = this.substitutor.Substitute(nestedTypeReference);
+        }
+
+        public override void Visit(INestedUnitNamespace nestedUnitNamespace) {
+          this.result = this.substitutor.Substitute(nestedUnitNamespace);
+        }
+
+        public override void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+          this.result = this.substitutor.Substitute(nestedUnitNamespaceReference);
+        }
+
+        public override void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
+          this.result = this.substitutor.Substitute(nestedUnitSetNamespace);
+        }
+
+        public override void Visit(IPointerTypeReference pointerTypeReference) {
+          this.result = this.substitutor.Substitute(pointerTypeReference);
+        }
+
+        public override void Visit(IPropertyDefinition propertyDefinition) {
+          this.result = this.substitutor.Substitute(propertyDefinition);
+        }
+
+        public override void Visit(IRootUnitNamespace rootUnitNamespace) {
+          this.result = this.substitutor.Substitute(rootUnitNamespace);
+        }
+
+        public override void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+          this.result = this.substitutor.Substitute(rootUnitNamespaceReference);
+        }
+
+        public override void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
+          this.result = this.substitutor.Substitute(rootUnitSetNamespace);
+        }
+
+        public override void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+          this.result = this.substitutor.Substitute((IEventDefinition)specializedEventDefinition);
+        }
+
+        public override void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+          this.result = this.substitutor.Substitute((IFieldDefinition)specializedFieldDefinition);
+        }
+
+        public override void Visit(ISpecializedFieldReference specializedFieldReference) {
+          this.result = this.substitutor.Substitute(specializedFieldReference);
+        }
+
+        public override void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+          this.result = this.substitutor.Substitute((IMethodDefinition)specializedMethodDefinition);
+        }
+
+        public override void Visit(ISpecializedMethodReference specializedMethodReference) {
+          this.result = this.substitutor.Substitute(specializedMethodReference);
+        }
+
+        public override void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+          this.result = this.substitutor.Substitute((IPropertyDefinition)specializedPropertyDefinition);
+        }
+
+        public override void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+          this.result = this.substitutor.Substitute((INestedTypeDefinition)specializedNestedTypeDefinition);
+        }
+
+        public override void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+          this.result = this.substitutor.Substitute(specializedNestedTypeReference);
+        }
+
+      }
+
+      internal IArrayTypeReference Substitute(IArrayTypeReference arrayTypeReference) {
+        if (arrayTypeReference is Dummy) return arrayTypeReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(arrayTypeReference, out copy)) return (ArrayTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(arrayTypeReference);
+        this.ReferenceCache.Add(arrayTypeReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        mutableCopy.ElementType = this.SubstituteViaDispatcher(mutableCopy.ElementType);
+        return mutableCopy;
+      }
+
+      internal IAssembly Substitute(IAssembly assembly) {
+        if (assembly is Dummy) return Dummy.Assembly;
+        var mutableCopy = (Assembly)this.DefinitionCache[assembly];
+        this.Substitute((Module)mutableCopy);
+        this.SubstituteElements(mutableCopy.AssemblyAttributes);
+        this.SubstituteElements(mutableCopy.ExportedTypes);
+        this.SubstituteElements(mutableCopy.Files);
+        this.SubstituteElements(mutableCopy.MemberModules);
+        this.SubstituteElements(mutableCopy.Resources);
+        this.SubstituteElements(mutableCopy.SecurityAttributes);
+        return mutableCopy;
+      }
+
+      internal IAssemblyReference Substitute(IAssemblyReference assemblyReference, bool keepAsDefinition = true) {
+        if (assemblyReference is Dummy) return assemblyReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(assemblyReference, out copy)) return (IAssemblyReference)copy;
+        if (this.ReferenceCache.TryGetValue(assemblyReference, out copy)) return (AssemblyReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(assemblyReference);
+        this.ReferenceCache.Add(assemblyReference, mutableCopy);
+        mutableCopy.ContainingAssembly = mutableCopy;
+        return mutableCopy;
+      }
+
+      internal ICustomAttribute Substitute(ICustomAttribute customAttribute) {
+        if (customAttribute is Dummy) return customAttribute;
+        var mutableCopy = this.shallowCopier.Copy(customAttribute);
+        this.SubstituteElements(mutableCopy.Arguments);
+        mutableCopy.Constructor = this.SubstituteViaDispatcher(mutableCopy.Constructor);
+        this.SubstituteElements(mutableCopy.NamedArguments);
+        return mutableCopy;
+      }
+
+      internal ICustomModifier Substitute(ICustomModifier customModifier) {
+        if (customModifier is Dummy) return customModifier;
+        var mutableCopy = this.shallowCopier.Copy(customModifier);
+        mutableCopy.Modifier = this.SubstituteViaDispatcher(mutableCopy.Modifier);
+        return mutableCopy;
+      }
+
+      internal IDefinition Substitute(IDefinition definition) {
+        if (definition is Dummy) return definition;
+        definition.Dispatch(this.Dispatcher);
+        return (IDefinition)this.Dispatcher.result;
+      }
+
+      internal IEventDefinition Substitute(IEventDefinition eventDefinition) {
+        if (eventDefinition is Dummy) return eventDefinition;
+        var mutableCopy = this.shallowCopier.Copy(eventDefinition);
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IFieldDefinition Substitute(IFieldDefinition fieldDefinition) {
+        if (fieldDefinition is Dummy) return fieldDefinition;
+        var mutableCopy = (FieldDefinition)this.DefinitionCache[fieldDefinition];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IFieldReference Substitute(IFieldReference fieldReference, bool keepAsDefinition = true) {
+        if (fieldReference is Dummy) return fieldReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(fieldReference, out copy)) return (IFieldReference)copy;
+        if (this.ReferenceCache.TryGetValue(fieldReference, out copy)) return (FieldReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(fieldReference);
+        this.ReferenceCache.Add(fieldReference, mutableCopy);
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IFileReference Substitute(IFileReference fileReference) {
+        if (fileReference is Dummy) return fileReference;
+        var mutableCopy = this.shallowCopier.Copy(fileReference);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingAssembly, out copy))
+          mutableCopy.ContainingAssembly = (IAssembly)copy;
+        return mutableCopy;
+      }
+
+      internal IFunctionPointerTypeReference Substitute(IFunctionPointerTypeReference functionPointerTypeReference) {
+        if (functionPointerTypeReference is Dummy) return functionPointerTypeReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(functionPointerTypeReference, out copy)) return (FunctionPointerTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(functionPointerTypeReference);
+        this.ReferenceCache.Add(functionPointerTypeReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        this.SubstituteElements(mutableCopy.ExtraArgumentTypes);
+        this.SubstituteElements(mutableCopy.Parameters);
+        if (mutableCopy.ReturnValueIsModified)
+          this.SubstituteElements(mutableCopy.ReturnValueCustomModifiers);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+        return mutableCopy;
+      }
+
+      internal IGenericMethodInstanceReference Substitute(IGenericMethodInstanceReference genericMethodInstanceReference) {
+        if (genericMethodInstanceReference is Dummy) return genericMethodInstanceReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(genericMethodInstanceReference, out copy)) return (GenericMethodInstanceReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(genericMethodInstanceReference);
+        this.ReferenceCache.Add(genericMethodInstanceReference, mutableCopy);
+        this.Substitute((MethodReference)mutableCopy);
+        this.SubstituteElements(mutableCopy.GenericArguments);
+        mutableCopy.GenericMethod = this.SubstituteViaDispatcher(mutableCopy.GenericMethod);
+        return mutableCopy;
+      }
+
+      internal IGenericMethodParameter Substitute(IGenericMethodParameter genericMethodParameter) {
+        if (genericMethodParameter is Dummy) return genericMethodParameter;
+        var mutableCopy = (GenericMethodParameter)this.DefinitionCache[genericMethodParameter];
+        this.Substitute((GenericParameter)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.DefiningMethod, out copy))
+          mutableCopy.DefiningMethod = (IMethodDefinition)copy;
+        return mutableCopy;
+      }
+
+      internal IGenericMethodParameterReference Substitute(IGenericMethodParameterReference genericMethodParameterReference, bool keepAsDefinition = true) {
+        if (genericMethodParameterReference is Dummy) return genericMethodParameterReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(genericMethodParameterReference, out copy)) return (IGenericMethodParameterReference)copy;
+        if (this.ReferenceCache.TryGetValue(genericMethodParameterReference, out copy)) return (GenericMethodParameterReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(genericMethodParameterReference);
+        this.ReferenceCache.Add(genericMethodParameterReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        mutableCopy.DefiningMethod = this.SubstituteViaDispatcher(mutableCopy.DefiningMethod);
+        return mutableCopy;
+      }
+
+      internal IGenericTypeInstanceReference Substitute(IGenericTypeInstanceReference genericTypeInstanceReference) {
+        if (genericTypeInstanceReference is Dummy) return genericTypeInstanceReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(genericTypeInstanceReference, out copy)) return (GenericTypeInstanceReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(genericTypeInstanceReference);
+        this.ReferenceCache.Add(genericTypeInstanceReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        this.SubstituteElements(mutableCopy.GenericArguments);
+        mutableCopy.GenericType = this.SubstituteViaDispatcher(mutableCopy.GenericType);
+        return mutableCopy;
+      }
+
+      internal IGenericTypeParameter Substitute(IGenericTypeParameter genericParameter) {
+        if (genericParameter is Dummy) return genericParameter;
+        var mutableCopy = (GenericTypeParameter)this.DefinitionCache[genericParameter];
+        this.Substitute((GenericParameter)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.DefiningType, out copy))
+          mutableCopy.DefiningType = (ITypeDefinition)copy;
+        return mutableCopy;
+      }
+
+      internal IGenericTypeParameterReference Substitute(IGenericTypeParameterReference genericTypeParameterReference, bool keepAsDefinition = true) {
+        if (genericTypeParameterReference is Dummy) return genericTypeParameterReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(genericTypeParameterReference, out copy)) return (IGenericTypeParameterReference)copy;
+        if (this.ReferenceCache.TryGetValue(genericTypeParameterReference, out copy)) return (GenericTypeParameterReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(genericTypeParameterReference);
+        this.ReferenceCache.Add(genericTypeParameterReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        mutableCopy.DefiningType = this.SubstituteViaDispatcher(mutableCopy.DefiningType);
+        return mutableCopy;
+      }
+
+      internal ILocalDefinition Substitute(ILocalDefinition localDefinition) {
+        if (localDefinition is Dummy) return localDefinition;
+        var mutableCopy = this.shallowCopier.Copy(localDefinition);
+        this.DefinitionCache.Add(localDefinition, mutableCopy);
+        if (mutableCopy.IsConstant)
+          mutableCopy.CompileTimeValue = this.Substitute(mutableCopy.CompileTimeValue);
+        if (mutableCopy.IsModified)
+          this.SubstituteElements(mutableCopy.CustomModifiers);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.MethodDefinition, out copy))
+          mutableCopy.MethodDefinition = (IMethodDefinition)copy;
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+        return mutableCopy;
+      }
+
+      internal IManagedPointerTypeReference Substitute(IManagedPointerTypeReference managedPointerTypeReference) {
+        if (managedPointerTypeReference is Dummy) return managedPointerTypeReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(managedPointerTypeReference, out copy)) return (ManagedPointerTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(managedPointerTypeReference);
+        this.ReferenceCache.Add(managedPointerTypeReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        mutableCopy.TargetType = this.SubstituteViaDispatcher(mutableCopy.TargetType);
+        return mutableCopy;
+      }
+
+      internal IMarshallingInformation Substitute(IMarshallingInformation marshallingInformation) {
+        if (marshallingInformation is Dummy) return marshallingInformation;
+        var mutableCopy = this.shallowCopier.Copy(marshallingInformation);
+        if (mutableCopy.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler)
+          mutableCopy.CustomMarshaller = this.SubstituteViaDispatcher(mutableCopy.CustomMarshaller);
+        if (mutableCopy.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray && 
+        (mutableCopy.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
+        mutableCopy.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
+        mutableCopy.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_RECORD))
+          mutableCopy.SafeArrayElementUserDefinedSubtype = this.SubstituteViaDispatcher(mutableCopy.SafeArrayElementUserDefinedSubtype);
+        return mutableCopy;
+      }
+
+      internal IMetadataConstant Substitute(IMetadataConstant constant) {
+        if (constant is Dummy) return constant;
+        var mutableCopy = this.shallowCopier.Copy(constant);
+        this.Substitute((MetadataExpression)mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IMetadataCreateArray Substitute(IMetadataCreateArray createArray) {
+        if (createArray is Dummy) return createArray;
+        var mutableCopy = this.shallowCopier.Copy(createArray);
+        this.Substitute((MetadataExpression)mutableCopy);
+        mutableCopy.ElementType = this.SubstituteViaDispatcher(mutableCopy.ElementType);
+        this.SubstituteElements(mutableCopy.Initializers);
+        return mutableCopy;
+      }
+
+      internal IMetadataNamedArgument Substitute(IMetadataNamedArgument namedArgument) {
+        if (namedArgument is Dummy) return namedArgument;
+        var mutableCopy = this.shallowCopier.Copy(namedArgument);
+        this.Substitute((MetadataExpression)mutableCopy);
+        mutableCopy.ArgumentValue = this.SubstituteViaDispatcher(mutableCopy.ArgumentValue);
+        mutableCopy.ResolvedDefinition = null;
+        return mutableCopy;
+      }
+
+      internal IMetadataTypeOf Substitute(IMetadataTypeOf typeOf) {
+        if (typeOf is Dummy) return typeOf;
+        var mutableCopy = this.shallowCopier.Copy(typeOf);
+        this.Substitute((MetadataExpression)mutableCopy);
+        mutableCopy.TypeToGet = this.SubstituteViaDispatcher(mutableCopy.TypeToGet);
+        return mutableCopy;
+      }
+
+      internal IMethodBody Substitute(IMethodBody methodBody, IMethodDefinition method) {
+        if (methodBody is Dummy) return methodBody;
+        return this.deepCopier.CopyMethodBody(methodBody, method);
+      }
+
+      internal IMethodBody Substitute(MethodBody mutableCopy) {
+        this.SubstituteElements(mutableCopy.LocalVariables);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.MethodDefinition, out copy))
+          mutableCopy.MethodDefinition = (IMethodDefinition)copy;
+        if (!mutableCopy.MethodDefinition.IsAbstract && !mutableCopy.MethodDefinition.IsExternal && mutableCopy.MethodDefinition.IsCil) {
+          this.SubstituteElements(mutableCopy.Operations);
+          this.SubstituteElements(mutableCopy.OperationExceptionInformation);
+        }
+        return mutableCopy;
+      }
+
+      internal IMethodDefinition Substitute(IMethodDefinition method) {
+        if (method is Dummy) return method;
+        var mutableCopy = (MethodDefinition)this.DefinitionCache[method];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IMethodImplementation Substitute(IMethodImplementation methodImplementation) {
+        if (methodImplementation is Dummy) return methodImplementation;
+        var mutableCopy = this.shallowCopier.Copy(methodImplementation);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingType, out copy))
+          mutableCopy.ContainingType = (ITypeDefinition)copy;
+        mutableCopy.ImplementedMethod = this.SubstituteViaDispatcher(mutableCopy.ImplementedMethod);
+        mutableCopy.ImplementingMethod = this.SubstituteViaDispatcher(mutableCopy.ImplementingMethod);
+        return mutableCopy;
+      }
+
+      internal IMethodReference Substitute(IMethodReference methodReference, bool keepAsDefinition = true) {
+        if (methodReference is Dummy) return methodReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(methodReference, out copy)) return (IMethodReference)copy;
+        if (this.ReferenceCache.TryGetValue(methodReference, out copy)) return (MethodReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(methodReference);
+        this.ReferenceCache.Add(methodReference, mutableCopy);
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IModifiedTypeReference Substitute(IModifiedTypeReference modifiedTypeReference) {
+        if (modifiedTypeReference is Dummy) return modifiedTypeReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(modifiedTypeReference, out copy)) return (ModifiedTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(modifiedTypeReference);
+        this.ReferenceCache.Add(modifiedTypeReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        this.SubstituteElements(mutableCopy.CustomModifiers);
+        mutableCopy.UnmodifiedType = this.SubstituteViaDispatcher(mutableCopy.UnmodifiedType);
+        return mutableCopy;
+      }
+
+      internal IModule Substitute(IModule module) {
+        if (module is Dummy) return module;
+        var mutableCopy = (Module)this.DefinitionCache[module];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IModuleReference Substitute(IModuleReference moduleReference, bool keepAsDefinition = true) {
+        if (moduleReference is Dummy) return moduleReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(moduleReference, out copy)) return (IModuleReference)copy;
+        if (this.ReferenceCache.TryGetValue(moduleReference, out copy)) return (ModuleReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(moduleReference);
+        this.ReferenceCache.Add(moduleReference, mutableCopy);
+        mutableCopy.ContainingAssembly = this.Substitute(mutableCopy.ContainingAssembly);
+        return mutableCopy;
+      }
+
+      internal INamespaceAliasForType Substitute(INamespaceAliasForType namespaceAliasForType) {
+        if (namespaceAliasForType is Dummy) return namespaceAliasForType;
+        var mutableCopy = (NamespaceAliasForType)this.DefinitionCache[namespaceAliasForType];
+        this.Substitute((AliasForType)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingNamespace, out copy))
+          mutableCopy.ContainingNamespace = (INamespaceDefinition)copy;
+        return mutableCopy;
+      }
+
+      internal INamespaceTypeDefinition Substitute(INamespaceTypeDefinition namespaceTypeDefinition) {
+        if (namespaceTypeDefinition is Dummy) return namespaceTypeDefinition;
+        var mutableCopy = (NamespaceTypeDefinition)this.DefinitionCache[namespaceTypeDefinition];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal INamespaceTypeReference Substitute(INamespaceTypeReference namespaceTypeReference, bool keepAsDefinition = true) {
+        if (namespaceTypeReference is Dummy) return namespaceTypeReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(namespaceTypeReference, out copy)) return (INamespaceTypeReference)copy;
+        if (this.ReferenceCache.TryGetValue(namespaceTypeReference, out copy)) return (NamespaceTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(namespaceTypeReference);
+        this.ReferenceCache.Add(namespaceTypeReference, mutableCopy);
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal INestedAliasForType Substitute(INestedAliasForType nestedAliasForType) {
+        if (nestedAliasForType is Dummy) return nestedAliasForType;
+        var mutableCopy = (NestedAliasForType)this.DefinitionCache[nestedAliasForType];
+        this.Substitute((AliasForType)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingAlias, out copy))
+          mutableCopy.ContainingAlias = (IAliasForType)copy;
+        return mutableCopy;
+      }
+
+      internal INestedTypeDefinition Substitute(INestedTypeDefinition nestedTypeDefinition) {
+        if (nestedTypeDefinition is Dummy) return nestedTypeDefinition;
+        var mutableCopy = (NestedTypeDefinition)this.DefinitionCache[nestedTypeDefinition];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal INestedTypeReference Substitute(INestedTypeReference nestedTypeReference, bool keepAsDefinition = true) {
+        if (nestedTypeReference is Dummy) return nestedTypeReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(nestedTypeReference, out copy)) return (INestedTypeReference)copy;
+        if (this.ReferenceCache.TryGetValue(nestedTypeReference, out copy)) return (NestedTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(nestedTypeReference);
+        this.ReferenceCache.Add(nestedTypeReference, mutableCopy);
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal INestedUnitNamespace Substitute(INestedUnitNamespace nestedUnitNamespace) {
+        if (nestedUnitNamespace is Dummy) return nestedUnitNamespace;
+        var mutableCopy = (NestedUnitNamespace)this.DefinitionCache[nestedUnitNamespace];
+        this.Substitute((UnitNamespace)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingUnitNamespace, out copy))
+          mutableCopy.ContainingUnitNamespace = (IUnitNamespace)copy;
+        return mutableCopy;
+      }
+
+      internal INestedUnitNamespaceReference Substitute(INestedUnitNamespaceReference nestedUnitNamespaceReference, bool keepAsDefinition = true) {
+        if (nestedUnitNamespaceReference is Dummy) return nestedUnitNamespaceReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(nestedUnitNamespaceReference, out copy)) return (INestedUnitNamespaceReference)copy;
+        if (this.ReferenceCache.TryGetValue(nestedUnitNamespaceReference, out copy)) return (NestedUnitNamespaceReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(nestedUnitNamespaceReference);
+        this.ReferenceCache.Add(nestedUnitNamespaceReference, mutableCopy);
+        this.Substitute((UnitNamespaceReference)mutableCopy);
+        mutableCopy.ContainingUnitNamespace = this.SubstituteViaDispatcher(mutableCopy.ContainingUnitNamespace);
+        return mutableCopy;
+      }
+
+      internal IOperation Substitute(IOperation operation) {
+        if (operation is Dummy) return Dummy.Operation;
+        var mutableCopy = this.shallowCopier.Copy(operation);
+        if (mutableCopy.Value == null) return mutableCopy;
+        var typeReference = mutableCopy.Value as ITypeReference;
+        if (typeReference != null)
+          mutableCopy.Value = this.SubstituteViaDispatcher(typeReference);
+        else {
+          var fieldReference = mutableCopy.Value as IFieldReference;
+          if (fieldReference != null)
+            mutableCopy.Value = this.SubstituteViaDispatcher(fieldReference);
+          else {
+            var methodReference = mutableCopy.Value as IMethodReference;
+            if (methodReference != null)
+              mutableCopy.Value = this.SubstituteViaDispatcher(methodReference);
+            else {
+              var parameter = mutableCopy.Value as IParameterDefinition;
+              if (parameter != null)
+                mutableCopy.Value = this.SubstituteReference(parameter);
+              else {
+                var local = mutableCopy.Value as ILocalDefinition;
+                if (local != null)
+                  mutableCopy.Value = this.SubstituteReference(local);
+              }
+            }
+          }
+        }
+        return mutableCopy;
+      }
+
+      internal IOperationExceptionInformation Substitute(IOperationExceptionInformation operationExceptionInformation) {
+        if (operationExceptionInformation is Dummy) return operationExceptionInformation;
+        var mutableCopy = this.shallowCopier.Copy(operationExceptionInformation);
+        mutableCopy.ExceptionType = this.SubstituteViaDispatcher(mutableCopy.ExceptionType);
+        return mutableCopy;
+      }
+
+      internal IParameterDefinition Substitute(IParameterDefinition parameterDefinition) {
+        if (parameterDefinition is Dummy) return parameterDefinition;
+        var mutableCopy = (ParameterDefinition)this.DefinitionCache[parameterDefinition];
+        this.SubstituteElements(mutableCopy.Attributes);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingSignature, out copy))
+          mutableCopy.ContainingSignature = (ISignature)copy;
+        if (mutableCopy.IsModified)
+          this.SubstituteElements(mutableCopy.CustomModifiers);
+        if (mutableCopy.HasDefaultValue)
+          mutableCopy.DefaultValue = this.Substitute(mutableCopy.DefaultValue);
+        if (mutableCopy.IsMarshalledExplicitly)
+          mutableCopy.MarshallingInformation = this.Substitute(mutableCopy.MarshallingInformation);
+        if (mutableCopy.IsParameterArray)
+          mutableCopy.ParamArrayElementType = this.SubstituteViaDispatcher(mutableCopy.ParamArrayElementType);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+        return mutableCopy;
+      }
+
+      internal IParameterTypeInformation Substitute(IParameterTypeInformation parameterTypeInformation, bool keepAsDefinition = true) {
+        if (parameterTypeInformation is Dummy) return parameterTypeInformation;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(parameterTypeInformation, out copy)) return (IParameterTypeInformation)copy;
+        if (this.ReferenceCache.TryGetValue(parameterTypeInformation, out copy)) return (ParameterTypeInformation)copy;
+        var mutableCopy = this.shallowCopier.Copy(parameterTypeInformation);
+        this.ReferenceCache.Add(parameterTypeInformation, mutableCopy);
+        var method = mutableCopy.ContainingSignature as IMethodReference;
+        if (method != null)
+          mutableCopy.ContainingSignature = this.SubstituteViaDispatcher(method);
+        else
+          mutableCopy.ContainingSignature = this.Substitute((IFunctionPointerTypeReference)mutableCopy.ContainingSignature);
+        if (mutableCopy.IsModified)
+          this.SubstituteElements(mutableCopy.CustomModifiers);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+        return mutableCopy;
+      }
+
+      internal IPlatformInvokeInformation Substitute(IPlatformInvokeInformation platformInvokeInformation) {
+        if (platformInvokeInformation is Dummy) return platformInvokeInformation;
+        var mutableCopy = this.shallowCopier.Copy(platformInvokeInformation);
+        mutableCopy.ImportModule = this.Substitute(mutableCopy.ImportModule);
+        return mutableCopy;
+      }
+
+      internal IPointerTypeReference Substitute(IPointerTypeReference pointerTypeReference) {
+        if (pointerTypeReference is Dummy) return pointerTypeReference;
+        object copy;
+        if (this.ReferenceCache.TryGetValue(pointerTypeReference, out copy)) return (PointerTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(pointerTypeReference);
+        this.ReferenceCache.Add(pointerTypeReference, mutableCopy);
+        this.Substitute((TypeReference)mutableCopy);
+        mutableCopy.TargetType = this.SubstituteViaDispatcher(mutableCopy.TargetType);
+        return mutableCopy;
+      }
+
+      internal IPropertyDefinition Substitute(IPropertyDefinition propertyDefinition) {
+        if (propertyDefinition is Dummy) return propertyDefinition;
+        PropertyDefinition mutableCopy = (PropertyDefinition)this.DefinitionCache[propertyDefinition];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IResourceReference Substitute(IResourceReference resourceReference) {
+        if (resourceReference is Dummy) return Dummy.Resource;
+        var mutableCopy = this.shallowCopier.Copy(resourceReference);
+        this.SubstituteElements(mutableCopy.Attributes);
+        mutableCopy.DefiningAssembly = this.Substitute(mutableCopy.DefiningAssembly);
+        return mutableCopy;
+      }
+
+      internal IRootUnitNamespace Substitute(IRootUnitNamespace rootUnitNamespace) {
+        if (rootUnitNamespace is Dummy) return rootUnitNamespace;
+        var mutableCopy = (RootUnitNamespace)this.DefinitionCache[rootUnitNamespace];
+        this.Substitute((UnitNamespace)mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IRootUnitNamespaceReference Substitute(IRootUnitNamespaceReference rootUnitNamespaceReference, bool keepAsDefinition = true) {
+        if (rootUnitNamespaceReference is Dummy) return rootUnitNamespaceReference;
+        object copy;
+        if (keepAsDefinition && this.DefinitionCache.TryGetValue(rootUnitNamespaceReference, out copy)) return (IRootUnitNamespaceReference)copy;
+        if (this.ReferenceCache.TryGetValue(rootUnitNamespaceReference, out copy)) return (RootUnitNamespaceReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(rootUnitNamespaceReference);
+        this.ReferenceCache.Add(rootUnitNamespaceReference, mutableCopy);
+        this.Substitute((UnitNamespaceReference)mutableCopy);
+        mutableCopy.Unit = this.SubstituteViaDispatcher(mutableCopy.Unit);
+        return mutableCopy;
+      }
+
+      internal ISecurityAttribute Substitute(ISecurityAttribute securityAttribute) {
+        if (securityAttribute is Dummy) return securityAttribute;
+        var mutableCopy = this.shallowCopier.Copy(securityAttribute);
+        this.SubstituteElements(mutableCopy.Attributes);
+        return mutableCopy;
+      }
+
+      internal ISpecializedFieldReference Substitute(ISpecializedFieldReference fieldReference) {
+        if (fieldReference is Dummy) return fieldReference;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(fieldReference, out copy)) return (ISpecializedFieldReference)copy;
+        if (this.ReferenceCache.TryGetValue(fieldReference, out copy)) return (SpecializedFieldReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(fieldReference);
+        this.ReferenceCache.Add(fieldReference, mutableCopy);
+        this.Substitute((FieldReference)mutableCopy);
+        mutableCopy.UnspecializedVersion = this.Substitute(mutableCopy.UnspecializedVersion);
+        return mutableCopy;
+      }
+
+      internal ISpecializedMethodReference Substitute(ISpecializedMethodReference methodReference) {
+        if (methodReference is Dummy) return methodReference;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(methodReference, out copy)) return (ISpecializedMethodReference)copy;
+        if (this.ReferenceCache.TryGetValue(methodReference, out copy)) return (SpecializedMethodReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(methodReference);
+        this.ReferenceCache.Add(methodReference, mutableCopy);
+        this.Substitute((MethodReference)mutableCopy);
+        mutableCopy.UnspecializedVersion = this.Substitute(mutableCopy.UnspecializedVersion);
+        return mutableCopy;
+      }
+
+      internal ISpecializedNestedTypeReference Substitute(ISpecializedNestedTypeReference nestedTypeReference) {
+        if (nestedTypeReference is Dummy) return nestedTypeReference;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(nestedTypeReference, out copy)) return (ISpecializedNestedTypeReference)copy;
+        if (this.ReferenceCache.TryGetValue(nestedTypeReference, out copy)) return (SpecializedNestedTypeReference)copy;
+        var mutableCopy = this.shallowCopier.Copy(nestedTypeReference);
+        this.ReferenceCache.Add(nestedTypeReference, mutableCopy);
+        this.Substitute((NestedTypeReference)mutableCopy);
+        mutableCopy.UnspecializedVersion = this.Substitute(mutableCopy.UnspecializedVersion);
+        return mutableCopy;
+      }
+
+      internal IWin32Resource Substitute(IWin32Resource win32Resource) {
+        if (win32Resource is Dummy) return win32Resource;
+        var mutableCopy = this.shallowCopier.Copy(win32Resource);
+        return mutableCopy;
+      }
+
+      private void Substitute(AliasForType mutableCopy) {
+        mutableCopy.AliasedType = this.SubstituteViaDispatcher(mutableCopy.AliasedType);
+        this.SubstituteElements(mutableCopy.Attributes);
+        this.SubstituteElements(mutableCopy.Members);
+      }
+
+      private void Substitute(EventDefinition mutableCopy) {
+        this.Substitute((TypeDefinitionMember)mutableCopy);
+        this.SubstituteElements(mutableCopy.Accessors);
+        mutableCopy.Adder = this.SubstituteViaDispatcher(mutableCopy.Adder);
+        if (mutableCopy.Caller != null)
+          mutableCopy.Caller = this.SubstituteViaDispatcher(mutableCopy.Caller);
+        mutableCopy.Remover = this.SubstituteViaDispatcher(mutableCopy.Remover);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(FieldDefinition mutableCopy) {
+        this.Substitute((TypeDefinitionMember)mutableCopy);
+        if (!(mutableCopy.CompileTimeValue is Dummy))
+          mutableCopy.CompileTimeValue = this.Substitute(mutableCopy.CompileTimeValue);
+        if (mutableCopy.IsModified)
+          this.SubstituteElements(mutableCopy.CustomModifiers);
+        if (mutableCopy.IsMarshalledExplicitly)
+          mutableCopy.MarshallingInformation = this.Substitute(mutableCopy.MarshallingInformation);
+        mutableCopy.InternFactory = this.host.InternFactory;
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(FieldReference mutableCopy) {
+        this.SubstituteElements(mutableCopy.Attributes);
+        mutableCopy.ContainingType = this.SubstituteViaDispatcher(mutableCopy.ContainingType);
+        if (mutableCopy.IsModified)
+          this.SubstituteElements(mutableCopy.CustomModifiers);
+        mutableCopy.InternFactory = this.host.InternFactory;
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(GenericParameter mutableCopy) {
+        this.Substitute((NamedTypeDefinition)mutableCopy);
+        this.SubstituteElements(mutableCopy.Constraints);
+      }
+
+      private void Substitute(MetadataExpression mutableCopy) {
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(MethodDefinition mutableCopy) {
+        this.Substitute((TypeDefinitionMember)mutableCopy);
+        if (!mutableCopy.IsAbstract && !mutableCopy.IsExternal)
+          mutableCopy.Body = this.Substitute(mutableCopy.Body, mutableCopy);
+        if (mutableCopy.IsGeneric)
+          this.SubstituteElements(mutableCopy.GenericParameters);
+        mutableCopy.InternFactory = this.host.InternFactory;
+        this.SubstituteElements(mutableCopy.Parameters);
+        if (mutableCopy.IsPlatformInvoke)
+          mutableCopy.PlatformInvokeData = this.Substitute(mutableCopy.PlatformInvokeData);
+        this.SubstituteElements(mutableCopy.ReturnValueAttributes);
+        if (mutableCopy.ReturnValueIsModified)
+          this.SubstituteElements(mutableCopy.ReturnValueCustomModifiers);
+        if (mutableCopy.ReturnValueIsMarshalledExplicitly)
+          mutableCopy.ReturnValueMarshallingInformation = this.Substitute(mutableCopy.ReturnValueMarshallingInformation);
+        this.SubstituteElements(mutableCopy.SecurityAttributes);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(MethodReference mutableCopy) {
+        this.SubstituteElements(mutableCopy.Attributes);
+        mutableCopy.ContainingType = this.SubstituteViaDispatcher(mutableCopy.ContainingType);
+        this.SubstituteElements(mutableCopy.ExtraParameters);
+        mutableCopy.InternFactory = this.host.InternFactory;
+        this.SubstituteElements(mutableCopy.Parameters);
+        if (mutableCopy.ReturnValueIsModified)
+          this.SubstituteElements(mutableCopy.ReturnValueCustomModifiers);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(Module mutableCopy) {
+        this.SubstituteElements(mutableCopy.AssemblyReferences);
+        if (mutableCopy.ContainingAssembly != null && !(mutableCopy is Assembly)) {
+          object copy;
+          if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingAssembly, out copy))
+            mutableCopy.ContainingAssembly = (IAssembly)copy;
+        }
+        if (mutableCopy.Kind == ModuleKind.ConsoleApplication || mutableCopy.Kind == ModuleKind.WindowsApplication)
+          mutableCopy.EntryPoint = this.SubstituteViaDispatcher(mutableCopy.EntryPoint);
+        this.SubstituteElements(mutableCopy.ModuleAttributes);
+        this.SubstituteElements(mutableCopy.ModuleReferences);
+        this.SubstituteElements(mutableCopy.Win32Resources);
+        mutableCopy.PlatformType = this.host.PlatformType;
+        mutableCopy.UnitNamespaceRoot = this.Substitute(mutableCopy.UnitNamespaceRoot);
+        var allTypes = mutableCopy.AllTypes;
+        for (int i = 0, n = allTypes.Count; i < n; i++) {
+          var type = allTypes[i];
+          object copy;
+          if (this.DefinitionCache.TryGetValue(type, out copy))
+            allTypes[i] = (INamedTypeDefinition)copy;
+          else {
+            //Dealing with a type that cannot be reached via UnitNamespaceRoot. Typically this is the <Module> type.
+            var mutableType = this.shallowCopier.Copy(type);
+            this.Substitute(mutableType);
+            allTypes[i] = mutableType;
+          }
+        }
+
+      }
+
+      private void Substitute(NamespaceTypeDefinition mutableCopy) {
+        this.Substitute((NamedTypeDefinition)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingUnitNamespace, out copy))
+          mutableCopy.ContainingUnitNamespace = (IUnitNamespace)copy;
+      }
+
+      private void Substitute(NamespaceTypeReference namespaceTypeReference) {
+        this.Substitute((TypeReference)namespaceTypeReference);
+        namespaceTypeReference.ContainingUnitNamespace = this.SubstituteViaDispatcher(namespaceTypeReference.ContainingUnitNamespace);
+      }
+
+      private void Substitute(NestedTypeDefinition mutableCopy) {
+        this.Substitute((NamedTypeDefinition)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingTypeDefinition, out copy))
+          mutableCopy.ContainingTypeDefinition = (ITypeDefinition)copy;
+      }
+
+      private void Substitute(NestedTypeReference mutableCopy) {
+        this.Substitute((TypeReference)mutableCopy);
+        mutableCopy.ContainingType = this.SubstituteViaDispatcher(mutableCopy.ContainingType);
+      }
+
+      private void Substitute(PropertyDefinition mutableCopy) {
+        this.Substitute((TypeDefinitionMember)mutableCopy);
+        this.SubstituteElements(mutableCopy.Accessors);
+        if (mutableCopy.HasDefaultValue)
+          mutableCopy.DefaultValue = this.Substitute(mutableCopy.DefaultValue);
+        if (mutableCopy.Getter != null)
+          mutableCopy.Getter = this.SubstituteViaDispatcher(mutableCopy.Getter);
+        this.SubstituteElements(mutableCopy.Parameters);
+        this.SubstituteElements(mutableCopy.ReturnValueAttributes);
+        if (mutableCopy.ReturnValueIsModified)
+          this.SubstituteElements(mutableCopy.ReturnValueCustomModifiers);
+        if (mutableCopy.Setter != null)
+          mutableCopy.Setter = this.Substitute(mutableCopy.Setter);
+        mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+      }
+
+      private void Substitute(NamedTypeDefinition mutableCopy) {
+        this.SubstituteElements(mutableCopy.Attributes);
+        this.SubstituteElements(mutableCopy.BaseClasses);
+        this.SubstituteElements(mutableCopy.Events);
+        this.SubstituteElements(mutableCopy.ExplicitImplementationOverrides);
+        this.SubstituteElements(mutableCopy.Fields);
+        if (mutableCopy.IsGeneric)
+          this.SubstituteElements(mutableCopy.GenericParameters);
+        this.SubstituteElements(mutableCopy.Interfaces);
+        mutableCopy.InternFactory = this.host.InternFactory;
+        this.SubstituteElements(mutableCopy.Methods);
+        this.SubstituteElements(mutableCopy.NestedTypes);
+        mutableCopy.PlatformType = this.host.PlatformType;
+        this.SubstituteElements(mutableCopy.Properties);
+        if (mutableCopy.HasDeclarativeSecurity)
+          this.SubstituteElements(mutableCopy.SecurityAttributes);
+        if (mutableCopy.IsEnum)
+          mutableCopy.UnderlyingType = this.SubstituteViaDispatcher(mutableCopy.UnderlyingType);
+      }
+
+      private void Substitute(TypeDefinitionMember mutableCopy) {
+        this.SubstituteElements(mutableCopy.Attributes);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingTypeDefinition, out copy))
+          mutableCopy.ContainingTypeDefinition = (ITypeDefinition)copy;
+      }
+
+      private void Substitute(TypeReference mutableCopy) {
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.AliasForType, out copy))
+          mutableCopy.AliasForType = (IAliasForType)copy;
+        this.SubstituteElements(mutableCopy.Attributes);
+        mutableCopy.InternFactory = this.host.InternFactory;
+        mutableCopy.PlatformType = this.host.PlatformType;
+      }
+
+      private void Substitute(UnitNamespace mutableCopy) {
+        this.SubstituteElements(mutableCopy.Attributes);
+        this.SubstituteElements(mutableCopy.Members);
+      }
+
+      private void Substitute(UnitNamespaceReference mutableCopy) {
+        this.SubstituteElements(mutableCopy.Attributes);
+      }
+
+      private void SubstituteElements(List<IAliasForType> aliasesForTypes) {
+        if (aliasesForTypes == null) return;
+        for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
+          aliasesForTypes[i] = this.SubstituteViaDispatcher(aliasesForTypes[i]);
+      }
+
+      private void SubstituteElements(List<IAliasMember> aliasesMembers) {
+        if (aliasesMembers == null) return;
+        for (int i = 0, n = aliasesMembers.Count; i < n; i++)
+          aliasesMembers[i] = (IAliasMember)this.Substitute((INestedAliasForType)aliasesMembers[i]);
+      }
+
+      private void SubstituteElements(List<IAssemblyReference> assemblyReferences) {
+        if (assemblyReferences == null) return;
+        for (int i = 0, n = assemblyReferences.Count; i < n; i++)
+          assemblyReferences[i] = this.Substitute(assemblyReferences[i]);
+      }
+
+      private void SubstituteElements(List<ICustomAttribute> customAttributes) {
+        if (customAttributes == null) return;
+        for (int i = 0, n = customAttributes.Count; i < n; i++)
+          customAttributes[i] = this.Substitute(customAttributes[i]);
+      }
+
+      private void SubstituteElements(List<ICustomModifier> customModifiers) {
+        if (customModifiers == null) return;
+        for (int i = 0, n = customModifiers.Count; i < n; i++)
+          customModifiers[i] = this.Substitute(customModifiers[i]);
+      }
+
+      private void SubstituteElements(List<IEventDefinition> events) {
+        if (events == null) return;
+        for (int i = 0, n = events.Count; i < n; i++)
+          events[i] = this.Substitute(events[i]);
+      }
+
+      private void SubstituteElements(List<IFieldDefinition> fields) {
+        if (fields == null) return;
+        for (int i = 0, n = fields.Count; i < n; i++)
+          fields[i] = this.Substitute(fields[i]);
+      }
+
+      private void SubstituteElements(List<IFileReference> fileReferences) {
+        if (fileReferences == null) return;
+        for (int i = 0, n = fileReferences.Count; i < n; i++)
+          fileReferences[i] = this.Substitute(fileReferences[i]);
+      }
+
+      private void SubstituteElements(List<IGenericMethodParameter> genericParameters) {
+        if (genericParameters == null) return;
+        for (int i = 0, n = genericParameters.Count; i < n; i++)
+          genericParameters[i] = this.Substitute(genericParameters[i]);
+      }
+
+      private void SubstituteElements(List<IGenericTypeParameter> genericParameters) {
+        if (genericParameters == null) return;
+        for (int i = 0, n = genericParameters.Count; i < n; i++)
+          genericParameters[i] = this.Substitute(genericParameters[i]);
+      }
+
+      private void SubstituteElements(List<ILocalDefinition> localDefinitions) {
+        if (localDefinitions == null) return;
+        for (int i = 0, n = localDefinitions.Count; i < n; i++)
+          localDefinitions[i] = this.Substitute(localDefinitions[i]);
+      }
+
+      private void SubstituteElements(List<IMetadataExpression> expressions) {
+        if (expressions == null) return;
+        for (int i = 0, n = expressions.Count; i < n; i++)
+          expressions[i] = this.SubstituteViaDispatcher(expressions[i]);
+      }
+
+      private void SubstituteElements(List<IMetadataNamedArgument> namedArguments) {
+        if (namedArguments == null) return;
+        for (int i = 0, n = namedArguments.Count; i < n; i++)
+          namedArguments[i] = this.Substitute(namedArguments[i]);
+      }
+
+      private void SubstituteElements(List<IMethodDefinition> methods) {
+        if (methods == null) return;
+        for (int i = 0, n = methods.Count; i < n; i++)
+          methods[i] = this.Substitute(methods[i]);
+      }
+
+      private void SubstituteElements(List<IMethodImplementation> methodImplementations) {
+        if (methodImplementations == null) return;
+        for (int i = 0, n = methodImplementations.Count; i < n; i++)
+          methodImplementations[i] = this.Substitute(methodImplementations[i]);
+      }
+
+      private void SubstituteElements(List<IMethodReference> methodReferences) {
+        if (methodReferences == null) return;
+        for (int i = 0, n = methodReferences.Count; i < n; i++)
+          methodReferences[i] = this.Substitute(methodReferences[i]);
+      }
+
+      private void SubstituteElements(List<IModule> modules) {
+        if (modules == null) return;
+        for (int i = 0, n = modules.Count; i < n; i++)
+          modules[i] = this.Substitute(modules[i]);
+      }
+
+      private void SubstituteElements(List<IModuleReference> moduleReferences) {
+        if (moduleReferences == null) return;
+        for (int i = 0, n = moduleReferences.Count; i < n; i++)
+          moduleReferences[i] = this.Substitute(moduleReferences[i]);
+      }
+
+      private void SubstituteElements(List<INamespaceMember> namespaceMembers) {
+        if (namespaceMembers == null) return;
+        for (int i = 0, n = namespaceMembers.Count; i < n; i++)
+          namespaceMembers[i] = this.SubstituteViaDispatcher(namespaceMembers[i]);
+      }
+
+      private void SubstituteElements(List<INestedTypeDefinition> nestedTypes) {
+        if (nestedTypes == null) return;
+        for (int i = 0, n = nestedTypes.Count; i < n; i++)
+          nestedTypes[i] = this.Substitute(nestedTypes[i]);
+      }
+
+      private void SubstituteElements(List<IOperation> operations) {
+        if (operations == null) return;
+        for (int i = 0, n = operations.Count; i < n; i++)
+          operations[i] = this.Substitute(operations[i]);
+      }
+
+      private void SubstituteElements(List<IOperationExceptionInformation> operationExceptionInformations) {
+        if (operationExceptionInformations == null) return;
+        for (int i = 0, n = operationExceptionInformations.Count; i < n; i++)
+          operationExceptionInformations[i] = this.Substitute(operationExceptionInformations[i]);
+      }
+
+      private void SubstituteElements(List<IParameterDefinition> parameters) {
+        if (parameters == null) return;
+        for (int i = 0, n = parameters.Count; i < n; i++)
+          parameters[i] = this.Substitute(parameters[i]);
+      }
+
+      private void SubstituteElements(List<IParameterTypeInformation> parameterTypeInformations) {
+        if (parameterTypeInformations == null) return;
+        for (int i = 0, n = parameterTypeInformations.Count; i < n; i++)
+          parameterTypeInformations[i] = this.Substitute(parameterTypeInformations[i]);
+      }
+
+      private void SubstituteElements(List<IPropertyDefinition> properties) {
+        if (properties == null) return;
+        for (int i = 0, n = properties.Count; i < n; i++)
+          properties[i] = this.Substitute(properties[i]);
+      }
+
+      private void SubstituteElements(List<IResourceReference> resourceReferences) {
+        if (resourceReferences == null) return;
+        for (int i = 0, n = resourceReferences.Count; i < n; i++)
+          resourceReferences[i] = this.Substitute(resourceReferences[i]);
+      }
+
+      private void SubstituteElements(List<ISecurityAttribute> securityAttributes) {
+        if (securityAttributes == null) return;
+        for (int i = 0, n = securityAttributes.Count; i < n; i++)
+          securityAttributes[i] = this.Substitute(securityAttributes[i]);
+      }
+
+      private void SubstituteElements(List<ITypeDefinitionMember> typeMembers) {
+        if (typeMembers == null) return;
+        for (int i = 0, n = typeMembers.Count; i < n; i++)
+          typeMembers[i] = this.SubstituteViaDispatcher(typeMembers[i]);
+      }
+
+      private void SubstituteElements(List<ITypeReference> typeReferences) {
+        if (typeReferences == null) return;
+        for (int i = 0, n = typeReferences.Count; i < n; i++)
+          typeReferences[i] = this.SubstituteViaDispatcher(typeReferences[i]);
+      }
+
+      private void SubstituteElements(List<IWin32Resource> win32Resources) {
+        if (win32Resources == null) return;
+        for (int i = 0, n = win32Resources.Count; i < n; i++)
+          win32Resources[i] = this.Substitute(win32Resources[i]);
+      }
+
+      private ILocalDefinition SubstituteReference(ILocalDefinition localDefinition) {
+        if (localDefinition is Dummy) return localDefinition;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(localDefinition, out copy)) return (ILocalDefinition)copy;
+        //If we get here, the local is outside of the cone and we just use it as is since locals do not have independent reference objects. 
+        return localDefinition;
+      }
+
+      private INamespaceAliasForType SubstituteReference(INamespaceAliasForType namespaceAliasForType) {
+        if (namespaceAliasForType is Dummy) return namespaceAliasForType;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(namespaceAliasForType, out copy)) return (NamespaceAliasForType)copy;
+        //If we get here, the alias is outside of the cone and we just use it as is since aliases do not have independent reference objects. 
+        return namespaceAliasForType;
+      }
+
+      private INestedAliasForType SubstituteReference(INestedAliasForType nestedAliasForType) {
+        if (nestedAliasForType is Dummy) return nestedAliasForType;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(nestedAliasForType, out copy)) return (NestedAliasForType)copy;
+        //If we get here, the alias is outside of the cone and we just use it as is since aliases do not have independent reference objects. 
+        return nestedAliasForType;
+      }
+
+      internal IParameterDefinition SubstituteReference(IParameterDefinition parameterDefinition) {
+        if (parameterDefinition is Dummy) return parameterDefinition;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(parameterDefinition, out copy)) return (IParameterDefinition)copy;
+        //If we get here, the parameter is outside of the cone and we just use it as is since parameters do not have independent reference objects. 
+        return parameterDefinition;
+      }
+
+      internal IPropertyDefinition SubstituteReference(IPropertyDefinition propertyDefinition) {
+        if (propertyDefinition is Dummy) return propertyDefinition;
+        object copy;
+        if (this.DefinitionCache.TryGetValue(propertyDefinition, out copy)) return (IPropertyDefinition)copy;
+        //If we get here, the property is outside of the cone and we just use it as is since properties do not have independent reference objects. 
+        return propertyDefinition;
+      }
+
+      private IAliasForType SubstituteViaDispatcher(IAliasForType aliasForType) {
+        if (aliasForType is Dummy) return aliasForType;
+        aliasForType.Dispatch(this.Dispatcher);
+        return (IAliasForType)this.Dispatcher.result;
+      }
+
+      private IFieldReference SubstituteViaDispatcher(IFieldReference fieldReference) {
+        if (fieldReference is Dummy) return fieldReference;
+        fieldReference.DispatchAsReference(this.Dispatcher);
+        return (IFieldReference)this.Dispatcher.result;
+      }
+
+      private IMetadataExpression SubstituteViaDispatcher(IMetadataExpression metadataExpression) {
+        if (metadataExpression is Dummy) return metadataExpression;
+        metadataExpression.Dispatch(this.Dispatcher);
+        return (IMetadataExpression)this.Dispatcher.result;
+      }
+
+      private IMethodReference SubstituteViaDispatcher(IMethodReference methodReference) {
+        if (methodReference is Dummy) return methodReference;
+        methodReference.DispatchAsReference(this.Dispatcher);
+        return (IMethodReference)this.Dispatcher.result;
+      }
+
+      private INamedTypeDefinition SubstituteViaDispatcher(INamedTypeDefinition typeDefinition) {
+        if (typeDefinition is Dummy) return typeDefinition;
+        typeDefinition.Dispatch(this.Dispatcher);
+        return (INamedTypeDefinition)this.Dispatcher.result;
+      }
+
+      private INamedTypeReference SubstituteViaDispatcher(INamedTypeReference namedTypeReference) {
+        if (namedTypeReference is Dummy) return namedTypeReference;
+        namedTypeReference.DispatchAsReference(this.Dispatcher);
+        return (INamedTypeReference)this.Dispatcher.result;
+      }
+
+      private INamespaceMember SubstituteViaDispatcher(INamespaceMember namespaceMember) {
+        if (namespaceMember is Dummy) return namespaceMember;
+        namespaceMember.Dispatch(this.Dispatcher);
+        return (INamespaceMember)this.Dispatcher.result;
+      }
+
+      private ITypeDefinitionMember SubstituteViaDispatcher(ITypeDefinitionMember typeDefinitionMember) {
+        if (typeDefinitionMember is Dummy) return typeDefinitionMember;
+        typeDefinitionMember.Dispatch(this.Dispatcher);
+        return (ITypeDefinitionMember)this.Dispatcher.result;
+      }
+
+      private ITypeReference SubstituteViaDispatcher(ITypeReference typeReference) {
+        if (typeReference is Dummy) return typeReference;
+        typeReference.DispatchAsReference(this.Dispatcher);
+        return (ITypeReference)this.Dispatcher.result;
+      }
+
+      private IUnitNamespaceReference SubstituteViaDispatcher(IUnitNamespaceReference unitNamespaceReference) {
+        if (unitNamespaceReference is Dummy) return unitNamespaceReference;
+        unitNamespaceReference.DispatchAsReference(this.Dispatcher);
+        return (IUnitNamespaceReference)this.Dispatcher.result;
+      }
+
+      private IUnitReference SubstituteViaDispatcher(IUnitReference unitReference) {
+        if (unitReference is Dummy) return unitReference;
+        unitReference.DispatchAsReference(this.Dispatcher);
+        return (IUnitReference)this.Dispatcher.result;
+      }
+
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified alias for type.
+    /// </summary>
+    public AliasForType Copy(IAliasForType aliasForType) {
+      Contract.Requires(!(aliasForType is Dummy));
+      aliasForType.Dispatch(this.Dispatcher);
+      return (AliasForType)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given array type reference.
+    /// </summary>
+    public ArrayTypeReference Copy(IArrayTypeReference arrayTypeReference) {
+      Contract.Requires(!(arrayTypeReference is Dummy));
+      return (ArrayTypeReference)this.SubstituteCopiesForOriginals.Substitute(arrayTypeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given assembly.
+    /// </summary>
+    public Assembly Copy(IAssembly assembly) {
+      Contract.Requires(!(assembly is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(assembly);
+      foreach (var type in assembly.GetAllTypes())
+        this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(type);
+      return (Assembly)this.SubstituteCopiesForOriginals.Substitute(assembly);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given assembly reference.
+    /// </summary>
+    public AssemblyReference Copy(IAssemblyReference assemblyReference) {
+      Contract.Requires(!(assemblyReference is Dummy));
+      return (AssemblyReference)this.SubstituteCopiesForOriginals.Substitute(assemblyReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given custom attribute.
+    /// </summary>
+    public CustomAttribute Copy(ICustomAttribute customAttribute) {
+      Contract.Requires(!(customAttribute is Dummy));
+      return (CustomAttribute)this.SubstituteCopiesForOriginals.Substitute(customAttribute);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given custom modifier.
+    /// </summary>
+    public CustomModifier Copy(ICustomModifier customModifier) {
+      Contract.Requires(!(customModifier is Dummy));
+      return (CustomModifier)this.SubstituteCopiesForOriginals.Substitute(customModifier);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given event definition.
+    /// </summary>
+    public EventDefinition Copy(IEventDefinition eventDefinition) {
+      Contract.Requires(!(eventDefinition is Dummy || eventDefinition is ISpecializedEventDefinition));
+      eventDefinition.Dispatch(this.Dispatcher);
+      return (EventDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method body.
+    /// </summary>
+    protected virtual IMethodBody CopyMethodBody(IMethodBody methodBody, IMethodDefinition method) {
+      Contract.Requires(!(methodBody is Dummy));
+      return this.SubstituteCopiesForOriginals.Substitute(this.SubstituteCopiesForOriginals.shallowCopier.Copy(methodBody));
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given field definition.
+    /// </summary>
+    public FieldDefinition Copy(IFieldDefinition fieldDefinition) {
+      Contract.Requires(!(fieldDefinition is Dummy || fieldDefinition is ISpecializedFieldDefinition));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(fieldDefinition);
+      return (FieldDefinition)this.SubstituteCopiesForOriginals.Substitute(fieldDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given field reference.
+    /// </summary>
+    public FieldReference Copy(IFieldReference fieldReference) {
+      Contract.Requires(!(fieldReference is Dummy));
+      fieldReference.DispatchAsReference(this.Dispatcher);
+      return (FieldReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given field reference.
+    /// </summary>
+    private FieldReference CopyUnspecialized(IFieldReference fieldReference) {
+      return (FieldReference)this.SubstituteCopiesForOriginals.Substitute(fieldReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given file reference.
+    /// </summary>
+    public FileReference Copy(IFileReference fileReference) {
+      Contract.Requires(!(fileReference is Dummy));
+      return (FileReference)this.SubstituteCopiesForOriginals.Substitute(fileReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given function pointer type reference.
+    /// </summary>
+    public FunctionPointerTypeReference Copy(IFunctionPointerTypeReference functionPointerTypeReference) {
+      Contract.Requires(!(functionPointerTypeReference is Dummy));
+      return (FunctionPointerTypeReference)this.SubstituteCopiesForOriginals.Substitute(functionPointerTypeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given generic method instance reference.
+    /// </summary>
+    public GenericMethodInstanceReference Copy(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      Contract.Requires(!(genericMethodInstanceReference is Dummy));
+      return (GenericMethodInstanceReference)this.SubstituteCopiesForOriginals.Substitute(genericMethodInstanceReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given generic method parameter reference.
+    /// </summary>
+    public GenericMethodParameter Copy(IGenericMethodParameter genericMethodParameter) {
+      Contract.Requires(!(genericMethodParameter is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(genericMethodParameter);
+      return (GenericMethodParameter)this.SubstituteCopiesForOriginals.Substitute(genericMethodParameter);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given generic method parameter reference.
+    /// </summary>
+    public GenericMethodParameterReference Copy(IGenericMethodParameterReference genericMethodParameterReference) {
+      Contract.Requires(!(genericMethodParameterReference is Dummy));
+      return (GenericMethodParameterReference)this.SubstituteCopiesForOriginals.Substitute(genericMethodParameterReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given generic type parameter.
+    /// </summary>
+    public GenericTypeParameter Copy(IGenericTypeParameter genericTypeParameter) {
+      Contract.Requires(!(genericTypeParameter is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(genericTypeParameter);
+      return (GenericTypeParameter)this.SubstituteCopiesForOriginals.Substitute(genericTypeParameter);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given generic type instance reference.
+    /// </summary>
+    public GenericTypeInstanceReference Copy(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      Contract.Requires(!(genericTypeInstanceReference is Dummy));
+      return (GenericTypeInstanceReference)this.SubstituteCopiesForOriginals.Substitute(genericTypeInstanceReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given generic type parameter reference.
+    /// </summary>
+    public GenericTypeParameterReference Copy(IGenericTypeParameterReference genericTypeParameterReference) {
+      Contract.Requires(!(genericTypeParameterReference is Dummy));
+      return (GenericTypeParameterReference)this.SubstituteCopiesForOriginals.Substitute(genericTypeParameterReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given global field definition.
+    /// </summary>
+    public GlobalFieldDefinition Copy(IGlobalFieldDefinition globalFieldDefinition) {
+      Contract.Requires(!(globalFieldDefinition is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(globalFieldDefinition);
+      return (GlobalFieldDefinition)this.SubstituteCopiesForOriginals.Substitute(globalFieldDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given global method definition.
+    /// </summary>
+    public GlobalMethodDefinition Copy(IGlobalMethodDefinition globalMethodDefinition) {
+      Contract.Requires(!(globalMethodDefinition is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(globalMethodDefinition);
+      return (GlobalMethodDefinition)this.SubstituteCopiesForOriginals.Substitute(globalMethodDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified local definition.
+    /// </summary>
+    public LocalDefinition Copy(ILocalDefinition localDefinition) {
+      Contract.Requires(!(localDefinition is Dummy));
+      return (LocalDefinition)this.SubstituteCopiesForOriginals.Substitute(localDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given managed pointer type reference.
+    /// </summary>
+    public ManagedPointerTypeReference Copy(IManagedPointerTypeReference managedPointerTypeReference) {
+      Contract.Requires(!(managedPointerTypeReference is Dummy));
+      return (ManagedPointerTypeReference)this.SubstituteCopiesForOriginals.Substitute(managedPointerTypeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given marshalling information.
+    /// </summary>
+    public MarshallingInformation Copy(IMarshallingInformation marshallingInformation) {
+      Contract.Requires(!(marshallingInformation is Dummy));
+      return (MarshallingInformation)this.SubstituteCopiesForOriginals.Substitute(marshallingInformation);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given metadata constant.
+    /// </summary>
+    public MetadataConstant Copy(IMetadataConstant constant) {
+      Contract.Requires(!(constant is Dummy));
+      return (MetadataConstant)this.SubstituteCopiesForOriginals.Substitute(constant);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given metadata array creation expression.
+    /// </summary>
+    public MetadataCreateArray Copy(IMetadataCreateArray createArray) {
+      Contract.Requires(!(createArray is Dummy));
+      return (MetadataCreateArray)this.SubstituteCopiesForOriginals.Substitute(createArray);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given metadata expression.
+    /// </summary>
+    public MetadataExpression Copy(IMetadataExpression expression) {
+      Contract.Requires(!(expression is Dummy));
+      expression.Dispatch(this.Dispatcher);
+      return (MetadataExpression)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given metadata named argument expression.
+    /// </summary>
+    public MetadataNamedArgument Copy(IMetadataNamedArgument namedArgument) {
+      Contract.Requires(!(namedArgument is Dummy));
+      return (MetadataNamedArgument)this.SubstituteCopiesForOriginals.Substitute(namedArgument);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given metadata typeof expression.
+    /// </summary>
+    public MetadataTypeOf Copy(IMetadataTypeOf typeOf) {
+      Contract.Requires(!(typeOf is Dummy));
+      return (MetadataTypeOf)this.SubstituteCopiesForOriginals.Substitute(typeOf);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method body.
+    /// </summary>
+    public MethodBody Copy(IMethodBody methodBody) {
+      Contract.Requires(!(methodBody is Dummy));
+      return (MethodBody)this.SubstituteCopiesForOriginals.Substitute(methodBody, methodBody.MethodDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method definition.
+    /// </summary>
+    public MethodDefinition Copy(IMethodDefinition method) {
+      Contract.Requires(!(method is Dummy || method is SpecializedMethodDefinition));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(method);
+      return (MethodDefinition)this.SubstituteCopiesForOriginals.Substitute(method);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method implementation.
+    /// </summary>
+    public MethodImplementation Copy(IMethodImplementation methodImplementation) {
+      Contract.Requires(!(methodImplementation is Dummy));
+      return (MethodImplementation)this.SubstituteCopiesForOriginals.Substitute(methodImplementation);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method reference.
+    /// </summary>
+    public MethodReference Copy(IMethodReference methodReference) {
+      Contract.Requires(!(methodReference is Dummy));
+      methodReference.DispatchAsReference(this.Dispatcher);
+      return (MethodReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method reference.
+    /// </summary>
+    private MethodReference CopyUnspecialized(IMethodReference methodReference) {
+      return (MethodReference)this.SubstituteCopiesForOriginals.Substitute(methodReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given modified type reference.
+    /// </summary>
+    public ModifiedTypeReference Copy(IModifiedTypeReference modifiedTypeReference) {
+      Contract.Requires(!(modifiedTypeReference is Dummy));
+      return (ModifiedTypeReference)this.SubstituteCopiesForOriginals.Substitute(modifiedTypeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given module.
+    /// </summary>
+    public Module Copy(IModule module) {
+      Contract.Requires(!(module is Dummy));
+      var assembly = module as IAssembly;
+      if (assembly != null) return this.Copy(assembly);
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(module);
+      return (Module)this.SubstituteCopiesForOriginals.Substitute(module);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given module reference.
+    /// </summary>
+    public ModuleReference Copy(IModuleReference moduleReference) {
+      Contract.Requires(!(moduleReference is Dummy));
+      var assemblyReference = moduleReference as IAssemblyReference;
+      if (assemblyReference != null) return this.Copy(assemblyReference);
+      return (ModuleReference)this.SubstituteCopiesForOriginals.Substitute(moduleReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified named type definition.
+    /// </summary>
+    public NamedTypeDefinition Copy(INamedTypeDefinition namedTypeDefinition) {
+      Contract.Requires(!(namedTypeDefinition is Dummy));
+      namedTypeDefinition.Dispatch(this.Dispatcher);
+      return (NamedTypeDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given alias for a namespace type definition.
+    /// </summary>
+    public NamespaceAliasForType Copy(INamespaceAliasForType namespaceAliasForType) {
+      Contract.Requires(!(namespaceAliasForType is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(namespaceAliasForType);
+      return (NamespaceAliasForType)this.SubstituteCopiesForOriginals.Substitute(namespaceAliasForType);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given namespace type definition.
+    /// </summary>
+    public NamespaceTypeDefinition Copy(INamespaceTypeDefinition namespaceTypeDefinition) {
+      Contract.Requires(!(namespaceTypeDefinition is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(namespaceTypeDefinition);
+      return (NamespaceTypeDefinition)this.SubstituteCopiesForOriginals.Substitute(namespaceTypeDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given namespace type reference.
+    /// </summary>
+    public NamespaceTypeReference Copy(INamespaceTypeReference namespaceTypeReference) {
+      Contract.Requires(!(namespaceTypeReference is Dummy));
+      return (NamespaceTypeReference)this.SubstituteCopiesForOriginals.Substitute(namespaceTypeReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given nested type alias.
+    /// </summary>
+    public NestedAliasForType Copy(INestedAliasForType nestedAliasForType) {
+      Contract.Requires(!(nestedAliasForType is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(nestedAliasForType);
+      return (NestedAliasForType)this.SubstituteCopiesForOriginals.Substitute(nestedAliasForType);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given nested type definition.
+    /// </summary>
+    public NestedTypeDefinition Copy(INestedTypeDefinition nestedTypeDefinition) {
+      Contract.Requires(!(nestedTypeDefinition is Dummy || nestedTypeDefinition is ISpecializedNestedTypeDefinition));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(nestedTypeDefinition);
+      return (NestedTypeDefinition)this.SubstituteCopiesForOriginals.Substitute(nestedTypeDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given nested type reference.
+    /// </summary>
+    public NestedTypeReference Copy(INestedTypeReference nestedTypeReference) {
+      Contract.Requires(!(nestedTypeReference is Dummy));
+      nestedTypeReference.DispatchAsReference(this.Dispatcher);
+      return (NestedTypeReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given nested type reference.
+    /// </summary>
+    private NestedTypeReference CopyUnspecialized(INestedTypeReference nestedTypeReference) {
+      return (NestedTypeReference)this.SubstituteCopiesForOriginals.Substitute(nestedTypeReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given nested unit namespace.
+    /// </summary>
+    public NestedUnitNamespace Copy(INestedUnitNamespace nestedUnitNamespace) {
+      Contract.Requires(!(nestedUnitNamespace is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(nestedUnitNamespace);
+      return (NestedUnitNamespace)this.SubstituteCopiesForOriginals.Substitute(nestedUnitNamespace);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given nested unit namespace reference.
+    /// </summary>
+    public NestedUnitNamespaceReference Copy(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      Contract.Requires(!(nestedUnitNamespaceReference is Dummy));
+      return (NestedUnitNamespaceReference)this.SubstituteCopiesForOriginals.Substitute(nestedUnitNamespaceReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified operation.
+    /// </summary>
+    public Operation Copy(IOperation operation) {
+      Contract.Requires(!(operation is Dummy));
+      return (Operation)this.SubstituteCopiesForOriginals.Substitute(operation);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified operation exception information.
+    /// </summary>
+    public OperationExceptionInformation Copy(IOperationExceptionInformation operationExceptionInformation) {
+      Contract.Requires(!(operationExceptionInformation is Dummy));
+      return (OperationExceptionInformation)this.SubstituteCopiesForOriginals.Substitute(operationExceptionInformation);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given parameter definition.
+    /// </summary>
+    public ParameterDefinition Copy(IParameterDefinition parameterDefinition) {
+      Contract.Requires(!(parameterDefinition is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(parameterDefinition);
+      return (ParameterDefinition)this.SubstituteCopiesForOriginals.Substitute(parameterDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given parameter type information.
+    /// </summary>
+    public ParameterTypeInformation Copy(IParameterTypeInformation parameterTypeInformation) {
+      Contract.Requires(!(parameterTypeInformation is Dummy));
+      return (ParameterTypeInformation)this.SubstituteCopiesForOriginals.Substitute(parameterTypeInformation, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified platform invoke information.
+    /// </summary>
+    public PlatformInvokeInformation Copy(IPlatformInvokeInformation platformInvokeInformation) {
+      Contract.Requires(!(platformInvokeInformation is Dummy));
+      return (PlatformInvokeInformation)this.SubstituteCopiesForOriginals.Substitute(platformInvokeInformation);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given pointer type reference.
+    /// </summary>
+    public PointerTypeReference Copy(IPointerTypeReference pointerTypeReference) {
+      Contract.Requires(!(pointerTypeReference is Dummy));
+      return (PointerTypeReference)this.SubstituteCopiesForOriginals.Substitute(pointerTypeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given property definition.
+    /// </summary>
+    public PropertyDefinition Copy(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(!(propertyDefinition is Dummy || propertyDefinition is ISpecializedPropertyDefinition));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(propertyDefinition);
+      return (PropertyDefinition)this.SubstituteCopiesForOriginals.Substitute(propertyDefinition);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given reference to a manifest resource.
+    /// </summary>
+    public ResourceReference Copy(IResourceReference resourceReference) {
+      Contract.Requires(!(resourceReference is Dummy));
+      return (ResourceReference)this.SubstituteCopiesForOriginals.Substitute(resourceReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given root unit namespace.
+    /// </summary>
+    public RootUnitNamespace Copy(IRootUnitNamespace rootUnitNamespace) {
+      Contract.Requires(!(rootUnitNamespace is Dummy));
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(rootUnitNamespace);
+      return (RootUnitNamespace)this.SubstituteCopiesForOriginals.Substitute(rootUnitNamespace);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given root unit namespace.
+    /// </summary>
+    public RootUnitNamespaceReference Copy(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      Contract.Requires(!(rootUnitNamespaceReference is Dummy));
+      return (RootUnitNamespaceReference)this.SubstituteCopiesForOriginals.Substitute(rootUnitNamespaceReference, keepAsDefinition: false);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given security attribute.
+    /// </summary>
+    public SecurityAttribute Copy(ISecurityAttribute securityAttribute) {
+      Contract.Requires(!(securityAttribute is Dummy));
+      return (SecurityAttribute)this.SubstituteCopiesForOriginals.Substitute(securityAttribute);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given specialized field reference.
+    /// </summary>
+    public SpecializedFieldReference Copy(ISpecializedFieldReference specializedFieldReference) {
+      Contract.Requires(!(specializedFieldReference is Dummy));
+      return (SpecializedFieldReference)this.SubstituteCopiesForOriginals.Substitute(specializedFieldReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given specialized method reference.
+    /// </summary>
+    public SpecializedMethodReference Copy(ISpecializedMethodReference specializedMethodReference) {
+      Contract.Requires(!(specializedMethodReference is Dummy));
+      return (SpecializedMethodReference)this.SubstituteCopiesForOriginals.Substitute(specializedMethodReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given specialized nested type reference.
+    /// </summary>
+    public SpecializedNestedTypeReference Copy(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      Contract.Requires(!(specializedNestedTypeReference is Dummy));
+      return (SpecializedNestedTypeReference)this.SubstituteCopiesForOriginals.Substitute(specializedNestedTypeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified type definition.
+    /// </summary>
+    public ITypeDefinition Copy(ITypeDefinition typeDefinition) {
+      Contract.Requires(!(typeDefinition is Dummy));
+      typeDefinition.Dispatch(this.Dispatcher);
+      return (ITypeDefinition)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified type member.
+    /// </summary>
+    public TypeDefinitionMember Copy(ITypeDefinitionMember typeMember) {
+      Contract.Requires(!(typeMember is Dummy));
+      typeMember.Dispatch(this.Dispatcher);
+      return (TypeDefinitionMember)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified type reference.
+    /// </summary>
+    public TypeReference Copy(ITypeReference typeReference) {
+      Contract.Requires(!(typeReference is Dummy));
+      typeReference.DispatchAsReference(this.Dispatcher);
+      return (TypeReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified unit namespace.
+    /// </summary>
+    public UnitNamespace Copy(IUnitNamespace unitNamespace) {
+      Contract.Requires(!(unitNamespace is Dummy));
+      unitNamespace.Dispatch(this.Dispatcher);
+      return (UnitNamespace)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the specified unit namespace.
+    /// </summary>
+    public UnitNamespaceReference Copy(IUnitNamespaceReference unitNamespace) {
+      Contract.Requires(!(unitNamespace is Dummy));
+      unitNamespace.DispatchAsReference(this.Dispatcher);
+      return (UnitNamespaceReference)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given Win32 resource.
+    /// </summary>
+    public Win32Resource Copy(IWin32Resource win32Resource) {
+      Contract.Requires(!(win32Resource is Dummy));
+      return (Win32Resource)this.SubstituteCopiesForOriginals.Substitute(win32Resource);
+    }
+
+    /// <summary>
+    /// Replaces each element of the given list with a deep copy of itself.
+    /// </summary>
+    /// <param name="definitions"></param>
+    public void Copy(List<IDefinition> definitions) {
+      Contract.Requires(definitions != null);
+      var n = definitions.Count;
+      for (int i = 0; i < n; i++)
+        this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(definitions[i]);
+      for (int i = 0; i < n; i++)
+        definitions[i] = this.SubstituteCopiesForOriginals.Substitute(definitions[i]);
+    }
+
+    /// <summary>
+    /// If the parameter has already been copied, return the copy. If not, assume that it is outside the cone and return this original.
+    /// </summary>
+    protected IParameterDefinition GetExistingCopyIfInsideCone(IParameterDefinition parameter) {
+      return this.SubstituteCopiesForOriginals.SubstituteReference(parameter);
+    }
+
+    /// <summary>
+    /// If the property has already been copied, return the copy. If not, assume that it is outside the cone and return this original.
+    /// </summary>
+    protected IPropertyDefinition GetExistingCopyIfInsideCone(IPropertyDefinition propertyDefinition) {
+      return this.SubstituteCopiesForOriginals.SubstituteReference(propertyDefinition);
+    }
+
+  }
 
   /// <summary>
   /// A class that produces a mutable deep copy a given metadata model node. 
@@ -79,7 +3333,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.coneAlreadyFixed = true;
     }
 
-    private CollectAndShallowCopyDefinitions definitionCollector;
+    private MetadataTraverser definitionCollector;
     /// <summary>
     /// Given a root of cone as an IDefinition, call the right AddDefinition method according to the type of the root. 
     /// </summary>
@@ -91,7 +3345,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         throw new ApplicationException("cone is fixed.");
       newTypes = new List<INamedTypeDefinition>();
       if (this.definitionCollector == null) {
-        this.definitionCollector = new CollectAndShallowCopyDefinitions(this, newTypes);
+        this.definitionCollector = new MetadataTraverser();
+        this.definitionCollector.PreorderVisitor = new CollectAndShallowCopyDefinitions(this, newTypes);
       }
       IAssembly assembly = rootOfCone as IAssembly;
       if (assembly != null) {
@@ -105,67 +3360,57 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       IRootUnitNamespace rootUnitNamespace = rootOfCone as IRootUnitNamespace;
       if (rootUnitNamespace != null) {
-        this.definitionCollector.Visit(rootUnitNamespace);
+        this.definitionCollector.Traverse(rootUnitNamespace);
         return;
       }
       INestedUnitNamespace nestedUnitNamespace = rootOfCone as INestedUnitNamespace;
       if (nestedUnitNamespace != null) {
-        this.definitionCollector.Visit(nestedUnitNamespace);
+        this.definitionCollector.Traverse(nestedUnitNamespace);
         return;
       }
-      INamespaceTypeDefinition nameSpaceTypeDefinition = rootOfCone as INamespaceTypeDefinition;
-      if (nameSpaceTypeDefinition != null) {
-        this.definitionCollector.Visit(nameSpaceTypeDefinition);
-        return;
-      }
-      INestedTypeDefinition nestedTypeDefinition = rootOfCone as INestedTypeDefinition;
-      if (nestedTypeDefinition != null) {
-        this.definitionCollector.Visit(nestedTypeDefinition);
+      ITypeDefinition typeDefinition = rootOfCone as ITypeDefinition;
+      if (typeDefinition != null) {
+        this.definitionCollector.Traverse(typeDefinition);
         return;
       }
       IGlobalFieldDefinition globalFieldDefinition = rootOfCone as IGlobalFieldDefinition;
       if (globalFieldDefinition != null) {
-        this.definitionCollector.Visit(globalFieldDefinition);
+        this.definitionCollector.Traverse(globalFieldDefinition);
         return;
       }
       IFieldDefinition fieldDefinition = rootOfCone as IFieldDefinition;
       if (fieldDefinition != null) {
-        this.definitionCollector.Visit(fieldDefinition);
+        this.definitionCollector.Traverse(fieldDefinition);
         return;
       }
       IGlobalMethodDefinition globalMethodDefinition = rootOfCone as IGlobalMethodDefinition;
       if (globalMethodDefinition != null) {
-        this.definitionCollector.Visit(globalMethodDefinition);
+        this.definitionCollector.Traverse(globalMethodDefinition);
         return;
       }
       IMethodDefinition methodDefinition = rootOfCone as IMethodDefinition;
       if (methodDefinition != null) {
-        this.definitionCollector.Visit(methodDefinition);
+        this.definitionCollector.Traverse(methodDefinition);
         return;
       }
       IPropertyDefinition propertyDefinition = rootOfCone as IPropertyDefinition;
       if (propertyDefinition != null) {
-        this.definitionCollector.Visit(propertyDefinition);
+        this.definitionCollector.Traverse(propertyDefinition);
         return;
       }
       IParameterDefinition parameterDefinition = rootOfCone as IParameterDefinition;
       if (parameterDefinition!= null) {
-        this.definitionCollector.Visit(parameterDefinition);
+        this.definitionCollector.Traverse(parameterDefinition);
         return;
       }
-      IGenericMethodParameter genericMethodParameter = rootOfCone as IGenericMethodParameter;
-      if (genericMethodParameter != null) {
-        this.definitionCollector.Visit(genericMethodParameter);
-        return;
-      }
-      IGenericTypeParameter genericTypeParameter = rootOfCone as IGenericTypeParameter;
-      if (genericTypeParameter != null) {
-        this.definitionCollector.Visit(genericTypeParameter);
+      IGenericParameter genericParameter = rootOfCone as IGenericParameter;
+      if (genericParameter != null) {
+        this.definitionCollector.Traverse(genericParameter);
         return;
       }
       IEventDefinition eventDefinition = rootOfCone as IEventDefinition;
       if (eventDefinition != null) {
-        this.definitionCollector.Visit(eventDefinition);
+        this.definitionCollector.Traverse(eventDefinition);
         return;
       }
       Debug.Assert(false);
@@ -1115,6 +4360,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           assemblyReference.ResolvedAssembly = (IAssembly)mutatedResolvedAssembly;
         }
       }
+      assemblyReference.Host = this.host;
       return assemblyReference; //a shallow copy is also deep in this case.
     }
 
@@ -1332,7 +4578,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected virtual GenericTypeInstanceReference DeepCopy(GenericTypeInstanceReference genericTypeInstanceReference) {
       this.DeepCopy((TypeReference)genericTypeInstanceReference);
       genericTypeInstanceReference.GenericArguments = this.DeepCopy(genericTypeInstanceReference.GenericArguments);
-      genericTypeInstanceReference.GenericType = this.DeepCopy(genericTypeInstanceReference.GenericType);
+      genericTypeInstanceReference.GenericType = (INamedTypeReference)this.DeepCopy(genericTypeInstanceReference.GenericType);
       return genericTypeInstanceReference;
     }
 
@@ -1373,7 +4619,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="aliasMember"></param>
     /// <returns></returns>
     protected virtual IAliasMember DeepCopy(IAliasMember aliasMember) {
-      var nestedAliasForType = aliasMember as INestedAliasForType;
+      var nestedAliasForType = (INestedAliasForType)aliasMember;
       return this.DeepCopy(this.GetMutableShallowCopy(nestedAliasForType));
     }
 
@@ -1564,6 +4810,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Makes a deep copy of the specified namespace type alias.
+    /// </summary>
+    /// <param name="namespaceAliasForType"></param>
+    /// <returns></returns>
+    protected virtual INamespaceAliasForType DeepCopy(INamespaceAliasForType namespaceAliasForType) {
+      object cachedValue;
+      if (this.cache.TryGetValue(namespaceAliasForType, out cachedValue)) {
+        return (INamespaceAliasForType)cachedValue;
+      }
+      return this.DeepCopy(this.GetMutableShallowCopy(namespaceAliasForType));
+    }
+
+    /// <summary>
     /// Visits the specified namespace member.
     /// </summary>
     /// <param name="namespaceMember">The namespace member.</param>
@@ -1577,6 +4836,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (globalMethodDefinition != null) return this.DeepCopy(globalMethodDefinition);
       IGlobalFieldDefinition/*?*/ globalFieldDefinition = namespaceMember as IGlobalFieldDefinition;
       if (globalFieldDefinition != null) return this.DeepCopy(globalFieldDefinition);
+      INamespaceAliasForType/*?*/ namespaceAliasForType = namespaceMember as INamespaceAliasForType;
+      if (namespaceMember != null) return this.DeepCopy(namespaceAliasForType);
       return namespaceMember;
     }
 
@@ -1856,7 +5117,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="typeDefinitions">The type definitions.</param>
     protected virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
       for (int i = 0, n = typeDefinitions.Count; i < n; i++) {
-        TypeDefinition/*?*/ typeDef = typeDefinitions[i] as TypeDefinition;
+        NamedTypeDefinition/*?*/ typeDef = typeDefinitions[i] as NamedTypeDefinition;
         if (typeDef == null) continue;
         typeDef.PrivateHelperMembers = this.DeepCopy(typeDef.PrivateHelperMembers);
       }
@@ -2157,6 +5418,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.cache.TryGetValue(moduleReference.ResolvedModule, out mutatedResolvedModule))
           moduleReference.ResolvedModule = (IModule)mutatedResolvedModule;
       }
+      moduleReference.Host = this.host;
       return moduleReference;
     }
 
@@ -2169,6 +5431,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       namespaceAliasForType.AliasedType = this.DeepCopy(namespaceAliasForType.AliasedType);
       namespaceAliasForType.Attributes = this.DeepCopy(namespaceAliasForType.Attributes);
       namespaceAliasForType.Locations = this.DeepCopy(namespaceAliasForType.Locations);
+      namespaceAliasForType.Members = this.DeepCopy(namespaceAliasForType.Members);
       return namespaceAliasForType;
     }
 
@@ -2178,7 +5441,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
     /// <returns></returns>
     protected virtual NamespaceTypeDefinition DeepCopy(NamespaceTypeDefinition namespaceTypeDefinition) {
-      this.DeepCopy((TypeDefinition)namespaceTypeDefinition);
+      this.DeepCopy((NamedTypeDefinition)namespaceTypeDefinition);
       namespaceTypeDefinition.ContainingUnitNamespace = this.GetMutableCopyIfItExists(namespaceTypeDefinition.ContainingUnitNamespace);
       return namespaceTypeDefinition;
     }
@@ -2255,7 +5518,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="nestedTypeDefinition">The nested type definition.</param>
     /// <returns></returns>
     protected virtual NestedTypeDefinition DeepCopy(NestedTypeDefinition nestedTypeDefinition) {
-      this.DeepCopy((TypeDefinition)nestedTypeDefinition);
+      this.DeepCopy((NamedTypeDefinition)nestedTypeDefinition);
       nestedTypeDefinition.ContainingTypeDefinition = this.GetMutableCopyIfItExists(nestedTypeDefinition.ContainingTypeDefinition);
       return nestedTypeDefinition;
     }
@@ -2309,7 +5572,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Note that when overriding this method, care must be taken to add the given mutable type definition to this.flatListOfTypes.
     /// </summary>
     /// <param name="typeDefinition">A mutable type definition.</param>
-    protected virtual void DeepCopy(TypeDefinition typeDefinition) {
+    protected virtual void DeepCopy(NamedTypeDefinition typeDefinition) {
       this.flatListOfTypes.Add(typeDefinition);
       typeDefinition.Attributes = this.DeepCopy(typeDefinition.Attributes);
       typeDefinition.BaseClasses = this.DeepCopy(typeDefinition.BaseClasses);
@@ -3126,15 +6389,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       copy.Copy(assembly, this.host.InternFactory);
       // Globals and VCC support, not reachable from C# compiler generated assemblies. 
       if (copy.AllTypes.Count > 0) {
-        this.definitionCollector.Visit(copy.AllTypes[0]);
+        this.definitionCollector.Traverse(copy.AllTypes[0]);
       }
       if (copy.AllTypes.Count > 1) {
-        INamespaceTypeDefinition globals = copy.AllTypes[1] as INamespaceTypeDefinition;
+        var globals = copy.AllTypes[1];
         if (globals != null && globals.Name.Value == "__Globals__") {
-          this.definitionCollector.Visit(globals);
+          this.definitionCollector.Traverse(globals);
         }
       }
-      this.definitionCollector.Visit(assembly);
+      this.definitionCollector.Traverse(assembly);
     }
 
     /// <summary>
@@ -3445,15 +6708,15 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.cache.Add(assembly, copy);
         this.cache.Add(copy, copy);
         copy.Copy(assembly, this.host.InternFactory);
-        this.definitionCollector.Visit(assembly);
+        this.definitionCollector.Traverse(assembly);
         // Globals and VCC support, not reachable from C# compiler generated assemblies. 
         if (((Module)copy).AllTypes.Count > 0) {
-          this.definitionCollector.Visit(((Module)copy).AllTypes[0]);
+          this.definitionCollector.Traverse(((Module)copy).AllTypes[0]);
         }
         if (((Module)copy).AllTypes.Count > 1) {
-          INamespaceTypeDefinition globals = ((Module)copy).AllTypes[1] as INamespaceTypeDefinition;
+          var globals = ((Module)copy).AllTypes[1];
           if (globals != null && globals.Name.Value == "__Globals__") {
-            this.definitionCollector.Visit(globals);
+            this.definitionCollector.Traverse(globals);
           }
         }
       } else {
@@ -3461,15 +6724,15 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.cache.Add(module, copy);
         this.cache.Add(copy, copy);
         copy.Copy(module, this.host.InternFactory);
-        this.definitionCollector.Visit(module);
+        this.definitionCollector.Traverse(module);
         // Globals and VCC support, not reachable from C# compiler generated assemblies. 
         if (copy.AllTypes.Count > 0) {
-          this.definitionCollector.Visit(copy.AllTypes[0]);
+          this.definitionCollector.Traverse(copy.AllTypes[0]);
         }
         if (copy.AllTypes.Count > 1) {
-          INamespaceTypeDefinition globals = copy.AllTypes[1] as INamespaceTypeDefinition;
+          var globals = copy.AllTypes[1];
           if (globals != null && globals.Name.Value == "__Globals__") {
-            this.definitionCollector.Visit(globals);
+            this.definitionCollector.Traverse(globals);
           }
         }
       }
@@ -3757,7 +7020,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// should be cached by the caller to make sure the right kind (assembly or module) is copied. 
   /// 
   /// </remarks>
-  internal class CollectAndShallowCopyDefinitions : BaseMetadataTraverser {
+  internal class CollectAndShallowCopyDefinitions : MetadataVisitor {
     MetadataCopier copier;
     List<INamedTypeDefinition> newTypes;
 
@@ -3782,9 +7045,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IFieldDefinition fieldDefinition) {
       if (!this.copier.cache.ContainsKey(fieldDefinition)) {
         var copy = new FieldDefinition();
+        copy.Copy(fieldDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(fieldDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(fieldDefinition, this.copier.host.InternFactory);
       }
     }
 
@@ -3795,9 +7058,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IGlobalFieldDefinition globalFieldDefinition) {
       if (!this.copier.cache.ContainsKey(globalFieldDefinition)) {
         var copy = new GlobalFieldDefinition();
+        copy.Copy(globalFieldDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(globalFieldDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(globalFieldDefinition, this.copier.host.InternFactory);
       }
     }
 
@@ -3808,12 +7071,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IGlobalMethodDefinition globalMethodDefinition) {
       if (!this.copier.cache.ContainsKey(globalMethodDefinition)) {
         var copy = new GlobalMethodDefinition();
+        copy.Copy(globalMethodDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(globalMethodDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(globalMethodDefinition, this.copier.host.InternFactory);
-        base.Visit((IMethodDefinition)copy);
-      } else
-        base.Visit((IMethodDefinition)this.copier.cache[globalMethodDefinition]);
+      }
     }
 
     /// <summary>
@@ -3823,12 +7084,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IMethodDefinition method) {
       if (!this.copier.cache.ContainsKey(method)) {
         var copy = new MethodDefinition();
+        copy.Copy(method, this.copier.host.InternFactory);
         this.copier.cache.Add(method, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(method, this.copier.host.InternFactory);
-        base.Visit(copy);
-      } else {
-        base.Visit((IMethodDefinition)this.copier.cache[method]);
       }
     }
 
@@ -3839,12 +7097,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
       if (!this.copier.cache.ContainsKey(namespaceTypeDefinition)) {
         var copy = new NamespaceTypeDefinition();
+        copy.Copy(namespaceTypeDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(namespaceTypeDefinition, copy);
         this.copier.cache.Add(copy, copy);
         this.newTypes.Add(copy);
-        copy.Copy(namespaceTypeDefinition, this.copier.host.InternFactory);
-        this.VisitTypeDefinition(copy);
-      } else this.VisitTypeDefinition((INamespaceTypeDefinition)this.copier.cache[namespaceTypeDefinition]);
+      }
     }
 
     /// <summary>
@@ -3852,40 +7109,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="nestedTypeDefinition"></param>
     public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
-      NestedTypeDefinition copy;
-      if (this.copier.cache.ContainsKey(nestedTypeDefinition)) {
-        copy = (NestedTypeDefinition)this.copier.cache[nestedTypeDefinition];
-      } else {
-        copy = new NestedTypeDefinition();
+      if (!this.copier.cache.ContainsKey(nestedTypeDefinition)) {
+        var copy = new NestedTypeDefinition();
+        copy.Copy(nestedTypeDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(nestedTypeDefinition, copy);
         this.copier.cache.Add(copy, copy);
         this.newTypes.Add(copy);
-        copy.Copy(nestedTypeDefinition, this.copier.host.InternFactory);
       }
-      this.VisitTypeDefinition(copy);
     }
-    /// <summary>
-    /// Base class's Visit(ITypeDefinition) will dispatch to subtypes. This method visits the sub nodes
-    /// of an ITypeDefinition without dispatching. It is supposed to be called from Visit(INestedTypeDefinition)
-    /// or Visit(INamespaceTypeDefinition) to avoid circular invocation. 
-    /// </summary>
-    /// <param name="typeDefinition"></param>
-    protected void VisitTypeDefinition(ITypeDefinition typeDefinition) {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(typeDefinition);
-      this.Visit(typeDefinition.Attributes);
-      this.Visit(typeDefinition.BaseClasses);
-      this.Visit(typeDefinition.ExplicitImplementationOverrides);
-      if (typeDefinition.HasDeclarativeSecurity)
-        this.Visit(typeDefinition.SecurityAttributes);
-      this.Visit(typeDefinition.Interfaces);
-      if (typeDefinition.IsGeneric)
-        this.Visit(typeDefinition.GenericParameters);
-      this.Visit(typeDefinition.Members);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
+
     /// <summary>
     /// Visit an generic method parameter. 
     /// </summary>
@@ -3893,11 +7125,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IGenericMethodParameter genericMethodParameter) {
       if (!this.copier.cache.ContainsKey(genericMethodParameter)) {
         var copy = new GenericMethodParameter();
+        copy.Copy(genericMethodParameter, this.copier.host.InternFactory);
         this.copier.cache.Add(genericMethodParameter, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(genericMethodParameter, this.copier.host.InternFactory);
       }
     }
+
     /// <summary>
     /// Visit a generic type parameter.
     /// </summary>
@@ -3905,11 +7138,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IGenericTypeParameter genericTypeParameter) {
       if (!this.copier.cache.ContainsKey(genericTypeParameter)) {
         var copy = new GenericTypeParameter();
+        copy.Copy(genericTypeParameter, this.copier.host.InternFactory);
         this.copier.cache.Add(genericTypeParameter, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(genericTypeParameter, this.copier.host.InternFactory);
       }
     }
+
     /// <summary>
     /// Visit an event definition. 
     /// </summary>
@@ -3917,12 +7151,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IEventDefinition eventDefinition) {
       if (!this.copier.cache.ContainsKey(eventDefinition)) {
         var copy = new EventDefinition();
+        copy.Copy(eventDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(eventDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(eventDefinition, this.copier.host.InternFactory);
-        base.Visit(copy);
-      } else base.Visit((IEventDefinition)this.copier.cache[eventDefinition]);
+      }
     }
+
     /// <summary>
     /// Visit a local definition. 
     /// </summary>
@@ -3930,11 +7164,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(ILocalDefinition localDefinition) {
       if (!this.copier.cache.ContainsKey(localDefinition)) {
         var copy = new LocalDefinition();
+        copy.Copy(localDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(localDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(localDefinition, this.copier.host.InternFactory);
       }
     }
+
     /// <summary>
     /// Visit a root unit namespace.
     /// </summary>
@@ -3942,27 +7177,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IRootUnitNamespace rootUnitNamespace) {
       if (!this.copier.cache.ContainsKey(rootUnitNamespace)) {
         var copy = new RootUnitNamespace();
+        copy.Copy(rootUnitNamespace, this.copier.host.InternFactory);
         this.copier.cache.Add(rootUnitNamespace, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(rootUnitNamespace, this.copier.host.InternFactory);
-        this.VisitUnitNamespace(copy);
-      } else {
-        this.VisitUnitNamespace((IUnitNamespace)this.copier.cache[rootUnitNamespace]);
       }
     }
 
-    /// <summary>
-    /// Visit a unit namespace. 
-    /// </summary>
-    /// <param name="namespaceDefinition"></param>
-    protected virtual void VisitUnitNamespace(IUnitNamespace namespaceDefinition) {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(namespaceDefinition);
-      this.Visit(namespaceDefinition.Members);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
     /// <summary>
     /// Visit an INestedUnitNamespace
     /// </summary>
@@ -3970,20 +7190,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(INestedUnitNamespace nestedUnitNamespace) {
       if (!this.copier.cache.ContainsKey(nestedUnitNamespace)) {
         var copy = new NestedUnitNamespace();
+        copy.Copy(nestedUnitNamespace, this.copier.host.InternFactory);
         this.copier.cache.Add(nestedUnitNamespace, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(nestedUnitNamespace, this.copier.host.InternFactory);
-        this.VisitUnitNamespace(nestedUnitNamespace);
       }
-      this.VisitUnitNamespace((IUnitNamespace)this.copier.cache[nestedUnitNamespace]);
     }
-    /// <summary>
-    /// Visit an INestedUnitSetNamespace. Not implemented. 
-    /// </summary>
-    /// <param name="nestedUnitSetNamespace"></param>
-    public override void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
-      throw new NotImplementedException();
-    }
+
     /// <summary>
     /// Visit an IParameterDefinition. Create a mutable parameter definition if one is not already created. 
     /// </summary>
@@ -3991,11 +7203,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IParameterDefinition parameterDefinition) {
       if (!this.copier.cache.ContainsKey(parameterDefinition)) {
         var copy = new ParameterDefinition();
+        copy.Copy(parameterDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(parameterDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(parameterDefinition, this.copier.host.InternFactory);
       }
     }
+
     /// <summary>
     /// Visit an IPropertyDefinition. Create a mutable PropertyDefinition if one is not already created. 
     /// </summary>
@@ -4003,35 +7216,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void Visit(IPropertyDefinition propertyDefinition) {
       if (!this.copier.cache.ContainsKey(propertyDefinition)) {
         var copy = new PropertyDefinition();
+        copy.Copy(propertyDefinition, this.copier.host.InternFactory);
         this.copier.cache.Add(propertyDefinition, copy);
         this.copier.cache.Add(copy, copy);
-        copy.Copy(propertyDefinition, this.copier.host.InternFactory);
-        base.Visit(copy);
-      } else base.Visit((IPropertyDefinition)this.copier.cache[propertyDefinition]);
-    }
-    /// <summary>
-    /// Visit an IUnit.
-    /// </summary>
-    /// <param name="unit"></param>
-    public override void Visit(IUnit unit) {
-      IModule module = unit as IModule;
-      if (module != null) {
-        this.Visit(module);
       }
     }
-    /// <summary>
-    /// Visit a UnitSet. Not implemented.
-    /// </summary>
-    /// <param name="unitSet"></param>
-    public override void Visit(IUnitSet unitSet) {
-      throw new NotImplementedException();
-    }
-    /// <summary>
-    /// Visit a UnitSetNamespace. Not implemented.
-    /// </summary>
-    /// <param name="unitSetNamespace"></param>
-    public override void Visit(IRootUnitSetNamespace unitSetNamespace) {
-      throw new NotImplementedException();
-    }
+
   }
 }

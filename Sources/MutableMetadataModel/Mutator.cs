@@ -14,10 +14,1912 @@ using System.Diagnostics;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.UtilityDataStructures;
 
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
+
+  /// <summary>
+  /// A class that traverses a metadata model in depth first, left to right order,
+  /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
+  /// </summary>
+  public class MetadataRewriter {
+
+    /// <summary>
+    /// A class that traverses a metadata model in depth first, left to right order,
+    /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public MetadataRewriter(IMetadataHost host) {
+      this.host = host;
+      this.internFactory = host.InternFactory;
+      this.dispatchingVisitor = new Dispatcher() { rewriter = this };
+    }
+
+    /// <summary>
+    /// An object representing the application that is hosting this rewriter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.
+    /// </summary>
+    protected readonly IMetadataHost host;
+    IInternFactory internFactory;
+
+    Dispatcher dispatchingVisitor;
+    class Dispatcher : MetadataVisitor {
+      internal MetadataRewriter rewriter;
+      internal object result;
+
+      public override void Visit(IArrayTypeReference arrayTypeReference) {
+        this.result = this.rewriter.Rewrite(arrayTypeReference);
+      }
+
+      public override void Visit(IAssemblyReference assemblyReference) {
+        this.result = this.rewriter.Rewrite(assemblyReference);
+      }
+
+      public override void Visit(IEventDefinition eventDefinition) {
+        this.result = this.rewriter.Rewrite(eventDefinition);
+      }
+
+      public override void Visit(IFieldDefinition fieldDefinition) {
+        this.result = this.rewriter.Rewrite(fieldDefinition);
+      }
+
+      public override void Visit(IFieldReference fieldReference) {
+        Contract.Assume(!(fieldReference is ISpecializedFieldReference));
+        this.result = this.rewriter.RewriteUnspecialized(fieldReference);
+      }
+
+      public override void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+        this.result = this.rewriter.Rewrite(functionPointerTypeReference);
+      }
+
+      public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+        this.result = this.rewriter.Rewrite(genericMethodInstanceReference);
+      }
+
+      public override void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+        this.result = this.rewriter.Rewrite(genericMethodParameterReference);
+      }
+
+      public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+        this.result = this.rewriter.Rewrite(genericTypeInstanceReference);
+      }
+
+      public override void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+        this.result = this.rewriter.Rewrite(genericTypeParameterReference);
+      }
+
+      public override void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+        this.result = this.rewriter.Rewrite(globalFieldDefinition);
+      }
+
+      public override void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+        this.result = this.rewriter.Rewrite(globalMethodDefinition);
+      }
+
+      public override void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+        this.result = this.rewriter.Rewrite(managedPointerTypeReference);
+      }
+
+      public override void Visit(IMetadataConstant constant) {
+        this.result = this.rewriter.Rewrite(constant);
+      }
+
+      public override void Visit(IMetadataCreateArray createArray) {
+        this.result = this.rewriter.Rewrite(createArray);
+      }
+
+      public override void Visit(IMetadataNamedArgument namedArgument) {
+        this.result = this.rewriter.Rewrite(namedArgument);
+      }
+
+      public override void Visit(IMetadataTypeOf typeOf) {
+        this.result = this.rewriter.Rewrite(typeOf);
+      }
+
+      public override void Visit(IMethodDefinition method) {
+        this.result = this.rewriter.Rewrite(method);
+      }
+
+      public override void Visit(IMethodReference methodReference) {
+        Contract.Assume(!(methodReference is IGenericMethodInstanceReference));
+        Contract.Assume(!(methodReference is ISpecializedMethodReference));
+        this.result = this.rewriter.RewriteUnspecialized(methodReference);
+      }
+
+      public override void Visit(IModifiedTypeReference modifiedTypeReference) {
+        this.result = this.rewriter.Rewrite(modifiedTypeReference);
+      }
+
+      public override void Visit(IModuleReference moduleReference) {
+        this.result = this.rewriter.Rewrite(moduleReference);
+      }
+
+      public override void Visit(INamespaceAliasForType namespaceAliasForType) {
+        this.result = this.rewriter.Rewrite(namespaceAliasForType);
+      }
+
+      public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+        this.result = this.rewriter.Rewrite(namespaceTypeDefinition);
+      }
+
+      public override void Visit(INamespaceTypeReference namespaceTypeReference) {
+        this.result = this.rewriter.Rewrite(namespaceTypeReference);
+      }
+
+      public override void Visit(INestedAliasForType nestedAliasForType) {
+        this.result = this.rewriter.Rewrite(nestedAliasForType);
+      }
+
+      public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
+        this.result = this.rewriter.Rewrite(nestedTypeDefinition);
+      }
+
+      public override void Visit(INestedTypeReference nestedTypeReference) {
+        Contract.Assume(!(nestedTypeReference is ISpecializedNestedTypeReference));
+        this.result = this.rewriter.RewriteUnspecialized(nestedTypeReference);
+      }
+
+      public override void Visit(INestedUnitNamespace nestedUnitNamespace) {
+        this.result = this.rewriter.Rewrite(nestedUnitNamespace);
+      }
+
+      public override void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+        this.result = this.rewriter.Rewrite(nestedUnitNamespaceReference);
+      }
+
+      public override void Visit(IPointerTypeReference pointerTypeReference) {
+        this.result = this.rewriter.Rewrite(pointerTypeReference);
+      }
+
+      public override void Visit(IPropertyDefinition propertyDefinition) {
+        this.result = this.rewriter.Rewrite(propertyDefinition);
+      }
+
+      public override void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+        this.result = this.rewriter.Rewrite(rootUnitNamespaceReference);
+      }
+
+      public override void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+        throw new InvalidOperationException("Rewriting a generic type instance");
+      }
+
+      public override void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+        throw new InvalidOperationException("Rewriting a generic type instance");
+      }
+
+      public override void Visit(ISpecializedFieldReference specializedFieldReference) {
+        this.result = this.rewriter.Rewrite(specializedFieldReference);
+      }
+
+      public override void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+        throw new InvalidOperationException("Rewriting a generic type instance");
+      }
+
+      public override void Visit(ISpecializedMethodReference specializedMethodReference) {
+        this.result = this.rewriter.Rewrite(specializedMethodReference);
+      }
+
+      public override void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+        throw new InvalidOperationException("Rewriting a generic type instance");
+      }
+
+      public override void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+        throw new InvalidOperationException("Rewriting a generic type instance");
+      }
+
+      public override void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+        this.result = this.rewriter.Rewrite(specializedNestedTypeReference);
+      }
+
+
+    }
+
+    /// <summary>
+    /// A map from reference to rewritten reference. Can be used to avoid rewriting the same reference more than once.
+    /// </summary>
+    protected Dictionary<IReference, IReference> referenceRewrites = new Dictionary<IReference, IReference>();
+
+    /// <summary>
+    /// Rewrites the alias for type
+    /// </summary>
+    public virtual IAliasForType Rewrite(IAliasForType aliasForType) {
+      aliasForType.Dispatch(this.dispatchingVisitor);
+      return (IAliasForType)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the alias for type member.
+    /// </summary>
+    public virtual IAliasMember Rewrite(IAliasMember aliasMember) {
+      aliasMember.Dispatch(this.dispatchingVisitor);
+      return (IAliasMember)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the array type reference.
+    /// </summary>
+    public virtual IArrayTypeReference Rewrite(IArrayTypeReference arrayTypeReference) {
+      var mutableArrayTypeReference = arrayTypeReference as ArrayTypeReference;
+      if (mutableArrayTypeReference == null || mutableArrayTypeReference.IsFrozen) return arrayTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableArrayTypeReference, out result)) return (IArrayTypeReference)result;
+      this.referenceRewrites[mutableArrayTypeReference] = mutableArrayTypeReference;
+      this.RewriteChildren(mutableArrayTypeReference);
+      return mutableArrayTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given assembly.
+    /// </summary>
+    public virtual IAssembly Rewrite(IAssembly assembly) {
+      var mutableAssembly = assembly as Assembly;
+      if (mutableAssembly == null) return assembly;
+      this.RewriteChildren(mutableAssembly);
+      return mutableAssembly;
+    }
+
+    /// <summary>
+    /// Rewrites the given assembly reference.
+    /// </summary>
+    public virtual IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
+      var mutableAssemblyReference = assemblyReference as AssemblyReference;
+      if (mutableAssemblyReference == null) return assemblyReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableAssemblyReference, out result)) return (IAssemblyReference)result;
+      this.referenceRewrites[mutableAssemblyReference] = mutableAssemblyReference;
+      this.RewriteChildren(mutableAssemblyReference);
+      return mutableAssemblyReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given custom attribute.
+    /// </summary>
+    public virtual ICustomAttribute Rewrite(ICustomAttribute customAttribute) {
+      var mutableCustomAttribute = customAttribute as CustomAttribute;
+      if (mutableCustomAttribute == null) return customAttribute;
+      this.RewriteChildren(mutableCustomAttribute);
+      return mutableCustomAttribute;
+    }
+
+    /// <summary>
+    /// Rewrites the given custom modifier.
+    /// </summary>
+    public virtual ICustomModifier Rewrite(ICustomModifier customModifier) {
+      var mutableCustomModifier = customModifier as CustomModifier;
+      if (mutableCustomModifier == null) return customModifier;
+      this.RewriteChildren(mutableCustomModifier);
+      return mutableCustomModifier;
+    }
+
+    /// <summary>
+    /// Rewrites the given event definition.
+    /// </summary>
+    public virtual IEventDefinition Rewrite(IEventDefinition eventDefinition) {
+      Contract.Requires(!(eventDefinition is ISpecializedEventDefinition));
+      var mutableEventDefinition = eventDefinition as EventDefinition;
+      if (mutableEventDefinition == null) return eventDefinition;
+      this.RewriteChildren(mutableEventDefinition);
+      return mutableEventDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given field definition.
+    /// </summary>
+    public virtual IFieldDefinition Rewrite(IFieldDefinition fieldDefinition) {
+      Contract.Requires(!(fieldDefinition is ISpecializedFieldDefinition));
+      var mutableFieldDefinition = fieldDefinition as FieldDefinition;
+      if (mutableFieldDefinition == null) return fieldDefinition;
+      this.RewriteChildren(mutableFieldDefinition);
+      return mutableFieldDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given field reference.
+    /// </summary>
+    public virtual IFieldReference Rewrite(IFieldReference fieldReference) {
+      fieldReference.Dispatch(this.dispatchingVisitor);
+      return (IFieldReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given field reference.
+    /// </summary>
+    public virtual IFieldReference RewriteUnspecialized(IFieldReference fieldReference) {
+      Contract.Requires(!(fieldReference is ISpecializedFieldReference));
+      var mutableFieldReference = fieldReference as FieldReference;
+      if (mutableFieldReference == null || mutableFieldReference.IsFrozen) return fieldReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableFieldReference, out result)) return (IFieldReference)result;
+      this.referenceRewrites[mutableFieldReference] = mutableFieldReference;
+      this.RewriteChildren(mutableFieldReference);
+      return mutableFieldReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given file reference.
+    /// </summary>
+    public virtual IFileReference Rewrite(IFileReference fileReference) {
+      var mutableFileReference = fileReference as FileReference;
+      if (mutableFileReference == null) return fileReference;
+      this.RewriteChildren(mutableFileReference);
+      return mutableFileReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given function pointer type reference.
+    /// </summary>
+    public virtual IFunctionPointerTypeReference Rewrite(IFunctionPointerTypeReference functionPointerTypeReference) {
+      var mutableFunctionPointerTypeReference = functionPointerTypeReference as FunctionPointerTypeReference;
+      if (mutableFunctionPointerTypeReference == null) return functionPointerTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableFunctionPointerTypeReference, out result)) return (IFunctionPointerTypeReference)result;
+      this.referenceRewrites[mutableFunctionPointerTypeReference] = mutableFunctionPointerTypeReference;
+      this.RewriteChildren(mutableFunctionPointerTypeReference);
+      return mutableFunctionPointerTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given generic method instance reference.
+    /// </summary>
+    public virtual IGenericMethodInstanceReference Rewrite(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      var mutableGenericMethodInstanceReference = genericMethodInstanceReference as GenericMethodInstanceReference;
+      if (mutableGenericMethodInstanceReference == null) return genericMethodInstanceReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableGenericMethodInstanceReference, out result)) return (IGenericMethodInstanceReference)result;
+      this.referenceRewrites[mutableGenericMethodInstanceReference] = mutableGenericMethodInstanceReference;
+      this.RewriteChildren(mutableGenericMethodInstanceReference);
+      return mutableGenericMethodInstanceReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given generic method parameter reference.
+    /// </summary>
+    public virtual IGenericMethodParameter Rewrite(IGenericMethodParameter genericMethodParameter) {
+      var mutableGenericMethodParameter = genericMethodParameter as GenericMethodParameter;
+      if (mutableGenericMethodParameter == null) return genericMethodParameter;
+      this.RewriteChildren(mutableGenericMethodParameter);
+      return mutableGenericMethodParameter;
+    }
+
+    /// <summary>
+    /// Rewrites the given generic method parameter reference.
+    /// </summary>
+    public virtual ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
+      var mutableGenericMethodInstanceReference = genericMethodParameterReference as GenericMethodParameterReference;
+      if (mutableGenericMethodInstanceReference == null || mutableGenericMethodInstanceReference.IsFrozen) return genericMethodParameterReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableGenericMethodInstanceReference, out result)) return (IGenericMethodParameterReference)result;
+      this.referenceRewrites[mutableGenericMethodInstanceReference] = mutableGenericMethodInstanceReference;
+      this.RewriteChildren(mutableGenericMethodInstanceReference);
+      return mutableGenericMethodInstanceReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given generic type instance reference.
+    /// </summary>
+    public virtual ITypeReference Rewrite(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      var mutableGenericTypeInstanceReference = genericTypeInstanceReference as GenericTypeInstanceReference;
+      if (mutableGenericTypeInstanceReference == null || mutableGenericTypeInstanceReference.IsFrozen) return genericTypeInstanceReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableGenericTypeInstanceReference, out result)) return (IGenericTypeInstanceReference)result;
+      this.referenceRewrites[mutableGenericTypeInstanceReference] = mutableGenericTypeInstanceReference;
+      this.RewriteChildren(mutableGenericTypeInstanceReference);
+      return mutableGenericTypeInstanceReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given generic type parameter reference.
+    /// </summary>
+    public virtual IGenericTypeParameter Rewrite(IGenericTypeParameter genericTypeParameter) {
+      var mutableGenericTypeParameter = genericTypeParameter as GenericTypeParameter;
+      if (mutableGenericTypeParameter == null) return genericTypeParameter;
+      this.RewriteChildren(mutableGenericTypeParameter);
+      return mutableGenericTypeParameter;
+    }
+
+    /// <summary>
+    /// Rewrites the given generic type parameter reference.
+    /// </summary>
+    public virtual ITypeReference Rewrite(IGenericTypeParameterReference genericTypeParameterReference) {
+      var mutableGenericTypeParameterReference = genericTypeParameterReference as GenericTypeParameterReference;
+      if (mutableGenericTypeParameterReference == null || mutableGenericTypeParameterReference.IsFrozen) return genericTypeParameterReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableGenericTypeParameterReference, out result)) return (IGenericTypeParameterReference)result;
+      this.referenceRewrites[mutableGenericTypeParameterReference] = mutableGenericTypeParameterReference;
+      this.RewriteChildren(mutableGenericTypeParameterReference);
+      return mutableGenericTypeParameterReference;
+    }
+
+    /// <summary>
+    /// Rewrites the specified global field definition.
+    /// </summary>
+    public virtual IGlobalFieldDefinition Rewrite(IGlobalFieldDefinition globalFieldDefinition) {
+      var mutableGlobalFieldDefinition = globalFieldDefinition as GlobalFieldDefinition;
+      if (mutableGlobalFieldDefinition == null) return globalFieldDefinition;
+      this.RewriteChildren(mutableGlobalFieldDefinition);
+      return mutableGlobalFieldDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the specified global method definition.
+    /// </summary>
+    public virtual IGlobalMethodDefinition Rewrite(IGlobalMethodDefinition globalMethodDefinition) {
+      var mutableGlobalMethodDefinition = globalMethodDefinition as GlobalMethodDefinition;
+      if (mutableGlobalMethodDefinition == null) return globalMethodDefinition;
+      this.RewriteChildren(mutableGlobalMethodDefinition);
+      return mutableGlobalMethodDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the specified local definition.
+    /// </summary>
+    public virtual ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
+      var mutableLocalDefinition = localDefinition as LocalDefinition;
+      if (mutableLocalDefinition == null) return localDefinition;
+      this.RewriteChildren(mutableLocalDefinition);
+      return mutableLocalDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given managed pointer type reference.
+    /// </summary>
+    public virtual IManagedPointerTypeReference Rewrite(IManagedPointerTypeReference managedPointerTypeReference) {
+      var mutableManagedPointerTypeReference = managedPointerTypeReference as ManagedPointerTypeReference;
+      if (mutableManagedPointerTypeReference == null || mutableManagedPointerTypeReference.IsFrozen) return managedPointerTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableManagedPointerTypeReference, out result)) return (IManagedPointerTypeReference)result;
+      this.referenceRewrites[mutableManagedPointerTypeReference] = mutableManagedPointerTypeReference;
+      this.RewriteChildren(mutableManagedPointerTypeReference);
+      return mutableManagedPointerTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given marshalling information.
+    /// </summary>
+    public virtual IMarshallingInformation Rewrite(IMarshallingInformation marshallingInformation) {
+      var mutableMarshallingInformation = marshallingInformation as MarshallingInformation;
+      if (mutableMarshallingInformation == null) return marshallingInformation;
+      this.RewriteChildren(mutableMarshallingInformation);
+      return mutableMarshallingInformation;
+    }
+
+    /// <summary>
+    /// Rewrites the given metadata constant.
+    /// </summary>
+    public virtual IMetadataConstant Rewrite(IMetadataConstant constant) {
+      var mutableMetadataConstant = constant as MetadataConstant;
+      if (mutableMetadataConstant == null) return constant;
+      this.RewriteChildren(mutableMetadataConstant);
+      return mutableMetadataConstant;
+    }
+
+    /// <summary>
+    /// Rewrites the given metadata array creation expression.
+    /// </summary>
+    public virtual IMetadataCreateArray Rewrite(IMetadataCreateArray metadataCreateArray) {
+      var mutableMetadataCreateArray = metadataCreateArray as MetadataCreateArray;
+      if (mutableMetadataCreateArray == null) return metadataCreateArray;
+      this.RewriteChildren(mutableMetadataCreateArray);
+      return mutableMetadataCreateArray;
+    }
+
+    /// <summary>
+    /// Rewrites the given metadata expression.
+    /// </summary>
+    public virtual IMetadataExpression Rewrite(IMetadataExpression metadataExpression) {
+      metadataExpression.Dispatch(this.dispatchingVisitor);
+      return (IMetadataExpression)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given metadata named argument expression.
+    /// </summary>
+    public virtual IMetadataNamedArgument Rewrite(IMetadataNamedArgument namedArgument) {
+      var mutableMetadataNamedArgument = namedArgument as MetadataNamedArgument;
+      if (mutableMetadataNamedArgument == null) return namedArgument;
+      this.RewriteChildren(mutableMetadataNamedArgument);
+      return mutableMetadataNamedArgument;
+    }
+
+    /// <summary>
+    /// Rewrites the given metadata typeof expression.
+    /// </summary>
+    public virtual IMetadataTypeOf Rewrite(IMetadataTypeOf metadataTypeOf) {
+      var mutableMetadataTypeOf = metadataTypeOf as MetadataTypeOf;
+      if (mutableMetadataTypeOf == null) return metadataTypeOf;
+      this.RewriteChildren(mutableMetadataTypeOf);
+      return mutableMetadataTypeOf;
+    }
+
+    /// <summary>
+    /// Rewrites the given method body.
+    /// </summary>
+    public virtual IMethodBody Rewrite(IMethodBody methodBody) {
+      var mutableMethodBody = methodBody as MethodBody;
+      if (mutableMethodBody == null) return methodBody;
+      this.RewriteChildren(mutableMethodBody);
+      return mutableMethodBody;
+    }
+
+    /// <summary>
+    /// Rewrites the given method definition.
+    /// </summary>
+    public virtual IMethodDefinition Rewrite(IMethodDefinition method) {
+      Contract.Requires(!(method is ISpecializedMethodDefinition));
+      var mutableMethodDefinition = method as MethodDefinition;
+      if (mutableMethodDefinition == null) return method;
+      this.RewriteChildren(mutableMethodDefinition);
+      return mutableMethodDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given method implementation.
+    /// </summary>
+    public virtual IMethodImplementation Rewrite(IMethodImplementation methodImplementation) {
+      var mutableMethodImplementation = methodImplementation as MethodImplementation;
+      if (mutableMethodImplementation == null) return methodImplementation;
+      this.RewriteChildren(mutableMethodImplementation);
+      return mutableMethodImplementation;
+    }
+
+    /// <summary>
+    /// Rewrites the given method reference.
+    /// </summary>
+    public virtual IMethodReference Rewrite(IMethodReference methodReference) {
+      methodReference.DispatchAsReference(this.dispatchingVisitor);
+      return (IMethodReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given method reference.
+    /// </summary>
+    public virtual IMethodReference RewriteUnspecialized(IMethodReference methodReference) {
+      Contract.Requires(!(methodReference is ISpecializedMethodReference));
+      var mutableMethodReference = methodReference as MethodReference;
+      if (mutableMethodReference == null || mutableMethodReference.IsFrozen) return methodReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableMethodReference, out result)) return (IMethodReference)result;
+      this.referenceRewrites[mutableMethodReference] = mutableMethodReference;
+      this.RewriteChildren(mutableMethodReference);
+      return methodReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given modified type reference.
+    /// </summary>
+    public virtual IModifiedTypeReference Rewrite(IModifiedTypeReference modifiedTypeReference) {
+      var mutableModifiedTypeReference = modifiedTypeReference as ModifiedTypeReference;
+      if (mutableModifiedTypeReference == null || mutableModifiedTypeReference.IsFrozen) return modifiedTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableModifiedTypeReference, out result)) return (IModifiedTypeReference)result;
+      this.referenceRewrites[mutableModifiedTypeReference] = mutableModifiedTypeReference;
+      this.RewriteChildren(mutableModifiedTypeReference);
+      return mutableModifiedTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given module.
+    /// </summary>
+    public virtual IModule Rewrite(IModule module) {
+      var assembly = module as IAssembly;
+      if (assembly != null) return this.Rewrite(assembly);
+      var mutableModule = module as Module;
+      if (mutableModule == null) return module;
+      this.RewriteChildren(mutableModule);
+      return mutableModule;
+    }
+
+    /// <summary>
+    /// Rewrites the given module reference.
+    /// </summary>
+    public virtual IModuleReference Rewrite(IModuleReference moduleReference) {
+      var mutableModuleReference = moduleReference as ModuleReference;
+      if (mutableModuleReference == null) return moduleReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableModuleReference, out result)) return (IModuleReference)result;
+      this.referenceRewrites[mutableModuleReference] = mutableModuleReference;
+      this.RewriteChildren(mutableModuleReference);
+      return mutableModuleReference;
+    }
+
+    /// <summary>
+    /// Rewrites the named specified type reference.
+    /// </summary>
+    public virtual INamedTypeDefinition Rewrite(INamedTypeDefinition namedTypeDefinition) {
+      namedTypeDefinition.Dispatch(this.dispatchingVisitor);
+      return (INamedTypeDefinition)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the named specified type reference.
+    /// </summary>
+    public virtual INamedTypeReference Rewrite(INamedTypeReference typeReference) {
+      typeReference.DispatchAsReference(this.dispatchingVisitor);
+      return (INamedTypeReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the namespace alias for type.
+    /// </summary>
+    public virtual INamespaceAliasForType Rewrite(INamespaceAliasForType namespaceAliasForType) {
+      var mutableNamespaceAliasForType = namespaceAliasForType as NamespaceAliasForType;
+      if (mutableNamespaceAliasForType == null) return namespaceAliasForType;
+      this.RewriteChildren(mutableNamespaceAliasForType);
+      return mutableNamespaceAliasForType;
+    }
+
+    /// <summary>
+    /// Rewrites the namespace definition.
+    /// </summary>
+    public virtual INamespaceDefinition Rewrite(INamespaceDefinition namespaceDefinition) {
+      namespaceDefinition.Dispatch(this.dispatchingVisitor);
+      return (INamespaceDefinition)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified namespace member.
+    /// </summary>
+    public virtual INamespaceMember Rewrite(INamespaceMember namespaceMember) {
+      namespaceMember.Dispatch(this.dispatchingVisitor);
+      return (INamespaceMember)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given namespace type definition.
+    /// </summary>
+    public virtual INamespaceTypeDefinition Rewrite(INamespaceTypeDefinition namespaceTypeDefinition) {
+      var mutableNamespaceTypeDefinition = namespaceTypeDefinition as NamespaceTypeDefinition;
+      if (mutableNamespaceTypeDefinition == null) return namespaceTypeDefinition;
+      this.RewriteChildren(mutableNamespaceTypeDefinition);
+      return mutableNamespaceTypeDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given namespace type reference.
+    /// </summary>
+    public virtual INamespaceTypeReference Rewrite(INamespaceTypeReference namespaceTypeReference) {
+      var mutableNamespaceTypeReference = namespaceTypeReference as NamespaceTypeReference;
+      if (mutableNamespaceTypeReference == null || mutableNamespaceTypeReference.IsFrozen) return namespaceTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableNamespaceTypeReference, out result)) return (INamespaceTypeReference)result;
+      this.referenceRewrites[mutableNamespaceTypeReference] = mutableNamespaceTypeReference;
+      this.RewriteChildren(mutableNamespaceTypeReference);
+      return mutableNamespaceTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the nested alias for type
+    /// </summary>
+    public virtual INestedAliasForType Rewrite(INestedAliasForType nestedAliasForType) {
+      var mutableNestedAliasForType = nestedAliasForType as NestedAliasForType;
+      if (mutableNestedAliasForType == null) return nestedAliasForType;
+      this.RewriteChildren(mutableNestedAliasForType);
+      return mutableNestedAliasForType;
+    }
+
+    /// <summary>
+    /// Rewrites the given nested type definition.
+    /// </summary>
+    public virtual INestedTypeDefinition Rewrite(INestedTypeDefinition namespaceTypeDefinition) {
+      var mutableNestedTypeDefinition = namespaceTypeDefinition as NestedTypeDefinition;
+      if (mutableNestedTypeDefinition == null) return namespaceTypeDefinition;
+      this.RewriteChildren(mutableNestedTypeDefinition);
+      return mutableNestedTypeDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given namespace type reference.
+    /// </summary>
+    public virtual INestedTypeReference Rewrite(INestedTypeReference nestedTypeReference) {
+      nestedTypeReference.DispatchAsReference(this.dispatchingVisitor);
+      return (INestedTypeReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given namespace type reference.
+    /// </summary>
+    private INestedTypeReference RewriteUnspecialized(INestedTypeReference nestedTypeReference) {
+      Contract.Requires(!(nestedTypeReference is ISpecializedNestedTypeReference));
+      var mutableNestedTypeReference = nestedTypeReference as NestedTypeReference;
+      if (mutableNestedTypeReference == null || mutableNestedTypeReference.IsFrozen) return nestedTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableNestedTypeReference, out result)) return (INestedTypeReference)result;
+      this.referenceRewrites[mutableNestedTypeReference] = mutableNestedTypeReference;
+      this.RewriteChildren(mutableNestedTypeReference);
+      return mutableNestedTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the specified nested unit namespace.
+    /// </summary>
+    public virtual INestedUnitNamespace Rewrite(INestedUnitNamespace nestedUnitNamespace) {
+      var mutableNestedUnitNamespace = nestedUnitNamespace as NestedUnitNamespace;
+      if (mutableNestedUnitNamespace == null) return nestedUnitNamespace;
+      this.RewriteChildren(mutableNestedUnitNamespace);
+      return mutableNestedUnitNamespace;
+    }
+
+    /// <summary>
+    /// Rewrites the specified reference to a nested unit namespace.
+    /// </summary>
+    public virtual INestedUnitNamespaceReference Rewrite(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      var mutableReference = nestedUnitNamespaceReference as NestedUnitNamespaceReference;
+      if (mutableReference == null || mutableReference.IsFrozen) return nestedUnitNamespaceReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableReference, out result)) return (INestedUnitNamespaceReference)result;
+      this.referenceRewrites[mutableReference] = mutableReference;
+      this.RewriteChildren(mutableReference);
+      return mutableReference;
+    }
+
+    /// <summary>
+    /// Rewrites the specified operation.
+    /// </summary>
+    public virtual IOperation Rewrite(IOperation operation) {
+      var mutableOperation = operation as Operation;
+      if (mutableOperation == null) return operation;
+      this.RewriteChildren(mutableOperation);
+      return mutableOperation;
+    }
+
+    /// <summary>
+    /// Rewrites the specified operation exception information.
+    /// </summary>
+    public virtual IOperationExceptionInformation Rewrite(IOperationExceptionInformation operationExceptionInformation) {
+      var mutableOperationExceptionInformation = operationExceptionInformation as OperationExceptionInformation;
+      if (mutableOperationExceptionInformation == null) return operationExceptionInformation;
+      this.RewriteChildren(mutableOperationExceptionInformation);
+      return mutableOperationExceptionInformation;
+    }
+
+    /// <summary>
+    /// Rewrites the given parameter definition.
+    /// </summary>
+    public virtual IParameterDefinition Rewrite(IParameterDefinition parameterDefinition) {
+      var mutableParameterDefinition = parameterDefinition as ParameterDefinition;
+      if (mutableParameterDefinition == null) return parameterDefinition;
+      this.RewriteChildren(mutableParameterDefinition);
+      return mutableParameterDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given parameter type information.
+    /// </summary>
+    public virtual IParameterTypeInformation Rewrite(IParameterTypeInformation parameterTypeInformation) {
+      var mutableParameterTypeInformation = parameterTypeInformation as ParameterTypeInformation;
+      if (mutableParameterTypeInformation == null) return parameterTypeInformation;
+      this.RewriteChildren(mutableParameterTypeInformation);
+      return mutableParameterTypeInformation;
+    }
+
+    /// <summary>
+    /// Rewrites the specified platform invoke information.
+    /// </summary>
+    public virtual IPlatformInvokeInformation Rewrite(IPlatformInvokeInformation platformInvokeInformation) {
+      var mutablePlatformInvokeInformation = platformInvokeInformation as PlatformInvokeInformation;
+      if (mutablePlatformInvokeInformation == null) return platformInvokeInformation;
+      this.RewriteChildren(mutablePlatformInvokeInformation);
+      return mutablePlatformInvokeInformation;
+    }
+
+    /// <summary>
+    /// Rewrites the given pointer type reference.
+    /// </summary>
+    public virtual IPointerTypeReference Rewrite(IPointerTypeReference pointerTypeReference) {
+      var mutablePointerTypeReference = pointerTypeReference as PointerTypeReference;
+      if (mutablePointerTypeReference == null || mutablePointerTypeReference.IsFrozen) return pointerTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutablePointerTypeReference, out result)) return (IPointerTypeReference)result;
+      this.referenceRewrites[mutablePointerTypeReference] = mutablePointerTypeReference;
+      this.RewriteChildren(mutablePointerTypeReference);
+      return mutablePointerTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given property definition.
+    /// </summary>
+    public virtual IPropertyDefinition Rewrite(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(!(propertyDefinition is ISpecializedPropertyDefinition));
+      var mutablePropertyDefinition = propertyDefinition as PropertyDefinition;
+      if (mutablePropertyDefinition == null) return propertyDefinition;
+      this.RewriteChildren(mutablePropertyDefinition);
+      return mutablePropertyDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the given reference to a manifest resource.
+    /// </summary>
+    public virtual IResourceReference Rewrite(IResourceReference resourceReference) {
+      var mutableResourceReference = resourceReference as ResourceReference;
+      if (mutableResourceReference == null) return resourceReference;
+      this.RewriteChildren(mutableResourceReference);
+      return mutableResourceReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given root unit namespace.
+    /// </summary>
+    public virtual IRootUnitNamespace Rewrite(IRootUnitNamespace rootUnitNamespace) {
+      var mutableRootUnitNamespace = rootUnitNamespace as RootUnitNamespace;
+      if (mutableRootUnitNamespace == null) return rootUnitNamespace;
+      this.RewriteChildren(mutableRootUnitNamespace);
+      return mutableRootUnitNamespace;
+    }
+
+    /// <summary>
+    /// Rewrites the given reference to a root unit namespace.
+    /// </summary>
+    public virtual IRootUnitNamespaceReference Rewrite(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      var mutableRootUnitNamespaceReference = rootUnitNamespaceReference as RootUnitNamespaceReference;
+      if (mutableRootUnitNamespaceReference == null || mutableRootUnitNamespaceReference.IsFrozen) return rootUnitNamespaceReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableRootUnitNamespaceReference, out result)) return (IRootUnitNamespaceReference)result;
+      this.referenceRewrites[mutableRootUnitNamespaceReference] = mutableRootUnitNamespaceReference;
+      this.RewriteChildren(mutableRootUnitNamespaceReference);
+      return mutableRootUnitNamespaceReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given security attribute.
+    /// </summary>
+    public virtual ISecurityAttribute Rewrite(ISecurityAttribute securityAttribute) {
+      var mutableSecurityAttribute = securityAttribute as SecurityAttribute;
+      if (mutableSecurityAttribute == null) return securityAttribute;
+      this.RewriteChildren(mutableSecurityAttribute);
+      return mutableSecurityAttribute;
+    }
+
+    /// <summary>
+    /// Rewrites the given specialized field reference.
+    /// </summary>
+    public virtual ISpecializedFieldReference Rewrite(ISpecializedFieldReference specializedFieldReference) {
+      var mutableSpecializedFieldReference = specializedFieldReference as SpecializedFieldReference;
+      if (mutableSpecializedFieldReference == null || mutableSpecializedFieldReference.IsFrozen) return specializedFieldReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableSpecializedFieldReference, out result)) return (ISpecializedFieldReference)result;
+      this.referenceRewrites[mutableSpecializedFieldReference] = mutableSpecializedFieldReference;
+      this.RewriteChildren(mutableSpecializedFieldReference);
+      return mutableSpecializedFieldReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given specialized method reference.
+    /// </summary>
+    public virtual IMethodReference Rewrite(ISpecializedMethodReference specializedMethodReference) {
+      var mutableSpecializedMethodReference = specializedMethodReference as SpecializedMethodReference;
+      if (mutableSpecializedMethodReference == null || mutableSpecializedMethodReference.IsFrozen) return specializedMethodReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableSpecializedMethodReference, out result)) return (IMethodReference)result;
+      this.referenceRewrites[mutableSpecializedMethodReference] = mutableSpecializedMethodReference;
+      this.RewriteChildren(mutableSpecializedMethodReference);
+      return mutableSpecializedMethodReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given specialized nested type reference.
+    /// </summary>
+    public virtual INestedTypeReference Rewrite(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      var mutableSpecializedNestedTypeReference = specializedNestedTypeReference as SpecializedNestedTypeReference;
+      if (mutableSpecializedNestedTypeReference == null || mutableSpecializedNestedTypeReference.IsFrozen) return specializedNestedTypeReference;
+      IReference result;
+      if (this.referenceRewrites.TryGetValue(mutableSpecializedNestedTypeReference, out result)) return (ISpecializedNestedTypeReference)result;
+      this.referenceRewrites[mutableSpecializedNestedTypeReference] = mutableSpecializedNestedTypeReference;
+      this.RewriteChildren(mutableSpecializedNestedTypeReference);
+      return mutableSpecializedNestedTypeReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given type definition.
+    /// </summary>
+    public virtual ITypeDefinition Rewrite(ITypeDefinition typeDefinition) {
+      Contract.Requires(!(typeDefinition is IGenericTypeInstance), "Generic type instances should be reconstructed, not rewritten.");
+      typeDefinition.Dispatch(this.dispatchingVisitor);
+      return (ITypeDefinition)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified type member.
+    /// </summary>
+    public virtual ITypeDefinitionMember Rewrite(ITypeDefinitionMember typeMember) {
+      typeMember.Dispatch(this.dispatchingVisitor);
+      return (ITypeDefinitionMember)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified type reference.
+    /// </summary>
+    public virtual ITypeReference Rewrite(ITypeReference typeReference) {
+      typeReference.DispatchAsReference(this.dispatchingVisitor);
+      return (ITypeReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified unit.
+    /// </summary>
+    public virtual IUnit Rewrite(IUnit unit) {
+      unit.Dispatch(this.dispatchingVisitor);
+      return (IUnit)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified unit namespace.
+    /// </summary>
+    public virtual IUnitNamespace Rewrite(IUnitNamespace unitNamespace) {
+      unitNamespace.Dispatch(this.dispatchingVisitor);
+      return (IUnitNamespace)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified reference to a unit namespace.
+    /// </summary>
+    public virtual IUnitNamespaceReference Rewrite(IUnitNamespaceReference unitNamespaceReference) {
+      unitNamespaceReference.DispatchAsReference(this.dispatchingVisitor);
+      return (IUnitNamespaceReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the specified unit reference.
+    /// </summary>
+    public virtual IUnitReference Rewrite(IUnitReference unitReference) {
+      unitReference.DispatchAsReference(this.dispatchingVisitor);
+      return (IUnitReference)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given Win32 resource.
+    /// </summary>
+    public virtual IWin32Resource Rewrite(IWin32Resource win32Resource) {
+      var mutableWin32Resource = win32Resource as Win32Resource;
+      if (mutableWin32Resource == null) return win32Resource;
+      this.RewriteChildren(mutableWin32Resource);
+      return mutableWin32Resource;
+    }
+
+    /// <summary>
+    /// Rewrites the list of aliases for types.
+    /// </summary>
+    public virtual List<IAliasForType>/*?*/ Rewrite(List<IAliasForType>/*?*/ aliasesForTypes) {
+      if (aliasesForTypes == null) return null;
+      for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
+        aliasesForTypes[i] = this.Rewrite(aliasesForTypes[i]);
+      return aliasesForTypes;
+    }
+
+    /// <summary>
+    /// Rewrites the list of members of a type alias.
+    /// </summary>
+    public virtual List<IAliasMember>/*?*/ Rewrite(List<IAliasMember>/*?*/ aliasMembers) {
+      if (aliasMembers == null) return null;
+      for (int i = 0, n = aliasMembers.Count; i < n; i++)
+        aliasMembers[i] = this.Rewrite(aliasMembers[i]);
+      return aliasMembers;
+    }
+
+    /// <summary>
+    /// Rewrites the specified assembly references.
+    /// </summary>
+    public virtual List<IAssemblyReference>/*?*/ Rewrite(List<IAssemblyReference>/*?*/ assemblyReferences) {
+      if (assemblyReferences == null) return null;
+      for (int i = 0, n = assemblyReferences.Count; i < n; i++)
+        assemblyReferences[i] = this.Rewrite(assemblyReferences[i]);
+      return assemblyReferences;
+    }
+
+    /// <summary>
+    /// Rewrites the specified custom attributes.
+    /// </summary>
+    public virtual List<ICustomAttribute>/*?*/ Rewrite(List<ICustomAttribute>/*?*/ customAttributes) {
+      if (customAttributes == null) return null;
+      for (int i = 0, n = customAttributes.Count; i < n; i++)
+        customAttributes[i] = this.Rewrite(customAttributes[i]);
+      return customAttributes;
+    }
+
+    /// <summary>
+    /// Rewrites the specified custom modifiers.
+    /// </summary>
+    public virtual List<ICustomModifier> Rewrite(List<ICustomModifier> customModifiers) {
+      if (customModifiers == null) return null;
+      for (int i = 0, n = customModifiers.Count; i < n; i++)
+        customModifiers[i] = this.Rewrite(customModifiers[i]);
+      return customModifiers;
+    }
+
+    /// <summary>
+    /// Rewrites the specified events.
+    /// </summary>
+    public virtual List<IEventDefinition>/*?*/ Rewrite(List<IEventDefinition>/*?*/ events) {
+      if (events == null) return null;
+      for (int i = 0, n = events.Count; i < n; i++)
+        events[i] = this.Rewrite(events[i]);
+      return events;
+    }
+
+    /// <summary>
+    /// Rewrites the specified fields.
+    /// </summary>
+    public virtual List<IFieldDefinition>/*?*/ Rewrite(List<IFieldDefinition>/*?*/ fields) {
+      if (fields == null) return null;
+      for (int i = 0, n = fields.Count; i < n; i++)
+        fields[i] = this.Rewrite(fields[i]);
+      return fields;
+    }
+
+    /// <summary>
+    /// Rewrites the specified file references.
+    /// </summary>
+    public virtual List<IFileReference>/*?*/ Rewrite(List<IFileReference>/*?*/ fileReferences) {
+      if (fileReferences == null) return null;
+      for (int i = 0, n = fileReferences.Count; i < n; i++)
+        fileReferences[i] = this.Rewrite(fileReferences[i]);
+      return fileReferences;
+    }
+
+    /// <summary>
+    /// Rewrites the specified generic parameters.
+    /// </summary>
+    public virtual List<IGenericMethodParameter>/*?*/ Rewrite(List<IGenericMethodParameter>/*?*/ genericParameters) {
+      if (genericParameters == null) return null;
+      for (int i = 0, n = genericParameters.Count; i < n; i++)
+        genericParameters[i] = this.Rewrite(genericParameters[i]);
+      return genericParameters;
+    }
+
+    /// <summary>
+    /// Rewrites the specified generic parameters.
+    /// </summary>
+    public virtual List<IGenericTypeParameter>/*?*/ Rewrite(List<IGenericTypeParameter>/*?*/ genericParameters) {
+      if (genericParameters == null) return null;
+      for (int i = 0, n = genericParameters.Count; i < n; i++)
+        genericParameters[i] = this.Rewrite(genericParameters[i]);
+      return genericParameters;
+    }
+
+    /// <summary>
+    /// Rewrites the specified local definitions.
+    /// </summary>
+    public virtual List<ILocalDefinition>/*?*/ Rewrite(List<ILocalDefinition>/*?*/ localDefinitions) {
+      if (localDefinitions == null) return null;
+      for (int i = 0, n = localDefinitions.Count; i < n; i++)
+        localDefinitions[i] = this.Rewrite(localDefinitions[i]);
+      return localDefinitions;
+    }
+
+    /// <summary>
+    /// Rewrites the specified expressions.
+    /// </summary>
+    public virtual List<IMetadataExpression>/*?*/ Rewrite(List<IMetadataExpression>/*?*/ expressions) {
+      if (expressions == null) return null;
+      for (int i = 0, n = expressions.Count; i < n; i++)
+        expressions[i] = this.Rewrite(expressions[i]);
+      return expressions;
+    }
+
+    /// <summary>
+    /// Rewrites the specified named arguments.
+    /// </summary>
+    public virtual List<IMetadataNamedArgument>/*?*/ Rewrite(List<IMetadataNamedArgument>/*?*/ namedArguments) {
+      if (namedArguments == null) return null;
+      for (int i = 0, n = namedArguments.Count; i < n; i++)
+        namedArguments[i] = this.Rewrite(namedArguments[i]);
+      return namedArguments;
+    }
+
+    /// <summary>
+    /// Rewrites the specified methods.
+    /// </summary>
+    public virtual List<IMethodDefinition>/*?*/ Rewrite(List<IMethodDefinition>/*?*/ methods) {
+      if (methods == null) return null;
+      for (int i = 0, n = methods.Count; i < n; i++)
+        methods[i] = this.Rewrite(methods[i]);
+      return methods;
+    }
+
+    /// <summary>
+    /// Rewrites the specified method implementations.
+    /// </summary>
+    public virtual List<IMethodImplementation>/*?*/ Rewrite(List<IMethodImplementation>/*?*/ methodImplementations) {
+      if (methodImplementations == null) return null;
+      for (int i = 0, n = methodImplementations.Count; i < n; i++)
+        methodImplementations[i] = this.Rewrite(methodImplementations[i]);
+      return methodImplementations;
+    }
+
+    /// <summary>
+    /// Rewrites the specified method references.
+    /// </summary>
+    public virtual List<IMethodReference>/*?*/ Rewrite(List<IMethodReference>/*?*/ methodReferences) {
+      if (methodReferences == null) return null;
+      for (int i = 0, n = methodReferences.Count; i < n; i++)
+        methodReferences[i] = this.Rewrite(methodReferences[i]);
+      return methodReferences;
+    }
+
+    /// <summary>
+    /// Rewrites the specified modules.
+    /// </summary>
+    public virtual List<IModule>/*?*/ Rewrite(List<IModule>/*?*/ modules) {
+      if (modules == null) return null;
+      for (int i = 0, n = modules.Count; i < n; i++)
+        modules[i] = this.Rewrite(modules[i]);
+      return modules;
+    }
+
+    /// <summary>
+    /// Rewrites the specified module references.
+    /// </summary>
+    public virtual List<IModuleReference>/*?*/ Rewrite(List<IModuleReference>/*?*/ moduleReferences) {
+      if (moduleReferences == null) return null;
+      for (int i = 0, n = moduleReferences.Count; i < n; i++)
+        moduleReferences[i] = this.Rewrite(moduleReferences[i]);
+      return moduleReferences;
+    }
+
+    /// <summary>
+    /// Rewrites the specified types.
+    /// </summary>
+    public virtual List<INamedTypeDefinition>/*?*/ Rewrite(List<INamedTypeDefinition>/*?*/ types) {
+      for (int i = 0, n = types.Count; i < n; i++)
+        types[i] = (INamedTypeDefinition)this.Rewrite(types[i]);
+      return types;
+    }
+
+    /// <summary>
+    /// Rewrites the specified namespace members.
+    /// </summary>
+    public virtual List<INamespaceMember>/*?*/ Rewrite(List<INamespaceMember>/*?*/ namespaceMembers) {
+      if (namespaceMembers == null) return null;
+      for (int i = 0, n = namespaceMembers.Count; i < n; i++)
+        namespaceMembers[i] = this.Rewrite(namespaceMembers[i]);
+      return namespaceMembers;
+    }
+
+    /// <summary>
+    /// Rewrites the specified nested types.
+    /// </summary>
+    public virtual List<INestedTypeDefinition>/*?*/ Rewrite(List<INestedTypeDefinition>/*?*/ nestedTypes) {
+      if (nestedTypes == null) return null;
+      for (int i = 0, n = nestedTypes.Count; i < n; i++)
+        nestedTypes[i] = this.Rewrite(nestedTypes[i]);
+      return nestedTypes;
+    }
+
+    /// <summary>
+    /// Rewrites the specified operations.
+    /// </summary>
+    public virtual List<IOperation>/*?*/ Rewrite(List<IOperation>/*?*/ operations) {
+      if (operations == null) return null;
+      for (int i = 0, n = operations.Count; i < n; i++)
+        operations[i] = this.Rewrite(operations[i]);
+      return operations;
+    }
+
+    /// <summary>
+    /// Rewrites the specified operation exception informations.
+    /// </summary>
+    public virtual List<IOperationExceptionInformation>/*?*/ Rewrite(List<IOperationExceptionInformation>/*?*/ operationExceptionInformations) {
+      if (operationExceptionInformations == null) return null;
+      for (int i = 0, n = operationExceptionInformations.Count; i < n; i++)
+        operationExceptionInformations[i] = this.Rewrite(operationExceptionInformations[i]);
+      return operationExceptionInformations;
+    }
+
+    /// <summary>
+    /// Rewrites the specified parameters.
+    /// </summary>
+    public virtual List<IParameterDefinition>/*?*/ Rewrite(List<IParameterDefinition>/*?*/ parameters) {
+      if (parameters == null) return null;
+      for (int i = 0, n = parameters.Count; i < n; i++)
+        parameters[i] = this.Rewrite(parameters[i]);
+      return parameters;
+    }
+
+    /// <summary>
+    /// Rewrites the specified parameter type informations.
+    /// </summary>
+    public virtual List<IParameterTypeInformation>/*?*/ Rewrite(List<IParameterTypeInformation>/*?*/ parameterTypeInformations) {
+      if (parameterTypeInformations == null) return null;
+      for (int i = 0, n = parameterTypeInformations.Count; i < n; i++)
+        parameterTypeInformations[i] = this.Rewrite(parameterTypeInformations[i]);
+      return parameterTypeInformations;
+    }
+
+    /// <summary>
+    /// Rewrites the specified properties.
+    /// </summary>
+    public virtual List<IPropertyDefinition>/*?*/ Rewrite(List<IPropertyDefinition>/*?*/ properties) {
+      if (properties == null) return null;
+      for (int i = 0, n = properties.Count; i < n; i++)
+        properties[i] = this.Rewrite(properties[i]);
+      return properties;
+    }
+
+    /// <summary>
+    /// Rewrites the specified resource references.
+    /// </summary>
+    public virtual List<IResourceReference>/*?*/ Rewrite(List<IResourceReference>/*?*/ resourceReferences) {
+      if (resourceReferences == null) return null;
+      for (int i = 0, n = resourceReferences.Count; i < n; i++)
+        resourceReferences[i] = this.Rewrite(resourceReferences[i]);
+      return resourceReferences;
+    }
+
+    /// <summary>
+    /// Rewrites the specified security attributes.
+    /// </summary>
+    public virtual List<ISecurityAttribute>/*?*/ Rewrite(List<ISecurityAttribute>/*?*/ securityAttributes) {
+      if (securityAttributes == null) return null;
+      for (int i = 0, n = securityAttributes.Count; i < n; i++)
+        securityAttributes[i] = this.Rewrite(securityAttributes[i]);
+      return securityAttributes;
+    }
+
+    /// <summary>
+    /// Rewrites the specified type members.
+    /// </summary>
+    /// <remarks>Not used by the rewriter itself.</remarks>
+    public virtual List<ITypeDefinitionMember>/*?*/ Rewrite(List<ITypeDefinitionMember>/*?*/ typeMembers) {
+      if (typeMembers == null) return null;
+      for (int i = 0, n = typeMembers.Count; i < n; i++)
+        typeMembers[i] = this.Rewrite(typeMembers[i]);
+      return typeMembers;
+    }
+
+    /// <summary>
+    /// Rewrites the specified type references.
+    /// </summary>
+    public virtual List<ITypeReference>/*?*/ Rewrite(List<ITypeReference>/*?*/ typeReferences) {
+      if (typeReferences == null) return null;
+      for (int i = 0, n = typeReferences.Count; i < n; i++)
+        typeReferences[i] = this.Rewrite(typeReferences[i]);
+      return typeReferences;
+    }
+
+    /// <summary>
+    /// Rewrites the specified type references.
+    /// </summary>
+    public virtual List<IWin32Resource>/*?*/ Rewrite(List<IWin32Resource>/*?*/ win32Resources) {
+      if (win32Resources == null) return null;
+      for (int i = 0, n = win32Resources.Count; i < n; i++)
+        win32Resources[i] = this.Rewrite(win32Resources[i]);
+      return win32Resources;
+    }
+
+    /// <summary>
+    /// Rewrites the children of the alias for type
+    /// </summary>
+    public virtual void RewriteChildren(AliasForType aliasForType) {
+      aliasForType.AliasedType = this.Rewrite(aliasForType.AliasedType);
+      aliasForType.Attributes = this.Rewrite(aliasForType.Attributes);
+      aliasForType.Members = this.Rewrite(aliasForType.Members);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the array type reference.
+    /// </summary>
+    public virtual void RewriteChildren(ArrayTypeReference arrayTypeReference) {
+      Contract.Requires(!arrayTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)arrayTypeReference);
+      arrayTypeReference.ElementType = this.Rewrite(arrayTypeReference.ElementType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given assembly.
+    /// </summary>
+    public virtual void RewriteChildren(Assembly assembly) {
+      assembly.AssemblyAttributes = this.Rewrite(assembly.AssemblyAttributes);
+      assembly.ExportedTypes = this.Rewrite(assembly.ExportedTypes);
+      assembly.Files = this.Rewrite(assembly.Files);
+      assembly.MemberModules = this.Rewrite(assembly.MemberModules);
+      assembly.Resources = this.Rewrite(assembly.Resources);
+      assembly.SecurityAttributes = this.Rewrite(assembly.SecurityAttributes);
+      this.RewriteChildren((Module)assembly);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given assembly reference.
+    /// </summary>
+    public virtual void RewriteChildren(AssemblyReference assemblyReference) {
+      Contract.Requires(!assemblyReference.IsFrozen);
+      this.RewriteChildren((ModuleReference)assemblyReference);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given custom attribute.
+    /// </summary>
+    public virtual void RewriteChildren(CustomAttribute customAttribute) {
+      customAttribute.Arguments = this.Rewrite(customAttribute.Arguments);
+      customAttribute.Constructor = this.Rewrite(customAttribute.Constructor);
+      customAttribute.NamedArguments = this.Rewrite(customAttribute.NamedArguments);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given custom modifier.
+    /// </summary>
+    public virtual void RewriteChildren(CustomModifier customModifier) {
+      customModifier.Modifier = this.Rewrite(customModifier.Modifier);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given event definition.
+    /// </summary>
+    public virtual void RewriteChildren(EventDefinition eventDefinition) {
+      this.RewriteChildren((TypeDefinitionMember)eventDefinition);
+      eventDefinition.Accessors = this.Rewrite(eventDefinition.Accessors);
+      eventDefinition.Adder = this.Rewrite(eventDefinition.Adder);
+      if (eventDefinition.Caller != null)
+        eventDefinition.Caller = this.Rewrite(eventDefinition.Caller);
+      eventDefinition.Remover = this.Rewrite(eventDefinition.Remover);
+      eventDefinition.Type = this.Rewrite(eventDefinition.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given field definition.
+    /// </summary>
+    public virtual void RewriteChildren(FieldDefinition fieldDefinition) {
+      this.RewriteChildren((TypeDefinitionMember)fieldDefinition);
+      if (fieldDefinition.IsCompileTimeConstant)
+        fieldDefinition.CompileTimeValue = this.Rewrite(fieldDefinition.CompileTimeValue);
+      if (fieldDefinition.IsModified)
+        fieldDefinition.CustomModifiers = this.Rewrite(fieldDefinition.CustomModifiers);
+      if (fieldDefinition.IsMarshalledExplicitly)
+        fieldDefinition.MarshallingInformation = this.Rewrite(fieldDefinition.MarshallingInformation);
+      fieldDefinition.InternFactory = this.internFactory;
+      fieldDefinition.Type = this.Rewrite(fieldDefinition.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the chidren of the given field reference.
+    /// </summary>
+    public virtual void RewriteChildren(FieldReference fieldReference) {
+      Contract.Requires(!fieldReference.IsFrozen);
+      fieldReference.Attributes = this.Rewrite(fieldReference.Attributes);
+      fieldReference.ContainingType = this.Rewrite(fieldReference.ContainingType);
+      if (fieldReference.IsModified)
+        fieldReference.CustomModifiers = this.Rewrite(fieldReference.CustomModifiers);
+      fieldReference.Type = this.Rewrite(fieldReference.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children the given file reference.
+    /// </summary>
+    public virtual void RewriteChildren(FileReference fileReference) {
+    }
+
+    /// <summary>
+    /// Rewrites the children the given function pointer type reference.
+    /// </summary>
+    public virtual void RewriteChildren(FunctionPointerTypeReference functionPointerTypeReference) {
+      Contract.Requires(!functionPointerTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)functionPointerTypeReference);
+      functionPointerTypeReference.ExtraArgumentTypes = this.Rewrite(functionPointerTypeReference.ExtraArgumentTypes);
+      functionPointerTypeReference.Parameters = this.Rewrite(functionPointerTypeReference.Parameters);
+      if (functionPointerTypeReference.ReturnValueIsModified)
+        functionPointerTypeReference.ReturnValueCustomModifiers = this.Rewrite(functionPointerTypeReference.ReturnValueCustomModifiers);
+      functionPointerTypeReference.Type = this.Rewrite(functionPointerTypeReference.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic method instance reference.
+    /// </summary>
+    public virtual void RewriteChildren(GenericMethodInstanceReference genericMethodInstanceReference) {
+      Contract.Requires(!genericMethodInstanceReference.IsFrozen);
+      this.RewriteChildren((MethodReference)genericMethodInstanceReference);
+      genericMethodInstanceReference.GenericArguments = this.Rewrite(genericMethodInstanceReference.GenericArguments);
+      genericMethodInstanceReference.GenericMethod = this.Rewrite(genericMethodInstanceReference.GenericMethod);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic method parameter reference.
+    /// </summary>
+    public virtual void RewriteChildren(GenericMethodParameter genericMethodParameter) {
+      this.RewriteChildren((GenericParameter)genericMethodParameter);
+    }
+
+    /// <summary>
+    /// Rewrites the children the given generic method parameter reference.
+    /// </summary>
+    public virtual void RewriteChildren(GenericMethodParameterReference genericMethodParameterReference) {
+      Contract.Requires(!genericMethodParameterReference.IsFrozen);
+      this.RewriteChildren((TypeReference)genericMethodParameterReference);
+      genericMethodParameterReference.DefiningMethod = this.Rewrite(genericMethodParameterReference.DefiningMethod);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic parameter.
+    /// </summary>
+    public virtual void RewriteChildren(GenericParameter genericParameter) {
+      this.RewriteChildren((NamedTypeDefinition)genericParameter);
+      genericParameter.Constraints = this.Rewrite(genericParameter.Constraints);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic type instance reference.
+    /// </summary>
+    public virtual void RewriteChildren(GenericTypeInstanceReference genericTypeInstanceReference) {
+      Contract.Requires(!genericTypeInstanceReference.IsFrozen);
+      this.RewriteChildren((TypeReference)genericTypeInstanceReference);
+      genericTypeInstanceReference.GenericArguments = this.Rewrite(genericTypeInstanceReference.GenericArguments);
+      genericTypeInstanceReference.GenericType = this.Rewrite(genericTypeInstanceReference.GenericType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic type parameter .
+    /// </summary>
+    public virtual void RewriteChildren(GenericTypeParameter genericTypeParameter) {
+      this.RewriteChildren((GenericParameter)genericTypeParameter);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic type parameter reference.
+    /// </summary>
+    public virtual void RewriteChildren(GenericTypeParameterReference genericTypeParameterReference) {
+      Contract.Requires(!genericTypeParameterReference.IsFrozen);
+      this.RewriteChildren((TypeReference)genericTypeParameterReference);
+      genericTypeParameterReference.DefiningType = this.Rewrite(genericTypeParameterReference.DefiningType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given global field definition.
+    /// </summary>
+    public virtual void RewriteChildren(GlobalFieldDefinition globalFieldDefinition) {
+      this.RewriteChildren((FieldDefinition)globalFieldDefinition);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given global method definition.
+    /// </summary>
+    public virtual void RewriteChildren(GlobalMethodDefinition globalMethodDefinition) {
+      this.RewriteChildren((MethodDefinition)globalMethodDefinition);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified local definition.
+    /// </summary>
+    public virtual void RewriteChildren(LocalDefinition localDefinition) {
+      if (localDefinition.IsConstant)
+        localDefinition.CompileTimeValue = this.Rewrite(localDefinition.CompileTimeValue);
+      if (localDefinition.IsModified)
+        localDefinition.CustomModifiers = this.Rewrite(localDefinition.CustomModifiers);
+      localDefinition.Type = this.Rewrite(localDefinition.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given managed pointer type reference.
+    /// </summary>
+    public virtual void RewriteChildren(ManagedPointerTypeReference managedPointerTypeReference) {
+      Contract.Requires(!managedPointerTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)managedPointerTypeReference);
+      managedPointerTypeReference.TargetType = this.Rewrite(managedPointerTypeReference.TargetType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given marshalling information.
+    /// </summary>
+    public virtual void RewriteChildren(MarshallingInformation marshallingInformation) {
+      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler)
+        marshallingInformation.CustomMarshaller = this.Rewrite(marshallingInformation.CustomMarshaller);
+      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray && 
+      (marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
+      marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
+      marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_RECORD))
+        marshallingInformation.SafeArrayElementUserDefinedSubtype = this.Rewrite(marshallingInformation.SafeArrayElementUserDefinedSubtype);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given metadata constant.
+    /// </summary>
+    public virtual void RewriteChildren(MetadataConstant constant) {
+      this.RewriteChildren((MetadataExpression)constant);
+      constant.Type = this.Rewrite(constant.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given metadata array creation expression.
+    /// </summary>
+    public virtual void RewriteChildren(MetadataCreateArray createArray) {
+      this.RewriteChildren((MetadataExpression)createArray);
+      createArray.ElementType = this.Rewrite(createArray.ElementType);
+      createArray.Initializers = this.Rewrite(createArray.Initializers);
+    }
+
+    /// <summary>
+    /// Rewrites the children the given metadata expression.
+    /// </summary>
+    public virtual void RewriteChildren(MetadataExpression expression) {
+      expression.Type = this.Rewrite(expression.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given metadata named argument expression.
+    /// </summary>
+    public virtual void RewriteChildren(MetadataNamedArgument namedArgument) {
+      this.RewriteChildren((MetadataExpression)namedArgument);
+      namedArgument.ArgumentValue = this.Rewrite(namedArgument.ArgumentValue);
+    }
+
+    /// <summary>
+    /// Rewrites the given metadata typeof expression.
+    /// </summary>
+    public virtual void RewriteChildren(MetadataTypeOf metadataTypeOf) {
+      this.RewriteChildren((MetadataExpression)metadataTypeOf);
+      metadataTypeOf.TypeToGet = this.Rewrite(metadataTypeOf.TypeToGet);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method body.
+    /// </summary>
+    public virtual void RewriteChildren(MethodBody methodBody) {
+      methodBody.LocalVariables = this.Rewrite(methodBody.LocalVariables);
+      methodBody.Operations = this.Rewrite(methodBody.Operations);
+      methodBody.OperationExceptionInformation = this.Rewrite(methodBody.OperationExceptionInformation);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method definition.
+    /// </summary>
+    public virtual void RewriteChildren(MethodDefinition method) {
+      this.RewriteChildren((TypeDefinitionMember)method);
+      if (method.IsGeneric)
+        method.GenericParameters = this.Rewrite(method.GenericParameters);
+      method.InternFactory = this.internFactory;
+      method.Parameters = this.Rewrite(method.Parameters);
+      if (method.IsPlatformInvoke)
+        method.PlatformInvokeData = this.Rewrite((PlatformInvokeInformation)method.PlatformInvokeData);
+      method.ReturnValueAttributes = this.Rewrite(method.ReturnValueAttributes);
+      if (method.ReturnValueIsModified)
+        method.ReturnValueCustomModifiers = this.Rewrite(method.ReturnValueCustomModifiers);
+      if (method.ReturnValueIsMarshalledExplicitly)
+        method.ReturnValueMarshallingInformation = this.Rewrite(method.ReturnValueMarshallingInformation);
+      if (method.HasDeclarativeSecurity)
+        method.SecurityAttributes = this.Rewrite(method.SecurityAttributes);
+      method.Type = this.Rewrite(method.Type);
+      if (!method.IsAbstract && !method.IsExternal)
+        method.Body = this.Rewrite(method.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method implementation.
+    /// </summary>
+    public virtual void RewriteChildren(MethodImplementation methodImplementation) {
+      methodImplementation.ImplementedMethod = this.Rewrite(methodImplementation.ImplementedMethod);
+      methodImplementation.ImplementingMethod = this.Rewrite(methodImplementation.ImplementingMethod);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method reference.
+    /// </summary>
+    public virtual void RewriteChildren(MethodReference methodReference) {
+      Contract.Requires(!methodReference.IsFrozen);
+      methodReference.Attributes = this.Rewrite(methodReference.Attributes);
+      methodReference.ContainingType = this.Rewrite(methodReference.ContainingType);
+      methodReference.ExtraParameters = this.Rewrite(methodReference.ExtraParameters);
+      methodReference.InternFactory = this.internFactory;
+      methodReference.Parameters = this.Rewrite(methodReference.Parameters);
+      if (methodReference.ReturnValueIsModified)
+        methodReference.ReturnValueCustomModifiers = this.Rewrite(methodReference.ReturnValueCustomModifiers);
+      methodReference.Type = this.Rewrite(methodReference.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given modified type reference.
+    /// </summary>
+    public virtual void RewriteChildren(ModifiedTypeReference modifiedTypeReference) {
+      Contract.Requires(!modifiedTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)modifiedTypeReference);
+      modifiedTypeReference.CustomModifiers = this.Rewrite(modifiedTypeReference.CustomModifiers);
+      modifiedTypeReference.UnmodifiedType = this.Rewrite(modifiedTypeReference.UnmodifiedType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given module.
+    /// </summary>
+    public virtual void RewriteChildren(Module module) {
+      this.RewriteChildren((Unit)module);
+      module.AssemblyReferences = this.Rewrite(module.AssemblyReferences);
+      if (module.Kind == ModuleKind.ConsoleApplication || module.Kind == ModuleKind.WindowsApplication)
+        module.EntryPoint = this.Rewrite(module.EntryPoint);
+      module.ModuleAttributes = this.Rewrite(module.ModuleAttributes);
+      module.ModuleReferences = this.Rewrite(module.ModuleReferences);
+      module.Win32Resources = this.Rewrite(module.Win32Resources);
+      module.UnitNamespaceRoot = this.Rewrite(module.UnitNamespaceRoot);
+    }
+
+    /// <summary>
+    /// Rewrites the children the given module reference.
+    /// </summary>
+    public virtual void RewriteChildren(ModuleReference moduleReference) {
+      this.RewriteChildren((UnitReference)moduleReference);
+      if (moduleReference.ContainingAssembly != null)
+        moduleReference.ContainingAssembly = this.Rewrite(moduleReference.ContainingAssembly);
+    }
+
+    /// <summary>
+    /// Rewrites the namespace alias for type
+    /// </summary>
+    public virtual void RewriteChildren(NamespaceAliasForType namespaceAliasForType) {
+      this.RewriteChildren((AliasForType)namespaceAliasForType);
+    }
+
+    /// <summary>
+    /// Rewrites the given namespace type reference.
+    /// </summary>
+    public virtual void RewriteChildren(NamespaceTypeDefinition namespaceTypeDefinition) {
+      this.RewriteChildren((NamedTypeDefinition)namespaceTypeDefinition);
+    }
+
+    /// <summary>
+    /// Rewrites the given namespace type reference.
+    /// </summary>
+    public virtual void RewriteChildren(NamespaceTypeReference namespaceTypeReference) {
+      Contract.Requires(!namespaceTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)namespaceTypeReference);
+      namespaceTypeReference.ContainingUnitNamespace = this.Rewrite(namespaceTypeReference.ContainingUnitNamespace);
+    }
+
+    /// <summary>
+    /// Rewrites the nested alias for type
+    /// </summary>
+    public virtual void RewriteChildren(NestedAliasForType nestedAliasForType) {
+      this.RewriteChildren((AliasForType)nestedAliasForType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of given nested type definition.
+    /// </summary>
+    public virtual void RewriteChildren(NestedTypeDefinition nestedTypeDefinition) {
+      this.RewriteChildren((NamedTypeDefinition)nestedTypeDefinition);
+    }
+
+    /// <summary>
+    /// Rewrites the given nested type reference.
+    /// </summary>
+    public virtual void RewriteChildren(NestedTypeReference nestedTypeReference) {
+      Contract.Requires(!nestedTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)nestedTypeReference);
+      nestedTypeReference.ContainingType = this.Rewrite(nestedTypeReference.ContainingType);
+    }
+
+    /// <summary>
+    /// Rewrites the given nested unit namespace.
+    /// </summary>
+    public virtual void RewriteChildren(NestedUnitNamespace nestedUnitNamespace) {
+      this.RewriteChildren((UnitNamespace)nestedUnitNamespace);
+    }
+
+    /// <summary>
+    /// Rewrites the given nested unit namespace reference.
+    /// </summary>
+    public virtual void RewriteChildren(NestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      Contract.Requires(!nestedUnitNamespaceReference.IsFrozen);
+      this.RewriteChildren((UnitNamespaceReference)nestedUnitNamespaceReference);
+      nestedUnitNamespaceReference.ContainingUnitNamespace = this.Rewrite(nestedUnitNamespaceReference.ContainingUnitNamespace);
+    }
+
+    /// <summary>
+    /// Rewrites the children the specified operation.
+    /// </summary>
+    public virtual void RewriteChildren(Operation operation) {
+      var typeReference = operation.Value as ITypeReference;
+      if (typeReference != null)
+        operation.Value = this.Rewrite(typeReference);
+      else {
+        var fieldReference = operation.Value as IFieldReference;
+        if (fieldReference != null)
+          operation.Value = this.Rewrite(fieldReference);
+        else {
+          var methodReference = operation.Value as IMethodReference;
+          if (methodReference != null)
+            operation.Value = this.Rewrite(methodReference);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified operation exception information.
+    /// </summary>
+    public virtual void RewriteChildren(OperationExceptionInformation operationExceptionInformation) {
+      if (operationExceptionInformation.HandlerKind == HandlerKind.Catch || operationExceptionInformation.HandlerKind == HandlerKind.Filter)
+        operationExceptionInformation.ExceptionType = this.Rewrite(operationExceptionInformation.ExceptionType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given parameter definition.
+    /// </summary>
+    public virtual void RewriteChildren(ParameterDefinition parameterDefinition) {
+      parameterDefinition.Attributes = this.Rewrite(parameterDefinition.Attributes);
+      if (parameterDefinition.IsModified)
+        parameterDefinition.CustomModifiers = this.Rewrite(parameterDefinition.CustomModifiers);
+      if (parameterDefinition.HasDefaultValue)
+        parameterDefinition.DefaultValue = this.Rewrite(parameterDefinition.DefaultValue);
+      if (parameterDefinition.IsMarshalledExplicitly)
+        parameterDefinition.MarshallingInformation = this.Rewrite(parameterDefinition.MarshallingInformation);
+      parameterDefinition.Type = this.Rewrite(parameterDefinition.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the given parameter type information.
+    /// </summary>
+    public virtual void RewriteChildren(ParameterTypeInformation parameterTypeInformation) {
+      if (parameterTypeInformation.IsModified)
+        parameterTypeInformation.CustomModifiers = this.Rewrite(parameterTypeInformation.CustomModifiers);
+      parameterTypeInformation.Type = this.Rewrite(parameterTypeInformation.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified platform invoke information.
+    /// </summary>
+    public virtual void RewriteChildren(PlatformInvokeInformation platformInvokeInformation) {
+      platformInvokeInformation.ImportModule = this.Rewrite(platformInvokeInformation.ImportModule);
+    }
+
+    /// <summary>
+    /// Rewrites the given pointer type reference.
+    /// </summary>
+    public virtual void RewriteChildren(PointerTypeReference pointerTypeReference) {
+      Contract.Requires(!pointerTypeReference.IsFrozen);
+      this.RewriteChildren((TypeReference)pointerTypeReference);
+      pointerTypeReference.TargetType = this.Rewrite(pointerTypeReference.TargetType);
+    }
+
+    /// <summary>
+    /// Rewrites the given property definition.
+    /// </summary>
+    public virtual void RewriteChildren(PropertyDefinition propertyDefinition) {
+      this.RewriteChildren((TypeDefinitionMember)propertyDefinition);
+      propertyDefinition.Accessors = this.Rewrite(propertyDefinition.Accessors);
+      if (propertyDefinition.HasDefaultValue)
+        propertyDefinition.DefaultValue = this.Rewrite((MetadataConstant)propertyDefinition.DefaultValue);
+      if (propertyDefinition.Getter != null)
+        propertyDefinition.Getter = this.Rewrite(propertyDefinition.Getter);
+      propertyDefinition.Parameters = this.Rewrite(propertyDefinition.Parameters);
+      propertyDefinition.ReturnValueAttributes = this.Rewrite(propertyDefinition.ReturnValueAttributes);
+      if (propertyDefinition.ReturnValueIsModified)
+        propertyDefinition.ReturnValueCustomModifiers = this.Rewrite(propertyDefinition.ReturnValueCustomModifiers);
+      if (propertyDefinition.Setter != null)
+        propertyDefinition.Setter = this.Rewrite(propertyDefinition.Setter);
+      propertyDefinition.Type = this.Rewrite(propertyDefinition.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given reference to a manifest resource.
+    /// </summary>
+    public virtual void RewriteChildren(ResourceReference resourceReference) {
+      resourceReference.Attributes = this.Rewrite(resourceReference.Attributes);
+      resourceReference.DefiningAssembly = this.Rewrite(resourceReference.DefiningAssembly);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified root unit namespace.
+    /// </summary>
+    public virtual void RewriteChildren(RootUnitNamespace rootUnitNamespace) {
+      this.RewriteChildren((UnitNamespace)rootUnitNamespace);
+    }
+
+    /// <summary>
+    /// Rewrites the given reference to a root unit namespace.
+    /// </summary>
+    public virtual void RewriteChildren(RootUnitNamespaceReference rootUnitNamespaceReference) {
+      Contract.Requires(!rootUnitNamespaceReference.IsFrozen);
+      this.RewriteChildren((UnitNamespaceReference)rootUnitNamespaceReference);
+      rootUnitNamespaceReference.Unit = this.Rewrite(rootUnitNamespaceReference.Unit);
+    }
+
+    /// <summary>
+    /// Rewrites the given security attribute.
+    /// </summary>
+    public virtual void RewriteChildren(SecurityAttribute securityAttribute) {
+      securityAttribute.Attributes = this.Rewrite(securityAttribute.Attributes);
+    }
+
+    /// <summary>
+    /// Rewrites the given specialized field reference.
+    /// </summary>
+    public virtual void RewriteChildren(SpecializedFieldReference fieldReference) {
+      Contract.Requires(!fieldReference.IsFrozen);
+      this.RewriteChildren((FieldReference)fieldReference);
+      fieldReference.UnspecializedVersion = this.Rewrite(fieldReference.UnspecializedVersion);
+    }
+
+    /// <summary>
+    /// Rewrites the given specialized method reference.
+    /// </summary>
+    public virtual void RewriteChildren(SpecializedMethodReference specializedMethodReference) {
+      Contract.Requires(!specializedMethodReference.IsFrozen);
+      this.RewriteChildren((MethodReference)specializedMethodReference);
+      specializedMethodReference.UnspecializedVersion = this.Rewrite(specializedMethodReference.UnspecializedVersion);
+    }
+
+    /// <summary>
+    /// Rewrites the given specialized nested type reference.
+    /// </summary>
+    public virtual void RewriteChildren(SpecializedNestedTypeReference specializedNestedTypeReference) {
+      Contract.Requires(!specializedNestedTypeReference.IsFrozen);
+      this.RewriteChildren((NestedTypeReference)specializedNestedTypeReference);
+      specializedNestedTypeReference.UnspecializedVersion = this.Rewrite(specializedNestedTypeReference.UnspecializedVersion);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified named type definition.
+    /// </summary>
+    public virtual void RewriteChildren(NamedTypeDefinition typeDefinition) {
+      typeDefinition.Attributes = this.Rewrite(typeDefinition.Attributes);
+      typeDefinition.BaseClasses = this.Rewrite(typeDefinition.BaseClasses);
+      typeDefinition.ExplicitImplementationOverrides = this.Rewrite(typeDefinition.ExplicitImplementationOverrides);
+      if (typeDefinition.IsGeneric)
+        typeDefinition.GenericParameters = this.Rewrite(typeDefinition.GenericParameters);
+      if (typeDefinition.HasDeclarativeSecurity)
+        typeDefinition.SecurityAttributes = this.Rewrite(typeDefinition.SecurityAttributes);
+      if (typeDefinition.IsEnum)
+        typeDefinition.UnderlyingType = this.Rewrite(typeDefinition.UnderlyingType);
+      typeDefinition.InternFactory = this.internFactory;
+      typeDefinition.PlatformType = this.host.PlatformType;
+      typeDefinition.Interfaces = this.Rewrite(typeDefinition.Interfaces);
+      typeDefinition.Events = this.Rewrite(typeDefinition.Events);
+      typeDefinition.Fields = this.Rewrite(typeDefinition.Fields);
+      typeDefinition.Methods = this.Rewrite(typeDefinition.Methods);
+      typeDefinition.NestedTypes = this.Rewrite(typeDefinition.NestedTypes);
+      typeDefinition.Properties = this.Rewrite(typeDefinition.Properties);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given type definition member.
+    /// </summary>
+    public virtual void RewriteChildren(TypeDefinitionMember typeDefinitionMember) {
+      typeDefinitionMember.Attributes = this.Rewrite(typeDefinitionMember.Attributes);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given type reference.
+    /// </summary>
+    public virtual void RewriteChildren(TypeReference typeReference) {
+      typeReference.Attributes = this.Rewrite(typeReference.Attributes);
+      typeReference.InternFactory = this.internFactory;
+      typeReference.PlatformType = this.host.PlatformType;
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified unit.
+    /// </summary>
+    public virtual void RewriteChildren(Unit unit) {
+      this.RewriteChildren((UnitReference)unit);
+      unit.PlatformType = this.host.PlatformType;
+    }
+
+    /// <summary>
+    /// Rewrites the specified unit.
+    /// </summary>
+    public virtual void RewriteChildren(UnitReference unitReference) {
+      Contract.Requires(!(unitReference.IsFrozen));
+      unitReference.Attributes = this.Rewrite(unitReference.Attributes);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified unit namespace.
+    /// </summary>
+    public virtual void RewriteChildren(UnitNamespace unitNamespace) {
+      unitNamespace.Attributes = this.Rewrite(unitNamespace.Attributes);
+      unitNamespace.Members = this.Rewrite(unitNamespace.Members);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the specified reference to a unit namespace.
+    /// </summary>
+    public virtual void RewriteChildren(UnitNamespaceReference unitNamespaceReference) {
+      unitNamespaceReference.Attributes = this.Rewrite(unitNamespaceReference.Attributes);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given Win32 resource.
+    /// </summary>
+    public virtual void RewriteChildren(Win32Resource win32Resource) {
+    }
+
+
+  }
 
   /// <summary>
   /// Implemented by mutable objects that provide a method that makes the mutable object a copy of a given immutable object.
@@ -1434,6 +3336,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.cache.TryGetValue(assemblyReference.ResolvedAssembly, out mutatedResolvedAssembly))
           assemblyReference.ResolvedAssembly = (IAssembly)mutatedResolvedAssembly;
       }
+      assemblyReference.Host = this.host;
+      assemblyReference.ReferringUnit = this.GetCurrentUnit();
       return assemblyReference;
     }
 
@@ -1759,7 +3663,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.Visit((TypeReference)genericTypeInstanceReference);
       this.path.Push(genericTypeInstanceReference);
       genericTypeInstanceReference.GenericArguments = this.Visit(genericTypeInstanceReference.GenericArguments);
-      genericTypeInstanceReference.GenericType = this.Visit(genericTypeInstanceReference.GenericType);
+      genericTypeInstanceReference.GenericType = (INamedTypeReference)this.Visit(genericTypeInstanceReference.GenericType);
       this.path.Pop();
       return genericTypeInstanceReference;
     }
@@ -2402,6 +4306,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.cache.TryGetValue(moduleReference.ResolvedModule, out mutatedResolvedModule))
           moduleReference.ResolvedModule = (IModule)mutatedResolvedModule;
       }
+      moduleReference.Host = this.host;
+      moduleReference.ReferringUnit = this.GetCurrentUnit();
       return moduleReference;
     }
 
@@ -2458,7 +4364,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual NamespaceTypeDefinition Visit(NamespaceTypeDefinition namespaceTypeDefinition) {
       if (this.stopTraversal) return namespaceTypeDefinition;
-      this.Visit((TypeDefinition)namespaceTypeDefinition);
+      this.Visit((NamedTypeDefinition)namespaceTypeDefinition);
       namespaceTypeDefinition.ContainingUnitNamespace = this.GetCurrentNamespace();
       return namespaceTypeDefinition;
     }
@@ -2512,7 +4418,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual NestedTypeDefinition Visit(NestedTypeDefinition nestedTypeDefinition) {
       if (this.stopTraversal) return nestedTypeDefinition;
-      this.Visit((TypeDefinition)nestedTypeDefinition);
+      this.Visit((NamedTypeDefinition)nestedTypeDefinition);
       nestedTypeDefinition.ContainingTypeDefinition = this.GetCurrentType();
       return nestedTypeDefinition;
     }
@@ -2578,7 +4484,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Note that when overriding this method, care must be taken to add the given mutable type definition to this.flatListOfTypes.
     /// </summary>
     /// <param name="typeDefinition">A mutable type definition.</param>
-    protected virtual void Visit(TypeDefinition typeDefinition) {
+    protected virtual void Visit(NamedTypeDefinition typeDefinition) {
       if (this.stopTraversal) return;
       this.flatListOfTypes.Add(typeDefinition);
       this.path.Push(typeDefinition);
@@ -2607,7 +4513,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
       if (this.stopTraversal) return;
       for (int i = 0, n = typeDefinitions.Count; i < n; i++) {
-        TypeDefinition/*?*/ typeDef = typeDefinitions[i] as TypeDefinition;
+        NamedTypeDefinition/*?*/ typeDef = typeDefinitions[i] as NamedTypeDefinition;
         if (typeDef == null) continue;
         this.path.Push(typeDef);
         typeDef.PrivateHelperMembers = this.Visit(typeDef.PrivateHelperMembers);
@@ -4285,7 +6191,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (mutable != null) return this.Mutate(mutable);
       if (this.visitImmutableNodes) {
         this.path.Push(localDefinition);
-        this.Visit(localDefinition.CustomModifiers);
+        if (localDefinition.IsModified)
+          this.Visit(localDefinition.CustomModifiers);
         this.Visit(localDefinition.Type);
         this.path.Pop();
       }
@@ -5107,6 +7014,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.referenceCache.TryGetValue(moduleReference.ResolvedModule, out mutatedResolvedModule))
           moduleReference.ResolvedModule = (IModule)mutatedResolvedModule;
       }
+      moduleReference.Host = this.host;
+      moduleReference.ReferringUnit = this.GetCurrentUnit();
       return moduleReference;
     }
 
@@ -5396,7 +7305,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Replaces the child nodes of the given mutable type definition with the results of running the mutator over them. 
     /// </summary>
     /// <param name="typeDefinition">A mutable type definition.</param>
-    protected virtual void VisitTypeDefinition(TypeDefinition typeDefinition) {
+    protected virtual void VisitTypeDefinition(NamedTypeDefinition typeDefinition) {
       if (this.stopTraversal) return;
       this.path.Push(typeDefinition);
       typeDefinition.Attributes = this.Mutate(typeDefinition.Attributes);
@@ -5424,7 +7333,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
       if (this.stopTraversal) return;
       for (int i = 0, n = typeDefinitions.Count; i < n; i++) {
-        TypeDefinition/*?*/ typeDef = typeDefinitions[i] as TypeDefinition;
+        NamedTypeDefinition/*?*/ typeDef = typeDefinitions[i] as NamedTypeDefinition;
         if (typeDef == null) continue;
         this.path.Push(typeDef);
         typeDef.PrivateHelperMembers = this.Mutate(typeDef.PrivateHelperMembers);
@@ -5780,7 +7689,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       //^ ensures !this.referenceCache.ContainsKey(genericTypeInstanceReference);
       if (this.stopTraversal) return genericTypeInstanceReference;
       var args = this.Mutate(genericTypeInstanceReference.GenericArguments);
-      var typ = this.Visit(genericTypeInstanceReference.GenericType);
+      var typ = (INamedTypeReference)this.Visit(genericTypeInstanceReference.GenericType);
       if (args != genericTypeInstanceReference.GenericArguments || typ != genericTypeInstanceReference.GenericType) {
         return MutableModelHelper.GetGenericTypeInstanceReference(new List<ITypeReference>(args), typ, this.host.InternFactory, genericTypeInstanceReference);
       }
@@ -6853,6 +8762,9 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// A helper class that provides functional versions of creating different type references. 
   /// </summary>
   public class MutableModelHelper {
+
+    //TODO: need to add an IPlatformTypes parameter everywhere
+
     /// <summary>
     /// Functional version of creating a generic type instance reference. 
     /// </summary>
@@ -6862,7 +8774,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="original">If not null, contains auxiliary information such as attributes or locations, which we also copy to the newly 
     /// created node. </param>
     /// <returns></returns>
-    public static IGenericTypeInstanceReference GetGenericTypeInstanceReference(IEnumerable<ITypeReference> genericArgs, ITypeReference genericType, IInternFactory internFactory, ITypeReference/*?*/ original) {
+    public static IGenericTypeInstanceReference GetGenericTypeInstanceReference(IEnumerable<ITypeReference> genericArgs, INamedTypeReference genericType, IInternFactory internFactory, ITypeReference/*?*/ original) {
       //^ ensures result is MutableModel.GenericTypeInstanceReference;
       var result = new GenericTypeInstanceReference();
       if (original != null)
@@ -7063,4 +8975,5 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
   }
+
 }

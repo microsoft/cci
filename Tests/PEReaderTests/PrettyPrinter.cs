@@ -1501,7 +1501,7 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Keyword("final");
       if (methodDefinition.RequiresSecurityObject)
         this.ILDasmPaper.Keyword("reqsecobj");
-      if (methodDefinition.PlatformInvokeData != Dummy.PlatformInvokeInformation) {
+      if (methodDefinition.IsPlatformInvoke) {
         this.PlatformInvokeInformation(methodDefinition.PlatformInvokeData);
       }
       if (!methodDefinition.IsStatic)
@@ -1583,9 +1583,8 @@ namespace ModuleReaderTests {
       this.ILDasmPaper.NewLine();
       this.ILDasmPaper.OpenBlock();
       this.CustomAttributes(methodDefinition.Attributes);
-      IMethodBody methodBody = methodDefinition.Body;
-      if (methodBody != Dummy.MethodBody) {
-        this.MethodBody(methodBody);
+      if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal && methodDefinition.Body != Dummy.MethodBody) {
+        this.MethodBody(methodDefinition.Body);
       }
       this.ILDasmPaper.CloseBlock();
     }

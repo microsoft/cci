@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 //
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
 // THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
@@ -32,8 +32,8 @@ namespace Microsoft.Cci {
       GC.SuppressFinalize(this);
     }
 
-    ~PdbWriter() {
-      this.Close();
+    ~PdbWriter(){
+       this.Close();
     }
 
     private void Close() {
@@ -42,7 +42,8 @@ namespace Microsoft.Cci {
     }
 
     public void CloseMethod(uint offset) {
-      this.DefineSequencePointsForCurrentDocument();
+      if (this.currentDocument != null && this.currentDocument != SourceDummy.PrimarySourceDocument)
+        this.DefineSequencePointsForCurrentDocument();
       this.SymWriter.CloseScope(offset);
       this.SymWriter.CloseMethod();
     }
@@ -73,9 +74,10 @@ namespace Microsoft.Cci {
         break;
       }
       if (ploc == null) return;
-      if (ploc.Document != this.currentDocument)
+      if (ploc.Document != this.currentDocument && this.currentDocument != null && ploc.Document != SourceDummy.PrimarySourceDocument)
         this.DefineSequencePointsForCurrentDocument();
-      this.currentDocument = ploc.PrimarySourceDocument;
+      if (ploc.Document != SourceDummy.PrimarySourceDocument)
+        this.currentDocument = ploc.PrimarySourceDocument;
       this.offsets.Add(offset);
       this.startLines.Add((uint)ploc.StartLine);
       this.startColumns.Add((uint)ploc.StartColumn);
@@ -83,25 +85,34 @@ namespace Microsoft.Cci {
       this.endColumns.Add((uint)ploc.EndColumn);
     }
 
-    IPrimarySourceDocument currentDocument = SourceDummy.PrimarySourceDocument;
+    /// <summary>
+    /// Null is the sentinel value because the document of a FeeFee source context
+    /// is the dummy document which must not be confused with the sentinel value.
+    /// It stays null until the first non-FeeFee source context is encountered.
+    /// It is updated only when another context is encountered that has a
+    /// different document *and* is not a FeeFee source context itself.
+    /// </summary>
+    IPrimarySourceDocument/*?*/ currentDocument = null;
     List<uint> offsets = new List<uint>();
     List<uint> startLines = new List<uint>();
     List<uint> startColumns = new List<uint>();
     List<uint> endLines = new List<uint>();
     List<uint> endColumns = new List<uint>();
 
+    /// <summary>
+    /// Flushes accumulated sequence points and re-initializes sequence point state.
+    /// </summary>
     private void DefineSequencePointsForCurrentDocument() {
-      if (this.currentDocument != SourceDummy.PrimarySourceDocument) {
-        ISymUnmanagedDocumentWriter document = this.GetDocumentWriterFor(this.currentDocument);
-        uint seqPointCount = (uint)this.offsets.Count;
-        uint[] offsets = this.offsets.ToArray();
-        uint[] startLines = this.startLines.ToArray();
-        uint[] startColumns = this.startColumns.ToArray();
-        uint[] endLines = this.endLines.ToArray();
-        uint[] endColumns = this.endColumns.ToArray();
-        this.SymWriter.DefineSequencePoints(document, seqPointCount, offsets, startLines, startColumns, endLines, endColumns);
-      }
-      this.currentDocument = SourceDummy.PrimarySourceDocument;
+      //^ requires this.currentDocument != null && this.currentDocument != SourceDummy.PrimarySourceDocument
+      ISymUnmanagedDocumentWriter document = this.GetDocumentWriterFor(this.currentDocument);
+      uint seqPointCount = (uint)this.offsets.Count;
+      uint[] offsets = this.offsets.ToArray();
+      uint[] startLines = this.startLines.ToArray();
+      uint[] startColumns = this.startColumns.ToArray();
+      uint[] endLines = this.endLines.ToArray();
+      uint[] endColumns = this.endColumns.ToArray();
+      this.SymWriter.DefineSequencePoints(document, seqPointCount, offsets, startLines, startColumns, endLines, endColumns);
+      this.currentDocument = null;
       this.offsets.Clear();
       this.startLines.Clear();
       this.startColumns.Clear();

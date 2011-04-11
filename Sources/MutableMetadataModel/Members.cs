@@ -80,11 +80,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMethodReference/*?*/ caller;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IEventDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Throws an InvalidOperation exception since valid Metadata never refers directly to an event.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     /// <summary>
@@ -243,11 +249,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<ICustomModifier>/*?*/ customModifiers;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IFieldDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IFieldReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IFieldReference)this);
     }
 
     /// <summary>
@@ -487,6 +499,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public FieldReference() {
+      Contract.Ensures(!this.IsFrozen);
       this.containingType = Dummy.TypeReference;
       this.internFactory = Dummy.InternFactory;
       this.name = Dummy.Name;
@@ -523,7 +536,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
-      set { this.attributes = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.attributes = value;
+      }
     }
     List<ICustomAttribute>/*?*/ attributes;
 
@@ -533,7 +549,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference ContainingType {
       get { return this.containingType; }
-      set { this.containingType = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.containingType = value; 
+      }
     }
     ITypeReference containingType;
 
@@ -542,15 +561,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public List<ICustomModifier>/*?*/ CustomModifiers {
       get { return this.customModifiers; }
-      set { this.customModifiers = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.customModifiers = value;
+      }
     }
     List<ICustomModifier>/*?*/ customModifiers;
 
     /// <summary>
     /// Calls visitor.Visit(IFieldReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
+      this.DispatchAsReference(visitor);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IFieldReference).
+    /// </summary>
+    public virtual void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -561,7 +589,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
-      set { this.internFactory = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.internFactory = value;
+      }
     }
     IInternFactory internFactory;
 
@@ -571,19 +602,38 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public uint InternedKey {
       get {
-        if (this.internedKey == 0)
+        if (this.internedKey == 0) {
           this.internedKey = this.InternFactory.GetFieldInternedKey(this);
+          this.isFrozen = true;
+        }
         return this.internedKey;
       }
     }
     uint internedKey;
 
     /// <summary>
+    /// True if the reference has been frozen and can no longer be modified. A reference becomes frozen
+    /// as soon as it is resolved or interned. An unfrozen reference can also explicitly be set to be frozen.
+    /// It is recommended that any code constructing a type reference freezes it immediately after construction is complete.
+    /// </summary>
+    public bool IsFrozen {
+      get { return this.isFrozen; }
+      set {
+        Contract.Requires(!this.IsFrozen && value);
+        this.isFrozen = value;
+      }
+    }
+    bool isFrozen;
+
+    /// <summary>
     /// The referenced field has custom modifiers.
     /// </summary>
     public bool IsModified {
       get { return this.isModified; }
-      set { this.isModified = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.isModified = value;
+      }
     }
     bool isModified;
 
@@ -593,7 +643,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool IsStatic {
       get { return this.isStatic; }
-      set { this.isStatic = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.isStatic = value;
+      }
     }
     bool isStatic;
 
@@ -603,7 +656,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
-      set { this.locations = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.locations = value;
+      }
     }
     List<ILocation>/*?*/ locations;
 
@@ -613,7 +669,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.name = value;
+      }
     }
     IName name;
 
@@ -622,8 +681,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public IFieldDefinition ResolvedField {
-      get { return TypeHelper.GetField(this.ContainingType.ResolvedType, this); }
+      get {
+        if (this.resolvedField == null) {
+          this.resolvedField = TypeHelper.GetField(this.ContainingType.ResolvedType, this);
+          this.isFrozen = true;
+        }
+        return this.resolvedField;
+      }
     }
+    IFieldDefinition/*?*/ resolvedField;
 
     /// <summary>
     /// The type definition member this reference resolves to.
@@ -649,7 +715,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
-      set { this.type = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.type = value;
+      }
     }
     ITypeReference type;
 
@@ -818,6 +887,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// The type arguments that were used to instantiate this.GenericMethod in order to create this method.
     /// </summary>
     /// <value></value>
@@ -838,11 +915,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMethodReference genericMethod;
 
     /// <summary>
-    /// The method being referred to.
+    /// Resolves the reference to find the method being referred to.
     /// </summary>
-    /// <value></value>
-    public override IMethodDefinition ResolvedMethod {
-      get { return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, this.GenericArguments.AsReadOnly(), this.InternFactory); }
+    protected override IMethodDefinition Resolve() {
+      return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, this.GenericArguments.AsReadOnly(), this.InternFactory);
     }
 
     #region IGenericMethodInstanceReference Members
@@ -898,11 +974,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     //^ invariant definingMethod.IsGeneric;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IGenericMethodParameter).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IGenericMethodParameterReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericMethodParameterReference)this);
     }
 
     #region IGenericMethodParameterReference Members
@@ -1255,6 +1337,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.returnValueAttributes = new List<ICustomAttribute>();
       this.returnValueCustomModifiers = new List<ICustomModifier>();
       this.returnValueMarshallingInformation = Dummy.MarshallingInformation;
+      this.returnValueName = Dummy.Name;
       this.securityAttributes = new List<ISecurityAttribute>();
       this.type = Dummy.TypeReference;
     }
@@ -1323,6 +1406,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.RequiresSecurityObject = methodDefinition.RequiresSecurityObject;
       this.ReturnValueIsByRef = methodDefinition.ReturnValueIsByRef;
       this.ReturnValueIsMarshalledExplicitly = methodDefinition.ReturnValueIsMarshalledExplicitly;
+      this.returnValueName = methodDefinition.ReturnValueName;
     }
 
     /// <summary>
@@ -1360,11 +1444,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     CallingConvention callingConvention;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IMethodDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IMethodReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IMethodReference)this);
     }
 
     /// <summary>
@@ -1873,6 +1963,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMarshallingInformation returnValueMarshallingInformation;
 
     /// <summary>
+    /// Specifies the name of the return value parameter.
+    /// </summary>
+    /// <value></value>
+    public IName ReturnValueName {
+      get { return this.returnValueName; }
+      set { this.returnValueName = value; }
+    }
+    IName returnValueName;
+
+    /// <summary>
     /// Declarative security actions for this method.
     /// </summary>
     /// <value></value>
@@ -1959,6 +2059,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public MethodReference() {
+      Contract.Ensures(!this.IsFrozen);
       this.attributes = new List<ICustomAttribute>();
       this.callingConvention = (CallingConvention)0;
       this.containingType = Dummy.TypeReference;
@@ -2012,7 +2113,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
-      set { this.attributes = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.attributes = value; }
     }
     List<ICustomAttribute> attributes;
 
@@ -2022,7 +2125,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public CallingConvention CallingConvention {
       get { return this.callingConvention; }
-      set { this.callingConvention = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.callingConvention = value;
+      }
     }
     CallingConvention callingConvention;
 
@@ -2032,17 +2138,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference ContainingType {
       get { return this.containingType; }
-      set { this.containingType = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.containingType = value;
+      }
     }
     ITypeReference containingType;
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IMethodReference).
     /// </summary>
-    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
+      this.DispatchAsReference(visitor);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IMethodReference).
+    /// </summary>
+    public virtual void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -2052,7 +2165,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<IParameterTypeInformation> ExtraParameters {
       get { return this.extraParameters; }
-      set { this.extraParameters = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.extraParameters = value;
+      }
     }
     List<IParameterTypeInformation> extraParameters;
 
@@ -2062,7 +2178,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ushort GenericParameterCount {
       get { return this.genericParameterCount; }
-      set { this.genericParameterCount = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.genericParameterCount = value;
+      }
     }
     ushort genericParameterCount;
 
@@ -2073,7 +2192,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public IInternFactory InternFactory {
       get { return this.internFactory; }
-      set { this.internFactory = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.internFactory = value;
+      }
     }
     IInternFactory internFactory;
 
@@ -2083,12 +2205,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public uint InternedKey {
       get {
-        if (this.internedKey == 0)
+        if (this.internedKey == 0) {
+          this.isFrozen = true;
           this.internedKey = this.InternFactory.GetMethodInternedKey(this);
+        }
         return this.internedKey;
       }
     }
     uint internedKey;
+
+    /// <summary>
+    /// True if the reference has been frozen and can no longer be modified. A reference becomes frozen
+    /// as soon as it is resolved or interned. An unfrozen reference can also explicitly be set to be frozen.
+    /// It is recommended that any code constructing a type reference freezes it immediately after construction is complete.
+    /// </summary>
+    public bool IsFrozen {
+      get { return this.isFrozen; }
+      set {
+        Contract.Requires(!this.IsFrozen && value);
+        this.isFrozen = value;
+      }
+    }
+    bool isFrozen;
 
     /// <summary>
     /// True if the method has generic parameters;
@@ -2104,7 +2242,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
-      set { this.locations = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.locations = value;
+      }
     }
     List<ILocation> locations;
 
@@ -2114,7 +2255,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.name = value;
+      }
     }
     IName name;
 
@@ -2124,7 +2268,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<IParameterTypeInformation> Parameters {
       get { return this.parameters; }
-      set { this.parameters = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.parameters = value;
+      }
     }
     List<IParameterTypeInformation> parameters;
 
@@ -2140,8 +2287,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The method being referred to.
     /// </summary>
     /// <value></value>
-    public virtual IMethodDefinition ResolvedMethod {
-      get { return TypeHelper.GetMethod(this.ContainingType.ResolvedType, this); }
+    public IMethodDefinition ResolvedMethod {
+      get {
+        if (this.resolvedMethod == null) {
+          this.isFrozen = true;
+          this.resolvedMethod = this.Resolve();
+        }
+        return this.resolvedMethod;
+      }
+    }
+    IMethodDefinition/*?*/ resolvedMethod;
+
+    /// <summary>
+    /// Resolves the reference to find the method being referred to.
+    /// </summary>
+    protected virtual IMethodDefinition Resolve() {
+      return TypeHelper.GetMethod(this.ContainingType.ResolvedType, this);
     }
 
     /// <summary>
@@ -2158,7 +2319,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
-      set { this.returnValueCustomModifiers = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.returnValueCustomModifiers = value;
+      }
     }
     List<ICustomModifier> returnValueCustomModifiers;
 
@@ -2168,7 +2332,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool ReturnValueIsByRef {
       get { return this.returnValueIsByRef; }
-      set { this.returnValueIsByRef = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.returnValueIsByRef = value;
+      }
     }
     bool returnValueIsByRef;
 
@@ -2178,7 +2345,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool ReturnValueIsModified {
       get { return this.returnValueIsModified; }
-      set { this.returnValueIsModified = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.returnValueIsModified = value;
+      }
     }
     bool returnValueIsModified;
 
@@ -2199,7 +2369,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
-      set { this.type = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.type = value;
+      }
     }
     ITypeReference type;
 
@@ -2335,11 +2508,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMetadataConstant defaultValue;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IParameterDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.VisitReference(IParameterDefinition).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.VisitReference(this);
     }
 
     private int flags;
@@ -2468,6 +2647,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference ParamArrayElementType {
       get { return this.paramArrayElementType; }
+      set { this.paramArrayElementType = value; }
     }
     ITypeReference paramArrayElementType;
 
@@ -2706,11 +2886,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMetadataConstant defaultValue;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IPropertyDefinition).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Throw an InvalidOperation exception since valid Metadata never references a property.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
     }
 
     /// <summary>
@@ -2995,6 +3181,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(ISpecializedFieldReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// A reference to the field definition that has been specialized to obtain the field definition referred to by this field reference.
     /// When the containing type of the referenced specialized field definition is itself a specialized nested type of a generic type instance,
     /// then the unspecialized field reference refers to the corresponding field definition from the unspecialized containing type definition.
@@ -3028,6 +3221,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
       ((ICopyFrom<IMethodReference>)this).Copy(specializedMethodReference, internFactory);
       this.unspecializedVersion = specializedMethodReference.UnspecializedVersion;
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedMethodReference).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
     }
 
     /// <summary>
@@ -3096,10 +3297,17 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     internal int flags;
 
@@ -3131,7 +3339,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </returns>
     public override string ToString() {
       return MemberHelper.GetMemberSignature(this,
-        NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName|NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
+        NameFormattingOptions.ParameterModifiers|NameFormattingOptions.TypeParameters|NameFormattingOptions.ParameterName|NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
     }
 
     /// <summary>

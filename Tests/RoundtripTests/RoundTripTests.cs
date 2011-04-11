@@ -99,9 +99,9 @@ public class RoundTripTests {
         RoundTripWithILMutator("mscorlib.dll", "mscorlib.pdb", true);
     }
 
-    void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MutatingVisitor mutator, string pdbPath) {
-        this.VisitAndMutate(mutator, ref assembly);
-        AssertWriteToPeFile(expectedResult, assembly, pdbPath);
+    void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataRewriter mutator, string pdbPath) {
+      var result = this.VisitAndMutate(mutator, assembly);
+      AssertWriteToPeFile(expectedResult, result, pdbPath);
     }
 
     void RoundTripWithILMutator(string assemblyName, string pdbPath) {
@@ -110,33 +110,40 @@ public class RoundTripTests {
 
     void RoundTripWithILMutator(string assemblyName, string pdbPath, bool verificationMayFail) {
         PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName, verificationMayFail);
-        RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MutatingVisitor(host), pdbPath);
+        RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataRewriter(host), pdbPath);
     }
 
     void AssertWriteToPeFile(PeVerifyResult expectedResult, IAssembly assembly, string pdbPath) {
-        using (var rewrittenFile = File.Create(assembly.Location)){
-          if (pdbPath != null) {
-            using (var f = File.OpenRead(pdbPath)) {
-              using (var pdbReader = new PdbReader(f, host)) {
-                using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
-                  PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
-                }
+      var validator = new MetadataValidator(this.host);
+      List<Microsoft.Cci.ErrorEventArgs> errorEvents = new List<Microsoft.Cci.ErrorEventArgs>();
+      this.host.Errors += (object sender, Microsoft.Cci.ErrorEventArgs e) => errorEvents.Add(e);
+      validator.Validate(assembly);
+      Debug.Assert(errorEvents.Count == 0);
+      using (var rewrittenFile = File.Create(assembly.Location)) {
+        if (pdbPath != null) {
+          using (var f = File.OpenRead(pdbPath)) {
+            using (var pdbReader = new PdbReader(f, host)) {
+              using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), pdbReader)) {
+                PeWriter.WritePeToStream(assembly, host, rewrittenFile, pdbReader, pdbReader, pdbWriter);
               }
             }
-          } else {
-            using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), null)) {
-              PeWriter.WritePeToStream(assembly, host, rewrittenFile, null, null, pdbWriter);
-            }
+          }
+        } else {
+          using (var pdbWriter = new PdbWriter(Path.GetFullPath(assembly.Location + ".pdb"), null)) {
+            PeWriter.WritePeToStream(assembly, host, rewrittenFile, null, null, pdbWriter);
           }
         }
+      }
 
-        Assert.True(File.Exists(assembly.Location));
-        PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location, true));
+      Assert.True(File.Exists(assembly.Location));
+      PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location, true));
     }
 
-    void VisitAndMutate(MutatingVisitor mutator, ref IAssembly assembly) {
-      assembly = mutator.Visit(assembly);
+    IAssembly VisitAndMutate(MetadataRewriter mutator, IAssembly assembly) {
+      var mutableAssembly = new MetadataDeepCopier(host).Copy(assembly);
+      assembly = mutator.Rewrite(mutableAssembly);
       Assert.NotNull(assembly);
+      return assembly;
     }
 
     static int StartAndWaitForResult(string fileName, string arguments, ref string stdOut, ref string stdErr) {

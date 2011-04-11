@@ -29,21 +29,16 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
     /// <param name="assemblyIdentity">The identity of the referenced assembly.</param>
-    public AssemblyReference(IMetadataHost host, AssemblyIdentity assemblyIdentity) {
-      this.host = host;
-      this.assemblyIdentity = assemblyIdentity;
-    }
-
-    /// <summary>
-    /// Allocates a reference to a .NET assembly.
-    /// </summary>
-    /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
-    /// <param name="assemblyIdentity">The identity of the referenced assembly.</param>
     /// <param name="isRetargetable">True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.</param>
-    public AssemblyReference(IMetadataHost host, AssemblyIdentity assemblyIdentity, bool isRetargetable) {
+    /// <param name="containsForeignTypes">
+    /// True if the referenced assembly contains types that describe objects that are neither COM objects nor objects that are managed by the CLR.
+    /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
+    /// </param>
+    public AssemblyReference(IMetadataHost host, AssemblyIdentity assemblyIdentity, bool isRetargetable = false, bool containsForeignTypes = false) {
       this.host = host;
       this.assemblyIdentity = assemblyIdentity;
       this.isRetargetable = isRetargetable;
+      this.containsForeignTypes = containsForeignTypes;
     }
 
     /// <summary>
@@ -91,6 +86,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(IAssemblyReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
     /// </summary>
     readonly IMetadataHost host;
@@ -101,9 +103,17 @@ namespace Microsoft.Cci {
     /// <value></value>
     public bool IsRetargetable {
       get { return this.isRetargetable; }
-      set { this.isRetargetable = value; }
     }
     bool isRetargetable;
+
+    /// <summary>
+    /// True if the referenced assembly contains types that describe objects that are neither COM objects nor objects that are managed by the CLR.
+    /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
+    /// </summary>
+    public bool ContainsForeignTypes {
+      get { return this.containsForeignTypes; }
+    }
+    bool containsForeignTypes;
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this AssemblyReference instance.
@@ -185,7 +195,6 @@ namespace Microsoft.Cci {
     public Version Version {
       get { return this.AssemblyIdentity.Version; }
     }
-
   }
 
   /// <summary>
@@ -221,10 +230,17 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     /// <summary>
     /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
@@ -341,6 +357,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(IModuleReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
     /// </summary>
     readonly IMetadataHost host;
@@ -415,6 +438,10 @@ namespace Microsoft.Cci {
     /// <param name="typeCode">A value indicating if the type is a primitive type or not.</param>
     public NamespaceTypeReference(IMetadataHost host, IUnitNamespaceReference containingUnitNamespace, IName name, ushort genericParameterCount, bool isEnum, bool isValueType, PrimitiveTypeCode typeCode)
       : base(host, isEnum, isValueType) {
+      Contract.Requires(host != null);
+      Contract.Requires(containingUnitNamespace != null);
+      Contract.Requires(name != null);
+
       this.containingUnitNamespace = containingUnitNamespace;
       this.name = name;
       this.genericParameterCount = genericParameterCount;
@@ -433,6 +460,13 @@ namespace Microsoft.Cci {
     /// Calls visitor.Visit(INamespaceTypeReference)
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(INamespaceTypeReference)
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -525,6 +559,14 @@ namespace Microsoft.Cci {
       get { return this.ResolvedType; }
     }
 
+    /// <summary>
+    /// True if this reference should be kept distinct from the definition it refers to. That is, when copied or persisted,
+    /// this object should not be unified with the referenced type, even if the referenced type is defined in the same
+    /// module as the reference to the type.
+    /// </summary>
+    public bool KeepDistinctFromDefinition {
+      get { return false; }
+    }
   }
 
   /// <summary>
@@ -551,9 +593,16 @@ namespace Microsoft.Cci {
     readonly IUnitNamespaceReference containingUnitNamespace;
 
     /// <summary>
-    /// Calls the visitor.Visit(INestedUnitNamespaceReference) method.
+    /// Calls visitor.Visit(INestedUnitNamespaceReference).
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(INestedUnitNamespaceReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1286,18 +1335,18 @@ namespace Microsoft.Cci {
     INamespaceTypeReference/*?*/ systemRuntimeCompilerServicesExtensionAttribute;
 
     /// <summary>
-    /// System.Runtime.CompilerServices.FriendAccessAllowedAttribute
+    /// System.Runtime.CompilerServices.InternalsVisibleToAttribute
     /// </summary>
-    public INamespaceTypeReference SystemRuntimeCompilerServicesFriendAccessAllowedAttribute {
+    public INamespaceTypeReference SystemRuntimeCompilerServicesInternalsVisibleToAttribute {
       get {
-        if (this.systemRuntimeCompilerServicesFriendAccessAllowedAttribute == null) {
-          this.systemRuntimeCompilerServicesFriendAccessAllowedAttribute =
-            this.CreateReference(this.CoreAssemblyRef, "System", "Runtime", "CompilerServices", "FriendAccessAllowedAttribute");
+        if (this.systemRuntimeCompilerServicesInternalsVisibleToAttribute == null) {
+          this.systemRuntimeCompilerServicesInternalsVisibleToAttribute =
+            this.CreateReference(this.CoreAssemblyRef, "System", "Runtime", "CompilerServices", "InternalsVisibleToAttribute");
         }
-        return this.systemRuntimeCompilerServicesFriendAccessAllowedAttribute;
+        return this.systemRuntimeCompilerServicesInternalsVisibleToAttribute;
       }
     }
-    INamespaceTypeReference/*?*/ systemRuntimeCompilerServicesFriendAccessAllowedAttribute;
+    INamespaceTypeReference/*?*/ systemRuntimeCompilerServicesInternalsVisibleToAttribute;
 
     /// <summary>
     /// System.Runtime.CompilerServices.IsConst
@@ -1396,6 +1445,20 @@ namespace Microsoft.Cci {
       }
     }
     INamespaceTypeReference/*?*/ systemSecuritySecuritySafeCriticalAttribute;
+
+    /// <summary>
+    /// System.Security.SuppressUnmanagedCodeSecurityAttribute
+    /// </summary>
+    public INamespaceTypeReference SystemSecuritySuppressUnmanagedCodeSecurityAttribute {
+      get {
+        if (this.systemSecuritySuppressUnmanagedCodeSecurityAttribute == null) {
+          this.systemSecuritySuppressUnmanagedCodeSecurityAttribute =
+              this.CreateReference(this.CoreAssemblyRef, "System", "Security", "SuppressUnmanagedCodeSecurityAttribute");
+        }
+        return this.systemSecuritySuppressUnmanagedCodeSecurityAttribute;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemSecuritySuppressUnmanagedCodeSecurityAttribute;
 
     /// <summary>
     /// System.String
@@ -1587,6 +1650,13 @@ namespace Microsoft.Cci {
     /// Calls visitor.Visit(IRootUnitNamespaceReference).
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IRootUnitNamespaceReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 

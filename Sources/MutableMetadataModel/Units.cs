@@ -26,16 +26,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public Assembly() {
-      this.assemblyAttributes = new List<ICustomAttribute>();
+      this.assemblyAttributes = new List<ICustomAttribute>(0);
       this.culture = "";
-      this.exportedTypes = new List<IAliasForType>();
+      this.exportedTypes = new List<IAliasForType>(0);
       this.flags = 0;
-      this.files = new List<IFileReference>();
-      this.memberModules = new List<IModule>();
+      this.files = new List<IFileReference>(0);
+      this.memberModules = new List<IModule>(0);
       this.moduleName = Dummy.Name;
       this.publicKey = new byte[0];
-      this.resources = new List<IResourceReference>();
-      this.securityAttributes = new List<ISecurityAttribute>();
+      this.resources = new List<IResourceReference>(0);
+      this.securityAttributes = new List<ISecurityAttribute>(0);
       this.version = new Version(0, 0);
     }
 
@@ -89,11 +89,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     string culture;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IAssembly).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IAssemblyReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IAssemblyReference)this);
     }
 
     /// <summary>
@@ -137,6 +143,20 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.Flags |= 0x100u;
         else
           this.Flags &= ~0x100u;
+      }
+    }
+
+    /// <summary>
+    /// True if the referenced assembly contains types that describe objects that are neither COM objects nor objects that are managed by the CLR.
+    /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
+    /// </summary>
+    public bool ContainsForeignTypes {
+      get { return (this.Flags & 0x200) != 0; }
+      set {
+        if (value)
+          this.Flags |= 0x200u;
+        else
+          this.Flags &= ~0x200u;
       }
     }
 
@@ -189,15 +209,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of this assembly . Empty if not specified.
+    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of this assembly. Null if not specified.
     /// This value is used by the loader to decrypt HashValue which it then compares with a freshly computed hash value to verify the
     /// integrity of the assembly.
     /// </summary>
-    public IEnumerable<byte> PublicKey {
+    public IEnumerable<byte>/*?*/ PublicKey {
       get { return this.publicKey; }
-      set { this.publicKey = value; this.assemblyIdentity = null; }
+      set {
+        if (IteratorHelper.EnumerableIsEmpty(value))
+          this.flags &= ~0x0001u;
+        else
+          this.flags |= 0x0001u;
+        this.publicKey = value; 
+        this.assemblyIdentity = null; 
+      }
     }
-    IEnumerable<byte> publicKey;
+    IEnumerable<byte>/*?*/ publicKey;
 
     /// <summary>
     /// A list of named byte sequences persisted with the assembly and used during execution, typically via .NET Framework helper classes.
@@ -313,6 +340,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IEnumerable<byte> PublicKeyToken {
       get {
+        if (this.publicKey == null) return Dummy.Assembly.PublicKeyToken;
         return UnitHelper.ComputePublicKeyToken(this.PublicKey);
       }
     }
@@ -329,10 +357,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public AssemblyReference() {
+      Contract.Ensures(!this.IsFrozen);
       this.aliases = new List<IName>();
       this.ResolvedModule = this.resolvedAssembly = Dummy.Assembly;
       this.culture = string.Empty;
       this.isRetargetable = false;
+      this.containsForeignTypes = false;
       this.publicKeyToken = new List<byte>();
       this.version = new Version(0, 0);
       this.ModuleIdentity = this.assemblyIdentity = Dummy.Assembly.AssemblyIdentity;
@@ -350,6 +380,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.ResolvedModule = this.resolvedAssembly = assemblyReference.ResolvedAssembly;
       this.culture = assemblyReference.Culture;
       this.isRetargetable = assemblyReference.IsRetargetable;
+      this.containsForeignTypes = assemblyReference.ContainsForeignTypes;
       this.publicKeyToken = new List<byte>(assemblyReference.PublicKeyToken);
       this.version = assemblyReference.Version;
       this.ModuleIdentity = this.assemblyIdentity = assemblyReference.AssemblyIdentity;
@@ -362,17 +393,47 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<IName> Aliases {
       get { return this.aliases; }
-      set { this.aliases = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.aliases = value; 
+      }
     }
     List<IName> aliases;
+
+    /// <summary>
+    /// Tries to resolves the reference with the aid of this.Host. If resolution fails, the result is Dummy.Module.
+    /// </summary>
+    protected override IModule Resolve() {
+      var result = this.ResolvedAssembly;
+      if (result is Dummy) return Dummy.Module;
+      return result;
+    }
+
+    private IAssembly ResolveAssembly() {
+      this.isFrozen = true;
+      if (this.Host == null) return Dummy.Assembly;
+      var unifiedIdentity = this.UnifiedAssemblyIdentity;
+      var result = this.Host.FindAssembly(unifiedIdentity);
+      if (result != Dummy.Assembly) return result;
+      if (unifiedIdentity.Location == null && this.ReferringUnit != null)
+        unifiedIdentity = this.Host.ProbeAssemblyReference(this.ReferringUnit, unifiedIdentity);
+      return this.Host.LoadAssembly(unifiedIdentity);
+    }
 
     /// <summary>
     /// The referenced assembly, or Dummy.Assembly if the reference cannot be resolved.
     /// </summary>
     /// <value></value>
     public IAssembly ResolvedAssembly {
-      get { return this.resolvedAssembly; }
-      set { this.ResolvedModule = this.resolvedAssembly = value; }
+      get {
+        if (this.resolvedAssembly == null)
+          this.resolvedAssembly = this.ResolveAssembly();
+        return this.resolvedAssembly; 
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.resolvedAssembly = value;
+      }
     }
     IAssembly resolvedAssembly;
 
@@ -383,7 +444,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public string Culture {
       get { return this.culture; }
-      set { this.culture = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.culture = value; 
+      }
     }
     string culture;
 
@@ -392,18 +456,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public bool IsRetargetable {
       get { return this.isRetargetable; }
-      set { this.isRetargetable = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.isRetargetable = value; 
+      }
     }
     bool isRetargetable;
 
     /// <summary>
-    /// The name of the referenced assembly.
+    /// True if the referenced assembly contains types that describe objects that are neither COM objects nor objects that are managed by the CLR.
+    /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
     /// </summary>
-    /// <value></value>
-    public override IName Name {
-      get { return base.Name; }
-      set { base.Name = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+    public bool ContainsForeignTypes {
+      get { return this.containsForeignTypes; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.containsForeignTypes = value; 
+      }
     }
+    bool containsForeignTypes;
 
     /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
@@ -411,7 +482,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<byte> PublicKeyToken {
       get { return this.publicKeyToken; }
-      set { this.publicKeyToken = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.publicKeyToken = value; 
+      }
     }
     List<byte> publicKeyToken;
 
@@ -421,7 +495,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public Version Version {
       get { return this.version; }
-      set { this.version = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.version = value;
+      }
     }
     Version version;
 
@@ -430,7 +507,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public string Location {
       get { return this.location; }
-      set { this.location = value; this.assemblyIdentity = this.unifiedAssemblyIdentity = null; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.location = value; 
+      }
     }
     string location;
 
@@ -444,11 +524,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// and the allocation can thus be avoided by using the reference's properties.</remarks>
     public AssemblyIdentity AssemblyIdentity {
       get {
-        if (this.assemblyIdentity == null)
+        if (this.assemblyIdentity == null) {
+          this.isFrozen = true;
           this.assemblyIdentity = new AssemblyIdentity(this.Name, this.Culture, this.Version, this.PublicKeyToken, this.Location);
+        }
         return this.assemblyIdentity;
       }
       set {
+        Contract.Requires(!this.IsFrozen);
         this.assemblyIdentity = this.unifiedAssemblyIdentity = value;
         this.culture = value.Culture;
         base.Name = value.Name;
@@ -467,11 +550,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <remarks>The location might not be set.</remarks>
     public AssemblyIdentity UnifiedAssemblyIdentity {
       get {
-        if (this.unifiedAssemblyIdentity == null)
-          return this.AssemblyIdentity;
+        if (this.unifiedAssemblyIdentity == null) {
+          this.isFrozen = true;
+          this.unifiedAssemblyIdentity = this.Host.UnifyAssembly(this.AssemblyIdentity);
+        }
         return this.unifiedAssemblyIdentity;
       }
-      set { this.unifiedAssemblyIdentity = value; }
     }
     AssemblyIdentity unifiedAssemblyIdentity;
 
@@ -511,10 +595,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.linkerMinorVersion = 0;
       this.metadataFormatMajorVersion = 1;
       this.metadataFormatMinorVersion = 0;
-      this.moduleAttributes = new List<ICustomAttribute>();
-      this.moduleReferences = new List<IModuleReference>();
+      this.moduleAttributes = new List<ICustomAttribute>(0);
+      this.moduleReferences = new List<IModuleReference>(0);
       this.persistentIdentifier = Guid.NewGuid();
-      this.machine = Machine.Unknown;
+      this.machine = Machine.Unknown; 
       this.requiresAmdInstructionSet = false;
       this.requiresStartupStub = false;
       this.requires32bits = false;
@@ -523,11 +607,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.sizeOfHeapReserve = 0x100000;
       this.sizeOfStackCommit = 0x1000;
       this.sizeOfStackReserve = 0x100000;
-      this.strings = new List<string>();
+      this.strings = new List<string>(0);
       this.targetRuntimeVersion = "";
       this.trackDebugData = false;
+      this.typeMemberReferences = new List<ITypeMemberReference>(0);
+      this.typeReferences = new List<ITypeReference>(0);
       this.usePublicKeyTokensForAssemblyReferences = false;
-      this.win32Resources = new List<IWin32Resource>();
+      this.win32Resources = new List<IWin32Resource>(0);
     }
 
     /// <summary>
@@ -537,7 +623,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IModule module, IInternFactory internFactory) {
       ((ICopyFrom<IUnit>)this).Copy(module, internFactory);
-      this.strings = new List<string>(module.GetStrings());
       this.allTypes = new List<INamedTypeDefinition>(module.GetAllTypes());
       this.assemblyReferences = new List<IAssemblyReference>(module.AssemblyReferences);
       this.baseAddress = module.BaseAddress;
@@ -569,6 +654,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.strings = new List<string>(module.GetStrings());
       this.targetRuntimeVersion = module.TargetRuntimeVersion;
       this.trackDebugData = module.TrackDebugData;
+      this.typeMemberReferences = new List<ITypeMemberReference>(module.GetTypeMemberReferences());
+      this.typeReferences = new List<ITypeReference>(module.GetTypeReferences());
       this.usePublicKeyTokensForAssemblyReferences = module.UsePublicKeyTokensForAssemblyReferences;
       this.win32Resources = new List<IWin32Resource>(module.Win32Resources);
     }
@@ -624,11 +711,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     ushort dllCharacteristics;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IModule).
     /// </summary>
-    /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IModuleReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IModuleReference)this);
     }
 
     /// <summary>
@@ -895,6 +988,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool trackDebugData;
 
     /// <summary>
+    /// Zero or more type references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
+    /// of the type reference table. If the module is produced some other way, the method may return an empty enumeration or an enumeration that is a
+    /// subset of the type references actually used in the module. 
+    /// </summary>
+    public List<ITypeReference> TypeReferences {
+      get { return this.typeReferences; }
+      set { this.typeReferences = value; }
+    }
+    List<ITypeReference> typeReferences;
+
+    /// <summary>
+    /// Returns zero or more type member references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
+    /// of the member reference table (which only contains entries for fields and methods). If the module is produced some other way, 
+    /// the method may return an empty enumeration or an enumeration that is a subset of the member references actually used in the module. 
+    /// </summary>
+    public List<ITypeMemberReference>/*?*/ TypeMemberReferences {
+      get { return this.typeMemberReferences; }
+      set { this.typeMemberReferences = value; }
+    }
+    List<ITypeMemberReference> typeMemberReferences;
+
+    /// <summary>
     /// A list of other units that are referenced by this unit.
     /// </summary>
     /// <value></value>
@@ -934,7 +1049,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IModule Members
 
-
     IEnumerable<IAssemblyReference> IModule.AssemblyReferences {
       get { return this.assemblyReferences.AsReadOnly(); }
     }
@@ -945,6 +1059,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<INamedTypeDefinition> IModule.GetAllTypes() {
       return this.allTypes.AsReadOnly();
+    }
+
+    IEnumerable<ITypeReference> IModule.GetTypeReferences() {
+      return this.typeReferences.AsReadOnly();
+    }
+
+    IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
+      return this.typeMemberReferences.AsReadOnly();
     }
 
     IEnumerable<ICustomAttribute> IModule.ModuleAttributes {
@@ -1044,17 +1166,31 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IAssemblyReference ContainingAssembly {
       get { return this.containingAssembly; }
-      set { this.containingAssembly = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.containingAssembly = value; 
+      }
     }
     IAssemblyReference containingAssembly;
 
     /// <summary>
-    /// 
+    /// Calls vistor.Visit(IModuleReference).
     /// </summary>
-    /// <param name="visitor"></param>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
+
+    /// <summary>
+    /// An object representing the application that is hosting the object model that this reference forms a part of.
+    /// </summary>
+    public IMetadataHost/*?*/ Host {
+      get { return this.host; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.host = value; 
+      }
+    }
+    IMetadataHost host;
 
     /// <summary>
     /// The identity of the referenced module.
@@ -1063,11 +1199,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <remarks>The location might not be set.</remarks>
     public ModuleIdentity ModuleIdentity {
       get {
-        if (this.moduleIdentity == null)
+        if (this.moduleIdentity == null) {
+          this.isFrozen = true;
           this.moduleIdentity = new ModuleIdentity(this.Name, "");
+        }
         return this.moduleIdentity;
       }
       set {
+        Contract.Requires(!this.IsFrozen);
         this.moduleIdentity = value;
         base.Name = value.Name;
       }
@@ -1075,12 +1214,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     ModuleIdentity moduleIdentity;
 
     /// <summary>
-    /// The name of the referenced module.
+    /// The unit that is the root of a graph that contains this reference instance. This is not the same as ContainingAssembly, which
+    /// is a reference to the assembly that contains the module which is referenced by this instance. May be null.
     /// </summary>
-    /// <value></value>
-    public override IName Name {
-      get { return base.Name; }
-      set { base.Name = value; this.moduleIdentity = null; }
+    public IUnit/*?*/ ReferringUnit {
+      get { return this.referringUnit; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.referringUnit = value;
+      }
+    }
+    IUnit/*?*/ referringUnit;
+
+    /// <summary>
+    /// Tries to resolves the reference with the aid of this.Host. If resolution fails, the result is Dummy.Module.
+    /// </summary>
+    protected virtual IModule Resolve() {
+      this.isFrozen = true;
+      if (this.Host == null) return Dummy.Module;
+      var identity = this.ModuleIdentity;
+      var result = this.Host.FindModule(identity);
+      if (result != Dummy.Module) return result;
+      if (identity.Location == null && this.ReferringUnit != null) 
+        identity = this.Host.ProbeModuleReference(this.ReferringUnit, identity);
+      return this.Host.LoadModule(identity);
     }
 
     /// <summary>
@@ -1088,10 +1245,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public IModule ResolvedModule {
-      get { return this.resolvedModule; }
-      set { this.resolvedModule = value; }
+      get {
+        if (this.resolvedModule == null)
+          this.resolvedModule = this.Resolve();
+        return this.resolvedModule; 
+      }
+      set {
+        this.resolvedModule = value;
+      }
     }
-    IModule resolvedModule;
+    IModule/*?*/ resolvedModule;
 
     /// <summary>
     /// The referenced unit, or Dummy.Unit if the reference cannot be resolved.
@@ -1251,17 +1414,48 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ICustomAttribute> Attributes {
       get { return this.attributes; }
-      set { this.attributes = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.attributes = value; 
+      }
     }
     List<ICustomAttribute> attributes;
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     /// <param name="visitor"></param>
-    public abstract void Dispatch(IMetadataVisitor visitor);
+    public virtual void Dispatch(IMetadataVisitor visitor) {
+      this.DispatchAsReference(visitor);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// True if the reference has been frozen and can no longer be modified. A reference becomes frozen
+    /// as soon as it is resolved or interned. An unfrozen reference can also explicitly be set to be frozen.
+    /// It is recommended that any code constructing a type reference freezes it immediately after construction is complete.
+    /// </summary>
+    public bool IsFrozen {
+      get { return this.isFrozen; }
+      set {
+        Contract.Requires(!this.IsFrozen && value);
+        this.isFrozen = value;
+      }
+    }
+    /// <summary>
+    /// True if the reference has been frozen and can no longer be modified. A reference becomes frozen
+    /// as soon as it is resolved or interned. An unfrozen reference can also explicitly be set to be frozen.
+    /// It is recommended that any code constructing a type reference freezes it immediately after construction is complete.
+    /// </summary>
+    protected bool isFrozen;
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
@@ -1269,7 +1463,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
-      set { this.locations = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.locations = value; 
+      }
     }
     List<ILocation> locations;
 
@@ -1279,7 +1476,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public virtual IName Name {
       get { return this.name; }
-      set { this.name = value; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.name = value; 
+      }
     }
     IName name;
 

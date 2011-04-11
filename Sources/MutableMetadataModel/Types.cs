@@ -78,11 +78,16 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
-    /// <param name="visitor"></param>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// This throws an InvalidOperation exception since valid metadata never has a reference to a type alias.
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new InvalidOperationException();
+    }
 
     //^ [Pure]
     /// <summary>
@@ -185,6 +190,148 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
+  [ContractVerification(true)]
+  public abstract class ArrayTypeReference : TypeReference, IArrayTypeReference {
+
+    /// <summary>
+    /// A reference to an array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
+    /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
+    /// </summary>
+    public ArrayTypeReference() {
+      this.elementType = Dummy.TypeReference;
+    }
+
+    [ContractInvariantMethod]
+    void ObjectInvariant() {
+      Contract.Invariant(this.elementType != null);
+      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
+      //Contract.Invariant(this.resolvedType == null || this.resolvedType.InternedKey == this.InternedKey);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IArrayTypeReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// The type of the elements of this array.
+    /// </summary>
+    public ITypeReference ElementType {
+      get { return this.elementType; }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value != null);
+        this.elementType = value;
+      }
+    }
+    ITypeReference elementType;
+
+    /// <summary>
+    /// This type of array is a single dimensional array with zero lower bound for index values.
+    /// </summary>
+    public abstract bool IsVector {
+      get;
+    }
+
+    /// <summary>
+    /// A possibly empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
+    /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
+    /// </summary>
+    public virtual List<int>/*?*/ LowerBounds {
+      get {
+        return null;
+      }
+      set {
+        Contract.Requires(!this.IsVector);
+        Contract.Requires(!this.IsFrozen);
+      }
+    }
+
+    /// <summary>
+    /// The number of array dimensions.
+    /// </summary>
+    public virtual uint Rank {
+      get { 
+        return 1; 
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        Contract.Requires(value > 0);
+      }
+    }
+
+    /// <summary>
+    /// A possible empty list of upper bounds for dimension indices.
+    /// The first upper bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
+    /// An unspecified upper bound means that instances of this type can have an arbitrary upper bound for that dimension.
+    /// </summary>
+    /// <value></value>
+    public virtual List<ulong>/*?*/ Sizes {
+      get {
+        return null; 
+      }
+      set {
+        Contract.Requires(!this.IsVector);
+        Contract.Requires(!this.IsFrozen);
+      }
+
+    }
+
+    /// <summary>
+    /// Gets the type of the resolved.
+    /// </summary>
+    /// <value>The type of the resolved.</value>
+    public override ITypeDefinition ResolvedType {
+      get {
+        return this.ResolvedArrayType;
+      }
+    }
+
+    /// <summary>
+    /// Gets the type of the resolved array.
+    /// </summary>
+    /// <value>The type of the resolved array.</value>
+    public IArrayType ResolvedArrayType {
+      get {
+        if (this.resolvedType == null) {
+          this.isFrozen = true;
+          this.resolvedType = this.Resolve();
+        }
+        return this.resolvedType;
+      }
+    }
+    IArrayType/*?*/ resolvedType;
+
+    /// <summary>
+    /// Returns the type of the resolved array.
+    /// </summary>
+    protected abstract IArrayType Resolve();
+
+    #region IArrayTypeReference Members
+
+
+    IEnumerable<int> IArrayTypeReference.LowerBounds {
+      get {
+        if (this.LowerBounds == null) return Dummy.ArrayType.LowerBounds;
+        return this.LowerBounds.AsReadOnly();
+      }
+    }
+
+    IEnumerable<ulong> IArrayTypeReference.Sizes {
+      get {
+        if (this.Sizes == null) return Dummy.ArrayType.Sizes;
+        return this.Sizes.AsReadOnly();
+      }
+    }
+
+    #endregion
+
+  }
   /// <summary>
   /// 
   /// </summary>
@@ -297,7 +444,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IFunctionPointerTypeReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -495,7 +642,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IGenericMethodParameterReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -554,7 +701,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get { return ((IGenericMethodParameterReference)this).ResolvedType; }
+      get { 
+        var result = ((IGenericMethodParameterReference)this).ResolvedType;
+        if (result == Dummy.GenericMethodParameter) return Dummy.Type;
+        return result;
+      }
     }
 
   }
@@ -562,7 +713,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public abstract class GenericParameter : TypeDefinition, IGenericParameter, ICopyFrom<IGenericParameter> {
+  public abstract class GenericParameter : NamedTypeDefinition, IGenericParameter, ICopyFrom<IGenericParameter> {
 
     //^ [NotDelayed]
     /// <summary>
@@ -636,16 +787,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override bool IsReferenceType {
       get {
         if (((int)this.flags & 0x00000800) == 0) {
-          this.flags |= (TypeDefinition.Flags)0x00000800;
+          this.flags |= (NamedTypeDefinition.Flags)0x00000800;
           if (this.MustBeReferenceType)
-            this.flags |= (TypeDefinition.Flags)0x00000400;
+            this.flags |= (NamedTypeDefinition.Flags)0x00000400;
           else {
             ITypeDefinition baseClass = this.GetEffectiveBaseClass();
             if (!TypeHelper.TypesAreEquivalent(baseClass, this.PlatformType.SystemObject) && baseClass != Dummy.Type) {
               if (baseClass.IsClass)
-                this.flags |= (TypeDefinition.Flags)0x00000400;
+                this.flags |= (NamedTypeDefinition.Flags)0x00000400;
               else if (baseClass.IsValueType)
-                this.flags |= (TypeDefinition.Flags)0x00000200;
+                this.flags |= (NamedTypeDefinition.Flags)0x00000200;
             }
           }
         }
@@ -662,18 +813,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override bool IsValueType {
       get {
         if (((int)this.flags & 0x00000800) == 0) {
-          this.flags |= (TypeDefinition.Flags)0x00000800;
+          this.flags |= (NamedTypeDefinition.Flags)0x00000800;
           if (this.MustBeReferenceType)
-            this.flags |= (TypeDefinition.Flags)0x00000400;
-          else {
-            ITypeDefinition baseClass = this.GetEffectiveBaseClass();
-            if (!TypeHelper.TypesAreEquivalent(baseClass, this.PlatformType.SystemObject) && baseClass != Dummy.Type) {
-              if (baseClass.IsClass)
-                this.flags |= (TypeDefinition.Flags)0x00000400;
-              else if (baseClass.IsValueType)
-                this.flags |= (TypeDefinition.Flags)0x00000200;
-            }
-          }
+            this.flags |= (NamedTypeDefinition.Flags)0x00000400;
         }
         return ((int)this.flags & 0x00000200) != 0;
       }
@@ -684,14 +826,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool MustBeReferenceType {
-      get { return (this.flags & TypeDefinition.Flags.MustBeReferenceType) != 0; }
+      get { return (this.flags & NamedTypeDefinition.Flags.MustBeReferenceType) != 0; }
       set
         //^ requires value ==> !this.MustBeValueType;
       {
         if (value)
-          this.flags |= TypeDefinition.Flags.MustBeReferenceType;
+          this.flags |= NamedTypeDefinition.Flags.MustBeReferenceType;
         else
-          this.flags &= ~TypeDefinition.Flags.MustBeReferenceType;
+          this.flags &= ~NamedTypeDefinition.Flags.MustBeReferenceType;
       }
     }
 
@@ -700,14 +842,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool MustBeValueType {
-      get { return (this.flags & TypeDefinition.Flags.MustBeValueType) != 0; }
+      get { return (this.flags & NamedTypeDefinition.Flags.MustBeValueType) != 0; }
       set
         //^ requires value ==> !this.MustBeReferenceType;
       {
         if (value)
-          this.flags |= TypeDefinition.Flags.MustBeValueType;
+          this.flags |= NamedTypeDefinition.Flags.MustBeValueType;
         else
-          this.flags &= ~TypeDefinition.Flags.MustBeValueType;
+          this.flags &= ~NamedTypeDefinition.Flags.MustBeValueType;
       }
     }
 
@@ -716,12 +858,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool MustHaveDefaultConstructor {
-      get { return (this.flags & TypeDefinition.Flags.MustHaveDefaultConstructor) != 0; }
+      get { return (this.flags & NamedTypeDefinition.Flags.MustHaveDefaultConstructor) != 0; }
       set {
         if (value)
-          this.flags |= TypeDefinition.Flags.MustHaveDefaultConstructor;
+          this.flags |= NamedTypeDefinition.Flags.MustHaveDefaultConstructor;
         else
-          this.flags &= ~TypeDefinition.Flags.MustHaveDefaultConstructor;
+          this.flags &= ~NamedTypeDefinition.Flags.MustHaveDefaultConstructor;
       }
     }
 
@@ -732,8 +874,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public TypeParameterVariance Variance {
       get { return (TypeParameterVariance)((int)this.flags>>4) & TypeParameterVariance.Mask; }
       set {
-        this.flags &= (TypeDefinition.Flags)~((int)TypeParameterVariance.Mask<<4);
-        this.flags |= (TypeDefinition.Flags)((int)(value&TypeParameterVariance.Mask)<<4);
+        this.flags &= (NamedTypeDefinition.Flags)~((int)TypeParameterVariance.Mask<<4);
+        this.flags |= (NamedTypeDefinition.Flags)((int)(value&TypeParameterVariance.Mask)<<4);
       }
     }
 
@@ -758,7 +900,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericTypeInstanceReference() {
-      this.genericType = Dummy.TypeReference;
+      this.genericType = Dummy.NamedTypeReference;
     }
 
     [ContractInvariantMethod]
@@ -788,7 +930,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IGenericTypeInstanceReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -814,7 +956,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Returns the generic type of which this type is an instance.
     /// </summary>
     /// <value></value>
-    public ITypeReference GenericType {
+    public INamedTypeReference GenericType {
       get { return this.genericType; }
       set {
         Contract.Requires(!this.IsFrozen);
@@ -823,7 +965,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.genericType = value;
       }
     }
-    ITypeReference genericType;
+    INamedTypeReference genericType;
 
     /// <summary>
     /// The generic type instance being referred to. Note that generic type instances are structural types and that two separate instances with the
@@ -910,6 +1052,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       visitor.Visit(this);
     }
 
+    /// <summary>
+    /// Calls visitor.Visit(IGenericTypeParameterReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericTypeParameterReference)this);
+    }
+
     #region IGenericTypeParameterReference Members
 
     ITypeReference IGenericTypeParameterReference.DefiningType {
@@ -981,7 +1130,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IGenericTypeParameterReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1043,7 +1192,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get { return ((IGenericTypeParameterReference)this).ResolvedType; }
+      get {
+        var result = ((IGenericTypeParameterReference)this).ResolvedType;
+        return result is Dummy ? Dummy.Type : result; 
+      }
     }
 
   }
@@ -1087,7 +1239,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IManagedPointerTypeReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1137,23 +1289,19 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// A reference to a multi-dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
   /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
-  [ContractVerification(true)]
-  public sealed class MatrixTypeReference : TypeReference, IArrayTypeReference, ICopyFrom<IArrayTypeReference> {
+  public sealed class MatrixTypeReference : ArrayTypeReference, ICopyFrom<IArrayTypeReference> {
 
     /// <summary>
     /// A reference to a multi-dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public MatrixTypeReference() {
-      this.elementType = Dummy.TypeReference;
       this.rank = 1;
     }
 
     [ContractInvariantMethod]
     void ObjectInvariant() {
-      Contract.Invariant(this.elementType != null);
       Contract.Invariant(this.rank > 0);
-      Contract.Invariant(this.resolvedArrayType == null || this.IsFrozen);
     }
 
     /// <summary>
@@ -1167,7 +1315,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(IArrayTypeReference matrixTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(matrixTypeReference, internFactory);
-      this.elementType = matrixTypeReference.ElementType;
+      this.ElementType = matrixTypeReference.ElementType;
       if (IteratorHelper.EnumerableIsNotEmpty(matrixTypeReference.LowerBounds))
         this.lowerBounds = new List<int>(matrixTypeReference.LowerBounds);
       else
@@ -1180,34 +1328,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Calls visitor.Visit(IArrayTypeReference).
-    /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// The type of the elements of this array.
-    /// </summary>
-    /// <value></value>
-    public ITypeReference ElementType {
-      get {
-        Contract.Ensures(Contract.Result<ITypeReference>() != null);
-        return this.elementType;
-      }
-      set {
-        Contract.Requires(!this.IsFrozen);
-        Contract.Requires(value != null);
-        this.elementType = value;
-      }
-    }
-    ITypeReference elementType;
-
-    /// <summary>
     /// This type of array is a single dimensional array with zero lower bound for index values.
     /// </summary>
     /// <value></value>
-    public bool IsVector {
+    public override bool IsVector {
       get { return false; }
     }
 
@@ -1216,12 +1340,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
     /// </summary>
     /// <value></value>
-    public List<int>/*?*/ LowerBounds {
+    public override List<int>/*?*/ LowerBounds {
       get { return this.lowerBounds; }
-      set {
-        Contract.Requires(!this.IsFrozen);
-        this.lowerBounds = value;
-      }
+      set { this.lowerBounds = value; }
     }
     List<int>/*?*/ lowerBounds;
 
@@ -1229,11 +1350,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The number of array dimensions.
     /// </summary>
     /// <value></value>
-    public uint Rank {
+    public override uint Rank {
       get { return this.rank; }
       set {
-        Contract.Requires(!this.IsFrozen);
-        Contract.Requires(value > 0);
         this.rank = value;
       }
     }
@@ -1245,60 +1364,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// An unspecified upper bound means that instances of this type can have an arbitrary upper bound for that dimension.
     /// </summary>
     /// <value></value>
-    public List<ulong>/*?*/ Sizes {
+    public override List<ulong>/*?*/ Sizes {
       get { return this.sizes; }
       set {
-        Contract.Requires(!this.IsFrozen);
         this.sizes = value;
       }
     }
     List<ulong>/*?*/ sizes;
 
     /// <summary>
-    /// Gets the type of the resolved array.
+    /// Returns the type of the resolved array.
     /// </summary>
-    /// <value>The type of the resolved array.</value>
-    IArrayType ResolvedArrayType {
-      get {
-        Contract.Ensures(Contract.Result<IArrayType>() != null);
-        Contract.Ensures(this.IsFrozen);
-        if (this.resolvedArrayType == null) {
-          this.isFrozen = true;
-          var self = (IArrayTypeReference)this;
-          this.resolvedArrayType = Matrix.GetMatrix(this.ElementType, this.Rank, self.LowerBounds, self.Sizes, this.InternFactory);
-        }
-        return this.resolvedArrayType;
-      }
+    /// <returns></returns>
+    protected override IArrayType Resolve() {
+      var self = (IArrayTypeReference)this;
+      return Matrix.GetMatrix(this.ElementType, this.Rank, self.LowerBounds, self.Sizes, this.InternFactory);
     }
-    IArrayType/*?*/ resolvedArrayType;
-
-    /// <summary>
-    /// The type definition being referred to.
-    /// In case this type was alias, this is also the type of the aliased type
-    /// </summary>
-    /// <value></value>
-    public override ITypeDefinition ResolvedType {
-      get { return this.ResolvedArrayType; }
-    }
-
-    #region IArrayTypeReference Members
-
-
-    IEnumerable<int> IArrayTypeReference.LowerBounds {
-      get {
-        if (this.lowerBounds == null) return Dummy.ArrayType.LowerBounds;
-        return this.lowerBounds.AsReadOnly();
-      }
-    }
-
-    IEnumerable<ulong> IArrayTypeReference.Sizes {
-      get {
-        if (this.sizes == null) return Dummy.ArrayType.Sizes;
-        return this.sizes.AsReadOnly();
-      }
-    }
-
-    #endregion
 
   }
 
@@ -1453,7 +1534,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class NamespaceTypeDefinition : TypeDefinition, INamespaceTypeDefinition, ICopyFrom<INamespaceTypeDefinition> {
+  public sealed class NamespaceTypeDefinition : NamedTypeDefinition, INamespaceTypeDefinition, ICopyFrom<INamespaceTypeDefinition> {
 
     /// <summary>
     /// 
@@ -1475,7 +1556,19 @@ namespace Microsoft.Cci.MutableCodeModel {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(namespaceTypeDefinition, internFactory);
       this.containingUnitNamespace = namespaceTypeDefinition.ContainingUnitNamespace;
       this.IsPublic = namespaceTypeDefinition.IsPublic;
+      this.IsForeignObject = namespaceTypeDefinition.IsForeignObject;
     }
+
+    /// <summary>
+    /// A map from type references to potentially empty enumerations of attributes.
+    /// The references are expected to be references to interface types implemented by this type
+    /// and the attributes are meant to provide additional information about the relationship between this type and its interface.
+    /// </summary>
+    public Dictionary<ITypeReference, IEnumerable<ICustomAttribute>>/*?*/ AttributesFor {
+      get { return this.attributesFor; }
+      set { this.attributesFor = value; }
+    }
+    Dictionary<ITypeReference, IEnumerable<ICustomAttribute>>/*?*/ attributesFor;
 
     /// <summary>
     /// The namespace that contains this member.
@@ -1495,6 +1588,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(INamespaceTypeReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((INamespaceTypeReference)this);
+    }
+
+    /// <summary>
     /// True if the type can be accessed from other assemblies.
     /// </summary>
     /// <value></value>
@@ -1503,9 +1603,31 @@ namespace Microsoft.Cci.MutableCodeModel {
         return (((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask) == TypeMemberVisibility.Public;
       }
       set {
-        this.flags &= (TypeDefinition.Flags)~TypeMemberVisibility.Mask;
+        this.flags &= (NamedTypeDefinition.Flags)~TypeMemberVisibility.Mask;
         if (value)
-          this.flags |= (TypeDefinition.Flags)TypeMemberVisibility.Public;
+          this.flags |= (NamedTypeDefinition.Flags)TypeMemberVisibility.Public;
+      }
+    }
+
+    /// <summary>
+    /// True if this reference should be kept distinct from the definition it refers to. That is, when copied or persisted,
+    /// this object should not be unified with the referenced type, even if the referenced type is defined in the same
+    /// module as the reference to the type.
+    /// </summary>
+    public bool KeepDistinctFromDefinition {
+      get { return false; }
+    }
+
+    /// <summary>
+    /// True if objects of this type are neither COM objects nor native to the CLR and are accessed via some kind of interoperation mechanism.
+    /// </summary>
+    public bool IsForeignObject {
+      get { return (this.flags & Flags.IsForeignObject) != 0; }
+      set {
+        if (value)
+          this.flags |= Flags.IsForeignObject;
+        else
+          this.flags &= ~Flags.IsForeignObject;
       }
     }
 
@@ -1544,6 +1666,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+
+    #region INamespaceTypeDefinition Members
+
+    IEnumerable<ICustomAttribute> INamespaceTypeDefinition.AttributesFor(ITypeReference implementedInterface) {
+      IEnumerable<ICustomAttribute> result;
+      if (this.AttributesFor != null && this.AttributesFor.TryGetValue(implementedInterface, out result)) return result;
+      return Dummy.Type.Attributes;
+    }
+
+    #endregion
+
   }
 
   /// <summary>
@@ -1558,6 +1691,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public NamespaceTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
       this.containingUnitNamespace = Dummy.RootUnitNamespace;
       this.genericParameterCount = 0;
       this.mangleName = true;
@@ -1586,6 +1720,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.genericParameterCount = namespaceTypeReference.GenericParameterCount;
       this.mangleName = namespaceTypeReference.MangleName;
       this.name = namespaceTypeReference.Name;
+      this.keepDistinctFromDefinition = namespaceTypeReference.KeepDistinctFromDefinition;
     }
 
     /// <summary>
@@ -1605,7 +1740,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(INamespaceTypeReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1640,7 +1775,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.resolvedType == null)
           this.resolvedType = this.Resolve();
-        return this.resolvedType;
+        return this.resolvedType == Dummy.NamespaceTypeDefinition ? Dummy.Type : this.resolvedType;
       }
     }
 
@@ -1680,6 +1815,17 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     IName name;
+
+    /// <summary>
+    /// True if this reference should be kept distinct from the definition it refers to. That is, when copied or persisted,
+    /// this object should not be unified with the referenced type, even if the referenced type is defined in the same
+    /// module as the reference to the type.
+    /// </summary>
+    public bool KeepDistinctFromDefinition {
+      get { return this.keepDistinctFromDefinition; }
+      set { this.keepDistinctFromDefinition = value; }
+    }
+    bool keepDistinctFromDefinition;
 
   }
 
@@ -1764,7 +1910,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class NestedTypeDefinition : TypeDefinition, INestedTypeDefinition, ICopyFrom<INestedTypeDefinition> {
+  public class NestedTypeDefinition : NamedTypeDefinition, INestedTypeDefinition, ICopyFrom<INestedTypeDefinition> {
 
     /// <summary>
     /// 
@@ -1805,8 +1951,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public TypeMemberVisibility Visibility {
       get { return ((TypeMemberVisibility)this.flags) & TypeMemberVisibility.Mask; }
       set {
-        this.flags &= (TypeDefinition.Flags)~TypeMemberVisibility.Mask;
-        this.flags |= (TypeDefinition.Flags)(value & TypeMemberVisibility.Mask);
+        this.flags &= (NamedTypeDefinition.Flags)~TypeMemberVisibility.Mask;
+        this.flags |= (NamedTypeDefinition.Flags)(value & TypeMemberVisibility.Mask);
       }
     }
 
@@ -1815,6 +1961,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(INestedTypeReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((INestedTypeReference)this);
     }
 
     #region IContainerMember<ITypeDefinition> Members
@@ -1863,6 +2016,59 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
+  /// 
+  /// </summary>
+  public sealed class SpecializedNestedTypeDefinition : NestedTypeDefinition, ISpecializedNestedTypeDefinition, ICopyFrom<ISpecializedNestedTypeDefinition> {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public SpecializedNestedTypeDefinition() {
+      this.unspecializedVersion = Dummy.NestedType;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedNestedTypeDefinition"></param>
+    /// <param name="internFactory"></param>
+    public void Copy(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition, IInternFactory internFactory) {
+      ((ICopyFrom<INestedTypeDefinition>)this).Copy(specializedNestedTypeDefinition, internFactory);
+      this.unspecializedVersion = specializedNestedTypeDefinition.UnspecializedVersion;
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedNestedTypeDefinition).
+    /// </summary>
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedNestedTypeReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((ISpecializedNestedTypeReference)this);
+    }
+
+    /// <summary>
+    /// The property that has been specialized to obtain this event. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
+    /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
+    /// corresponds to a definition that is not obtained via specialization.)
+    /// </summary>
+    public INestedTypeDefinition UnspecializedVersion {
+      get { return this.unspecializedVersion; }
+      set { this.unspecializedVersion = value; }
+    }
+    INestedTypeDefinition unspecializedVersion;
+
+    INestedTypeReference ISpecializedNestedTypeReference.UnspecializedVersion {
+      get { return this.UnspecializedVersion; }
+    }
+
+  }
+
+  /// <summary>
   /// A reference to a nested type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
   /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
@@ -1874,6 +2080,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public NestedTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
       this.containingType = Dummy.TypeReference;
       this.genericParameterCount = 0;
       this.mangleName = true;
@@ -1922,7 +2129,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(INestedTypeReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -1988,6 +2195,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.resolvedType == null)
           this.resolvedType = this.Resolve();
         Contract.Assume(!(this is ITypeDefinition));
+        if (this.resolvedType == Dummy.NestedType) return Dummy.Type;
         return this.resolvedType;
       }
     }
@@ -2059,7 +2267,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IPointerTypeReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -2139,6 +2347,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(ISpecializedNestedTypeReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// A reference to the nested type that has been specialized to obtain this nested type reference. When the containing type is an instance of type which is itself a specialized member (i.e. it is a nested
     /// type of a generic type instance), then the unspecialized member refers to a member from the unspecialized containing type. (I.e. the unspecialized member always
     /// corresponds to a definition that is not obtained via specialization.)
@@ -2159,12 +2374,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public abstract class TypeDefinition : INamedTypeDefinition, ICopyFrom<INamedTypeDefinition> {
+  public abstract class NamedTypeDefinition : INamedTypeDefinition, ICopyFrom<INamedTypeDefinition> {
 
     /// <summary>
     /// 
     /// </summary>
-    internal TypeDefinition() {
+    internal NamedTypeDefinition() {
       this.alignment = 0;
       this.attributes = new List<ICustomAttribute>();
       this.baseClasses = new List<ITypeReference>();
@@ -2297,10 +2512,17 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     /// <summary>
     /// Zero or more events defined by this type.
@@ -2353,6 +2575,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       MustBeValueType=0x00004000,
       MustHaveDefaultConstructor=0x00002000,
       MangleName=0x00001000,
+      IsForeignObject=0x00000800,
       None=0x00000000,
     }
     internal Flags flags;
@@ -2362,7 +2585,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeDefinition">Unspecialized type definition to be specialized/instantiated.</param>
     /// <param name="internFactory">An internfactory. </param>
-    public static ITypeDefinition SelfInstance(ITypeDefinition typeDefinition, IInternFactory internFactory) {
+    public static ITypeDefinition SelfInstance(INamedTypeDefinition typeDefinition, IInternFactory internFactory) {
       INamespaceTypeDefinition namespaceTypeDefinition = typeDefinition as INamespaceTypeDefinition;
       if (namespaceTypeDefinition != null) {
         if (typeDefinition.IsGeneric)
@@ -2371,9 +2594,9 @@ namespace Microsoft.Cci.MutableCodeModel {
           return typeDefinition;
       }
       INestedTypeDefinition nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
-      ITypeDefinition result = typeDefinition;
+      INamedTypeDefinition result = typeDefinition;
       if (nestedTypeDefinition != null) {
-        ITypeDefinition containingTypeDefinition = SelfInstance(nestedTypeDefinition.ContainingTypeDefinition, internFactory);
+        var containingTypeDefinition = SelfInstance((INamedTypeDefinition)nestedTypeDefinition.ContainingTypeDefinition, internFactory);
         var genericTypeInstance = containingTypeDefinition as GenericTypeInstance;
         while (genericTypeInstance == null) {
           var specializedNestedTypeRef = containingTypeDefinition as ISpecializedNestedTypeReference;
@@ -2385,14 +2608,14 @@ namespace Microsoft.Cci.MutableCodeModel {
           }
         }
         if (genericTypeInstance != null) {
-          result = new SpecializedNestedTypeDefinition(nestedTypeDefinition, nestedTypeDefinition, containingTypeDefinition, genericTypeInstance, internFactory);
+          result = new Microsoft.Cci.SpecializedNestedTypeDefinition(nestedTypeDefinition, nestedTypeDefinition, containingTypeDefinition, genericTypeInstance, internFactory);
         }
       }
       if (typeDefinition.IsGeneric) {
         var args = new List<ITypeReference>();
         foreach (var gpar in typeDefinition.GenericParameters)
           args.Add(gpar);
-        result = GenericTypeInstance.GetGenericTypeInstance(result, args, internFactory);
+        return GenericTypeInstance.GetGenericTypeInstance(result, args, internFactory);
       }
       return result;
     }
@@ -2498,14 +2721,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Return a specialized nested type obtained from the specialized instance of its containing type if this type is a nested type, or this otherwise.
     /// </summary>
     /// <returns></returns>
-    protected ITypeReference GetSpecializedType(ITypeDefinition typeDef) {
+    protected INamedTypeReference GetSpecializedType(INamedTypeDefinition typeDef) {
       var nestedType = typeDef as INestedTypeDefinition;
       if (nestedType != null) {
         ITypeReference containingTypeReference = null;
         if (nestedType.ContainingTypeDefinition.IsGeneric)
           containingTypeReference = nestedType.ContainingTypeDefinition.InstanceType;
         else
-          containingTypeReference = this.GetSpecializedType(nestedType.ContainingTypeDefinition);
+          containingTypeReference = this.GetSpecializedType((INamedTypeDefinition)nestedType.ContainingTypeDefinition);
         foreach (var nested in containingTypeReference.ResolvedType.NestedTypes) {
           if (nested.Name == nestedType.Name && nested.GenericParameterCount == nested.GenericParameterCount) return nested;
         }
@@ -3097,7 +3320,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Calls visitor.Visit(IModifiedTypeReference).
     /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -3235,18 +3458,24 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDefinition. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// of the object implementing IReference. The dispatch method does nothing else.
     /// </summary>
-    /// <param name="visitor">
-    /// An instance of a class that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of
-    /// a subset of the nodes in the graph. Contains a specialized Visit routine for each standard type of object defined in this object model. 
-    /// </param>
-    public abstract void Dispatch(IMetadataVisitor visitor);
+    /// <param name="visitor"></param>
+    public void Dispatch(IMetadataVisitor visitor) {
+      this.DispatchAsReference(visitor);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IReference, which is not derived from IDefinition. For example an object implemeting IArrayType will
+    /// call visitor.Visit(IArrayTypeReference) and not visitor.Visit(IArrayType).
+    /// The dispatch method does nothing else.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     [ContractClassFor(typeof(TypeReference))]
     abstract partial class TypeReferenceAbstractMethodContracts : TypeReference {
-      public override void Dispatch(IMetadataVisitor visitor) {
+      public override void DispatchAsReference(IMetadataVisitor visitor) {
         Contract.Requires(visitor != null);
       }
     }
@@ -3441,21 +3670,13 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
   /// </summary>
   [ContractVerification(true)]
-  public sealed class VectorTypeReference : TypeReference, IArrayTypeReference, ICopyFrom<IArrayTypeReference> {
+  public sealed class VectorTypeReference : ArrayTypeReference, ICopyFrom<IArrayTypeReference> {
 
     /// <summary>
     /// A reference to a zero based single dimensional array type. Type references can be initialized incrementally, but once a reference is frozen, or resolved
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public VectorTypeReference() {
-      this.elementType = Dummy.TypeReference;
-    }
-
-    [ContractInvariantMethod]
-    void ObjectInvariant() {
-      Contract.Invariant(this.elementType != null);
-      Contract.Invariant(this.resolvedType == null || this.IsFrozen);
-      //Contract.Invariant(this.resolvedType == null || this.resolvedType.InternedKey == this.InternedKey);
     }
 
     /// <summary>
@@ -3469,104 +3690,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(IArrayTypeReference vectorTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(vectorTypeReference, internFactory);
-      this.elementType = vectorTypeReference.ElementType;
+      this.ElementType = vectorTypeReference.ElementType;
     }
-
-    /// <summary>
-    /// Calls visitor.Visit(IArrayTypeReference).
-    /// </summary>
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// The type of the elements of this array.
-    /// </summary>
-    public ITypeReference ElementType {
-      get { return this.elementType; }
-      set {
-        Contract.Requires(!this.IsFrozen);
-        Contract.Requires(value != null);
-        this.elementType = value;
-      }
-    }
-    ITypeReference elementType;
 
     /// <summary>
     /// This type of array is a single dimensional array with zero lower bound for index values.
     /// </summary>
-    public bool IsVector {
+    public override bool IsVector {
       get { return true; }
     }
 
     /// <summary>
-    /// A possibly empty list of lower bounds for dimension indices. When not explicitly specified, a lower bound defaults to zero.
-    /// The first lower bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
+    /// Returns the type of the resolved array.
     /// </summary>
-    public IEnumerable<int> LowerBounds {
-      get {
-        Contract.Ensures(IteratorHelper.EnumerableIsEmpty(Contract.Result<IEnumerable<int>>()));
-        Contract.Assume(IteratorHelper.EnumerableIsEmpty(Dummy.ArrayType.LowerBounds));
-        Contract.Assume(IteratorHelper.EnumerableCount(Dummy.ArrayType.LowerBounds) == 0);
-        return Dummy.ArrayType.LowerBounds;
-      }
+    /// <returns></returns>
+    protected override IArrayType Resolve() {
+      return Vector.GetVector(this.ElementType, this.InternFactory);
     }
-
-    /// <summary>
-    /// The number of array dimensions.
-    /// </summary>
-    public uint Rank {
-      get {
-        Contract.Ensures(Contract.Result<uint>() == 1);
-        return 1;
-      }
-    }
-
-    /// <summary>
-    /// A possible empty list of upper bounds for dimension indices.
-    /// The first upper bound in the list corresponds to the first dimension. Dimensions cannot be skipped.
-    /// An unspecified upper bound means that instances of this type can have an arbitrary upper bound for that dimension.
-    /// </summary>
-    /// <value></value>
-    public IEnumerable<ulong> Sizes {
-      get {
-        Contract.Ensures(IteratorHelper.EnumerableIsEmpty(Contract.Result<IEnumerable<ulong>>()));
-        Contract.Assume(IteratorHelper.EnumerableIsEmpty(Dummy.ArrayType.Sizes));
-        Contract.Assume(IteratorHelper.EnumerableCount(Dummy.ArrayType.Sizes) == 0);
-        return Dummy.ArrayType.Sizes;
-      }
-    }
-
-    /// <summary>
-    /// Gets the type of the resolved.
-    /// </summary>
-    /// <value>The type of the resolved.</value>
-    public override ITypeDefinition ResolvedType {
-      get {
-        return this.ResolvedArrayType;
-      }
-    }
-
-    /// <summary>
-    /// Gets the type of the resolved array.
-    /// </summary>
-    /// <value>The type of the resolved array.</value>
-    public IArrayType ResolvedArrayType {
-      get {
-        Contract.Ensures(Contract.Result<IArrayType>() != null);
-        //Contract.Ensures(Contract.Result<IArrayType>() == Dummy.Type || this.IsAlias ||
-        //    Contract.Result<ITypeDefinition>().InternedKey == this.InternedKey);
-        Contract.Ensures(this.IsFrozen);
-
-        if (this.resolvedType == null) {
-          this.isFrozen = true;
-          this.resolvedType = Vector.GetVector(this.ElementType, this.InternFactory);
-          //Contract.Assert(this.resolvedType.InternedKey == this.InternedKey);
-        }
-        return this.resolvedType;
-      }
-    }
-    IArrayType/*?*/ resolvedType;
 
   }
 
