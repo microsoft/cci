@@ -16,17 +16,17 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
-    public override void Visit(IAddition addition) {
+    public override void TraverseChildren(IAddition addition) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(addition.LeftOperand);
+      this.Traverse(addition.LeftOperand);
       this.sourceEmitterOutput.Write(" + ");
-      this.Visit(addition.RightOperand);
+      this.Traverse(addition.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IAddressableExpression addressableExpression) {
+    public override void TraverseChildren(IAddressableExpression addressableExpression) {
       ILocalDefinition/*?*/ local = addressableExpression.Definition as ILocalDefinition;
       if (local != null) {
         this.PrintLocalName(local);
@@ -44,12 +44,12 @@ namespace CSharpSourceEmitter {
       }
       IArrayIndexer/*?*/ arrayIndexer = addressableExpression.Definition as IArrayIndexer;
       if (arrayIndexer != null) {
-        this.Visit(arrayIndexer);
+        this.Traverse(arrayIndexer);
         return;
       }
       IAddressDereference/*?*/ addressDereference = addressableExpression.Definition as IAddressDereference;
       if (addressDereference != null) {
-        this.Visit(addressDereference);
+        this.Traverse(addressDereference);
         return;
       }
       IMethodReference/*?*/ method = addressableExpression.Definition as IMethodReference;
@@ -73,50 +73,59 @@ namespace CSharpSourceEmitter {
       return base.ToString();
     }
 
-    public override void Visit(IAddressDereference addressDereference) {
-      if (addressDereference.Address.Type is IPointerTypeReference)
+    public override void TraverseChildren(IAddressDereference addressDereference) {
+      if (addressDereference.Address.Type is IPointerTypeReference || addressDereference.Address.Type.TypeCode == PrimitiveTypeCode.IntPtr)
         this.sourceEmitterOutput.Write("*");
       else {
         var addrOf = addressDereference.Address as IAddressOf;
         if (addrOf != null) {
-          this.Visit(addrOf.Expression);
+          this.Traverse(addrOf.Expression);
           return;
         }
       }
-      this.Visit(addressDereference.Address);
+      this.Traverse(addressDereference.Address);
     }
 
-    public override void Visit(IAddressOf addressOf) {
+    public override void TraverseChildren(IAddressOf addressOf) {
       this.sourceEmitterOutput.Write("&");
-      this.Visit(addressOf.Expression);
+      this.Traverse(addressOf.Expression);
     }
 
-    public override void Visit(IAliasForType aliasForType) {
+    public override void TraverseChildren(IAliasForType aliasForType) {
       // Already outputted these at the top for IAssembly
     }
 
-    public override void Visit(IAnonymousDelegate anonymousDelegate) {
+    public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
+      if (IteratorHelper.EnumerableHasLength(anonymousDelegate.Body.Statements, 1)) {
+        var returnStatement = IteratorHelper.Single(anonymousDelegate.Body.Statements) as IReturnStatement;
+        if (returnStatement != null && returnStatement.Expression != null) {
+          this.Traverse(anonymousDelegate.Parameters);
+          this.sourceEmitterOutput.Write(" => ");
+          this.Traverse(returnStatement.Expression);
+          return;
+        }
+      }
       this.sourceEmitterOutput.Write("delegate ");
-      this.Visit(anonymousDelegate.Parameters);
+      this.Traverse(anonymousDelegate.Parameters);
       this.sourceEmitterOutput.WriteLine(" {");
       this.sourceEmitterOutput.IncreaseIndent();
-      this.Visit(anonymousDelegate.Body.Statements);
+      this.Traverse(anonymousDelegate.Body.Statements);
       this.sourceEmitterOutput.DecreaseIndent();
       this.sourceEmitterOutput.Write("}", true);
     }
 
-    public override void Visit(IArrayIndexer arrayIndexer) {
-      this.Visit(arrayIndexer.IndexedObject);
+    public override void TraverseChildren(IArrayIndexer arrayIndexer) {
+      this.Traverse(arrayIndexer.IndexedObject);
       this.sourceEmitterOutput.Write("[");
-      this.Visit(arrayIndexer.Indices);
+      this.Traverse(arrayIndexer.Indices);
       this.sourceEmitterOutput.Write("]");
     }
 
-    public override void Visit(IArrayTypeReference arrayTypeReference) {
-      base.Visit(arrayTypeReference);
+    public override void TraverseChildren(IArrayTypeReference arrayTypeReference) {
+      base.TraverseChildren(arrayTypeReference);
     }
 
-    public override void Visit(IAssembly assembly) {
+    public override void TraverseChildren(IAssembly assembly) {
       foreach (var attr in assembly.Attributes) {
         var at = Utils.GetAttributeType(attr);
         if (at == SpecialAttribute.Extension ||
@@ -131,59 +140,59 @@ namespace CSharpSourceEmitter {
         // Nested type are automatically included
         if (!(alias.AliasedType is INestedTypeReference)) {
           sourceEmitterOutput.Write("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(");
-          Visit(alias.AliasedType);
+          PrintTypeReference(alias.AliasedType);
           sourceEmitterOutput.WriteLine("))]");
         }
       }
       PrintToken(CSharpToken.NewLine);
-      base.Visit(assembly);
+      base.TraverseChildren(assembly);
     }
 
-    public override void Visit(IAssemblyReference assemblyReference) {
-      base.Visit(assemblyReference);
+    public override void TraverseChildren(IAssemblyReference assemblyReference) {
+      base.TraverseChildren(assemblyReference);
     }
 
-    public override void Visit(IAssignment assignment) {
-      this.Visit(assignment.Target);
+    public override void TraverseChildren(IAssignment assignment) {
+      this.Traverse(assignment.Target);
       this.PrintToken(CSharpToken.Space);
       this.PrintToken(CSharpToken.Assign);
       this.PrintToken(CSharpToken.Space);
-      this.Visit(assignment.Source);
+      this.Traverse(assignment.Source);
     }
 
-    public override void Visit(IBitwiseAnd bitwiseAnd) {
+    public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(bitwiseAnd.LeftOperand);
+      this.Traverse(bitwiseAnd.LeftOperand);
       this.sourceEmitterOutput.Write(" & ");
-      this.Visit(bitwiseAnd.RightOperand);
+      this.Traverse(bitwiseAnd.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IBitwiseOr bitwiseOr) {
+    public override void TraverseChildren(IBitwiseOr bitwiseOr) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(bitwiseOr.LeftOperand);
+      this.Traverse(bitwiseOr.LeftOperand);
       this.sourceEmitterOutput.Write(" | ");
-      this.Visit(bitwiseOr.RightOperand);
+      this.Traverse(bitwiseOr.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IBlockExpression blockExpression) {
+    public override void TraverseChildren(IBlockExpression blockExpression) {
       this.sourceEmitterOutput.WriteLine("(() => {");
       this.sourceEmitterOutput.IncreaseIndent();
-      this.Visit(blockExpression.BlockStatement);
+      this.Traverse(blockExpression.BlockStatement);
       this.sourceEmitterOutput.Write("return ", true);
-      this.Visit(blockExpression.Expression);
+      this.Traverse(blockExpression.Expression);
       this.sourceEmitterOutput.Write("; })()");
       this.sourceEmitterOutput.DecreaseIndent();
     }
 
-    public override void Visit(IBoundExpression boundExpression) {
+    public override void TraverseChildren(IBoundExpression boundExpression) {
       if (boundExpression.Instance != null) {
         IAddressOf/*?*/ addressOf = boundExpression.Instance as IAddressOf;
         if (addressOf != null && addressOf.Expression.Type.IsValueType) {
-          this.Visit(addressOf.Expression);
+          this.Traverse(addressOf.Expression);
         } else {
-          this.Visit(boundExpression.Instance);
+          this.Traverse(boundExpression.Instance);
         }
         this.PrintToken(CSharpToken.Dot);
       }
@@ -206,23 +215,23 @@ namespace CSharpSourceEmitter {
       }
     }
 
-    public override void Visit(ICastIfPossible castIfPossible) {
+    public override void TraverseChildren(ICastIfPossible castIfPossible) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(castIfPossible.ValueToCast);
+      this.Traverse(castIfPossible.ValueToCast);
       this.sourceEmitterOutput.Write(" as ");
-      this.Visit(castIfPossible.TargetType);
+      this.PrintTypeReference(castIfPossible.TargetType);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ICheckIfInstance checkIfInstance) {
+    public override void TraverseChildren(ICheckIfInstance checkIfInstance) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(checkIfInstance.Operand);
+      this.Traverse(checkIfInstance.Operand);
       this.sourceEmitterOutput.Write(" is ");
-      this.Visit(checkIfInstance.TypeToCheck);
+      this.PrintTypeReference(checkIfInstance.TypeToCheck);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ICompileTimeConstant constant) {
+    public override void TraverseChildren(ICompileTimeConstant constant) {
       if (constant.Value == null)
         this.PrintToken(CSharpToken.Null);
       else if (constant.Value is bool)
@@ -233,52 +242,52 @@ namespace CSharpSourceEmitter {
         this.sourceEmitterOutput.Write(constant.Value.ToString());
     }
 
-    public override void Visit(IConditional conditional) {
+    public override void TraverseChildren(IConditional conditional) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(conditional.Condition);
+      this.Traverse(conditional.Condition);
       if (ExpressionHelper.IsIntegralOne(conditional.ResultIfTrue)) {
         this.sourceEmitterOutput.Write(" || ");
-        this.Visit(conditional.ResultIfFalse);
+        this.Traverse(conditional.ResultIfFalse);
         this.sourceEmitterOutput.Write(")");
         return;
       }
       if (ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse)) {
         this.sourceEmitterOutput.Write(" && ");
-        this.Visit(conditional.ResultIfTrue);
+        this.Traverse(conditional.ResultIfTrue);
         this.sourceEmitterOutput.Write(")");
         return;
       }
       this.sourceEmitterOutput.Write(" ? ");
-      this.Visit(conditional.ResultIfTrue);
+      this.Traverse(conditional.ResultIfTrue);
       this.sourceEmitterOutput.Write(" : ");
-      this.Visit(conditional.ResultIfFalse);
+      this.Traverse(conditional.ResultIfFalse);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IConversion conversion) {
+    public override void TraverseChildren(IConversion conversion) {
       if (conversion.CheckNumericRange)
         this.sourceEmitterOutput.Write("checked");
       this.sourceEmitterOutput.Write("((");
       this.PrintTypeReferenceName(conversion.TypeAfterConversion);
       this.sourceEmitterOutput.Write(")");
-      this.Visit(conversion.ValueToConvert);
+      this.Traverse(conversion.ValueToConvert);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ICreateArray createArray) {
+    public override void TraverseChildren(ICreateArray createArray) {
       this.sourceEmitterOutput.Write("new ");
       this.PrintTypeReference(createArray.ElementType);
       this.sourceEmitterOutput.Write("[");
-      this.Visit(createArray.Sizes);
+      this.Traverse(createArray.Sizes);
       this.sourceEmitterOutput.Write("]");
       if (IteratorHelper.EnumerableIsNotEmpty(createArray.Initializers)) {
         this.sourceEmitterOutput.Write(" {");
-        this.Visit(createArray.Initializers);
+        this.Traverse(createArray.Initializers);
         this.sourceEmitterOutput.Write("}");
       }
     }
 
-    private void Visit(IEnumerable<ulong> sizes) {
+    private void TraverseChildren(IEnumerable<ulong> sizes) {
       bool emitComma = false;
       foreach (ulong size in sizes) {
         if (emitComma) this.sourceEmitterOutput.Write(", ");
@@ -287,112 +296,103 @@ namespace CSharpSourceEmitter {
       }
     }
 
-    public override void Visit(ICreateDelegateInstance/*!*/ createDelegateInstance) {
+    public override void TraverseChildren(ICreateDelegateInstance/*!*/ createDelegateInstance) {
       if (createDelegateInstance.Instance != null) {
         ICompileTimeConstant constant = createDelegateInstance.Instance as ICompileTimeConstant;
         if (constant == null || constant.Value != null) {
-          this.Visit(createDelegateInstance.Instance);
+          this.Traverse(createDelegateInstance.Instance);
           this.PrintToken(CSharpToken.Dot);
         }
       }
       this.PrintMethodDefinitionName(createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod);
-      //base.Visit(createDelegateInstance);
+      //base.TraverseChildren(createDelegateInstance);
     }
 
-    public override void Visit(ICreateObjectInstance createObjectInstance) {
+    public override void TraverseChildren(ICreateObjectInstance createObjectInstance) {
       this.PrintToken(CSharpToken.New);
       this.PrintTypeReferenceName(createObjectInstance.MethodToCall.ContainingType);
       this.PrintArgumentList(createObjectInstance.Arguments);
     }
 
-    public override void Visit(ICustomAttribute customAttribute) {
+    public override void TraverseChildren(ICustomAttribute customAttribute) {
       // Different uses of custom attributes must print them directly based on context
-      //base.Visit(customAttribute);
+      //base.TraverseChildren(customAttribute);
     }
 
-    public override void Visit(ICustomModifier customModifier) {
-      base.Visit(customModifier);
+    public override void TraverseChildren(ICustomModifier customModifier) {
+      base.TraverseChildren(customModifier);
     }
 
-    public override void Visit(IDefaultValue defaultValue) {
+    public override void TraverseChildren(IDefaultValue defaultValue) {
       this.sourceEmitterOutput.Write("default(");
       this.PrintTypeReference(defaultValue.DefaultValueType);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IDivision division) {
+    public override void TraverseChildren(IDivision division) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(division.LeftOperand);
+      this.Traverse(division.LeftOperand);
       this.sourceEmitterOutput.Write(" / ");
-      this.Visit(division.RightOperand);
+      this.Traverse(division.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IDupValue dupValue) {
+    public override void TraverseChildren(IDupValue dupValue) {
       this.sourceEmitterOutput.Write("dup");
     }
 
-    public override void Visit(IEquality equality) {
+    public override void TraverseChildren(IEquality equality) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(equality.LeftOperand);
+      this.Traverse(equality.LeftOperand);
       this.sourceEmitterOutput.Write(" == ");
-      this.Visit(equality.RightOperand);
+      this.Traverse(equality.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IExclusiveOr exclusiveOr) {
+    public override void TraverseChildren(IExclusiveOr exclusiveOr) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(exclusiveOr.LeftOperand);
+      this.Traverse(exclusiveOr.LeftOperand);
       this.sourceEmitterOutput.Write(" ^ ");
-      this.Visit(exclusiveOr.RightOperand);
+      this.Traverse(exclusiveOr.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IEnumerable<IExpression> arguments) {
+    public new void Traverse(IEnumerable<IExpression> arguments) {
       bool needComma = false;
       foreach (IExpression argument in arguments) {
         if (needComma) {
           this.PrintToken(CSharpToken.Comma);
           this.PrintToken(CSharpToken.Space);
         }
-        this.Visit(argument);
+        this.Traverse(argument);
         needComma = true;
       }
     }
 
-    public override void Visit(IExpression expression) {
-      base.Visit(expression);
+    public override void TraverseChildren(IExpression expression) {
+      base.TraverseChildren(expression);
     }
 
-    public override void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+    public override void TraverseChildren(IGetTypeOfTypedReference getTypeOfTypedReference) {
       this.sourceEmitterOutput.Write("__reftype(");
-      this.Visit(getTypeOfTypedReference.TypedReference);
+      this.Traverse(getTypeOfTypedReference.TypedReference);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+    public override void TraverseChildren(IGetValueOfTypedReference getValueOfTypedReference) {
       this.sourceEmitterOutput.Write("__refvalue(");
-      this.Visit(getValueOfTypedReference.TypedReference);
+      this.Traverse(getValueOfTypedReference.TypedReference);
       this.sourceEmitterOutput.Write(", ");
       this.PrintTypeReferenceName(getValueOfTypedReference.TargetType);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IGlobalFieldDefinition globalFieldDefinition) {
-      base.Visit(globalFieldDefinition);
-    }
-
-
-    public override void Visit(IGlobalMethodDefinition globalMethodDefinition) {
-      base.Visit(globalMethodDefinition);
-    }
-
-    public override void Visit(IGreaterThan greaterThan) {
+    public override void TraverseChildren(IGreaterThan greaterThan) {
       if (greaterThan.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThan.LeftOperand.Type)) {
         this.sourceEmitterOutput.Write("!(");
-        this.Visit(greaterThan.LeftOperand);
+        this.Traverse(greaterThan.LeftOperand);
         this.sourceEmitterOutput.Write(" <= ");
-        this.Visit(greaterThan.RightOperand);
+        this.Traverse(greaterThan.RightOperand);
         this.sourceEmitterOutput.Write(")");
         return;
       }
@@ -403,7 +403,7 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThan.LeftOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(greaterThan.LeftOperand);
+      this.Traverse(greaterThan.LeftOperand);
       this.sourceEmitterOutput.Write(" > ");
       if (greaterThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThan.RightOperand.Type) && 
         greaterThan.RightOperand.Type != TypeHelper.UnsignedEquivalent(greaterThan.RightOperand.Type)) {
@@ -411,16 +411,16 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThan.RightOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(greaterThan.RightOperand);
+      this.Traverse(greaterThan.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+    public override void TraverseChildren(IGreaterThanOrEqual greaterThanOrEqual) {
       if (greaterThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type)) {
         this.sourceEmitterOutput.Write("!(");
-        this.Visit(greaterThanOrEqual.LeftOperand);
+        this.Traverse(greaterThanOrEqual.LeftOperand);
         this.sourceEmitterOutput.Write(" < ");
-        this.Visit(greaterThanOrEqual.RightOperand);
+        this.Traverse(greaterThanOrEqual.RightOperand);
         this.sourceEmitterOutput.Write(")");
         return;
       }
@@ -431,7 +431,7 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThanOrEqual.LeftOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(greaterThanOrEqual.LeftOperand);
+      this.Traverse(greaterThanOrEqual.LeftOperand);
       this.sourceEmitterOutput.Write(" >= ");
       if (greaterThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.RightOperand.Type) && 
         greaterThanOrEqual.RightOperand.Type != TypeHelper.UnsignedEquivalent(greaterThanOrEqual.RightOperand.Type)) {
@@ -439,24 +439,24 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(greaterThanOrEqual.RightOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(greaterThanOrEqual.RightOperand);
+      this.Traverse(greaterThanOrEqual.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ILeftShift leftShift) {
+    public override void TraverseChildren(ILeftShift leftShift) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(leftShift.LeftOperand);
+      this.Traverse(leftShift.LeftOperand);
       this.sourceEmitterOutput.Write(" << ");
-      this.Visit(leftShift.RightOperand);
+      this.Traverse(leftShift.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ILessThan lessThan) {
+    public override void TraverseChildren(ILessThan lessThan) {
       if (lessThan.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThan.LeftOperand.Type)) {
         this.sourceEmitterOutput.Write("!(");
-        this.Visit(lessThan.LeftOperand);
+        this.Traverse(lessThan.LeftOperand);
         this.sourceEmitterOutput.Write(" >= ");
-        this.Visit(lessThan.RightOperand);
+        this.Traverse(lessThan.RightOperand);
         this.sourceEmitterOutput.Write(")");
         return;
       }
@@ -467,7 +467,7 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThan.LeftOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(lessThan.LeftOperand);
+      this.Traverse(lessThan.LeftOperand);
       this.sourceEmitterOutput.Write(" < ");
       if (lessThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThan.RightOperand.Type) && 
         lessThan.RightOperand.Type != TypeHelper.UnsignedEquivalent(lessThan.RightOperand.Type)) {
@@ -475,16 +475,16 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThan.RightOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(lessThan.RightOperand);
+      this.Traverse(lessThan.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ILessThanOrEqual lessThanOrEqual) {
+    public override void TraverseChildren(ILessThanOrEqual lessThanOrEqual) {
       if (lessThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type)) {
         this.sourceEmitterOutput.Write("!(");
-        this.Visit(lessThanOrEqual.LeftOperand);
+        this.Traverse(lessThanOrEqual.LeftOperand);
         this.sourceEmitterOutput.Write(" > ");
-        this.Visit(lessThanOrEqual.RightOperand);
+        this.Traverse(lessThanOrEqual.RightOperand);
         this.sourceEmitterOutput.Write(")");
         return;
       }
@@ -495,7 +495,7 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThanOrEqual.LeftOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(lessThanOrEqual.LeftOperand);
+      this.Traverse(lessThanOrEqual.LeftOperand);
       this.sourceEmitterOutput.Write(" <= ");
       if (lessThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThanOrEqual.RightOperand.Type) && 
         lessThanOrEqual.RightOperand.Type != TypeHelper.UnsignedEquivalent(lessThanOrEqual.RightOperand.Type)) {
@@ -503,30 +503,30 @@ namespace CSharpSourceEmitter {
         this.PrintTypeReferenceName(TypeHelper.UnsignedEquivalent(lessThanOrEqual.RightOperand.Type));
         this.sourceEmitterOutput.Write(")");
       }
-      this.Visit(lessThanOrEqual.RightOperand);
+      this.Traverse(lessThanOrEqual.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ILogicalNot logicalNot) {
+    public override void TraverseChildren(ILogicalNot logicalNot) {
       this.sourceEmitterOutput.Write("!");
-      this.Visit(logicalNot.Operand);
+      this.Traverse(logicalNot.Operand);
     }
 
-    public override void Visit(IMakeTypedReference makeTypedReference) {
+    public override void TraverseChildren(IMakeTypedReference makeTypedReference) {
       this.sourceEmitterOutput.Write("__makeref(");
-      this.Visit(makeTypedReference.Operand);
+      this.Traverse(makeTypedReference.Operand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
-      base.Visit(managedPointerTypeReference);
+    public override void TraverseChildren(IManagedPointerTypeReference managedPointerTypeReference) {
+      base.TraverseChildren(managedPointerTypeReference);
     }
 
-    public override void Visit(IMarshallingInformation marshallingInformation) {
-      base.Visit(marshallingInformation);
+    public override void TraverseChildren(IMarshallingInformation marshallingInformation) {
+      base.TraverseChildren(marshallingInformation);
     }
 
-    public override void Visit(IMetadataConstant constant) {
+    public override void TraverseChildren(IMetadataConstant constant) {
       var val = constant.Value;
       if (val == null)
         this.PrintToken(CSharpToken.Null);
@@ -657,7 +657,7 @@ namespace CSharpSourceEmitter {
         if (valLeft == fv || (flags && (fv != 0) && ((valLeft & fv) == fv))) {
           if (valLeft != value)
             sourceEmitterOutput.Write(" | ");
-          Visit((IFieldReference)c);
+          TraverseChildren((IFieldReference)c);
           valLeft -= fv;
           if (valLeft == 0) {
             success = true;
@@ -670,7 +670,7 @@ namespace CSharpSourceEmitter {
         if (valLeft != value)
           sourceEmitterOutput.Write(" | ");
         sourceEmitterOutput.Write("unchecked((");
-        Visit((ITypeReference)enumType);
+        TraverseChildren((ITypeReference)enumType);
         sourceEmitterOutput.Write(")0x" + valLeft.ToString("X") + ")");
       }
       if (negate)
@@ -704,34 +704,30 @@ namespace CSharpSourceEmitter {
       throw new ArgumentException();
     }
 
-    public override void Visit(IMetadataCreateArray createArray) {
-      base.Visit(createArray);
+    public override void TraverseChildren(IMetadataCreateArray createArray) {
+      base.TraverseChildren(createArray);
     }
 
-    public override void Visit(IMetadataExpression expression) {
-      expression.Dispatch(this);
-    }
-
-    public override void Visit(IMetadataNamedArgument namedArgument) {
+    public override void TraverseChildren(IMetadataNamedArgument namedArgument) {
       this.sourceEmitterOutput.Write(namedArgument.ArgumentName.Value+" = ");
-      this.Visit(namedArgument.ArgumentValue);
+      this.Traverse(namedArgument.ArgumentValue);
     }
 
-    public override void Visit(IMetadataTypeOf typeOf) {
+    public override void TraverseChildren(IMetadataTypeOf typeOf) {
       PrintToken(CSharpToken.TypeOf);
       PrintToken(CSharpToken.LeftParenthesis);
-      base.Visit(typeOf);
+      this.PrintTypeReference(typeOf.TypeToGet);
       PrintToken(CSharpToken.RightParenthesis);
     }
 
-    public override void Visit(IMethodCall methodCall) {
+    public override void TraverseChildren(IMethodCall methodCall) {
       NameFormattingOptions options = NameFormattingOptions.None;
       if (!methodCall.IsStaticCall) {
         IAddressOf/*?*/ addressOf = methodCall.ThisArgument as IAddressOf;
         if (addressOf != null) {
-          this.Visit(addressOf.Expression);
+          this.Traverse(addressOf.Expression);
         } else {
-          this.Visit(methodCall.ThisArgument);
+          this.Traverse(methodCall.ThisArgument);
         }
         this.PrintToken(CSharpToken.Dot);
         options |= NameFormattingOptions.OmitContainingNamespace|NameFormattingOptions.OmitContainingType;
@@ -742,199 +738,187 @@ namespace CSharpSourceEmitter {
 
     private void PrintArgumentList(IEnumerable<IExpression> arguments) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(arguments);
+      this.Traverse(arguments);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IMethodImplementation methodImplementation) {
-      base.Visit(methodImplementation);
+    public override void TraverseChildren(IMethodImplementation methodImplementation) {
+      base.TraverseChildren(methodImplementation);
     }
 
-    public override void Visit(IMethodReference methodReference) {
-      base.Visit(methodReference);
+    public override void TraverseChildren(IMethodReference methodReference) {
+      base.TraverseChildren(methodReference);
     }
 
-    public override void Visit(IModifiedTypeReference modifiedTypeReference) {
-      base.Visit(modifiedTypeReference);
+    public override void TraverseChildren(IModifiedTypeReference modifiedTypeReference) {
+      base.TraverseChildren(modifiedTypeReference);
     }
 
-    public override void Visit(IModule module) {
+    public override void TraverseChildren(IModule module) {
       if (!(module is IAssembly)) {
         foreach (var attr in module.Attributes) {
           PrintAttribute(module, attr, true, "module");
         }
       }
 
-      base.Visit(module);
+      base.TraverseChildren(module);
     }
 
-    public override void Visit(IModuleReference moduleReference) {
-      base.Visit(moduleReference);
+    public override void TraverseChildren(IModuleReference moduleReference) {
+      base.TraverseChildren(moduleReference);
     }
 
-    public override void Visit(IModulus modulus) {
+    public override void TraverseChildren(IModulus modulus) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(modulus.LeftOperand);
+      this.Traverse(modulus.LeftOperand);
       this.sourceEmitterOutput.Write(" % ");
-      this.Visit(modulus.RightOperand);
+      this.Traverse(modulus.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IMultiplication multiplication) {
+    public override void TraverseChildren(IMultiplication multiplication) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(multiplication.LeftOperand);
+      this.Traverse(multiplication.LeftOperand);
       this.sourceEmitterOutput.Write(" * ");
-      this.Visit(multiplication.RightOperand);
+      this.Traverse(multiplication.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(INamedArgument namedArgument) {
-      base.Visit(namedArgument);
+    public override void TraverseChildren(INamedArgument namedArgument) {
+      base.TraverseChildren(namedArgument);
     }
 
-    public override void Visit(INamespaceAliasForType namespaceAliasForType) {
-      base.Visit(namespaceAliasForType);
+    public override void TraverseChildren(INamespaceAliasForType namespaceAliasForType) {
+      base.TraverseChildren(namespaceAliasForType);
     }
 
-    public override void Visit(INamespaceTypeReference namespaceTypeReference) {
-      base.Visit(namespaceTypeReference);
+    public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
+      base.TraverseChildren(namespaceTypeReference);
     }
 
-    public override void Visit(INestedAliasForType nestedAliasForType) {
-      base.Visit(nestedAliasForType);
+    public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
+      base.TraverseChildren(nestedTypeReference);
     }
 
-    public override void Visit(INestedTypeReference nestedTypeReference) {
-      base.Visit(nestedTypeReference);
-    }
-
-    public override void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
-      base.Visit(nestedUnitNamespaceReference);
-    }
-
-    public override void Visit(INotEquality notEquality) {
+    public override void TraverseChildren(INotEquality notEquality) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(notEquality.LeftOperand);
+      this.Traverse(notEquality.LeftOperand);
       this.sourceEmitterOutput.Write(" != ");
-      this.Visit(notEquality.RightOperand);
+      this.Traverse(notEquality.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IOldValue oldValue) {
-      base.Visit(oldValue);
+    public override void TraverseChildren(IOldValue oldValue) {
+      base.TraverseChildren(oldValue);
     }
 
-    public override void Visit(IOnesComplement onesComplement) {
-      base.Visit(onesComplement);
+    public override void TraverseChildren(IOnesComplement onesComplement) {
+      base.TraverseChildren(onesComplement);
     }
 
-    public override void Visit(IOperation operation) {
-      base.Visit(operation);
+    public override void TraverseChildren(IOperation operation) {
+      base.TraverseChildren(operation);
     }
 
-    public override void Visit(IOperationExceptionInformation operationExceptionInformation) {
-      base.Visit(operationExceptionInformation);
+    public override void TraverseChildren(IOperationExceptionInformation operationExceptionInformation) {
+      base.TraverseChildren(operationExceptionInformation);
     }
 
-    public override void Visit(IOutArgument outArgument) {
-      base.Visit(outArgument);
+    public override void TraverseChildren(IOutArgument outArgument) {
+      base.TraverseChildren(outArgument);
     }
 
-    public override void Visit(IParameterTypeInformation parameterTypeInformation) {
-      base.Visit(parameterTypeInformation);
+    public override void TraverseChildren(IParameterTypeInformation parameterTypeInformation) {
+      base.TraverseChildren(parameterTypeInformation);
     }
 
-    public override void Visit(IPlatformInvokeInformation platformInvokeInformation) {
-      base.Visit(platformInvokeInformation);
+    public override void TraverseChildren(IPlatformInvokeInformation platformInvokeInformation) {
+      base.TraverseChildren(platformInvokeInformation);
     }
 
-    public override void Visit(IPointerCall pointerCall) {
-      base.Visit(pointerCall);
+    public override void TraverseChildren(IPointerCall pointerCall) {
+      base.TraverseChildren(pointerCall);
     }
 
-    public override void Visit(IPointerTypeReference pointerTypeReference) {
-      base.Visit(pointerTypeReference);
+    public override void TraverseChildren(IPointerTypeReference pointerTypeReference) {
+      base.TraverseChildren(pointerTypeReference);
     }
 
-    public override void Visit(IPopValue popValue) {
+    public override void TraverseChildren(IPopValue popValue) {
       this.sourceEmitterOutput.Write("pop");
     }
 
-    public override void Visit(IRefArgument refArgument) {
-      base.Visit(refArgument);
+    public override void TraverseChildren(IRefArgument refArgument) {
+      base.TraverseChildren(refArgument);
     }
 
-    public override void Visit(IResourceReference resourceReference) {
-      base.Visit(resourceReference);
+    public override void TraverseChildren(IResourceReference resourceReference) {
+      base.TraverseChildren(resourceReference);
     }
 
-    public override void Visit(IReturnValue returnValue) {
+    public override void TraverseChildren(IReturnValue returnValue) {
       this.sourceEmitterOutput.Write("result");
     }
 
-    public override void Visit(IRightShift rightShift) {
+    public override void TraverseChildren(IRightShift rightShift) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(rightShift.LeftOperand);
+      this.Traverse(rightShift.LeftOperand);
       this.sourceEmitterOutput.Write(" >> ");
-      this.Visit(rightShift.RightOperand);
+      this.Traverse(rightShift.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
-      base.Visit(rootUnitNamespaceReference);
+    public override void TraverseChildren(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      base.TraverseChildren(runtimeArgumentHandleExpression);
     }
 
-    public override void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
-      base.Visit(runtimeArgumentHandleExpression);
+    public override void TraverseChildren(ISecurityAttribute securityAttribute) {
+      base.TraverseChildren(securityAttribute);
     }
 
-    public override void Visit(ISecurityAttribute securityAttribute) {
-      base.Visit(securityAttribute);
+    public override void TraverseChildren(ISizeOf sizeOf) {
+      base.TraverseChildren(sizeOf);
     }
 
-    public override void Visit(ISizeOf sizeOf) {
-      base.Visit(sizeOf);
+    public override void TraverseChildren(ISourceMethodBody methodBody) {
+      base.TraverseChildren(methodBody);
     }
 
-    public override void Visit(ISourceMethodBody methodBody) {
-      base.Visit(methodBody);
+    public override void TraverseChildren(IStackArrayCreate stackArrayCreate) {
+      base.TraverseChildren(stackArrayCreate);
     }
 
-    public override void Visit(IStackArrayCreate stackArrayCreate) {
-      base.Visit(stackArrayCreate);
-    }
-
-    public override void Visit(ISubtraction subtraction) {
+    public override void TraverseChildren(ISubtraction subtraction) {
       this.sourceEmitterOutput.Write("(");
-      this.Visit(subtraction.LeftOperand);
+      this.Traverse(subtraction.LeftOperand);
       this.sourceEmitterOutput.Write(" - ");
-      this.Visit(subtraction.RightOperand);
+      this.Traverse(subtraction.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ITargetExpression targetExpression) {
+    public override void TraverseChildren(ITargetExpression targetExpression) {
       IArrayIndexer/*?*/ indexer = targetExpression.Definition as IArrayIndexer;
       if (indexer != null) {
-        this.Visit(indexer);
+        this.Traverse(indexer);
         return;
       }
       IAddressDereference/*?*/ deref = targetExpression.Definition as IAddressDereference;
       if (deref != null) {
         IAddressOf/*?*/ addressOf = deref.Address as IAddressOf;
         if (addressOf != null) {
-          this.Visit(addressOf.Expression);
+          this.Traverse(addressOf.Expression);
           return;
         }
         if (targetExpression.Instance != null) {
-          this.Visit(targetExpression.Instance);
+          this.Traverse(targetExpression.Instance);
           this.sourceEmitterOutput.Write("->");
-        } else if (deref.Address.Type is IPointerTypeReference)
+        } else if (deref.Address.Type is IPointerTypeReference || deref.Address.Type.TypeCode == PrimitiveTypeCode.IntPtr)
           this.sourceEmitterOutput.Write("*");
-        this.Visit(deref.Address);
+        this.Traverse(deref.Address);
         return;
       } else {
         if (targetExpression.Instance != null) {
-          this.Visit(targetExpression.Instance);
+          this.Traverse(targetExpression.Instance);
           this.sourceEmitterOutput.Write(".");
         }
       }
@@ -952,63 +936,44 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.Write(local.Name.Value);
     }
 
-    public override void Visit(IThisReference thisReference) {
+    public override void TraverseChildren(IThisReference thisReference) {
       this.PrintToken(CSharpToken.This);
     }
 
-    public override void Visit(ITypeDefinitionMember typeMember) {
-      base.Visit(typeMember);
+    public override void TraverseChildren(ITypeDefinitionMember typeMember) {
+      base.TraverseChildren(typeMember);
     }
 
-    public override void Visit(ITypeMemberReference typeMemberReference) {
-    }
-
-    public override void Visit(ITokenOf tokenOf) {
+    public override void TraverseChildren(ITokenOf tokenOf) {
       this.sourceEmitterOutput.Write("tokenof(");
-      base.Visit(tokenOf);
+      base.TraverseChildren(tokenOf);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ITypeOf typeOf) {
+    public override void TraverseChildren(ITypeOf typeOf) {
       this.sourceEmitterOutput.Write("typeof(");
-      this.Visit(typeOf.TypeToGet);
+      this.PrintTypeReference(typeOf.TypeToGet);
       this.sourceEmitterOutput.Write(")");
     }
 
-    public override void Visit(ITypeReference typeReference) {
+    public override void TraverseChildren(ITypeReference typeReference) {
       this.PrintTypeReference(typeReference);
     }
 
-    public override void Visit(IUnaryNegation unaryNegation) {
-      base.Visit(unaryNegation);
+    public override void TraverseChildren(IUnaryNegation unaryNegation) {
+      base.TraverseChildren(unaryNegation);
     }
 
-    public override void Visit(IUnaryPlus unaryPlus) {
-      base.Visit(unaryPlus);
+    public override void TraverseChildren(IUnaryPlus unaryPlus) {
+      base.TraverseChildren(unaryPlus);
     }
 
-    public override void Visit(IUnit unit) {
-      base.Visit(unit);
+    public override void TraverseChildren(IUnitNamespaceReference unitNamespaceReference) {
+      base.TraverseChildren(unitNamespaceReference);
     }
 
-    public override void Visit(IUnitNamespaceReference unitNamespaceReference) {
-      base.Visit(unitNamespaceReference);
-    }
-
-    public override void Visit(IUnitReference unitReference) {
-      base.Visit(unitReference);
-    }
-
-    public override void Visit(IUnitSet unitSet) {
-      base.Visit(unitSet);
-    }
-
-    public override void Visit(IUnitSetNamespace unitSetNamespace) {
-      base.Visit(unitSetNamespace);
-    }
-
-    public override void Visit(IVectorLength vectorLength) {
-      this.Visit(vectorLength.Vector);
+    public override void TraverseChildren(IVectorLength vectorLength) {
+      this.Traverse(vectorLength.Vector);
       this.sourceEmitterOutput.Write(".Length");
     }
 

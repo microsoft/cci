@@ -55,7 +55,7 @@ public struct ErrorNode {
 /// as the definition.
 /// 8) ContainingTypeDefinition in method definitions are the same objects as the containing type definition. 
 /// </summary>
-public class Checker : BaseCodeTraverser {
+public class Checker : CodeTraverser {
   /// <summary>
   /// A checker that checks the consistency of a code model. 
   /// </summary>
@@ -79,80 +79,88 @@ public class Checker : BaseCodeTraverser {
     this.errors.Add(node, new ErrorNode() { Node = node, Code = code });
   }
 
-  public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+  public override void TraverseChildren(IGenericMethodInstanceReference genericMethodInstanceReference) {
     var methodDef = genericMethodInstanceReference.ResolvedMethod;
     if (methodDef == Dummy.Method) {
       this.EmitError(genericMethodInstanceReference, ErrorCode.GenericMethodInstanceResolution);
     }
-    base.Visit(genericMethodInstanceReference);
+    base.TraverseChildren(genericMethodInstanceReference);
   }
 
-  public override void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+  public override void TraverseChildren(IMethodReference methodReference) {
+    var methodDef = methodReference.ResolvedMethod;
+    if (methodDef == Dummy.Method) {
+      this.EmitError(methodReference, ErrorCode.MethodResolution);
+    }
+    base.TraverseChildren(methodReference);
+  }
+
+  public override void TraverseChildren(IFunctionPointerTypeReference functionPointerTypeReference) {
     var typ = functionPointerTypeReference.ResolvedType;
     if (typ == Dummy.Type) {
       this.EmitError(functionPointerTypeReference, ErrorCode.FunctionPointerTypeResolution);
     }
-    base.Visit(functionPointerTypeReference);
+    base.TraverseChildren(functionPointerTypeReference);
   }
 
-  public override void Visit(IPointerTypeReference pointerTypeReference) {
+  public override void TraverseChildren(IPointerTypeReference pointerTypeReference) {
     var typ = pointerTypeReference.ResolvedType;
     if (typ == Dummy.Type) {
       this.EmitError(pointerTypeReference, ErrorCode.PointerTypeResolution);
     }
-    base.Visit(pointerTypeReference);
+    base.TraverseChildren(pointerTypeReference);
   }
 
-  public override void Visit(INestedTypeReference nestedTypeReference) {
+  public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
     var typ = nestedTypeReference.ResolvedType;
     if (typ == Dummy.Type) {
       this.EmitError(nestedTypeReference, ErrorCode.NestedTypeResolution);
     }
-    base.Visit(nestedTypeReference);
+    base.TraverseChildren(nestedTypeReference);
   }
 
-  public override void Visit(INamespaceTypeReference namespaceTypeReference) {
+  public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
     var typ = namespaceTypeReference.ResolvedType;
     if (typ == Dummy.Type) {
       this.EmitError(namespaceTypeReference, ErrorCode.NamespaceTypeResolution);
     }
-    base.Visit(namespaceTypeReference);
+    base.TraverseChildren(namespaceTypeReference);
   }
 
-  public override void Visit(IArrayTypeReference arrayTypeReference) {
+  public override void TraverseChildren(IArrayTypeReference arrayTypeReference) {
     var typ = arrayTypeReference.ResolvedType;
     if (typ == Dummy.Type) {
       this.EmitError(arrayTypeReference, ErrorCode.NamespaceTypeResolution);
     }
-    base.Visit(arrayTypeReference);
+    base.TraverseChildren(arrayTypeReference);
   }
 
-  public override void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+  public override void TraverseChildren(IGenericMethodParameterReference genericMethodParameterReference) {
     var typ = genericMethodParameterReference.ResolvedType;
     if (typ == Dummy.Type) {
       this.EmitError(genericMethodParameterReference, ErrorCode.GenericMethodParameterResolution);
     } else if ((typ.Name != genericMethodParameterReference.Name && !genericMethodParameterReference.Name.Value.StartsWith("!")) || typ.Index != genericMethodParameterReference.Index) {
       this.EmitError(genericMethodParameterReference, ErrorCode.GenericMethodParameterResolution);
     }
-    base.Visit(genericMethodParameterReference);
+    base.TraverseChildren(genericMethodParameterReference);
   }
 
-  public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+  public override void TraverseChildren(IGenericTypeInstanceReference genericTypeInstanceReference) {
     var typ = genericTypeInstanceReference.ResolvedType;
-    if (typ == Dummy.Type) {
+    if (!(typ is IGenericTypeInstance) || (((IGenericTypeInstance)typ).GenericType is Dummy)) {
       this.EmitError(genericTypeInstanceReference, ErrorCode.GenericTypeInstanceResolution);
     }
-    base.Visit(genericTypeInstanceReference);
+    base.TraverseChildren(genericTypeInstanceReference);
   }
 
-  public override void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+  public override void TraverseChildren(IGenericTypeParameterReference genericTypeParameterReference) {
     var typ = genericTypeParameterReference.ResolvedType;
     if (typ == Dummy.GenericTypeParameter) {
       this.EmitError(genericTypeParameterReference, ErrorCode.GenericTypeParameterResolution);
     } else if ((typ.Name != genericTypeParameterReference.Name && !genericTypeParameterReference.Name.Value.StartsWith("!")) || typ.Index != genericTypeParameterReference.Index) {
       this.EmitError(genericTypeParameterReference, ErrorCode.GenericTypeParameterResolution);
     }
-    base.Visit(genericTypeParameterReference);
+    base.TraverseChildren(genericTypeParameterReference);
   }
 
 }

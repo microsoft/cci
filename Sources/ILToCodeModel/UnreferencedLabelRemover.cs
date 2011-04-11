@@ -12,25 +12,74 @@ using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
-  internal class UnreferencedLabelRemover : BaseCodeTraverser {
+  internal class UnreferencedLabelRemover : CodeTraverser {
 
+    internal UnreferencedLabelRemover(SourceMethodBody methodBody) {
+      this.methodBody = methodBody;
+    }
+
+    SourceMethodBody methodBody;
     Dictionary<int, uint> referencedLabels;
     bool secondPass;
 
-    internal void Visit(BasicBlock rootBlock) {
+    internal void Traverse(BasicBlock rootBlock) {
       this.secondPass = false;
-      this.Visit((IBlockStatement)rootBlock);
+      this.Traverse((IBlockStatement)rootBlock);
       this.secondPass = true;
-      this.Visit((IBlockStatement)rootBlock);
+      this.Traverse((IBlockStatement)rootBlock);
     }
 
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       if (this.secondPass) {
         var bb = (BasicBlock)block;
         var statements = bb.Statements;
         for (int i = 0; i < statements.Count; i++) {
           var labeledStatement = statements[i] as ILabeledStatement;
-          if (labeledStatement == null) continue;
+          if (labeledStatement == null) {
+            if (i == 0) continue;
+            var returnStatement = statements[i] as ReturnStatement;
+            if (returnStatement != null) {
+              var localDeclarationsStatement = statements[i-1] as ILocalDeclarationStatement;
+              if (localDeclarationsStatement != null) {
+                var boundExpression = returnStatement.Expression as IBoundExpression;
+                int numReferences;
+                if (boundExpression != null && boundExpression.Definition == localDeclarationsStatement.LocalVariable &&
+                  this.methodBody.numberOfReferences.TryGetValue(localDeclarationsStatement.LocalVariable, out numReferences) &&
+                  numReferences == 1) {
+                    if (this.methodBody.sourceLocationProvider != null) {
+                      bool isCompilerGenerated;
+                      this.methodBody.sourceLocationProvider.GetSourceNameFor(localDeclarationsStatement.LocalVariable, out isCompilerGenerated);
+                      if (!isCompilerGenerated) continue;
+                    }
+                    statements.RemoveAt(--i);
+                    returnStatement.Expression = localDeclarationsStatement.InitialValue;
+                }
+              }
+            } else {
+              var expressionStatement = statements[i] as IExpressionStatement;
+              if (expressionStatement != null) {
+                var assignment = expressionStatement.Expression as IAssignment;
+                if (assignment != null) {
+                  var localDefinition = assignment.Target.Definition as ILocalDefinition;
+                  if (localDefinition != null) {
+                    for (int j = i-1; j >= 0; j--) {
+                      if (statements[j] is IEmptyStatement) continue;
+                      var localDeclarationsStatement = statements[j] as LocalDeclarationStatement;
+                      if (localDeclarationsStatement == null) break;
+                      if (localDeclarationsStatement.LocalVariable != localDefinition) continue;
+                      if (localDeclarationsStatement.InitialValue != null) break;
+                      localDeclarationsStatement.InitialValue = assignment.Source;
+                      statements[i] = statements[j];
+                      statements.RemoveAt(j);
+                      i--;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+            continue;
+          }
           uint references = 0;
           if (this.referencedLabels != null)
             this.referencedLabels.TryGetValue(labeledStatement.Label.UniqueKey, out references);
@@ -46,10 +95,10 @@ namespace Microsoft.Cci.ILToCodeModel {
           statements[i] = labeledStatement.Statement;
         }
       } else
-        base.Visit(block);
+        base.TraverseChildren(block);
     }
 
-    public override void Visit(IGotoStatement gotoStatement) {
+    public override void TraverseChildren(IGotoStatement gotoStatement) {
       if (this.referencedLabels == null)
         this.referencedLabels = new Dictionary<int, uint>();
       var key = gotoStatement.TargetStatement.Label.UniqueKey;

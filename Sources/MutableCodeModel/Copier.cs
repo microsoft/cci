@@ -9,10 +9,2721 @@ using Microsoft.Cci;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableContracts;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
+
+  /// <summary>
+  /// 
+  /// </summary>
+  public class CodeShallowCopier : MetadataShallowCopier {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    public CodeShallowCopier(IMetadataHost targetHost) 
+      : base(targetHost) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
+    public CodeShallowCopier(IMetadataHost targetHost, IUnit targetUnit)
+      : base(targetHost, targetUnit) {
+    }
+
+    CodeDispatcher Dispatcher {
+      get { 
+        if (this.dispatcher == null)
+          this.dispatcher = new CodeDispatcher() { copier = this };
+        return this.dispatcher;
+      }
+    }
+    CodeDispatcher dispatcher;
+
+    class CodeDispatcher : MetadataDispatcher, ICodeVisitor {
+
+      internal object result;
+      internal CodeShallowCopier copier;
+
+      #region ICodeVisitor Members
+
+      public void Visit(IAddition addition) {
+        this.result = this.copier.Copy(addition);
+      }
+
+      public void Visit(IAddressableExpression addressableExpression) {
+        this.result = this.copier.Copy(addressableExpression);
+      }
+
+      public void Visit(IAddressDereference addressDereference) {
+        this.result = this.copier.Copy(addressDereference);
+      }
+
+      public void Visit(IAddressOf addressOf) {
+        this.result = this.copier.Copy(addressOf);
+      }
+
+      public void Visit(IAnonymousDelegate anonymousDelegate) {
+        this.result = this.copier.Copy(anonymousDelegate);
+      }
+
+      public void Visit(IArrayIndexer arrayIndexer) {
+        this.result = this.copier.Copy(arrayIndexer);
+      }
+
+      public void Visit(IAssertStatement assertStatement) {
+        this.result = this.copier.Copy(assertStatement);
+      }
+
+      public void Visit(IAssignment assignment) {
+        this.result = this.copier.Copy(assignment);
+      }
+
+      public void Visit(IAssumeStatement assumeStatement) {
+        this.result = this.copier.Copy(assumeStatement);
+      }
+
+      public void Visit(IBitwiseAnd bitwiseAnd) {
+        this.result = this.copier.Copy(bitwiseAnd);
+      }
+
+      public void Visit(IBitwiseOr bitwiseOr) {
+        this.result = this.copier.Copy(bitwiseOr);
+      }
+
+      public void Visit(IBlockExpression blockExpression) {
+        this.result = this.copier.Copy(blockExpression);
+      }
+
+      public void Visit(IBlockStatement block) {
+        this.result = this.copier.Copy(block);
+      }
+
+      public void Visit(IBreakStatement breakStatement) {
+        this.result = this.copier.Copy(breakStatement);
+      }
+
+      public void Visit(IBoundExpression boundExpression) {
+        this.result = this.copier.Copy(boundExpression);
+      }
+
+      public void Visit(ICastIfPossible castIfPossible) {
+        this.result = this.copier.Copy(castIfPossible);
+      }
+
+      public void Visit(ICatchClause catchClause) {
+        this.result = this.copier.Copy(catchClause);
+      }
+
+      public void Visit(ICheckIfInstance checkIfInstance) {
+        this.result = this.copier.Copy(checkIfInstance);
+      }
+
+      public void Visit(ICompileTimeConstant constant) {
+        this.result = this.copier.Copy(constant);
+      }
+
+      public void Visit(IConversion conversion) {
+        this.result = this.copier.Copy(conversion);
+      }
+
+      public void Visit(IConditional conditional) {
+        this.result = this.copier.Copy(conditional);
+      }
+
+      public void Visit(IConditionalStatement conditionalStatement) {
+        this.result = this.copier.Copy(conditionalStatement);
+      }
+
+      public void Visit(IContinueStatement continueStatement) {
+        this.result = this.copier.Copy(continueStatement);
+      }
+
+      public void Visit(ICreateArray createArray) {
+        this.result = this.copier.Copy(createArray);
+      }
+
+      public void Visit(ICreateDelegateInstance createDelegateInstance) {
+        this.result = this.copier.Copy(createDelegateInstance);
+      }
+
+      public void Visit(ICreateObjectInstance createObjectInstance) {
+        this.result = this.copier.Copy(createObjectInstance);
+      }
+
+      public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+        this.result = this.copier.Copy(debuggerBreakStatement);
+      }
+
+      public void Visit(IDefaultValue defaultValue) {
+        this.result = this.copier.Copy(defaultValue);
+      }
+
+      public void Visit(IDivision division) {
+        this.result = this.copier.Copy(division);
+      }
+
+      public void Visit(IDoUntilStatement doUntilStatement) {
+        this.result = this.copier.Copy(doUntilStatement);
+      }
+
+      public void Visit(IDupValue dupValue) {
+        this.result = this.copier.Copy(dupValue);
+      }
+
+      public void Visit(IEmptyStatement emptyStatement) {
+        this.result = this.copier.Copy(emptyStatement);
+      }
+
+      public void Visit(IEquality equality) {
+        this.result = this.copier.Copy(equality);
+      }
+
+      public void Visit(IExclusiveOr exclusiveOr) {
+        this.result = this.copier.Copy(exclusiveOr);
+      }
+
+      public void Visit(IExpressionStatement expressionStatement) {
+        this.result = this.copier.Copy(expressionStatement);
+      }
+
+      public void Visit(IForEachStatement forEachStatement) {
+        this.result = this.copier.Copy(forEachStatement);
+      }
+
+      public void Visit(IForStatement forStatement) {
+        this.result = this.copier.Copy(forStatement);
+      }
+
+      public void Visit(IGotoStatement gotoStatement) {
+        this.result = this.copier.Copy(gotoStatement);
+      }
+
+      public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+        this.result = this.copier.Copy(gotoSwitchCaseStatement);
+      }
+
+      public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+        this.result = this.copier.Copy(getTypeOfTypedReference);
+      }
+
+      public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+        this.result = this.copier.Copy(getValueOfTypedReference);
+      }
+
+      public void Visit(IGreaterThan greaterThan) {
+        this.result = this.copier.Copy(greaterThan);
+      }
+
+      public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+        this.result = this.copier.Copy(greaterThanOrEqual);
+      }
+
+      public void Visit(ILabeledStatement labeledStatement) {
+        this.result = this.copier.Copy(labeledStatement);
+      }
+
+      public void Visit(ILeftShift leftShift) {
+        this.result = this.copier.Copy(leftShift);
+      }
+
+      public void Visit(ILessThan lessThan) {
+        this.result = this.copier.Copy(lessThan);
+      }
+
+      public void Visit(ILessThanOrEqual lessThanOrEqual) {
+        this.result = this.copier.Copy(lessThanOrEqual);
+      }
+
+      public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+        this.result = this.copier.Copy(localDeclarationStatement);
+      }
+
+      public void Visit(ILockStatement lockStatement) {
+        this.result = this.copier.Copy(lockStatement);
+      }
+
+      public void Visit(ILogicalNot logicalNot) {
+        this.result = this.copier.Copy(logicalNot);
+      }
+
+      public void Visit(IMakeTypedReference makeTypedReference) {
+        this.result = this.copier.Copy(makeTypedReference);
+      }
+
+      public void Visit(IMethodCall methodCall) {
+        this.result = this.copier.Copy(methodCall);
+      }
+
+      public void Visit(IModulus modulus) {
+        this.result = this.copier.Copy(modulus);
+      }
+
+      public void Visit(IMultiplication multiplication) {
+        this.result = this.copier.Copy(multiplication);
+      }
+
+      public void Visit(INamedArgument namedArgument) {
+        this.result = this.copier.Copy(namedArgument);
+      }
+
+      public void Visit(INotEquality notEquality) {
+        this.result = this.copier.Copy(notEquality);
+      }
+
+      public void Visit(IOldValue oldValue) {
+        this.result = this.copier.Copy(oldValue);
+      }
+
+      public void Visit(IOnesComplement onesComplement) {
+        this.result = this.copier.Copy(onesComplement);
+      }
+
+      public void Visit(IOutArgument outArgument) {
+        this.result = this.copier.Copy(outArgument);
+      }
+
+      public void Visit(IPointerCall pointerCall) {
+        this.result = this.copier.Copy(pointerCall);
+      }
+
+      public void Visit(IPopValue popValue) {
+        this.result = this.copier.Copy(popValue);
+      }
+
+      public void Visit(IPushStatement pushStatement) {
+        this.result = this.copier.Copy(pushStatement);
+      }
+
+      public void Visit(IRefArgument refArgument) {
+        this.result = this.copier.Copy(refArgument);
+      }
+
+      public void Visit(IResourceUseStatement resourceUseStatement) {
+        this.result = this.copier.Copy(resourceUseStatement);
+      }
+
+      public void Visit(IReturnValue returnValue) {
+        this.result = this.copier.Copy(returnValue);
+      }
+
+      public void Visit(IRethrowStatement rethrowStatement) {
+        this.result = this.copier.Copy(rethrowStatement);
+      }
+
+      public void Visit(IReturnStatement returnStatement) {
+        this.result = this.copier.Copy(returnStatement);
+      }
+
+      public void Visit(IRightShift rightShift) {
+        this.result = this.copier.Copy(rightShift);
+      }
+
+      public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+        this.result = this.copier.Copy(runtimeArgumentHandleExpression);
+      }
+
+      public void Visit(ISizeOf sizeOf) {
+        this.result = this.copier.Copy(sizeOf);
+      }
+
+      public void Visit(IStackArrayCreate stackArrayCreate) {
+        this.result = this.copier.Copy(stackArrayCreate);
+      }
+
+      public void Visit(ISubtraction subtraction) {
+        this.result = this.copier.Copy(subtraction);
+      }
+
+      public void Visit(ISwitchCase switchCase) {
+        this.result = this.copier.Copy(switchCase);
+      }
+
+      public void Visit(ISwitchStatement switchStatement) {
+        this.result = this.copier.Copy(switchStatement);
+      }
+
+      public void Visit(ITargetExpression targetExpression) {
+        this.result = this.copier.Copy(targetExpression);
+      }
+
+      public void Visit(IThisReference thisReference) {
+        this.result = this.copier.Copy(thisReference);
+      }
+
+      public void Visit(IThrowStatement throwStatement) {
+        this.result = this.copier.Copy(throwStatement);
+      }
+
+      public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+        this.result = this.copier.Copy(tryCatchFilterFinallyStatement);
+      }
+
+      public void Visit(ITokenOf tokenOf) {
+        this.result = this.copier.Copy(tokenOf);
+      }
+
+      public void Visit(ITypeOf typeOf) {
+        this.result = this.copier.Copy(typeOf);
+      }
+
+      public void Visit(IUnaryNegation unaryNegation) {
+        this.result = this.copier.Copy(unaryNegation);
+      }
+
+      public void Visit(IUnaryPlus unaryPlus) {
+        this.result = this.copier.Copy(unaryPlus);
+      }
+
+      public void Visit(IVectorLength vectorLength) {
+        this.result = this.copier.Copy(vectorLength);
+      }
+
+      public void Visit(IWhileDoStatement whileDoStatement) {
+        this.result = this.copier.Copy(whileDoStatement);
+      }
+
+      public void Visit(IYieldBreakStatement yieldBreakStatement) {
+        this.result = this.copier.Copy(yieldBreakStatement);
+      }
+
+      public void Visit(IYieldReturnStatement yieldReturnStatement) {
+        this.result = this.copier.Copy(yieldReturnStatement);
+      }
+
+      #endregion
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
+    public Addition Copy(IAddition addition) {
+      return new Addition(addition);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
+    public AddressableExpression Copy(IAddressableExpression addressableExpression) {
+      return new AddressableExpression(addressableExpression);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
+    public AddressDereference Copy(IAddressDereference addressDereference) {
+      return new AddressDereference(addressDereference);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
+    public AddressOf Copy(IAddressOf addressOf) {
+      return new AddressOf(addressOf);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
+    public AnonymousDelegate Copy(IAnonymousDelegate anonymousDelegate) {
+      return new AnonymousDelegate(anonymousDelegate);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
+    public ArrayIndexer Copy(IArrayIndexer arrayIndexer) {
+      return new ArrayIndexer(arrayIndexer);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
+    public AssertStatement Copy(IAssertStatement assertStatement) {
+      return new AssertStatement(assertStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
+    public Assignment Copy(IAssignment assignment) {
+      return new Assignment(assignment);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
+    public AssumeStatement Copy(IAssumeStatement assumeStatement) {
+      return new AssumeStatement(assumeStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given bitwise and expression.
+    /// </summary>
+    /// <param name="bitwiseAnd"></param>
+    public BitwiseAnd Copy(IBitwiseAnd bitwiseAnd) {
+      return new BitwiseAnd(bitwiseAnd);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given bitwise or expression.
+    /// </summary>
+    /// <param name="bitwiseOr"></param>
+    public BitwiseOr Copy(IBitwiseOr bitwiseOr) {
+      return new BitwiseOr(bitwiseOr);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
+    public BlockExpression Copy(IBlockExpression blockExpression) {
+      return new BlockExpression(blockExpression);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given statement block.
+    /// </summary>
+    /// <param name="block"></param>
+    public BlockStatement Copy(IBlockStatement block) {
+      return new BlockStatement(block);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given break statement.
+    /// </summary>
+    /// <param name="breakStatement"></param>
+    public BreakStatement Copy(IBreakStatement breakStatement) {
+      return new BreakStatement(breakStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the cast-if-possible expression.
+    /// </summary>
+    /// <param name="castIfPossible"></param>
+    public CastIfPossible Copy(ICastIfPossible castIfPossible) {
+      return new CastIfPossible(castIfPossible);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given catch clause.
+    /// </summary>
+    /// <param name="catchClause"></param>
+    public CatchClause Copy(ICatchClause catchClause) {
+      return new CatchClause(catchClause);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given check-if-instance expression.
+    /// </summary>
+    /// <param name="checkIfInstance"></param>
+    public CheckIfInstance Copy(ICheckIfInstance checkIfInstance) {
+      return new CheckIfInstance(checkIfInstance);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given compile time constant.
+    /// </summary>
+    /// <param name="constant"></param>
+    public CompileTimeConstant Copy(ICompileTimeConstant constant) {
+      return new CompileTimeConstant(constant);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given conversion expression.
+    /// </summary>
+    /// <param name="conversion"></param>
+    public Conversion Copy(IConversion conversion) {
+      return new Conversion(conversion);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given conditional expression.
+    /// </summary>
+    /// <param name="conditional"></param>
+    public Conditional Copy(IConditional conditional) {
+      return new Conditional(conditional);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement"></param>
+    public ConditionalStatement Copy(IConditionalStatement conditionalStatement) {
+      return new ConditionalStatement(conditionalStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given continue statement.
+    /// </summary>
+    /// <param name="continueStatement"></param>
+    public ContinueStatement Copy(IContinueStatement continueStatement) {
+      return new ContinueStatement(continueStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
+    public CreateArray Copy(ICreateArray createArray) {
+      return new CreateArray(createArray);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given constructor call expression.
+    /// </summary>
+    /// <param name="createObjectInstance"></param>
+    public CreateObjectInstance Copy(ICreateObjectInstance createObjectInstance) {
+      return new CreateObjectInstance(createObjectInstance);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the anonymous object creation expression.
+    /// </summary>
+    /// <param name="createDelegateInstance"></param>
+    public CreateDelegateInstance Copy(ICreateDelegateInstance createDelegateInstance) {
+      return new CreateDelegateInstance(createDelegateInstance);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given defalut value expression.
+    /// </summary>
+    /// <param name="defaultValue"></param>
+    public DefaultValue Copy(IDefaultValue defaultValue) {
+      return new DefaultValue(defaultValue);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given division expression.
+    /// </summary>
+    /// <param name="division"></param>
+    public Division Copy(IDivision division) {
+      return new Division(division);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement"></param>
+    public DoUntilStatement Copy(IDoUntilStatement doUntilStatement) {
+      return new DoUntilStatement(doUntilStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public DupValue Copy(IDupValue dupValue) {
+      return new DupValue(dupValue);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given empty statement.
+    /// </summary>
+    /// <param name="emptyStatement"></param>
+    public EmptyStatement Copy(IEmptyStatement emptyStatement) {
+      return new EmptyStatement(emptyStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given equality expression.
+    /// </summary>
+    /// <param name="equality"></param>
+    public Equality Copy(IEquality equality) {
+      return new Equality(equality);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given exclusive or expression.
+    /// </summary>
+    /// <param name="exclusiveOr"></param>
+    public ExclusiveOr Copy(IExclusiveOr exclusiveOr) {
+      return new ExclusiveOr(exclusiveOr);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
+    public BoundExpression Copy(IBoundExpression boundExpression) {
+      return new BoundExpression(boundExpression);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement"></param>
+    public DebuggerBreakStatement Copy(IDebuggerBreakStatement debuggerBreakStatement) {
+      return new DebuggerBreakStatement(debuggerBreakStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given expression.
+    /// </summary>
+    /// <param name="expression"></param>
+    public Expression Copy(IExpression expression) {
+      expression.Dispatch(this.Dispatcher);
+      return (Expression)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given expression statement.
+    /// </summary>
+    /// <param name="expressionStatement"></param>
+    public ExpressionStatement Copy(IExpressionStatement expressionStatement) {
+      return new ExpressionStatement(expressionStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given foreach statement.
+    /// </summary>
+    /// <param name="forEachStatement"></param>
+    public ForEachStatement Copy(IForEachStatement forEachStatement) {
+      return new ForEachStatement(forEachStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given for statement.
+    /// </summary>
+    /// <param name="forStatement"></param>
+    public ForStatement Copy(IForStatement forStatement) {
+      return new ForStatement(forStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given get type of typed reference expression.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference"></param>
+    public GetTypeOfTypedReference Copy(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      return new GetTypeOfTypedReference(getTypeOfTypedReference);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given get value of typed reference expression.
+    /// </summary>
+    /// <param name="getValueOfTypedReference"></param>
+    public GetValueOfTypedReference Copy(IGetValueOfTypedReference getValueOfTypedReference) {
+      return new GetValueOfTypedReference(getValueOfTypedReference);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given goto statement.
+    /// </summary>
+    /// <param name="gotoStatement"></param>
+    public GotoStatement Copy(IGotoStatement gotoStatement) {
+      return new GotoStatement(gotoStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement"></param>
+    public GotoSwitchCaseStatement Copy(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      return new GotoSwitchCaseStatement(gotoSwitchCaseStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given greater-than expression.
+    /// </summary>
+    /// <param name="greaterThan"></param>
+    public GreaterThan Copy(IGreaterThan greaterThan) {
+      return new GreaterThan(greaterThan);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given greater-than-or-equal expression.
+    /// </summary>
+    /// <param name="greaterThanOrEqual"></param>
+    public GreaterThanOrEqual Copy(IGreaterThanOrEqual greaterThanOrEqual) {
+      return new GreaterThanOrEqual(greaterThanOrEqual);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement"></param>
+    public LabeledStatement Copy(ILabeledStatement labeledStatement) {
+      return new LabeledStatement(labeledStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given left shift expression.
+    /// </summary>
+    /// <param name="leftShift"></param>
+    public LeftShift Copy(ILeftShift leftShift) {
+      return new LeftShift(leftShift);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given less-than expression.
+    /// </summary>
+    /// <param name="lessThan"></param>
+    public LessThan Copy(ILessThan lessThan) {
+      return new LessThan(lessThan);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given less-than-or-equal expression.
+    /// </summary>
+    /// <param name="lessThanOrEqual"></param>
+    public LessThanOrEqual Copy(ILessThanOrEqual lessThanOrEqual) {
+      return new LessThanOrEqual(lessThanOrEqual);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement"></param>
+    public LocalDeclarationStatement Copy(ILocalDeclarationStatement localDeclarationStatement) {
+      return new LocalDeclarationStatement(localDeclarationStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given lock statement.
+    /// </summary>
+    /// <param name="lockStatement"></param>
+    public LockStatement Copy(ILockStatement lockStatement) {
+      return new LockStatement(lockStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given logical not expression.
+    /// </summary>
+    /// <param name="logicalNot"></param>
+    public LogicalNot Copy(ILogicalNot logicalNot) {
+      return new LogicalNot(logicalNot);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given make typed reference expression.
+    /// </summary>
+    /// <param name="makeTypedReference"></param>
+    public MakeTypedReference Copy(IMakeTypedReference makeTypedReference) {
+      return new MakeTypedReference(makeTypedReference);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
+    public MethodCall Copy(IMethodCall methodCall) {
+      return new MethodCall(methodCall);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given modulus expression.
+    /// </summary>
+    /// <param name="modulus"></param>
+    public Modulus Copy(IModulus modulus) {
+      return new Modulus(modulus);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given multiplication expression.
+    /// </summary>
+    /// <param name="multiplication"></param>
+    public Multiplication Copy(IMultiplication multiplication) {
+      return new Multiplication(multiplication);
+    }
+
+    /// <summary>
+    /// Visits the specified named arguments.
+    /// </summary>
+    /// <param name="namedArguments">The named arguments.</param>
+    public virtual void Visit(IEnumerable<INamedArgument> namedArguments) {
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
+    public NamedArgument Copy(INamedArgument namedArgument) {
+      return new NamedArgument(namedArgument);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given not equality expression.
+    /// </summary>
+    /// <param name="notEquality"></param>
+    public NotEquality Copy(INotEquality notEquality) {
+      return new NotEquality(notEquality);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given old value expression.
+    /// </summary>
+    /// <param name="oldValue"></param>
+    public OldValue Copy(IOldValue oldValue) {
+      return new OldValue(oldValue);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given one's complement expression.
+    /// </summary>
+    /// <param name="onesComplement"></param>
+    public OnesComplement Copy(IOnesComplement onesComplement) {
+      return new OnesComplement(onesComplement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given out argument expression.
+    /// </summary>
+    /// <param name="outArgument"></param>
+    public OutArgument Copy(IOutArgument outArgument) {
+      return new OutArgument(outArgument);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given pointer call.
+    /// </summary>
+    /// <param name="pointerCall"></param>
+    public PointerCall Copy(IPointerCall pointerCall) {
+      return new PointerCall(pointerCall);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public PopValue Copy(IPopValue popValue) {
+      return new PopValue(popValue);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public PushStatement Copy(IPushStatement pushStatement) {
+      return new PushStatement(pushStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given ref argument expression.
+    /// </summary>
+    /// <param name="refArgument"></param>
+    public RefArgument Copy(IRefArgument refArgument) {
+      return new RefArgument(refArgument);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given resource usage statement.
+    /// </summary>
+    /// <param name="resourceUseStatement"></param>
+    public ResourceUseStatement Copy(IResourceUseStatement resourceUseStatement) {
+      return new ResourceUseStatement(resourceUseStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement"></param>
+    public RethrowStatement Copy(IRethrowStatement rethrowStatement) {
+      return new RethrowStatement(rethrowStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the return statement.
+    /// </summary>
+    /// <param name="returnStatement"></param>
+    public ReturnStatement Copy(IReturnStatement returnStatement) {
+      return new ReturnStatement(returnStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given return value expression.
+    /// </summary>
+    /// <param name="returnValue"></param>
+    public ReturnValue Copy(IReturnValue returnValue) {
+      return new ReturnValue(returnValue);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given right shift expression.
+    /// </summary>
+    /// <param name="rightShift"></param>
+    public RightShift Copy(IRightShift rightShift) {
+      return new RightShift(rightShift);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given stack array create expression.
+    /// </summary>
+    /// <param name="stackArrayCreate"></param>
+    public StackArrayCreate Copy(IStackArrayCreate stackArrayCreate) {
+      return new StackArrayCreate(stackArrayCreate);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression"></param>
+    public RuntimeArgumentHandleExpression Copy(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      return new RuntimeArgumentHandleExpression(runtimeArgumentHandleExpression);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given sizeof() expression.
+    /// </summary>
+    /// <param name="sizeOf"></param>
+    public SizeOf Copy(ISizeOf sizeOf) {
+      return new SizeOf(sizeOf);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given source method body.
+    /// </summary>
+    /// <param name="sourceMethodBody"></param>
+    public SourceMethodBody Copy(ISourceMethodBody sourceMethodBody) {
+      var copy = new SourceMethodBody(this.targetHost, null);
+      copy.Block = sourceMethodBody.Block;
+      copy.LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed;
+      copy.MethodDefinition = sourceMethodBody.MethodDefinition;
+      return copy;
+    }
+
+    /// <summary>
+    /// Visits the specified statements.
+    /// </summary>
+    /// <param name="statements">The statements.</param>
+    public virtual void Visit(IEnumerable<IStatement> statements) {
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public Statement Copy(IStatement statement) {
+      statement.Dispatch(this.Dispatcher);
+      return (Statement)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given subtraction expression.
+    /// </summary>
+    /// <param name="subtraction"></param>
+    public Subtraction Copy(ISubtraction subtraction) {
+      return new Subtraction(subtraction);
+    }
+
+    /// <summary>
+    /// Visits the specified switch cases.
+    /// </summary>
+    /// <param name="switchCases">The switch cases.</param>
+    public virtual void Visit(IEnumerable<ISwitchCase> switchCases) {
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given switch case.
+    /// </summary>
+    /// <param name="switchCase"></param>
+    public SwitchCase Copy(ISwitchCase switchCase) {
+      return new SwitchCase(switchCase);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given switch statement.
+    /// </summary>
+    /// <param name="switchStatement"></param>
+    public SwitchStatement Copy(ISwitchStatement switchStatement) {
+      return new SwitchStatement(switchStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
+    public TargetExpression Copy(ITargetExpression targetExpression) {
+      return new TargetExpression(targetExpression);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
+    public ThisReference Copy(IThisReference thisReference) {
+      return new ThisReference(thisReference);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the throw statement.
+    /// </summary>
+    /// <param name="throwStatement"></param>
+    public ThrowStatement Copy(IThrowStatement throwStatement) {
+      return new ThrowStatement(throwStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the try-catch-filter-finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement"></param>
+    public TryCatchFinallyStatement Copy(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      return new TryCatchFinallyStatement(tryCatchFilterFinallyStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given tokenof() expression.
+    /// </summary>
+    /// <param name="tokenOf"></param>
+    public TokenOf Copy(ITokenOf tokenOf) {
+      return new TokenOf(tokenOf);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given typeof() expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
+    public TypeOf Copy(ITypeOf typeOf) {
+      return new TypeOf(typeOf);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given unary negation expression.
+    /// </summary>
+    /// <param name="unaryNegation"></param>
+    public UnaryNegation Copy(IUnaryNegation unaryNegation) {
+      return new UnaryNegation(unaryNegation);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given unary plus expression.
+    /// </summary>
+    /// <param name="unaryPlus"></param>
+    public UnaryPlus Copy(IUnaryPlus unaryPlus) {
+      return new UnaryPlus(unaryPlus);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given vector length expression.
+    /// </summary>
+    /// <param name="vectorLength"></param>
+    public VectorLength Copy(IVectorLength vectorLength) {
+      return new VectorLength(vectorLength);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement"></param>
+    public WhileDoStatement Copy(IWhileDoStatement whileDoStatement) {
+      return new WhileDoStatement(whileDoStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
+    public YieldBreakStatement Copy(IYieldBreakStatement yieldBreakStatement) {
+      return new YieldBreakStatement(yieldBreakStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement"></param>
+    public YieldReturnStatement Copy(IYieldReturnStatement yieldReturnStatement) {
+      return new YieldReturnStatement(yieldReturnStatement);
+    }
+
+
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
+  public class CodeDeepCopier : MetadataDeepCopier {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    public CodeDeepCopier(IMetadataHost targetHost)
+      : this(targetHost, new CodeShallowCopier(targetHost)) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
+    public CodeDeepCopier(IMetadataHost targetHost, IUnit targetUnit)
+      : this(targetHost, new CodeShallowCopier(targetHost, targetUnit)) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="shallowCopier"></param>
+    protected CodeDeepCopier(IMetadataHost targetHost, CodeShallowCopier shallowCopier)
+      : base(targetHost, shallowCopier) {
+      this.shallowCopier = shallowCopier;
+    }
+
+    CodeShallowCopier shallowCopier;
+
+    private CodeDispatcher Dispatcher {
+      get {
+        if (this.dispatcher == null)
+          this.dispatcher = new CodeDispatcher() { copier = this };
+        return dispatcher; 
+      }
+    }
+    CodeDispatcher dispatcher;
+
+    class CodeDispatcher : MetadataDispatcher, ICodeVisitor {
+
+      internal object result;
+      internal CodeDeepCopier copier;
+
+      #region ICodeVisitor Members
+
+      public void Visit(IAddition addition) {
+        this.result = this.copier.Copy(addition);
+      }
+
+      public void Visit(IAddressableExpression addressableExpression) {
+        this.result = this.copier.Copy(addressableExpression);
+      }
+
+      public void Visit(IAddressDereference addressDereference) {
+        this.result = this.copier.Copy(addressDereference);
+      }
+
+      public void Visit(IAddressOf addressOf) {
+        this.result = this.copier.Copy(addressOf);
+      }
+
+      public void Visit(IAnonymousDelegate anonymousDelegate) {
+        this.result = this.copier.Copy(anonymousDelegate);
+      }
+
+      public void Visit(IArrayIndexer arrayIndexer) {
+        this.result = this.copier.Copy(arrayIndexer);
+      }
+
+      public void Visit(IAssertStatement assertStatement) {
+        this.result = this.copier.Copy(assertStatement);
+      }
+
+      public void Visit(IAssignment assignment) {
+        this.result = this.copier.Copy(assignment);
+      }
+
+      public void Visit(IAssumeStatement assumeStatement) {
+        this.result = this.copier.Copy(assumeStatement);
+      }
+
+      public void Visit(IBitwiseAnd bitwiseAnd) {
+        this.result = this.copier.Copy(bitwiseAnd);
+      }
+
+      public void Visit(IBitwiseOr bitwiseOr) {
+        this.result = this.copier.Copy(bitwiseOr);
+      }
+
+      public void Visit(IBlockExpression blockExpression) {
+        this.result = this.copier.Copy(blockExpression);
+      }
+
+      public void Visit(IBlockStatement block) {
+        this.result = this.copier.Copy(block);
+      }
+
+      public void Visit(IBreakStatement breakStatement) {
+        this.result = this.copier.Copy(breakStatement);
+      }
+
+      public void Visit(IBoundExpression boundExpression) {
+        this.result = this.copier.Copy(boundExpression);
+      }
+
+      public void Visit(ICastIfPossible castIfPossible) {
+        this.result = this.copier.Copy(castIfPossible);
+      }
+
+      public void Visit(ICatchClause catchClause) {
+        this.result = this.copier.Copy(catchClause);
+      }
+
+      public void Visit(ICheckIfInstance checkIfInstance) {
+        this.result = this.copier.Copy(checkIfInstance);
+      }
+
+      public void Visit(ICompileTimeConstant constant) {
+        this.result = this.copier.Copy(constant);
+      }
+
+      public void Visit(IConversion conversion) {
+        this.result = this.copier.Copy(conversion);
+      }
+
+      public void Visit(IConditional conditional) {
+        this.result = this.copier.Copy(conditional);
+      }
+
+      public void Visit(IConditionalStatement conditionalStatement) {
+        this.result = this.copier.Copy(conditionalStatement);
+      }
+
+      public void Visit(IContinueStatement continueStatement) {
+        this.result = this.copier.Copy(continueStatement);
+      }
+
+      public void Visit(ICreateArray createArray) {
+        this.result = this.copier.Copy(createArray);
+      }
+
+      public void Visit(ICreateDelegateInstance createDelegateInstance) {
+        this.result = this.copier.Copy(createDelegateInstance);
+      }
+
+      public void Visit(ICreateObjectInstance createObjectInstance) {
+        this.result = this.copier.Copy(createObjectInstance);
+      }
+
+      public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+        this.result = this.copier.Copy(debuggerBreakStatement);
+      }
+
+      public void Visit(IDefaultValue defaultValue) {
+        this.result = this.copier.Copy(defaultValue);
+      }
+
+      public void Visit(IDivision division) {
+        this.result = this.copier.Copy(division);
+      }
+
+      public void Visit(IDoUntilStatement doUntilStatement) {
+        this.result = this.copier.Copy(doUntilStatement);
+      }
+
+      public void Visit(IDupValue dupValue) {
+        this.result = this.copier.Copy(dupValue);
+      }
+
+      public void Visit(IEmptyStatement emptyStatement) {
+        this.result = this.copier.Copy(emptyStatement);
+      }
+
+      public void Visit(IEquality equality) {
+        this.result = this.copier.Copy(equality);
+      }
+
+      public void Visit(IExclusiveOr exclusiveOr) {
+        this.result = this.copier.Copy(exclusiveOr);
+      }
+
+      public void Visit(IExpressionStatement expressionStatement) {
+        this.result = this.copier.Copy(expressionStatement);
+      }
+
+      public void Visit(IForEachStatement forEachStatement) {
+        this.result = this.copier.Copy(forEachStatement);
+      }
+
+      public void Visit(IForStatement forStatement) {
+        this.result = this.copier.Copy(forStatement);
+      }
+
+      public void Visit(IGotoStatement gotoStatement) {
+        this.result = this.copier.Copy(gotoStatement);
+      }
+
+      public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+        this.result = this.copier.Copy(gotoSwitchCaseStatement);
+      }
+
+      public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+        this.result = this.copier.Copy(getTypeOfTypedReference);
+      }
+
+      public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+        this.result = this.copier.Copy(getValueOfTypedReference);
+      }
+
+      public void Visit(IGreaterThan greaterThan) {
+        this.result = this.copier.Copy(greaterThan);
+      }
+
+      public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+        this.result = this.copier.Copy(greaterThanOrEqual);
+      }
+
+      public void Visit(ILabeledStatement labeledStatement) {
+        this.result = this.copier.Copy(labeledStatement);
+      }
+
+      public void Visit(ILeftShift leftShift) {
+        this.result = this.copier.Copy(leftShift);
+      }
+
+      public void Visit(ILessThan lessThan) {
+        this.result = this.copier.Copy(lessThan);
+      }
+
+      public void Visit(ILessThanOrEqual lessThanOrEqual) {
+        this.result = this.copier.Copy(lessThanOrEqual);
+      }
+
+      public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+        this.result = this.copier.Copy(localDeclarationStatement);
+      }
+
+      public void Visit(ILockStatement lockStatement) {
+        this.result = this.copier.Copy(lockStatement);
+      }
+
+      public void Visit(ILogicalNot logicalNot) {
+        this.result = this.copier.Copy(logicalNot);
+      }
+
+      public void Visit(IMakeTypedReference makeTypedReference) {
+        this.result = this.copier.Copy(makeTypedReference);
+      }
+
+      public void Visit(IMethodCall methodCall) {
+        this.result = this.copier.Copy(methodCall);
+      }
+
+      public void Visit(IModulus modulus) {
+        this.result = this.copier.Copy(modulus);
+      }
+
+      public void Visit(IMultiplication multiplication) {
+        this.result = this.copier.Copy(multiplication);
+      }
+
+      public void Visit(INamedArgument namedArgument) {
+        this.result = this.copier.Copy(namedArgument);
+      }
+
+      public void Visit(INotEquality notEquality) {
+        this.result = this.copier.Copy(notEquality);
+      }
+
+      public void Visit(IOldValue oldValue) {
+        this.result = this.copier.Copy(oldValue);
+      }
+
+      public void Visit(IOnesComplement onesComplement) {
+        this.result = this.copier.Copy(onesComplement);
+      }
+
+      public void Visit(IOutArgument outArgument) {
+        this.result = this.copier.Copy(outArgument);
+      }
+
+      public void Visit(IPointerCall pointerCall) {
+        this.result = this.copier.Copy(pointerCall);
+      }
+
+      public void Visit(IPopValue popValue) {
+        this.result = this.copier.Copy(popValue);
+      }
+
+      public void Visit(IPushStatement pushStatement) {
+        this.result = this.copier.Copy(pushStatement);
+      }
+
+      public void Visit(IRefArgument refArgument) {
+        this.result = this.copier.Copy(refArgument);
+      }
+
+      public void Visit(IResourceUseStatement resourceUseStatement) {
+        this.result = this.copier.Copy(resourceUseStatement);
+      }
+
+      public void Visit(IReturnValue returnValue) {
+        this.result = this.copier.Copy(returnValue);
+      }
+
+      public void Visit(IRethrowStatement rethrowStatement) {
+        this.result = this.copier.Copy(rethrowStatement);
+      }
+
+      public void Visit(IReturnStatement returnStatement) {
+        this.result = this.copier.Copy(returnStatement);
+      }
+
+      public void Visit(IRightShift rightShift) {
+        this.result = this.copier.Copy(rightShift);
+      }
+
+      public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+        this.result = this.copier.Copy(runtimeArgumentHandleExpression);
+      }
+
+      public void Visit(ISizeOf sizeOf) {
+        this.result = this.copier.Copy(sizeOf);
+      }
+
+      public void Visit(IStackArrayCreate stackArrayCreate) {
+        this.result = this.copier.Copy(stackArrayCreate);
+      }
+
+      public void Visit(ISubtraction subtraction) {
+        this.result = this.copier.Copy(subtraction);
+      }
+
+      public void Visit(ISwitchCase switchCase) {
+        this.result = this.copier.Copy(switchCase);
+      }
+
+      public void Visit(ISwitchStatement switchStatement) {
+        this.result = this.copier.Copy(switchStatement);
+      }
+
+      public void Visit(ITargetExpression targetExpression) {
+        this.result = this.copier.Copy(targetExpression);
+      }
+
+      public void Visit(IThisReference thisReference) {
+        this.result = this.copier.Copy(thisReference);
+      }
+
+      public void Visit(IThrowStatement throwStatement) {
+        this.result = this.copier.Copy(throwStatement);
+      }
+
+      public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+        this.result = this.copier.Copy(tryCatchFilterFinallyStatement);
+      }
+
+      public void Visit(ITokenOf tokenOf) {
+        this.result = this.copier.Copy(tokenOf);
+      }
+
+      public void Visit(ITypeOf typeOf) {
+        this.result = this.copier.Copy(typeOf);
+      }
+
+      public void Visit(IUnaryNegation unaryNegation) {
+        this.result = this.copier.Copy(unaryNegation);
+      }
+
+      public void Visit(IUnaryPlus unaryPlus) {
+        this.result = this.copier.Copy(unaryPlus);
+      }
+
+      public void Visit(IVectorLength vectorLength) {
+        this.result = this.copier.Copy(vectorLength);
+      }
+
+      public void Visit(IWhileDoStatement whileDoStatement) {
+        this.result = this.copier.Copy(whileDoStatement);
+      }
+
+      public void Visit(IYieldBreakStatement yieldBreakStatement) {
+        this.result = this.copier.Copy(yieldBreakStatement);
+      }
+
+      public void Visit(IYieldReturnStatement yieldReturnStatement) {
+        this.result = this.copier.Copy(yieldReturnStatement);
+      }
+
+      #endregion
+    }
+
+    private Dictionary<ILocalDefinition, ILocalDefinition> LocalsInsideCone {
+      get { 
+        if (this.localsInsideCone == null)
+          this.localsInsideCone = new Dictionary<ILocalDefinition, ILocalDefinition>();
+        return this.localsInsideCone; 
+      }
+    }
+    Dictionary<ILocalDefinition, ILocalDefinition> localsInsideCone;
+
+    private new IFieldReference Copy(IFieldReference fieldReference) {
+      if (fieldReference is Dummy) return fieldReference;
+      return base.Copy(fieldReference);
+    }
+
+    private new IMethodReference Copy(IMethodReference methodReference) {
+      if (methodReference is Dummy) return methodReference;
+      return base.Copy(methodReference);
+    }
+
+    private new ITypeReference Copy(ITypeReference typeReference) {
+      if (typeReference is Dummy) return typeReference;
+      return base.Copy(typeReference);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
+    public Addition Copy(IAddition addition) {
+      var mutableCopy = this.shallowCopier.Copy(addition);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
+    public AddressableExpression Copy(IAddressableExpression addressableExpression) {
+      var mutableCopy = this.shallowCopier.Copy(addressableExpression);
+      this.CopyChildren((Expression)mutableCopy);
+      if (mutableCopy.Instance != null)
+        mutableCopy.Instance = this.Copy(mutableCopy.Instance);
+      var local = mutableCopy.Definition as ILocalDefinition;
+      if (local != null)
+        mutableCopy.Definition = this.GetExistingCopyIfInsideCone(local);
+      else {
+        var parameter = mutableCopy.Definition as IParameterDefinition;
+        if (parameter != null)
+          mutableCopy.Definition = this.GetExistingCopyIfInsideCone(parameter);
+        else {
+          var fieldReference = mutableCopy.Definition as IFieldReference;
+          if (fieldReference != null)
+            mutableCopy.Definition = this.Copy(fieldReference);
+          else {
+            var arrayIndexer = mutableCopy.Definition as IArrayIndexer;
+            if (arrayIndexer != null)
+              mutableCopy.Definition = this.Copy(arrayIndexer);
+            else {
+              var addressDereference = mutableCopy.Definition as IAddressDereference;
+              if (addressDereference != null)
+                mutableCopy.Definition = this.Copy(addressDereference);
+              else {
+                var methodReference = mutableCopy.Definition as IMethodReference;
+                if (methodReference != null)
+                  mutableCopy.Definition = this.Copy(methodReference);
+                else {
+                  var thisReference = (IThisReference)mutableCopy.Definition;
+                  mutableCopy.Definition = this.Copy(thisReference);
+                }
+              }
+            }
+          }
+        }
+      }
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
+    public AddressDereference Copy(IAddressDereference addressDereference) {
+      var mutableCopy = this.shallowCopier.Copy(addressDereference);
+      mutableCopy.Address = this.Copy(mutableCopy.Address);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
+    public AddressOf Copy(IAddressOf addressOf) {
+      var mutableCopy = this.shallowCopier.Copy(addressOf);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
+    public AnonymousDelegate Copy(IAnonymousDelegate anonymousDelegate) {
+      var mutableCopy = this.shallowCopier.Copy(anonymousDelegate);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Parameters = this.Copy(mutableCopy.Parameters);
+      mutableCopy.Body = this.Copy((BlockStatement)mutableCopy.Body);
+      mutableCopy.ReturnType = this.Copy(mutableCopy.ReturnType);
+      if (mutableCopy.ReturnValueIsModified)
+        mutableCopy.ReturnValueCustomModifiers = this.Copy(mutableCopy.ReturnValueCustomModifiers);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
+    public ArrayIndexer Copy(IArrayIndexer arrayIndexer) {
+      var mutableCopy = this.shallowCopier.Copy(arrayIndexer);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.IndexedObject = this.Copy(mutableCopy.IndexedObject);
+      mutableCopy.Indices = this.Copy(mutableCopy.Indices);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
+    public AssertStatement Copy(IAssertStatement assertStatement) {
+      var mutableCopy = this.shallowCopier.Copy(assertStatement);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      if (mutableCopy.Description != null)
+        mutableCopy.Description = this.Copy(mutableCopy.Description);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
+    public Assignment Copy(IAssignment assignment) {
+      var mutableCopy = this.shallowCopier.Copy(assignment);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Target = this.Copy(mutableCopy.Target);
+      mutableCopy.Source = this.Copy(mutableCopy.Source);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
+    public AssumeStatement Copy(IAssumeStatement assumeStatement) {
+      var mutableCopy = this.shallowCopier.Copy(assumeStatement);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      if (mutableCopy.Description != null)
+        mutableCopy.Description = this.Copy(mutableCopy.Description);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given bitwise and expression.
+    /// </summary>
+    /// <param name="bitwiseAnd"></param>
+    public BitwiseAnd Copy(IBitwiseAnd bitwiseAnd) {
+      var mutableCopy = this.shallowCopier.Copy(bitwiseAnd);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given bitwise or expression.
+    /// </summary>
+    /// <param name="bitwiseOr"></param>
+    public BitwiseOr Copy(IBitwiseOr bitwiseOr) {
+      var mutableCopy = this.shallowCopier.Copy(bitwiseOr);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
+    public BlockExpression Copy(IBlockExpression blockExpression) {
+      var mutableCopy = this.shallowCopier.Copy(blockExpression);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.BlockStatement = this.Copy((BlockStatement)mutableCopy.BlockStatement);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given statement block.
+    /// </summary>
+    /// <param name="block"></param>
+    public BlockStatement Copy(IBlockStatement block) {
+      var mutableCopy = this.shallowCopier.Copy(block);
+      mutableCopy.Statements = this.Copy(mutableCopy.Statements);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given break statement.
+    /// </summary>
+    /// <param name="breakStatement"></param>
+    public BreakStatement Copy(IBreakStatement breakStatement) {
+      var mutableCopy = this.shallowCopier.Copy(breakStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
+    public BoundExpression Copy(IBoundExpression boundExpression) {
+      var mutableCopy = this.shallowCopier.Copy(boundExpression);
+      this.CopyChildren((Expression)mutableCopy);
+      if (mutableCopy.Instance != null)
+        mutableCopy.Instance = this.Copy(mutableCopy.Instance);
+      var local = mutableCopy.Definition as ILocalDefinition;
+      if (local != null)
+        mutableCopy.Definition = this.GetExistingCopyIfInsideCone(local);
+      else {
+        var parameter = mutableCopy.Definition as IParameterDefinition;
+        if (parameter != null)
+          mutableCopy.Definition = this.GetExistingCopyIfInsideCone(parameter);
+        else {
+          var fieldReference = (IFieldReference)mutableCopy.Definition;
+          mutableCopy.Definition = this.Copy(fieldReference);
+        }
+      }
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the cast-if-possible expression.
+    /// </summary>
+    /// <param name="castIfPossible"></param>
+    public CastIfPossible Copy(ICastIfPossible castIfPossible) {
+      var mutableCopy = this.shallowCopier.Copy(castIfPossible);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.ValueToCast = this.Copy(mutableCopy.ValueToCast);
+      mutableCopy.TargetType = this.Copy(mutableCopy.TargetType);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given catch clause.
+    /// </summary>
+    /// <param name="catchClause"></param>
+    public CatchClause Copy(ICatchClause catchClause) {
+      var mutableCopy = this.shallowCopier.Copy(catchClause);
+      mutableCopy.ExceptionType = this.Copy(mutableCopy.ExceptionType);
+      if (mutableCopy.ExceptionContainer != Dummy.LocalVariable) {
+        mutableCopy.ExceptionContainer = this.Copy(mutableCopy.ExceptionContainer);
+        this.LocalsInsideCone.Add(catchClause.ExceptionContainer, mutableCopy.ExceptionContainer);
+      }
+      if (mutableCopy.FilterCondition != null)
+        mutableCopy.FilterCondition = this.Copy(mutableCopy.FilterCondition);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given check-if-instance expression.
+    /// </summary>
+    /// <param name="checkIfInstance"></param>
+    public CheckIfInstance Copy(ICheckIfInstance checkIfInstance) {
+      var mutableCopy = this.shallowCopier.Copy(checkIfInstance);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Operand = this.Copy(mutableCopy.Operand);
+      mutableCopy.TypeToCheck = this.Copy(mutableCopy.TypeToCheck);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given compile time constant.
+    /// </summary>
+    /// <param name="constant"></param>
+    public CompileTimeConstant Copy(ICompileTimeConstant constant) {
+      var mutableCopy = this.shallowCopier.Copy(constant);
+      this.CopyChildren((Expression)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given conversion expression.
+    /// </summary>
+    /// <param name="conversion"></param>
+    public Conversion Copy(IConversion conversion) {
+      var mutableCopy = this.shallowCopier.Copy(conversion);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.ValueToConvert = this.Copy(mutableCopy.ValueToConvert);
+      mutableCopy.TypeAfterConversion = this.Copy(mutableCopy.TypeAfterConversion);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given conditional expression.
+    /// </summary>
+    /// <param name="conditional"></param>
+    public Conditional Copy(IConditional conditional) {
+      var mutableCopy = this.shallowCopier.Copy(conditional);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      mutableCopy.ResultIfTrue = this.Copy(mutableCopy.ResultIfTrue);
+      mutableCopy.ResultIfFalse = this.Copy(mutableCopy.ResultIfFalse);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement"></param>
+    public ConditionalStatement Copy(IConditionalStatement conditionalStatement) {
+      var mutableCopy = this.shallowCopier.Copy(conditionalStatement);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      mutableCopy.TrueBranch = this.Copy(mutableCopy.TrueBranch);
+      mutableCopy.FalseBranch = this.Copy(mutableCopy.FalseBranch);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given continue statement.
+    /// </summary>
+    /// <param name="continueStatement"></param>
+    public ContinueStatement Copy(IContinueStatement continueStatement) {
+      var mutableCopy = this.shallowCopier.Copy(continueStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
+    public CreateArray Copy(ICreateArray createArray) {
+      var mutableCopy = this.shallowCopier.Copy(createArray);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.ElementType = this.Copy(mutableCopy.ElementType);
+      mutableCopy.Sizes = this.Copy(mutableCopy.Sizes);
+      mutableCopy.Initializers = this.Copy(mutableCopy.Initializers);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given constructor call expression.
+    /// </summary>
+    /// <param name="createObjectInstance"></param>
+    public CreateObjectInstance Copy(ICreateObjectInstance createObjectInstance) {
+      var mutableCopy = this.shallowCopier.Copy(createObjectInstance);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.MethodToCall = this.Copy(mutableCopy.MethodToCall);
+      mutableCopy.Arguments = this.Copy(mutableCopy.Arguments);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the anonymous object creation expression.
+    /// </summary>
+    /// <param name="createDelegateInstance"></param>
+    public CreateDelegateInstance Copy(ICreateDelegateInstance createDelegateInstance) {
+      var mutableCopy = this.shallowCopier.Copy(createDelegateInstance);
+      this.CopyChildren((Expression)mutableCopy);
+      if (mutableCopy.Instance != null)
+        mutableCopy.Instance = this.Copy(mutableCopy.Instance);
+      mutableCopy.MethodToCallViaDelegate = this.Copy(mutableCopy.MethodToCallViaDelegate);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement"></param>
+    public DebuggerBreakStatement Copy(IDebuggerBreakStatement debuggerBreakStatement) {
+      var mutableCopy = this.shallowCopier.Copy(debuggerBreakStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given defalut value expression.
+    /// </summary>
+    /// <param name="defaultValue"></param>
+    public DefaultValue Copy(IDefaultValue defaultValue) {
+      var mutableCopy = this.shallowCopier.Copy(defaultValue);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.DefaultValueType = this.Copy(mutableCopy.DefaultValueType);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given division expression.
+    /// </summary>
+    /// <param name="division"></param>
+    public Division Copy(IDivision division) {
+      var mutableCopy = this.shallowCopier.Copy(division);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement"></param>
+    public DoUntilStatement Copy(IDoUntilStatement doUntilStatement) {
+      var mutableCopy = this.shallowCopier.Copy(doUntilStatement);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public DupValue Copy(IDupValue dupValue) {
+      var mutableCopy = this.shallowCopier.Copy(dupValue);
+      this.CopyChildren((Expression)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given empty statement.
+    /// </summary>
+    /// <param name="emptyStatement"></param>
+    public EmptyStatement Copy(IEmptyStatement emptyStatement) {
+      var mutableCopy = this.shallowCopier.Copy(emptyStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given equality expression.
+    /// </summary>
+    /// <param name="equality"></param>
+    public Equality Copy(IEquality equality) {
+      var mutableCopy = this.shallowCopier.Copy(equality);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given exclusive or expression.
+    /// </summary>
+    /// <param name="exclusiveOr"></param>
+    public ExclusiveOr Copy(IExclusiveOr exclusiveOr) {
+      var mutableCopy = this.shallowCopier.Copy(exclusiveOr);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given expression.
+    /// </summary>
+    /// <param name="expression"></param>
+    public Expression Copy(IExpression expression) {
+      expression.Dispatch(this.Dispatcher);
+      return (Expression)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given expression statement.
+    /// </summary>
+    /// <param name="expressionStatement"></param>
+    public ExpressionStatement Copy(IExpressionStatement expressionStatement) {
+      var mutableCopy = this.shallowCopier.Copy(expressionStatement);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given foreach statement.
+    /// </summary>
+    /// <param name="forEachStatement"></param>
+    public ForEachStatement Copy(IForEachStatement forEachStatement) {
+      var mutableCopy = this.shallowCopier.Copy(forEachStatement);
+      mutableCopy.Variable = this.Copy(mutableCopy.Variable);
+      this.LocalsInsideCone.Add(forEachStatement.Variable, mutableCopy.Variable);
+      mutableCopy.Collection = this.Copy(mutableCopy.Collection);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given for statement.
+    /// </summary>
+    /// <param name="forStatement"></param>
+    public ForStatement Copy(IForStatement forStatement) {
+      var mutableCopy = this.shallowCopier.Copy(forStatement);
+      mutableCopy.InitStatements = this.Copy(mutableCopy.InitStatements);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      mutableCopy.IncrementStatements = this.Copy(mutableCopy.IncrementStatements);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given get type of typed reference expression.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference"></param>
+    public GetTypeOfTypedReference Copy(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      var mutableCopy = this.shallowCopier.Copy(getTypeOfTypedReference);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.TypedReference = this.Copy(mutableCopy.TypedReference);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given get value of typed reference expression.
+    /// </summary>
+    /// <param name="getValueOfTypedReference"></param>
+    public GetValueOfTypedReference Copy(IGetValueOfTypedReference getValueOfTypedReference) {
+      var mutableCopy = this.shallowCopier.Copy(getValueOfTypedReference);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.TypedReference = this.Copy(mutableCopy.TypedReference);
+      mutableCopy.TargetType = this.Copy(mutableCopy.TargetType);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given goto statement.
+    /// </summary>
+    /// <param name="gotoStatement"></param>
+    public GotoStatement Copy(IGotoStatement gotoStatement) {
+      var mutableCopy = this.shallowCopier.Copy(gotoStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement"></param>
+    public GotoSwitchCaseStatement Copy(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      var mutableCopy = this.shallowCopier.Copy(gotoSwitchCaseStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given greater-than expression.
+    /// </summary>
+    /// <param name="greaterThan"></param>
+    public GreaterThan Copy(IGreaterThan greaterThan) {
+      var mutableCopy = this.shallowCopier.Copy(greaterThan);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given greater-than-or-equal expression.
+    /// </summary>
+    /// <param name="greaterThanOrEqual"></param>
+    public GreaterThanOrEqual Copy(IGreaterThanOrEqual greaterThanOrEqual) {
+      var mutableCopy = this.shallowCopier.Copy(greaterThanOrEqual);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement"></param>
+    public LabeledStatement Copy(ILabeledStatement labeledStatement) {
+      var mutableCopy = this.shallowCopier.Copy(labeledStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given left shift expression.
+    /// </summary>
+    /// <param name="leftShift"></param>
+    public LeftShift Copy(ILeftShift leftShift) {
+      var mutableCopy = this.shallowCopier.Copy(leftShift);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given less-than expression.
+    /// </summary>
+    /// <param name="lessThan"></param>
+    public LessThan Copy(ILessThan lessThan) {
+      var mutableCopy = this.shallowCopier.Copy(lessThan);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given less-than-or-equal expression.
+    /// </summary>
+    /// <param name="lessThanOrEqual"></param>
+    public LessThanOrEqual Copy(ILessThanOrEqual lessThanOrEqual) {
+      var mutableCopy = this.shallowCopier.Copy(lessThanOrEqual);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement"></param>
+    public LocalDeclarationStatement Copy(ILocalDeclarationStatement localDeclarationStatement) {
+      var mutableCopy = this.shallowCopier.Copy(localDeclarationStatement);
+      if (!this.LocalsInsideCone.ContainsKey(mutableCopy.LocalVariable)) { //work around bug in decompiler, for now
+        mutableCopy.LocalVariable = this.Copy(mutableCopy.LocalVariable);
+        this.LocalsInsideCone.Add(localDeclarationStatement.LocalVariable, mutableCopy.LocalVariable);
+      }
+      if (mutableCopy.InitialValue != null)
+        mutableCopy.InitialValue = this.Copy(mutableCopy.InitialValue);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given lock statement.
+    /// </summary>
+    /// <param name="lockStatement"></param>
+    public LockStatement Copy(ILockStatement lockStatement) {
+      var mutableCopy = this.shallowCopier.Copy(lockStatement);
+      mutableCopy.Guard = this.Copy(mutableCopy.Guard);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given logical not expression.
+    /// </summary>
+    /// <param name="logicalNot"></param>
+    public LogicalNot Copy(ILogicalNot logicalNot) {
+      var mutableCopy = this.shallowCopier.Copy(logicalNot);
+      this.CopyChildren((UnaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given make typed reference expression.
+    /// </summary>
+    /// <param name="makeTypedReference"></param>
+    public MakeTypedReference Copy(IMakeTypedReference makeTypedReference) {
+      var mutableCopy = this.shallowCopier.Copy(makeTypedReference);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Operand = this.Copy(mutableCopy.Operand);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
+    public MethodCall Copy(IMethodCall methodCall) {
+      var mutableCopy = this.shallowCopier.Copy(methodCall);
+      this.CopyChildren((Expression)mutableCopy);
+      if (!mutableCopy.IsStaticCall)
+        mutableCopy.ThisArgument = this.Copy(mutableCopy.ThisArgument);
+      mutableCopy.MethodToCall = this.Copy(mutableCopy.MethodToCall);
+      mutableCopy.Arguments = this.Copy(mutableCopy.Arguments);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given modulus expression.
+    /// </summary>
+    /// <param name="modulus"></param>
+    public Modulus Copy(IModulus modulus) {
+      var mutableCopy = this.shallowCopier.Copy(modulus);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given multiplication expression.
+    /// </summary>
+    /// <param name="multiplication"></param>
+    public Multiplication Copy(IMultiplication multiplication) {
+      var mutableCopy = this.shallowCopier.Copy(multiplication);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
+    public NamedArgument Copy(INamedArgument namedArgument) {
+      var mutableCopy = this.shallowCopier.Copy(namedArgument);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.ArgumentValue = this.Copy(mutableCopy.ArgumentValue);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given not equality expression.
+    /// </summary>
+    /// <param name="notEquality"></param>
+    public NotEquality Copy(INotEquality notEquality) {
+      var mutableCopy = this.shallowCopier.Copy(notEquality);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given old value expression.
+    /// </summary>
+    /// <param name="oldValue"></param>
+    public OldValue Copy(IOldValue oldValue) {
+      var mutableCopy = this.shallowCopier.Copy(oldValue);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given one's complement expression.
+    /// </summary>
+    /// <param name="onesComplement"></param>
+    public OnesComplement Copy(IOnesComplement onesComplement) {
+      var mutableCopy = this.shallowCopier.Copy(onesComplement);
+      this.CopyChildren((UnaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given out argument expression.
+    /// </summary>
+    /// <param name="outArgument"></param>
+    public OutArgument Copy(IOutArgument outArgument) {
+      var mutableCopy = this.shallowCopier.Copy(outArgument);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given pointer call.
+    /// </summary>
+    /// <param name="pointerCall"></param>
+    public PointerCall Copy(IPointerCall pointerCall) {
+      var mutableCopy = this.shallowCopier.Copy(pointerCall);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Pointer = this.Copy(mutableCopy.Pointer);
+      mutableCopy.Arguments = this.Copy(mutableCopy.Arguments);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public PopValue Copy(IPopValue popValue) {
+      var mutableCopy = this.shallowCopier.Copy(popValue);
+      this.CopyChildren((Expression)popValue);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public PushStatement Copy(IPushStatement pushStatement) {
+      var mutableCopy = this.shallowCopier.Copy(pushStatement);
+      mutableCopy.ValueToPush = this.Copy(mutableCopy.ValueToPush);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given ref argument expression.
+    /// </summary>
+    /// <param name="refArgument"></param>
+    public RefArgument Copy(IRefArgument refArgument) {
+      var mutableCopy = this.shallowCopier.Copy(refArgument);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given resource usage statement.
+    /// </summary>
+    /// <param name="resourceUseStatement"></param>
+    public ResourceUseStatement Copy(IResourceUseStatement resourceUseStatement) {
+      var mutableCopy = this.shallowCopier.Copy(resourceUseStatement);
+      mutableCopy.ResourceAcquisitions = this.Copy(mutableCopy.ResourceAcquisitions);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement"></param>
+    public RethrowStatement Copy(IRethrowStatement rethrowStatement) {
+      var mutableCopy = this.shallowCopier.Copy(rethrowStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the return statement.
+    /// </summary>
+    /// <param name="returnStatement"></param>
+    public ReturnStatement Copy(IReturnStatement returnStatement) {
+      var mutableCopy = this.shallowCopier.Copy(returnStatement);
+      if (mutableCopy.Expression != null)
+        mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given return value expression.
+    /// </summary>
+    /// <param name="returnValue"></param>
+    public ReturnValue Copy(IReturnValue returnValue) {
+      var mutableCopy = this.shallowCopier.Copy(returnValue);
+      this.CopyChildren((Expression)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given right shift expression.
+    /// </summary>
+    /// <param name="rightShift"></param>
+    public RightShift Copy(IRightShift rightShift) {
+      var mutableCopy = this.shallowCopier.Copy(rightShift);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given stack array create expression.
+    /// </summary>
+    /// <param name="stackArrayCreate"></param>
+    public StackArrayCreate Copy(IStackArrayCreate stackArrayCreate) {
+      var mutableCopy = this.shallowCopier.Copy(stackArrayCreate);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.ElementType = this.Copy(mutableCopy.ElementType);
+      mutableCopy.Size = this.Copy(mutableCopy.Size);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression"></param>
+    public RuntimeArgumentHandleExpression Copy(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      var mutableCopy = this.shallowCopier.Copy(runtimeArgumentHandleExpression);
+      this.CopyChildren((Expression)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given sizeof() expression.
+    /// </summary>
+    /// <param name="sizeOf"></param>
+    public SizeOf Copy(ISizeOf sizeOf) {
+      var mutableCopy = this.shallowCopier.Copy(sizeOf);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.TypeToSize = this.Copy(mutableCopy.TypeToSize);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given source method body.
+    /// </summary>
+    /// <param name="sourceMethodBody"></param>
+    public SourceMethodBody Copy(ISourceMethodBody sourceMethodBody) {
+      return this.Copy(sourceMethodBody, sourceMethodBody.MethodDefinition);
+    }
+
+    private SourceMethodBody Copy(ISourceMethodBody sourceMethodBody, IMethodDefinition method) {
+      var mutableCopy = this.shallowCopier.Copy(sourceMethodBody);
+      mutableCopy.Block = this.Copy(mutableCopy.Block);
+      mutableCopy.MethodDefinition = method;
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public Statement Copy(IStatement statement) {
+      statement.Dispatch(this.Dispatcher);
+      return (Statement)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given subtraction expression.
+    /// </summary>
+    /// <param name="subtraction"></param>
+    public Subtraction Copy(ISubtraction subtraction) {
+      var mutableCopy = this.shallowCopier.Copy(subtraction);
+      this.CopyChildren((BinaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given switch case.
+    /// </summary>
+    /// <param name="switchCase"></param>
+    public SwitchCase Copy(ISwitchCase switchCase) {
+      var mutableCopy = this.shallowCopier.Copy(switchCase);
+      if (!mutableCopy.IsDefault)
+        mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given switch statement.
+    /// </summary>
+    /// <param name="switchStatement"></param>
+    public SwitchStatement Copy(ISwitchStatement switchStatement) {
+      var mutableCopy = this.shallowCopier.Copy(switchStatement);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      mutableCopy.Cases = this.Copy(mutableCopy.Cases);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
+    public TargetExpression Copy(ITargetExpression targetExpression) {
+      var mutableCopy = this.shallowCopier.Copy(targetExpression);
+      this.CopyChildren((Expression)mutableCopy);
+      if (mutableCopy.Instance != null) {
+        mutableCopy.Instance = this.Copy(mutableCopy.Instance);
+      }
+      var local = mutableCopy.Definition as ILocalDefinition;
+      if (local != null)
+        mutableCopy.Definition = this.GetExistingCopyIfInsideCone(local);
+      else {
+        var parameter = mutableCopy.Definition as IParameterDefinition;
+        if (parameter != null)
+          mutableCopy.Definition = this.GetExistingCopyIfInsideCone(parameter);
+        else {
+          var fieldReference = mutableCopy.Definition as IFieldReference;
+          if (fieldReference != null)
+            mutableCopy.Definition = this.Copy(fieldReference);
+          else {
+            var arrayIndexer = mutableCopy.Definition as IArrayIndexer;
+            if (arrayIndexer != null)
+              mutableCopy.Definition = this.Copy(arrayIndexer);
+            else {
+              var addressDereference = mutableCopy.Definition as IAddressDereference;
+              if (addressDereference != null)
+                mutableCopy.Definition = this.Copy(addressDereference);
+              else {
+                var propertyDefinition = (IPropertyDefinition)mutableCopy.Definition;
+                mutableCopy.Definition = this.GetExistingCopyIfInsideCone(propertyDefinition);
+              }
+            }
+          }
+        }
+      }
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
+    public ThisReference Copy(IThisReference thisReference) {
+      var mutableCopy = this.shallowCopier.Copy(thisReference);
+      this.CopyChildren((Expression)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the throw statement.
+    /// </summary>
+    /// <param name="throwStatement"></param>
+    public ThrowStatement Copy(IThrowStatement throwStatement) {
+      var mutableCopy = this.shallowCopier.Copy(throwStatement);
+      mutableCopy.Exception = this.Copy(mutableCopy.Exception);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the try-catch-filter-finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement"></param>
+    public TryCatchFinallyStatement Copy(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      var mutableCopy = this.shallowCopier.Copy(tryCatchFilterFinallyStatement);
+      mutableCopy.TryBody = this.Copy(mutableCopy.TryBody);
+      mutableCopy.CatchClauses = this.Copy(mutableCopy.CatchClauses);
+      if (mutableCopy.FaultBody != null)
+        mutableCopy.FaultBody = this.Copy(mutableCopy.FaultBody);
+      if (mutableCopy.FinallyBody != null)
+        mutableCopy.FinallyBody = this.Copy(mutableCopy.FinallyBody);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given tokenof() expression.
+    /// </summary>
+    /// <param name="tokenOf"></param>
+    public TokenOf Copy(ITokenOf tokenOf) {
+      var mutableCopy = this.shallowCopier.Copy(tokenOf);
+      this.CopyChildren((Expression)mutableCopy);
+      var fieldReference = mutableCopy.Definition as IFieldReference;
+      if (fieldReference != null)
+        mutableCopy.Definition = this.Copy(fieldReference);
+      else {
+        var methodReference = mutableCopy.Definition as IMethodReference;
+        if (methodReference != null)
+          mutableCopy.Definition = this.Copy(methodReference);
+        else {
+          var typeReference = (ITypeReference)mutableCopy.Definition;
+          mutableCopy.Definition = this.Copy(typeReference);
+        }
+      }
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given typeof() expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
+    public TypeOf Copy(ITypeOf typeOf) {
+      var mutableCopy = this.shallowCopier.Copy(typeOf);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.TypeToGet = this.Copy(mutableCopy.TypeToGet);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given unary negation expression.
+    /// </summary>
+    /// <param name="unaryNegation"></param>
+    public UnaryNegation Copy(IUnaryNegation unaryNegation) {
+      var mutableCopy = this.shallowCopier.Copy(unaryNegation);
+      this.CopyChildren((UnaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given unary plus expression.
+    /// </summary>
+    /// <param name="unaryPlus"></param>
+    public UnaryPlus Copy(IUnaryPlus unaryPlus) {
+      var mutableCopy = this.shallowCopier.Copy(unaryPlus);
+      this.CopyChildren((UnaryOperation)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given vector length expression.
+    /// </summary>
+    /// <param name="vectorLength"></param>
+    public VectorLength Copy(IVectorLength vectorLength) {
+      var mutableCopy = this.shallowCopier.Copy(vectorLength);
+      this.CopyChildren((Expression)mutableCopy);
+      mutableCopy.Vector = this.Copy(mutableCopy.Vector);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement"></param>
+    public WhileDoStatement Copy(IWhileDoStatement whileDoStatement) {
+      var mutableCopy = this.shallowCopier.Copy(whileDoStatement);
+      mutableCopy.Condition = this.Copy(mutableCopy.Condition);
+      mutableCopy.Body = this.Copy(mutableCopy.Body);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
+    public YieldBreakStatement Copy(IYieldBreakStatement yieldBreakStatement) {
+      var mutableCopy = this.shallowCopier.Copy(yieldBreakStatement);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement"></param>
+    public YieldReturnStatement Copy(IYieldReturnStatement yieldReturnStatement) {
+      var mutableCopy = this.shallowCopier.Copy(yieldReturnStatement);
+      mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+
+    /// <summary>
+    /// Returns a deep copy the given list of catch clauses.
+    /// </summary>
+    /// <param name="catchClauses"></param>
+    public virtual List<ICatchClause>/*?*/ Copy(List<ICatchClause>/*?*/ catchClauses) {
+      if (catchClauses == null) return null;
+      for (int i = 0, n = catchClauses.Count; i < n; i++)
+        catchClauses[i] = this.Copy(catchClauses[i]);
+      return catchClauses;
+    }
+
+    /// <summary>
+    /// Returns a deep copy the given list of expressions.
+    /// </summary>
+    /// <param name="expressions"></param>
+    public virtual List<IExpression>/*?*/ Copy(List<IExpression>/*?*/ expressions) {
+      if (expressions == null) return null;
+      for (int i = 0, n = expressions.Count; i < n; i++)
+        expressions[i] = this.Copy(expressions[i]);
+      return expressions;
+    }
+
+    /// <summary>
+    /// Returns a deep copy the given list of switch cases.
+    /// </summary>
+    /// <param name="switchCases"></param>
+    public virtual List<ISwitchCase>/*?*/ Copy(List<ISwitchCase>/*?*/ switchCases) {
+      if (switchCases == null) return null;
+      for (int i = 0, n = switchCases.Count; i < n; i++)
+        switchCases[i] = this.Copy(switchCases[i]);
+      return switchCases;
+    }
+
+    /// <summary>
+    /// Returns a deep copy the given enumeration of statements.
+    /// </summary>
+    /// <param name="statements"></param>
+    public virtual List<IStatement>/*?*/ Copy(List<IStatement>/*?*/ statements) {
+      if (statements == null) return null;
+      for (int i = 0, n = statements.Count; i < n; i++)
+        statements[i] = this.Copy(statements[i]);
+      return statements;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given list of parameters.
+    /// </summary>
+    public virtual List<IParameterDefinition>/*?*/ Copy(List<IParameterDefinition>/*?*/ parameters) {
+      if (parameters == null) return null;
+      for (int i = 0, n = parameters.Count; i < n; i++)
+        parameters[i] = this.Copy(parameters[i]);
+      return parameters;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given list of custom modifiers.
+    /// </summary>
+    public virtual List<ICustomModifier>/*?*/ Copy(List<ICustomModifier>/*?*/ customModifiers) {
+      if (customModifiers == null) return null;
+      for (int i = 0, n = customModifiers.Count; i < n; i++)
+        customModifiers[i] = this.Copy(customModifiers[i]);
+      return customModifiers;
+    }
+
+    private void CopyChildren(BinaryOperation binaryOperation) {
+      this.CopyChildren((Expression)binaryOperation);
+      binaryOperation.LeftOperand = this.Copy(binaryOperation.LeftOperand);
+      binaryOperation.RightOperand = this.Copy(binaryOperation.RightOperand);
+    }
+
+    private void CopyChildren(Expression expression) {
+      expression.Type = this.Copy(expression.Type);
+      Contract.Assume(expression.Type is Microsoft.Cci.MutableCodeModel.NamedTypeDefinition || expression.Type is Microsoft.Cci.MutableCodeModel.TypeReference);
+    }
+
+    private void CopyChildren(UnaryOperation unaryOperation) {
+      this.CopyChildren((Expression)unaryOperation);
+      unaryOperation.Operand = this.Copy(unaryOperation.Operand);
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given method body.
+    /// </summary>
+    protected override IMethodBody CopyMethodBody(IMethodBody methodBody, IMethodDefinition method) {
+      var sourceMethodBody = methodBody as ISourceMethodBody;
+      if (sourceMethodBody != null) return this.Copy(sourceMethodBody, method);
+      return base.CopyMethodBody(methodBody, method);
+    }
+
+    /// <summary>
+    /// If the local is declared inside the subtree being copied by this copier, then return the copy. Otherwise return the local itself. No copies are made by this method.
+    /// </summary>
+    /// <param name="local">A local that is referenced from an expression.</param>
+    /// <returns></returns>
+    private ILocalDefinition GetExistingCopyIfInsideCone(ILocalDefinition local) {
+      ILocalDefinition copy;
+      if (this.LocalsInsideCone.TryGetValue(local, out copy)) return copy;
+      return local; //The local is declared in a scope that encloses the cone being copied.
+    }
+
+  }
+
   /// <summary>
   /// Provides copy of a method body, a statement, or an expression, in which the references to the nodes
   /// inside a cone is replaced. The cone is defined using the parent class. 
@@ -101,32 +2812,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #region DeepCopy methods
-
-    /// <summary>
-    /// Returns a mutable deep copy of the given assembly.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
-    /// table for interning is what is needed.</param>
-    /// <param name="assembly">The assembly to copied.</param>
-    /// <param name="sourceLocationProvider"></param>
-    public static Assembly DeepCopy(IMetadataHost host, IAssembly assembly, ISourceLocationProvider sourceLocationProvider = null) {
-      List<INamedTypeDefinition> newTypes;
-      return (Assembly)new CodeCopier(host, sourceLocationProvider, assembly, out newTypes).Substitute(assembly);
-    }
-
-    /// <summary>
-    /// Returns a mutable deep copy of the given module.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references. For the purposes of this call, the
-    /// table for interning is what is needed.</param>
-    /// <param name="module">The module to copied.</param>
-    /// <param name="sourceLocationProvider"></param>
-    public static Module DeepCopy(IMetadataHost host, IModule module, ISourceLocationProvider sourceLocationProvider = null) {
-      List<INamedTypeDefinition> newTypes;
-      return (Module)new CodeCopier(host, null, module, out newTypes).Substitute(module);
-    }
 
     /// <summary>
     /// Visit a list of statements. 
@@ -2101,6 +4786,483 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
   }
 
+}
+
+namespace Microsoft.Cci.MutableCodeModel.Contracts {
+  /// <summary>
+  /// 
+  /// </summary>
+  public class CodeAndContractShallowCopier : CodeShallowCopier {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    public CodeAndContractShallowCopier(IMetadataHost targetHost)
+      : base(targetHost) {
+      this.dispatchingVisitor = new ContractElementDispatcher() { copier = this };
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
+    public CodeAndContractShallowCopier(IMetadataHost targetHost, IUnit targetUnit)
+      : base(targetHost, targetUnit) {
+      this.dispatchingVisitor = new ContractElementDispatcher() { copier = this };
+    }
+
+    ContractElementDispatcher dispatchingVisitor;
+    class ContractElementDispatcher : CodeVisitor, ICodeAndContractVisitor {
+
+      internal object result;
+      internal CodeAndContractShallowCopier copier;
+
+      public void Visit(ILoopInvariant loopInvariant) {
+        this.result = this.copier.Copy(loopInvariant);
+      }
+
+      public void Visit(ILoopVariant loopVariant) {
+        this.result = this.copier.Copy(loopVariant);
+      }
+
+      public void Visit(IMethodVariant methodVariant) {
+        this.result = this.copier.Copy(methodVariant);
+      }
+
+      public void Visit(IPostcondition postCondition) {
+        this.result = this.copier.Copy(postCondition);
+      }
+
+      public void Visit(IPrecondition precondition) {
+        this.result = this.copier.Copy(precondition);
+      }
+
+      public void Visit(ITypeInvariant typeInvariant) {
+        this.result = this.copier.Copy(typeInvariant);
+      }
+
+      public void Visit(ILoopContract loopContract) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IMethodContract methodContract) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IThrownException thrownException) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(ITypeContract typeContract) {
+        Contract.Assume(false);
+      }
+
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given contract element.
+    /// </summary>
+    /// <param name="contractElement"></param>
+    public virtual ContractElement Copy(IContractElement contractElement) {
+      contractElement.Dispatch(this.dispatchingVisitor);
+      return (ContractElement)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given loop contract.
+    /// </summary>
+    public virtual LoopContract Copy(ILoopContract loopContract) {
+      return new LoopContract(loopContract);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given loop invariant.
+    /// </summary>
+    public virtual LoopInvariant Copy(ILoopInvariant loopInvariant) {
+      return new LoopInvariant(loopInvariant);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given loop variant.
+    /// </summary>
+    public virtual LoopVariant Copy(ILoopVariant loopVariant) {
+      return new LoopVariant(loopVariant);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given method contract.
+    /// </summary>
+    public virtual MethodContract Copy(IMethodContract methodContract) {
+      return new MethodContract(methodContract);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given variant.
+    /// </summary>
+    public virtual MethodVariant Copy(IMethodVariant variant) {
+      return new MethodVariant(variant);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given postCondition.
+    /// </summary>
+    public virtual Postcondition Copy(IPostcondition postCondition) {
+      return new Postcondition(postCondition);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given precondition.
+    /// </summary>
+    public virtual Precondition Copy(IPrecondition precondition) {
+      return new Precondition(precondition);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given thrown exception.
+    /// </summary>
+    public virtual ThrownException Copy(IThrownException thrownException) {
+      return new ThrownException(thrownException);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given type contract.
+    /// </summary>
+    public virtual TypeContract Copy(ITypeContract typeContract) {
+      return new TypeContract(typeContract);
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of the given type invariant.
+    /// </summary>
+    public virtual TypeInvariant Copy(ITypeInvariant typeInvariant) {
+      return new TypeInvariant(typeInvariant);
+    }
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
+  public class CodeAndContractDeepCopier : CodeDeepCopier {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    public CodeAndContractDeepCopier(IMetadataHost targetHost)
+      : this(targetHost, new CodeAndContractShallowCopier(targetHost)) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
+    /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
+    public CodeAndContractDeepCopier(IMetadataHost targetHost, IUnit targetUnit)
+      : this(targetHost, new CodeAndContractShallowCopier(targetHost, targetUnit)) {
+    }
+
+    private CodeAndContractDeepCopier(IMetadataHost targetHost, CodeAndContractShallowCopier shallowCopier)
+      : base(targetHost, shallowCopier) {
+      this.shallowCopier = shallowCopier;
+    }
+
+    ContractElementDispatcher dispatcher;
+    private ContractElementDispatcher Dispatcher {
+      get {
+        if (this.dispatcher == null)
+          this.dispatcher = new ContractElementDispatcher() { copier = this };
+        return this.dispatcher; 
+      }
+    }
+    class ContractElementDispatcher : CodeVisitor, ICodeAndContractVisitor {
+
+      internal object result;
+      internal CodeAndContractDeepCopier copier;
+
+      public void Visit(ILoopInvariant loopInvariant) {
+        this.result = this.copier.Copy(loopInvariant);
+      }
+
+      public void Visit(ILoopVariant loopVariant) {
+        this.result = this.copier.Copy(loopVariant);
+      }
+
+      public void Visit(IMethodVariant methodVariant) {
+        this.result = this.copier.Copy(methodVariant);
+      }
+
+      public void Visit(IPostcondition postCondition) {
+        this.result = this.copier.Copy(postCondition);
+      }
+
+      public void Visit(IPrecondition precondition) {
+        this.result = this.copier.Copy(precondition);
+      }
+
+      public void Visit(ITypeInvariant typeInvariant) {
+        this.result = this.copier.Copy(typeInvariant);
+      }
+
+      public void Visit(ILoopContract loopContract) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IMethodContract methodContract) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IThrownException thrownException) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(ITypeContract typeContract) {
+        Contract.Assume(false);
+      }
+
+    }
+
+    CodeAndContractShallowCopier shallowCopier;
+
+    /// <summary>
+    /// Called from the type specific copy method to copy the common part of all contract elments.
+    /// </summary>
+    /// <param name="contractElement"></param>
+    private void Copy(ContractElement contractElement) {
+      contractElement.Condition = this.Copy(contractElement.Condition);
+      if (contractElement.Description != null)
+        contractElement.Description = this.Copy(contractElement.Description);
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of addressable expressions.
+    /// </summary>
+    private List<IAddressableExpression> Copy(List<IAddressableExpression> addressableExpressions) {
+      if (addressableExpressions == null) return null;
+      for (int i = 0, n = addressableExpressions.Count; i < n; i++)
+        addressableExpressions[i] = this.Copy(addressableExpressions[i]);
+      return addressableExpressions;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of fields.
+    /// </summary>
+    private List<IFieldDefinition> Copy(List<IFieldDefinition> fields) {
+      if (fields == null) return null;
+      for (int i = 0, n = fields.Count; i < n; i++)
+        fields[i] = this.Copy(fields[i]);
+      return fields;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of trigger expressions.
+    /// </summary>
+    private IEnumerable<IEnumerable<IExpression>> Copy(IEnumerable<IEnumerable<IExpression>> triggers) {
+      var result = new List<IEnumerable<IExpression>>(triggers);
+      for (int i = 0, n = result.Count; i < n; i++) {
+        var list = new List<IExpression>(result[i]);
+        result[i] = this.Copy(list).AsReadOnly();
+      }
+      return result.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of loop invariants.
+    /// </summary>
+    private List<ILoopInvariant> Copy(List<ILoopInvariant> loopInvariants) {
+      if (loopInvariants == null) return null;
+      for (int i = 0, n = loopInvariants.Count; i < n; i++)
+        loopInvariants[i] = this.Copy(loopInvariants[i]);
+      return loopInvariants;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of loop variants.
+    /// </summary>
+    private List<ILoopVariant> Copy(List<ILoopVariant> loopVariants) {
+      if (loopVariants == null) return null;
+      for (int i = 0, n = loopVariants.Count; i < n; i++)
+        loopVariants[i] = this.Copy(loopVariants[i]);
+      return loopVariants;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of method definitions.
+    /// </summary>
+    private List<IMethodDefinition> Copy(List<IMethodDefinition> methods) {
+      if (methods == null) return null;
+      for (int i = 0, n = methods.Count; i < n; i++)
+        methods[i] = this.Copy(methods[i]);
+      return methods;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of post conditions.
+    /// </summary>
+    private List<IPostcondition> Copy(List<IPostcondition> postConditions) {
+      if (postConditions == null) return null;
+      for (int i = 0, n = postConditions.Count; i < n; i++)
+        postConditions[i] = this.Copy(postConditions[i]);
+      return postConditions;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of pre conditions.
+    /// </summary>
+    private List<IPrecondition> Copy(List<IPrecondition> preconditions) {
+      if (preconditions == null) return null;
+      for (int i = 0, n = preconditions.Count; i < n; i++)
+        preconditions[i] = this.Copy(preconditions[i]);
+      return preconditions;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of thrown exceptions.
+    /// </summary>
+    private List<IThrownException> Copy(List<IThrownException> thrownExceptions) {
+      if (thrownExceptions == null) return null;
+      for (int i = 0, n = thrownExceptions.Count; i < n; i++)
+        thrownExceptions[i] = this.Copy(thrownExceptions[i]);
+      return thrownExceptions;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of addressable expressions.
+    /// </summary>
+    private List<ITypeInvariant> Copy(List<ITypeInvariant> typeInvariants) {
+      if (typeInvariants == null) return null;
+      for (int i = 0, n = typeInvariants.Count; i < n; i++)
+        typeInvariants[i] = this.Copy(typeInvariants[i]);
+      return typeInvariants;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given list of post conditions.
+    /// </summary>
+    public List<IMethodVariant> Copy(List<IMethodVariant> variants) {
+      if (variants == null) return null;
+      for (int i = 0, n = variants.Count; i < n; i++)
+        variants[i] = this.Copy(variants[i]);
+      return variants;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given contract element.
+    /// </summary>
+    /// <param name="contractElement"></param>
+    public ContractElement Copy(IContractElement contractElement) {
+      contractElement.Dispatch(this.Dispatcher);
+      return (ContractElement)this.Dispatcher.result;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given loop contract.
+    /// </summary>
+    public LoopContract Copy(ILoopContract loopContract) {
+      var mutableCopy = this.shallowCopier.Copy(loopContract);
+      mutableCopy.Invariants = this.Copy(mutableCopy.Invariants);
+      mutableCopy.Variants = this.Copy(mutableCopy.Variants);
+      mutableCopy.Writes = this.Copy(mutableCopy.Writes);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given loop invariant.
+    /// </summary>
+    public LoopInvariant Copy(ILoopInvariant loopInvariant) {
+      var mutableCopy = this.shallowCopier.Copy(loopInvariant);
+      this.Copy((ContractElement)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given loop variant.
+    /// </summary>
+    public LoopVariant Copy(ILoopVariant loopVariant) {
+      var mutableCopy = this.shallowCopier.Copy(loopVariant);
+      this.Copy((ContractElement)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given method contract.
+    /// </summary>
+    public MethodContract Copy(IMethodContract methodContract) {
+      var mutableCopy = this.shallowCopier.Copy(methodContract);
+      mutableCopy.Allocates = this.Copy(mutableCopy.Allocates);
+      mutableCopy.Frees = this.Copy(mutableCopy.Frees);
+      mutableCopy.ModifiedVariables = this.Copy(mutableCopy.ModifiedVariables);
+      mutableCopy.Postconditions = this.Copy(mutableCopy.Postconditions);
+      mutableCopy.Preconditions = this.Copy(mutableCopy.Preconditions);
+      mutableCopy.Reads = this.Copy(mutableCopy.Reads);
+      mutableCopy.ThrownExceptions = this.Copy(mutableCopy.ThrownExceptions);
+      mutableCopy.Writes = this.Copy(mutableCopy.Writes);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given variant.
+    /// </summary>
+    public MethodVariant Copy(IMethodVariant variant) {
+      var mutableCopy = this.shallowCopier.Copy(variant);
+      this.Copy((ContractElement)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given postCondition.
+    /// </summary>
+    public Postcondition Copy(IPostcondition postCondition) {
+      var mutableCopy = this.shallowCopier.Copy(postCondition);
+      this.Copy((ContractElement)mutableCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given precondition.
+    /// </summary>
+    public Precondition Copy(IPrecondition precondition) {
+      var mutableCopy = this.shallowCopier.Copy(precondition);
+      this.Copy((ContractElement)mutableCopy);
+      if (mutableCopy.ExceptionToThrow != null)
+        mutableCopy.ExceptionToThrow = this.Copy(mutableCopy.ExceptionToThrow);
+      return mutableCopy;
+    }
+
+    //TODO: copy statement contract
+
+    /// <summary>
+    /// Makes a deep copy of the given thrown exception.
+    /// </summary>
+    public ThrownException Copy(IThrownException thrownException) {
+      var mutableCopy = this.shallowCopier.Copy(thrownException);
+      mutableCopy.ExceptionType = this.Copy(mutableCopy.ExceptionType);
+      mutableCopy.Postcondition = this.Copy(mutableCopy.Postcondition);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given type contract.
+    /// </summary>
+    public TypeContract Copy(ITypeContract typeContract) {
+      var mutableCopy = this.shallowCopier.Copy(typeContract);
+      mutableCopy.ContractFields = this.Copy(mutableCopy.ContractFields);
+      mutableCopy.ContractMethods = this.Copy(mutableCopy.ContractMethods);
+      mutableCopy.Invariants = this.Copy(mutableCopy.Invariants);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Makes a deep copy of the given type invariant.
+    /// </summary>
+    public TypeInvariant Copy(ITypeInvariant typeInvariant) {
+      var mutableCopy = this.shallowCopier.Copy(typeInvariant);
+      this.Copy((ContractElement)mutableCopy);
+      return mutableCopy;
+    }
+  }
+
   /// <summary>
   /// Provides copy of a method contract, method body, a statement, or an expression, in which the references to the nodes
   /// inside a cone is replaced. The cone is defined using the parent class. 
@@ -2144,11 +5306,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="postcondition"></param>
     /// <returns></returns>
-    public virtual PostCondition GetMutableCopy(IPostcondition postcondition) {
+    public virtual Postcondition GetMutableCopy(IPostcondition postcondition) {
       object cachedValue;
       if (this.cache.TryGetValue(postcondition, out cachedValue))
-        return (PostCondition)cachedValue;
-      var result = new PostCondition(postcondition);
+        return (Postcondition)cachedValue;
+      var result = new Postcondition(postcondition);
       // Probably not necessary, no two postconditions are shared. 
       this.cache.Add(postcondition, result);
       this.cache.Add(result, result);
@@ -2309,7 +5471,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Visits the specified post condition.
     /// </summary>
     /// <param name="postCondition">The post condition.</param>
-    protected virtual IPostcondition DeepCopy(PostCondition postCondition) {
+    protected virtual IPostcondition DeepCopy(Postcondition postCondition) {
       postCondition.Condition = this.Substitute(postCondition.Condition);
       if (postCondition.Description != null)
         postCondition.Description = this.Substitute(postCondition.Description);
@@ -2411,7 +5573,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IPostcondition Substitute(IPostcondition postcondition) {
       this.coneAlreadyFixed = true;
-      return this.DeepCopy(new PostCondition(postcondition));
+      return this.DeepCopy(new Postcondition(postcondition));
     }
 
     /// <summary>
@@ -2450,3 +5612,4 @@ namespace Microsoft.Cci.MutableCodeModel {
 
   }
 }
+

@@ -527,11 +527,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get {
-        Contract.Ensures(Contract.Result<IEnumerable<ILocation>>() != null);
-        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ILocation>>(), x => x != null));
-        throw new NotImplementedException();
-      }
+      get { throw new NotImplementedException();  }
     }
   }
 

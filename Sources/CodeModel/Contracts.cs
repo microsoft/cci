@@ -242,7 +242,7 @@ namespace Microsoft.Cci.Contracts {
     }
     IMethodReference/*?*/ forallRef;
 
-    private ITypeReference PredicateType {
+    private INamedTypeReference PredicateType {
       get {
         if (this.predicateType == null)
           this.predicateType = new NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
@@ -250,7 +250,7 @@ namespace Microsoft.Cci.Contracts {
         return this.predicateType;
       }
     }
-    ITypeReference/*?*/ predicateType;
+    INamedTypeReference/*?*/ predicateType;
 
     /// <summary>
     /// A reference to a method that is called to indicate that the condition supplied as its argument is an
@@ -366,6 +366,12 @@ namespace Microsoft.Cci.Contracts {
     IExpression/*?*/ Description { get; }
 
     /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IContractElement.
+    /// </summary>
+    void Dispatch(ICodeAndContractVisitor visitor);
+
+    /// <summary>
     /// The original source representation of the contract element.
     /// </summary>
     /// <remarks>
@@ -416,8 +422,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A measure that must be reduced in every nonterminal iteration of a loop
   /// </summary>
-  public interface ILoopVariant : IContractElement
-  {
+  public interface ILoopVariant : IContractElement {
   }
 
   /// <summary>
@@ -513,8 +518,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A measure that must be decrease in every call from the method.
   /// </summary>
-  public interface IMethodVariant : IContractElement
-  {
+  public interface IMethodVariant : IContractElement {
   }
 
   /// <summary>
@@ -773,6 +777,9 @@ namespace Microsoft.Cci.Contracts {
 
     public IExpression Description {
       get { return CodeDummy.Expression; }
+    }
+
+    public void Dispatch(ICodeAndContractVisitor visitor) {
     }
 
     public string OriginalSource {

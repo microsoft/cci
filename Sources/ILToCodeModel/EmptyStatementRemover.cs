@@ -12,9 +12,9 @@ using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
-  internal class EmptyStatementRemover : BaseCodeTraverser {
-    public override void Visit(IBlockStatement block) {
-      base.Visit(block);
+  internal class EmptyStatementRemover : CodeTraverser {
+    public override void TraverseChildren(IBlockStatement block) {
+      base.TraverseChildren(block);
       BasicBlock bb = block as BasicBlock;
       if (bb != null)
         FindPattern(bb.Statements);

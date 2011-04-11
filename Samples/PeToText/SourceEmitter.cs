@@ -22,7 +22,7 @@ namespace PeToText {
   public class SourceEmitter : CSharpSourceEmitter.SourceEmitter {
 
     public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, bool noIL, bool printCompilerGeneratedMembers)
-      : base (sourceEmitterOutput){
+      : base(sourceEmitterOutput) {
       this.host = host;
       this.pdbReader = pdbReader;
       this.noIL = noIL;
@@ -33,16 +33,16 @@ namespace PeToText {
     PdbReader/*?*/ pdbReader;
     bool noIL;
 
-    public override void Visit(IMethodBody methodBody) {
+    public override void Traverse(IMethodBody methodBody) {
       PrintToken(CSharpToken.LeftCurly);
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null)
         sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, !this.printCompilerGeneratedMembers);
       if (this.noIL)
-        this.Visit(sourceMethodBody.Block.Statements);
+        this.Traverse(sourceMethodBody.Block.Statements);
       else {
-        this.Visit(sourceMethodBody.Block);
+        this.Traverse(sourceMethodBody.Block);
         PrintToken(CSharpToken.NewLine);
 
         if (this.pdbReader != null)

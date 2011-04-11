@@ -46,9 +46,14 @@
     <Compile Include="ContractExtractor.cs" />
     <Compile Include="ContractHelper.cs" />
     <Compile Include="ContractProviders.cs" />
+    <Compile Include="MoveNext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Metadata\Sources\Microsoft.Contracts\Microsoft.Contracts.csproj">
+      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
+      <Name>Microsoft.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ILToCodeModel\ILToCodeModel.csproj">
       <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
       <Name>ILToCodeModel</Name>

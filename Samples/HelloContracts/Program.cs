@@ -140,7 +140,7 @@ namespace HelloContracts {
     private string PrintExpression(IExpression expression) {
       SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
       SourceEmitter CSSourceEmitter = new SourceEmitter(sourceEmitterOutput);
-      CSSourceEmitter.Visit(expression);
+      CSSourceEmitter.Traverse(expression);
       return sourceEmitterOutput.Data;
     }
     private void PrintMethodContract(IMethodContract/*?*/ methodContract) {
@@ -299,7 +299,7 @@ namespace HelloContracts {
 
       var newContract = new Microsoft.Cci.MutableContracts.MethodContract();
       var post = new List<IPostcondition>();
-      var p = new Microsoft.Cci.MutableContracts.PostCondition() {
+      var p = new Microsoft.Cci.MutableContracts.Postcondition() {
         Condition = new NotEquality() {
           LeftOperand = new ReturnValue() { Type = returnType, },
           RightOperand = new CompileTimeConstant() {

@@ -14,8 +14,8 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IPropertyDefinition propertyDefinition) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(IPropertyDefinition propertyDefinition) {
 
       PrintAttributes(propertyDefinition);
 
@@ -66,7 +66,7 @@ namespace CSharpSourceEmitter {
         foreach (IParameterDefinition parameterDefinition in parms) {
           if (!fFirstParameter)
             PrintParameterListDelimiter();
-          this.Visit(parameterDefinition);
+          this.Traverse(parameterDefinition);
           fFirstParameter = false;
         }
         PrintToken(CSharpToken.RightSquareBracket);
@@ -83,7 +83,7 @@ namespace CSharpSourceEmitter {
         if (getMeth.IsAbstract || getMeth.IsExternal)
           PrintToken(CSharpToken.Semicolon);
         else
-          Visit(getMeth.Body);
+          Traverse(getMeth.Body);
       }
       if (propertyDefinition.Setter != null) {
         PrintToken(CSharpToken.Indent);
@@ -94,7 +94,7 @@ namespace CSharpSourceEmitter {
         if (setMeth.IsAbstract || setMeth.IsExternal)
           PrintToken(CSharpToken.Semicolon);
         else
-          Visit(setMeth.Body);
+          Traverse(setMeth.Body);
       }
       PrintToken(CSharpToken.RightCurly);
     }

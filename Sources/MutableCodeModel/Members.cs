@@ -90,7 +90,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
 
-      if (this.isNormalized) {
+      var isNormalized = this.isNormalized;
+      NormalizationChecker checker = null;
+      if (!isNormalized) {
+        //Assuming that most methods are not iterators and do not contain anonymous delegates, it is worth our while to check if this is really the case.
+        checker = new NormalizationChecker();
+        checker.TraverseChildren(this.Block);
+        isNormalized = !checker.foundAnonymousDelegate && !checker.foundYield;
+      }
+
+      if (isNormalized) {
         var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.iteratorLocalCount);
         converter.ConvertToIL(this.Block);
         iteratorScopes = converter.GetIteratorScopes();
@@ -98,11 +107,16 @@ namespace Microsoft.Cci.MutableCodeModel {
         maxStack = converter.MaximumStackSizeNeeded;
         operations = converter.GetOperations();
         operationExceptionInformation = converter.GetOperationExceptionInformation();
-        if (privateHelperTypes == null)
-          privateHelperTypes = new List<ITypeDefinition>(0);
       } else {
-        var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider); //, this.contractProvider);
-        var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, this.Block);
+        //This object might already be immutable and we are just doing delayed initialization, so make a copy of this.Block.
+        var mutableBlock = new CodeDeepCopier(this.host).Copy(this.Block);
+        //if (checker.foundAnonymousDelegate) {
+        //  var remover = new AnonymousDelegateRemover(this.host, this.sourceLocationProvider);
+        //  remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock);
+        //  privateHelperTypes = remover.closureClasses;
+        //}
+        var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider);
+        var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, mutableBlock);
         normalizedBody.isNormalized = true;
         iteratorScopes = normalizedBody.iteratorScopes;
         localVariables = normalizedBody.LocalVariables;
@@ -111,7 +125,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         operationExceptionInformation = normalizedBody.OperationExceptionInformation;
         if (privateHelperTypes == null)
           privateHelperTypes = normalizedBody.PrivateHelperTypes;
-        else
+        else //this can happen when this source method body has already been partially normalized, for instance by the removal of yield statements.
           privateHelperTypes.AddRange(normalizedBody.PrivateHelperTypes);
       }
 
@@ -131,6 +145,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// True if the method body does not contain any anonymous delegates or yield statements.
+    /// This property is not computed, but is set by the constructor of this body.
     /// </summary>
     public bool IsNormalized {
       get { return this.isNormalized; }
@@ -226,8 +241,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// In case of instructions to AST decompilation this should ideally be list of all types
     /// which are local to method.
     /// </summary>
-    /// <value></value>
-    public List<ITypeDefinition> PrivateHelperTypes {
+    public List<ITypeDefinition>/*?*/ PrivateHelperTypes {
       get {
         if (!this.ilWasGenerated) this.GenerateIL();
         return this.privateHelperTypes;
@@ -240,7 +254,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IMethodBody Members
 
     IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes {
-      get { return this.PrivateHelperTypes.AsReadOnly(); }
+      get {
+        if (this.PrivateHelperTypes == null)
+          return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
+        else
+          return this.PrivateHelperTypes.AsReadOnly(); 
+      }
     }
 
     #endregion

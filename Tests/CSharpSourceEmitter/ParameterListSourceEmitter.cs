@@ -14,8 +14,8 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IEnumerable<IParameterDefinition> parameters) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public new void Traverse(IEnumerable<IParameterDefinition> parameters) {
       PrintToken(CSharpToken.LeftParenthesis);
 
       bool fFirstParameter = true;
@@ -23,7 +23,7 @@ namespace CSharpSourceEmitter {
         if (!fFirstParameter)
           PrintParameterListDelimiter();
 
-        this.Visit(parameterDefinition);
+        this.Traverse(parameterDefinition);
         fFirstParameter = false;
       }
 

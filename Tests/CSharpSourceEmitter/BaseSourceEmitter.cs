@@ -89,7 +89,7 @@ namespace CSharpSourceEmitter {
   /// Prints out C# source corresponding to CCI nodes as they are visited.
   /// </summary>
   /// <remarks>
-  /// Extenders can modify the output by overriding Visit or Print* methods.
+  /// Extenders can modify the output by overriding Traverse or Print* methods.
   /// This is a rather ugly and somewhat inflexible model.  A better approach would be to transform
   /// the CCI object model into a C# AST (parse tree), then let extenders mutate that model before 
   /// running a very simple visitor that prints it out as text.

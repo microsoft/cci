@@ -14,7 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
     public virtual void PrintTypeDefinition(ITypeDefinition typeDefinition) {
       if (typeDefinition.IsDelegate) {
         PrintDelegateDefinition(typeDefinition);
@@ -30,7 +30,7 @@ namespace CSharpSourceEmitter {
       PrintTypeDefinitionKeywordType(typeDefinition);
       PrintTypeDefinitionName(typeDefinition);
       if (typeDefinition.IsGeneric) {
-        this.Visit(typeDefinition.GenericParameters);
+        this.Traverse(typeDefinition.GenericParameters);
       }
       PrintTypeDefinitionBaseTypesAndInterfaces(typeDefinition);
 
@@ -45,7 +45,7 @@ namespace CSharpSourceEmitter {
       foreach (var m in typeDefinition.Properties) members.Add(m);
       foreach (var m in typeDefinition.Fields) members.Add(m);
       foreach (var m in typeDefinition.NestedTypes) members.Add(m);
-      Visit(members);
+      Traverse(members);
 
       PrintTypeDefinitionRightCurly(typeDefinition);
     }
@@ -69,9 +69,9 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.Space);
       PrintTypeDefinitionName(delegateDefinition);
       if (delegateDefinition.GenericParameterCount > 0) {
-        this.Visit(delegateDefinition.GenericParameters);
+        this.Traverse(delegateDefinition.GenericParameters);
       }
-      Visit(invokeMethod.Parameters);
+      Traverse(invokeMethod.Parameters);
 
       PrintToken(CSharpToken.Semicolon);
     }
@@ -188,15 +188,15 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.RightCurly);
     }
 
-    public override void Visit(IEnumerable<ITypeDefinitionMember> typeMembers) {
+    public new void Traverse(IEnumerable<ITypeDefinitionMember> typeMembers) {
 
       if (IteratorHelper.EnumerableIsNotEmpty(typeMembers) && IteratorHelper.First(typeMembers).ContainingTypeDefinition.IsEnum) {
         // Enums don't get intervening blank lines
         foreach (var member in typeMembers)
-          Visit(member);
+          Traverse(member);
       } else {
         // Ensure there's exactly one blank line between each non-empty member
-        VisitWithInterveningBlankLines(typeMembers, m => Visit(m));
+        VisitWithInterveningBlankLines(typeMembers, m => Traverse(m));
       }
     }
   }

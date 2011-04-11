@@ -14,8 +14,8 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IParameterDefinition parameterDefinition) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(IParameterDefinition parameterDefinition) {
       PrintParameterDefinitionModifiers(parameterDefinition);
       PrintParameterDefinitionType(parameterDefinition);
       PrintToken(CSharpToken.Space);

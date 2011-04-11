@@ -14,51 +14,9 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(INamespaceDefinition namespaceDefinition) {
-      namespaceDefinition.Dispatch(this);
-    }
-
-    public override void Visit(INestedUnitNamespace nestedUnitNamespace) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(INestedUnitNamespace nestedUnitNamespace) {
       PrintNamespaceDefinition((INamespaceDefinition)nestedUnitNamespace);
-    }
-
-    public override void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
-      PrintNamespaceDefinition((INamespaceDefinition)nestedUnitSetNamespace);
-    }
-
-    public override void Visit(IRootUnitNamespace rootUnitNamespace) {
-      this.Visit(rootUnitNamespace.Members);
-    }
-
-    public override void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
-      this.Visit(rootUnitSetNamespace.Members);
-    }
-
-    public override void Visit(INamespaceMember namespaceMember) {
-      if (this.stopTraversal) return;
-      INamespaceDefinition/*?*/ nestedNamespace = namespaceMember as INamespaceDefinition;
-      if (nestedNamespace != null)
-        this.Visit(nestedNamespace);
-      else {
-        ITypeDefinition/*?*/ namespaceType = namespaceMember as ITypeDefinition;
-        if (namespaceType != null)
-          this.Visit(namespaceType);
-        else {
-          ITypeDefinitionMember/*?*/ globalFieldOrMethod = namespaceMember as ITypeDefinitionMember;
-          if (globalFieldOrMethod != null) {
-            this.Visit(globalFieldOrMethod);
-          } else {
-            INamespaceAliasForType/*?*/ namespaceAlias = namespaceMember as INamespaceAliasForType;
-            if (namespaceAlias != null)
-              this.Visit(namespaceAlias);
-            else {
-              //TODO: error
-              namespaceMember.Dispatch(this);
-            }
-          }
-        }
-      }
     }
 
     public virtual void PrintNamespaceDefinition(INamespaceDefinition namespaceDefinition) {
@@ -67,7 +25,7 @@ namespace CSharpSourceEmitter {
       PrintKeywordNamespace();
       PrintNamespaceDefinitionName(namespaceDefinition);
       PrintNamespaceDefinitionLeftCurly(namespaceDefinition);
-      this.Visit(namespaceDefinition.Members);
+      this.Traverse(namespaceDefinition.Members);
       PrintNamespaceDefinitionRightCurly(namespaceDefinition);
     }
 
@@ -89,7 +47,7 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.RightCurly);
     }
 
-    public override void Visit(IEnumerable<INamespaceMember> namespaceMembers) {
+    public new void Traverse(IEnumerable<INamespaceMember> namespaceMembers) {
       // Try to sort in a way that preserves the original compiler order (captured in token value).
       // Put things with no tokens (eg. nested namespaces) after those with tokens, sorted by name
       var members = new List<INamespaceMember>(namespaceMembers);
@@ -109,7 +67,7 @@ namespace CSharpSourceEmitter {
         }));
 
       // Print the members with a blank line between them
-      VisitWithInterveningBlankLines(members, m => Visit(m));
+      VisitWithInterveningBlankLines(members, m => Traverse(m));
     }
 
     public virtual void VisitWithInterveningBlankLines<T>(IEnumerable<T> members, Action<T> onVisit) {

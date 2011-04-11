@@ -14,8 +14,8 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IEnumerable<IGenericTypeParameter> genericParameters) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public new void Traverse(IEnumerable<IGenericTypeParameter> genericParameters) {
       PrintToken(CSharpToken.LeftAngleBracket);
 
       bool fFirstParameter = true;
@@ -23,7 +23,7 @@ namespace CSharpSourceEmitter {
         if (!fFirstParameter)
           PrintGenericTypeParametersListDelimiter();
 
-        this.Visit(genericTypeParameter);
+        this.Traverse(genericTypeParameter);
 
         fFirstParameter = false;
       }
@@ -31,7 +31,7 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.RightAngleBracket);
     }
 
-    public override void Visit(IEnumerable<IGenericMethodParameter> genericParameters) {
+    public new void Traverse(IEnumerable<IGenericMethodParameter> genericParameters) {
       PrintToken(CSharpToken.LeftAngleBracket);
 
       bool fFirstParameter = true;
@@ -39,7 +39,7 @@ namespace CSharpSourceEmitter {
         if (!fFirstParameter)
           PrintGenericTypeParametersListDelimiter();
 
-        this.Visit(genericMethodParameter);
+        this.Traverse(genericMethodParameter);
 
         fFirstParameter = false;
       }

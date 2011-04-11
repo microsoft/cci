@@ -274,7 +274,10 @@ namespace Microsoft.Cci.ILToCodeModel {
               ISpecializedMethodDefinition moveNextGeneric = moveNext as ISpecializedMethodDefinition;
               if (moveNextGeneric != null)
                 moveNext = moveNextGeneric.UnspecializedVersion.ResolvedMethod;
-              return moveNext.Body;
+              var body = moveNext.Body;
+              var sourceBody = body as SourceMethodBody; //it may already have been decompiled.
+              if (sourceBody != null) body = sourceBody.ilMethodBody; //TODO: it would be nice to avoid decompiling it again
+              return body;
             }
           }
         }
@@ -299,17 +302,17 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="rootBlock"></param>
     /// <returns></returns>
     protected IBlockStatement Transform(BasicBlock rootBlock) {
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      new PatternDecompiler(this, this.predecessors).Visit(rootBlock);
-      new RemoveBranchConditionLocals(this).Visit(rootBlock);
+      new TypeInferencer((INamedTypeDefinition)this.ilMethodBody.MethodDefinition.ContainingType, this.host).Traverse(rootBlock);
+      new PatternDecompiler(this, this.predecessors).Traverse(rootBlock);
+      new RemoveBranchConditionLocals(this).Traverse(rootBlock);
       new Unstacker(this).Visit(rootBlock);
-      new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(rootBlock);
-      new TryCatchDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
-      new IfThenElseDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
-      new SwitchDecompiler(this.host.PlatformType, this.predecessors).Visit(rootBlock);
-      new BlockRemover().Visit(rootBlock);
-      new DeclarationAdder().Visit(this, rootBlock);
-      new EmptyStatementRemover().Visit(rootBlock);
+      new TypeInferencer((INamedTypeDefinition)this.ilMethodBody.MethodDefinition.ContainingType, this.host).Traverse(rootBlock);
+      new TryCatchDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+      new IfThenElseDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+      new SwitchDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+      new BlockRemover().Traverse(rootBlock);
+      new DeclarationAdder().Traverse(this, rootBlock);
+      new EmptyStatementRemover().Traverse(rootBlock);
       IBlockStatement result = rootBlock;
       if (this.decompileIterators) {
         IMethodBody moveNextILBody = this.FindClosureMoveNext(rootBlock);
@@ -323,8 +326,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       result = new CompilationArtifactRemover(this).RemoveCompilationArtifacts((BlockStatement)result);
       var bb = result as BasicBlock;
       if (bb != null) {
-        new UnreferencedLabelRemover().Visit(bb);
-        new TypeInferencer(this.ilMethodBody.MethodDefinition.ContainingType, this.host).Visit(bb);
+        new UnreferencedLabelRemover(this).Traverse(bb);
+        new TypeInferencer((INamedTypeDefinition)this.ilMethodBody.MethodDefinition.ContainingType, this.host).Traverse(bb);
       }
       return result;
     }
@@ -408,6 +411,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         addressableExpression.Definition = currentOperation.Value;
       if (currentOperation.OperationCode == OperationCode.Ldflda || currentOperation.OperationCode == OperationCode.Ldvirtftn)
         addressableExpression.Instance = this.PopOperandStack();
+      if (currentOperation.OperationCode == OperationCode.Ldloca || currentOperation.OperationCode == OperationCode.Ldloca_S) {
+        this.numberOfReferences[currentOperation.Value] =
+            this.numberOfReferences.ContainsKey(currentOperation.Value) ?
+            this.numberOfReferences[currentOperation.Value] + 1 :
+            1;
+      }
       return new AddressOf() { Expression = addressableExpression };
     }
 
@@ -1434,6 +1443,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression ParseStackArrayCreate() {
       StackArrayCreate result = new StackArrayCreate();
       result.Size = this.PopOperandStack();
+      result.ElementType = this.host.PlatformType.SystemUInt8;
       return result;
     }
 
@@ -1579,7 +1589,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         block = DuplicateMoveNextForIteratorMethod(rootBlock);
 
         block = this.AddLocalDeclarationIfNecessary(block);
-        new TypeInferencer(this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Visit(block);
+        new TypeInferencer((INamedTypeDefinition)this.iteratorMethodBody.MethodDefinition.ContainingType, this.host).Traverse(block);
         return block;
       }
     }

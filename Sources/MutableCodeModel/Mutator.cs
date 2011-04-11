@@ -22,6 +22,2276 @@ using Microsoft.Cci.MutableContracts;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
+  /// A class that traverses a mutable code and metadata model in depth first, left to right order,
+  /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
+  /// </summary>
+  public class CodeRewriter : MetadataRewriter {
+
+    /// <summary>
+    /// A class that traverses a mutable code and metadata model in depth first, left to right order,
+    /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public CodeRewriter(IMetadataHost host)
+      : base(host) {
+      this.dispatchingVisitor = new Dispatcher() { rewriter = this };
+    }
+
+    Dispatcher dispatchingVisitor;
+    class Dispatcher : MetadataVisitor, ICodeVisitor {
+
+      internal CodeRewriter rewriter;
+      internal object result;
+
+      public void Visit(IAddition addition) {
+        this.result = this.rewriter.Rewrite((Addition)addition);
+      }
+
+      public void Visit(IAddressableExpression addressableExpression) {
+        this.result = this.rewriter.Rewrite((AddressableExpression)addressableExpression);
+      }
+
+      public void Visit(IAddressDereference addressDereference) {
+        this.result = this.rewriter.Rewrite((AddressDereference)addressDereference);
+      }
+
+      public void Visit(IAddressOf addressOf) {
+        this.result = this.rewriter.Rewrite((AddressOf)addressOf);
+      }
+
+      public void Visit(IAnonymousDelegate anonymousDelegate) {
+        this.result = this.rewriter.Rewrite((AnonymousDelegate)anonymousDelegate);
+      }
+
+      public void Visit(IArrayIndexer arrayIndexer) {
+        this.result = this.rewriter.Rewrite((ArrayIndexer)arrayIndexer);
+      }
+
+      public void Visit(IAssertStatement assertStatement) {
+        this.result = this.rewriter.Rewrite((AssertStatement)assertStatement);
+      }
+
+      public void Visit(IAssignment assignment) {
+        this.result = this.rewriter.Rewrite((Assignment)assignment);
+      }
+
+      public void Visit(IAssumeStatement assumeStatement) {
+        this.result = this.rewriter.Rewrite((AssumeStatement)assumeStatement);
+      }
+
+      public void Visit(IBitwiseAnd bitwiseAnd) {
+        this.result = this.rewriter.Rewrite((BitwiseAnd)bitwiseAnd);
+      }
+
+      public void Visit(IBitwiseOr bitwiseOr) {
+        this.result = this.rewriter.Rewrite((BitwiseOr)bitwiseOr);
+      }
+
+      public void Visit(IBlockExpression blockExpression) {
+        this.result = this.rewriter.Rewrite((BlockExpression)blockExpression);
+      }
+
+      public void Visit(IBlockStatement block) {
+        this.result = this.rewriter.Rewrite((BlockStatement)block);
+      }
+
+      public void Visit(IBreakStatement breakStatement) {
+        this.result = this.rewriter.Rewrite((BreakStatement)breakStatement);
+      }
+
+      public void Visit(IBoundExpression boundExpression) {
+        this.result = this.rewriter.Rewrite((BoundExpression)boundExpression);
+      }
+
+      public void Visit(ICastIfPossible castIfPossible) {
+        this.result = this.rewriter.Rewrite((CastIfPossible)castIfPossible);
+      }
+
+      public void Visit(ICatchClause catchClause) {
+        this.result = this.rewriter.Rewrite((CatchClause)catchClause);
+      }
+
+      public void Visit(ICheckIfInstance checkIfInstance) {
+        this.result = this.rewriter.Rewrite((CheckIfInstance)checkIfInstance);
+      }
+
+      public void Visit(ICompileTimeConstant constant) {
+        this.result = this.rewriter.Rewrite((CompileTimeConstant)constant);
+      }
+
+      public void Visit(IConversion conversion) {
+        this.result = this.rewriter.Rewrite((Conversion)conversion);
+      }
+
+      public void Visit(IConditional conditional) {
+        this.result = this.rewriter.Rewrite((Conditional)conditional);
+      }
+
+      public void Visit(IConditionalStatement conditionalStatement) {
+        this.result = this.rewriter.Rewrite((ConditionalStatement)conditionalStatement);
+      }
+
+      public void Visit(IContinueStatement continueStatement) {
+        this.result = this.rewriter.Rewrite((ContinueStatement)continueStatement);
+      }
+
+      public void Visit(ICreateArray createArray) {
+        this.result = this.rewriter.Rewrite((CreateArray)createArray);
+      }
+
+      public void Visit(ICreateDelegateInstance createDelegateInstance) {
+        this.result = this.rewriter.Rewrite((CreateDelegateInstance)createDelegateInstance);
+      }
+
+      public void Visit(ICreateObjectInstance createObjectInstance) {
+        this.result = this.rewriter.Rewrite((CreateObjectInstance)createObjectInstance);
+      }
+
+      public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+        this.result = this.rewriter.Rewrite((DebuggerBreakStatement)debuggerBreakStatement);
+      }
+
+      public void Visit(IDefaultValue defaultValue) {
+        this.result = this.rewriter.Rewrite((DefaultValue)defaultValue);
+      }
+
+      public void Visit(IDivision division) {
+        this.result = this.rewriter.Rewrite((Division)division);
+      }
+
+      public void Visit(IDoUntilStatement doUntilStatement) {
+        this.result = this.rewriter.Rewrite((DoUntilStatement)doUntilStatement);
+      }
+
+      public void Visit(IDupValue dupValue) {
+        this.result = this.rewriter.Rewrite((DupValue)dupValue);
+      }
+
+      public void Visit(IEmptyStatement emptyStatement) {
+        this.result = this.rewriter.Rewrite((EmptyStatement)emptyStatement);
+      }
+
+      public void Visit(IEquality equality) {
+        this.result = this.rewriter.Rewrite((Equality)equality);
+      }
+
+      public void Visit(IExclusiveOr exclusiveOr) {
+        this.result = this.rewriter.Rewrite((ExclusiveOr)exclusiveOr);
+      }
+
+      public void Visit(IExpressionStatement expressionStatement) {
+        this.result = this.rewriter.Rewrite((ExpressionStatement)expressionStatement);
+      }
+
+      public void Visit(IForEachStatement forEachStatement) {
+        this.result = this.rewriter.Rewrite((ForEachStatement)forEachStatement);
+      }
+
+      public void Visit(IForStatement forStatement) {
+        this.result = this.rewriter.Rewrite((ForStatement)forStatement);
+      }
+
+      public void Visit(IGotoStatement gotoStatement) {
+        this.result = this.rewriter.Rewrite((GotoStatement)gotoStatement);
+      }
+
+      public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+        this.result = this.rewriter.Rewrite((GotoSwitchCaseStatement)gotoSwitchCaseStatement);
+      }
+
+      public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+        this.result = this.rewriter.Rewrite((GetTypeOfTypedReference)getTypeOfTypedReference);
+      }
+
+      public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+        this.result = this.rewriter.Rewrite((GetValueOfTypedReference)getValueOfTypedReference);
+      }
+
+      public void Visit(IGreaterThan greaterThan) {
+        this.result = this.rewriter.Rewrite((GreaterThan)greaterThan);
+      }
+
+      public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+        this.result = this.rewriter.Rewrite((GreaterThanOrEqual)greaterThanOrEqual);
+      }
+
+      public void Visit(ILabeledStatement labeledStatement) {
+        this.result = this.rewriter.Rewrite((LabeledStatement)labeledStatement);
+      }
+
+      public void Visit(ILeftShift leftShift) {
+        this.result = this.rewriter.Rewrite((LeftShift)leftShift);
+      }
+
+      public void Visit(ILessThan lessThan) {
+        this.result = this.rewriter.Rewrite((LessThan)lessThan);
+      }
+
+      public void Visit(ILessThanOrEqual lessThanOrEqual) {
+        this.result = this.rewriter.Rewrite((LessThanOrEqual)lessThanOrEqual);
+      }
+
+      public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+        this.result = this.rewriter.Rewrite((LocalDeclarationStatement)localDeclarationStatement);
+      }
+
+      public void Visit(ILockStatement lockStatement) {
+        this.result = this.rewriter.Rewrite((LockStatement)lockStatement);
+      }
+
+      public void Visit(ILogicalNot logicalNot) {
+        this.result = this.rewriter.Rewrite((LogicalNot)logicalNot);
+      }
+
+      public void Visit(IMakeTypedReference makeTypedReference) {
+        this.result = this.rewriter.Rewrite((MakeTypedReference)makeTypedReference);
+      }
+
+      public void Visit(IMethodCall methodCall) {
+        this.result = this.rewriter.Rewrite((MethodCall)methodCall);
+      }
+
+      public void Visit(IModulus modulus) {
+        this.result = this.rewriter.Rewrite((Modulus)modulus);
+      }
+
+      public void Visit(IMultiplication multiplication) {
+        this.result = this.rewriter.Rewrite((Multiplication)multiplication);
+      }
+
+      public void Visit(INamedArgument namedArgument) {
+        this.result = this.rewriter.Rewrite((NamedArgument)namedArgument);
+      }
+
+      public void Visit(INotEquality notEquality) {
+        this.result = this.rewriter.Rewrite((NotEquality)notEquality);
+      }
+
+      public void Visit(IOldValue oldValue) {
+        this.result = this.rewriter.Rewrite((OldValue)oldValue);
+      }
+
+      public void Visit(IOnesComplement onesComplement) {
+        this.result = this.rewriter.Rewrite((OnesComplement)onesComplement);
+      }
+
+      public void Visit(IOutArgument outArgument) {
+        this.result = this.rewriter.Rewrite((OutArgument)outArgument);
+      }
+
+      public void Visit(IPointerCall pointerCall) {
+        this.result = this.rewriter.Rewrite((PointerCall)pointerCall);
+      }
+
+      public void Visit(IPopValue popValue) {
+        this.result = this.rewriter.Rewrite((PopValue)popValue);
+      }
+
+      public void Visit(IPushStatement pushStatement) {
+        this.result = this.rewriter.Rewrite((PushStatement)pushStatement);
+      }
+
+      public void Visit(IRefArgument refArgument) {
+        this.result = this.rewriter.Rewrite((RefArgument)refArgument);
+      }
+
+      public void Visit(IResourceUseStatement resourceUseStatement) {
+        this.result = this.rewriter.Rewrite((ResourceUseStatement)resourceUseStatement);
+      }
+
+      public void Visit(IReturnValue returnValue) {
+        this.result = this.rewriter.Rewrite((ReturnValue)returnValue);
+      }
+
+      public void Visit(IRethrowStatement rethrowStatement) {
+        this.result = this.rewriter.Rewrite((RethrowStatement)rethrowStatement);
+      }
+
+      public void Visit(IReturnStatement returnStatement) {
+        this.result = this.rewriter.Rewrite((ReturnStatement)returnStatement);
+      }
+
+      public void Visit(IRightShift rightShift) {
+        this.result = this.rewriter.Rewrite((RightShift)rightShift);
+      }
+
+      public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+        this.result = this.rewriter.Rewrite((RuntimeArgumentHandleExpression)runtimeArgumentHandleExpression);
+      }
+
+      public void Visit(ISizeOf sizeOf) {
+        this.result = this.rewriter.Rewrite((SizeOf)sizeOf);
+      }
+
+      public void Visit(IStackArrayCreate stackArrayCreate) {
+        this.result = this.rewriter.Rewrite((StackArrayCreate)stackArrayCreate);
+      }
+
+      public void Visit(ISubtraction subtraction) {
+        this.result = this.rewriter.Rewrite((Subtraction)subtraction);
+      }
+
+      public void Visit(ISwitchCase switchCase) {
+        this.result = this.rewriter.Rewrite((SwitchCase)switchCase);
+      }
+
+      public void Visit(ISwitchStatement switchStatement) {
+        this.result = this.rewriter.Rewrite((SwitchStatement)switchStatement);
+      }
+
+      public void Visit(ITargetExpression targetExpression) {
+        this.result = this.rewriter.Rewrite((TargetExpression)targetExpression);
+      }
+
+      public void Visit(IThisReference thisReference) {
+        this.result = this.rewriter.Rewrite((ThisReference)thisReference);
+      }
+
+      public void Visit(IThrowStatement throwStatement) {
+        this.result = this.rewriter.Rewrite((ThrowStatement)throwStatement);
+      }
+
+      public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+        this.result = this.rewriter.Rewrite((TryCatchFinallyStatement)tryCatchFilterFinallyStatement);
+      }
+
+      public void Visit(ITokenOf tokenOf) {
+        this.result = this.rewriter.Rewrite((TokenOf)tokenOf);
+      }
+
+      public void Visit(ITypeOf typeOf) {
+        this.result = this.rewriter.Rewrite((TypeOf)typeOf);
+      }
+
+      public void Visit(IUnaryNegation unaryNegation) {
+        this.result = this.rewriter.Rewrite((UnaryNegation)unaryNegation);
+      }
+
+      public void Visit(IUnaryPlus unaryPlus) {
+        this.result = this.rewriter.Rewrite((UnaryPlus)unaryPlus);
+      }
+
+      public void Visit(IVectorLength vectorLength) {
+        this.result = this.rewriter.Rewrite((VectorLength)vectorLength);
+      }
+
+      public void Visit(IWhileDoStatement whileDoStatement) {
+        this.result = this.rewriter.Rewrite((WhileDoStatement)whileDoStatement);
+      }
+
+      public void Visit(IYieldBreakStatement yieldBreakStatement) {
+        this.result = this.rewriter.Rewrite((YieldBreakStatement)yieldBreakStatement);
+      }
+
+      public void Visit(IYieldReturnStatement yieldReturnStatement) {
+        this.result = this.rewriter.Rewrite((YieldReturnStatement)yieldReturnStatement);
+      }
+
+    }
+
+    private new IFieldReference Rewrite(IFieldReference fieldReference) {
+      if (fieldReference is Dummy) return fieldReference;
+      return base.Rewrite(fieldReference);
+    }
+
+    private new IMethodReference Rewrite(IMethodReference methodReference) {
+      if (methodReference is Dummy) return methodReference;
+      return base.Rewrite(methodReference);
+    }
+
+    private new ITypeReference Rewrite(ITypeReference typeReference) {
+      if (typeReference is Dummy) return typeReference;
+      return base.Rewrite(typeReference);
+    }
+
+    /// <summary>
+    /// Rewrites the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
+    public virtual IExpression Rewrite(IAddition addition) {
+      var mutableAddition = addition as Addition;
+      if (mutableAddition == null) return addition;
+      this.RewriteChildren(mutableAddition);
+      return mutableAddition;
+    }
+
+    /// <summary>
+    /// Rewrites the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
+    public virtual IAddressableExpression Rewrite(IAddressableExpression addressableExpression) {
+      var mutableAddressableExpression = addressableExpression as AddressableExpression;
+      if (mutableAddressableExpression == null) return addressableExpression;
+      this.RewriteChildren(mutableAddressableExpression);
+      return mutableAddressableExpression;
+    }
+
+    /// <summary>
+    /// Rewrites the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
+    public virtual IExpression Rewrite(IAddressDereference addressDereference) {
+      var mutableAddressDereference = addressDereference as AddressDereference;
+      if (mutableAddressDereference == null) return addressDereference;
+      this.RewriteChildren(mutableAddressDereference);
+      return mutableAddressDereference;
+    }
+
+    /// <summary>
+    /// Rewrites the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
+    public virtual IExpression Rewrite(IAddressOf addressOf) {
+      var mutableAddressOf = addressOf as AddressOf;
+      if (mutableAddressOf == null) return addressOf;
+      this.RewriteChildren(mutableAddressOf);
+      return mutableAddressOf;
+    }
+
+    /// <summary>
+    /// Rewrites the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
+    public virtual IExpression Rewrite(IAnonymousDelegate anonymousDelegate) {
+      var mutableAnonymousDelegate = anonymousDelegate as AnonymousDelegate;
+      if (mutableAnonymousDelegate == null) return anonymousDelegate;
+      this.RewriteChildren(mutableAnonymousDelegate);
+      return mutableAnonymousDelegate;
+    }
+
+    /// <summary>
+    /// Rewrites the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
+    public virtual IExpression Rewrite(IArrayIndexer arrayIndexer) {
+      var mutableArrayIndexer = arrayIndexer as ArrayIndexer;
+      if (mutableArrayIndexer == null) return arrayIndexer;
+      this.RewriteChildren(mutableArrayIndexer);
+      return mutableArrayIndexer;
+    }
+
+    /// <summary>
+    /// Rewrites the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
+    public virtual IStatement Rewrite(IAssertStatement assertStatement) {
+      var mutableAssertStatement = assertStatement as AssertStatement;
+      if (mutableAssertStatement == null) return assertStatement;
+      this.RewriteChildren(mutableAssertStatement);
+      return mutableAssertStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
+    public virtual IExpression Rewrite(IAssignment assignment) {
+      var mutableAssignment = assignment as Assignment;
+      if (mutableAssignment == null) return assignment;
+      this.RewriteChildren(mutableAssignment);
+      return mutableAssignment;
+    }
+
+    /// <summary>
+    /// Rewrites the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
+    public virtual IStatement Rewrite(IAssumeStatement assumeStatement) {
+      var mutableAssumeStatement = assumeStatement as AssumeStatement;
+      if (mutableAssumeStatement == null) return assumeStatement;
+      this.RewriteChildren(mutableAssumeStatement);
+      return mutableAssumeStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given bitwise and expression.
+    /// </summary>
+    /// <param name="binaryOperation"></param>
+    public virtual IExpression Rewrite(IBinaryOperation binaryOperation) {
+      binaryOperation.Dispatch(this.dispatchingVisitor);
+      return (IBinaryOperation)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given bitwise and expression.
+    /// </summary>
+    /// <param name="bitwiseAnd"></param>
+    public virtual IExpression Rewrite(IBitwiseAnd bitwiseAnd) {
+      var mutableBitwiseAnd = bitwiseAnd as BitwiseAnd;
+      if (mutableBitwiseAnd == null) return bitwiseAnd;
+      this.RewriteChildren(mutableBitwiseAnd);
+      return mutableBitwiseAnd;
+    }
+
+    /// <summary>
+    /// Rewrites the given bitwise or expression.
+    /// </summary>
+    /// <param name="bitwiseOr"></param>
+    public virtual IExpression Rewrite(IBitwiseOr bitwiseOr) {
+      var mutableBitwiseOr = bitwiseOr as BitwiseOr;
+      if (mutableBitwiseOr == null) return bitwiseOr;
+      this.RewriteChildren(mutableBitwiseOr);
+      return mutableBitwiseOr;
+    }
+
+    /// <summary>
+    /// Rewrites the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
+    public virtual IExpression Rewrite(IBlockExpression blockExpression) {
+      var mutableBlockExpression = blockExpression as BlockExpression;
+      if (mutableBlockExpression == null) return blockExpression;
+      this.RewriteChildren(mutableBlockExpression);
+      return mutableBlockExpression;
+    }
+
+    /// <summary>
+    /// Rewrites the given statement block.
+    /// </summary>
+    /// <param name="block"></param>
+    public virtual IBlockStatement Rewrite(IBlockStatement block) {
+      var mutableBlockStatement = block as BlockStatement;
+      if (mutableBlockStatement == null) return block;
+      this.RewriteChildren(mutableBlockStatement);
+      return mutableBlockStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
+    public virtual IExpression Rewrite(IBoundExpression boundExpression) {
+      var mutableBoundExpression = boundExpression as BoundExpression;
+      if (mutableBoundExpression == null) return boundExpression;
+      this.RewriteChildren(mutableBoundExpression);
+      return mutableBoundExpression;
+    }
+
+    /// <summary>
+    /// Rewrites the given break statement.
+    /// </summary>
+    /// <param name="breakStatement"></param>
+    public virtual IStatement Rewrite(IBreakStatement breakStatement) {
+      var mutableBreakStatement = breakStatement as BreakStatement;
+      if (mutableBreakStatement == null) return breakStatement;
+      this.RewriteChildren(mutableBreakStatement);
+      return mutableBreakStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the cast-if-possible expression.
+    /// </summary>
+    /// <param name="castIfPossible"></param>
+    public virtual IExpression Rewrite(ICastIfPossible castIfPossible) {
+      var mutableCastIfPossible = castIfPossible as CastIfPossible;
+      if (mutableCastIfPossible == null) return castIfPossible;
+      this.RewriteChildren(mutableCastIfPossible);
+      return mutableCastIfPossible;
+    }
+
+    /// <summary>
+    /// Rewrites the given catch clause.
+    /// </summary>
+    /// <param name="catchClause"></param>
+    public virtual ICatchClause Rewrite(ICatchClause catchClause) {
+      var mutableCatchClause = catchClause as CatchClause;
+      if (mutableCatchClause == null) return catchClause;
+      this.RewriteChildren(mutableCatchClause);
+      return mutableCatchClause;
+    }
+
+    /// <summary>
+    /// Rewrites the given check-if-instance expression.
+    /// </summary>
+    /// <param name="checkIfInstance"></param>
+    public virtual IExpression Rewrite(ICheckIfInstance checkIfInstance) {
+      var mutableCheckIfInstance = checkIfInstance as CheckIfInstance;
+      if (mutableCheckIfInstance == null) return checkIfInstance;
+      this.RewriteChildren(mutableCheckIfInstance);
+      return mutableCheckIfInstance;
+    }
+
+    /// <summary>
+    /// Rewrites the given compile time constant.
+    /// </summary>
+    /// <param name="constant"></param>
+    public virtual ICompileTimeConstant Rewrite(ICompileTimeConstant constant) {
+      var mutableCompileTimeConstant = constant as CompileTimeConstant;
+      if (mutableCompileTimeConstant == null) return constant;
+      this.RewriteChildren(mutableCompileTimeConstant);
+      return mutableCompileTimeConstant;
+    }
+
+    /// <summary>
+    /// Rewrites the given conditional expression.
+    /// </summary>
+    /// <param name="conditional"></param>
+    public virtual IExpression Rewrite(IConditional conditional) {
+      var mutableConditional = conditional as Conditional;
+      if (mutableConditional == null) return conditional;
+      this.RewriteChildren(mutableConditional);
+      return mutableConditional;
+    }
+
+    /// <summary>
+    /// Rewrites the given conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement"></param>
+    public virtual IStatement Rewrite(IConditionalStatement conditionalStatement) {
+      var mutableConditionalStatement = conditionalStatement as ConditionalStatement;
+      if (mutableConditionalStatement == null) return conditionalStatement;
+      this.RewriteChildren(mutableConditionalStatement);
+      return mutableConditionalStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given continue statement.
+    /// </summary>
+    /// <param name="continueStatement"></param>
+    public virtual IStatement Rewrite(IContinueStatement continueStatement) {
+      var mutableContinueStatement = continueStatement as ContinueStatement;
+      if (mutableContinueStatement == null) return continueStatement;
+      this.RewriteChildren(mutableContinueStatement);
+      return mutableContinueStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given conversion expression.
+    /// </summary>
+    /// <param name="conversion"></param>
+    public virtual IExpression Rewrite(IConversion conversion) {
+      var mutableConversion = conversion as Conversion;
+      if (mutableConversion == null) return conversion;
+      this.RewriteChildren(mutableConversion);
+      return mutableConversion;
+    }
+
+    /// <summary>
+    /// Rewrites the given array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
+    public virtual IExpression Rewrite(ICreateArray createArray) {
+      var mutableCreateArray = createArray as CreateArray;
+      if (mutableCreateArray == null) return createArray;
+      this.RewriteChildren(mutableCreateArray);
+      return mutableCreateArray;
+    }
+
+    /// <summary>
+    /// Rewrites the anonymous object creation expression.
+    /// </summary>
+    /// <param name="createDelegateInstance"></param>
+    public virtual IExpression Rewrite(ICreateDelegateInstance createDelegateInstance) {
+      var mutableCreateDelegateInstance = createDelegateInstance as CreateDelegateInstance;
+      if (mutableCreateDelegateInstance == null) return createDelegateInstance;
+      this.RewriteChildren(mutableCreateDelegateInstance);
+      return mutableCreateDelegateInstance;
+    }
+
+    /// <summary>
+    /// Rewrites the given constructor call expression.
+    /// </summary>
+    /// <param name="createObjectInstance"></param>
+    public virtual IExpression Rewrite(ICreateObjectInstance createObjectInstance) {
+      var mutableCreateObjectInstance = createObjectInstance as CreateObjectInstance;
+      if (mutableCreateObjectInstance == null) return createObjectInstance;
+      this.RewriteChildren(mutableCreateObjectInstance);
+      return mutableCreateObjectInstance;
+    }
+
+    /// <summary>
+    /// Rewrites the given debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement"></param>
+    public virtual IStatement Rewrite(IDebuggerBreakStatement debuggerBreakStatement) {
+      var mutableDebuggerBreakStatement = debuggerBreakStatement as DebuggerBreakStatement;
+      if (mutableDebuggerBreakStatement == null) return debuggerBreakStatement;
+      this.RewriteChildren(mutableDebuggerBreakStatement);
+      return mutableDebuggerBreakStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given defalut value expression.
+    /// </summary>
+    /// <param name="defaultValue"></param>
+    public virtual IExpression Rewrite(IDefaultValue defaultValue) {
+      var mutableDefaultValue = defaultValue as DefaultValue;
+      if (mutableDefaultValue == null) return defaultValue;
+      this.RewriteChildren(mutableDefaultValue);
+      return mutableDefaultValue;
+    }
+
+    /// <summary>
+    /// Rewrites the given division expression.
+    /// </summary>
+    /// <param name="division"></param>
+    public virtual IExpression Rewrite(IDivision division) {
+      var mutableDivision = division as Division;
+      if (mutableDivision == null) return division;
+      this.RewriteChildren(mutableDivision);
+      return mutableDivision;
+    }
+
+    /// <summary>
+    /// Rewrites the given do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement"></param>
+    public virtual IStatement Rewrite(IDoUntilStatement doUntilStatement) {
+      var mutableDoUntilStatement = doUntilStatement as DoUntilStatement;
+      if (mutableDoUntilStatement == null) return doUntilStatement;
+      this.RewriteChildren(mutableDoUntilStatement);
+      return mutableDoUntilStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public virtual IExpression Rewrite(IDupValue dupValue) {
+      var mutableDupValue = dupValue as DupValue;
+      if (mutableDupValue == null) return dupValue;
+      this.RewriteChildren(mutableDupValue);
+      return mutableDupValue;
+    }
+
+    /// <summary>
+    /// Rewrites the given empty statement.
+    /// </summary>
+    /// <param name="emptyStatement"></param>
+    public virtual IStatement Rewrite(IEmptyStatement emptyStatement) {
+      var mutableEmptyStatement = emptyStatement as EmptyStatement;
+      if (mutableEmptyStatement == null) return emptyStatement;
+      this.RewriteChildren(mutableEmptyStatement);
+      return mutableEmptyStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given equality expression.
+    /// </summary>
+    /// <param name="equality"></param>
+    public virtual IExpression Rewrite(IEquality equality) {
+      var mutableEquality = equality as Equality;
+      if (mutableEquality == null) return equality;
+      this.RewriteChildren(mutableEquality);
+      return mutableEquality;
+    }
+
+    /// <summary>
+    /// Rewrites the given exclusive or expression.
+    /// </summary>
+    /// <param name="exclusiveOr"></param>
+    public virtual IExpression Rewrite(IExclusiveOr exclusiveOr) {
+      var mutableExclusiveOr = exclusiveOr as ExclusiveOr;
+      if (mutableExclusiveOr == null) return exclusiveOr;
+      this.RewriteChildren(mutableExclusiveOr);
+      return mutableExclusiveOr;
+    }
+
+    /// <summary>
+    /// Rewrites the given expression.
+    /// </summary>
+    /// <param name="expression"></param>
+    public virtual IExpression Rewrite(IExpression expression) {
+      expression.Dispatch(this.dispatchingVisitor);
+      return (IExpression)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given expression statement.
+    /// </summary>
+    /// <param name="expressionStatement"></param>
+    public virtual IStatement Rewrite(IExpressionStatement expressionStatement) {
+      var mutableExpressionStatement = expressionStatement as ExpressionStatement;
+      if (mutableExpressionStatement == null) return expressionStatement;
+      this.RewriteChildren(mutableExpressionStatement);
+      return mutableExpressionStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given foreach statement.
+    /// </summary>
+    /// <param name="forEachStatement"></param>
+    public virtual IStatement Rewrite(IForEachStatement forEachStatement) {
+      var mutableForEachStatement = forEachStatement as ForEachStatement;
+      if (mutableForEachStatement == null) return forEachStatement;
+      this.RewriteChildren(mutableForEachStatement);
+      return mutableForEachStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given for statement.
+    /// </summary>
+    /// <param name="forStatement"></param>
+    public virtual IStatement Rewrite(IForStatement forStatement) {
+      var mutableForStatement = forStatement as ForStatement;
+      if (mutableForStatement == null) return forStatement;
+      this.RewriteChildren(mutableForStatement);
+      return mutableForStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given get type of typed reference expression.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference"></param>
+    public virtual IExpression Rewrite(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      var mutableGetTypeOfTypedReference = getTypeOfTypedReference as GetTypeOfTypedReference;
+      if (mutableGetTypeOfTypedReference == null) return getTypeOfTypedReference;
+      this.RewriteChildren(mutableGetTypeOfTypedReference);
+      return mutableGetTypeOfTypedReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given get value of typed reference expression.
+    /// </summary>
+    /// <param name="getValueOfTypedReference"></param>
+    public virtual IExpression Rewrite(IGetValueOfTypedReference getValueOfTypedReference) {
+      var mutableGetValueOfTypedReference = getValueOfTypedReference as GetValueOfTypedReference;
+      if (mutableGetValueOfTypedReference == null) return getValueOfTypedReference;
+      this.RewriteChildren(mutableGetValueOfTypedReference);
+      return mutableGetValueOfTypedReference;
+    }
+
+    /// <summary>
+    /// Rewrites the given goto statement.
+    /// </summary>
+    /// <param name="gotoStatement"></param>
+    public virtual IStatement Rewrite(IGotoStatement gotoStatement) {
+      var mutableGotoStatement = gotoStatement as GotoStatement;
+      if (mutableGotoStatement == null) return gotoStatement;
+      this.RewriteChildren(mutableGotoStatement);
+      return mutableGotoStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement"></param>
+    public virtual IStatement Rewrite(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      var mutableGotoSwitchCaseStatement = gotoSwitchCaseStatement as GotoSwitchCaseStatement;
+      if (mutableGotoSwitchCaseStatement == null) return gotoSwitchCaseStatement;
+      this.RewriteChildren(mutableGotoSwitchCaseStatement);
+      return mutableGotoSwitchCaseStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given greater-than expression.
+    /// </summary>
+    /// <param name="greaterThan"></param>
+    public virtual IExpression Rewrite(IGreaterThan greaterThan) {
+      var mutableGreaterThan = greaterThan as GreaterThan;
+      if (mutableGreaterThan == null) return greaterThan;
+      this.RewriteChildren(mutableGreaterThan);
+      return mutableGreaterThan;
+    }
+
+    /// <summary>
+    /// Rewrites the given greater-than-or-equal expression.
+    /// </summary>
+    /// <param name="greaterThanOrEqual"></param>
+    public virtual IExpression Rewrite(IGreaterThanOrEqual greaterThanOrEqual) {
+      var mutableGreaterThanOrEqual = greaterThanOrEqual as GreaterThanOrEqual;
+      if (mutableGreaterThanOrEqual == null) return greaterThanOrEqual;
+      this.RewriteChildren(mutableGreaterThanOrEqual);
+      return mutableGreaterThanOrEqual;
+    }
+
+    /// <summary>
+    /// Rewrites the given labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement"></param>
+    public virtual IStatement Rewrite(ILabeledStatement labeledStatement) {
+      var mutableLabeledStatement = labeledStatement as LabeledStatement;
+      if (mutableLabeledStatement == null) return labeledStatement;
+      this.RewriteChildren(mutableLabeledStatement);
+      return mutableLabeledStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given left shift expression.
+    /// </summary>
+    /// <param name="leftShift"></param>
+    public virtual IExpression Rewrite(ILeftShift leftShift) {
+      var mutableLeftShift = leftShift as LeftShift;
+      if (mutableLeftShift == null) return leftShift;
+      this.RewriteChildren(mutableLeftShift);
+      return mutableLeftShift;
+    }
+
+    /// <summary>
+    /// Rewrites the given less-than expression.
+    /// </summary>
+    /// <param name="lessThan"></param>
+    public virtual IExpression Rewrite(ILessThan lessThan) {
+      var mutableLessThan = lessThan as LessThan;
+      if (mutableLessThan == null) return lessThan;
+      this.RewriteChildren(mutableLessThan);
+      return mutableLessThan;
+    }
+
+    /// <summary>
+    /// Rewrites the given less-than-or-equal expression.
+    /// </summary>
+    /// <param name="lessThanOrEqual"></param>
+    public virtual IExpression Rewrite(ILessThanOrEqual lessThanOrEqual) {
+      var mutableLessThanOrEqual = lessThanOrEqual as LessThanOrEqual;
+      if (mutableLessThanOrEqual == null) return lessThanOrEqual;
+      this.RewriteChildren(mutableLessThanOrEqual);
+      return mutableLessThanOrEqual;
+    }
+
+    /// <summary>
+    /// Rewrites the given local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement"></param>
+    public virtual IStatement Rewrite(ILocalDeclarationStatement localDeclarationStatement) {
+      var mutableLocalDeclarationStatement = localDeclarationStatement as LocalDeclarationStatement;
+      if (mutableLocalDeclarationStatement == null) return localDeclarationStatement;
+      this.RewriteChildren(mutableLocalDeclarationStatement);
+      return mutableLocalDeclarationStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given lock statement.
+    /// </summary>
+    /// <param name="lockStatement"></param>
+    public virtual IStatement Rewrite(ILockStatement lockStatement) {
+      var mutableLockStatement = lockStatement as LockStatement;
+      if (mutableLockStatement == null) return lockStatement;
+      this.RewriteChildren(mutableLockStatement);
+      return mutableLockStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given logical not expression.
+    /// </summary>
+    /// <param name="logicalNot"></param>
+    public virtual IExpression Rewrite(ILogicalNot logicalNot) {
+      var mutableLogicalNot = logicalNot as LogicalNot;
+      if (mutableLogicalNot == null) return logicalNot;
+      this.RewriteChildren(mutableLogicalNot);
+      return mutableLogicalNot;
+    }
+
+    /// <summary>
+    /// Rewrites the given make typed reference expression.
+    /// </summary>
+    /// <param name="makeTypedReference"></param>
+    public virtual IExpression Rewrite(IMakeTypedReference makeTypedReference) {
+      var mutableMakeTypedReference = makeTypedReference as MakeTypedReference;
+      if (mutableMakeTypedReference == null) return makeTypedReference;
+      this.RewriteChildren(mutableMakeTypedReference);
+      return mutableMakeTypedReference;
+    }
+
+    /// <summary>
+    /// Rewrites the the given method body.
+    /// </summary>
+    /// <param name="methodBody"></param>
+    public override IMethodBody Rewrite(IMethodBody methodBody) {
+      var sourceBody = methodBody as ISourceMethodBody;
+      if (sourceBody != null) return this.Rewrite(sourceBody);
+      return base.Rewrite(methodBody);
+    }
+
+    /// <summary>
+    /// Rewrites the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
+    public virtual IExpression Rewrite(IMethodCall methodCall) {
+      var mutableMethodCall = methodCall as MethodCall;
+      if (mutableMethodCall == null) return methodCall;
+      this.RewriteChildren(mutableMethodCall);
+      return mutableMethodCall;
+    }
+
+    /// <summary>
+    /// Rewrites the given modulus expression.
+    /// </summary>
+    /// <param name="modulus"></param>
+    public virtual IExpression Rewrite(IModulus modulus) {
+      var mutableModulus = modulus as Modulus;
+      if (mutableModulus == null) return modulus;
+      this.RewriteChildren(mutableModulus);
+      return mutableModulus;
+    }
+
+    /// <summary>
+    /// Rewrites the given multiplication expression.
+    /// </summary>
+    /// <param name="multiplication"></param>
+    public virtual IExpression Rewrite(IMultiplication multiplication) {
+      var mutableMultiplication = multiplication as Multiplication;
+      if (mutableMultiplication == null) return multiplication;
+      this.RewriteChildren(mutableMultiplication);
+      return mutableMultiplication;
+    }
+
+    /// <summary>
+    /// Rewrites the given named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
+    public virtual IExpression Rewrite(INamedArgument namedArgument) {
+      var mutableNamedArgument = namedArgument as NamedArgument;
+      if (mutableNamedArgument == null) return namedArgument;
+      this.RewriteChildren(mutableNamedArgument);
+      return mutableNamedArgument;
+    }
+
+    /// <summary>
+    /// Rewrites the given not equality expression.
+    /// </summary>
+    /// <param name="notEquality"></param>
+    public virtual IExpression Rewrite(INotEquality notEquality) {
+      var mutableNotEquality = notEquality as NotEquality;
+      if (mutableNotEquality == null) return notEquality;
+      this.RewriteChildren(mutableNotEquality);
+      return mutableNotEquality;
+    }
+
+    /// <summary>
+    /// Rewrites the given old value expression.
+    /// </summary>
+    /// <param name="oldValue"></param>
+    public virtual IExpression Rewrite(IOldValue oldValue) {
+      var mutableOldValue = oldValue as OldValue;
+      if (mutableOldValue == null) return oldValue;
+      this.RewriteChildren(mutableOldValue);
+      return mutableOldValue;
+    }
+
+    /// <summary>
+    /// Rewrites the given one's complement expression.
+    /// </summary>
+    /// <param name="onesComplement"></param>
+    public virtual IExpression Rewrite(IOnesComplement onesComplement) {
+      var mutableOnesComplement = onesComplement as OnesComplement;
+      if (mutableOnesComplement == null) return onesComplement;
+      this.RewriteChildren(mutableOnesComplement);
+      return mutableOnesComplement;
+    }
+
+    /// <summary>
+    /// Rewrites the given out argument expression.
+    /// </summary>
+    /// <param name="outArgument"></param>
+    public virtual IExpression Rewrite(IOutArgument outArgument) {
+      var mutableOutArgument = outArgument as OutArgument;
+      if (mutableOutArgument == null) return outArgument;
+      this.RewriteChildren(mutableOutArgument);
+      return mutableOutArgument;
+    }
+
+    /// <summary>
+    /// Rewrites the given pointer call.
+    /// </summary>
+    /// <param name="pointerCall"></param>
+    public virtual IExpression Rewrite(IPointerCall pointerCall) {
+      var mutablePointerCall = pointerCall as PointerCall;
+      if (mutablePointerCall == null) return pointerCall;
+      this.RewriteChildren(mutablePointerCall);
+      return mutablePointerCall;
+    }
+
+    /// <summary>
+    /// Rewrites the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public virtual IExpression Rewrite(IPopValue popValue) {
+      var mutablePopValue = popValue as PopValue;
+      if (mutablePopValue == null) return popValue;
+      this.RewriteChildren(mutablePopValue);
+      return mutablePopValue;
+    }
+
+    /// <summary>
+    /// Rewrites the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public virtual IStatement Rewrite(IPushStatement pushStatement) {
+      var mutablePushStatement = pushStatement as PushStatement;
+      if (mutablePushStatement == null) return pushStatement;
+      this.RewriteChildren(mutablePushStatement);
+      return mutablePushStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given ref argument expression.
+    /// </summary>
+    /// <param name="refArgument"></param>
+    public virtual IExpression Rewrite(IRefArgument refArgument) {
+      var mutableRefArgument = refArgument as RefArgument;
+      if (mutableRefArgument == null) return refArgument;
+      this.RewriteChildren(mutableRefArgument);
+      return mutableRefArgument;
+    }
+
+    /// <summary>
+    /// Rewrites the given resource usage statement.
+    /// </summary>
+    /// <param name="resourceUseStatement"></param>
+    public virtual IStatement Rewrite(IResourceUseStatement resourceUseStatement) {
+      var mutableResourceUseStatement = resourceUseStatement as ResourceUseStatement;
+      if (mutableResourceUseStatement == null) return resourceUseStatement;
+      this.RewriteChildren(mutableResourceUseStatement);
+      return mutableResourceUseStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement"></param>
+    public virtual IStatement Rewrite(IRethrowStatement rethrowStatement) {
+      var mutableRethrowStatement = rethrowStatement as RethrowStatement;
+      if (mutableRethrowStatement == null) return rethrowStatement;
+      this.RewriteChildren(mutableRethrowStatement);
+      return mutableRethrowStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the return statement.
+    /// </summary>
+    /// <param name="returnStatement"></param>
+    public virtual IStatement Rewrite(IReturnStatement returnStatement) {
+      var mutableReturnStatement = returnStatement as ReturnStatement;
+      if (mutableReturnStatement == null) return returnStatement;
+      this.RewriteChildren(mutableReturnStatement);
+      return mutableReturnStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given return value expression.
+    /// </summary>
+    /// <param name="returnValue"></param>
+    public virtual IExpression Rewrite(IReturnValue returnValue) {
+      var mutableReturnValue = returnValue as ReturnValue;
+      if (mutableReturnValue == null) return returnValue;
+      this.RewriteChildren(mutableReturnValue);
+      return mutableReturnValue;
+    }
+
+    /// <summary>
+    /// Rewrites the given right shift expression.
+    /// </summary>
+    /// <param name="rightShift"></param>
+    public virtual IExpression Rewrite(IRightShift rightShift) {
+      var mutableRightShift = rightShift as RightShift;
+      if (mutableRightShift == null) return rightShift;
+      this.RewriteChildren(mutableRightShift);
+      return mutableRightShift;
+    }
+
+    /// <summary>
+    /// Rewrites the given runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression"></param>
+    public virtual IExpression Rewrite(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      var mutableRuntimeArgumentHandleExpression = runtimeArgumentHandleExpression as RuntimeArgumentHandleExpression;
+      if (mutableRuntimeArgumentHandleExpression == null) return runtimeArgumentHandleExpression;
+      this.RewriteChildren(mutableRuntimeArgumentHandleExpression);
+      return mutableRuntimeArgumentHandleExpression;
+    }
+
+    /// <summary>
+    /// Rewrites the given sizeof() expression.
+    /// </summary>
+    /// <param name="sizeOf"></param>
+    public virtual IExpression Rewrite(ISizeOf sizeOf) {
+      var mutableSizeOf = sizeOf as SizeOf;
+      if (mutableSizeOf == null) return sizeOf;
+      this.RewriteChildren(mutableSizeOf);
+      return mutableSizeOf;
+    }
+
+    /// <summary>
+    /// Rewrites the given stack array create expression.
+    /// </summary>
+    /// <param name="stackArrayCreate"></param>
+    public virtual IExpression Rewrite(IStackArrayCreate stackArrayCreate) {
+      var mutableStackArrayCreate = stackArrayCreate as StackArrayCreate;
+      if (mutableStackArrayCreate == null) return stackArrayCreate;
+      this.RewriteChildren(mutableStackArrayCreate);
+      return mutableStackArrayCreate;
+    }
+
+    /// <summary>
+    /// Rewrites the the given source method body.
+    /// </summary>
+    /// <param name="sourceMethodBody"></param>
+    public virtual ISourceMethodBody Rewrite(ISourceMethodBody sourceMethodBody) {
+      var mutableSourceMethodBody = sourceMethodBody as SourceMethodBody;
+      if (mutableSourceMethodBody == null) return sourceMethodBody;
+      this.RewriteChildren(mutableSourceMethodBody);
+      return mutableSourceMethodBody;
+    }
+
+    /// <summary>
+    /// Rewrites the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public virtual IStatement Rewrite(IStatement statement) {
+      statement.Dispatch(this.dispatchingVisitor);
+      return (IStatement)this.dispatchingVisitor.result;
+    }
+
+    /// <summary>
+    /// Rewrites the given subtraction expression.
+    /// </summary>
+    /// <param name="subtraction"></param>
+    public virtual IExpression Rewrite(ISubtraction subtraction) {
+      var mutableSubtraction = subtraction as Subtraction;
+      if (mutableSubtraction == null) return subtraction;
+      this.RewriteChildren(mutableSubtraction);
+      return mutableSubtraction;
+    }
+
+    /// <summary>
+    /// Rewrites the given switch case.
+    /// </summary>
+    /// <param name="switchCase"></param>
+    public virtual ISwitchCase Rewrite(ISwitchCase switchCase) {
+      var mutableSwitchCase = switchCase as SwitchCase;
+      if (mutableSwitchCase == null) return switchCase;
+      this.RewriteChildren(mutableSwitchCase);
+      return mutableSwitchCase;
+    }
+
+    /// <summary>
+    /// Rewrites the given switch statement.
+    /// </summary>
+    /// <param name="switchStatement"></param>
+    public virtual IStatement Rewrite(ISwitchStatement switchStatement) {
+      var mutableSwitchStatement = switchStatement as SwitchStatement;
+      if (mutableSwitchStatement == null) return switchStatement;
+      this.RewriteChildren(mutableSwitchStatement);
+      return mutableSwitchStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
+    public virtual ITargetExpression Rewrite(ITargetExpression targetExpression) {
+      var mutableTargetExpression = targetExpression as TargetExpression;
+      if (mutableTargetExpression == null) return targetExpression;
+      this.RewriteChildren(mutableTargetExpression);
+      return mutableTargetExpression;
+    }
+
+    /// <summary>
+    /// Rewrites the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
+    public virtual IExpression Rewrite(IThisReference thisReference) {
+      var mutableThisReference = thisReference as ThisReference;
+      if (mutableThisReference == null) return thisReference;
+      this.RewriteChildren(mutableThisReference);
+      return mutableThisReference;
+    }
+
+    /// <summary>
+    /// Rewrites the throw statement.
+    /// </summary>
+    /// <param name="throwStatement"></param>
+    public virtual IStatement Rewrite(IThrowStatement throwStatement) {
+      var mutableThrowStatement = throwStatement as ThrowStatement;
+      if (mutableThrowStatement == null) return throwStatement;
+      this.RewriteChildren(mutableThrowStatement);
+      return mutableThrowStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given tokenof() expression.
+    /// </summary>
+    /// <param name="tokenOf"></param>
+    public virtual IExpression Rewrite(ITokenOf tokenOf) {
+      var mutableTokenOf = tokenOf as TokenOf;
+      if (mutableTokenOf == null) return tokenOf;
+      this.RewriteChildren(mutableTokenOf);
+      return mutableTokenOf;
+    }
+
+    /// <summary>
+    /// Rewrites the try-catch-filter-finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement"></param>
+    public virtual IStatement Rewrite(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      var mutableTryCatchFinallyStatement = tryCatchFilterFinallyStatement as TryCatchFinallyStatement;
+      if (mutableTryCatchFinallyStatement == null) return tryCatchFilterFinallyStatement;
+      this.RewriteChildren(mutableTryCatchFinallyStatement);
+      return mutableTryCatchFinallyStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given typeof() expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
+    public virtual IExpression Rewrite(ITypeOf typeOf) {
+      var mutableTypeOf = typeOf as TypeOf;
+      if (mutableTypeOf == null) return typeOf;
+      this.RewriteChildren(mutableTypeOf);
+      return mutableTypeOf;
+    }
+
+    /// <summary>
+    /// Rewrites the given unary negation expression.
+    /// </summary>
+    /// <param name="unaryNegation"></param>
+    public virtual IExpression Rewrite(IUnaryNegation unaryNegation) {
+      var mutableUnaryNegation = unaryNegation as UnaryNegation;
+      if (mutableUnaryNegation == null) return unaryNegation;
+      this.RewriteChildren(mutableUnaryNegation);
+      return mutableUnaryNegation;
+    }
+
+    /// <summary>
+    /// Rewrites the given unary plus expression.
+    /// </summary>
+    /// <param name="unaryPlus"></param>
+    public virtual IExpression Rewrite(IUnaryPlus unaryPlus) {
+      var mutableUnaryPlus = unaryPlus as UnaryPlus;
+      if (mutableUnaryPlus == null) return unaryPlus;
+      this.RewriteChildren(mutableUnaryPlus);
+      return mutableUnaryPlus;
+    }
+
+    /// <summary>
+    /// Rewrites the given vector length expression.
+    /// </summary>
+    /// <param name="vectorLength"></param>
+    public virtual IExpression Rewrite(IVectorLength vectorLength) {
+      var mutableVectorLength = vectorLength as VectorLength;
+      if (mutableVectorLength == null) return vectorLength;
+      this.RewriteChildren(mutableVectorLength);
+      return mutableVectorLength;
+    }
+
+    /// <summary>
+    /// Rewrites the given while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement"></param>
+    public virtual IStatement Rewrite(IWhileDoStatement whileDoStatement) {
+      var mutableWhileDoStatement = whileDoStatement as WhileDoStatement;
+      if (mutableWhileDoStatement == null) return whileDoStatement;
+      this.RewriteChildren(mutableWhileDoStatement);
+      return mutableWhileDoStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
+    public virtual IStatement Rewrite(IYieldBreakStatement yieldBreakStatement) {
+      var mutableYieldBreakStatement = yieldBreakStatement as YieldBreakStatement;
+      if (mutableYieldBreakStatement == null) return yieldBreakStatement;
+      this.RewriteChildren(mutableYieldBreakStatement);
+      return mutableYieldBreakStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement"></param>
+    public virtual IStatement Rewrite(IYieldReturnStatement yieldReturnStatement) {
+      var mutableYieldReturnStatement = yieldReturnStatement as YieldReturnStatement;
+      if (mutableYieldReturnStatement == null) return yieldReturnStatement;
+      this.RewriteChildren(mutableYieldReturnStatement);
+      return mutableYieldReturnStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of catch clauses.
+    /// </summary>
+    /// <param name="catchClauses"></param>
+    public virtual List<ICatchClause>/*?*/ Rewrite(List<ICatchClause>/*?*/ catchClauses) {
+      if (catchClauses == null) return null;
+      for (int i = 0, n = catchClauses.Count; i < n; i++)
+        catchClauses[i] = this.Rewrite((CatchClause)catchClauses[i]);
+      return catchClauses;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of expressions.
+    /// </summary>
+    /// <param name="expressions"></param>
+    public virtual List<IExpression>/*?*/ Rewrite(List<IExpression>/*?*/ expressions) {
+      if (expressions == null) return null;
+      for (int i = 0, n = expressions.Count; i < n; i++)
+        expressions[i] = this.Rewrite(expressions[i]);
+      return expressions;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of switch cases.
+    /// </summary>
+    /// <param name="switchCases"></param>
+    public virtual List<ISwitchCase>/*?*/ Rewrite(List<ISwitchCase>/*?*/ switchCases) {
+      if (switchCases == null) return null;
+      for (int i = 0, n = switchCases.Count; i < n; i++)
+        switchCases[i] = this.Rewrite((SwitchCase)switchCases[i]);
+      return switchCases;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of statements.
+    /// </summary>
+    /// <param name="statements"></param>
+    public virtual List<IStatement>/*?*/ Rewrite(List<IStatement>/*?*/ statements) {
+      if (statements == null) return null;
+      for (int i = 0, n = statements.Count; i < n; i++)
+        statements[i] = this.Rewrite(statements[i]);
+      return statements;
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
+    public virtual void RewriteChildren(Addition addition) {
+      this.RewriteChildren((BinaryOperation)addition);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
+    public virtual void RewriteChildren(AddressableExpression addressableExpression) {
+      this.RewriteChildren((Expression)addressableExpression);
+      var local = addressableExpression.Definition as LocalDefinition;
+      if (local != null)
+        addressableExpression.Definition = this.Rewrite(local);
+      else {
+        var parameter = addressableExpression.Definition as ParameterDefinition;
+        if (parameter != null)
+          addressableExpression.Definition = this.Rewrite(parameter);
+        else {
+          var fieldReference = addressableExpression.Definition as IFieldReference;
+          if (fieldReference != null)
+            addressableExpression.Definition = this.Rewrite(fieldReference);
+          else {
+            var arrayIndexer = addressableExpression.Definition as ArrayIndexer;
+            if (arrayIndexer != null) {
+              addressableExpression.Definition = this.Rewrite(arrayIndexer);
+              return; //do not rewrite Instance again
+            } else {
+              var addressDereference = addressableExpression.Definition as AddressDereference;
+              if (addressDereference != null)
+                addressableExpression.Definition = this.Rewrite(addressDereference);
+              else {
+                var methodReference = addressableExpression.Definition as MethodReference;
+                if (methodReference != null)
+                  addressableExpression.Definition = this.Rewrite(methodReference);
+                else {
+                  var thisReference = (ThisReference)addressableExpression.Definition;
+                  addressableExpression.Definition = this.Rewrite(thisReference);
+                }
+              }
+            }
+          }
+        }
+      }
+      if (addressableExpression.Instance != null)
+        addressableExpression.Instance = this.Rewrite(addressableExpression.Instance);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
+    public virtual void RewriteChildren(AddressDereference addressDereference) {
+      this.RewriteChildren((Expression)addressDereference);
+      addressDereference.Address = this.Rewrite(addressDereference.Address);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
+    public virtual void RewriteChildren(AddressOf addressOf) {
+      this.RewriteChildren((Expression)addressOf);
+      addressOf.Expression = this.Rewrite((AddressableExpression)addressOf.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
+    public virtual void RewriteChildren(AnonymousDelegate anonymousDelegate) {
+      this.RewriteChildren((Expression)anonymousDelegate);
+      anonymousDelegate.Parameters = this.Rewrite(anonymousDelegate.Parameters);
+      anonymousDelegate.Body = this.Rewrite((BlockStatement)anonymousDelegate.Body);
+      anonymousDelegate.ReturnType = this.Rewrite(anonymousDelegate.ReturnType);
+      if (anonymousDelegate.ReturnValueIsModified)
+        anonymousDelegate.ReturnValueCustomModifiers =this.Rewrite(anonymousDelegate.ReturnValueCustomModifiers);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
+    public virtual void RewriteChildren(ArrayIndexer arrayIndexer) {
+      this.RewriteChildren((Expression)arrayIndexer);
+      arrayIndexer.IndexedObject = this.Rewrite(arrayIndexer.IndexedObject);
+      arrayIndexer.Indices = this.Rewrite(arrayIndexer.Indices);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
+    public virtual void RewriteChildren(AssertStatement assertStatement) {
+      this.RewriteChildren((Statement)assertStatement);
+      assertStatement.Condition = this.Rewrite(assertStatement.Condition);
+      if (assertStatement.Description != null)
+        assertStatement.Description = this.Rewrite(assertStatement.Description);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
+    public virtual void RewriteChildren(Assignment assignment) {
+      this.RewriteChildren((Expression)assignment);
+      assignment.Target = this.Rewrite(assignment.Target);
+      assignment.Source = this.Rewrite(assignment.Source);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
+    public virtual void RewriteChildren(AssumeStatement assumeStatement) {
+      this.RewriteChildren((Statement)assumeStatement);
+      assumeStatement.Condition = this.Rewrite(assumeStatement.Condition);
+      if (assumeStatement.Description != null)
+        assumeStatement.Description = this.Rewrite(assumeStatement.Description);
+    }
+
+    /// <summary>
+    /// Called from the type specific rewrite method to rewrite the common part of all binary operation expressions.
+    /// </summary>
+    public virtual void RewriteChildren(BinaryOperation binaryOperation) {
+      this.RewriteChildren((Expression)binaryOperation);
+      binaryOperation.LeftOperand = this.Rewrite(binaryOperation.LeftOperand);
+      binaryOperation.RightOperand = this.Rewrite(binaryOperation.RightOperand);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given bitwise and expression.
+    /// </summary>
+    public virtual void RewriteChildren(BitwiseAnd bitwiseAnd) {
+      this.RewriteChildren((BinaryOperation)bitwiseAnd);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given bitwise or expression.
+    /// </summary>
+    public virtual void RewriteChildren(BitwiseOr bitwiseOr) {
+      this.RewriteChildren((BinaryOperation)bitwiseOr);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given block expression.
+    /// </summary>
+    public virtual void RewriteChildren(BlockExpression blockExpression) {
+      this.RewriteChildren((Expression)blockExpression);
+      blockExpression.BlockStatement = this.Rewrite((BlockStatement)blockExpression.BlockStatement);
+      blockExpression.Expression = this.Rewrite(blockExpression.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given statement block.
+    /// </summary>
+    public virtual void RewriteChildren(BlockStatement block) {
+      block.Statements = this.Rewrite(block.Statements);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given bound expression.
+    /// </summary>
+    public virtual void RewriteChildren(BoundExpression boundExpression) {
+      this.RewriteChildren((Expression)boundExpression);
+      if (boundExpression.Instance != null)
+        boundExpression.Instance = this.Rewrite(boundExpression.Instance);
+      var local = boundExpression.Definition as LocalDefinition;
+      if (local != null)
+        boundExpression.Definition = this.Rewrite(local);
+      else {
+        var parameter = boundExpression.Definition as ParameterDefinition;
+        if (parameter != null)
+          boundExpression.Definition = this.Rewrite(parameter);
+        else {
+          var fieldReference = (IFieldReference)boundExpression.Definition;
+          boundExpression.Definition = this.Rewrite(fieldReference);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given break statement.
+    /// </summary>
+    public virtual void RewriteChildren(BreakStatement breakStatement) {
+      this.RewriteChildren((Statement)breakStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the cast-if-possible expression.
+    /// </summary>
+    public virtual void RewriteChildren(CastIfPossible castIfPossible) {
+      this.RewriteChildren((Expression)castIfPossible);
+      castIfPossible.ValueToCast = this.Rewrite(castIfPossible.ValueToCast);
+      castIfPossible.TargetType = this.Rewrite(castIfPossible.TargetType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given catch clause.
+    /// </summary>
+    public virtual void RewriteChildren(CatchClause catchClause) {
+      catchClause.ExceptionType = this.Rewrite(catchClause.ExceptionType);
+      if (catchClause.ExceptionContainer != Dummy.LocalVariable)
+        catchClause.ExceptionContainer = this.Rewrite((LocalDefinition)catchClause.ExceptionContainer);
+      if (catchClause.FilterCondition != null)
+        catchClause.FilterCondition = this.Rewrite(catchClause.FilterCondition);
+      catchClause.Body = this.Rewrite((BlockStatement)catchClause.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given check-if-instance expression.
+    /// </summary>
+    public virtual void RewriteChildren(CheckIfInstance checkIfInstance) {
+      this.RewriteChildren((Expression)checkIfInstance);
+      checkIfInstance.Operand = this.Rewrite(checkIfInstance.Operand);
+      checkIfInstance.TypeToCheck = this.Rewrite(checkIfInstance.TypeToCheck);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given compile time constant.
+    /// </summary>
+    public virtual void RewriteChildren(CompileTimeConstant constant) {
+      this.RewriteChildren((Expression)constant);
+    }
+
+    /// <summary>
+    /// Called from the type specific rewrite method to rewrite the common part of constructors and method calls.
+    /// </summary>
+    /// <param name="constructorOrMethodCall"></param>
+    public virtual void RewriteChildren(ConstructorOrMethodCall constructorOrMethodCall) {
+      this.RewriteChildren((Expression)constructorOrMethodCall);
+      constructorOrMethodCall.Arguments = this.Rewrite(constructorOrMethodCall.Arguments);
+      constructorOrMethodCall.MethodToCall = this.Rewrite(constructorOrMethodCall.MethodToCall);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given conditional expression.
+    /// </summary>
+    public virtual void RewriteChildren(Conditional conditional) {
+      this.RewriteChildren((Expression)conditional);
+      conditional.Condition = this.Rewrite(conditional.Condition);
+      conditional.ResultIfTrue = this.Rewrite(conditional.ResultIfTrue);
+      conditional.ResultIfFalse = this.Rewrite(conditional.ResultIfFalse);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given conditional statement.
+    /// </summary>
+    public virtual void RewriteChildren(ConditionalStatement conditionalStatement) {
+      this.RewriteChildren((Statement)conditionalStatement);
+      conditionalStatement.Condition = this.Rewrite(conditionalStatement.Condition);
+      conditionalStatement.TrueBranch = this.Rewrite(conditionalStatement.TrueBranch);
+      conditionalStatement.FalseBranch = this.Rewrite(conditionalStatement.FalseBranch);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given continue statement.
+    /// </summary>
+    public virtual void RewriteChildren(ContinueStatement continueStatement) {
+      this.RewriteChildren((Statement)continueStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given conversion expression.
+    /// </summary>
+    public virtual void RewriteChildren(Conversion conversion) {
+      this.RewriteChildren((Expression)conversion);
+      conversion.ValueToConvert = this.Rewrite(conversion.ValueToConvert);
+      conversion.TypeAfterConversion = this.Rewrite(conversion.TypeAfterConversion);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given array creation expression.
+    /// </summary>
+    public virtual void RewriteChildren(CreateArray createArray) {
+      this.RewriteChildren((Expression)createArray);
+      createArray.ElementType = this.Rewrite(createArray.ElementType);
+      createArray.Sizes = this.Rewrite(createArray.Sizes);
+      createArray.Initializers = this.Rewrite(createArray.Initializers);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the anonymous object creation expression.
+    /// </summary>
+    public virtual void RewriteChildren(CreateDelegateInstance createDelegateInstance) {
+      this.RewriteChildren((Expression)createDelegateInstance);
+      if (createDelegateInstance.Instance != null)
+        createDelegateInstance.Instance = this.Rewrite(createDelegateInstance.Instance);
+      createDelegateInstance.MethodToCallViaDelegate = this.Rewrite(createDelegateInstance.MethodToCallViaDelegate);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given constructor call expression.
+    /// </summary>
+    public virtual void RewriteChildren(CreateObjectInstance createObjectInstance) {
+      this.RewriteChildren((ConstructorOrMethodCall)createObjectInstance);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given debugger break statement.
+    /// </summary>
+    public virtual void RewriteChildren(DebuggerBreakStatement debuggerBreakStatement) {
+      this.RewriteChildren((Statement)debuggerBreakStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given defalut value expression.
+    /// </summary>
+    public virtual void RewriteChildren(DefaultValue defaultValue) {
+      this.RewriteChildren((Expression)defaultValue);
+      defaultValue.DefaultValueType = this.Rewrite(defaultValue.DefaultValueType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given division expression.
+    /// </summary>
+    public virtual void RewriteChildren(Division division) {
+      this.RewriteChildren((BinaryOperation)division);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given do until statement.
+    /// </summary>
+    public virtual void RewriteChildren(DoUntilStatement doUntilStatement) {
+      this.RewriteChildren((Statement)doUntilStatement);
+      doUntilStatement.Body = this.Rewrite(doUntilStatement.Body);
+      doUntilStatement.Condition = this.Rewrite(doUntilStatement.Condition);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given dup value expression.
+    /// </summary>
+    public virtual void RewriteChildren(DupValue dupValue) {
+      this.RewriteChildren((Expression)dupValue);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given empty statement.
+    /// </summary>
+    public virtual void RewriteChildren(EmptyStatement emptyStatement) {
+      this.RewriteChildren((Statement)emptyStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given equality expression.
+    /// </summary>
+    public virtual void RewriteChildren(Equality equality) {
+      this.RewriteChildren((BinaryOperation)equality);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given exclusive or expression.
+    /// </summary>
+    public virtual void RewriteChildren(ExclusiveOr exclusiveOr) {
+      this.RewriteChildren((BinaryOperation)exclusiveOr);
+    }
+
+    /// <summary>
+    /// Called from the type specific rewrite method to rewrite the common part of all expressions.
+    /// </summary>
+    public virtual void RewriteChildren(Expression expression) {
+      expression.Type = this.Rewrite(expression.Type);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given expression statement.
+    /// </summary>
+    public virtual void RewriteChildren(ExpressionStatement expressionStatement) {
+      this.RewriteChildren((Statement)expressionStatement);
+      expressionStatement.Expression = this.Rewrite(expressionStatement.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given foreach statement.
+    /// </summary>
+    public virtual void RewriteChildren(ForEachStatement forEachStatement) {
+      this.RewriteChildren((Statement)forEachStatement);
+      forEachStatement.Variable = this.Rewrite((LocalDefinition)forEachStatement.Variable);
+      forEachStatement.Collection = this.Rewrite(forEachStatement.Collection);
+      forEachStatement.Body = this.Rewrite(forEachStatement.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given for statement.
+    /// </summary>
+    public virtual void RewriteChildren(ForStatement forStatement) {
+      this.RewriteChildren((Statement)forStatement);
+      forStatement.InitStatements = this.Rewrite(forStatement.InitStatements);
+      forStatement.Condition = this.Rewrite(forStatement.Condition);
+      forStatement.IncrementStatements = this.Rewrite(forStatement.IncrementStatements);
+      forStatement.Body = this.Rewrite(forStatement.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given get type of typed reference expression.
+    /// </summary>
+    public virtual void RewriteChildren(GetTypeOfTypedReference getTypeOfTypedReference) {
+      this.RewriteChildren((Expression)getTypeOfTypedReference);
+      getTypeOfTypedReference.TypedReference = this.Rewrite(getTypeOfTypedReference.TypedReference);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given get value of typed reference expression.
+    /// </summary>
+    public virtual void RewriteChildren(GetValueOfTypedReference getValueOfTypedReference) {
+      this.RewriteChildren((Expression)getValueOfTypedReference);
+      getValueOfTypedReference.TypedReference = this.Rewrite(getValueOfTypedReference.TypedReference);
+      getValueOfTypedReference.TargetType = this.Rewrite(getValueOfTypedReference.TargetType);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given goto statement.
+    /// </summary>
+    public virtual void RewriteChildren(GotoStatement gotoStatement) {
+      this.RewriteChildren((Statement)gotoStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given goto switch case statement.
+    /// </summary>
+    public virtual void RewriteChildren(GotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      this.RewriteChildren((Statement)gotoSwitchCaseStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given greater-than expression.
+    /// </summary>
+    public virtual void RewriteChildren(GreaterThan greaterThan) {
+      this.RewriteChildren((BinaryOperation)greaterThan);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given greater-than-or-equal expression.
+    /// </summary>
+    public virtual void RewriteChildren(GreaterThanOrEqual greaterThanOrEqual) {
+      this.RewriteChildren((BinaryOperation)greaterThanOrEqual);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given labeled statement.
+    /// </summary>
+    public virtual void RewriteChildren(LabeledStatement labeledStatement) {
+      this.RewriteChildren((Statement)labeledStatement);
+      labeledStatement.Statement = this.Rewrite(labeledStatement.Statement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given left shift expression.
+    /// </summary>
+    public virtual void RewriteChildren(LeftShift leftShift) {
+      this.RewriteChildren((BinaryOperation)leftShift);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given less-than expression.
+    /// </summary>
+    public virtual void RewriteChildren(LessThan lessThan) {
+      this.RewriteChildren((BinaryOperation)lessThan);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given less-than-or-equal expression.
+    /// </summary>
+    public virtual void RewriteChildren(LessThanOrEqual lessThanOrEqual) {
+      this.RewriteChildren((BinaryOperation)lessThanOrEqual);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given local declaration statement.
+    /// </summary>
+    public virtual void RewriteChildren(LocalDeclarationStatement localDeclarationStatement) {
+      this.RewriteChildren((Statement)localDeclarationStatement);
+      localDeclarationStatement.LocalVariable = this.Rewrite((LocalDefinition)localDeclarationStatement.LocalVariable);
+      if (localDeclarationStatement.InitialValue != null)
+        localDeclarationStatement.InitialValue = this.Rewrite(localDeclarationStatement.InitialValue);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given lock statement.
+    /// </summary>
+    public virtual void RewriteChildren(LockStatement lockStatement) {
+      this.RewriteChildren((Statement)lockStatement);
+      lockStatement.Guard = this.Rewrite(lockStatement.Guard);
+      lockStatement.Body = this.Rewrite(lockStatement.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given logical not expression.
+    /// </summary>
+    public virtual void RewriteChildren(LogicalNot logicalNot) {
+      this.RewriteChildren((UnaryOperation)logicalNot);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given make typed reference expression.
+    /// </summary>
+    public virtual void RewriteChildren(MakeTypedReference makeTypedReference) {
+      this.RewriteChildren((Expression)makeTypedReference);
+      makeTypedReference.Operand = this.Rewrite(makeTypedReference.Operand);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method call.
+    /// </summary>
+    public virtual void RewriteChildren(MethodCall methodCall) {
+      this.RewriteChildren((ConstructorOrMethodCall)methodCall);
+      if (!methodCall.IsStaticCall)
+        methodCall.ThisArgument = this.Rewrite(methodCall.ThisArgument);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given modulus expression.
+    /// </summary>
+    public virtual void RewriteChildren(Modulus modulus) {
+      this.RewriteChildren((BinaryOperation)modulus);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given multiplication expression.
+    /// </summary>
+    public virtual void RewriteChildren(Multiplication multiplication) {
+      this.RewriteChildren((BinaryOperation)multiplication);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given named argument expression.
+    /// </summary>
+    public virtual void RewriteChildren(NamedArgument namedArgument) {
+      this.RewriteChildren((Expression)namedArgument);
+      namedArgument.ArgumentValue = this.Rewrite(namedArgument.ArgumentValue);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given not equality expression.
+    /// </summary>
+    public virtual void RewriteChildren(NotEquality notEquality) {
+      this.RewriteChildren((BinaryOperation)notEquality);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given old value expression.
+    /// </summary>
+    public virtual void RewriteChildren(OldValue oldValue) {
+      this.RewriteChildren((Expression)oldValue);
+      oldValue.Expression = this.Rewrite(oldValue.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given one's complement expression.
+    /// </summary>
+    public virtual void RewriteChildren(OnesComplement onesComplement) {
+      this.RewriteChildren((UnaryOperation)onesComplement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given out argument expression.
+    /// </summary>
+    public virtual void RewriteChildren(OutArgument outArgument) {
+      this.RewriteChildren((Expression)outArgument);
+      outArgument.Expression = (ITargetExpression)this.Rewrite((TargetExpression)outArgument.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given pointer call.
+    /// </summary>
+    public virtual void RewriteChildren(PointerCall pointerCall) {
+      this.RewriteChildren((Expression)pointerCall);
+      pointerCall.Pointer = this.Rewrite(pointerCall.Pointer);
+      pointerCall.Arguments = this.Rewrite(pointerCall.Arguments);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given pop value expression.
+    /// </summary>
+    public virtual void RewriteChildren(PopValue popValue) {
+      this.RewriteChildren((Expression)popValue);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given push statement.
+    /// </summary>
+    public virtual void RewriteChildren(PushStatement pushStatement) {
+      this.RewriteChildren((Statement)pushStatement);
+      pushStatement.ValueToPush = this.Rewrite(pushStatement.ValueToPush);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given ref argument expression.
+    /// </summary>
+    public virtual void RewriteChildren(RefArgument refArgument) {
+      this.RewriteChildren((Expression)refArgument);
+      refArgument.Expression = this.Rewrite((AddressableExpression)refArgument.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given resource usage statement.
+    /// </summary>
+    public virtual void RewriteChildren(ResourceUseStatement resourceUseStatement) {
+      this.RewriteChildren((Statement)resourceUseStatement);
+      resourceUseStatement.ResourceAcquisitions = this.Rewrite(resourceUseStatement.ResourceAcquisitions);
+      resourceUseStatement.Body = this.Rewrite(resourceUseStatement.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the rethrow statement.
+    /// </summary>
+    public virtual void RewriteChildren(RethrowStatement rethrowStatement) {
+      this.RewriteChildren((Statement)rethrowStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the return statement.
+    /// </summary>
+    public virtual void RewriteChildren(ReturnStatement returnStatement) {
+      this.RewriteChildren((Statement)returnStatement);
+      if (returnStatement.Expression != null)
+        returnStatement.Expression = this.Rewrite(returnStatement.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given return value expression.
+    /// </summary>
+    public virtual void RewriteChildren(ReturnValue returnValue) {
+      this.RewriteChildren((Expression)returnValue);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given right shift expression.
+    /// </summary>
+    public virtual void RewriteChildren(RightShift rightShift) {
+      this.RewriteChildren((BinaryOperation)rightShift);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given runtime argument handle expression.
+    /// </summary>
+    public virtual void RewriteChildren(RuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      this.RewriteChildren((Expression)runtimeArgumentHandleExpression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given sizeof() expression.
+    /// </summary>
+    public virtual void RewriteChildren(SizeOf sizeOf) {
+      this.RewriteChildren((Expression)sizeOf);
+      sizeOf.TypeToSize = this.Rewrite(sizeOf.TypeToSize);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the the given source method body.
+    /// </summary>
+    public virtual void RewriteChildren(SourceMethodBody sourceMethodBody) {
+      sourceMethodBody.Block = this.Rewrite((BlockStatement)sourceMethodBody.Block);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given stack array create expression.
+    /// </summary>
+    public virtual void RewriteChildren(StackArrayCreate stackArrayCreate) {
+      this.RewriteChildren((Expression)stackArrayCreate);
+      stackArrayCreate.ElementType = this.Rewrite(stackArrayCreate.ElementType);
+      stackArrayCreate.Size = this.Rewrite(stackArrayCreate.Size);
+    }
+
+    /// <summary>
+    /// Called from the type specific rewrite method to rewrite the common part of all statements.
+    /// </summary>
+    public virtual void RewriteChildren(Statement statement) {
+      //This is just an extension hook
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given subtraction expression.
+    /// </summary>
+    public virtual void RewriteChildren(Subtraction subtraction) {
+      this.RewriteChildren((BinaryOperation)subtraction);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given switch case.
+    /// </summary>
+    public virtual void RewriteChildren(SwitchCase switchCase) {
+      if (!switchCase.IsDefault)
+        switchCase.Expression = this.Rewrite((CompileTimeConstant)switchCase.Expression);
+      switchCase.Body = this.Rewrite(switchCase.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given switch statement.
+    /// </summary>
+    public virtual void RewriteChildren(SwitchStatement switchStatement) {
+      this.RewriteChildren((Statement)switchStatement);
+      switchStatement.Expression = this.Rewrite(switchStatement.Expression);
+      switchStatement.Cases = this.Rewrite(switchStatement.Cases);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given target expression.
+    /// </summary>
+    public virtual void RewriteChildren(TargetExpression targetExpression) {
+      this.RewriteChildren((Expression)targetExpression);
+      var local = targetExpression.Definition as LocalDefinition;
+      if (local != null)
+        targetExpression.Definition = this.Rewrite(local);
+      else {
+        var parameter = targetExpression.Definition as ParameterDefinition;
+        if (parameter != null)
+          targetExpression.Definition = this.Rewrite(parameter);
+        else {
+          var fieldReference = targetExpression.Definition as IFieldReference;
+          if (fieldReference != null)
+            targetExpression.Definition = this.Rewrite(fieldReference);
+          else {
+            var arrayIndexer = targetExpression.Definition as ArrayIndexer;
+            if (arrayIndexer != null) {
+              targetExpression.Definition = this.Rewrite(arrayIndexer);
+              return; //do not rewrite Instance again.
+            } else {
+              var addressDereference = targetExpression.Definition as AddressDereference;
+              if (addressDereference != null)
+                targetExpression.Definition = this.Rewrite(addressDereference);
+              else {
+                var propertyDefinition = (PropertyDefinition)targetExpression.Definition;
+                targetExpression.Definition = this.Rewrite(propertyDefinition);
+              }
+            }
+          }
+        }
+      }
+      if (targetExpression.Instance != null) {
+        targetExpression.Instance = this.Rewrite(targetExpression.Instance);
+      }
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given this reference expression.
+    /// </summary>
+    public virtual void RewriteChildren(ThisReference thisReference) {
+      this.RewriteChildren((Expression)thisReference);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the throw statement.
+    /// </summary>
+    public virtual void RewriteChildren(ThrowStatement throwStatement) {
+      this.RewriteChildren((Statement)throwStatement);
+      throwStatement.Exception = this.Rewrite(throwStatement.Exception);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given tokenof() expression.
+    /// </summary>
+    public virtual void RewriteChildren(TokenOf tokenOf) {
+      this.RewriteChildren((Expression)tokenOf);
+      var fieldReference = tokenOf.Definition as IFieldReference;
+      if (fieldReference != null)
+        tokenOf.Definition = this.Rewrite(fieldReference);
+      else {
+        var methodReference = tokenOf.Definition as IMethodReference;
+        if (methodReference != null)
+          tokenOf.Definition = this.Rewrite(methodReference);
+        else {
+          var typeReference = (ITypeReference)tokenOf.Definition;
+          tokenOf.Definition = this.Rewrite(typeReference);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Rewrites the children of the try-catch-filter-finally statement.
+    /// </summary>
+    public virtual void RewriteChildren(TryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      this.RewriteChildren((Statement)tryCatchFilterFinallyStatement);
+      tryCatchFilterFinallyStatement.TryBody = this.Rewrite((BlockStatement)tryCatchFilterFinallyStatement.TryBody);
+      tryCatchFilterFinallyStatement.CatchClauses = this.Rewrite(tryCatchFilterFinallyStatement.CatchClauses);
+      if (tryCatchFilterFinallyStatement.FaultBody != null)
+        tryCatchFilterFinallyStatement.FaultBody = this.Rewrite((BlockStatement)tryCatchFilterFinallyStatement.FaultBody);
+      if (tryCatchFilterFinallyStatement.FinallyBody != null)
+        tryCatchFilterFinallyStatement.FinallyBody = this.Rewrite((BlockStatement)tryCatchFilterFinallyStatement.FinallyBody);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given typeof() expression.
+    /// </summary>
+    public virtual void RewriteChildren(TypeOf typeOf) {
+      this.RewriteChildren((Expression)typeOf);
+      typeOf.TypeToGet = this.Rewrite(typeOf.TypeToGet);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given unary negation expression.
+    /// </summary>
+    public virtual void RewriteChildren(UnaryNegation unaryNegation) {
+      this.RewriteChildren((UnaryOperation)unaryNegation);
+    }
+
+    /// <summary>
+    /// Called from the type specific rewrite method to rewrite the common part of all unary operation expressions.
+    /// </summary>
+    public virtual void RewriteChildren(UnaryOperation unaryOperation) {
+      this.RewriteChildren((Expression)unaryOperation);
+      unaryOperation.Operand = this.Rewrite(unaryOperation.Operand);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given unary plus expression.
+    /// </summary>
+    public virtual void RewriteChildren(UnaryPlus unaryPlus) {
+      this.RewriteChildren((UnaryOperation)unaryPlus);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given vector length expression.
+    /// </summary>
+    public virtual void RewriteChildren(VectorLength vectorLength) {
+      this.RewriteChildren((Expression)vectorLength);
+      vectorLength.Vector = this.Rewrite(vectorLength.Vector);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given while do statement.
+    /// </summary>
+    public virtual void RewriteChildren(WhileDoStatement whileDoStatement) {
+      this.RewriteChildren((Statement)whileDoStatement);
+      whileDoStatement.Condition = this.Rewrite(whileDoStatement.Condition);
+      whileDoStatement.Body = this.Rewrite(whileDoStatement.Body);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given yield break statement.
+    /// </summary>
+    public virtual void RewriteChildren(YieldBreakStatement yieldBreakStatement) {
+      this.RewriteChildren((Statement)yieldBreakStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given yield return statement.
+    /// </summary>
+    public virtual void RewriteChildren(YieldReturnStatement yieldReturnStatement) {
+      this.RewriteChildren((Statement)yieldReturnStatement);
+      yieldReturnStatement.Expression = this.Rewrite(yieldReturnStatement.Expression);
+    }
+
+  }
+
+  /// <summary>
   /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
   /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
   /// </summary>
@@ -2194,844 +4464,6 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
-  /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
-  /// Also visits and mutates the associated code contracts and establishes associations with new copies.
-  /// </summary>
-  /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
-  /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
-  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
-  /// The new classes CodeAndContractCopier and CodeAndContractMutatingVisitor are meant to facilitate such scenarios.
-  /// </remarks>
-  [Obsolete("This class has been superceded by CodeAndContractCopier and CodeAndContractMutatingVisitor, used in combination. It will go away after April 2011")]
-  public class CodeAndContractMutator : CodeMutator {
-
-    /// <summary>
-    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
-    /// </summary>
-    protected readonly ContractProvider/*?*/ contractProvider;
-
-    /// <summary>
-    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
-    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
-    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    public CodeAndContractMutator(IMetadataHost host)
-      : base(host) { }
-
-    /// <summary>
-    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
-    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
-    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="copyOnlyIfNotAlreadyMutable">True if the mutator should try and perform mutations in place, rather than mutating new copies.</param>
-    public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
-      : base(host, copyOnlyIfNotAlreadyMutable) {
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeAndContractMutator(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider) {
-      this.contractProvider = contractProvider;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider) {
-      this.contractProvider = contractProvider;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CodeAndContractMutator"/> class.
-    /// </summary>
-    /// <param name="template">The template.</param>
-    protected CodeAndContractMutator(CodeAndContractMutator template)
-      : base(template.host, template.sourceLocationProvider) {
-      this.contractProvider = template.contractProvider;
-    }
-
-    /// <summary>
-    /// Visits the specified addressable expressions.
-    /// </summary>
-    /// <param name="addressableExpressions">The addressable expressions.</param>
-    /// <returns></returns>
-    public virtual List<IAddressableExpression> Visit(List<IAddressableExpression> addressableExpressions) {
-      List<IAddressableExpression> newList = new List<IAddressableExpression>();
-      foreach (var addressableExpression in addressableExpressions)
-        newList.Add(this.Visit(addressableExpression));
-      return newList;
-    }
-
-    /// <summary>
-    /// Visits the specified triggers.
-    /// </summary>
-    /// <param name="triggers">The triggers.</param>
-    /// <returns></returns>
-    public virtual IEnumerable<IEnumerable<IExpression>> Visit(IEnumerable<IEnumerable<IExpression>> triggers) {
-      List<IEnumerable<IExpression>> newTriggers = new List<IEnumerable<IExpression>>(triggers);
-      for (int i = 0, n = newTriggers.Count; i < n; i++)
-        newTriggers[i] = this.Visit(new List<IExpression>(newTriggers[i])).AsReadOnly();
-      return newTriggers.AsReadOnly();
-    }
-
-    /// <summary>
-    /// Visits the specified expression.
-    /// </summary>
-    /// <param name="expression">The expression.</param>
-    /// <returns></returns>
-    public override IExpression Visit(IExpression expression) {
-      IExpression result = base.Visit(expression);
-      if (this.contractProvider != null && expression is IMethodCall) {
-        IEnumerable<IEnumerable<IExpression>>/*?*/ triggers = this.contractProvider.GetTriggersFor(expression);
-        if (triggers != null)
-          this.contractProvider.AssociateTriggersWithQuantifier(result, this.Visit(triggers));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified loop contract.
-    /// </summary>
-    /// <param name="loopContract">The loop contract.</param>
-    /// <returns></returns>
-    public virtual ILoopContract Visit(ILoopContract loopContract) {
-      LoopContract mutableLoopContract = loopContract as LoopContract;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutableLoopContract == null)
-        mutableLoopContract = new LoopContract(loopContract);
-      return this.Visit(mutableLoopContract);
-    }
-
-    /// <summary>
-    /// Visits the specified loop contract.
-    /// </summary>
-    /// <param name="loopContract">The loop contract.</param>
-    /// <returns></returns>
-    public virtual ILoopContract Visit(LoopContract loopContract) {
-      loopContract.Invariants = this.Visit(loopContract.Invariants);
-      loopContract.Writes = this.Visit(loopContract.Writes);
-      return loopContract;
-    }
-
-    /// <summary>
-    /// Visits the specified loop invariants.
-    /// </summary>
-    /// <param name="loopInvariants">The loop invariants.</param>
-    /// <returns></returns>
-    public virtual List<ILoopInvariant> Visit(List<ILoopInvariant> loopInvariants) {
-      List<ILoopInvariant> newList = new List<ILoopInvariant>();
-      foreach (var loopInvariant in loopInvariants)
-        newList.Add(this.Visit(loopInvariant));
-      return newList;
-    }
-
-    /// <summary>
-    /// Visits the specified loop invariant.
-    /// </summary>
-    /// <param name="loopInvariant">The loop invariant.</param>
-    /// <returns></returns>
-    public virtual ILoopInvariant Visit(ILoopInvariant loopInvariant) {
-      LoopInvariant mutableLoopInvariant = loopInvariant as LoopInvariant;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutableLoopInvariant == null)
-        mutableLoopInvariant = new LoopInvariant(loopInvariant);
-      return this.Visit(mutableLoopInvariant);
-    }
-
-    /// <summary>
-    /// Visits the specified loop invariant.
-    /// </summary>
-    /// <param name="loopInvariant">The loop invariant.</param>
-    /// <returns></returns>
-    public virtual ILoopInvariant Visit(LoopInvariant loopInvariant) {
-      loopInvariant.Condition = this.Visit(loopInvariant.Condition);
-      if (loopInvariant.Description != null)
-        loopInvariant.Description = this.Visit(loopInvariant.Description);
-      return loopInvariant;
-    }
-
-    /// <summary>
-    /// Visits the specified method definition.
-    /// </summary>
-    /// <param name="methodDefinition">The method definition.</param>
-    /// <returns></returns>
-    public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
-      var result = this.GetMutableCopy(methodDefinition);
-      if (this.contractProvider != null) {
-        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
-        if (methodContract != null)
-          this.contractProvider.AssociateMethodWithContract(result, methodContract);
-      }
-      return this.Visit(result);
-    }
-
-    /// <summary>
-    /// Visits the specified global method definition.
-    /// </summary>
-    /// <param name="globalMethodDefinition">The global method definition.</param>
-    /// <returns></returns>
-    public override IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
-      var result = this.GetMutableCopy(globalMethodDefinition);
-      if (this.contractProvider != null) {
-        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(globalMethodDefinition);
-        if (methodContract != null)
-          this.contractProvider.AssociateMethodWithContract(result, methodContract);
-      }
-      return this.Visit(result);
-    }
-
-    /// <summary>
-    /// Visits the specified method definition.
-    /// </summary>
-    /// <param name="methodDefinition">The method definition.</param>
-    /// <returns></returns>
-    public override MethodDefinition Visit(MethodDefinition methodDefinition) {
-      if (this.stopTraversal) return methodDefinition;
-      this.Visit((TypeDefinitionMember)methodDefinition);
-      this.path.Push(methodDefinition);
-      if (methodDefinition.IsGeneric)
-        methodDefinition.GenericParameters = this.Visit(methodDefinition.GenericParameters, methodDefinition);
-      methodDefinition.Parameters = this.Visit(methodDefinition.Parameters);
-      if (methodDefinition.IsPlatformInvoke)
-        methodDefinition.PlatformInvokeData = this.Visit(this.GetMutableCopy(methodDefinition.PlatformInvokeData));
-      methodDefinition.ReturnValueAttributes = this.VisitMethodReturnValueAttributes(methodDefinition.ReturnValueAttributes);
-      if (methodDefinition.ReturnValueIsModified)
-        methodDefinition.ReturnValueCustomModifiers = this.VisitMethodReturnValueCustomModifiers(methodDefinition.ReturnValueCustomModifiers);
-      if (methodDefinition.ReturnValueIsMarshalledExplicitly)
-        methodDefinition.ReturnValueMarshallingInformation = this.VisitMethodReturnValueMarshallingInformation(this.GetMutableCopy(methodDefinition.ReturnValueMarshallingInformation));
-      if (methodDefinition.HasDeclarativeSecurity)
-        methodDefinition.SecurityAttributes = this.Visit(methodDefinition.SecurityAttributes);
-      methodDefinition.Type = this.Visit(methodDefinition.Type);
-      if (this.contractProvider != null) {
-        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
-        if (methodContract != null)
-          this.contractProvider.AssociateMethodWithContract(methodDefinition, this.Visit(methodContract));
-      }
-      if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal)
-        methodDefinition.Body = this.Visit(methodDefinition.Body);
-      this.path.Pop();
-      return methodDefinition;
-    }
-
-    /// <summary>
-    /// Visits the specified method body.
-    /// </summary>
-    /// <param name="methodBody">The method body.</param>
-    /// <returns></returns>
-    public override IMethodBody Visit(IMethodBody methodBody) {
-      ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody != null) {
-        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
-        mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
-        var currentMethod = this.GetCurrentMethod();
-        // Visiting the block extracts the contract, but it gets associated with the immutable method
-        if (this.contractProvider != null) {
-          var methodDef = methodBody.MethodDefinition;
-          IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDef);
-          if (methodContract != null)
-            this.contractProvider.AssociateMethodWithContract(currentMethod, this.Visit(methodContract));
-        }
-        mutableSourceMethodBody.MethodDefinition = currentMethod;
-        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
-        return mutableSourceMethodBody;
-      }
-      return base.Visit(methodBody);
-    }
-
-    /// <summary>
-    /// Visits the specified method contract.
-    /// </summary>
-    /// <param name="methodContract">The method contract.</param>
-    /// <returns></returns>
-    public virtual IMethodContract Visit(IMethodContract methodContract) {
-      MethodContract mutableMethodContract = methodContract as MethodContract;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutableMethodContract == null)
-        mutableMethodContract = new MethodContract(methodContract);
-      return this.Visit(mutableMethodContract);
-    }
-
-    /// <summary>
-    /// Visits the specified method contract.
-    /// </summary>
-    /// <param name="methodContract">The method contract.</param>
-    /// <returns></returns>
-    public virtual IMethodContract Visit(MethodContract methodContract) {
-      methodContract.Allocates = this.Visit(methodContract.Allocates);
-      methodContract.Frees = this.Visit(methodContract.Frees);
-      methodContract.ModifiedVariables = this.Visit(methodContract.ModifiedVariables);
-      methodContract.Postconditions = this.Visit(methodContract.Postconditions);
-      methodContract.Preconditions = this.Visit(methodContract.Preconditions);
-      methodContract.Reads = this.Visit(methodContract.Reads);
-      methodContract.ThrownExceptions = this.Visit(methodContract.ThrownExceptions);
-      methodContract.Writes = this.Visit(methodContract.Writes);
-      return methodContract;
-    }
-
-    /// <summary>
-    /// Visits the specified post conditions.
-    /// </summary>
-    /// <param name="postConditions">The post conditions.</param>
-    /// <returns></returns>
-    public virtual List<IPostcondition> Visit(List<IPostcondition> postConditions) {
-      List<IPostcondition> newList = new List<IPostcondition>();
-      foreach (var postCondition in postConditions)
-        newList.Add(this.Visit(postCondition));
-      return newList;
-    }
-
-    /// <summary>
-    /// Visits the specified post condition.
-    /// </summary>
-    /// <param name="postCondition">The post condition.</param>
-    public virtual IPostcondition Visit(IPostcondition postCondition) {
-      PostCondition mutablePostCondition = postCondition as PostCondition;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutablePostCondition == null)
-        mutablePostCondition = new PostCondition(postCondition);
-      return this.Visit(mutablePostCondition);
-    }
-
-    /// <summary>
-    /// Visits the specified post condition.
-    /// </summary>
-    /// <param name="postCondition">The post condition.</param>
-    public virtual IPostcondition Visit(PostCondition postCondition) {
-      postCondition.Condition = this.Visit(postCondition.Condition);
-      if (postCondition.Description != null)
-        postCondition.Description = this.Visit(postCondition.Description);
-      return postCondition;
-    }
-
-    /// <summary>
-    /// Visits the specified preconditions.
-    /// </summary>
-    /// <param name="preconditions">The preconditions.</param>
-    public virtual List<IPrecondition> Visit(List<IPrecondition> preconditions) {
-      List<IPrecondition> newList = new List<IPrecondition>();
-      foreach (var precondition in preconditions)
-        newList.Add(this.Visit(precondition));
-      return newList;
-    }
-
-    /// <summary>
-    /// Visits the specified precondition.
-    /// </summary>
-    /// <param name="precondition">The precondition.</param>
-    public virtual IPrecondition Visit(IPrecondition precondition) {
-      Precondition mutablePrecondition = precondition as Precondition;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutablePrecondition == null)
-        mutablePrecondition = new Precondition(precondition);
-      return this.Visit(mutablePrecondition);
-    }
-
-    /// <summary>
-    /// Visits the specified precondition.
-    /// </summary>
-    /// <param name="precondition">The precondition.</param>
-    public virtual IPrecondition Visit(Precondition precondition) {
-      precondition.Condition = this.Visit(precondition.Condition);
-      if (precondition.Description != null)
-        precondition.Description = this.Visit(precondition.Description);
-      if (precondition.ExceptionToThrow != null)
-        precondition.ExceptionToThrow = this.Visit(precondition.ExceptionToThrow);
-      return precondition;
-    }
-
-    /// <summary>
-    /// Visits the specified statement.
-    /// </summary>
-    /// <param name="statement">The statement.</param>
-    public override IStatement Visit(IStatement statement) {
-      IStatement result = base.Visit(statement);
-      if (this.contractProvider != null) {
-        ILoopContract/*?*/ loopContract = this.contractProvider.GetLoopContractFor(statement);
-        if (loopContract != null)
-          this.contractProvider.AssociateLoopWithContract(result, this.Visit(loopContract));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified thrown exceptions.
-    /// </summary>
-    /// <param name="thrownExceptions">The thrown exceptions.</param>
-    public virtual List<IThrownException> Visit(List<IThrownException> thrownExceptions) {
-      List<IThrownException> newList = new List<IThrownException>();
-      foreach (var thrownException in thrownExceptions)
-        newList.Add(this.Visit(thrownException));
-      return newList;
-    }
-
-    /// <summary>
-    /// Visits the specified thrown exception.
-    /// </summary>
-    /// <param name="thrownException">The thrown exception.</param>
-    public virtual IThrownException Visit(IThrownException thrownException) {
-      ThrownException mutableThrownException = thrownException as ThrownException;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutableThrownException == null)
-        mutableThrownException = new ThrownException(thrownException);
-      return this.Visit(mutableThrownException);
-    }
-
-    /// <summary>
-    /// Visits the specified thrown exception.
-    /// </summary>
-    /// <param name="thrownException">The thrown exception.</param>
-    public virtual IThrownException Visit(ThrownException thrownException) {
-      thrownException.ExceptionType = this.Visit(thrownException.ExceptionType);
-      thrownException.Postcondition = this.Visit(thrownException.Postcondition);
-      return thrownException;
-    }
-
-    /// <summary>
-    /// Visits the specified type contract.
-    /// </summary>
-    /// <param name="typeContract">The type contract.</param>
-    public virtual ITypeContract Visit(ITypeContract typeContract) {
-      TypeContract mutableTypeContract = typeContract as TypeContract;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutableTypeContract == null)
-        mutableTypeContract = new TypeContract(typeContract);
-      return this.Visit(mutableTypeContract);
-    }
-
-    /// <summary>
-    /// Visits the specified type contract.
-    /// </summary>
-    /// <param name="typeContract">The type contract.</param>
-    public virtual ITypeContract Visit(TypeContract typeContract) {
-      typeContract.ContractFields = this.Visit(typeContract.ContractFields);
-      typeContract.ContractMethods = this.Visit(typeContract.ContractMethods);
-      typeContract.Invariants = this.Visit(typeContract.Invariants);
-      return typeContract;
-    }
-
-    /// <summary>
-    /// Visits the specified type invariants.
-    /// </summary>
-    /// <param name="typeInvariants">The type invariants.</param>
-    public virtual List<ITypeInvariant> Visit(List<ITypeInvariant> typeInvariants) {
-      List<ITypeInvariant> newList = new List<ITypeInvariant>();
-      foreach (var typeInvariant in typeInvariants)
-        newList.Add(this.Visit(typeInvariant));
-      return newList;
-    }
-
-    /// <summary>
-    /// Visits the specified type invariant.
-    /// </summary>
-    /// <param name="typeInvariant">The type invariant.</param>
-    public virtual ITypeInvariant Visit(ITypeInvariant typeInvariant) {
-      TypeInvariant mutableTypeInvariant = typeInvariant as TypeInvariant;
-      if (!this.copyOnlyIfNotAlreadyMutable || mutableTypeInvariant == null)
-        mutableTypeInvariant = new TypeInvariant(typeInvariant);
-      return this.Visit(mutableTypeInvariant);
-    }
-
-    /// <summary>
-    /// Visits the specified type invariant.
-    /// </summary>
-    /// <param name="typeInvariant">The type invariant.</param>
-    public virtual ITypeInvariant Visit(TypeInvariant typeInvariant) {
-      typeInvariant.Condition = this.Visit(typeInvariant.Condition);
-      if (typeInvariant.Description != null)
-        typeInvariant.Description = this.Visit(typeInvariant.Description);
-      return typeInvariant;
-    }
-
-    /// <summary>
-    /// Visits the specified namespace type definition.
-    /// </summary>
-    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
-    public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
-      var result = base.Visit(namespaceTypeDefinition);
-      if (this.contractProvider != null) {
-        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(namespaceTypeDefinition);
-        if (typeContract != null)
-          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified nested type definition.
-    /// </summary>
-    /// <param name="nestedTypeDefinition">The nested type definition.</param>
-    public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
-      var result = base.Visit(nestedTypeDefinition);
-      if (this.contractProvider != null) {
-        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(nestedTypeDefinition);
-        if (typeContract != null)
-          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
-      }
-      return result;
-    }
-
-  }
-
-  /// <summary>
-  /// 
-  /// </summary>
-  public class CodeAndContractMutatingVisitor : CodeMutatingVisitor {
-    /// <summary>
-    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
-    /// </summary>
-    protected readonly ContractProvider/*?*/ contractProvider;
-
-    /// <summary>
-    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
-    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
-    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    public CodeAndContractMutatingVisitor(IMetadataHost host)
-      : base(host) {
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeAndContractMutatingVisitor(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider) {
-      this.contractProvider = contractProvider;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CodeAndContractMutator"/> class.
-    /// </summary>
-    /// <param name="template">The template.</param>
-    protected CodeAndContractMutatingVisitor(CodeAndContractMutatingVisitor template)
-      : base(template.host, template.sourceLocationProvider) {
-      this.contractProvider = template.contractProvider;
-    }
-
-    /// <summary>
-    /// Visits the specified addressable expressions.
-    /// </summary>
-    /// <param name="addressableExpressions">The addressable expressions.</param>
-    /// <returns></returns>
-    public virtual List<IAddressableExpression> Visit(List<IAddressableExpression> addressableExpressions) {
-      if (this.stopTraversal) return addressableExpressions;
-      for (int i = 0, n = addressableExpressions.Count; i < n; i++)
-        addressableExpressions[i] = this.Visit(addressableExpressions[i]);
-      return addressableExpressions;
-    }
-
-    /// <summary>
-    /// Visits the specified triggers.
-    /// </summary>
-    /// <param name="triggers">The triggers.</param>
-    /// <returns></returns>
-    public virtual IEnumerable<IEnumerable<IExpression>> Visit(IEnumerable<IEnumerable<IExpression>> triggers) {
-      if (this.stopTraversal) return triggers;
-      var newTriggers = new List<IEnumerable<IExpression>>(triggers);
-      for (int i = 0, n = newTriggers.Count; i < n; i++)
-        newTriggers[i] = this.Visit(new List<IExpression>(newTriggers[i])).AsReadOnly();
-      return newTriggers.AsReadOnly();
-    }
-
-    /// <summary>
-    /// Visits the specified expression.
-    /// </summary>
-    /// <param name="expression">The expression.</param>
-    /// <returns></returns>
-    public override IExpression Visit(IExpression expression) {
-      if (this.stopTraversal) return expression;
-      var result = base.Visit(expression);
-      if (this.contractProvider != null && expression is IMethodCall) {
-        IEnumerable<IEnumerable<IExpression>>/*?*/ triggers = this.contractProvider.GetTriggersFor(expression);
-        if (triggers != null)
-          this.contractProvider.AssociateTriggersWithQuantifier(result, this.Visit(triggers));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified loop contract.
-    /// </summary>
-    /// <param name="loopContract">The loop contract.</param>
-    /// <returns></returns>
-    public virtual ILoopContract Visit(ILoopContract loopContract) {
-      if (this.stopTraversal) return loopContract;
-      LoopContract mutableLoopContract = loopContract as LoopContract;
-      if (mutableLoopContract == null) return loopContract;
-      mutableLoopContract.Invariants = this.Visit(mutableLoopContract.Invariants);
-      mutableLoopContract.Writes = this.Visit(mutableLoopContract.Writes);
-      return mutableLoopContract;
-    }
-
-    /// <summary>
-    /// Visits the specified loop invariants.
-    /// </summary>
-    /// <param name="loopInvariants">The loop invariants.</param>
-    /// <returns></returns>
-    public virtual List<ILoopInvariant> Visit(List<ILoopInvariant> loopInvariants) {
-      if (this.stopTraversal) return loopInvariants;
-      for (int i = 0, n = loopInvariants.Count; i < n; i++)
-        loopInvariants[i] = this.Visit(loopInvariants[i]);
-      return loopInvariants;
-    }
-
-    /// <summary>
-    /// Visits the specified loop invariant.
-    /// </summary>
-    /// <param name="loopInvariant">The loop invariant.</param>
-    /// <returns></returns>
-    public virtual ILoopInvariant Visit(ILoopInvariant loopInvariant) {
-      if (this.stopTraversal) return loopInvariant;
-      LoopInvariant mutableLoopInvariant = loopInvariant as LoopInvariant;
-      if (mutableLoopInvariant == null) return loopInvariant;
-      mutableLoopInvariant.Condition = this.Visit(mutableLoopInvariant.Condition);
-      if (mutableLoopInvariant.Description != null)
-        mutableLoopInvariant.Description = this.Visit(mutableLoopInvariant.Description);
-      return mutableLoopInvariant;
-    }
-
-    /// <summary>
-    /// Visits the method definition.
-    /// </summary>
-    /// <param name="methodDefinition">The method definition.</param>
-    /// <returns></returns>
-    public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
-      if (this.stopTraversal) return methodDefinition;
-      var result = base.Visit(methodDefinition);
-      if (this.contractProvider != null) {
-        //Visit the contract before visiting the method body so that it is all fixed up before
-        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
-        if (methodContract != null)
-          this.contractProvider.AssociateMethodWithContract(methodDefinition, this.Visit(methodContract));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified method contract.
-    /// </summary>
-    /// <param name="methodContract">The method contract.</param>
-    /// <returns></returns>
-    public virtual IMethodContract Visit(IMethodContract methodContract) {
-      if (this.stopTraversal) return methodContract;
-      MethodContract mutableMethodContract = methodContract as MethodContract;
-      if (mutableMethodContract == null) return methodContract;
-      mutableMethodContract.Allocates = this.Visit(mutableMethodContract.Allocates);
-      mutableMethodContract.Frees = this.Visit(mutableMethodContract.Frees);
-      mutableMethodContract.ModifiedVariables = this.Visit(mutableMethodContract.ModifiedVariables);
-      mutableMethodContract.Postconditions = this.Visit(mutableMethodContract.Postconditions);
-      mutableMethodContract.Preconditions = this.Visit(mutableMethodContract.Preconditions);
-      mutableMethodContract.Reads = this.Visit(mutableMethodContract.Reads);
-      mutableMethodContract.ThrownExceptions = this.Visit(mutableMethodContract.ThrownExceptions);
-      mutableMethodContract.Writes = this.Visit(mutableMethodContract.Writes);
-      return mutableMethodContract;
-    }
-
-    /// <summary>
-    /// Visits the specified post conditions.
-    /// </summary>
-    /// <param name="postConditions">The post conditions.</param>
-    /// <returns></returns>
-    public virtual List<IPostcondition> Visit(List<IPostcondition> postConditions) {
-      if (this.stopTraversal) return postConditions;
-      for (int i = 0, n = postConditions.Count; i < n; i++)
-        postConditions[i] = this.Visit(postConditions[i]);
-      return postConditions;
-    }
-
-    /// <summary>
-    /// Visits the specified post condition.
-    /// </summary>
-    /// <param name="postCondition">The post condition.</param>
-    public virtual IPostcondition Visit(IPostcondition postCondition) {
-      if (this.stopTraversal) return postCondition;
-      PostCondition mutablePostCondition = postCondition as PostCondition;
-      if (mutablePostCondition == null) return postCondition;
-      mutablePostCondition.Condition = this.Visit(mutablePostCondition.Condition);
-      if (mutablePostCondition.Description != null)
-        mutablePostCondition.Description = this.Visit(mutablePostCondition.Description);
-      return mutablePostCondition;
-    }
-
-    /// <summary>
-    /// Visits the specified preconditions.
-    /// </summary>
-    /// <param name="preconditions">The preconditions.</param>
-    public virtual List<IPrecondition> Visit(List<IPrecondition> preconditions) {
-      if (this.stopTraversal) return preconditions;
-      for (int i = 0, n = preconditions.Count; i < n; i++)
-        preconditions[i] = this.Visit(preconditions[i]);
-      return preconditions;
-    }
-
-    /// <summary>
-    /// Visits the specified precondition.
-    /// </summary>
-    /// <param name="precondition">The precondition.</param>
-    public virtual IPrecondition Visit(IPrecondition precondition) {
-      if (this.stopTraversal) return precondition;
-      Precondition mutablePrecondition = precondition as Precondition;
-      if (mutablePrecondition == null) return precondition;
-      mutablePrecondition.Condition = this.Visit(mutablePrecondition.Condition);
-      if (mutablePrecondition.Description != null)
-        mutablePrecondition.Description = this.Visit(mutablePrecondition.Description);
-      if (mutablePrecondition.ExceptionToThrow != null)
-        mutablePrecondition.ExceptionToThrow = this.Visit(mutablePrecondition.ExceptionToThrow);
-      return mutablePrecondition;
-    }
-
-    /// <summary>
-    /// Visits the specified statement.
-    /// </summary>
-    /// <param name="statement">The statement.</param>
-    public override IStatement Visit(IStatement statement) {
-      if (this.stopTraversal) return statement;
-      IStatement result = base.Visit(statement);
-      if (this.contractProvider != null) {
-        ILoopContract/*?*/ loopContract = this.contractProvider.GetLoopContractFor(statement);
-        if (loopContract != null)
-          this.contractProvider.AssociateLoopWithContract(result, this.Visit(loopContract));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified thrown exceptions.
-    /// </summary>
-    /// <param name="thrownExceptions">The thrown exceptions.</param>
-    public virtual List<IThrownException> Visit(List<IThrownException> thrownExceptions) {
-      if (this.stopTraversal) return thrownExceptions;
-      for (int i = 0, n = thrownExceptions.Count; i < n; i++)
-        thrownExceptions[i] = this.Visit(thrownExceptions[i]);
-      return thrownExceptions;
-    }
-
-    /// <summary>
-    /// Visits the specified thrown exception.
-    /// </summary>
-    /// <param name="thrownException">The thrown exception.</param>
-    public virtual IThrownException Visit(IThrownException thrownException) {
-      if (this.stopTraversal) return thrownException;
-      ThrownException mutableThrownException = thrownException as ThrownException;
-      if (mutableThrownException == null) return thrownException;
-      mutableThrownException.ExceptionType = this.Visit(mutableThrownException.ExceptionType);
-      mutableThrownException.Postcondition = this.Visit(mutableThrownException.Postcondition);
-      return mutableThrownException;
-    }
-
-    /// <summary>
-    /// Visits the specified type contract.
-    /// </summary>
-    /// <param name="typeContract">The type contract.</param>
-    public virtual ITypeContract Visit(ITypeContract typeContract) {
-      if (this.stopTraversal) return typeContract;
-      TypeContract mutableTypeContract = typeContract as TypeContract;
-      if (mutableTypeContract == null) return typeContract;
-      mutableTypeContract.ContractFields = this.Visit(mutableTypeContract.ContractFields);
-      mutableTypeContract.ContractMethods = this.Visit(mutableTypeContract.ContractMethods);
-      mutableTypeContract.Invariants = this.Visit(mutableTypeContract.Invariants);
-      return mutableTypeContract;
-    }
-
-    /// <summary>
-    /// Visits the specified field invariants.
-    /// </summary>
-    /// <param name="fieldInvariants">The field invariants.</param>
-    public virtual List<IFieldDefinition> Visit(List<IFieldDefinition> fieldInvariants) {
-      if (this.stopTraversal) return fieldInvariants;
-      for (int i = 0, n = fieldInvariants.Count; i < n; i++)
-        fieldInvariants[i] = this.Visit(fieldInvariants[i]);
-      return fieldInvariants;
-    }
-
-    /// <summary>
-    /// Visits the specified contract methods.
-    /// </summary>
-    /// <param name="contractMethods">The contract methods.</param>
-    public virtual List<IMethodDefinition> Visit(List<IMethodDefinition> contractMethods) {
-      if (this.stopTraversal) return contractMethods;
-      for (int i = 0, n = contractMethods.Count; i < n; i++)
-        contractMethods[i] = this.Visit(contractMethods[i]);
-      return contractMethods;
-    }
-
-    /// <summary>
-    /// Visits the specified type invariants.
-    /// </summary>
-    /// <param name="typeInvariants">The type invariants.</param>
-    public virtual List<ITypeInvariant> Visit(List<ITypeInvariant> typeInvariants) {
-      if (this.stopTraversal) return typeInvariants;
-      for (int i = 0, n = typeInvariants.Count; i < n; i++)
-        typeInvariants[i] = this.Visit(typeInvariants[i]);
-      return typeInvariants;
-    }
-
-    /// <summary>
-    /// Visits the specified type invariant.
-    /// </summary>
-    /// <param name="typeInvariant">The type invariant.</param>
-    public virtual ITypeInvariant Visit(ITypeInvariant typeInvariant) {
-      if (this.stopTraversal) return typeInvariant;
-      TypeInvariant mutableTypeInvariant = typeInvariant as TypeInvariant;
-      if (mutableTypeInvariant == null) return typeInvariant;
-      mutableTypeInvariant.Condition = this.Visit(mutableTypeInvariant.Condition);
-      if (mutableTypeInvariant.Description != null)
-        mutableTypeInvariant.Description = this.Visit(mutableTypeInvariant.Description);
-      return mutableTypeInvariant;
-    }
-
-    /// <summary>
-    /// Visits the specified namespace type definition.
-    /// </summary>
-    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
-    public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
-      if (this.stopTraversal) return namespaceTypeDefinition;
-      var result = base.Visit(namespaceTypeDefinition);
-      if (this.contractProvider != null) {
-        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(namespaceTypeDefinition);
-        if (typeContract != null)
-          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
-      }
-      return result;
-    }
-
-    /// <summary>
-    /// Visits the specified nested type definition.
-    /// </summary>
-    /// <param name="nestedTypeDefinition">The nested type definition.</param>
-    public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
-      if (this.stopTraversal) return nestedTypeDefinition;
-      var result = base.Visit(nestedTypeDefinition);
-      if (this.contractProvider != null) {
-        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(nestedTypeDefinition);
-        if (typeContract != null)
-          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
-      }
-      return result;
-    }
-  }
-
-  /// <summary>
   /// Use this as a base class when you define a code mutator that mutates ONLY method bodies (in other words
   /// all metadata definitions, including parameter definitions and local definition remain unchanged).
   /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), 
@@ -3098,96 +4530,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Visits the specified method reference.
     /// </summary>
-    /// <param name="methodReference">The method reference.</param>
-    public override IMethodReference Visit(IMethodReference methodReference) {
-      return methodReference;
-    }
-
-    /// <summary>
-    /// Visits a parameter definition that is being referenced.
-    /// </summary>
-    /// <param name="parameterDefinition">The referenced parameter definition.</param>
-    public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
-      return parameterDefinition;
-    }
-
-    /// <summary>
-    /// Visits the specified type reference.
-    /// </summary>
-    /// <param name="typeReference">The type reference.</param>
-    public override ITypeReference Visit(ITypeReference typeReference) {
-      return typeReference;
-    }
-
-    #endregion All code mutators that are not mutating an entire assembly need to *not* modify certain references
-  }
-
-  /// <summary>
-  /// Use this as a base class when you define a code and contract mutator that mutates ONLY
-  /// method bodies and their contracts.
-  /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), and
-  /// Visit(ITypeReference) that make sure to not modify the references.
-  /// </summary>
-  public class MethodBodyCodeAndContractMutator : CodeAndContractMutatingVisitor {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host"></param>
-    public MethodBodyCodeAndContractMutator(IMetadataHost host)
-      : base(host) { }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host"></param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
-      : base(host) { }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
-    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
-    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public MethodBodyCodeAndContractMutator(IMetadataHost host,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider, contractProvider) { }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="host"></param>
-    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
-    /// <param name="sourceLocationProvider"></param>
-    /// <param name="contractProvider"></param>
-    public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
-      : base(host, sourceLocationProvider, contractProvider) { }
-
-    #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
-    /// <summary>
-    /// Visits the specified field reference.
-    /// </summary>
-    /// <param name="fieldReference">The field reference.</param>
-    public override IFieldReference Visit(IFieldReference fieldReference) {
-      return fieldReference;
-    }
-
-    /// <summary>
-    /// Visits a reference to the specified local definition.
-    /// </summary>
-    /// <param name="localDefinition">The referenced local definition to visit.</param>
-    /// <returns></returns>
-    public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
-      return localDefinition;
-    }
-
-    /// <summary>
-    /// Visits the specified method reference.
-    /// </summary>
-    /// <param name="methodReference">The method reference.</param>
     public override IMethodReference Visit(IMethodReference methodReference) {
       return methodReference;
     }
@@ -4005,6 +5347,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="popValue">The PopValue.</param>
     /// <returns></returns>
     public virtual IExpression Visit(PopValue popValue) {
+      popValue.Type = this.Visit(popValue.Type);
       return popValue;
     }
 
@@ -5591,4 +6934,1312 @@ namespace Microsoft.Cci.MutableCodeModel {
       #endregion overriding implementations of ICodeVisitor Members
     }
   }
+}
+
+namespace Microsoft.Cci.MutableCodeModel.Contracts {
+
+  /// <summary>
+  /// A class that traverses a mutable contract, code and metadata model in depth first, left to right order,
+  /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
+  /// </summary>
+  public class CodeAndContractRewriter : CodeRewriter {
+
+    /// <summary>
+    /// A class that traverses a mutable contract, code and metadata model in depth first, left to right order,
+    /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public CodeAndContractRewriter(IMetadataHost host)
+      : base(host) {
+    }
+
+    /// <summary>
+    /// A class that traverses a mutable contract, code and metadata model in depth first, left to right order,
+    /// rewriting each node it visits by updating the node's children with recursivly rewritten nodes.
+    /// Important: ALL nodes in the model to rewrite must come from the mutable code and metadata model.
+    /// The rewritten model, however, may incorporate other kinds of nodes.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    public CodeAndContractRewriter(IMetadataHost host, ContractProvider/*?*/ contractProvider)
+      : base(host) {
+      this.contractProvider = contractProvider;
+    }
+
+    /// <summary>
+    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
+    /// </summary>
+    protected readonly ContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// Rewrites the given list of trigger expressions.
+    /// </summary>
+    public virtual IEnumerable<IEnumerable<IExpression>>/*?*/ Rewrite(IEnumerable<IEnumerable<IExpression>>/*?*/ triggers) {
+      var result = new List<IEnumerable<IExpression>>(triggers);
+      for (int i = 0, n = result.Count; i < n; i++) {
+        var list = new List<IExpression>(result[i]);
+        result[i] = this.Rewrite(list).AsReadOnly();
+      }
+      return result.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Rewrites the given loop contract.
+    /// </summary>
+    public virtual ILoopContract Rewrite(ILoopContract loopContract) {
+      var mutableLoopContract = loopContract as LoopContract;
+      if (mutableLoopContract == null) return loopContract;
+      this.RewriteChildren(mutableLoopContract);
+      return mutableLoopContract;
+    }
+
+    /// <summary>
+    /// Rewrites the given loop invariant.
+    /// </summary>
+    public virtual ILoopInvariant Rewrite(ILoopInvariant loopInvariant) {
+      var mutableLoopInvariant = loopInvariant as LoopInvariant;
+      if (mutableLoopInvariant == null) return loopInvariant;
+      this.RewriteChildren(mutableLoopInvariant);
+      return mutableLoopInvariant;
+    }
+
+    /// <summary>
+    /// Rewrites the given loop variant.
+    /// </summary>
+    public virtual ILoopVariant Rewrite(ILoopVariant loopVariant) {
+      var mutableLoopVariant = loopVariant as LoopVariant;
+      if (mutableLoopVariant == null) return loopVariant;
+      this.RewriteChildren(mutableLoopVariant);
+      return mutableLoopVariant;
+    }
+
+    /// <summary>
+    /// Rewrites the given method contract.
+    /// </summary>
+    public virtual IMethodContract Rewrite(IMethodContract methodContract) {
+      var mutableMethodContract = methodContract as MethodContract;
+      if (mutableMethodContract == null) return methodContract;
+      this.RewriteChildren(mutableMethodContract);
+      return mutableMethodContract;
+    }
+
+    /// <summary>
+    /// Rewrites the given method variant.
+    /// </summary>
+    public virtual IMethodVariant Rewrite(IMethodVariant methodVariant) {
+      var mutableMethodVariant = methodVariant as MethodVariant;
+      if (mutableMethodVariant == null) return methodVariant;
+      this.RewriteChildren(mutableMethodVariant);
+      return mutableMethodVariant;
+    }
+
+    /// <summary>
+    /// Rewrites the given postCondition.
+    /// </summary>
+    public virtual IPostcondition Rewrite(IPostcondition postCondition) {
+      var mutablePostcondition = postCondition as Postcondition;
+      if (mutablePostcondition == null) return postCondition;
+      this.RewriteChildren(mutablePostcondition);
+      return mutablePostcondition;
+    }
+
+    /// <summary>
+    /// Rewrites the given pre condition.
+    /// </summary>
+    public virtual IPrecondition Rewrite(IPrecondition precondition) {
+      var mutablePrecondition = precondition as Precondition;
+      if (mutablePrecondition == null) return precondition;
+      this.RewriteChildren(mutablePrecondition);
+      return mutablePrecondition;
+    }
+
+    /// <summary>
+    /// Rewrites the specified statement.
+    /// </summary>
+    public override IStatement Rewrite(IStatement statement) {
+      var rewrittenStatement = base.Rewrite(statement);
+      if (this.contractProvider != null) {
+        var loopContract = this.contractProvider.GetLoopContractFor(statement);
+        if (loopContract != null) {
+          var rewrittenLoopContract = this.Rewrite(loopContract);
+          this.contractProvider.AssociateLoopWithContract(rewrittenStatement, rewrittenLoopContract);
+        }
+      }
+      return rewrittenStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given thrown exception.
+    /// </summary>
+    public virtual IThrownException Rewrite(IThrownException thrownException) {
+      var mutableThrownException = thrownException as ThrownException;
+      if (mutableThrownException == null) return thrownException;
+      this.RewriteChildren(mutableThrownException);
+      return mutableThrownException;
+    }
+
+    /// <summary>
+    /// Rewrites the given type contract.
+    /// </summary>
+    public virtual ITypeContract Rewrite(ITypeContract typeContract) {
+      var mutableTypeContract = typeContract as TypeContract;
+      if (mutableTypeContract == null) return typeContract;
+      this.RewriteChildren(mutableTypeContract);
+      return mutableTypeContract;
+    }
+
+    /// <summary>
+    /// Rewrites the given type invariant.
+    /// </summary>
+    public virtual ITypeInvariant Rewrite(ITypeInvariant typeInvariant) {
+      var mutableTypeInvariant = typeInvariant as TypeInvariant;
+      if (mutableTypeInvariant == null) return typeInvariant;
+      this.RewriteChildren(mutableTypeInvariant);
+      return mutableTypeInvariant;
+    }
+
+    /// <summary>
+    /// Rewrites the given method call.
+    /// </summary>
+    public override IExpression Rewrite(IMethodCall methodCall) {
+      var rewrittenMethodCall = base.Rewrite(methodCall);
+      if (this.contractProvider != null) {
+        var triggers = this.contractProvider.GetTriggersFor(methodCall);
+        if (triggers != null) {
+          var rewrittenTriggers = this.Rewrite(triggers);
+          this.contractProvider.AssociateTriggersWithQuantifier(rewrittenMethodCall, rewrittenTriggers);
+        }
+      }
+      return rewrittenMethodCall;
+    }
+
+    /// <summary>
+    /// Rewrites the given method definition.
+    /// </summary>
+    public override IMethodDefinition Rewrite(IMethodDefinition method) {
+      var rewrittenMethod = base.Rewrite(method);
+      if (this.contractProvider != null) {
+        var methodContract = this.contractProvider.GetMethodContractFor(method);
+        if (methodContract != null) {
+          var rewrittenContract = this.Rewrite(methodContract);
+          this.contractProvider.AssociateMethodWithContract(rewrittenMethod, rewrittenContract);
+        }
+      }
+      return rewrittenMethod;
+    }
+
+    /// <summary>
+    /// Rewrites the given type definition.
+    /// </summary>
+    public override ITypeDefinition Rewrite(ITypeDefinition typeDefinition) {
+      var result = base.Rewrite(typeDefinition);
+      if (this.contractProvider == null) return result;
+      var typeContract = this.contractProvider.GetTypeContractFor(typeDefinition) as TypeContract;
+      if (typeContract != null) {
+        var newContract = this.Rewrite(typeContract);
+        this.contractProvider.AssociateTypeWithContract(result, newContract);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of addressable expressions.
+    /// </summary>
+    public virtual List<IAddressableExpression>/*?*/ Rewrite(List<IAddressableExpression>/*?*/ addressableExpressions) {
+      if (addressableExpressions == null) return null;
+      for (int i = 0, n = addressableExpressions.Count; i < n; i++)
+        addressableExpressions[i] = this.Rewrite(addressableExpressions[i]);
+      return addressableExpressions;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of loop invariants.
+    /// </summary>
+    public virtual List<ILoopInvariant>/*?*/ Rewrite(List<ILoopInvariant>/*?*/ loopInvariants) {
+      if (loopInvariants == null) return null;
+      for (int i = 0, n = loopInvariants.Count; i < n; i++)
+        loopInvariants[i] = this.Rewrite(loopInvariants[i]);
+      return loopInvariants;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of loop variants.
+    /// </summary>
+    public virtual List<ILoopVariant>/*?*/ Rewrite(List<ILoopVariant>/*?*/ loopVariants) {
+      if (loopVariants == null) return null;
+      for (int i = 0, n = loopVariants.Count; i < n; i++)
+        loopVariants[i] = this.Rewrite(loopVariants[i]);
+      return loopVariants;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of post conditions.
+    /// </summary>
+    public virtual List<IPostcondition>/*?*/ Rewrite(List<IPostcondition>/*?*/ postConditions) {
+      if (postConditions == null) return null;
+      for (int i = 0, n = postConditions.Count; i < n; i++)
+        postConditions[i] = this.Rewrite(postConditions[i]);
+      return postConditions;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of pre conditions.
+    /// </summary>
+    public virtual List<IPrecondition>/*?*/ Rewrite(List<IPrecondition>/*?*/ preconditions) {
+      if (preconditions == null) return null;
+      for (int i = 0, n = preconditions.Count; i < n; i++)
+        preconditions[i] = this.Rewrite(preconditions[i]);
+      return preconditions;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of thrown exceptions.
+    /// </summary>
+    public virtual List<IThrownException>/*?*/ Rewrite(List<IThrownException>/*?*/ thrownExceptions) {
+      if (thrownExceptions == null) return null;
+      for (int i = 0, n = thrownExceptions.Count; i < n; i++)
+        thrownExceptions[i] = this.Rewrite(thrownExceptions[i]);
+      return thrownExceptions;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of addressable expressions.
+    /// </summary>
+    public virtual List<ITypeInvariant>/*?*/ Rewrite(List<ITypeInvariant>/*?*/ typeInvariants) {
+      if (typeInvariants == null) return null;
+      for (int i = 0, n = typeInvariants.Count; i < n; i++)
+        typeInvariants[i] = this.Rewrite(typeInvariants[i]);
+      return typeInvariants;
+    }
+
+    /// <summary>
+    /// Rewrites the given list of post conditions.
+    /// </summary>
+    public virtual List<IMethodVariant>/*?*/ Rewrite(List<IMethodVariant>/*?*/ variants) {
+      if (variants == null) return null;
+      for (int i = 0, n = variants.Count; i < n; i++)
+        variants[i] = this.Rewrite(variants[i]);
+      return variants;
+    }
+
+    /// <summary>
+    /// Called from the type specific rewrite method to rewrite the common part of all contract elments.
+    /// </summary>
+    /// <param name="contractElement"></param>
+    public virtual void RewriteChildren(ContractElement contractElement) {
+      contractElement.Condition = this.Rewrite(contractElement.Condition);
+      if (contractElement.Description != null)
+        contractElement.Description = this.Rewrite(contractElement.Description);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given loop contract.
+    /// </summary>
+    public virtual void RewriteChildren(LoopContract loopContract) {
+      loopContract.Invariants = this.Rewrite(loopContract.Invariants);
+      loopContract.Variants = this.Rewrite(loopContract.Variants);
+      loopContract.Writes = this.Rewrite(loopContract.Writes);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given loop invariant.
+    /// </summary>
+    public virtual void RewriteChildren(LoopInvariant loopInvariant) {
+      this.RewriteChildren((ContractElement)loopInvariant);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given loop variant.
+    /// </summary>
+    public virtual void RewriteChildren(LoopVariant loopVariant) {
+      this.RewriteChildren((ContractElement)loopVariant);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method contract.
+    /// </summary>
+    public virtual void RewriteChildren(MethodContract methodContract) {
+      methodContract.Allocates = this.Rewrite(methodContract.Allocates);
+      methodContract.Frees = this.Rewrite(methodContract.Frees);
+      methodContract.ModifiedVariables = this.Rewrite(methodContract.ModifiedVariables);
+      methodContract.Postconditions = this.Rewrite(methodContract.Postconditions);
+      methodContract.Preconditions = this.Rewrite(methodContract.Preconditions);
+      methodContract.Reads = this.Rewrite(methodContract.Reads);
+      methodContract.ThrownExceptions = this.Rewrite(methodContract.ThrownExceptions);
+      methodContract.Writes = this.Rewrite(methodContract.Writes);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given method variant.
+    /// </summary>
+    public virtual void RewriteChildren(MethodVariant methodVariant) {
+      this.RewriteChildren((ContractElement)methodVariant);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given pre condition.
+    /// </summary>
+    public virtual void RewriteChildren(Precondition precondition) {
+      this.RewriteChildren((ContractElement)precondition);
+      if (precondition.ExceptionToThrow != null)
+        precondition.ExceptionToThrow = this.Rewrite(precondition.ExceptionToThrow);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given thrown exception.
+    /// </summary>
+    public virtual void RewriteChildren(ThrownException thrownException) {
+      thrownException.ExceptionType = this.Rewrite(thrownException.ExceptionType);
+      thrownException.Postcondition = this.Rewrite((Postcondition)thrownException.Postcondition);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given type contract.
+    /// </summary>
+    public virtual void RewriteChildren(TypeContract typeContract) {
+      typeContract.ContractFields = this.Rewrite(typeContract.ContractFields);
+      typeContract.ContractMethods = this.Rewrite(typeContract.ContractMethods);
+      typeContract.Invariants = this.Rewrite(typeContract.Invariants);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given type invariant.
+    /// </summary>
+    public virtual void RewriteChildren(TypeInvariant typeInvariant) {
+      this.RewriteChildren((ContractElement)typeInvariant);
+    }
+
+  }
+
+
+  /// <summary>
+  /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+  /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+  /// Also visits and mutates the associated code contracts and establishes associations with new copies.
+  /// </summary>
+  /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
+  /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
+  /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
+  /// The new classes CodeAndContractCopier and CodeAndContractMutatingVisitor are meant to facilitate such scenarios.
+  /// </remarks>
+  [Obsolete("This class has been superceded by CodeAndContractCopier and CodeAndContractMutatingVisitor, used in combination. It will go away after April 2011")]
+  public class CodeAndContractMutator : CodeMutator {
+
+    /// <summary>
+    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
+    /// </summary>
+    protected readonly ContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public CodeAndContractMutator(IMetadataHost host)
+      : base(host) { }
+
+    /// <summary>
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="copyOnlyIfNotAlreadyMutable">True if the mutator should try and perform mutations in place, rather than mutating new copies.</param>
+    public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
+      : base(host, copyOnlyIfNotAlreadyMutable) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    public CodeAndContractMutator(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider) {
+      this.contractProvider = contractProvider;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    public CodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, copyOnlyIfNotAlreadyMutable, sourceLocationProvider) {
+      this.contractProvider = contractProvider;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CodeAndContractMutator"/> class.
+    /// </summary>
+    /// <param name="template">The template.</param>
+    protected CodeAndContractMutator(CodeAndContractMutator template)
+      : base(template.host, template.sourceLocationProvider) {
+      this.contractProvider = template.contractProvider;
+    }
+
+    /// <summary>
+    /// Visits the specified addressable expressions.
+    /// </summary>
+    /// <param name="addressableExpressions">The addressable expressions.</param>
+    /// <returns></returns>
+    public virtual List<IAddressableExpression> Visit(List<IAddressableExpression> addressableExpressions) {
+      List<IAddressableExpression> newList = new List<IAddressableExpression>();
+      foreach (var addressableExpression in addressableExpressions)
+        newList.Add(this.Visit(addressableExpression));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified triggers.
+    /// </summary>
+    /// <param name="triggers">The triggers.</param>
+    /// <returns></returns>
+    public virtual IEnumerable<IEnumerable<IExpression>> Visit(IEnumerable<IEnumerable<IExpression>> triggers) {
+      List<IEnumerable<IExpression>> newTriggers = new List<IEnumerable<IExpression>>(triggers);
+      for (int i = 0, n = newTriggers.Count; i < n; i++)
+        newTriggers[i] = this.Visit(new List<IExpression>(newTriggers[i])).AsReadOnly();
+      return newTriggers.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Visits the specified expression.
+    /// </summary>
+    /// <param name="expression">The expression.</param>
+    /// <returns></returns>
+    public override IExpression Visit(IExpression expression) {
+      IExpression result = base.Visit(expression);
+      if (this.contractProvider != null && expression is IMethodCall) {
+        IEnumerable<IEnumerable<IExpression>>/*?*/ triggers = this.contractProvider.GetTriggersFor(expression);
+        if (triggers != null)
+          this.contractProvider.AssociateTriggersWithQuantifier(result, this.Visit(triggers));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified loop contract.
+    /// </summary>
+    /// <param name="loopContract">The loop contract.</param>
+    /// <returns></returns>
+    public virtual ILoopContract Visit(ILoopContract loopContract) {
+      LoopContract mutableLoopContract = loopContract as LoopContract;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableLoopContract == null)
+        mutableLoopContract = new LoopContract(loopContract);
+      return this.Visit(mutableLoopContract);
+    }
+
+    /// <summary>
+    /// Visits the specified loop contract.
+    /// </summary>
+    /// <param name="loopContract">The loop contract.</param>
+    /// <returns></returns>
+    public virtual ILoopContract Visit(LoopContract loopContract) {
+      loopContract.Invariants = this.Visit(loopContract.Invariants);
+      loopContract.Writes = this.Visit(loopContract.Writes);
+      return loopContract;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariants.
+    /// </summary>
+    /// <param name="loopInvariants">The loop invariants.</param>
+    /// <returns></returns>
+    public virtual List<ILoopInvariant> Visit(List<ILoopInvariant> loopInvariants) {
+      List<ILoopInvariant> newList = new List<ILoopInvariant>();
+      foreach (var loopInvariant in loopInvariants)
+        newList.Add(this.Visit(loopInvariant));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant">The loop invariant.</param>
+    /// <returns></returns>
+    public virtual ILoopInvariant Visit(ILoopInvariant loopInvariant) {
+      LoopInvariant mutableLoopInvariant = loopInvariant as LoopInvariant;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableLoopInvariant == null)
+        mutableLoopInvariant = new LoopInvariant(loopInvariant);
+      return this.Visit(mutableLoopInvariant);
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant">The loop invariant.</param>
+    /// <returns></returns>
+    public virtual ILoopInvariant Visit(LoopInvariant loopInvariant) {
+      loopInvariant.Condition = this.Visit(loopInvariant.Condition);
+      if (loopInvariant.Description != null)
+        loopInvariant.Description = this.Visit(loopInvariant.Description);
+      return loopInvariant;
+    }
+
+    /// <summary>
+    /// Visits the specified method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
+    public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
+      var result = this.GetMutableCopy(methodDefinition);
+      if (this.contractProvider != null) {
+        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
+        if (methodContract != null)
+          this.contractProvider.AssociateMethodWithContract(result, methodContract);
+      }
+      return this.Visit(result);
+    }
+
+    /// <summary>
+    /// Visits the specified global method definition.
+    /// </summary>
+    /// <param name="globalMethodDefinition">The global method definition.</param>
+    /// <returns></returns>
+    public override IGlobalMethodDefinition Visit(IGlobalMethodDefinition globalMethodDefinition) {
+      var result = this.GetMutableCopy(globalMethodDefinition);
+      if (this.contractProvider != null) {
+        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(globalMethodDefinition);
+        if (methodContract != null)
+          this.contractProvider.AssociateMethodWithContract(result, methodContract);
+      }
+      return this.Visit(result);
+    }
+
+    /// <summary>
+    /// Visits the specified method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
+    public override MethodDefinition Visit(MethodDefinition methodDefinition) {
+      if (this.stopTraversal) return methodDefinition;
+      this.Visit((TypeDefinitionMember)methodDefinition);
+      this.path.Push(methodDefinition);
+      if (methodDefinition.IsGeneric)
+        methodDefinition.GenericParameters = this.Visit(methodDefinition.GenericParameters, methodDefinition);
+      methodDefinition.Parameters = this.Visit(methodDefinition.Parameters);
+      if (methodDefinition.IsPlatformInvoke)
+        methodDefinition.PlatformInvokeData = this.Visit(this.GetMutableCopy(methodDefinition.PlatformInvokeData));
+      methodDefinition.ReturnValueAttributes = this.VisitMethodReturnValueAttributes(methodDefinition.ReturnValueAttributes);
+      if (methodDefinition.ReturnValueIsModified)
+        methodDefinition.ReturnValueCustomModifiers = this.VisitMethodReturnValueCustomModifiers(methodDefinition.ReturnValueCustomModifiers);
+      if (methodDefinition.ReturnValueIsMarshalledExplicitly)
+        methodDefinition.ReturnValueMarshallingInformation = this.VisitMethodReturnValueMarshallingInformation(this.GetMutableCopy(methodDefinition.ReturnValueMarshallingInformation));
+      if (methodDefinition.HasDeclarativeSecurity)
+        methodDefinition.SecurityAttributes = this.Visit(methodDefinition.SecurityAttributes);
+      methodDefinition.Type = this.Visit(methodDefinition.Type);
+      if (this.contractProvider != null) {
+        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
+        if (methodContract != null)
+          this.contractProvider.AssociateMethodWithContract(methodDefinition, this.Visit(methodContract));
+      }
+      if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal)
+        methodDefinition.Body = this.Visit(methodDefinition.Body);
+      this.path.Pop();
+      return methodDefinition;
+    }
+
+    /// <summary>
+    /// Visits the specified method body.
+    /// </summary>
+    /// <param name="methodBody">The method body.</param>
+    /// <returns></returns>
+    public override IMethodBody Visit(IMethodBody methodBody) {
+      ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
+      if (sourceMethodBody != null) {
+        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
+        mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
+        var currentMethod = this.GetCurrentMethod();
+        // Visiting the block extracts the contract, but it gets associated with the immutable method
+        if (this.contractProvider != null) {
+          var methodDef = methodBody.MethodDefinition;
+          IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDef);
+          if (methodContract != null)
+            this.contractProvider.AssociateMethodWithContract(currentMethod, this.Visit(methodContract));
+        }
+        mutableSourceMethodBody.MethodDefinition = currentMethod;
+        mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
+        return mutableSourceMethodBody;
+      }
+      return base.Visit(methodBody);
+    }
+
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
+    /// <returns></returns>
+    public virtual IMethodContract Visit(IMethodContract methodContract) {
+      MethodContract mutableMethodContract = methodContract as MethodContract;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableMethodContract == null)
+        mutableMethodContract = new MethodContract(methodContract);
+      return this.Visit(mutableMethodContract);
+    }
+
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
+    /// <returns></returns>
+    public virtual IMethodContract Visit(MethodContract methodContract) {
+      methodContract.Allocates = this.Visit(methodContract.Allocates);
+      methodContract.Frees = this.Visit(methodContract.Frees);
+      methodContract.ModifiedVariables = this.Visit(methodContract.ModifiedVariables);
+      methodContract.Postconditions = this.Visit(methodContract.Postconditions);
+      methodContract.Preconditions = this.Visit(methodContract.Preconditions);
+      methodContract.Reads = this.Visit(methodContract.Reads);
+      methodContract.ThrownExceptions = this.Visit(methodContract.ThrownExceptions);
+      methodContract.Writes = this.Visit(methodContract.Writes);
+      return methodContract;
+    }
+
+    /// <summary>
+    /// Visits the specified post conditions.
+    /// </summary>
+    /// <param name="postConditions">The post conditions.</param>
+    /// <returns></returns>
+    public virtual List<IPostcondition> Visit(List<IPostcondition> postConditions) {
+      List<IPostcondition> newList = new List<IPostcondition>();
+      foreach (var postCondition in postConditions)
+        newList.Add(this.Visit(postCondition));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified post condition.
+    /// </summary>
+    /// <param name="postCondition">The post condition.</param>
+    public virtual IPostcondition Visit(IPostcondition postCondition) {
+      Postcondition mutablePostCondition = postCondition as Postcondition;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutablePostCondition == null)
+        mutablePostCondition = new Postcondition(postCondition);
+      return this.Visit(mutablePostCondition);
+    }
+
+    /// <summary>
+    /// Visits the specified post condition.
+    /// </summary>
+    /// <param name="postCondition">The post condition.</param>
+    public virtual IPostcondition Visit(Postcondition postCondition) {
+      postCondition.Condition = this.Visit(postCondition.Condition);
+      if (postCondition.Description != null)
+        postCondition.Description = this.Visit(postCondition.Description);
+      return postCondition;
+    }
+
+    /// <summary>
+    /// Visits the specified preconditions.
+    /// </summary>
+    /// <param name="preconditions">The preconditions.</param>
+    public virtual List<IPrecondition> Visit(List<IPrecondition> preconditions) {
+      List<IPrecondition> newList = new List<IPrecondition>();
+      foreach (var precondition in preconditions)
+        newList.Add(this.Visit(precondition));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified precondition.
+    /// </summary>
+    /// <param name="precondition">The precondition.</param>
+    public virtual IPrecondition Visit(IPrecondition precondition) {
+      Precondition mutablePrecondition = precondition as Precondition;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutablePrecondition == null)
+        mutablePrecondition = new Precondition(precondition);
+      return this.Visit(mutablePrecondition);
+    }
+
+    /// <summary>
+    /// Visits the specified precondition.
+    /// </summary>
+    /// <param name="precondition">The precondition.</param>
+    public virtual IPrecondition Visit(Precondition precondition) {
+      precondition.Condition = this.Visit(precondition.Condition);
+      if (precondition.Description != null)
+        precondition.Description = this.Visit(precondition.Description);
+      if (precondition.ExceptionToThrow != null)
+        precondition.ExceptionToThrow = this.Visit(precondition.ExceptionToThrow);
+      return precondition;
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public override IStatement Visit(IStatement statement) {
+      IStatement result = base.Visit(statement);
+      if (this.contractProvider != null) {
+        ILoopContract/*?*/ loopContract = this.contractProvider.GetLoopContractFor(statement);
+        if (loopContract != null)
+          this.contractProvider.AssociateLoopWithContract(result, this.Visit(loopContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exceptions.
+    /// </summary>
+    /// <param name="thrownExceptions">The thrown exceptions.</param>
+    public virtual List<IThrownException> Visit(List<IThrownException> thrownExceptions) {
+      List<IThrownException> newList = new List<IThrownException>();
+      foreach (var thrownException in thrownExceptions)
+        newList.Add(this.Visit(thrownException));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exception.
+    /// </summary>
+    /// <param name="thrownException">The thrown exception.</param>
+    public virtual IThrownException Visit(IThrownException thrownException) {
+      ThrownException mutableThrownException = thrownException as ThrownException;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableThrownException == null)
+        mutableThrownException = new ThrownException(thrownException);
+      return this.Visit(mutableThrownException);
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exception.
+    /// </summary>
+    /// <param name="thrownException">The thrown exception.</param>
+    public virtual IThrownException Visit(ThrownException thrownException) {
+      thrownException.ExceptionType = this.Visit(thrownException.ExceptionType);
+      thrownException.Postcondition = this.Visit(thrownException.Postcondition);
+      return thrownException;
+    }
+
+    /// <summary>
+    /// Visits the specified type contract.
+    /// </summary>
+    /// <param name="typeContract">The type contract.</param>
+    public virtual ITypeContract Visit(ITypeContract typeContract) {
+      TypeContract mutableTypeContract = typeContract as TypeContract;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableTypeContract == null)
+        mutableTypeContract = new TypeContract(typeContract);
+      return this.Visit(mutableTypeContract);
+    }
+
+    /// <summary>
+    /// Visits the specified type contract.
+    /// </summary>
+    /// <param name="typeContract">The type contract.</param>
+    public virtual ITypeContract Visit(TypeContract typeContract) {
+      typeContract.ContractFields = this.Visit(typeContract.ContractFields);
+      typeContract.ContractMethods = this.Visit(typeContract.ContractMethods);
+      typeContract.Invariants = this.Visit(typeContract.Invariants);
+      return typeContract;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariants.
+    /// </summary>
+    /// <param name="typeInvariants">The type invariants.</param>
+    public virtual List<ITypeInvariant> Visit(List<ITypeInvariant> typeInvariants) {
+      List<ITypeInvariant> newList = new List<ITypeInvariant>();
+      foreach (var typeInvariant in typeInvariants)
+        newList.Add(this.Visit(typeInvariant));
+      return newList;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariant.
+    /// </summary>
+    /// <param name="typeInvariant">The type invariant.</param>
+    public virtual ITypeInvariant Visit(ITypeInvariant typeInvariant) {
+      TypeInvariant mutableTypeInvariant = typeInvariant as TypeInvariant;
+      if (!this.copyOnlyIfNotAlreadyMutable || mutableTypeInvariant == null)
+        mutableTypeInvariant = new TypeInvariant(typeInvariant);
+      return this.Visit(mutableTypeInvariant);
+    }
+
+    /// <summary>
+    /// Visits the specified type invariant.
+    /// </summary>
+    /// <param name="typeInvariant">The type invariant.</param>
+    public virtual ITypeInvariant Visit(TypeInvariant typeInvariant) {
+      typeInvariant.Condition = this.Visit(typeInvariant.Condition);
+      if (typeInvariant.Description != null)
+        typeInvariant.Description = this.Visit(typeInvariant.Description);
+      return typeInvariant;
+    }
+
+    /// <summary>
+    /// Visits the specified namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
+    public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      var result = base.Visit(namespaceTypeDefinition);
+      if (this.contractProvider != null) {
+        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(namespaceTypeDefinition);
+        if (typeContract != null)
+          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition">The nested type definition.</param>
+    public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
+      var result = base.Visit(nestedTypeDefinition);
+      if (this.contractProvider != null) {
+        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(nestedTypeDefinition);
+        if (typeContract != null)
+          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
+      }
+      return result;
+    }
+
+  }
+
+  /// <summary>
+  /// Use this as a base class when you define a code and contract mutator that mutates ONLY
+  /// method bodies and their contracts.
+  /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), and
+  /// Visit(ITypeReference) that make sure to not modify the references.
+  /// </summary>
+  public class MethodBodyCodeAndContractMutator : CodeAndContractMutatingVisitor {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    public MethodBodyCodeAndContractMutator(IMetadataHost host)
+      : base(host) { }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable)
+      : base(host) { }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    public MethodBodyCodeAndContractMutator(IMetadataHost host,
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider, contractProvider) { }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="copyOnlyIfNotAlreadyMutable"></param>
+    /// <param name="sourceLocationProvider"></param>
+    /// <param name="contractProvider"></param>
+    public MethodBodyCodeAndContractMutator(IMetadataHost host, bool copyOnlyIfNotAlreadyMutable, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider, contractProvider) { }
+
+    #region All code mutators that are not mutating an entire assembly need to *not* modify certain references
+    /// <summary>
+    /// Visits the specified field reference.
+    /// </summary>
+    /// <param name="fieldReference">The field reference.</param>
+    public override IFieldReference Visit(IFieldReference fieldReference) {
+      return fieldReference;
+    }
+
+    /// <summary>
+    /// Visits a reference to the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition">The referenced local definition to visit.</param>
+    /// <returns></returns>
+    public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
+      return localDefinition;
+    }
+
+    /// <summary>
+    /// Visits the specified method reference.
+    /// </summary>
+    public override IMethodReference Visit(IMethodReference methodReference) {
+      return methodReference;
+    }
+
+    /// <summary>
+    /// Visits a parameter definition that is being referenced.
+    /// </summary>
+    /// <param name="parameterDefinition">The referenced parameter definition.</param>
+    public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
+      return parameterDefinition;
+    }
+
+    /// <summary>
+    /// Visits the specified type reference.
+    /// </summary>
+    /// <param name="typeReference">The type reference.</param>
+    public override ITypeReference Visit(ITypeReference typeReference) {
+      return typeReference;
+    }
+
+    #endregion All code mutators that are not mutating an entire assembly need to *not* modify certain references
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
+  public class CodeAndContractMutatingVisitor : CodeMutatingVisitor {
+    /// <summary>
+    /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.
+    /// </summary>
+    protected readonly ContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// Allocates a mutator that uses the inherited methods from MetadataMutator to walk everything down to the method body level,
+    /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
+    /// The mutator also visits and mutates the associated code contracts and establishes associations with new copies.
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    public CodeAndContractMutatingVisitor(IMetadataHost host)
+      : base(host) {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
+    /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
+    public CodeAndContractMutatingVisitor(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ContractProvider/*?*/ contractProvider)
+      : base(host, sourceLocationProvider) {
+      this.contractProvider = contractProvider;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CodeAndContractMutator"/> class.
+    /// </summary>
+    /// <param name="template">The template.</param>
+    protected CodeAndContractMutatingVisitor(CodeAndContractMutatingVisitor template)
+      : base(template.host, template.sourceLocationProvider) {
+      this.contractProvider = template.contractProvider;
+    }
+
+    /// <summary>
+    /// Visits the specified addressable expressions.
+    /// </summary>
+    /// <param name="addressableExpressions">The addressable expressions.</param>
+    /// <returns></returns>
+    public virtual List<IAddressableExpression> Visit(List<IAddressableExpression> addressableExpressions) {
+      if (this.stopTraversal) return addressableExpressions;
+      for (int i = 0, n = addressableExpressions.Count; i < n; i++)
+        addressableExpressions[i] = this.Visit(addressableExpressions[i]);
+      return addressableExpressions;
+    }
+
+    /// <summary>
+    /// Visits the specified triggers.
+    /// </summary>
+    /// <param name="triggers">The triggers.</param>
+    /// <returns></returns>
+    public virtual IEnumerable<IEnumerable<IExpression>> Visit(IEnumerable<IEnumerable<IExpression>> triggers) {
+      if (this.stopTraversal) return triggers;
+      var newTriggers = new List<IEnumerable<IExpression>>(triggers);
+      for (int i = 0, n = newTriggers.Count; i < n; i++)
+        newTriggers[i] = this.Visit(new List<IExpression>(newTriggers[i])).AsReadOnly();
+      return newTriggers.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Visits the specified expression.
+    /// </summary>
+    /// <param name="expression">The expression.</param>
+    /// <returns></returns>
+    public override IExpression Visit(IExpression expression) {
+      if (this.stopTraversal) return expression;
+      var result = base.Visit(expression);
+      if (this.contractProvider != null && expression is IMethodCall) {
+        IEnumerable<IEnumerable<IExpression>>/*?*/ triggers = this.contractProvider.GetTriggersFor(expression);
+        if (triggers != null)
+          this.contractProvider.AssociateTriggersWithQuantifier(result, this.Visit(triggers));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified loop contract.
+    /// </summary>
+    /// <param name="loopContract">The loop contract.</param>
+    /// <returns></returns>
+    public virtual ILoopContract Visit(ILoopContract loopContract) {
+      if (this.stopTraversal) return loopContract;
+      LoopContract mutableLoopContract = loopContract as LoopContract;
+      if (mutableLoopContract == null) return loopContract;
+      mutableLoopContract.Invariants = this.Visit(mutableLoopContract.Invariants);
+      mutableLoopContract.Writes = this.Visit(mutableLoopContract.Writes);
+      return mutableLoopContract;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariants.
+    /// </summary>
+    /// <param name="loopInvariants">The loop invariants.</param>
+    /// <returns></returns>
+    public virtual List<ILoopInvariant> Visit(List<ILoopInvariant> loopInvariants) {
+      if (this.stopTraversal) return loopInvariants;
+      for (int i = 0, n = loopInvariants.Count; i < n; i++)
+        loopInvariants[i] = this.Visit(loopInvariants[i]);
+      return loopInvariants;
+    }
+
+    /// <summary>
+    /// Visits the specified loop invariant.
+    /// </summary>
+    /// <param name="loopInvariant">The loop invariant.</param>
+    /// <returns></returns>
+    public virtual ILoopInvariant Visit(ILoopInvariant loopInvariant) {
+      if (this.stopTraversal) return loopInvariant;
+      LoopInvariant mutableLoopInvariant = loopInvariant as LoopInvariant;
+      if (mutableLoopInvariant == null) return loopInvariant;
+      mutableLoopInvariant.Condition = this.Visit(mutableLoopInvariant.Condition);
+      if (mutableLoopInvariant.Description != null)
+        mutableLoopInvariant.Description = this.Visit(mutableLoopInvariant.Description);
+      return mutableLoopInvariant;
+    }
+
+    /// <summary>
+    /// Visits the method definition.
+    /// </summary>
+    /// <param name="methodDefinition">The method definition.</param>
+    /// <returns></returns>
+    public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
+      if (this.stopTraversal) return methodDefinition;
+      var result = base.Visit(methodDefinition);
+      if (this.contractProvider != null) {
+        //Visit the contract before visiting the method body so that it is all fixed up before
+        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
+        if (methodContract != null)
+          this.contractProvider.AssociateMethodWithContract(methodDefinition, this.Visit(methodContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified method contract.
+    /// </summary>
+    /// <param name="methodContract">The method contract.</param>
+    /// <returns></returns>
+    public virtual IMethodContract Visit(IMethodContract methodContract) {
+      if (this.stopTraversal) return methodContract;
+      MethodContract mutableMethodContract = methodContract as MethodContract;
+      if (mutableMethodContract == null) return methodContract;
+      mutableMethodContract.Allocates = this.Visit(mutableMethodContract.Allocates);
+      mutableMethodContract.Frees = this.Visit(mutableMethodContract.Frees);
+      mutableMethodContract.ModifiedVariables = this.Visit(mutableMethodContract.ModifiedVariables);
+      mutableMethodContract.Postconditions = this.Visit(mutableMethodContract.Postconditions);
+      mutableMethodContract.Preconditions = this.Visit(mutableMethodContract.Preconditions);
+      mutableMethodContract.Reads = this.Visit(mutableMethodContract.Reads);
+      mutableMethodContract.ThrownExceptions = this.Visit(mutableMethodContract.ThrownExceptions);
+      mutableMethodContract.Writes = this.Visit(mutableMethodContract.Writes);
+      return mutableMethodContract;
+    }
+
+    /// <summary>
+    /// Visits the specified post conditions.
+    /// </summary>
+    /// <param name="postConditions">The post conditions.</param>
+    /// <returns></returns>
+    public virtual List<IPostcondition> Visit(List<IPostcondition> postConditions) {
+      if (this.stopTraversal) return postConditions;
+      for (int i = 0, n = postConditions.Count; i < n; i++)
+        postConditions[i] = this.Visit(postConditions[i]);
+      return postConditions;
+    }
+
+    /// <summary>
+    /// Visits the specified post condition.
+    /// </summary>
+    /// <param name="postCondition">The post condition.</param>
+    public virtual IPostcondition Visit(IPostcondition postCondition) {
+      if (this.stopTraversal) return postCondition;
+      Postcondition mutablePostCondition = postCondition as Postcondition;
+      if (mutablePostCondition == null) return postCondition;
+      mutablePostCondition.Condition = this.Visit(mutablePostCondition.Condition);
+      if (mutablePostCondition.Description != null)
+        mutablePostCondition.Description = this.Visit(mutablePostCondition.Description);
+      return mutablePostCondition;
+    }
+
+    /// <summary>
+    /// Visits the specified preconditions.
+    /// </summary>
+    /// <param name="preconditions">The preconditions.</param>
+    public virtual List<IPrecondition> Visit(List<IPrecondition> preconditions) {
+      if (this.stopTraversal) return preconditions;
+      for (int i = 0, n = preconditions.Count; i < n; i++)
+        preconditions[i] = this.Visit(preconditions[i]);
+      return preconditions;
+    }
+
+    /// <summary>
+    /// Visits the specified precondition.
+    /// </summary>
+    /// <param name="precondition">The precondition.</param>
+    public virtual IPrecondition Visit(IPrecondition precondition) {
+      if (this.stopTraversal) return precondition;
+      Precondition mutablePrecondition = precondition as Precondition;
+      if (mutablePrecondition == null) return precondition;
+      mutablePrecondition.Condition = this.Visit(mutablePrecondition.Condition);
+      if (mutablePrecondition.Description != null)
+        mutablePrecondition.Description = this.Visit(mutablePrecondition.Description);
+      if (mutablePrecondition.ExceptionToThrow != null)
+        mutablePrecondition.ExceptionToThrow = this.Visit(mutablePrecondition.ExceptionToThrow);
+      return mutablePrecondition;
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public override IStatement Visit(IStatement statement) {
+      if (this.stopTraversal) return statement;
+      IStatement result = base.Visit(statement);
+      if (this.contractProvider != null) {
+        ILoopContract/*?*/ loopContract = this.contractProvider.GetLoopContractFor(statement);
+        if (loopContract != null)
+          this.contractProvider.AssociateLoopWithContract(result, this.Visit(loopContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exceptions.
+    /// </summary>
+    /// <param name="thrownExceptions">The thrown exceptions.</param>
+    public virtual List<IThrownException> Visit(List<IThrownException> thrownExceptions) {
+      if (this.stopTraversal) return thrownExceptions;
+      for (int i = 0, n = thrownExceptions.Count; i < n; i++)
+        thrownExceptions[i] = this.Visit(thrownExceptions[i]);
+      return thrownExceptions;
+    }
+
+    /// <summary>
+    /// Visits the specified thrown exception.
+    /// </summary>
+    /// <param name="thrownException">The thrown exception.</param>
+    public virtual IThrownException Visit(IThrownException thrownException) {
+      if (this.stopTraversal) return thrownException;
+      ThrownException mutableThrownException = thrownException as ThrownException;
+      if (mutableThrownException == null) return thrownException;
+      mutableThrownException.ExceptionType = this.Visit(mutableThrownException.ExceptionType);
+      mutableThrownException.Postcondition = this.Visit(mutableThrownException.Postcondition);
+      return mutableThrownException;
+    }
+
+    /// <summary>
+    /// Visits the specified type contract.
+    /// </summary>
+    /// <param name="typeContract">The type contract.</param>
+    public virtual ITypeContract Visit(ITypeContract typeContract) {
+      if (this.stopTraversal) return typeContract;
+      TypeContract mutableTypeContract = typeContract as TypeContract;
+      if (mutableTypeContract == null) return typeContract;
+      mutableTypeContract.ContractFields = this.Visit(mutableTypeContract.ContractFields);
+      mutableTypeContract.ContractMethods = this.Visit(mutableTypeContract.ContractMethods);
+      mutableTypeContract.Invariants = this.Visit(mutableTypeContract.Invariants);
+      return mutableTypeContract;
+    }
+
+    /// <summary>
+    /// Visits the specified field invariants.
+    /// </summary>
+    /// <param name="fieldInvariants">The field invariants.</param>
+    public virtual List<IFieldDefinition> Visit(List<IFieldDefinition> fieldInvariants) {
+      if (this.stopTraversal) return fieldInvariants;
+      for (int i = 0, n = fieldInvariants.Count; i < n; i++)
+        fieldInvariants[i] = this.Visit(fieldInvariants[i]);
+      return fieldInvariants;
+    }
+
+    /// <summary>
+    /// Visits the specified contract methods.
+    /// </summary>
+    /// <param name="contractMethods">The contract methods.</param>
+    public virtual List<IMethodDefinition> Visit(List<IMethodDefinition> contractMethods) {
+      if (this.stopTraversal) return contractMethods;
+      for (int i = 0, n = contractMethods.Count; i < n; i++)
+        contractMethods[i] = this.Visit(contractMethods[i]);
+      return contractMethods;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariants.
+    /// </summary>
+    /// <param name="typeInvariants">The type invariants.</param>
+    public virtual List<ITypeInvariant> Visit(List<ITypeInvariant> typeInvariants) {
+      if (this.stopTraversal) return typeInvariants;
+      for (int i = 0, n = typeInvariants.Count; i < n; i++)
+        typeInvariants[i] = this.Visit(typeInvariants[i]);
+      return typeInvariants;
+    }
+
+    /// <summary>
+    /// Visits the specified type invariant.
+    /// </summary>
+    /// <param name="typeInvariant">The type invariant.</param>
+    public virtual ITypeInvariant Visit(ITypeInvariant typeInvariant) {
+      if (this.stopTraversal) return typeInvariant;
+      TypeInvariant mutableTypeInvariant = typeInvariant as TypeInvariant;
+      if (mutableTypeInvariant == null) return typeInvariant;
+      mutableTypeInvariant.Condition = this.Visit(mutableTypeInvariant.Condition);
+      if (mutableTypeInvariant.Description != null)
+        mutableTypeInvariant.Description = this.Visit(mutableTypeInvariant.Description);
+      return mutableTypeInvariant;
+    }
+
+    /// <summary>
+    /// Visits the specified namespace type definition.
+    /// </summary>
+    /// <param name="namespaceTypeDefinition">The namespace type definition.</param>
+    public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      if (this.stopTraversal) return namespaceTypeDefinition;
+      var result = base.Visit(namespaceTypeDefinition);
+      if (this.contractProvider != null) {
+        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(namespaceTypeDefinition);
+        if (typeContract != null)
+          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Visits the specified nested type definition.
+    /// </summary>
+    /// <param name="nestedTypeDefinition">The nested type definition.</param>
+    public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
+      if (this.stopTraversal) return nestedTypeDefinition;
+      var result = base.Visit(nestedTypeDefinition);
+      if (this.contractProvider != null) {
+        ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(nestedTypeDefinition);
+        if (typeContract != null)
+          this.contractProvider.AssociateTypeWithContract(result, this.Visit(typeContract));
+      }
+      return result;
+    }
+  }
+
 }

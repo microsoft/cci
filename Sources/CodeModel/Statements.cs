@@ -115,6 +115,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// The local that contains the exception instance when executing the catch clause body.
+    /// If there is no such local, Dummy.LocalVariable is returned.
     /// </summary>
     ILocalDefinition ExceptionContainer { get; }
 

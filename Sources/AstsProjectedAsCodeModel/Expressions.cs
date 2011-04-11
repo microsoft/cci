@@ -9261,24 +9261,20 @@ namespace Microsoft.Cci.Ast {
           resolvedGenericTypeOrMethod = qualifiedName.ResolveAsNamespaceOrTypeGroup();
         //TODO: namespace qualified name
       }
-      ITypeDefinition/*?*/ resolvedGenericType = resolvedGenericTypeOrMethod as ITypeDefinition;
+      var resolvedGenericType = resolvedGenericTypeOrMethod as INamedTypeDefinition;
       if (resolvedGenericType == null) {
         ITypeGroup/*?*/ typeGroup = resolvedGenericTypeOrMethod as ITypeGroup;
         if (typeGroup != null) {
           uint numTypeArgs = IteratorHelper.EnumerableCount(this.ArgumentTypes);
-          foreach (ITypeDefinition type in typeGroup.Types) {
+          foreach (INamedTypeDefinition type in typeGroup.Types) {
             if (type.GenericParameterCount != numTypeArgs) continue;
             resolvedGenericType = type;
             break;
           }
         }
       }
-      if (resolvedGenericType != null && resolvedGenericType.IsGeneric) {
-        ITypeReference genericType = resolvedGenericType;
-        //^ assume genericType.ResolvedType.IsGeneric;
-        //^ assume false; //the previous assume is not enough to establish the precondition
-        return GenericTypeInstance.GetGenericTypeInstance(genericType, this.GetArgumentTypeReferences(), this.Compilation.HostEnvironment.InternFactory);
-      }
+      if (resolvedGenericType != null && resolvedGenericType.IsGeneric)
+        return GenericTypeInstance.GetGenericTypeInstance(resolvedGenericType, this.GetArgumentTypeReferences(), this.Compilation.HostEnvironment.InternFactory);
       return null;
     }
 
@@ -9376,13 +9372,11 @@ namespace Microsoft.Cci.Ast {
       List<ITypeReference> argumentTypes = new List<ITypeReference>();
       foreach (TypeExpression typeArgument in this.argumentTypes)
         argumentTypes.Add(typeArgument.ResolvedType);
-      ITypeDefinition genericType = this.GenericType.Resolve(argumentTypes.Count);
+      INamedTypeDefinition genericType = (INamedTypeDefinition)this.GenericType.Resolve(argumentTypes.Count);
       if (!genericType.IsGeneric) {
         //TODO: error message
         return Dummy.Type;
       }
-      //^ assume genericType.ResolvedType.IsGeneric;
-      //^ assume false; //the previous assume is not enough to establish the precondition
       return GenericTypeInstance.GetGenericTypeInstance(genericType, argumentTypes, this.Compilation.HostEnvironment.InternFactory);
     }
 
@@ -14102,7 +14096,7 @@ namespace Microsoft.Cci.Ast {
     /// If the expression does not resolve to exactly one type, an error is added to the error collection of the compilation context.
     /// </summary>
     protected override ITypeDefinition Resolve() {
-      ITypeDefinition systemNullable = this.PlatformType.SystemNullable.ResolvedType;
+      var systemNullable = this.PlatformType.SystemNullable.ResolvedType;
       if (!systemNullable.IsGeneric) return Dummy.Type;
       List<ITypeReference> genericArguments = new List<ITypeReference>(1);
       genericArguments.Add(this.ElementType.ResolvedType);
@@ -17211,7 +17205,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(xxxxx) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      //visitor.Visit(this);
     }
 
     /// <summary>
@@ -17301,7 +17295,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(xxxxx) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      //visitor.Visit(this);
     }
 
     /// <summary>
@@ -18637,7 +18631,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(xxxxx) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      //visitor.Visit(this);
     }
 
     /// <summary>
@@ -20268,7 +20262,7 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(xxxxx) method.
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      //visitor.Visit(this);
     }
 
     /// <summary>

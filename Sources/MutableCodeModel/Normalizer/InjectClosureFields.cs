@@ -8,7 +8,7 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //-----------------------------------------------------------------------------
-using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.MutableCodeModel.Contracts;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -23,7 +23,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// NOTE: It must be instantiated for each body it visits, either an anonymous
   /// delegate or the original method body.
   /// </summary>  
-  internal class InjectClosureFields : CodeMutatingVisitor {
+  internal class InjectClosureFields : CodeRewriter {
 
     #region Fields
 
@@ -58,6 +58,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// from the method that is currently being mutated.
     /// </summary>
     LocalDefinition/*?*/ closureLocal;
+    ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     /// <summary>
     /// The map used to get from an anonymous delegate encountered during mutation to the method
@@ -76,7 +77,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// the order from outermost class to innermost.
     /// I.e., (forall i : 0 &lt; i &lt; closureClassList.Length : closureClassList[i].ContainingTypeDefinition == closureClassList[i-1])
     /// </summary>
-    List<ITypeDefinition> classList;
+    List<INamedTypeDefinition> classList;
     int nestingDepth;
 
     #endregion
@@ -120,13 +121,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     private InjectClosureFields(
       IMethodDefinition method,
       Dictionary<object, BoundField> fieldForCapturedLocalOrParameter,
-      List<ITypeDefinition> classList, int index,
+      List<INamedTypeDefinition> classList, int index,
       List<FieldDefinition> outerClosures, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
       Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping,
       Dictionary<IAnonymousDelegate, MethodDefinition> lambda2method,
       Dictionary<NestedTypeDefinition, MethodDefinition> constructorForClosureClass
       )
-      : base(host, sourceLocationProvider) {
+      : base(host) {
+      this.sourceLocationProvider = sourceLocationProvider;
       this.method = method;
       this.classList = classList;
       this.nestingDepth = index;
@@ -209,13 +211,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     private ITypeReference GetSelfReferenceForPrivateHelperTypes(INestedTypeDefinition privateHelperType) {
       //^ requires privateHelperType is INestedTypeDefinition;
-      var result = TypeDefinition.SelfInstance(privateHelperType, this.host.InternFactory);
+      var result = NamedTypeDefinition.SelfInstance(privateHelperType, this.host.InternFactory);
       if (this.method.IsGeneric) {
         var t = new SpecializedNestedTypeReference() {
-          ContainingType = TypeDefinition.SelfInstance(privateHelperType.ContainingTypeDefinition, this.host.InternFactory),
+          ContainingType = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)privateHelperType.ContainingTypeDefinition, this.host.InternFactory),
           GenericParameterCount = privateHelperType.GenericParameterCount,
           MangleName = true,
           Name = privateHelperType.Name,
+          InternFactory = this.host.InternFactory,
+          PlatformType = this.host.PlatformType,
           UnspecializedVersion = privateHelperType,
         };
         var gas = IteratorHelper.GetConversionEnumerable<IGenericMethodParameter, ITypeReference>(this.method.GenericParameters);
@@ -255,9 +259,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     private IMethodReference GetSelfReference(IMethodDefinition methodDefinition) {
       ITypeReference containingType;
-      INamespaceTypeDefinition ntd = methodDefinition.ContainingType as INamespaceTypeDefinition;
+      INamespaceTypeDefinition ntd = methodDefinition.ContainingTypeDefinition as INamespaceTypeDefinition;
       if (ntd != null)
-        containingType = TypeDefinition.SelfInstance(ntd, this.host.InternFactory);
+        containingType = NamedTypeDefinition.SelfInstance(ntd, this.host.InternFactory);
       else
         containingType = this.GetSelfReferenceForPrivateHelperTypes((INestedTypeDefinition)methodDefinition.ContainingTypeDefinition);
       if (methodDefinition.IsGeneric || containingType is IGenericTypeInstanceReference || containingType is ISpecializedNestedTypeReference) {
@@ -267,13 +271,14 @@ namespace Microsoft.Cci.MutableCodeModel {
         result.ContainingType = containingType;
         return result;
       }
+      if (containingType == methodDefinition.ContainingTypeDefinition) return methodDefinition;
       var result1 = new MethodReference();
       result1.Copy(methodDefinition, this.host.InternFactory);
       result1.ContainingType = containingType;
       return result1;
     }
 
-    private IMethodBody GetMethodBodyFrom(IBlockStatement block, IMethodDefinition method, Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping) {
+    private IMethodBody GetMethodBodyFrom(BlockStatement block, IMethodDefinition method, Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping) {
       var closureClass = (NestedTypeDefinition)method.ContainingTypeDefinition; // cast succeeds because method is *always* defined in a closure class
       var nestingDepth = this.classList.IndexOf(closureClass);
       Debug.Assert(0 <= nestingDepth);
@@ -285,7 +290,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.lambda2method,
         this.constructorForClosureClass
         );
-      block = bodyFixer.Visit(block);
+      block = (BlockStatement)bodyFixer.Rewrite(block);
 
         // For all methods except for the one in the innermost closure class,
         // inject a preamble that creates an instance of the next inner closure
@@ -444,10 +449,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 3. Replace occurrences of anonymous delegates by create-delegate
     /// expressions.
     /// </summary>
-    internal static IBlockStatement GetBodyAfterInjectingClosureFields(
+    internal static BlockStatement GetBodyAfterInjectingClosureFields(
       IMethodDefinition method,
       Dictionary<object, BoundField> fieldForCapturedLocalOrParameter,
-      List<ITypeDefinition> classList,
+      List<INamedTypeDefinition> classList,
       List<FieldDefinition> outerClosures,
       IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider,
@@ -462,7 +467,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           host, sourceLocationProvider, genericTypeParameterMapping,
           lambda2method,
           new Dictionary<NestedTypeDefinition, MethodDefinition>());
-      var result = instance.Visit(body);
+      var result = (BlockStatement)instance.Rewrite(body);
 
       // For all methods except for the one in the innermost closure class,
       // inject a preamble that creates an instance of the next inner closure
@@ -509,11 +514,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// transform it into an assignment to the field in the closure class.
     /// </summary>
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
-    public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
-      var originalLocalVariable = localDeclarationStatement.LocalVariable;
-      localDeclarationStatement.LocalVariable = this.Visit(originalLocalVariable);
-      if (localDeclarationStatement.InitialValue != null) {
-        var source = this.Visit(localDeclarationStatement.InitialValue);
+    public override IStatement Rewrite(ILocalDeclarationStatement localDeclarationStatement) {
+      var mutableLocalDeclarationStatement = localDeclarationStatement as LocalDeclarationStatement;
+      if (mutableLocalDeclarationStatement == null) return localDeclarationStatement;
+      var originalLocalVariable = mutableLocalDeclarationStatement.LocalVariable;
+      mutableLocalDeclarationStatement.LocalVariable = this.Rewrite(originalLocalVariable);
+      if (mutableLocalDeclarationStatement.InitialValue != null) {
+        var source = this.Rewrite(mutableLocalDeclarationStatement.InitialValue);
         BoundField/*?*/ boundField;
         if (this.fieldForCapturedLocalOrParameter.TryGetValue(originalLocalVariable, out boundField)) {
           var currentClosureLocal = this.closureLocal;
@@ -522,10 +529,10 @@ namespace Microsoft.Cci.MutableCodeModel {
           var fieldRef = GetSelfReference(fieldDef);
           var target = new TargetExpression() { Instance = currentClosureLocalBinding, Definition = fieldRef, Type = boundField.Type };
           var assignment = new Assignment() { Target = target, Source = source, Type = boundField.Type };
-          return new ExpressionStatement() { Expression = assignment, Locations = localDeclarationStatement.Locations };
+          return new ExpressionStatement() { Expression = assignment, Locations = mutableLocalDeclarationStatement.Locations };
         } else {
           //return base.Visit(localDeclarationStatement);
-          localDeclarationStatement.InitialValue = source;
+          mutableLocalDeclarationStatement.InitialValue = source;
         }
       }
       // Decompilation might have left a local declaration without an initial value. If so, it isn't needed
@@ -533,29 +540,31 @@ namespace Microsoft.Cci.MutableCodeModel {
       // field.
       if (this.fieldForCapturedLocalOrParameter.ContainsKey(originalLocalVariable))
         return CodeDummy.GotoStatement;
-      return localDeclarationStatement;
+      return mutableLocalDeclarationStatement;
     }
 
     /// <summary>
     /// Replaces all references to captured locals/parameters with a reference to the corresponding closure class field.
     /// </summary>
-    public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
+    public override IAddressableExpression Rewrite(IAddressableExpression addressableExpression) {
+      var mutableAddressableExpression = addressableExpression as AddressableExpression;
+      if (mutableAddressableExpression == null) return addressableExpression;
       BoundField/*?*/ boundField;
-      if (this.fieldForCapturedLocalOrParameter.TryGetValue(addressableExpression.Definition, out boundField)) {
+      if (this.fieldForCapturedLocalOrParameter.TryGetValue(mutableAddressableExpression.Definition, out boundField)) {
         var selfReference = boundField.Field.ContainingTypeDefinition as NestedTypeDefinition;
-        if (selfReference == null) return addressableExpression; // really "assert false" since no bound field belongs to a non-nested type
-        addressableExpression.Instance = this.ClosureInstanceFor(selfReference);
-        addressableExpression.Definition = this.GetSelfReference(boundField.Field);
-        addressableExpression.Type = this.Visit(boundField.Type);
-        return addressableExpression;
+        if (selfReference == null) return mutableAddressableExpression; // really "assert false" since no bound field belongs to a non-nested type
+        mutableAddressableExpression.Instance = this.ClosureInstanceFor(selfReference);
+        mutableAddressableExpression.Definition = this.GetSelfReference(boundField.Field);
+        mutableAddressableExpression.Type = this.Rewrite(boundField.Type);
+        return mutableAddressableExpression;
       }
-      return base.Visit(addressableExpression);
+      return base.Rewrite(mutableAddressableExpression);
     }
 
     /// <summary>
     /// Replaces all references to captured locals/parameters with a reference to the corresponding closure class field.
     /// </summary>
-    public override IExpression Visit(BoundExpression boundExpression) {
+    public override IExpression Rewrite(IBoundExpression boundExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
         var selfReference = boundField.Field.ContainingTypeDefinition as NestedTypeDefinition;
@@ -563,25 +572,27 @@ namespace Microsoft.Cci.MutableCodeModel {
         return new BoundExpression() {
           Definition = this.GetSelfReference(boundField.Field),
           Instance = this.ClosureInstanceFor(selfReference),
-          Type = this.Visit(boundField.Type),
+          Type = this.Rewrite(boundField.Type),
         };
       }
-      return base.Visit(boundExpression);
+      return base.Rewrite(boundExpression);
     }
 
     /// <summary>
     /// Replaces all references to captured locals/parameters with a reference to the corresponding closure class field.
     /// </summary>
-    public override ITargetExpression Visit(TargetExpression targetExpression) {
+    public override ITargetExpression Rewrite(ITargetExpression targetExpression) {
+      var mutableTargetExpression = targetExpression as TargetExpression;
+      if (mutableTargetExpression == null) return targetExpression;
       BoundField/*?*/ boundField;
-      if (this.fieldForCapturedLocalOrParameter.TryGetValue(targetExpression.Definition, out boundField)) {
+      if (this.fieldForCapturedLocalOrParameter.TryGetValue(mutableTargetExpression.Definition, out boundField)) {
         var selfReference = boundField.Field.ContainingTypeDefinition as NestedTypeDefinition;
-        if (selfReference == null) return targetExpression; // really "assert false" since no bound field belongs to a non-nested type
-        targetExpression.Instance = this.ClosureInstanceFor(selfReference);
-        targetExpression.Definition = this.GetSelfReference(boundField.Field);
-        return targetExpression;
+        if (selfReference == null) return mutableTargetExpression; // really "assert false" since no bound field belongs to a non-nested type
+        mutableTargetExpression.Instance = this.ClosureInstanceFor(selfReference);
+        mutableTargetExpression.Definition = this.GetSelfReference(boundField.Field);
+        return mutableTargetExpression;
       }
-      return base.Visit(targetExpression);
+      return base.Rewrite(mutableTargetExpression);
     }
 
     /// <summary>
@@ -596,7 +607,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// any nested lambdas).
     /// 
     /// </summary>
-    public override IExpression Visit(ThisReference thisReference) {
+    public override IExpression Rewrite(IThisReference thisReference) {
 
       if (this.nestingDepth == 0) {
         // then the occurrence of "this" is in the original method
@@ -625,25 +636,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       return boundExpression;
     }
 
-    public override ITypeReference Visit(ITypeReference typeReference) {
-
+    public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
       // In the body of the original method, do *not* replace references to the method's
       // generic parameters with references to the type parameters of the closure class.
-      if (this.nestingDepth == 0) return typeReference;
-
-      IGenericMethodParameter gmp = typeReference as IGenericMethodParameter;
-      if (gmp != null) {
+      if (this.nestingDepth > 0) {
         IGenericTypeParameter targetType;
-        if (this.genericTypeParameterMapping.TryGetValue(gmp.InternedKey, out targetType))
+        if (this.genericTypeParameterMapping.TryGetValue(genericMethodParameterReference.InternedKey, out targetType))
           return targetType;
       }
-      IGenericMethodParameterReference gmpr = typeReference as IGenericMethodParameterReference;
-      if (gmpr != null) {
-        IGenericTypeParameter targetType;
-        if (this.genericTypeParameterMapping.TryGetValue(gmpr.ResolvedType.InternedKey, out targetType))
-          return targetType;
-      }
-      return base.Visit(typeReference);
+      return base.Rewrite(genericMethodParameterReference);
     }
 
     /// <summary>
@@ -660,12 +661,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     ///   class, "CC", that is contained in C.
     /// </summary>
     /// <param name="anonymousDelegate">The anonymous delegate.</param>
-    public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
+    public override IExpression Rewrite(IAnonymousDelegate anonymousDelegate) {
+      var mutableAnonymousDelegate = anonymousDelegate as AnonymousDelegate;
+      if (mutableAnonymousDelegate == null) return anonymousDelegate;
       var M = this.method;
 
-      var L = this.lambda2method[anonymousDelegate]; //new MethodDefinition();
-      L.CallingConvention = anonymousDelegate.CallingConvention;
-      if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) == 0) {
+      var L = this.lambda2method[mutableAnonymousDelegate]; //new MethodDefinition();
+      L.CallingConvention = mutableAnonymousDelegate.CallingConvention;
+      if ((mutableAnonymousDelegate.CallingConvention & CallingConvention.HasThis) == 0) {
         // Keep method static
         L.IsStatic = true;
         // But if it was generic, turn that off because the method being generic turns
@@ -679,12 +682,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       L.IsCil = true;
       L.IsHiddenBySignature = true;
 
-      if (anonymousDelegate.ReturnValueIsModified)
-        L.ReturnValueCustomModifiers = new List<ICustomModifier>(anonymousDelegate.ReturnValueCustomModifiers);
-      L.ReturnValueIsByRef = anonymousDelegate.ReturnValueIsByRef;
+      if (mutableAnonymousDelegate.ReturnValueIsModified)
+        L.ReturnValueCustomModifiers = new List<ICustomModifier>(mutableAnonymousDelegate.ReturnValueCustomModifiers);
+      L.ReturnValueIsByRef = mutableAnonymousDelegate.ReturnValueIsByRef;
       L.Visibility = TypeMemberVisibility.Public;
 
-      var newParams = new List<IParameterDefinition>(anonymousDelegate.Parameters.Count);
+      var newParams = new List<IParameterDefinition>(mutableAnonymousDelegate.Parameters.Count);
       // hack? increment the nesting depth so that the visit of the parameter types
       // happens in the context of the anonymous delegate and not the containing method.
       // If this isn't done, then generic method parameters referred to in the parameter
@@ -693,11 +696,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Also, need to do this for the types of any local variables, as well as the return
       // type of the closure method itself.
       this.nestingDepth++;
-      foreach (var p in anonymousDelegate.Parameters) {
+      foreach (var p in mutableAnonymousDelegate.Parameters) {
         var newP = new ParameterDefinition();
         newP.Copy(p, this.host.InternFactory);
         newP.ContainingSignature = L;
-        newP.Type = this.Visit(newP.Type);
+        newP.Type = this.Rewrite(newP.Type);
         newParams.Add(newP);
         BoundField/*?*/ bf;
         if (this.fieldForCapturedLocalOrParameter.TryGetValue(p, out bf)) {
@@ -706,14 +709,14 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       L.Parameters = newParams;
 
-      L.Type = this.Visit(anonymousDelegate.ReturnType);
+      L.Type = this.Rewrite(mutableAnonymousDelegate.ReturnType);
 
-      if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) == 0) {
-        SubstituteParameters sps = new SubstituteParameters(host, anonymousDelegate, L);
-        anonymousDelegate.Body = sps.Visit(anonymousDelegate.Body);
+      if ((mutableAnonymousDelegate.CallingConvention & CallingConvention.HasThis) == 0) {
+        SubstituteParameters sps = new SubstituteParameters(host, mutableAnonymousDelegate, L);
+        mutableAnonymousDelegate.Body = sps.Visit(mutableAnonymousDelegate.Body);
       }
 
-      L.Body = this.GetMethodBodyFrom(anonymousDelegate.Body, L, this.genericTypeParameterMapping);
+      L.Body = this.GetMethodBodyFrom((BlockStatement)mutableAnonymousDelegate.Body, L, this.genericTypeParameterMapping);
       // Can't ask for the local variables until after the body has been set
 
       // NB!!! Side effect of evaluating the LocalVariables is to turn the CodeModel into IL!!
@@ -722,7 +725,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       foreach (var v in L.Body.LocalVariables) {
         LocalDefinition ld = v as LocalDefinition;
         if (ld != null) {
-          ld.Type = this.Visit(ld.Type);
+          ld.Type = this.Rewrite(ld.Type);
           ld.MethodDefinition = L;
         }
       }
@@ -733,7 +736,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       boundCurrentClosureLocal.Definition = this.closureLocal;
 
       var createDelegateInstance = new CreateDelegateInstance();
-      if ((anonymousDelegate.CallingConvention & CallingConvention.HasThis) != 0)
+      if ((mutableAnonymousDelegate.CallingConvention & CallingConvention.HasThis) != 0)
         createDelegateInstance.Instance = boundCurrentClosureLocal;
 
       var mref = this.GetSelfReference(L);
@@ -743,7 +746,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           gas.Add(gmp);
         mref = new GenericMethodInstanceReference() {
           CallingConvention = L.CallingConvention,
-          ContainingType = TypeDefinition.SelfInstance(L.ContainingTypeDefinition, this.host.InternFactory),
+          ContainingType = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)L.ContainingTypeDefinition, this.host.InternFactory),
           GenericArguments = gas,
           GenericMethod = mref,
           InternFactory = this.host.InternFactory,
@@ -753,7 +756,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         };
       }
       createDelegateInstance.MethodToCallViaDelegate = mref;
-      createDelegateInstance.Type = this.Visit(anonymousDelegate.Type);
+      createDelegateInstance.Type = this.Rewrite(mutableAnonymousDelegate.Type);
 
       return createDelegateInstance;
     }
@@ -761,6 +764,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #endregion
 
   }
+
   /// <summary>
   /// A mutator that substitutes parameters defined in one signature with those from another signature.
   /// </summary>

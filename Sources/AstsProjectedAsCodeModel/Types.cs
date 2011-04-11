@@ -21,7 +21,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// 
   /// </summary>
-  public abstract class GenericParameter : TypeDefinition, IGenericParameter {
+  public abstract class GenericParameter : NamedTypeDefinition, IGenericParameter {
 
     //^ [NotDelayed]
     /// <summary>
@@ -35,16 +35,15 @@ namespace Microsoft.Cci.Ast {
     /// <param name="mustHaveDefaultConstructor"></param>
     /// <param name="internFactory"></param>
     protected GenericParameter(IName name, ushort index, TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor, IInternFactory internFactory)
-      : base(internFactory) {
+      : base(name, internFactory) {
       int flags = (int)variance << 4;
       if (mustBeReferenceType) flags |= 0x00200000;
       if (mustBeValueType) flags |= 0x00010000;
       if (mustHaveDefaultConstructor) flags |= 0x00008000;
       flags |= 0x00004000; //IsReferenceType and IsValueType still have to be computed
       this.index = index;
-      this.name = name;
       //^ base;
-      this.flags |= (TypeDefinition.Flags)flags;
+      this.flags |= (NamedTypeDefinition.Flags)flags;
     }
 
     /// <summary>
@@ -90,16 +89,16 @@ namespace Microsoft.Cci.Ast {
     public override bool IsReferenceType {
       get {
         if (((int)this.flags & 0x00004000) != 0) {
-          this.flags &= (TypeDefinition.Flags)~0x00004000;
+          this.flags &= (NamedTypeDefinition.Flags)~0x00004000;
           if (this.MustBeReferenceType)
-            this.flags |= (TypeDefinition.Flags)0x00002000;
+            this.flags |= (NamedTypeDefinition.Flags)0x00002000;
           else {
             ITypeDefinition baseClass = TypeHelper.EffectiveBaseClass(this);
             if (!TypeHelper.TypesAreEquivalent(baseClass, this.PlatformType.SystemObject)) {
               if (baseClass.IsClass)
-                this.flags |= (TypeDefinition.Flags)0x00002000;
+                this.flags |= (NamedTypeDefinition.Flags)0x00002000;
               else if (baseClass.IsValueType)
-                this.flags |= (TypeDefinition.Flags)0x00001000;
+                this.flags |= (NamedTypeDefinition.Flags)0x00001000;
             }
           }
         }
@@ -116,16 +115,16 @@ namespace Microsoft.Cci.Ast {
     public override bool IsValueType {
       get {
         if (((int)this.flags & 0x00004000) != 0) {
-          this.flags &= (TypeDefinition.Flags)~0x00004000;
+          this.flags &= (NamedTypeDefinition.Flags)~0x00004000;
           if (this.MustBeReferenceType)
-            this.flags |= (TypeDefinition.Flags)0x00002000;
+            this.flags |= (NamedTypeDefinition.Flags)0x00002000;
           else {
             ITypeDefinition baseClass = TypeHelper.EffectiveBaseClass(this);
             if (!TypeHelper.TypesAreEquivalent(baseClass, this.PlatformType.SystemObject)) {
               if (baseClass.IsClass)
-                this.flags |= (TypeDefinition.Flags)0x00002000;
+                this.flags |= (NamedTypeDefinition.Flags)0x00002000;
               else if (baseClass.IsValueType)
-                this.flags |= (TypeDefinition.Flags)0x00001000;
+                this.flags |= (NamedTypeDefinition.Flags)0x00001000;
             }
           }
         }
@@ -168,15 +167,6 @@ namespace Microsoft.Cci.Ast {
     public bool MustHaveDefaultConstructor {
       get { return ((int)this.flags & 0x00008000) != 0; }
     }
-
-    /// <summary>
-    /// The name of the entity.
-    /// </summary>
-    /// <value></value>
-    public IName Name {
-      get { return this.name; }
-    }
-    readonly IName name;
 
     /// <summary>
     /// If the given generic parameter is a generic parameter of the generic method of which the given method is an instance, then return the corresponding type argument that
@@ -256,7 +246,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="mustBeReferenceType"></param>
     /// <param name="mustBeValueType"></param>
     /// <param name="mustHaveDefaultConstructor"></param>
-    public GenericTypeParameter(TypeDefinition definingType, IName name, ushort index, TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor)
+    public GenericTypeParameter(NamedTypeDefinition definingType, IName name, ushort index, TypeParameterVariance variance, bool mustBeReferenceType, bool mustBeValueType, bool mustHaveDefaultConstructor)
       : base(name, index, variance, mustBeReferenceType, mustBeValueType, mustHaveDefaultConstructor, definingType.InternFactory)
       //^ requires definingType.IsGeneric;
     {
@@ -278,7 +268,7 @@ namespace Microsoft.Cci.Ast {
     /// The generic type that defines this type parameter.
     /// </summary>
     /// <value></value>
-    public TypeDefinition DefiningType {
+    public NamedTypeDefinition DefiningType {
       get
         //^ ensures result.IsGeneric;
       {
@@ -286,7 +276,7 @@ namespace Microsoft.Cci.Ast {
         return this.definingType;
       }
     }
-    readonly TypeDefinition definingType;
+    readonly NamedTypeDefinition definingType;
     // ^ invariant this.definingType.IsGeneric; //TODO Boogie: It should be possible to use non owned objects in invariants, provided that they are immutable.
 
     /// <summary>
@@ -294,6 +284,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(IGenericTypeParameterReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IGenericTypeParameterReference)this);
     }
 
     /// <summary>
@@ -536,7 +533,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// 
   /// </summary>
-  public class NamespaceTypeDefinition : TypeDefinition, INamespaceTypeDefinition {
+  public class NamespaceTypeDefinition : NamedTypeDefinition, INamespaceTypeDefinition {
 
     /// <summary>
     /// 
@@ -545,9 +542,8 @@ namespace Microsoft.Cci.Ast {
     /// <param name="name"></param>
     /// <param name="internFactory"></param>
     public NamespaceTypeDefinition(IUnitNamespace containingUnitNamespace, IName name, IInternFactory internFactory)
-      : base(internFactory) {
+      : base(name, internFactory) {
       this.containingUnitNamespace = containingUnitNamespace;
-      this.name = name;
     }
 
     /// <summary>
@@ -592,7 +588,7 @@ namespace Microsoft.Cci.Ast {
       int flags = 0;
       //^ assume typeDeclaration is NamespaceTypeDeclaration;
       if (((NamespaceTypeDeclaration)typeDeclaration).IsPublic) flags = (int)TypeMemberVisibility.Public;
-      this.flags = (TypeDefinition.Flags)flags;
+      this.flags = (NamedTypeDefinition.Flags)flags;
       base.UpdateFlags(typeDeclaration);
     }
 
@@ -613,6 +609,14 @@ namespace Microsoft.Cci.Ast {
         }
         return result == TypeMemberVisibility.Public;
       }
+    }
+
+    bool INamespaceTypeDefinition.IsForeignObject {
+      get { return false; }
+    }
+
+    IEnumerable<ICustomAttribute> INamespaceTypeDefinition.AttributesFor(ITypeReference implementedInterface) {
+      return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
     }
 
     #endregion
@@ -653,19 +657,6 @@ namespace Microsoft.Cci.Ast {
 
     #endregion
 
-    #region INamedEntity Members
-
-    /// <summary>
-    /// The name of the entity.
-    /// </summary>
-    /// <value></value>
-    public IName Name {
-      get { return this.name; }
-    }
-    readonly IName name;
-
-    #endregion
-
     #region IDoubleDispatcher Members
 
     /// <summary>
@@ -673,6 +664,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(INamespaceTypeReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((INamespaceTypeReference)this);
     }
 
     #endregion
@@ -699,6 +697,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.ContainingUnitNamespace; }
     }
 
+    bool INamespaceTypeReference.KeepDistinctFromDefinition {
+      get { return false; }
+    }
+
     INamespaceTypeDefinition INamespaceTypeReference.ResolvedType {
       get { return this; }
     }
@@ -717,7 +719,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// 
   /// </summary>
-  public class NestedTypeDefinition : TypeDefinition, INestedTypeDefinition {
+  public class NestedTypeDefinition : NamedTypeDefinition, INestedTypeDefinition {
 
     /// <summary>
     /// 
@@ -726,9 +728,8 @@ namespace Microsoft.Cci.Ast {
     /// <param name="name"></param>
     /// <param name="internFactory"></param>
     public NestedTypeDefinition(ITypeDefinition containingTypeDefinition, IName name, IInternFactory internFactory)
-      : base(internFactory) {
+      : base(name, internFactory) {
       this.containingTypeDefinition = containingTypeDefinition;
-      this.name = name;
     }
 
     /// <summary>
@@ -746,7 +747,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="typeDeclaration"></param>
     protected override void UpdateFlags(TypeDeclaration typeDeclaration) {
       //^ assume typeDeclaration is NestedTypeDeclaration;
-      this.flags = (TypeDefinition.Flags)((NestedTypeDeclaration)typeDeclaration).Visibility;
+      this.flags = (NamedTypeDefinition.Flags)((NestedTypeDeclaration)typeDeclaration).Visibility;
       base.UpdateFlags(typeDeclaration);
     }
 
@@ -804,19 +805,6 @@ namespace Microsoft.Cci.Ast {
 
     #endregion
 
-    #region INamedEntity Members
-
-    /// <summary>
-    /// The name of the entity.
-    /// </summary>
-    /// <value></value>
-    public IName Name {
-      get { return this.name; }
-    }
-    readonly IName name;
-
-    #endregion
-
     #region IDoubleDispatcher Members
 
     /// <summary>
@@ -824,6 +812,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(INestedTypeReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((INestedTypeReference)this);
     }
 
     #endregion
@@ -883,7 +878,7 @@ namespace Microsoft.Cci.Ast {
   /// <summary>
   /// 
   /// </summary>
-  public abstract class TypeDefinition : AggregatedScope<ITypeDefinitionMember, TypeDeclaration, IAggregatableTypeDeclarationMember>, ITypeDefinition {
+  public abstract class NamedTypeDefinition : AggregatedScope<ITypeDefinitionMember, TypeDeclaration, IAggregatableTypeDeclarationMember>, INamedTypeDefinition {
     /// <summary>
     /// 
     /// </summary>
@@ -938,9 +933,11 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="name"></param>
     /// <param name="internFactory"></param>
-    protected TypeDefinition(IInternFactory internFactory) {
+    protected NamedTypeDefinition(IName name, IInternFactory internFactory) {
       this.internFactory = internFactory;
+      this.name = name;
     }
 
     /// <summary>
@@ -1114,6 +1111,13 @@ namespace Microsoft.Cci.Ast {
     /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model reference node interface type implemented by the concrete type
+    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
+    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     /// <summary>
     /// Zero or more implementation overrides provided by the class.
@@ -1523,6 +1527,15 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The name of the type.
+    /// </summary>
+    /// <value></value>
+    public IName Name {
+      get { return this.name; }
+    }
+    readonly IName name;
+
+    /// <summary>
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
@@ -1899,7 +1912,11 @@ namespace Microsoft.Cci.Ast {
     /// In case this type was alias, this is also the type of the aliased type
     /// </summary>
     /// <value></value>
-    public ITypeDefinition ResolvedType {
+    public INamedTypeDefinition ResolvedType {
+      get { return this; }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
       get { return this; }
     }
 

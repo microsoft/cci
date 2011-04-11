@@ -38,12 +38,12 @@ namespace Microsoft.Cci.ILToCodeModel {
     public IBlockStatement RemoveCompilationArtifacts(BlockStatement blockStatement) {
       if (this.referencedLabels == null) {
         LabelReferenceFinder finder = new LabelReferenceFinder();
-        finder.Visit(blockStatement.Statements);
+        finder.Traverse(blockStatement.Statements);
         this.referencedLabels = finder.referencedLabels;
       }
       this.RecursivelyFindCapturedLocals(blockStatement);
       IBlockStatement result = this.Visit(blockStatement);
-      result = CachedDelegateRemover.RemoveCachedDelegates(this.host, result);
+      result = CachedDelegateRemover.RemoveCachedDelegates(this.host, result, sourceMethodBody);
       return result;
     }
 
@@ -105,6 +105,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    public override IExpression Visit(IExpression expression) {
+      var convertToUnsigned = expression as ConvertToUnsigned;
+      if (convertToUnsigned != null) expression = new Conversion(convertToUnsigned);
+      return base.Visit(expression);
+    }
+
     private IExpression ConvertToBoolean(IExpression expression) {
       if (expression.Type.TypeCode == PrimitiveTypeCode.Boolean) return expression;
       var cc = expression as CompileTimeConstant;
@@ -142,7 +148,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Visit(targetExpression);
     }
 
-    class CapturedLocalsFinder : BaseCodeTraverser {
+    class CapturedLocalsFinder : CodeTraverser {
 
       CompilationArtifactRemover remover;
 
@@ -150,11 +156,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.remover = remover;
       }
 
-      public override void Visit(IBlockStatement block) {
+      public override void TraverseChildren(IBlockStatement block) {
         var blockStatement = block as BlockStatement;
         if (blockStatement != null)
           this.FindCapturedLocals(blockStatement.Statements);
-        base.Visit(block);
+        base.TraverseChildren(block);
       }
 
       private void FindCapturedLocals(List<IStatement> statements) {
@@ -192,7 +198,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (!TypeHelper.TypesAreEquivalent(t1, t2)) {
           var nt2 = t2 as INestedTypeReference;
           if (nt2 == null || !TypeHelper.TypesAreEquivalent(t1, nt2.ContainingType)) return;
-          return;
         }
         var resolvedClosureType = closureType.ResolvedType;
         if (!UnspecializedMethods.IsCompilerGenerated(resolvedClosureType)) return;
@@ -371,7 +376,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private void RecursivelyFindCapturedLocals(BlockStatement blockStatement) {
-      new CapturedLocalsFinder(this).Visit(blockStatement);
+      new CapturedLocalsFinder(this).Traverse(blockStatement);
     }
 
     public override IExpression Visit(BoundExpression boundExpression) {
@@ -416,6 +421,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       if ((TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) || TypeHelper.TypesAreEquivalent(dctct, this.containingType)) &&
         UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
         return ConvertToAnonymousDelegate(createDelegateInstance);
+      // REVIEW: This is needed only when iterators are *not* decompiled. When they are, then that happens before this phase and the create delegate instances
+      // have been moved into the iterator method (from the MoveNext method) so the above pattern catches everything.
+      if (UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition)) {
+        var containingTypeAsNestedType = this.containingType as INestedTypeDefinition;
+        if (containingTypeAsNestedType != null && dctnt != null && TypeHelper.TypesAreEquivalent(dctnt.ContainingType, containingTypeAsNestedType.ContainingType)) {
+          return ConvertToAnonymousDelegate(createDelegateInstance);
+        }
+      }
       return base.Visit(createDelegateInstance);
     }
 
@@ -606,11 +619,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (!isCompilerGenerated) return localDeclarationStatement;
       }
       var val = localDeclarationStatement.InitialValue;
-      if (numReferences > 0 && (val is CompileTimeConstant || val is TypeOf || val is ThisReference)) {
+      if (val is CompileTimeConstant || val is TypeOf || val is ThisReference) {
         this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.Add(local, val);
         return CodeDummy.Block; //Causes the caller to omit this statement from the containing statement list.
       }
-      if (numReferences == 0) return CodeDummy.Block; //unused declaration
+      if (numReferences == 0 && val == null) return CodeDummy.Block; //unused declaration
       return localDeclarationStatement;
     }
 
@@ -676,9 +689,9 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal class CachedDelegateRemover : MethodBodyCodeMutator {
 
-    public static IBlockStatement RemoveCachedDelegates(IMetadataHost host, IBlockStatement blockStatement) {
-      var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal();
-      finder.Visit(blockStatement);
+    public static IBlockStatement RemoveCachedDelegates(IMetadataHost host, IBlockStatement blockStatement, SourceMethodBody sourceMethodBody) {
+      var finder = new FindAssignmentToCachedDelegateStaticFieldOrLocal(sourceMethodBody);
+      finder.Traverse(blockStatement);
       if (finder.cachedDelegateFieldsOrLocals.Count == 0) return blockStatement;
       var mutator = new CachedDelegateRemover(host, finder.cachedDelegateFieldsOrLocals);
       return mutator.Visit(blockStatement);
@@ -768,7 +781,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         return base.Visit(localDeclarationStatement);
     }
 
-    class FindAssignmentToCachedDelegateStaticFieldOrLocal : BaseCodeTraverser {
+    class FindAssignmentToCachedDelegateStaticFieldOrLocal : CodeTraverser {
+
+      internal FindAssignmentToCachedDelegateStaticFieldOrLocal(SourceMethodBody sourceMethodBody) {
+        this.sourceMethodBody = sourceMethodBody;
+      }
+
+      SourceMethodBody sourceMethodBody;
 
       public Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals = new Dictionary<string, AnonymousDelegate>();
 
@@ -777,22 +796,25 @@ namespace Microsoft.Cci.ILToCodeModel {
       /// instead of looking for just assignments of lambdas to locals (or fields). The latter leads to the
       /// mis-identification of user-written code that assigns labmdas to locals (or fields).
       /// </summary>
-      public override void Visit(IConditionalStatement conditionalStatement) {
-        if (!(conditionalStatement.FalseBranch is IEmptyStatement)) goto JustVisit;
+      public override void TraverseChildren(IConditionalStatement conditionalStatement) {
+        if (!(conditionalStatement.FalseBranch is IEmptyStatement)) goto JustTraverse;
         var b = conditionalStatement.TrueBranch as BlockStatement;
-        if (b == null) goto JustVisit;
-        if (b.Statements.Count != 1) goto JustVisit;
+        if (b == null) goto JustTraverse;
+        if (b.Statements.Count != 1) goto JustTraverse;
         var s = b.Statements[0] as IExpressionStatement;
-        if (s == null) goto JustVisit;
+        if (s == null) goto JustTraverse;
         var assignment = s.Expression as IAssignment;
-        if (assignment == null) goto JustVisit;
+        if (assignment == null) goto JustTraverse;
         AnonymousDelegate lambda = assignment.Source as AnonymousDelegate;
-        if (lambda == null) goto JustVisit;
+        if (lambda == null) goto JustTraverse;
         IFieldReference/*?*/ fieldReference = assignment.Target.Definition as IFieldReference;
         if (fieldReference != null) {
           if (UnspecializedMethods.IsCompilerGenerated(fieldReference)
             && fieldReference.Name.Value.Contains(CachedDelegateId)) {
             this.cachedDelegateFieldsOrLocals[fieldReference.Name.Value] = lambda;
+            if (this.sourceMethodBody.privateHelperFieldsToRemove == null)
+              this.sourceMethodBody.privateHelperFieldsToRemove = new Dictionary<IFieldDefinition, IFieldDefinition>();
+            this.sourceMethodBody.privateHelperFieldsToRemove.Add(fieldReference.ResolvedField, fieldReference.ResolvedField);
           }
           return;
         }
@@ -801,18 +823,18 @@ namespace Microsoft.Cci.ILToCodeModel {
           this.cachedDelegateFieldsOrLocals[localDefinition.Name.Value] = lambda;
           return;
         }
-      JustVisit:
-        base.Visit(conditionalStatement);
+      JustTraverse:
+        base.TraverseChildren(conditionalStatement);
 
       }
     }
   }
 
-  internal class LabelReferenceFinder : BaseCodeTraverser {
+  internal class LabelReferenceFinder : CodeTraverser {
 
     internal Dictionary<int, bool> referencedLabels = new Dictionary<int, bool>();
 
-    public override void Visit(IGotoStatement gotoStatement) {
+    public override void TraverseChildren(IGotoStatement gotoStatement) {
       this.referencedLabels[gotoStatement.TargetStatement.Label.UniqueKey] = true;
     }
 

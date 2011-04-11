@@ -19,15 +19,15 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <remarks>
   /// The metadata model does not have the concept of block scopes. All local variables used in a method body are listed in the LocalVariables property of IMethodBody.
   /// The CodeModel on the other hand, has explicit blocks and these blocks contain explicit LocalDeclarationStatement instances that declare the variables that are local
-  /// to a block. This visitor decompiles the MetaData model to the CodeModel by inserting (adding) the necessary LocalDeclarationStatement instances in the 
+  /// to a block. This class decompiles the MetaData model to the CodeModel by inserting (adding) the necessary LocalDeclarationStatement instances in the 
   /// appropriate places. 
   /// </remarks>
-  internal class DeclarationAdder : BaseCodeTraverser {
+  internal class DeclarationAdder : CodeTraverser {
 
     Dictionary<ILocalDefinition, bool> declaredLocals = new Dictionary<ILocalDefinition, bool>();
 
-    internal void Visit(SourceMethodBody body, BasicBlock rootBlock) {
-      this.Visit(rootBlock);
+    internal void Traverse(SourceMethodBody body, BasicBlock rootBlock) {
+      this.Traverse(rootBlock);
       //Now add declarations for any locals declared only on the body (for example temporary variables introduced by Unstacker).
       List<IStatement> prelude = new List<IStatement>();
       var localsAndTemps = body.ilMethodBody.LocalVariables;
@@ -67,7 +67,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         LocalFinder finder = new LocalFinder();
-        finder.Visit(block.Statements[i]);
+        finder.Traverse(block.Statements[i]);
         foreach (ILocalDefinition local in finder.FoundLocals) {
           if (!localsMet.Contains(local)) localsMet.Add(local);
         }
@@ -89,26 +89,21 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    class LocalFinder : BaseCodeTraverser {
+    class LocalFinder : CodeTraverser {
       List<ILocalDefinition> foundLocals = new List<ILocalDefinition>();
 
       public List<ILocalDefinition> FoundLocals {
         get { return foundLocals; }
       }
 
-      public override void Visit(ILocalDefinition localDefinition) {
+      public override void TraverseChildren(ILocalDefinition localDefinition) {
         if (!foundLocals.Contains(localDefinition)) foundLocals.Add(localDefinition);
-        base.Visit(localDefinition);
-      }
-
-      public override void VisitReference(ILocalDefinition local) {
-        if (!foundLocals.Contains(local)) foundLocals.Add(local);
-        base.Visit(local);
+        base.TraverseChildren(localDefinition);
       }
 
     }
 
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       BasicBlock basicBlock = (BasicBlock)block;
       List<ILocalDefinition>/*?*/ localsInCurrentScope = basicBlock.LocalVariables;
       if (localsInCurrentScope != null) {
@@ -123,17 +118,18 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (prelude.Count > 0)
           basicBlock.Statements.InsertRange(0, prelude); //TODO: use pdb info to insert them in the same order they appear in the source
       }
-      this.Visit(basicBlock.Statements);
+      this.Traverse(basicBlock.Statements);
     }
 
-    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+    public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       this.declaredLocals[localDeclarationStatement.LocalVariable] = true;
-      base.Visit(localDeclarationStatement);
+      base.TraverseChildren(localDeclarationStatement);
     }
 
-    public override void Visit(ICatchClause catchClause) {
-      this.declaredLocals[catchClause.ExceptionContainer] = true;
-      base.Visit(catchClause);
+    public override void TraverseChildren(ICatchClause catchClause) {
+      if (catchClause.ExceptionContainer != Dummy.LocalVariable)
+        this.declaredLocals[catchClause.ExceptionContainer] = true;
+      base.TraverseChildren(catchClause);
     }
   }
 }

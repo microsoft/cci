@@ -14,7 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
     public virtual void PrintBaseTypesAndInterfacesList(ITypeDefinition typeDefinition) {
       IEnumerable<ITypeReference> basesList = typeDefinition.BaseClasses;
       IEnumerable<ITypeReference> interfacesList = typeDefinition.Interfaces;

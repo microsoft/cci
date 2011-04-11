@@ -14,7 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
     public virtual void PrintBaseTypeOrInterfaceName(ITypeReference typeReference) {
       PrintTypeReference(typeReference);
     }

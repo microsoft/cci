@@ -14,12 +14,12 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IGenericTypeParameter genericTypeParameter) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(IGenericTypeParameter genericTypeParameter) {
       sourceEmitterOutput.Write(genericTypeParameter.Name.Value);
     }
 
-    public override void Visit(IGenericMethodParameter genericMethodParameter) {
+    public override void TraverseChildren(IGenericMethodParameter genericMethodParameter) {
       sourceEmitterOutput.Write(genericMethodParameter.Name.Value);
     }
 

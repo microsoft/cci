@@ -14,290 +14,284 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       PrintToken(CSharpToken.LeftCurly);
-      base.Visit(block);
+      base.TraverseChildren(block);
       PrintToken(CSharpToken.RightCurly);
     }
 
-    public override void Visit(IAssertStatement assertStatement) {
+    public override void TraverseChildren(IAssertStatement assertStatement) {
       this.PrintToken(CSharpToken.Indent);
       sourceEmitterOutput.Write("CodeContract.Assert(");
-      this.Visit(assertStatement.Condition);
+      this.Traverse(assertStatement.Condition);
       if (assertStatement.Description != null) {
         sourceEmitterOutput.Write(",");
-        this.Visit(assertStatement.Description);
+        this.Traverse(assertStatement.Description);
       }
       sourceEmitterOutput.WriteLine(");");
     }
 
-    public override void Visit(IAssumeStatement assumeStatement) {
+    public override void TraverseChildren(IAssumeStatement assumeStatement) {
       this.PrintToken(CSharpToken.Indent);
       sourceEmitterOutput.Write("CodeContract.Assume(");
-      this.Visit(assumeStatement.Condition);
+      this.Traverse(assumeStatement.Condition);
       if (assumeStatement.Description != null) {
         sourceEmitterOutput.Write(",");
-        this.Visit(assumeStatement.Description);
+        this.Traverse(assumeStatement.Description);
       }
       sourceEmitterOutput.WriteLine(");");
     }
 
-    public override void Visit(IBreakStatement breakStatement) {
+    public override void TraverseChildren(IBreakStatement breakStatement) {
       this.PrintToken(CSharpToken.Indent);
       sourceEmitterOutput.WriteLine("break;");
     }
 
-    public override void Visit(IConditionalStatement conditionalStatement) {
+    public override void TraverseChildren(IConditionalStatement conditionalStatement) {
       sourceEmitterOutput.Write("if (", true);
-      this.Visit(conditionalStatement.Condition);
+      this.Traverse(conditionalStatement.Condition);
       sourceEmitterOutput.Write(")");
       if (conditionalStatement.TrueBranch is IBlockStatement)
-        this.Visit(conditionalStatement.TrueBranch);
+        this.Traverse(conditionalStatement.TrueBranch);
       else {
         PrintToken(CSharpToken.NewLine);
         sourceEmitterOutput.IncreaseIndent();
-        this.Visit(conditionalStatement.TrueBranch);
+        this.Traverse(conditionalStatement.TrueBranch);
         sourceEmitterOutput.DecreaseIndent();
       }
       if (!(conditionalStatement.FalseBranch is IEmptyStatement)) {
         this.sourceEmitterOutput.Write("else", true);
-        this.Visit(conditionalStatement.FalseBranch);
+        this.Traverse(conditionalStatement.FalseBranch);
       }
     }
 
-    public override void Visit(IContinueStatement continueStatement) {
+    public override void TraverseChildren(IContinueStatement continueStatement) {
       sourceEmitterOutput.WriteLine("continue;");
     }
 
-    public override void Visit(ICatchClause catchClause) {
-      base.Visit(catchClause);
+    public override void TraverseChildren(ICatchClause catchClause) {
+      base.TraverseChildren(catchClause);
     }
 
-    public override void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+    public override void TraverseChildren(IDebuggerBreakStatement debuggerBreakStatement) {
       this.PrintToken(CSharpToken.Indent);
       sourceEmitterOutput.WriteLine("Debugger.Break();");
     }
 
-    public override void Visit(IDoUntilStatement doUntilStatement) {
-      base.Visit(doUntilStatement);
+    public override void TraverseChildren(IDoUntilStatement doUntilStatement) {
+      base.TraverseChildren(doUntilStatement);
     }
 
-    public override void Visit(IEmptyStatement emptyStatement) {
-      base.Visit(emptyStatement);
+    public override void TraverseChildren(IEmptyStatement emptyStatement) {
+      base.TraverseChildren(emptyStatement);
     }
 
-    public override void Visit(IExpressionStatement expressionStatement) {
+    public override void TraverseChildren(IExpressionStatement expressionStatement) {
       this.PrintToken(CSharpToken.Indent);
-      this.Visit(expressionStatement.Expression);
+      this.Traverse(expressionStatement.Expression);
       this.PrintToken(CSharpToken.Semicolon);
     }
 
-    public override void Visit(IFieldReference fieldReference) {
+    public override void TraverseChildren(IFieldReference fieldReference) {
       this.sourceEmitterOutput.Write(MemberHelper.GetMemberSignature(fieldReference, NameFormattingOptions.None));
     }
 
-    public override void Visit(IFileReference fileReference) {
-      base.Visit(fileReference);
+    public override void TraverseChildren(IFileReference fileReference) {
+      base.TraverseChildren(fileReference);
     }
 
-    public override void Visit(IForEachStatement forEachStatement) {
-      base.Visit(forEachStatement);
+    public override void TraverseChildren(IForEachStatement forEachStatement) {
+      base.TraverseChildren(forEachStatement);
     }
 
-    public override void Visit(IForStatement forStatement) {
-      base.Visit(forStatement);
+    public override void TraverseChildren(IForStatement forStatement) {
+      base.TraverseChildren(forStatement);
     }
 
-    public override void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
-      base.Visit(functionPointerTypeReference);
+    public override void TraverseChildren(IFunctionPointerTypeReference functionPointerTypeReference) {
+      base.TraverseChildren(functionPointerTypeReference);
     }
 
-    public override void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
-      base.Visit(genericMethodInstanceReference);
+    public override void TraverseChildren(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      base.TraverseChildren(genericMethodInstanceReference);
     }
 
-    public override void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
-      base.Visit(genericMethodParameterReference);
+    public override void TraverseChildren(IGenericMethodParameterReference genericMethodParameterReference) {
+      base.TraverseChildren(genericMethodParameterReference);
     }
 
-    public override void Visit(IGenericParameter genericParameter) {
-      base.Visit(genericParameter);
+    public override void TraverseChildren(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      base.TraverseChildren(genericTypeInstanceReference);
     }
 
-    public override void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
-      base.Visit(genericTypeInstanceReference);
+    public override void TraverseChildren(IGenericTypeParameterReference genericTypeParameterReference) {
+      base.TraverseChildren(genericTypeParameterReference);
     }
 
-    public override void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
-      base.Visit(genericTypeParameterReference);
-    }
-
-    public override void Visit(IGotoStatement gotoStatement) {
+    public override void TraverseChildren(IGotoStatement gotoStatement) {
       this.sourceEmitterOutput.Write("goto ", true);
       this.sourceEmitterOutput.Write(gotoStatement.TargetStatement.Label.Value);
       this.sourceEmitterOutput.WriteLine(";");
     }
 
-    public override void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
-      base.Visit(gotoSwitchCaseStatement);
+    public override void TraverseChildren(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      base.TraverseChildren(gotoSwitchCaseStatement);
     }
 
-    public override void Visit(ILabeledStatement labeledStatement) {
+    public override void TraverseChildren(ILabeledStatement labeledStatement) {
       this.sourceEmitterOutput.DecreaseIndent();
       this.sourceEmitterOutput.Write(labeledStatement.Label.Value, true);
       this.sourceEmitterOutput.WriteLine(":");
       this.sourceEmitterOutput.IncreaseIndent();
-      this.Visit(labeledStatement.Statement);
+      this.Traverse(labeledStatement.Statement);
     }
 
-    public override void Visit(ILocalDefinition localDefinition) {
-      base.Visit(localDefinition);
+    public override void TraverseChildren(ILocalDefinition localDefinition) {
+      base.TraverseChildren(localDefinition);
     }
 
-    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+    public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       string type = TypeHelper.GetTypeName(localDeclarationStatement.LocalVariable.Type, NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords);
       this.sourceEmitterOutput.Write(type, true);
       this.sourceEmitterOutput.Write(" ");
       this.PrintLocalName(localDeclarationStatement.LocalVariable);
       if (localDeclarationStatement.InitialValue != null) {
         this.sourceEmitterOutput.Write(" = ");
-        this.Visit(localDeclarationStatement.InitialValue);
+        this.Traverse(localDeclarationStatement.InitialValue);
       }
       this.sourceEmitterOutput.WriteLine(";");
     }
 
-    public override void Visit(ILockStatement lockStatement) {
-      base.Visit(lockStatement);
+    public override void TraverseChildren(ILockStatement lockStatement) {
+      base.TraverseChildren(lockStatement);
     }
 
-    public override void Visit(IPushStatement pushStatement) {
+    public override void TraverseChildren(IPushStatement pushStatement) {
       this.sourceEmitterOutput.Write("push ", true);
-      this.Visit(pushStatement.ValueToPush);
+      this.Traverse(pushStatement.ValueToPush);
       this.sourceEmitterOutput.WriteLine(";");
     }
 
-    public override void Visit(IResourceUseStatement resourceUseStatement) {
-      base.Visit(resourceUseStatement);
+    public override void TraverseChildren(IResourceUseStatement resourceUseStatement) {
+      base.TraverseChildren(resourceUseStatement);
     }
 
-    public override void Visit(IRethrowStatement rethrowStatement) {
+    public override void TraverseChildren(IRethrowStatement rethrowStatement) {
       this.sourceEmitterOutput.WriteLine("throw;", true);
     }
 
-    public override void Visit(IReturnStatement returnStatement) {
+    public override void TraverseChildren(IReturnStatement returnStatement) {
       this.PrintToken(CSharpToken.Indent);
       this.PrintToken(CSharpToken.Return);
       if (returnStatement.Expression != null) {
         this.PrintToken(CSharpToken.Space);
-        this.Visit(returnStatement.Expression);
+        this.Traverse(returnStatement.Expression);
       }
       this.PrintToken(CSharpToken.Semicolon);
       this.PrintToken(CSharpToken.NewLine);
     }
 
-    public override void Visit(IStatement statement) {
-      base.Visit(statement);
+    public override void TraverseChildren(IStatement statement) {
+      base.TraverseChildren(statement);
     }
 
-    public override void Visit(ISwitchCase switchCase) {
+    public override void TraverseChildren(ISwitchCase switchCase) {
       if (switchCase.IsDefault)
         this.sourceEmitterOutput.WriteLine("default:", true);
       else {
         this.sourceEmitterOutput.Write("case ", true);
-        this.Visit(switchCase.Expression);
+        this.Traverse(switchCase.Expression);
         this.sourceEmitterOutput.WriteLine(":");
       }
       this.sourceEmitterOutput.IncreaseIndent();
-      this.Visit(switchCase.Body);
+      this.Traverse(switchCase.Body);
       this.sourceEmitterOutput.DecreaseIndent();
     }
 
-    public override void Visit(ISwitchStatement switchStatement) {
+    public override void TraverseChildren(ISwitchStatement switchStatement) {
       this.sourceEmitterOutput.Write("switch(", true);
-      this.Visit(switchStatement.Expression);
+      this.Traverse(switchStatement.Expression);
       this.sourceEmitterOutput.WriteLine("){");
       this.sourceEmitterOutput.IncreaseIndent();
-      this.Visit(switchStatement.Cases);
+      this.Traverse(switchStatement.Cases);
       this.sourceEmitterOutput.DecreaseIndent();
       
       this.sourceEmitterOutput.WriteLine("}", true);
     }
 
-    public override void Visit(IThrowStatement throwStatement) {
+    public override void TraverseChildren(IThrowStatement throwStatement) {
       this.PrintToken(CSharpToken.Indent);
       this.PrintToken(CSharpToken.Throw);
       if (throwStatement.Exception != null) {
         this.PrintToken(CSharpToken.Space);
-        this.Visit(throwStatement.Exception);
+        this.Traverse(throwStatement.Exception);
       }
       this.PrintToken(CSharpToken.Semicolon);
     }
 
-    public override void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+    public override void TraverseChildren(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
       this.PrintToken(CSharpToken.Indent);
       this.PrintToken(CSharpToken.Try);
-      this.Visit(tryCatchFilterFinallyStatement.TryBody);
+      this.Traverse(tryCatchFilterFinallyStatement.TryBody);
       foreach (ICatchClause clause in tryCatchFilterFinallyStatement.CatchClauses) {
         this.sourceEmitterOutput.Write("catch", true);
         if (clause.ExceptionType != Dummy.TypeReference) {
           this.sourceEmitterOutput.Write("(");
           this.PrintTypeReference(clause.ExceptionType);
-          this.sourceEmitterOutput.Write(" ");
-          this.PrintLocalName(clause.ExceptionContainer);
+          if (clause.ExceptionContainer != Dummy.LocalVariable) {
+            this.sourceEmitterOutput.Write(" ");
+            this.PrintLocalName(clause.ExceptionContainer);
+          }
           this.sourceEmitterOutput.Write(")");
         }
         if (clause.FilterCondition != null) {
           this.sourceEmitterOutput.WriteLine("{");
           this.sourceEmitterOutput.IncreaseIndent();
           this.sourceEmitterOutput.Write("if (", true);
-          this.Visit(clause.FilterCondition);
+          this.Traverse(clause.FilterCondition);
           this.sourceEmitterOutput.WriteLine(" == 1)");
-          this.Visit(clause.Body);
+          this.Traverse(clause.Body);
           this.sourceEmitterOutput.DecreaseIndent();
           this.sourceEmitterOutput.WriteLine("}", true);
         }
-        this.Visit(clause.Body);
+        this.Traverse(clause.Body);
       }
       if (tryCatchFilterFinallyStatement.FaultBody != null) {
         this.sourceEmitterOutput.Write("fault", true);
-        this.Visit(tryCatchFilterFinallyStatement.FaultBody);
+        this.Traverse(tryCatchFilterFinallyStatement.FaultBody);
       }
       if (tryCatchFilterFinallyStatement.FinallyBody != null) {
         this.sourceEmitterOutput.Write("finally", true);
-        this.Visit(tryCatchFilterFinallyStatement.FinallyBody);
+        this.Traverse(tryCatchFilterFinallyStatement.FinallyBody);
       }
     }
 
-    public override void Visit(IWhileDoStatement whileDoStatement) {
-      base.Visit(whileDoStatement);
+    public override void TraverseChildren(IWhileDoStatement whileDoStatement) {
+      base.TraverseChildren(whileDoStatement);
     }
 
-    public override void Visit(IWin32Resource win32Resource) {
-      base.Visit(win32Resource);
+    public override void TraverseChildren(IWin32Resource win32Resource) {
+      base.TraverseChildren(win32Resource);
     }
 
-    public override void Visit(IYieldBreakStatement yieldBreakStatement) {
+    public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
       this.PrintToken(CSharpToken.Indent);
       this.PrintToken(CSharpToken.YieldBreak);
       this.PrintToken(CSharpToken.Semicolon);
       this.PrintToken(CSharpToken.NewLine);
     }
 
-    public override void Visit(IYieldReturnStatement yieldReturnStatement) {
+    public override void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
       this.PrintToken(CSharpToken.Indent);
       this.PrintToken(CSharpToken.YieldReturn);
       if (yieldReturnStatement.Expression != null) {
         this.PrintToken(CSharpToken.Space);
-        this.Visit(yieldReturnStatement.Expression);
+        this.Traverse(yieldReturnStatement.Expression);
       }
       this.PrintToken(CSharpToken.Semicolon);
       this.PrintToken(CSharpToken.NewLine);
-    }
-
-    public override void VisitMethodReturnAttributes(IEnumerable<ICustomAttribute> customAttributes) {
-      base.VisitMethodReturnAttributes(customAttributes);
     }
 
   }

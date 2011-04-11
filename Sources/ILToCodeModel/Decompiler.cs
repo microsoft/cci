@@ -71,13 +71,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
     private static Module GetCodeModelFromMetadataModelHelper(IMetadataHost host, IModule module,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators) {
-      var result = MetadataCopier.DeepCopy(host, module); //TODO: do not copy method bodies
+      var result = new MetadataDeepCopier(host).Copy(module);
       var replacer = new ReplaceMetadataMethodBodiesWithDecompiledMethodBodies(host, module, sourceLocationProvider, localScopeProvider, decompileIterators);
-      replacer.Visit(result);
+      replacer.Traverse(result);
       var finder = new HelperTypeFinder(host, sourceLocationProvider);
-      finder.Visit(result);
+      finder.Traverse(result);
       var remover = new RemoveUnnecessaryTypes(finder.helperTypes, finder.helperMethods, finder.helperFields);
-      remover.Visit(result);
+      remover.Traverse(result);
       result.AllTypes.RemoveAll(td => finder.helperTypes.ContainsKey(td.InternedKey)); // depends on RemoveAll preserving order
       return result;
     }
@@ -89,7 +89,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// of a given metadata model and also replaces any method bodies with instances of SourceMethodBody, which implements the ISourceMethodBody.Block property
   /// by decompiling the metadata model information provided by the properties of IMethodBody.
   /// </summary>
-  internal class ReplaceMetadataMethodBodiesWithDecompiledMethodBodies : BaseMetadataTraverser {
+  internal class ReplaceMetadataMethodBodiesWithDecompiledMethodBodies : MetadataTraverser {
 
     /// <summary>
     /// An object that can provide information about the local scopes of a method. May be null. 
@@ -135,7 +135,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Replaces the body of the given method with an equivalent instance of SourceMethod body, which in addition also implements ISourceMethodBody,
     /// which has the additional property, Block, which represents the corresponding Code Model for the method body.
     /// </summary>
-    public override void Visit(IMethodDefinition method) {
+    public override void TraverseChildren(IMethodDefinition method) {
       if (method.IsExternal || method.IsAbstract) return;
       ((MethodDefinition)method).Body = new SourceMethodBody(method.Body, this.host, this.sourceLocationProvider, this.localScopeProvider, this.decompileIterators);
     }
@@ -145,7 +145,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// A traverser that visits every method body and collects together all of the private helper types of these bodies.
   /// </summary>
-  internal sealed class HelperTypeFinder : BaseMetadataTraverser {
+  internal sealed class HelperTypeFinder : MetadataTraverser {
 
     /// <summary>
     /// Contains an entry for every type that has been introduced by the compiler to hold the state of an anonymous delegate or of an iterator.
@@ -188,43 +188,43 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal HelperTypeFinder(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider) {
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
+      this.TraverseIntoMethodBodies = true;
     }
 
     /// <summary>
     /// Traverses only the namespace root of the given assembly, removing any type from the model that have the same
     /// interned key as one of the entries of this.typesToRemove.
     /// </summary>
-    public override void Visit(IModule module) {
-      this.Visit(module.NamespaceRoot);
+    public override void TraverseChildren(IModule module) {
+      this.Traverse(module.UnitNamespaceRoot);
     }
 
     /// <summary>
-    /// Visits the specified type definition, traversing only the nested types and methods and
-    /// collecting together all of the private helper types that are introduced by the compiler
+    /// Traverses only the nested types and methods and collects together all of the private helper types that are introduced by the compiler
     /// when methods that contain closures or iterators are compiled.
     /// </summary>
-    public override void Visit(ITypeDefinition typeDefinition) {
-      var mutableTypeDefinition = (TypeDefinition)typeDefinition;
+    public override void TraverseChildren(INamedTypeDefinition typeDefinition) {
+      var mutableTypeDefinition = (NamedTypeDefinition)typeDefinition;
       foreach (ITypeDefinition nestedType in mutableTypeDefinition.NestedTypes)
-        this.Visit(nestedType);
+        this.Traverse(nestedType);
       foreach (IMethodDefinition method in mutableTypeDefinition.Methods)
-        this.Visit(method);
+        this.Traverse(method);
     }
 
     /// <summary>
-    /// Visits only the (possibly missing) body of the method.
+    /// Traverses only the (possibly missing) body of the method.
     /// </summary>
     /// <param name="method"></param>
-    public override void Visit(IMethodDefinition method) {
+    public override void TraverseChildren(IMethodDefinition method) {
       if (method.IsAbstract || method.IsExternal) return;
-      this.Visit(method.Body);
+      this.Traverse(method.Body);
     }
 
     /// <summary>
     /// Records all of the helper types of the method body into this.helperTypes.
     /// </summary>
     /// <param name="methodBody"></param>
-    public override void Visit(IMethodBody methodBody) {
+    public override void TraverseChildren(IMethodBody methodBody) {
       var mutableBody = (SourceMethodBody)methodBody;
       var block = mutableBody.Block; //force decompilation
       bool denormalize = false;
@@ -259,7 +259,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// A traverser for a mutable code model that removes a specified set of types from the model.
   /// </summary>
-  internal class RemoveUnnecessaryTypes : BaseMetadataTraverser {
+  internal class RemoveUnnecessaryTypes : MetadataTraverser {
 
     /// <summary>
     /// Contains an entry for every type that has been introduced by the compiler to hold the state of an anonymous delegate or of an iterator.
@@ -283,7 +283,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<IFieldDefinition, IFieldDefinition> helperFields;
 
     /// <summary>
-    /// Allocatates a traverser for a mutable code model that removes a specified set of types from the model.
+    /// Allocates a traverser for a mutable code model that removes a specified set of types from the model.
     /// </summary>
     /// <param name="helperTypes">A dictionary whose keys are the interned keys of the types to remove from member lists.</param>
     /// <param name="helperMethods">A dictionary whose keys are the interned keys of the methods to remove from member lists.</param>
@@ -299,23 +299,23 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Traverses only the namespace root of the given assembly, removing any type from the model that have the same
     /// interned key as one of the entries of this.typesToRemove.
     /// </summary>
-    public override void Visit(IModule module) {
-      this.Visit(module.NamespaceRoot);
+    public override void TraverseChildren(IModule module) {
+      this.Traverse(module.UnitNamespaceRoot);
     }
 
     /// <summary>
-    /// Visits the specified type definition, removing any nested types that are compiler introduced private helper types
+    /// Traverses the specified type definition, removing any nested types that are compiler introduced private helper types
     /// for maintaining the state of closures and anonymous delegates.
     /// </summary>
-    public override void Visit(ITypeDefinition typeDefinition) {
-      var mutableTypeDefinition = (TypeDefinition)typeDefinition;
+    public override void TraverseChildren(INamedTypeDefinition typeDefinition) {
+      var mutableTypeDefinition = (NamedTypeDefinition)typeDefinition;
       for (int i = 0; i < mutableTypeDefinition.NestedTypes.Count; i++) {
         var nestedType = mutableTypeDefinition.NestedTypes[i];
         if (this.helperTypes.ContainsKey(nestedType.InternedKey)) {
           mutableTypeDefinition.NestedTypes.RemoveAt(i);
           i--;
         } else
-          this.Visit((ITypeDefinition)nestedType);
+          this.Traverse(nestedType);
       }
       for (int i = 0; i < mutableTypeDefinition.Methods.Count; i++) {
         var helperMethod = mutableTypeDefinition.Methods[i];

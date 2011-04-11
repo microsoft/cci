@@ -14,19 +14,16 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(INamespaceTypeDefinition namespaceTypeDefinition) {
       PrintTypeDefinition(namespaceTypeDefinition as ITypeDefinition);
     }
 
-    public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
+    public override void TraverseChildren(INestedTypeDefinition nestedTypeDefinition) {
       if (!this.printCompilerGeneratedMembers && AttributeHelper.Contains(nestedTypeDefinition.Attributes, nestedTypeDefinition.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
         return;
       PrintTypeDefinition(nestedTypeDefinition as ITypeDefinition);
     }
 
-    public override void Visit(ITypeDefinition typeDefinition) {
-      typeDefinition.Dispatch(this);
-    }
   }
 }

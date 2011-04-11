@@ -55,6 +55,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(INestedUnitNamespaceReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((INestedUnitNamespaceReference)this);
+    }
+
+    /// <summary>
     /// 
     /// </summary>
     /// <returns></returns>
@@ -360,6 +367,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IRootUnitNamespaceReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IRootUnitNamespaceReference)this);
     }
 
     /// <summary>

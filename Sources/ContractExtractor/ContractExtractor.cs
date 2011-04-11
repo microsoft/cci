@@ -9,12 +9,10 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.IO;
-using Microsoft.Cci;
-using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
-using Microsoft.Cci.ILToCodeModel;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.MutableCodeModel.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
 
@@ -41,6 +39,13 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IContractAwareHost host, ISourceMethodBody sourceMethodBody, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
       var e = new ContractExtractor(sourceMethodBody, host, pdbReader, localScopeProvider);
+      #region Special case for iterators (until decompiler always handles them)
+      var moveNext = IteratorContracts.FindClosureMoveNext(host, sourceMethodBody);
+      if (moveNext != null) {
+        var mc = IteratorContracts.GetMethodContractFromMoveNext(host, e, sourceMethodBody, moveNext, pdbReader, localScopeProvider);
+        return new MethodContractAndMethodBody(mc, sourceMethodBody.Block);
+      }
+      #endregion
       return e.SplitMethodBodyIntoContractAndCode(sourceMethodBody.Block);
     }
 
@@ -56,7 +61,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static ITypeContract/*?*/ GetObjectInvariant(IContractAwareHost host, ITypeDefinition typeDefinition, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
       TypeContract cumulativeContract = new TypeContract();
-      TypeDefinition mutableTypeDefinition = typeDefinition as TypeDefinition;
+      NamedTypeDefinition mutableTypeDefinition = typeDefinition as NamedTypeDefinition;
       var invariantMethods = new List<IMethodDefinition>(ContractHelper.GetInvariantMethods(typeDefinition));
       foreach (var invariantMethod in invariantMethods) {
         IMethodBody methodBody = invariantMethod.Body;
@@ -135,27 +140,12 @@ namespace Microsoft.Cci.MutableContracts {
       return null;
     }
 
-    private bool IsContractMethod(IMethodReference/*?*/ method) {
+    internal bool IsContractMethod(IMethodReference/*?*/ method) {
       if (method == null) return false;
       if (method.ContainingType.InternedKey == this.contractClass.InternedKey) return true;
       // Reference assemblies define their own internal versions of the contract methods
       return this.contractClassDefinedInReferenceAssembly != null &&
         (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
-    }
-    private bool IsOverridingOrImplementingMethod(IMethodDefinition methodDefinition) {
-      return (
-        // method was marked "override" in source
-        (methodDefinition.IsVirtual && !methodDefinition.IsNewSlot)
-        ||
-        // method is *not* in a contract class and it is an implementation of an interface method
-        (this.extractingFromAMethodInAContractClass == null
-          &&
-        // method is being used as an implementation of an interface method
-          (IteratorHelper.EnumerableIsNotEmpty(ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(methodDefinition))
-        // method is an explicit implementation of an interface method
-          || IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition))
-          ))
-        );
     }
 
     private ContractExtractor(
@@ -281,7 +271,7 @@ namespace Microsoft.Cci.MutableContracts {
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
       IMethodReference methodToCall = methodCall.MethodToCall;
       List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
-      List<ILocation> locations = new List<ILocation>();
+      List<ILocation> locations = new List<ILocation>(methodCall.Locations);
       for (int i = lastIndex; 0 <= i; i--) {
         if (IteratorHelper.EnumerableIsNotEmpty(clump[i].Locations)) {
           locations.AddRange(clump[i].Locations);
@@ -311,7 +301,8 @@ namespace Microsoft.Cci.MutableContracts {
       if (this.methodIsInReferenceAssembly) {
         origSource = GetStringFromArgument(arguments[2]);
       } else {
-        TryGetConditionText(locations, numArgs, out origSource);
+        if (this.pdbReader != null)
+          TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
       }
 
       TypeInvariant invariant = new TypeInvariant() {
@@ -342,8 +333,6 @@ namespace Microsoft.Cci.MutableContracts {
       var found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, 0, 0, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
       if (!found || !BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) return blockStatement;
 
-      var isOverrideOrImplementation = IsOverridingOrImplementingMethod(this.sourceMethodBody.MethodDefinition);
-
       var localDeclarationStatements = new List<IStatement>();
       var firstStatementIndex = 0;
       while (firstStatementIndex < blockStatement.Statements.Count) {
@@ -371,14 +360,14 @@ namespace Microsoft.Cci.MutableContracts {
         // TODO: Signal error if not foundCtorCall?
         System.Diagnostics.Debug.Assert(foundCtorCall);
         // Need to also keep any nops with source contexts in the method body and not in the contract
-        int eb;
-        int es;
-        var foundNops = IndexOf(s => s is IEmptyStatement && IteratorHelper.EnumerableIsNotEmpty(s.Locations),
-          linearBlockIndex, blockIndex, stmtIndex, out eb, out es);
-        if (foundNops) {
-          blockIndex = eb;
-          stmtIndex = es;
-        }
+        //int eb;
+        //int es;
+        //var foundNops = IndexOf(s => s is IEmptyStatement && IteratorHelper.EnumerableIsNotEmpty(s.Locations),
+        //  linearBlockIndex, blockIndex, stmtIndex, out eb, out es);
+        //if (foundNops) {
+        //  blockIndex = eb;
+        //  stmtIndex = es;
+        //}
         newStmts.AddRange(ExtractClump(linearBlockIndex, 0, firstStatementIndex, blockIndex, stmtIndex));
         currentStatementIndex = stmtIndex + 1;
         var lastIndexInBlock = linearBlockIndex[blockIndex].Statements.Count-1;
@@ -402,24 +391,29 @@ namespace Microsoft.Cci.MutableContracts {
         }
       }
 
-      ILocalDefinition/*?*/ contractLocalAliasingThis = null;
-      if (currentStatementIndex < linearBlockIndex[currentBlockIndex].Statements.Count) {
-        if (this.extractingFromAMethodInAContractClass != null) {
-          // Before the first contract, allow an assignment of the form "J jThis = this;"
-          // but only in a method that is in a contract class for an interface.
-          // If found, skip the statement (i.e., don't keep it in the method body)
-          // and replace all occurences of the local in the contracts by "this".
+      var remaining = ExtractContractsAndReturnRemainingStatements(linearBlockIndex, currentBlockIndex, currentStatementIndex, lastBlockIndex, lastStatementIndex);
+      if (0 < localDeclarationStatements.Count)
+        remaining.InsertRange(0, localDeclarationStatements);
+      newStmts.AddRange(remaining);
+      blockStatement.Statements = newStmts;
+      return blockStatement;
+    }
 
-          //TODO: Allow only an assignment to a local of the form "J jThis = this"
-          // (Need to hold onto the type J and make sure "this" is the RHS of the assignment.)
-          ILocalDeclarationStatement lds = linearBlockIndex[currentBlockIndex].Statements[currentStatementIndex] as ILocalDeclarationStatement;
-          if (lds != null && lds.InitialValue is IThisReference) {
-            contractLocalAliasingThis = lds.LocalVariable;
-            currentStatementIndex++;
-          }
-        }
-      }
-      
+    private List<IStatement> ExtractContractsAndReturnRemainingStatements(
+      List<BlockStatement> linearBlockIndex,
+      int startBlock,
+      int startStatement,
+      int lastBlockIndex,
+      int lastStatementIndex
+      ){
+
+      int currentBlockIndex = startBlock;
+      int currentStatementIndex = startStatement;
+      int blockIndexOfNextContractCall;
+      int stmtIndexOfNextContractCall;
+
+      var found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, startBlock, startStatement, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
+
       while (found && BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) {
         var currentClump = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, blockIndexOfNextContractCall, stmtIndexOfNextContractCall);
         currentClump = LocalBinder.CloseClump(this.host, currentClump);
@@ -437,26 +431,33 @@ namespace Microsoft.Cci.MutableContracts {
         found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, currentBlockIndex, currentStatementIndex, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
       }
 
-      if (contractLocalAliasingThis != null) {
-        var cltt = new ContractLocalToThis(this.host, contractLocalAliasingThis, this.sourceMethodBody.MethodDefinition.ContainingType);
-        cltt.Visit(this.CurrentMethodContract);
-      }
-
       var lastBlock = linearBlockIndex[linearBlockIndex.Count - 1];
       var currentClump2 = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, linearBlockIndex.Count - 1, lastBlock.Statements.Count - 1);
-      if (0 < localDeclarationStatements.Count) {
-        currentClump2.InsertRange(0, localDeclarationStatements);
-      }
-      newStmts.AddRange(currentClump2);
-      blockStatement.Statements = newStmts;
-      return blockStatement;
+      return currentClump2;
+    }
+
+    internal static MethodContractAndMethodBody MoveNextExtractor(
+      IContractAwareHost host,
+      PdbReader pdbReader,
+      ILocalScopeProvider localScopeProvider,
+      ISourceMethodBody moveNextBody,
+      BlockStatement blockStatement,
+      int startBlock,
+      int startStatement,
+      int lastBlockIndex,
+      int lastStatementIndex
+      ) {
+      var e = new ContractExtractor(moveNextBody, host, pdbReader, localScopeProvider);
+      var linearBlockIndex = e.LinearizeBlocks(blockStatement);
+      var result = e.ExtractContractsAndReturnRemainingStatements(linearBlockIndex, startBlock, startStatement, lastBlockIndex, lastStatementIndex);
+      return new MethodContractAndMethodBody(e.currentMethodContract, new BlockStatement() { Statements = result, });
     }
 
     private static bool BlockStatementIndicesLessThanOrEqual(int b1, int s1, int b2, int s2) {
       return ((b1 < b2) || (b1 == b2 && s1 <= s2));
     }
 
-    private void ExtractContract(List<IStatement> currentClump) {
+    internal void ExtractContract(List<IStatement> currentClump) {
       var lastIndex = currentClump.Count - 1;
       ExpressionStatement/*?*/ expressionStatement = currentClump[lastIndex] as ExpressionStatement;
       if (expressionStatement == null) {
@@ -474,7 +475,7 @@ namespace Microsoft.Cci.MutableContracts {
             if (numArgs == 0 && mname == "EndContractBlock") return;
             if (!(numArgs == 1 || numArgs == 2 || numArgs == 3)) return;
 
-            var locations = new List<ILocation>(expressionStatement.Locations);
+            var locations = new List<ILocation>(methodCall.Locations);
             if (locations.Count == 0) {
               for (int i = lastIndex; 0 <= i; i--) {
                 if (IteratorHelper.EnumerableIsNotEmpty(currentClump[i].Locations)) {
@@ -508,7 +509,8 @@ namespace Microsoft.Cci.MutableContracts {
             if (this.methodIsInReferenceAssembly) {
               origSource = GetStringFromArgument(arguments[2]);
             } else {
-              TryGetConditionText(locations, numArgs, out origSource);
+              if (this.pdbReader != null)
+                TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
             }
             IExpression/*?*/ description = numArgs >= 2 ? arguments[1] : null;
 
@@ -516,7 +518,7 @@ namespace Microsoft.Cci.MutableContracts {
 
             if (mname == "Ensures") {
               contractExpression = this.oldAndResultExtractor.Visit(contractExpression);
-              PostCondition postcondition = new PostCondition() {
+              Postcondition postcondition = new Postcondition() {
                 Condition = contractExpression,
                 Description = description,
                 IsModel = isModel,
@@ -532,7 +534,7 @@ namespace Microsoft.Cci.MutableContracts {
               contractExpression = this.oldAndResultExtractor.Visit(contractExpression);
               ThrownException exceptionalPostcondition = new ThrownException() {
                 ExceptionType = genericArgs[0],
-                Postcondition = new PostCondition() {
+                Postcondition = new Postcondition() {
                   Condition = contractExpression,
                   Description = description,
                   IsModel = isModel,
@@ -596,7 +598,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// list of statements in a BlockStatement.
     /// </summary>
     /// <returns>A list of the blocks. Each block is unchanged.</returns>
-    private List<BlockStatement> LinearizeBlocks(BlockStatement blockStatement) {
+    internal List<BlockStatement> LinearizeBlocks(BlockStatement blockStatement) {
       var result = new List<BlockStatement>();
       if (blockStatement.Statements.Count == 0) return result;
       BlockStatement bs = blockStatement;
@@ -647,34 +649,7 @@ namespace Microsoft.Cci.MutableContracts {
       return clump;
     }
 
-    private class ContractLocalToThis : CodeAndContractMutatingVisitor {
-      ITypeReference typeOfThis;
-      ILocalDefinition local;
-
-      public ContractLocalToThis(IMetadataHost host, ILocalDefinition local, ITypeReference typeOfThis) :
-        base(host) {
-        this.local = local;
-        this.typeOfThis = typeOfThis;
-      }
-
-      /// <summary>
-      /// Parameters might be immutable and if so, then this mutator would end up creating
-      /// mutable copies. But then they are not object-equal to the parameter from the method
-      /// and downstream mutators/copiers (especially copiers) expect all references to a parameter
-      /// to be object-equal to the parameter reached from the method definition.
-      /// </summary>
-      public override IExpression Visit(BoundExpression boundExpression) {
-        ILocalDefinition/*?*/ ld = boundExpression.Definition as ILocalDefinition;
-        if (ld != null && ld == this.local)
-          return new ThisReference() { Type = typeOfThis, };
-        IParameterDefinition/*?*/ par = boundExpression.Definition as IParameterDefinition;
-        if (par != null)
-          return boundExpression;
-        return base.Visit(boundExpression);
-      }
-    }
-
-    private bool IndexOf(Predicate<IStatement> test, List<BlockStatement> blockList, int startBlock, int startStmt, out int endBlock, out int endStmt) {
+    internal bool IndexOf(Predicate<IStatement> test, List<BlockStatement> blockList, int startBlock, int startStmt, out int endBlock, out int endStmt) {
 
       endBlock = -1;
       endStmt = -1;
@@ -705,7 +680,7 @@ namespace Microsoft.Cci.MutableContracts {
       blockIndex = -1; stmtIndex = -1;
       return false;
     }
-    private bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
+    internal bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
       if (countLegacy && IsLegacyRequires(statement)) return true;
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false; ;
@@ -748,7 +723,7 @@ namespace Microsoft.Cci.MutableContracts {
       return expressionStatement.Expression as IMethodCall;
     }
 
-    private bool IsPreconditionOrPostcondition(IStatement statement) {
+    internal bool IsPreconditionOrPostcondition(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false;
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
@@ -763,7 +738,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return mname == "Requires" || mname == "Ensures";
     }
-    private static bool IsValidatorOrAbbreviator(IStatement statement) {
+    internal static bool IsValidatorOrAbbreviator(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false;
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
@@ -771,7 +746,7 @@ namespace Microsoft.Cci.MutableContracts {
       IMethodReference methodToCall = methodCall.MethodToCall;
       return ContractHelper.IsValidatorOrAbbreviator(methodToCall);
     }
-    private static bool IsLegacyRequires(IStatement statement) {
+    internal static bool IsLegacyRequires(IStatement statement) {
       ConditionalStatement conditional = statement as ConditionalStatement;
       if (conditional == null) return false;
       EmptyStatement empty = conditional.FalseBranch as EmptyStatement;
@@ -834,9 +809,9 @@ namespace Microsoft.Cci.MutableContracts {
 
     private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
 
-    private bool TryGetConditionText(IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
+    internal static bool TryGetConditionText(PdbReader pdbReader, IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
       int startColumn;
-      if (!TryGetSourceText(locations, out sourceText, out startColumn)) return false;
+      if (!TryGetSourceText(pdbReader, locations, out sourceText, out startColumn)) return false;
       int firstSourceTextIndex = sourceText.IndexOf('(');
       firstSourceTextIndex = firstSourceTextIndex == -1 ? 0 : firstSourceTextIndex + 1; // the +1 is to skip the opening paren
       int lastSourceTextIndex;
@@ -854,24 +829,22 @@ namespace Microsoft.Cci.MutableContracts {
       sourceText = AdjustIndentationOfMultilineSourceText(sourceText, indentSize);
       return true;
     }
-    private bool TryGetSourceText(IEnumerable<ILocation> locations, out string/*?*/ sourceText, out int startColumn) {
+    internal static bool TryGetSourceText(PdbReader pdbReader, IEnumerable<ILocation> locations, out string/*?*/ sourceText, out int startColumn) {
       sourceText = null;
       startColumn = 0; // columns begin at 1, so this can work as a null value
-      if (this.sourceLocationProvider != null) {
-        foreach (var loc in locations) {
-          foreach (IPrimarySourceLocation psloc in this.pdbReader.GetClosestPrimarySourceLocationsFor(loc)) {
-            if (!String.IsNullOrEmpty(psloc.Source)) {
-              sourceText = psloc.Source;
-              startColumn = psloc.StartColumn;
-              break;
-            }
+      foreach (var loc in locations) {
+        foreach (IPrimarySourceLocation psloc in pdbReader.GetClosestPrimarySourceLocationsFor(loc)) {
+          if (!String.IsNullOrEmpty(psloc.Source)) {
+            sourceText = psloc.Source;
+            startColumn = psloc.StartColumn;
+            break;
           }
-          if (sourceText != null) break;
         }
+        if (sourceText != null) break;
       }
       return sourceText != null;
     }
-    private int IndexOfWhileSkippingBalancedThings(string source, int startIndex, char targetChar) {
+    internal static int IndexOfWhileSkippingBalancedThings(string source, int startIndex, char targetChar) {
       int i = startIndex;
       while (i < source.Length) {
         if (source[i] == targetChar) break;
@@ -881,12 +854,12 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return i;
     }
-    static char[] whiteSpace = { ' ', '\t' };
-    private string AdjustIndentationOfMultilineSourceText(string sourceText, int trimLength) {
+    internal static char[] WhiteSpace = { ' ', '\t' };
+    internal static string AdjustIndentationOfMultilineSourceText(string sourceText, int trimLength) {
       if (!sourceText.Contains("\n")) return sourceText;
       var lines = sourceText.Split('\n');
       if (lines.Length == 1) return sourceText;
-      var trimmedSecondLine = lines[1].TrimStart(whiteSpace);
+      var trimmedSecondLine = lines[1].TrimStart(WhiteSpace);
       for (int i = 1; i < lines.Length; i++) {
         var currentLine = lines[i];
         if (trimLength < currentLine.Length) {
@@ -899,7 +872,7 @@ namespace Microsoft.Cci.MutableContracts {
             lines[i] = currentLine.Substring(trimLength);
         }
       }
-      var numberOfLinesToJoin = String.IsNullOrEmpty(lines[lines.Length - 1].TrimStart(whiteSpace)) ? lines.Length - 1 : lines.Length;
+      var numberOfLinesToJoin = String.IsNullOrEmpty(lines[lines.Length - 1].TrimStart(WhiteSpace)) ? lines.Length - 1 : lines.Length;
       return String.Join("\n", lines, 0, numberOfLinesToJoin);
     }
 
@@ -927,7 +900,7 @@ namespace Microsoft.Cci.MutableContracts {
     // For the first form, the ExceptionToThrow is E, for the second form
     // it is the call.
     //
-    private void ExtractLegacyRequires(List<IStatement> currentClump) {
+    internal void ExtractLegacyRequires(List<IStatement> currentClump) {
       var lastIndex = currentClump.Count - 1;
       ConditionalStatement conditional = currentClump[lastIndex] as ConditionalStatement;
       //^ requires IsLegacyRequires(conditional);
@@ -944,7 +917,8 @@ namespace Microsoft.Cci.MutableContracts {
 
       string origSource = null;
       if (0 < locations.Count) {
-        TryGetConditionText(locations, 1, out origSource);
+        if (this.pdbReader != null)
+          TryGetConditionText(this.pdbReader, locations, 1, out origSource);
         if (origSource != null) {
           origSource = BrianGru.NegatePredicate(origSource);
         }
@@ -999,7 +973,8 @@ namespace Microsoft.Cci.MutableContracts {
           Type = this.host.PlatformType.SystemBoolean,
         },
         ExceptionToThrow = failureBehavior,
-        Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))), //new List<ILocation>(locations),
+//        Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))), //new List<ILocation>(locations),
+        Locations = new List<ILocation>(locations),
         OriginalSource = origSource,
       };
       this.CurrentMethodContract.Preconditions.Add(precondition);
@@ -1023,217 +998,6 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    private class OldAndResultExtractor : MethodBodyCodeMutator {
-      ISourceMethodBody sourceMethodBody;
-      ITypeReference contractClass;
-      AnonymousDelegate/*?*/ currentAnonymousDelegate;
-      internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<IReference, IReference> referenceCache, ITypeReference contractClass)
-        : base(host, true) {
-        this.sourceMethodBody = sourceMethodBody;
-        this.referenceCache = referenceCache;
-        this.contractClass = contractClass;
-      }
-
-      public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
-        var savedAnonymousDelegate = this.currentAnonymousDelegate;
-        this.currentAnonymousDelegate = anonymousDelegate;
-        var result = base.Visit(anonymousDelegate);
-        this.currentAnonymousDelegate = savedAnonymousDelegate;
-        return result;
-      }
-
-      public override IExpression Visit(MethodCall methodCall) {
-        IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
-        if (methodToCall != null) {
-          if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey) {
-            //TODO: exists, forall
-            if (methodToCall.GenericMethod.Name.Value == "Result") {
-              ReturnValue returnValue = new ReturnValue() {
-                Type = methodToCall.Type,
-                Locations = methodCall.Locations,
-              };
-              if (this.currentAnonymousDelegate != null)
-                this.currentAnonymousDelegate.CallingConvention |= CallingConvention.HasThis;
-              return returnValue;
-            }
-            if (methodToCall.GenericMethod.Name.Value == "OldValue") {
-              OldValue oldValue = new OldValue() {
-                Expression = this.Visit(methodCall.Arguments[0]),
-                Type = methodToCall.Type,
-                Locations = methodCall.Locations,
-              };
-              return oldValue;
-            }
-
-            if (methodToCall.GenericMethod.Name.Value == "ValueAtReturn") {
-              AddressDereference addressDereference = new AddressDereference() {
-                Address = methodCall.Arguments[0],
-                Locations = methodCall.Locations,
-                Type = methodToCall.Type,
-              };
-              return this.Visit(addressDereference);
-            }
-
-          }
-        }
-        return base.Visit(methodCall);
-      }
-    }
-
-    private static class BrianGru {
-      #region Code from BrianGru to negate predicates coming from if-then-throw preconditions
-      // Recognize some common predicate forms, and negate them.  Also, fall back to a correct default.
-      internal static String NegatePredicate(String predicate) {
-        if (String.IsNullOrEmpty(predicate)) return "";
-        // "(p)", but avoiding stuff like "(p && q) || (!p)"
-        if (predicate[0] == '(' && predicate[predicate.Length - 1] == ')') {
-          if (predicate.IndexOf('(', 1) == -1)
-            return '(' + NegatePredicate(predicate.Substring(1, predicate.Length - 2)) + ')';
-        }
-
-        // "!p"
-        if (predicate[0] == '!' && (ContainsNoOperators(predicate, 1, predicate.Length - 1) || IsSimpleFunctionCall(predicate, 1, predicate.Length - 1)))
-          return predicate.Substring(1);
-
-        // "a < b" or "a <= b"
-        if (predicate.Contains("<")) {
-          int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
-          int ltIndex = predicate.IndexOf('<');
-          bool ltOrEquals = predicate[ltIndex + 1] == '=';
-          aEnd = ltIndex;
-          bStart = ltOrEquals ? ltIndex + 2 : ltIndex + 1;
-
-          String a = predicate.Substring(aStart, aEnd - aStart);
-          String b = predicate.Substring(bStart, bEnd - bStart);
-          if (ContainsNoOperators(a) && ContainsNoOperators(b))
-            return a + (ltOrEquals ? ">" : ">=") + b;
-        }
-
-        // "a > b" or "a >= b"
-        if (predicate.Contains(">")) {
-          int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
-          int gtIndex = predicate.IndexOf('>');
-          bool gtOrEquals = predicate[gtIndex + 1] == '=';
-          aEnd = gtIndex;
-          bStart = gtOrEquals ? gtIndex + 2 : gtIndex + 1;
-
-          String a = predicate.Substring(aStart, aEnd - aStart);
-          String b = predicate.Substring(bStart, bEnd - bStart);
-          if (ContainsNoOperators(a) && ContainsNoOperators(b))
-            return a + (gtOrEquals ? "<" : "<=") + b;
-        }
-
-        // "a == b"  or  "a != b"
-        if (predicate.Contains("=")) {
-          int aStart = 0, aEnd = -1, bStart = -1, bEnd = predicate.Length;
-          int eqIndex = predicate.IndexOf('=');
-          bool skip = false;
-          bool equalsOperator = false;
-          if (predicate[eqIndex - 1] == '!') {
-            aEnd = eqIndex - 1;
-            bStart = eqIndex + 1;
-            equalsOperator = false;
-          } else if (predicate[eqIndex + 1] == '=') {
-            aEnd = eqIndex;
-            bStart = eqIndex + 2;
-            equalsOperator = true;
-          } else
-            skip = true;
-
-          if (!skip) {
-            String a = predicate.Substring(aStart, aEnd - aStart);
-            String b = predicate.Substring(bStart, bEnd - bStart);
-            if (ContainsNoOperators(a) && ContainsNoOperators(b))
-              return a + (equalsOperator ? "!=" : "==") + b;
-          }
-        }
-
-        if (predicate.Contains("&&") || predicate.Contains("||")) {
-          // Consider predicates like "(P) && (Q)", "P || Q", "(P || Q) && R", etc.
-          // Apply DeMorgan's law, and recurse to negate both sides of the binary operator.
-          int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
-          int parenCount = 0;
-          bool skip = false;
-          bool foundAnd = false, foundOr = false;
-          aEnd = 0;
-          while (aEnd < predicate.Length && ((predicate[aEnd] != '&' && predicate[aEnd] != '|') || parenCount > 0)) {
-            if (predicate[aEnd] == '(')
-              parenCount++;
-            else if (predicate[aEnd] == ')')
-              parenCount--;
-            aEnd++;
-          }
-          if (aEnd >= predicate.Length - 1)
-            skip = true;
-          else {
-            if (aEnd + 1 < predicate.Length && predicate[aEnd] == '&' && predicate[aEnd + 1] == '&')
-              foundAnd = true;
-            else if (aEnd + 1 < predicate.Length && predicate[aEnd] == '|' && predicate[aEnd + 1] == '|')
-              foundOr = true;
-            if (!foundAnd && !foundOr)
-              skip = true;
-          }
-
-          if (!skip) {
-            bStart = aEnd + 2;
-            while (Char.IsWhiteSpace(predicate[aEnd - 1]))
-              aEnd--;
-            while (Char.IsWhiteSpace(predicate[bStart]))
-              bStart++;
-
-            String a = predicate.Substring(aStart, aEnd - aStart);
-            String b = predicate.Substring(bStart, bEnd - bStart);
-            String op = foundAnd ? " || " : " && ";
-            return NegatePredicate(a) + op + NegatePredicate(b);
-          }
-        }
-
-        return String.Format("!({0})", predicate);
-      }
-      private static bool ContainsNoOperators(String s) {
-        return ContainsNoOperators(s, 0, s.Length);
-      }
-      // These aren't operators like + per se, but ones that will cause evaluation order to possibly change,
-      // or alter the semantics of what might be in a predicate.
-      // @TODO: Consider adding '~'
-      static readonly String[] Operators = new String[] { "==", "!=", "=", "<", ">", "(", ")", "//", "/*", "*/" };
-      private static bool ContainsNoOperators(String s, int start, int end) {
-        foreach (String op in Operators)
-          if (s.IndexOf(op) >= 0)
-            return false;
-        return true;
-      }
-      private static bool ArrayContains<T>(T[] array, T item) {
-        foreach (T x in array)
-          if (item.Equals(x))
-            return true;
-        return false;
-      }
-      // Recognize only SIMPLE method calls, like "System.String.Equals("", "")".
-      private static bool IsSimpleFunctionCall(String s, int start, int end) {
-        char[] badChars = { '+', '-', '*', '/', '~', '<', '=', '>', ';', '?', ':' };
-        int parenCount = 0;
-        int index = start;
-        bool foundMethod = false;
-        for (; index < end; index++) {
-          if (s[index] == '(') {
-            parenCount++;
-            if (parenCount > 1)
-              return false;
-            if (foundMethod == true)
-              return false;
-            foundMethod = true;
-          } else if (s[index] == ')') {
-            parenCount--;
-            if (index != end - 1)
-              return false;
-          } else if (ArrayContains(badChars, s[index]))
-            return false;
-        }
-        return foundMethod;
-      }
-      #endregion Code from BrianGru to negate predicates coming from if-then-throw preconditions
-    }
 
     /// <summary>
     /// A mutator that replaces the parameters of a method with the arguments from a method call.
@@ -1298,7 +1062,9 @@ namespace Microsoft.Cci.MutableContracts {
         if (mname != "Assert" && mname != "Assume") goto JustVisit;
 
         string/*?*/ origSource = null;
-        this.parent.TryGetConditionText(locations, numArgs, out origSource);
+        if (this.pdbReader != null)
+          ContractExtractor.TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
+
 
         var locations2 = this.pdbReader == null ? new List<ILocation>() :
           new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations)));
@@ -1380,18 +1146,18 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    private class FindModelMembers : BaseCodeTraverser {
+    private class FindModelMembers : CodeTraverser {
       private bool foundModelMember = false;
       private FindModelMembers() { }
       public static bool ContainsModelMembers(IExpression expression) {
         var fmm = new FindModelMembers();
-        fmm.Visit(expression);
+        fmm.Traverse(expression);
         return fmm.foundModelMember;
       }
-      public override void Visit(IMethodCall methodCall) {
+      public override void TraverseChildren(IMethodCall methodCall) {
         if (ContractHelper.IsModel(methodCall.MethodToCall) != null)
           this.foundModelMember = true;
-        base.Visit(methodCall);
+        base.TraverseChildren(methodCall);
       }
     }
 
@@ -1448,6 +1214,232 @@ namespace Microsoft.Cci.MutableContracts {
 
     }
 
+  }
+
+  internal class OldAndResultExtractor : MethodBodyCodeMutator {
+    ISourceMethodBody sourceMethodBody;
+    ITypeReference contractClass;
+    AnonymousDelegate/*?*/ currentAnonymousDelegate;
+    internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<IReference, IReference>/*?*/ referenceCache, ITypeReference contractClass)
+      : base(host, true) {
+      this.sourceMethodBody = sourceMethodBody;
+      if (referenceCache != null)
+        this.referenceCache = referenceCache;
+      this.contractClass = contractClass;
+    }
+
+    public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
+      var savedAnonymousDelegate = this.currentAnonymousDelegate;
+      this.currentAnonymousDelegate = anonymousDelegate;
+      var result = base.Visit(anonymousDelegate);
+      this.currentAnonymousDelegate = savedAnonymousDelegate;
+      return result;
+    }
+
+    public override IExpression Visit(MethodCall methodCall) {
+      IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
+      if (methodToCall != null) {
+        if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey) {
+          //TODO: exists, forall
+          if (methodToCall.GenericMethod.Name.Value == "Result") {
+            ReturnValue returnValue = new ReturnValue() {
+              Type = methodToCall.Type,
+              Locations = methodCall.Locations,
+            };
+            if (this.currentAnonymousDelegate != null)
+              this.currentAnonymousDelegate.CallingConvention |= CallingConvention.HasThis;
+            return returnValue;
+          }
+          if (methodToCall.GenericMethod.Name.Value == "OldValue") {
+            OldValue oldValue = new OldValue() {
+              Expression = this.Visit(methodCall.Arguments[0]),
+              Type = methodToCall.Type,
+              Locations = methodCall.Locations,
+            };
+            return oldValue;
+          }
+
+          if (methodToCall.GenericMethod.Name.Value == "ValueAtReturn") {
+            AddressDereference addressDereference = new AddressDereference() {
+              Address = methodCall.Arguments[0],
+              Locations = methodCall.Locations,
+              Type = methodToCall.Type,
+            };
+            return this.Visit(addressDereference);
+          }
+
+        }
+      }
+      return base.Visit(methodCall);
+    }
+  }
+  internal class FindModelMembers : BaseCodeTraverser {
+    private bool foundModelMember = false;
+    private FindModelMembers() { }
+    public static bool ContainsModelMembers(IExpression expression) {
+      var fmm = new FindModelMembers();
+      fmm.Visit(expression);
+      return fmm.foundModelMember;
+    }
+    public override void Visit(IMethodCall methodCall) {
+      if (ContractHelper.IsModel(methodCall.MethodToCall) != null)
+        this.foundModelMember = true;
+      base.Visit(methodCall);
+    }
+  }
+  internal static class BrianGru {
+    #region Code from BrianGru to negate predicates coming from if-then-throw preconditions
+    // Recognize some common predicate forms, and negate them.  Also, fall back to a correct default.
+    internal static String NegatePredicate(String predicate) {
+      if (String.IsNullOrEmpty(predicate)) return "";
+      // "(p)", but avoiding stuff like "(p && q) || (!p)"
+      if (predicate[0] == '(' && predicate[predicate.Length - 1] == ')') {
+        if (predicate.IndexOf('(', 1) == -1)
+          return '(' + NegatePredicate(predicate.Substring(1, predicate.Length - 2)) + ')';
+      }
+
+      // "!p"
+      if (predicate[0] == '!' && (ContainsNoOperators(predicate, 1, predicate.Length - 1) || IsSimpleFunctionCall(predicate, 1, predicate.Length - 1)))
+        return predicate.Substring(1);
+
+      // "a < b" or "a <= b"
+      if (predicate.Contains("<")) {
+        int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
+        int ltIndex = predicate.IndexOf('<');
+        bool ltOrEquals = predicate[ltIndex + 1] == '=';
+        aEnd = ltIndex;
+        bStart = ltOrEquals ? ltIndex + 2 : ltIndex + 1;
+
+        String a = predicate.Substring(aStart, aEnd - aStart);
+        String b = predicate.Substring(bStart, bEnd - bStart);
+        if (ContainsNoOperators(a) && ContainsNoOperators(b))
+          return a + (ltOrEquals ? ">" : ">=") + b;
+      }
+
+      // "a > b" or "a >= b"
+      if (predicate.Contains(">")) {
+        int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
+        int gtIndex = predicate.IndexOf('>');
+        bool gtOrEquals = predicate[gtIndex + 1] == '=';
+        aEnd = gtIndex;
+        bStart = gtOrEquals ? gtIndex + 2 : gtIndex + 1;
+
+        String a = predicate.Substring(aStart, aEnd - aStart);
+        String b = predicate.Substring(bStart, bEnd - bStart);
+        if (ContainsNoOperators(a) && ContainsNoOperators(b))
+          return a + (gtOrEquals ? "<" : "<=") + b;
+      }
+
+      // "a == b"  or  "a != b"
+      if (predicate.Contains("=")) {
+        int aStart = 0, aEnd = -1, bStart = -1, bEnd = predicate.Length;
+        int eqIndex = predicate.IndexOf('=');
+        bool skip = false;
+        bool equalsOperator = false;
+        if (predicate[eqIndex - 1] == '!') {
+          aEnd = eqIndex - 1;
+          bStart = eqIndex + 1;
+          equalsOperator = false;
+        } else if (predicate[eqIndex + 1] == '=') {
+          aEnd = eqIndex;
+          bStart = eqIndex + 2;
+          equalsOperator = true;
+        } else
+          skip = true;
+
+        if (!skip) {
+          String a = predicate.Substring(aStart, aEnd - aStart);
+          String b = predicate.Substring(bStart, bEnd - bStart);
+          if (ContainsNoOperators(a) && ContainsNoOperators(b))
+            return a + (equalsOperator ? "!=" : "==") + b;
+        }
+      }
+
+      if (predicate.Contains("&&") || predicate.Contains("||")) {
+        // Consider predicates like "(P) && (Q)", "P || Q", "(P || Q) && R", etc.
+        // Apply DeMorgan's law, and recurse to negate both sides of the binary operator.
+        int aStart = 0, aEnd, bStart, bEnd = predicate.Length;
+        int parenCount = 0;
+        bool skip = false;
+        bool foundAnd = false, foundOr = false;
+        aEnd = 0;
+        while (aEnd < predicate.Length && ((predicate[aEnd] != '&' && predicate[aEnd] != '|') || parenCount > 0)) {
+          if (predicate[aEnd] == '(')
+            parenCount++;
+          else if (predicate[aEnd] == ')')
+            parenCount--;
+          aEnd++;
+        }
+        if (aEnd >= predicate.Length - 1)
+          skip = true;
+        else {
+          if (aEnd + 1 < predicate.Length && predicate[aEnd] == '&' && predicate[aEnd + 1] == '&')
+            foundAnd = true;
+          else if (aEnd + 1 < predicate.Length && predicate[aEnd] == '|' && predicate[aEnd + 1] == '|')
+            foundOr = true;
+          if (!foundAnd && !foundOr)
+            skip = true;
+        }
+
+        if (!skip) {
+          bStart = aEnd + 2;
+          while (Char.IsWhiteSpace(predicate[aEnd - 1]))
+            aEnd--;
+          while (Char.IsWhiteSpace(predicate[bStart]))
+            bStart++;
+
+          String a = predicate.Substring(aStart, aEnd - aStart);
+          String b = predicate.Substring(bStart, bEnd - bStart);
+          String op = foundAnd ? " || " : " && ";
+          return NegatePredicate(a) + op + NegatePredicate(b);
+        }
+      }
+
+      return String.Format("!({0})", predicate);
+    }
+    private static bool ContainsNoOperators(String s) {
+      return ContainsNoOperators(s, 0, s.Length);
+    }
+    // These aren't operators like + per se, but ones that will cause evaluation order to possibly change,
+    // or alter the semantics of what might be in a predicate.
+    // @TODO: Consider adding '~'
+    static readonly String[] Operators = new String[] { "==", "!=", "=", "<", ">", "(", ")", "//", "/*", "*/" };
+    private static bool ContainsNoOperators(String s, int start, int end) {
+      foreach (String op in Operators)
+        if (s.IndexOf(op) >= 0)
+          return false;
+      return true;
+    }
+    private static bool ArrayContains<T>(T[] array, T item) {
+      foreach (T x in array)
+        if (item.Equals(x))
+          return true;
+      return false;
+    }
+    // Recognize only SIMPLE method calls, like "System.String.Equals("", "")".
+    private static bool IsSimpleFunctionCall(String s, int start, int end) {
+      char[] badChars = { '+', '-', '*', '/', '~', '<', '=', '>', ';', '?', ':' };
+      int parenCount = 0;
+      int index = start;
+      bool foundMethod = false;
+      for (; index < end; index++) {
+        if (s[index] == '(') {
+          parenCount++;
+          if (parenCount > 1)
+            return false;
+          if (foundMethod == true)
+            return false;
+          foundMethod = true;
+        } else if (s[index] == ')') {
+          parenCount--;
+          if (index != end - 1)
+            return false;
+        } else if (ArrayContains(badChars, s[index]))
+          return false;
+      }
+      return foundMethod;
+    }
+    #endregion Code from BrianGru to negate predicates coming from if-then-throw preconditions
   }
 
 

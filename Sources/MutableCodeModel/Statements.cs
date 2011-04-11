@@ -305,7 +305,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The local that contains the exception instance when executing the catch clause body.
+    /// The local that contains the exception instance when executing the catch clause body. 
+    /// If there is no such local, Dummy.LocalVariable is returned.
     /// </summary>
     /// <value></value>
     public ILocalDefinition ExceptionContainer {

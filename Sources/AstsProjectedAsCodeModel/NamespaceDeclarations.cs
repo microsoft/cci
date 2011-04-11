@@ -459,7 +459,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     private bool HasExtensionMethod(ITypeDefinition typeDefinition) {
-      TypeDefinition typeDef = typeDefinition as TypeDefinition;
+      NamedTypeDefinition typeDef = typeDefinition as NamedTypeDefinition;
       if (typeDef != null)
         return typeDef.HasExtensionMethod;
       else

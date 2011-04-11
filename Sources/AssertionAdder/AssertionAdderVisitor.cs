@@ -14,7 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 
-namespace Microsoft.Cci  {
+namespace Microsoft.Cci {
   /// <summary>
   /// A visitor that traverses a code model and generates explicit assert and assume statements based on implicit checks and assumptions
   /// that are present in the object model. For example, any array index expression implicitly asserts that the array index is within bounds.
@@ -54,8 +54,7 @@ namespace Microsoft.Cci  {
     private IUnitSet unitSet = Dummy.UnitSet;
     private readonly uint? insertAssumeFalseAtLine;
 
-    private ICollection<IStatement> GetOrCreateStmtListForStmt(IStatement stmt)
-    {
+    private ICollection<IStatement> GetOrCreateStmtListForStmt(IStatement stmt) {
       ICollection<IStatement>/*?*/ stmts;
       if (!this.addedStmts.TryGetValue(this.currentStatement, out stmts))
         this.addedStmts[stmt] = stmts = new List<IStatement>();
@@ -243,8 +242,7 @@ namespace Microsoft.Cci  {
       this.currentStatement = oldCurrentStatement;
     }
 
-    static void GetLocationLineSpan(IPrimarySourceLocation loc, out uint startLine, out uint endLine)
-    {
+    static void GetLocationLineSpan(IPrimarySourceLocation loc, out uint startLine, out uint endLine) {
       IIncludedSourceLocation/*?*/ iloc = loc as IIncludedSourceLocation;
       if (iloc != null) {
         startLine = (uint)iloc.OriginalStartLine;
@@ -263,7 +261,7 @@ namespace Microsoft.Cci  {
       if (this.insertAssumeFalseAtLine != null) {
         uint startLine;
         uint endLine;
-        GetLocationLineSpan(GetPrimarySourceLocationFrom(block.Locations), out startLine, out endLine);      
+        GetLocationLineSpan(GetPrimarySourceLocationFrom(block.Locations), out startLine, out endLine);
         if (startLine <= this.insertAssumeFalseAtLine.Value &&
            this.insertAssumeFalseAtLine.Value < endLine) {
           foreach (IStatement stmt in block.Statements) {
@@ -295,8 +293,7 @@ namespace Microsoft.Cci  {
       base.Visit(unit);
     }
 
-    internal static IPrimarySourceLocation GetPrimarySourceLocationFrom(IEnumerable<ILocation> locations)
-    {
+    internal static IPrimarySourceLocation GetPrimarySourceLocationFrom(IEnumerable<ILocation> locations) {
       IPrimarySourceLocation/*?*/ ploc = null;
       foreach (ILocation location in locations) {
         ploc = location as IPrimarySourceLocation;

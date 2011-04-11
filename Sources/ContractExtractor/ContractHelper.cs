@@ -9,11 +9,11 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.IO;
-using Microsoft.Cci;
-using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.MutableCodeModel.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
 
@@ -133,7 +133,7 @@ namespace Microsoft.Cci.MutableContracts {
           contractInvariantMethodAttribute.Constructor = contractInvariantMethodCtor;
           attributes.Add(contractInvariantMethodAttribute);
           #endregion
-          ((TypeDefinition)typeDefinition).Methods.Add(m);
+          ((NamedTypeDefinition)typeDefinition).Methods.Add(m);
           #endregion Define the method
         }
         base.Visit(typeDefinition);
@@ -324,8 +324,13 @@ namespace Microsoft.Cci.MutableContracts {
     public static ITypeReference Unspecialized(ITypeReference type) {
       var instance = type as IGenericTypeInstanceReference;
       if (instance != null) {
-        return instance.GenericType;
+        var gt = instance.GenericType;
+        var spec = gt as ISpecializedNestedTypeReference;
+        if (spec != null) return spec.UnspecializedVersion;
+        return gt;
       }
+      var sntr = type as ISpecializedNestedTypeReference;
+      if (sntr != null) return sntr.UnspecializedVersion;
       return type;
     }
 
@@ -359,7 +364,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="typeDefinition">The type definition whose attributes will be searched</param>
     /// <param name="attributeName">Name of the attribute.</param>
     /// <returns></returns>
-    public static ITypeDefinition/*?*/ GetTypeDefinitionFromAttribute(ITypeDefinition typeDefinition, string attributeName) {
+    public static INamedTypeDefinition/*?*/ GetTypeDefinitionFromAttribute(ITypeDefinition typeDefinition, string attributeName) {
       ICustomAttribute foundAttribute = null;
       foreach (ICustomAttribute attribute in typeDefinition.Attributes) {
         if (TypeHelper.GetTypeName(attribute.Type) == attributeName) {
@@ -374,7 +379,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (abstractTypeMD == null) return null;
       ITypeReference referencedTypeReference = Unspecialized(abstractTypeMD.TypeToGet);
       ITypeDefinition referencedTypeDefinition = referencedTypeReference.ResolvedType;
-      return referencedTypeDefinition;
+      return referencedTypeDefinition as INamedTypeDefinition;
     }
 
     /// <summary>
@@ -392,7 +397,7 @@ namespace Microsoft.Cci.MutableContracts {
       var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
       ITypeDefinition definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
 
-      var typeHoldingContractDefinition = GetTypeDefinitionFromAttribute(definingType, "System.Diagnostics.Contracts.ContractClassAttribute");
+      ITypeDefinition typeHoldingContractDefinition = GetTypeDefinitionFromAttribute(definingType, "System.Diagnostics.Contracts.ContractClassAttribute");
       if (typeHoldingContractDefinition == null) return null;
       if (definingType.IsInterface) {
         #region Explicit Interface Implementations
@@ -416,7 +421,7 @@ namespace Microsoft.Cci.MutableContracts {
         return null;
       } else if (methodDefinition.IsAbstract) {
         if (typeHoldingContractDefinition.IsGeneric) {
-          var instant = GenericTypeInstance.GetGenericTypeInstance(typeHoldingContractDefinition,
+          var instant = GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition,
             IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(definingType.GenericParameters),
             host.InternFactory);
           typeHoldingContractDefinition = instant;
@@ -704,7 +709,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (CanAccess(p.Description, typeDefinition)) {
           filteredPostconditions[i] = p;
         } else {
-          var newP = new PostCondition(p);
+          var newP = new Postcondition(p);
           newP.Description = null;
           filteredPostconditions[i] = newP;
         }
@@ -736,7 +741,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (CanAccess(te.Postcondition.Description, typeDefinition)) {
           filteredThrownExceptions[i] = te;
         } else {
-          var newP = new PostCondition(te.Postcondition);
+          var newP = new Postcondition(te.Postcondition);
           newP.Description = null;
           filteredThrownExceptions[i] = new ThrownException() {
             ExceptionType = te.ExceptionType,
@@ -942,14 +947,14 @@ namespace Microsoft.Cci.MutableContracts {
       var contractMethods = new ContractMethods(host);
       var cp = new Microsoft.Cci.MutableContracts.ContractProvider(contractMethods, module);
       var extractor = new SeparateContractsFromCode(host, pdbReader, localScopeProvider, cp);
-      extractor.Visit(module);
+      extractor.Traverse(module);
       return cp;
     }
 
     /// <summary>
     /// A traverser that extracts contracts from methods and updates a given contract provider with these contracts.
     /// </summary>
-    private class SeparateContractsFromCode : BaseCodeTraverser {
+    private class SeparateContractsFromCode : CodeTraverser {
 
       private ContractProvider contractProvider;
       private PdbReader/*?*/ pdbReader;
@@ -963,18 +968,18 @@ namespace Microsoft.Cci.MutableContracts {
         this.contractProvider = contractProvider;
       }
 
-      public override void Visit(ITypeDefinition typeDefinition) {
+      public override void TraverseChildren(ITypeDefinition typeDefinition) {
         var contract = ContractExtractor.GetObjectInvariant(this.contractAwareHost, typeDefinition, this.pdbReader, this.localScopeProvider);
         if (contract != null) {
           this.contractProvider.AssociateTypeWithContract(typeDefinition, contract);
         }
-        base.Visit(typeDefinition);
+        base.TraverseChildren(typeDefinition);
       }
 
       /// <summary>
       /// For each method body, use the extractor to split it into the codeand contract.
       /// </summary>
-      public override void Visit(IMethodBody methodBody) {
+      public override void TraverseChildren(IMethodBody methodBody) {
         ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
         if (sourceMethodBody != null) {
           var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody, 
@@ -1084,7 +1089,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (k == this.sourceType.InternedKey) {
           ITypeReference st = this.targetType;
           return new ThisReference() {
-            Type = TypeDefinition.SelfInstance(st.ResolvedType, this.host.InternFactory),
+            Type = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)st.ResolvedType, this.host.InternFactory),
           };
         }
         return base.DeepCopy(thisReference);
@@ -1318,7 +1323,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (k == this.sourceType.InternedKey) {
         ITypeReference st = this.targetType;
         return new ThisReference() {
-          Type = TypeDefinition.SelfInstance(st.ResolvedType, this.host.InternFactory),
+          Type = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)st.ResolvedType, this.host.InternFactory),
         };
       }
       return base.DeepCopy(thisReference);

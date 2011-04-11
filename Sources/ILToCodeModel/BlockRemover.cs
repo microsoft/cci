@@ -12,9 +12,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class BlockRemover : BaseCodeTraverser {
+  internal class BlockRemover : CodeTraverser {
 
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       BasicBlock blockStatement = (BasicBlock)block;
       List<IStatement> flatListOfStatements = new List<IStatement>();
       this.Flatten(blockStatement, flatListOfStatements);
@@ -28,11 +28,11 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (nestedBlock.LocalVariables == null || nestedBlock.LocalVariables.Count == 0 || nestedBlock.Statements.Count == 0 || (nestedBlock.Statements.Count == 1 && nestedBlock.Statements[0] is BasicBlock))
             this.Flatten(nestedBlock, flatListOfStatements);
           else {
-            this.Visit(nestedBlock);
+            this.Traverse(nestedBlock);
             flatListOfStatements.Add(nestedBlock);
           }
         } else {
-          this.Visit(statement);
+          this.Traverse(statement);
           flatListOfStatements.Add(statement);
         }
       }

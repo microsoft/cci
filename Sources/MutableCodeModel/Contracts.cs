@@ -290,6 +290,35 @@ namespace Microsoft.Cci.MutableContracts {
   }
 
   /// <summary>
+  /// A measure that must be reduced in every nonterminal iteration of a loop
+  /// </summary>
+  public sealed class LoopVariant : ContractElement, ILoopVariant {
+
+    /// <summary>
+    /// Creates a fresh loop variant.
+    /// </summary>
+    public LoopVariant() {
+    }
+
+    /// <summary>
+    /// Creates a loop variant that shares all of the information in <paramref name="loopVariant"/>.
+    /// </summary>
+    /// <param name="loopVariant"></param>
+    public LoopVariant(ILoopVariant loopVariant)
+      : base(loopVariant) {
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ILoopVariant).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+  }
+
+  /// <summary>
   /// A condition that must be true at the start of every iteration of a loop.
   /// </summary>
   public sealed class LoopInvariant : ContractElement, ILoopInvariant {
@@ -306,6 +335,14 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="loopInvariant"></param>
     public LoopInvariant(ILoopInvariant loopInvariant)
       : base(loopInvariant) {
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ILoopInvariant).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
     }
 
   }
@@ -512,6 +549,36 @@ namespace Microsoft.Cci.MutableContracts {
   }
 
   /// <summary>
+  /// A measure that must be decrease in every call from the method.
+  /// </summary>
+  public sealed class MethodVariant : ContractElement, IMethodVariant {
+
+    /// <summary>
+    /// Creates a fresh method variant.
+    /// </summary>
+    public MethodVariant()
+      : base() {
+    }
+
+    /// <summary>
+    /// Creates a method variant that shares all of the information in <paramref name="methodVariant"/>
+    /// </summary>
+    /// <param name="methodVariant"></param>
+    public MethodVariant(IMethodVariant methodVariant)
+      : base(methodVariant) {
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IMethodVariant).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+  }
+
+  /// <summary>
   /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
   /// </summary>
   public sealed class Precondition : ContractElement, IPrecondition {
@@ -545,6 +612,14 @@ namespace Microsoft.Cci.MutableContracts {
     bool alwaysCheckedAtRuntime;
 
     /// <summary>
+    /// Calls visitor.Visit(IPrecondition).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// An exeption that will be thrown if Condition is not true at the start of the method that is associated with this instance.
     /// May be null. If null, the runtime behavior of the associated method is undefined when Condition is not true.
     /// </summary>
@@ -559,12 +634,12 @@ namespace Microsoft.Cci.MutableContracts {
   /// <summary>
   /// A condition that must be true at the end of a method.
   /// </summary>
-  public sealed class PostCondition : ContractElement, IPostcondition {
+  public sealed class Postcondition : ContractElement, IPostcondition {
 
     /// <summary>
     /// Creates a fresh postcondition.
     /// </summary>
-    public PostCondition()
+    public Postcondition()
       : base() {
     }
 
@@ -572,8 +647,16 @@ namespace Microsoft.Cci.MutableContracts {
     /// Creates a postcondition that shares all of the information in <paramref name="postcondition"/>
     /// </summary>
     /// <param name="postcondition"></param>
-    public PostCondition(IPostcondition postcondition)
+    public Postcondition(IPostcondition postcondition)
       : base(postcondition) {
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IPostCondition).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
     }
 
   }
@@ -742,6 +825,13 @@ namespace Microsoft.Cci.MutableContracts {
     }
     bool isAxiom;
 
+    /// <summary>
+    /// Calls visitor.Visit(ITypeInvariant).
+    /// </summary>
+    /// <param name="visitor"></param>
+    public override void Dispatch(ICodeAndContractVisitor visitor) {
+      visitor.Visit(this);
+    }
 
     /// <summary>
     /// The name of the invariant. Used in error diagnostics. May be null.
@@ -817,6 +907,13 @@ namespace Microsoft.Cci.MutableContracts {
       set { this.description = value; }
     }
     IExpression description;
+
+    /// <summary>
+    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
+    /// of the object implementing IContractElement.
+    /// </summary>
+    /// <param name="visitor"></param>
+    public abstract void Dispatch(ICodeAndContractVisitor visitor);
 
     /// <summary>
     /// As an option, tools that provide contracts may want to have a "string-ified" version

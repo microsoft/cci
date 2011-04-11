@@ -17,16 +17,14 @@ using Microsoft.Cci.MutableContracts;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// This visitor takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
-  /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
+  /// A class providing functionality to rewrite high level constructs such as anonymous delegates and yield statements
+  /// into helper classes and methods, thus making it easier to generate IL from the CodeModel.
   /// </summary>
   public class MethodBodyNormalizer {
 
-    IMetadataHost host;
-    ISourceLocationProvider/*?*/ sourceLocationProvider;
     /// <summary>
-    /// Initializes a visitor that takes a method body and rewrites it so that high level constructs such as anonymous delegates and yield statements
-    /// are turned into helper classes and methods, thus making it easier to generate IL from the CodeModel.
+    /// A class providing functionality to rewrite high level constructs such as anonymous delegates and yield statements
+    /// into helper classes and methods, thus making it easier to generate IL from the CodeModel.
     /// </summary>
     /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
@@ -36,27 +34,29 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.sourceLocationProvider = sourceLocationProvider;
     }
 
-    Dictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
+    /// <summary>
+    /// An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.
+    /// </summary>
+    IMetadataHost host;
+
+    /// <summary>
+    /// An object that can map the ILocation objects found in a block of statements to IPrimarySourceLocation objects. May be null.
+    /// </summary>
+    ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     /// <summary>
     /// Given a method definition and a block of statements that represents the Block property of the body of the method,
     /// returns a SourceMethod with a body that no longer has any yield statements or anonymous delegate expressions.
     /// The given block of statements is mutated in place.
     /// </summary>
-    /// <param name="method"></param>
-    /// <param name="body"></param>
-    /// <returns></returns>
     public SourceMethodBody GetNormalizedSourceMethodBodyFor(IMethodDefinition method, IBlockStatement body) {
-
-      var fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-      var privateHelperTypes = new List<ITypeDefinition>();
-
-      var finder = new ClosureFinder(method, fieldForCapturedLocalOrParameter, this.host);
-      finder.Visit(body);
+      var finder = new ClosureFinder(method, this.host);
+      finder.Traverse(body);
 
       if (finder.foundAnonymousDelegate) {
         body = InjectClosureFields.GetBodyAfterInjectingClosureFields(
-          method, fieldForCapturedLocalOrParameter,
+          method, finder.fieldForCapturedLocalOrParameter,
           finder.classList,
           finder.outerClosures,
           this.host,
@@ -67,12 +67,11 @@ namespace Microsoft.Cci.MutableCodeModel {
           );
       }
 
+      var privateHelperTypes = new List<ITypeDefinition>();
       if (finder.foundYield) {
         this.isIteratorBody = true;
         body = this.GetNormalizedIteratorBody(body, method, privateHelperTypes);
       }
-      List<ITypeDefinition> priv = new List<ITypeDefinition>();
-      priv.AddRange(privateHelperTypes);
       SourceMethodBody result = new SourceMethodBody(this.host, this.sourceLocationProvider);
       result.Block = body;
       result.MethodDefinition = method;
@@ -81,11 +80,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (finder.foundAnonymousDelegate) {
         for (int i = 1; i < finder.classList.Count; i++) {
           // the first element in classList is the containing type of "method": don't include that!
-          priv.Add(finder.classList[i]);
+          privateHelperTypes.Add(finder.classList[i]);
         }
       }
-      result.PrivateHelperTypes = priv;
-      //result.PrivateHelperTypes = privateHelperTypes;
+      result.PrivateHelperTypes = privateHelperTypes;
 
       return result;
     }
@@ -119,10 +117,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="method">Method definition that owns the body</param>
     /// <param name="privateHelperTypes">List of helper types generated when compiling <paramref name="method">method</paramref>/></param>
     /// <returns></returns>
-    private IBlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes) {
-      this.iteratorLocalCount = new Dictionary<IBlockStatement, uint>();
-      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(this.iteratorLocalCount,
-        method, privateHelperTypes, this.host, this.sourceLocationProvider);
+    private BlockStatement GetNormalizedIteratorBody(IBlockStatement body, IMethodDefinition method, List<ITypeDefinition> privateHelperTypes) {
+      IteratorClosureGenerator iteratorClosureGenerator = new IteratorClosureGenerator(method, privateHelperTypes, this.host, this.sourceLocationProvider);
       return iteratorClosureGenerator.CompileIterator(body);
     }
 
@@ -134,6 +130,46 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     bool isIteratorBody;
 
+  }
+
+  /// <summary>
+  /// A traverser that checks for the presense of yield statements and anonymous delegates.
+  /// </summary>
+  internal class NormalizationChecker : CodeTraverser {
+
+    /// <summary>
+    /// The traversal encountered an anonymous delegate.
+    /// </summary>
+    internal bool foundAnonymousDelegate;
+
+    /// <summary>
+    /// The traversal encountered a yield statement.
+    /// </summary>
+    internal bool foundYield;
+
+    public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
+      this.foundAnonymousDelegate = true;
+      if (this.foundYield)
+        this.StopTraversal = true;
+      else
+        base.TraverseChildren(anonymousDelegate);
+    }
+
+    public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
+      this.foundYield = true;
+      if (this.foundAnonymousDelegate)
+        this.StopTraversal = true;
+      else
+        base.TraverseChildren(yieldBreakStatement);
+    }
+
+    public override void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
+      this.foundYield = true;
+      if (this.foundAnonymousDelegate)
+        this.StopTraversal = true;
+      else
+        base.TraverseChildren(yieldReturnStatement);
+    }
   }
 
   /// <summary>
@@ -161,7 +197,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// 4) If the iterator method has a type parameter, so will the closure class. Make sure in the closure class only
   /// the right type parameter is referenced. 
   /// </summary>
-  internal class IteratorClosureGenerator : BaseCodeTraverser {
+  internal class IteratorClosureGenerator {
 
     /// <summary>
     /// Create closure class, including all its members for an iterator method and rewrite the body of the iterator method.
@@ -188,13 +224,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 4) If the iterator method has a type parameter, so will the closure class. Make sure in the closure class only
     /// the right type parameter is referenced. 
     /// </summary>
-    internal IteratorClosureGenerator(Dictionary<IBlockStatement, uint> iteratorLocalCount,
-        IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
+    internal IteratorClosureGenerator(IMethodDefinition method, List<ITypeDefinition> privateHelperTypes, IMetadataHost host,
       ISourceLocationProvider/*?*/ sourceLocationProvider) {
       this.privateHelperTypes = privateHelperTypes;
       this.method = method;
       this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
-      this.iteratorLocalCount = iteratorLocalCount;
+      this.iteratorLocalCount = new Dictionary<IBlockStatement, uint>();
       this.host = host; this.sourceLocationProvider = sourceLocationProvider;
 
       var methodType = method.Type;
@@ -208,25 +243,33 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMetadataHost host;
     ISourceLocationProvider/*?*/ sourceLocationProvider;
 
+    /// <summary>
+    /// A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.
+    /// </summary>>
     Dictionary<IBlockStatement, uint> iteratorLocalCount;
+
     /// <summary>
     /// Iterator method.
     /// </summary>
     private IMethodDefinition method = Dummy.Method;
+
     /// <summary>
     /// List of helper types generated during compilation. We shall add the iterator closure to the list. 
     /// </summary>
     private List<ITypeDefinition> privateHelperTypes;
+
     /// <summary>
     /// List of all locals in the body of iterator method.
     /// </summary>
     private List<ILocalDefinition> allLocals;
 
     CopyTypeFromIteratorToClosure copyTypeToClosure;
+
     /// <summary>
     /// Mapping between (the interned key of) method type parameters (of the iterator method) and generic type parameters (of the closure class).
     /// </summary>
     Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping = new Dictionary<uint, IGenericTypeParameter>();
+
     /// <summary>
     /// Mapping between parameters and locals to the fields of the closure class. 
     /// </summary>
@@ -242,12 +285,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Compile the method body, represented by <paramref name="block"/>. It creates the closure class and all its members
     /// and creates a new body for the iterator method. 
     /// </summary>
-    internal IBlockStatement CompileIterator(IBlockStatement block) {
-      this.allLocals = new List<ILocalDefinition>();
-      this.Visit(block);
-      BlockStatement mutableBlockStatement = new BlockStatement(block);
-      IteratorClosureInformation iteratorClosure = this.CreateIteratorClosure(mutableBlockStatement);
-      IBlockStatement result = this.CreateNewIteratorMethodBody(mutableBlockStatement, iteratorClosure);
+    internal BlockStatement CompileIterator(IBlockStatement block) {
+      var copier = new CodeDeepCopier(this.host);
+      var copiedBlock = copier.Copy(block);
+      var localCollector = new LocalCollector();
+      new CodeTraverser() { PreorderVisitor = localCollector }.Traverse(copiedBlock);
+      this.allLocals = localCollector.allLocals;
+      IteratorClosureInformation iteratorClosure = this.CreateIteratorClosure(copiedBlock);
+      var result = this.CreateNewIteratorMethodBody(iteratorClosure);
       return result;
     }
 
@@ -302,17 +347,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// iteratorClosureLocal.field = parameter; // for each parameter including this. 
     /// return iteratorClosureLocal;
     /// </remarks>
-    private IBlockStatement CreateNewIteratorMethodBody(BlockStatement block, IteratorClosureInformation iteratorClosure) {
+    private BlockStatement CreateNewIteratorMethodBody(IteratorClosureInformation iteratorClosure) {
       BlockStatement result = new BlockStatement();
       // iteratorClosureLocal = new IteratorClosure(0);
       LocalDefinition localDefinition = new LocalDefinition() {
         Name = this.host.NameTable.GetNameFor("iteratorClosureLocal"),
         Type = GetClosureTypeReferenceFromIterator(iteratorClosure),
-        Locations = block.Locations
       };
       CreateObjectInstance createObjectInstance = new CreateObjectInstance() {
         MethodToCall = GetMethodReference(iteratorClosure, iteratorClosure.Constructor),
-        Locations = block.Locations,
         Type = localDefinition.Type
       };
       // the start state depends on whether the iterator is an IEnumerable or an IEnumerator. For the former,
@@ -488,6 +531,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         genericMethodParameters.Add(genericMethodParameter);
         GenericTypeParameter newTypeParam = new GenericTypeParameter() {
           Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
+          InternFactory = this.host.InternFactory,
+          PlatformType = this.host.PlatformType,
           Index = (count++),
         };
         this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
@@ -667,20 +712,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Create method body of the MoveNext from the body of the iterator method.
+    /// Create method body of the MoveNext from a copy of the body of the iterator method.
     /// 
     /// First we substitute the locals/parameters with closure fields, and generic method type parameter of the iterator
     /// method with generic type parameters of the closure class (if any). 
     /// Then, we build the state machine. 
     /// </summary>
     private IBlockStatement TranslateIteratorMethodBodyToMoveNextBody(IteratorClosureInformation iteratorClosure, BlockStatement blockStatement) {
-      // Copy and substitution.
-      CopyToIteratorClosure copier = new CopyToIteratorClosure(this.FieldForCapturedLocalOrParameter, this.iteratorLocalCount, this.genericTypeParameterMapping, iteratorClosure, this.host);
-      IBlockStatement result = copier.Visit(blockStatement);
+      var rewriter = new RewriteAsMoveNext(this.FieldForCapturedLocalOrParameter, this.iteratorLocalCount, this.genericTypeParameterMapping, iteratorClosure, this.host);
+      rewriter.RewriteChildren(blockStatement);
       // State machine.
       Dictionary<int, ILabeledStatement> StateEntries = new YieldReturnYieldBreakReplacer(iteratorClosure, this.host).GetStateEntries(blockStatement);
-      result = BuildStateMachine(iteratorClosure, (BlockStatement)result, StateEntries);
-      return result;
+      return BuildStateMachine(iteratorClosure, blockStatement, StateEntries);
     }
 
     /// <summary>
@@ -1204,7 +1247,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         //  field.Type = typeRef;
         //else
         //  field.Type = method.ContainingTypeDefinition;
-        field.Type = TypeDefinition.SelfInstance(method.ContainingTypeDefinition, this.host.InternFactory);
+        field.Type = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)method.ContainingTypeDefinition, this.host.InternFactory);
         field.Visibility = TypeMemberVisibility.Public;
         field.ContainingTypeDefinition = iteratorClosure.ClosureDefinition;
         iteratorClosure.ThisField = field;
@@ -1278,51 +1321,51 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
-    /// <summary>
-    /// Collect locals declared in the body. 
-    /// </summary>
-    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
-      //localDeclarationStatement.LocalVariable = this.Visit(this.GetMutableCopy(localDeclarationStatement.LocalVariable));
-      if (!this.allLocals.Contains(localDeclarationStatement.LocalVariable))
-        this.allLocals.Add(localDeclarationStatement.LocalVariable);
-      base.Visit(localDeclarationStatement);
-    }
+    class LocalCollector : CodeVisitor {
 
-    /// <summary>
-    /// Collect locals in TargetExpression
-    /// </summary>
-    public override void Visit(ITargetExpression targetExpression) {
-      ILocalDefinition localDefinition = targetExpression.Definition as ILocalDefinition;
-      if (localDefinition != null) {
-        if (!this.allLocals.Contains(localDefinition)) {
-          this.allLocals.Add(localDefinition);
+      internal List<ILocalDefinition> allLocals = new List<ILocalDefinition>();
+
+      /// <summary>
+      /// Collect locals declared in the body. 
+      /// </summary>
+      public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+        if (!this.allLocals.Contains(localDeclarationStatement.LocalVariable))
+          this.allLocals.Add(localDeclarationStatement.LocalVariable);
+      }
+
+      /// <summary>
+      /// Collect locals in TargetExpression
+      /// </summary>
+      public override void Visit(ITargetExpression targetExpression) {
+        ILocalDefinition localDefinition = targetExpression.Definition as ILocalDefinition;
+        if (localDefinition != null) {
+          if (!this.allLocals.Contains(localDefinition)) {
+            this.allLocals.Add(localDefinition);
+          }
         }
       }
-      base.Visit(targetExpression);
-    }
 
-    public override void Visit(IBoundExpression boundExpression) {
-      ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
-      if (localDefinition != null) {
-        if (!this.allLocals.Contains(localDefinition)) {
-          this.allLocals.Add(localDefinition);
+      public override void Visit(IBoundExpression boundExpression) {
+        ILocalDefinition localDefinition = boundExpression.Definition as ILocalDefinition;
+        if (localDefinition != null) {
+          if (!this.allLocals.Contains(localDefinition)) {
+            this.allLocals.Add(localDefinition);
+          }
         }
       }
-      base.Visit(boundExpression);
-    }
 
-    public override void Visit(IAddressableExpression addressableExpression) {
-      ILocalDefinition localDefinition = addressableExpression.Definition as ILocalDefinition;
-      if (localDefinition != null) {
-        if (!this.allLocals.Contains(localDefinition)) {
-          this.allLocals.Add(localDefinition);
+      public override void Visit(IAddressableExpression addressableExpression) {
+        ILocalDefinition localDefinition = addressableExpression.Definition as ILocalDefinition;
+        if (localDefinition != null) {
+          if (!this.allLocals.Contains(localDefinition)) {
+            this.allLocals.Add(localDefinition);
+          }
         }
       }
-      base.Visit(addressableExpression);
     }
   }
 
-  internal class YieldReturnYieldBreakReplacer : MethodBodyCodeMutator {
+  internal class YieldReturnYieldBreakReplacer : CodeRewriter {
     /// <summary>
     /// Used in the tranformation of an iterator method body into a MoveNext method body, this class replaces
     /// yield returns and yield breaks with approppriate assignments to this dot current and return statements. 
@@ -1332,18 +1375,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     IteratorClosureInformation iteratorClosure;
     internal YieldReturnYieldBreakReplacer(IteratorClosureInformation iteratorClosure, IMetadataHost host) :
-      base(host, true) {
+      base(host) {
       this.iteratorClosure = iteratorClosure;
     }
-    /// <summary>
-    /// State generator
-    /// </summary>
     private int stateNumber;
-    private int FreshState {
-      get {
-        return stateNumber++;
-      }
-    }
     /// <summary>
     /// Mapping between state machine state and its target label.
     /// </summary>
@@ -1357,13 +1392,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       BlockStatement blockStatement = body;
       stateEntries = new Dictionary<int, ILabeledStatement>();
       LabeledStatement initialLabel = new LabeledStatement() {
-        Label = this.host.NameTable.GetNameFor("Label"+ FreshState), Statement = new EmptyStatement()
+        Label = this.host.NameTable.GetNameFor("Label"+ this.stateNumber++), Statement = new EmptyStatement()
       };
       // O(n), but happen only once. 
       blockStatement.Statements.Insert(0, initialLabel);
       stateEntries.Add(0, initialLabel);
       this.stateNumber = 1;
-      base.Visit(blockStatement);
+      this.RewriteChildren(blockStatement);
       this.stateNumber = 0;
       Dictionary<int, ILabeledStatement> result = stateEntries;
       stateEntries = null;
@@ -1380,16 +1415,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// }
     /// and associate the newly generated Fresh_state with its entry point: Fresh_label.
     /// </summary>
-    public override IStatement Visit(YieldReturnStatement yieldReturnStatement) {
+    public override IStatement Rewrite(IYieldReturnStatement yieldReturnStatement) {
       BlockStatement blockStatement = new BlockStatement();
-      int state = FreshState;
+      int state = this.stateNumber++;
       ExpressionStatement thisDotStateEqState = new ExpressionStatement() {
         Expression = new Assignment() {
           Source = new CompileTimeConstant() { Value = state, Type = this.host.PlatformType.SystemInt32 },
           Target = new TargetExpression() { Definition = this.iteratorClosure.StateFieldReference, Instance = new ThisReference(), Type = this.host.PlatformType.SystemInt32 },
           Type = this.host.PlatformType.SystemInt32,
         },
-        Locations = yieldReturnStatement.Locations
+        Locations = IteratorHelper.EnumerableIsEmpty(yieldReturnStatement.Locations) ? null : new List<ILocation>(yieldReturnStatement.Locations)
       };
       blockStatement.Statements.Add(thisDotStateEqState);
       ExpressionStatement thisDotCurrentEqReturnExp = new ExpressionStatement() {
@@ -1423,7 +1458,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="yieldBreakStatement"></param>
     /// <returns></returns>
-    public override IStatement Visit(YieldBreakStatement yieldBreakStatement) {
+    public override IStatement Rewrite(IYieldBreakStatement yieldBreakStatement) {
       BlockStatement blockStatement = new BlockStatement();
       ExpressionStatement thisDotStateEqMinus2 = new ExpressionStatement() {
         Expression = new Assignment() {

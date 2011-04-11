@@ -73,14 +73,6 @@ namespace HelloAST {
       Compilation compilation;
 
       /// <summary>
-      /// Calls visitor.Visit((IAssembly)this).
-      /// </summary>
-      /// <param name="visitor">A visitor class with a Visit(IAssembly) method.</param>
-      public override void Dispatch(IMetadataVisitor visitor) {
-        visitor.Visit(this);
-      }
-
-      /// <summary>
       /// A reference to Test.Main.
       /// </summary>
       public override IMethodReference EntryPoint {

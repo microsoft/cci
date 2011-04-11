@@ -14,19 +14,21 @@ using System.Diagnostics;
 
 namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
-  /// A mutator that copies statements, expressions, type references previously in the iterator method world to ones
-  /// in the iterator closure. Replace parameters and locals with closure fields. Replace occurrences of the generic
-  /// method parameter with generic type parameter of the closure class. 
+  /// A rewriter that takes a copy of the body of an iterator method and turns it into the body of a MoveNext method
+  /// by replacing parameters and locals with iterator state fields and replacing occurrences of the generic
+  /// method parameters of the iterator with generic type parameter of the iterator state class. 
   /// </summary>
-  internal class CopyToIteratorClosure : TypeReferenceSubstitutor {
+  internal class RewriteAsMoveNext : CodeRewriter {
 
     Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
     Dictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
+    Dictionary<uint, IGenericTypeParameter> genericParameterMapping;
     IteratorClosureInformation iteratorClosure;
 
     /// <summary>
-    /// Allocates a mutator that visits an anonymous delegate body and produces a copy that has been changed to
-    /// reference captured locals and parameters via fields on a closure class.
+    /// A rewriter that takes a copy of the body of an iterator method and turns it into the body of a MoveNext method
+    /// by replacing parameters and locals with iterator state fields and replacing occurrences of the generic
+    /// method parameters of the iterator with generic type parameter of the iterator state class. 
     /// </summary>
     /// <param name="fieldForCapturedLocalOrParameter">A map from captured locals and parameters to the closure class fields that hold their state for the method
     /// corresponding to the anonymous delegate.</param>
@@ -35,62 +37,66 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this mutator. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods.</param>
-    internal CopyToIteratorClosure(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount, Dictionary<uint, IGenericTypeParameter> genericParameterMapping,
-      IteratorClosureInformation closure, IMetadataHost host)
-      : base(host, genericParameterMapping) {
+    internal RewriteAsMoveNext(Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, Dictionary<IBlockStatement, uint> iteratorLocalCount, 
+      Dictionary<uint, IGenericTypeParameter> genericParameterMapping,  IteratorClosureInformation closure, IMetadataHost host)
+      : base(host) {
       this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
       this.iteratorClosure = closure;
+      this.genericParameterMapping = genericParameterMapping;
       this.iteratorLocalCount = iteratorLocalCount;
     }
 
-    public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
+    public override void RewriteChildren(AddressableExpression addressableExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(addressableExpression.Definition, out boundField)) {
         addressableExpression.Instance = new ThisReference();
         addressableExpression.Definition = iteratorClosure.GetReferenceOfFieldUsedByPeers(boundField.Field);
-        return addressableExpression;
+        addressableExpression.Type = boundField.Type;
+        return;
       }
-      return base.Visit(addressableExpression);
+      base.RewriteChildren(addressableExpression);
     }
 
-    public override IBlockStatement Visit(BlockStatement blockStatement) {
+    public override void RewriteChildren(BlockStatement blockStatement) {
       var savedCurrentBlockStatement = this.currentBlockStatement;
       this.currentBlockStatement = blockStatement;
-      var result = base.Visit(blockStatement);
+      base.RewriteChildren(blockStatement);
       this.currentBlockStatement = savedCurrentBlockStatement;
-      return result;
     }
 
     BlockStatement currentBlockStatement;
 
-    public override IExpression Visit(BoundExpression boundExpression) {
+    public override void RewriteChildren(BoundExpression boundExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(boundExpression.Definition, out boundField)) {
         boundExpression.Instance = new ThisReference();
         boundExpression.Definition = iteratorClosure.GetReferenceOfFieldUsedByPeers(boundField.Field);
-        return boundExpression;
+        boundExpression.Type = boundField.Type;
+        return;
       }
-      return base.Visit(boundExpression);
+      base.RewriteChildren(boundExpression);
     }
 
-    public override ITargetExpression Visit(TargetExpression targetExpression) {
+    public override void RewriteChildren(TargetExpression targetExpression) {
       BoundField/*?*/ boundField;
       if (this.fieldForCapturedLocalOrParameter.TryGetValue(targetExpression.Definition, out boundField)) {
         targetExpression.Instance = new ThisReference();
         targetExpression.Definition = iteratorClosure.GetReferenceOfFieldUsedByPeers(boundField.Field);
-        return targetExpression;
+        targetExpression.Type = boundField.Type;
+        return;
       }
-      return base.Visit(targetExpression);
+      base.RewriteChildren(targetExpression);
     }
 
-    public override IExpression Visit(ThisReference thisReference) {
+    public override IExpression Rewrite(IThisReference thisReference) {
       var boundExpression = new BoundExpression();
       boundExpression.Instance = thisReference;
       boundExpression.Definition = iteratorClosure.ThisFieldReference;
+      boundExpression.Type = iteratorClosure.ThisFieldReference.Type;
       return boundExpression;
     }
 
-    public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
+    public override IStatement Rewrite(ILocalDeclarationStatement localDeclarationStatement) {
       if (this.iteratorLocalCount != null) {
         uint count = 0;
         this.iteratorLocalCount.TryGetValue(this.currentBlockStatement, out count);
@@ -106,12 +112,20 @@ namespace Microsoft.Cci.MutableCodeModel {
               Target = new TargetExpression() { Definition = localDeclarationStatement.LocalVariable, Instance = null, Type = localDeclarationStatement.LocalVariable.Type },
               Type = localDeclarationStatement.LocalVariable.Type
             },
-            Locations = localDeclarationStatement.Locations
+            Locations = IteratorHelper.EnumerableIsEmpty(localDeclarationStatement.Locations) ? null : new List<ILocation>(localDeclarationStatement.Locations)
           };
-          return base.Visit(assignToLocal);
+          base.RewriteChildren(assignToLocal);
+          return assignToLocal;
         }
       }
-      return base.Visit(localDeclarationStatement);
+      return base.Rewrite(localDeclarationStatement);
+    }
+
+    public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
+      IGenericTypeParameter targetType;
+      if (this.genericParameterMapping.TryGetValue(genericMethodParameterReference.InternedKey, out targetType))
+        return targetType;
+      return base.Rewrite(genericMethodParameterReference);
     }
 
   }
@@ -144,51 +158,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       return base.Visit(typeReference);
     }
   }
-
-  /// <summary>
-  /// Substitute type references as mapped through a provided table of corresponding
-  /// type references.
-  /// </summary>
-  internal class TypeReferenceSubstitutor : MethodBodyMappingMutator {
-    protected Dictionary<uint, ITypeReference> typeMap;
-    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<uint, ITypeReference> internedKey2typeReference)
-      : base(host) {
-        this.typeMap = internedKey2typeReference;
-    }
-    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<uint, IGenericTypeParameter> internedKey2typeReference)
-      : base(host) {
-        this.typeMap = new Dictionary<uint, ITypeReference>(internedKey2typeReference.Count);
-        foreach (var e in internedKey2typeReference) {
-        this.typeMap.Add(e.Key, e.Value);
-      }
-    }
-    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<ITypeReference, ITypeReference> typeReference2typeReference)
-      : base(host) {
-      this.typeMap = new Dictionary<uint, ITypeReference>(typeReference2typeReference.Count);
-      foreach (var e in typeReference2typeReference) {
-        this.typeMap.Add(e.Key.InternedKey, e.Value);
-      }
-    }
-    internal TypeReferenceSubstitutor(IMetadataHost host, Dictionary<IGenericMethodParameter, IGenericTypeParameter> genericParameterMapping)
-      : base(host) {
-      this.typeMap = new Dictionary<uint, ITypeReference>(genericParameterMapping.Count);
-      foreach (var e in genericParameterMapping) {
-        this.typeMap.Add(e.Key.InternedKey, e.Value);
-      }
-    }
-
-    /// <summary>
-    /// If the interned key of the <paramref name="typeReference"/> is in the domain of the substitution
-    /// table, return the type reference that it is mapped to. Otherwise, do a base visit on it.
-    /// </summary>
-    public override ITypeReference Visit(ITypeReference typeReference) {
-      ITypeReference targetType;
-      if (this.typeMap.TryGetValue(typeReference.InternedKey, out targetType))
-        return targetType;
-      return base.Visit(typeReference);
-    }
-  }
-
 
   /// <summary>
   /// Use this as a base class when you try to mutate the method body of method M1 in class C1

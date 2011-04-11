@@ -112,6 +112,7 @@
     <Compile Include="Expressions.cs" />
     <Compile Include="Members.cs" />
     <Compile Include="Mutator.cs" />
+    <Compile Include="Normalizer\AnonymousDelegateRemover.cs" />
     <Compile Include="Normalizer\CapturedLocalOrArgumentFinder.cs" />
     <Compile Include="Normalizer\Duplicator.cs" />
     <Compile Include="Normalizer\Helpers.cs" />
@@ -121,6 +122,10 @@
     <Compile Include="Statements.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Metadata\Sources\Microsoft.Contracts\Microsoft.Contracts.csproj">
+      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
+      <Name>Microsoft.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
       <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
       <Name>MutableMetadataModel</Name>

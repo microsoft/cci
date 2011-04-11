@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -159,10 +160,6 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given exclusive or expression.
     /// </summary>
     void Visit(IExclusiveOr exclusiveOr);
-    /// <summary>
-    /// Performs some computation with the given expression.
-    /// </summary>
-    void Visit(IExpression expression);
     /// <summary>
     /// Performs some computation with the given expression statement.
     /// </summary>
@@ -375,6 +372,3110 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// Contains a specialized Visit routine for each standard type of object defined in the code and metadata model. 
+  /// </summary>
+  public class CodeVisitor : MetadataVisitor, ICodeVisitor {
+
+    /// <summary>
+    /// Contains a specialized Visit routine for each standard type of object defined in the code and metadata model. 
+    /// </summary>
+    public CodeVisitor() {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given addition.
+    /// </summary>
+    /// <param name="addition"></param>
+    public virtual void Visit(IAddition addition) {
+      this.Visit((IBinaryOperation)addition);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given addressable expression.
+    /// </summary>
+    /// <param name="addressableExpression"></param>
+    public virtual void Visit(IAddressableExpression addressableExpression) {
+      this.Visit((IExpression)addressableExpression);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given address dereference expression.
+    /// </summary>
+    /// <param name="addressDereference"></param>
+    public virtual void Visit(IAddressDereference addressDereference) {
+      this.Visit((IExpression)addressDereference);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given AddressOf expression.
+    /// </summary>
+    /// <param name="addressOf"></param>
+    public virtual void Visit(IAddressOf addressOf) {
+      this.Visit((IExpression)addressOf);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given anonymous delegate expression.
+    /// </summary>
+    /// <param name="anonymousDelegate"></param>
+    public virtual void Visit(IAnonymousDelegate anonymousDelegate) {
+      this.Visit((IExpression)anonymousDelegate);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given array indexer expression.
+    /// </summary>
+    /// <param name="arrayIndexer"></param>
+    public virtual void Visit(IArrayIndexer arrayIndexer) {
+      this.Visit((IExpression)arrayIndexer);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given assert statement.
+    /// </summary>
+    /// <param name="assertStatement"></param>
+    public virtual void Visit(IAssertStatement assertStatement) {
+      this.Visit((IStatement)assertStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given assignment expression.
+    /// </summary>
+    /// <param name="assignment"></param>
+    public virtual void Visit(IAssignment assignment) {
+      this.Visit((IExpression)assignment);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given assume statement.
+    /// </summary>
+    /// <param name="assumeStatement"></param>
+    public virtual void Visit(IAssumeStatement assumeStatement) {
+      this.Visit((IStatement)assumeStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given bitwise and expression.
+    /// </summary>
+    /// <param name="bitwiseAnd"></param>
+    public virtual void Visit(IBitwiseAnd bitwiseAnd) {
+      this.Visit((IBinaryOperation)bitwiseAnd);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given bitwise and expression.
+    /// </summary>
+    /// <param name="binaryOperation"></param>
+    public virtual void Visit(IBinaryOperation binaryOperation) {
+      this.Visit((IExpression)binaryOperation);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given bitwise or expression.
+    /// </summary>
+    /// <param name="bitwiseOr"></param>
+    public virtual void Visit(IBitwiseOr bitwiseOr) {
+      this.Visit((IBinaryOperation)bitwiseOr);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
+    public virtual void Visit(IBlockExpression blockExpression) {
+      this.Visit((IExpression)blockExpression);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given statement block.
+    /// </summary>
+    /// <param name="block"></param>
+    public virtual void Visit(IBlockStatement block) {
+      this.Visit((IStatement)block);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given break statement.
+    /// </summary>
+    /// <param name="breakStatement"></param>
+    public virtual void Visit(IBreakStatement breakStatement) {
+      this.Visit((IStatement)breakStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the cast-if-possible expression.
+    /// </summary>
+    /// <param name="castIfPossible"></param>
+    public virtual void Visit(ICastIfPossible castIfPossible) {
+      this.Visit((IExpression)castIfPossible);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given catch clause.
+    /// </summary>
+    /// <param name="catchClause"></param>
+    public virtual void Visit(ICatchClause catchClause) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given check-if-instance expression.
+    /// </summary>
+    /// <param name="checkIfInstance"></param>
+    public virtual void Visit(ICheckIfInstance checkIfInstance) {
+      this.Visit((IExpression)checkIfInstance);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given compile time constant.
+    /// </summary>
+    /// <param name="constant"></param>
+    public virtual void Visit(ICompileTimeConstant constant) {
+      this.Visit((IExpression)constant);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given conversion expression.
+    /// </summary>
+    /// <param name="conversion"></param>
+    public virtual void Visit(IConversion conversion) {
+      this.Visit((IExpression)conversion);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given conditional expression.
+    /// </summary>
+    /// <param name="conditional"></param>
+    public virtual void Visit(IConditional conditional) {
+      this.Visit((IExpression)conditional);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given conditional statement.
+    /// </summary>
+    /// <param name="conditionalStatement"></param>
+    public virtual void Visit(IConditionalStatement conditionalStatement) {
+      this.Visit((IStatement)conditionalStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given continue statement.
+    /// </summary>
+    /// <param name="continueStatement"></param>
+    public virtual void Visit(IContinueStatement continueStatement) {
+      this.Visit((IStatement)continueStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given array creation expression.
+    /// </summary>
+    /// <param name="createArray"></param>
+    public virtual void Visit(ICreateArray createArray) {
+      this.Visit((IExpression)createArray);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given constructor call expression.
+    /// </summary>
+    /// <param name="createObjectInstance"></param>
+    public virtual void Visit(ICreateObjectInstance createObjectInstance) {
+      this.Visit((IExpression)createObjectInstance);
+    }
+
+    /// <summary>
+    /// Performs some computation with the anonymous object creation expression.
+    /// </summary>
+    /// <param name="createDelegateInstance"></param>
+    public virtual void Visit(ICreateDelegateInstance createDelegateInstance) {
+      this.Visit((IExpression)createDelegateInstance);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given defalut value expression.
+    /// </summary>
+    /// <param name="defaultValue"></param>
+    public virtual void Visit(IDefaultValue defaultValue) {
+      this.Visit((IExpression)defaultValue);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given division expression.
+    /// </summary>
+    /// <param name="division"></param>
+    public virtual void Visit(IDivision division) {
+      this.Visit((IBinaryOperation)division);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given do until statement.
+    /// </summary>
+    /// <param name="doUntilStatement"></param>
+    public virtual void Visit(IDoUntilStatement doUntilStatement) {
+      this.Visit((IStatement)doUntilStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given dup value expression.
+    /// </summary>
+    /// <param name="dupValue"></param>
+    public virtual void Visit(IDupValue dupValue) {
+      this.Visit((IExpression)dupValue);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given empty statement.
+    /// </summary>
+    /// <param name="emptyStatement"></param>
+    public virtual void Visit(IEmptyStatement emptyStatement) {
+      this.Visit((IStatement)emptyStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given equality expression.
+    /// </summary>
+    /// <param name="equality"></param>
+    public virtual void Visit(IEquality equality) {
+      this.Visit((IBinaryOperation)equality);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given exclusive or expression.
+    /// </summary>
+    /// <param name="exclusiveOr"></param>
+    public virtual void Visit(IExclusiveOr exclusiveOr) {
+      this.Visit((IBinaryOperation)exclusiveOr);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
+    public virtual void Visit(IBoundExpression boundExpression) {
+      this.Visit((IExpression)boundExpression);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given debugger break statement.
+    /// </summary>
+    /// <param name="debuggerBreakStatement"></param>
+    public virtual void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+      this.Visit((IStatement)debuggerBreakStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given expression.
+    /// </summary>
+    /// <param name="expression"></param>
+    public virtual void Visit(IExpression expression) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given expression statement.
+    /// </summary>
+    /// <param name="expressionStatement"></param>
+    public virtual void Visit(IExpressionStatement expressionStatement) {
+      this.Visit((IStatement)expressionStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given foreach statement.
+    /// </summary>
+    /// <param name="forEachStatement"></param>
+    public virtual void Visit(IForEachStatement forEachStatement) {
+      this.Visit((IStatement)forEachStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given for statement.
+    /// </summary>
+    /// <param name="forStatement"></param>
+    public virtual void Visit(IForStatement forStatement) {
+      this.Visit((IStatement)forStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given get type of typed reference expression.
+    /// </summary>
+    /// <param name="getTypeOfTypedReference"></param>
+    public virtual void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      this.Visit((IExpression)getTypeOfTypedReference);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given get value of typed reference expression.
+    /// </summary>
+    /// <param name="getValueOfTypedReference"></param>
+    public virtual void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+      this.Visit((IExpression)getValueOfTypedReference);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given goto statement.
+    /// </summary>
+    /// <param name="gotoStatement"></param>
+    public virtual void Visit(IGotoStatement gotoStatement) {
+      this.Visit((IStatement)gotoStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given goto switch case statement.
+    /// </summary>
+    /// <param name="gotoSwitchCaseStatement"></param>
+    public virtual void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      this.Visit((IStatement)gotoSwitchCaseStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given greater-than expression.
+    /// </summary>
+    /// <param name="greaterThan"></param>
+    public virtual void Visit(IGreaterThan greaterThan) {
+      this.Visit((IBinaryOperation)greaterThan);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given greater-than-or-equal expression.
+    /// </summary>
+    /// <param name="greaterThanOrEqual"></param>
+    public virtual void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+      this.Visit((IBinaryOperation)greaterThanOrEqual);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given labeled statement.
+    /// </summary>
+    /// <param name="labeledStatement"></param>
+    public virtual void Visit(ILabeledStatement labeledStatement) {
+      this.Visit((IStatement)labeledStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given left shift expression.
+    /// </summary>
+    /// <param name="leftShift"></param>
+    public virtual void Visit(ILeftShift leftShift) {
+      this.Visit((IBinaryOperation)leftShift);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given less-than expression.
+    /// </summary>
+    /// <param name="lessThan"></param>
+    public virtual void Visit(ILessThan lessThan) {
+      this.Visit((IBinaryOperation)lessThan);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given less-than-or-equal expression.
+    /// </summary>
+    /// <param name="lessThanOrEqual"></param>
+    public virtual void Visit(ILessThanOrEqual lessThanOrEqual) {
+      this.Visit((IBinaryOperation)lessThanOrEqual);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given local declaration statement.
+    /// </summary>
+    /// <param name="localDeclarationStatement"></param>
+    public virtual void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      this.Visit((IStatement)localDeclarationStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given lock statement.
+    /// </summary>
+    /// <param name="lockStatement"></param>
+    public virtual void Visit(ILockStatement lockStatement) {
+      this.Visit((IStatement)lockStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given logical not expression.
+    /// </summary>
+    /// <param name="logicalNot"></param>
+    public virtual void Visit(ILogicalNot logicalNot) {
+      this.Visit((IExpression)logicalNot);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given make typed reference expression.
+    /// </summary>
+    /// <param name="makeTypedReference"></param>
+    public virtual void Visit(IMakeTypedReference makeTypedReference) {
+      this.Visit((IExpression)makeTypedReference);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
+    public virtual void Visit(IMethodCall methodCall) {
+      this.Visit((IExpression)methodCall);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given modulus expression.
+    /// </summary>
+    /// <param name="modulus"></param>
+    public virtual void Visit(IModulus modulus) {
+      this.Visit((IBinaryOperation)modulus);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given multiplication expression.
+    /// </summary>
+    /// <param name="multiplication"></param>
+    public virtual void Visit(IMultiplication multiplication) {
+      this.Visit((IBinaryOperation)multiplication);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given named argument expression.
+    /// </summary>
+    /// <param name="namedArgument"></param>
+    public virtual void Visit(INamedArgument namedArgument) {
+      this.Visit((IExpression)namedArgument);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given not equality expression.
+    /// </summary>
+    /// <param name="notEquality"></param>
+    public virtual void Visit(INotEquality notEquality) {
+      this.Visit((IBinaryOperation)notEquality);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given old value expression.
+    /// </summary>
+    /// <param name="oldValue"></param>
+    public virtual void Visit(IOldValue oldValue) {
+      this.Visit((IExpression)oldValue);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given one's complement expression.
+    /// </summary>
+    /// <param name="onesComplement"></param>
+    public virtual void Visit(IOnesComplement onesComplement) {
+      this.Visit((IExpression)onesComplement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given out argument expression.
+    /// </summary>
+    /// <param name="outArgument"></param>
+    public virtual void Visit(IOutArgument outArgument) {
+      this.Visit((IExpression)outArgument);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given pointer call.
+    /// </summary>
+    /// <param name="pointerCall"></param>
+    public virtual void Visit(IPointerCall pointerCall) {
+      this.Visit((IExpression)pointerCall);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given pop value expression.
+    /// </summary>
+    /// <param name="popValue"></param>
+    public virtual void Visit(IPopValue popValue) {
+      this.Visit((IExpression)popValue);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given push statement.
+    /// </summary>
+    /// <param name="pushStatement"></param>
+    public virtual void Visit(IPushStatement pushStatement) {
+      this.Visit((IStatement)pushStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given ref argument expression.
+    /// </summary>
+    /// <param name="refArgument"></param>
+    public virtual void Visit(IRefArgument refArgument) {
+      this.Visit((IExpression)refArgument);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given resource usage statement.
+    /// </summary>
+    /// <param name="resourceUseStatement"></param>
+    public virtual void Visit(IResourceUseStatement resourceUseStatement) {
+      this.Visit((IStatement)resourceUseStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the rethrow statement.
+    /// </summary>
+    /// <param name="rethrowStatement"></param>
+    public virtual void Visit(IRethrowStatement rethrowStatement) {
+      this.Visit((IStatement)rethrowStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the return statement.
+    /// </summary>
+    /// <param name="returnStatement"></param>
+    public virtual void Visit(IReturnStatement returnStatement) {
+      this.Visit((IStatement)returnStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given return value expression.
+    /// </summary>
+    /// <param name="returnValue"></param>
+    public virtual void Visit(IReturnValue returnValue) {
+      this.Visit((IExpression)returnValue);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given right shift expression.
+    /// </summary>
+    /// <param name="rightShift"></param>
+    public virtual void Visit(IRightShift rightShift) {
+      this.Visit((IBinaryOperation)rightShift);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given stack array create expression.
+    /// </summary>
+    /// <param name="stackArrayCreate"></param>
+    public virtual void Visit(IStackArrayCreate stackArrayCreate) {
+      this.Visit((IExpression)stackArrayCreate);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given runtime argument handle expression.
+    /// </summary>
+    /// <param name="runtimeArgumentHandleExpression"></param>
+    public virtual void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      this.Visit((IExpression)runtimeArgumentHandleExpression);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given sizeof() expression.
+    /// </summary>
+    /// <param name="sizeOf"></param>
+    public virtual void Visit(ISizeOf sizeOf) {
+      this.Visit((IExpression)sizeOf);
+    }
+
+    /// <summary>
+    /// Visits the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public virtual void Visit(IStatement statement) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given subtraction expression.
+    /// </summary>
+    /// <param name="subtraction"></param>
+    public virtual void Visit(ISubtraction subtraction) {
+      this.Visit((IBinaryOperation)subtraction);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given switch case.
+    /// </summary>
+    /// <param name="switchCase"></param>
+    public virtual void Visit(ISwitchCase switchCase) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given switch statement.
+    /// </summary>
+    /// <param name="switchStatement"></param>
+    public virtual void Visit(ISwitchStatement switchStatement) {
+      this.Visit((IStatement)switchStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given target expression.
+    /// </summary>
+    /// <param name="targetExpression"></param>
+    public virtual void Visit(ITargetExpression targetExpression) {
+      this.Visit((IExpression)targetExpression);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
+    public virtual void Visit(IThisReference thisReference) {
+      this.Visit((IExpression)thisReference);
+    }
+
+    /// <summary>
+    /// Performs some computation with the throw statement.
+    /// </summary>
+    /// <param name="throwStatement"></param>
+    public virtual void Visit(IThrowStatement throwStatement) {
+      this.Visit((IStatement)throwStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the try-catch-filter-finally statement.
+    /// </summary>
+    /// <param name="tryCatchFilterFinallyStatement"></param>
+    public virtual void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      this.Visit((IStatement)tryCatchFilterFinallyStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given tokenof() expression.
+    /// </summary>
+    /// <param name="tokenOf"></param>
+    public virtual void Visit(ITokenOf tokenOf) {
+      this.Visit((IExpression)tokenOf);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given typeof() expression.
+    /// </summary>
+    /// <param name="typeOf"></param>
+    public virtual void Visit(ITypeOf typeOf) {
+      this.Visit((IExpression)typeOf);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given unary negation expression.
+    /// </summary>
+    /// <param name="unaryNegation"></param>
+    public virtual void Visit(IUnaryNegation unaryNegation) {
+      this.Visit((IUnaryOperation)unaryNegation);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given unary operation expression.
+    /// </summary>
+    /// <param name="unaryOperation"></param>
+    public virtual void Visit(IUnaryOperation unaryOperation) {
+      this.Visit((IExpression)unaryOperation);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given unary plus expression.
+    /// </summary>
+    /// <param name="unaryPlus"></param>
+    public virtual void Visit(IUnaryPlus unaryPlus) {
+      this.Visit((IUnaryOperation)unaryPlus);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given vector length expression.
+    /// </summary>
+    /// <param name="vectorLength"></param>
+    public virtual void Visit(IVectorLength vectorLength) {
+      this.Visit((IExpression)vectorLength);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given while do statement.
+    /// </summary>
+    /// <param name="whileDoStatement"></param>
+    public virtual void Visit(IWhileDoStatement whileDoStatement) {
+      this.Visit((IStatement)whileDoStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given yield break statement.
+    /// </summary>
+    /// <param name="yieldBreakStatement"></param>
+    public virtual void Visit(IYieldBreakStatement yieldBreakStatement) {
+      this.Visit((IStatement)yieldBreakStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given yield return statement.
+    /// </summary>
+    /// <param name="yieldReturnStatement"></param>
+    public virtual void Visit(IYieldReturnStatement yieldReturnStatement) {
+      this.Visit((IStatement)yieldReturnStatement);
+    }
+
+  }
+
+  /// <summary>
+  /// A class that traverses the code and metadata model in depth first, left to right order,
+  /// calling visitors on each model instance in pre-order as well as post-order.
+  /// </summary>
+  public class CodeTraverser : MetadataTraverser {
+
+    /// <summary>
+    /// A class that traverses the code and metadata model in depth first, left to right order,
+    /// calling visitors on each model instance in pre-order as well as post-order.
+    /// </summary>
+    public CodeTraverser() {
+      this.dispatchingVisitor = new Dispatcher() { traverser = this };
+    }
+
+    ICodeVisitor/*?*/ preorderVisitor;
+    ICodeVisitor/*?*/ postorderVisitor;
+
+    /// <summary>
+    /// A visitor that should be called on each object being traversed, before any of its children are traversed. May be null.
+    /// </summary>
+    public new ICodeVisitor/*?*/ PreorderVisitor {
+      get { return this.preorderVisitor; }
+      set { 
+        this.preorderVisitor = value;
+        base.PreorderVisitor = value;
+      }
+    }
+
+    /// <summary>
+    /// A visitor that should be called on each object being traversed, after all of its children are traversed. May be null. 
+    /// </summary>
+    public new  ICodeVisitor/*?*/ PostorderVisitor {
+      get { return this.postorderVisitor; }
+      set { 
+        this.postorderVisitor = value;
+        base.PostorderVisitor = value;
+      }
+    }
+
+    Dispatcher dispatchingVisitor;
+    class Dispatcher : MetadataVisitor, ICodeVisitor {
+
+      internal CodeTraverser traverser;
+
+      public void Visit(IAddition addition) {
+        this.traverser.Traverse(addition);
+      }
+
+      public void Visit(IAddressableExpression addressableExpression) {
+        this.traverser.Traverse(addressableExpression);
+      }
+
+      public void Visit(IAddressDereference addressDereference) {
+        this.traverser.Traverse(addressDereference);
+      }
+
+      public void Visit(IAddressOf addressOf) {
+        this.traverser.Traverse(addressOf);
+      }
+
+      public void Visit(IAnonymousDelegate anonymousDelegate) {
+        this.traverser.Traverse(anonymousDelegate);
+      }
+
+      public void Visit(IArrayIndexer arrayIndexer) {
+        this.traverser.Traverse(arrayIndexer);
+      }
+
+      public void Visit(IAssertStatement assertStatement) {
+        this.traverser.Traverse(assertStatement);
+      }
+
+      public void Visit(IAssignment assignment) {
+        this.traverser.Traverse(assignment);
+      }
+
+      public void Visit(IAssumeStatement assumeStatement) {
+        this.traverser.Traverse(assumeStatement);
+      }
+
+      public void Visit(IBitwiseAnd bitwiseAnd) {
+        this.traverser.Traverse(bitwiseAnd);
+      }
+
+      public void Visit(IBitwiseOr bitwiseOr) {
+        this.traverser.Traverse(bitwiseOr);
+      }
+
+      public void Visit(IBlockExpression blockExpression) {
+        this.traverser.Traverse(blockExpression);
+      }
+
+      public void Visit(IBlockStatement block) {
+        this.traverser.Traverse(block);
+      }
+
+      public void Visit(IBreakStatement breakStatement) {
+        this.traverser.Traverse(breakStatement);
+      }
+
+      public void Visit(IBoundExpression boundExpression) {
+        this.traverser.Traverse(boundExpression);
+      }
+
+      public void Visit(ICastIfPossible castIfPossible) {
+        this.traverser.Traverse(castIfPossible);
+      }
+
+      public void Visit(ICatchClause catchClause) {
+        this.traverser.Traverse(catchClause);
+      }
+
+      public void Visit(ICheckIfInstance checkIfInstance) {
+        this.traverser.Traverse(checkIfInstance);
+      }
+
+      public void Visit(ICompileTimeConstant constant) {
+        this.traverser.Traverse(constant);
+      }
+
+      public void Visit(IConversion conversion) {
+        this.traverser.Traverse(conversion);
+      }
+
+      public void Visit(IConditional conditional) {
+        this.traverser.Traverse(conditional);
+      }
+
+      public void Visit(IConditionalStatement conditionalStatement) {
+        this.traverser.Traverse(conditionalStatement);
+      }
+
+      public void Visit(IContinueStatement continueStatement) {
+        this.traverser.Traverse(continueStatement);
+      }
+
+      public void Visit(ICreateArray createArray) {
+        this.traverser.Traverse(createArray);
+      }
+
+      public void Visit(ICreateDelegateInstance createDelegateInstance) {
+        this.traverser.Traverse(createDelegateInstance);
+      }
+
+      public void Visit(ICreateObjectInstance createObjectInstance) {
+        this.traverser.Traverse(createObjectInstance);
+      }
+
+      public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+        this.traverser.Traverse(debuggerBreakStatement);
+      }
+
+      public void Visit(IDefaultValue defaultValue) {
+        this.traverser.Traverse(defaultValue);
+      }
+
+      public void Visit(IDivision division) {
+        this.traverser.Traverse(division);
+      }
+
+      public void Visit(IDoUntilStatement doUntilStatement) {
+        this.traverser.Traverse(doUntilStatement);
+      }
+
+      public void Visit(IDupValue dupValue) {
+        this.traverser.Traverse(dupValue);
+      }
+
+      public void Visit(IEmptyStatement emptyStatement) {
+        this.traverser.Traverse(emptyStatement);
+      }
+
+      public void Visit(IEquality equality) {
+        this.traverser.Traverse(equality);
+      }
+
+      public void Visit(IExclusiveOr exclusiveOr) {
+        this.traverser.Traverse(exclusiveOr);
+      }
+
+      public void Visit(IExpressionStatement expressionStatement) {
+        this.traverser.Traverse(expressionStatement);
+      }
+
+      public void Visit(IForEachStatement forEachStatement) {
+        this.traverser.Traverse(forEachStatement);
+      }
+
+      public void Visit(IForStatement forStatement) {
+        this.traverser.Traverse(forStatement);
+      }
+
+      public void Visit(IGotoStatement gotoStatement) {
+        this.traverser.Traverse(gotoStatement);
+      }
+
+      public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+        this.traverser.Traverse(gotoSwitchCaseStatement);
+      }
+
+      public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+        this.traverser.Traverse(getTypeOfTypedReference);
+      }
+
+      public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+        this.traverser.Traverse(getValueOfTypedReference);
+      }
+
+      public void Visit(IGreaterThan greaterThan) {
+        this.traverser.Traverse(greaterThan);
+      }
+
+      public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+        this.traverser.Traverse(greaterThanOrEqual);
+      }
+
+      public void Visit(ILabeledStatement labeledStatement) {
+        this.traverser.Traverse(labeledStatement);
+      }
+
+      public void Visit(ILeftShift leftShift) {
+        this.traverser.Traverse(leftShift);
+      }
+
+      public void Visit(ILessThan lessThan) {
+        this.traverser.Traverse(lessThan);
+      }
+
+      public void Visit(ILessThanOrEqual lessThanOrEqual) {
+        this.traverser.Traverse(lessThanOrEqual);
+      }
+
+      public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+        this.traverser.Traverse(localDeclarationStatement);
+      }
+
+      public void Visit(ILockStatement lockStatement) {
+        this.traverser.Traverse(lockStatement);
+      }
+
+      public void Visit(ILogicalNot logicalNot) {
+        this.traverser.Traverse(logicalNot);
+      }
+
+      public void Visit(IMakeTypedReference makeTypedReference) {
+        this.traverser.Traverse(makeTypedReference);
+      }
+
+      public void Visit(IMethodCall methodCall) {
+        this.traverser.Traverse(methodCall);
+      }
+
+      public void Visit(IModulus modulus) {
+        this.traverser.Traverse(modulus);
+      }
+
+      public void Visit(IMultiplication multiplication) {
+        this.traverser.Traverse(multiplication);
+      }
+
+      public void Visit(INamedArgument namedArgument) {
+        this.traverser.Traverse(namedArgument);
+      }
+
+      public void Visit(INotEquality notEquality) {
+        this.traverser.Traverse(notEquality);
+      }
+
+      public void Visit(IOldValue oldValue) {
+        this.traverser.Traverse(oldValue);
+      }
+
+      public void Visit(IOnesComplement onesComplement) {
+        this.traverser.Traverse(onesComplement);
+      }
+
+      public void Visit(IOutArgument outArgument) {
+        this.traverser.Traverse(outArgument);
+      }
+
+      public void Visit(IPointerCall pointerCall) {
+        this.traverser.Traverse(pointerCall);
+      }
+
+      public void Visit(IPopValue popValue) {
+        this.traverser.Traverse(popValue);
+      }
+
+      public void Visit(IPushStatement pushStatement) {
+        this.traverser.Traverse(pushStatement);
+      }
+
+      public void Visit(IRefArgument refArgument) {
+        this.traverser.Traverse(refArgument);
+      }
+
+      public void Visit(IResourceUseStatement resourceUseStatement) {
+        this.traverser.Traverse(resourceUseStatement);
+      }
+
+      public void Visit(IReturnValue returnValue) {
+        this.traverser.Traverse(returnValue);
+      }
+
+      public void Visit(IRethrowStatement rethrowStatement) {
+        this.traverser.Traverse(rethrowStatement);
+      }
+
+      public void Visit(IReturnStatement returnStatement) {
+        this.traverser.Traverse(returnStatement);
+      }
+
+      public void Visit(IRightShift rightShift) {
+        this.traverser.Traverse(rightShift);
+      }
+
+      public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+        this.traverser.Traverse(runtimeArgumentHandleExpression);
+      }
+
+      public void Visit(ISizeOf sizeOf) {
+        this.traverser.Traverse(sizeOf);
+      }
+
+      public void Visit(IStackArrayCreate stackArrayCreate) {
+        this.traverser.Traverse(stackArrayCreate);
+      }
+
+      public void Visit(ISubtraction subtraction) {
+        this.traverser.Traverse(subtraction);
+      }
+
+      public void Visit(ISwitchCase switchCase) {
+        this.traverser.Traverse(switchCase);
+      }
+
+      public void Visit(ISwitchStatement switchStatement) {
+        this.traverser.Traverse(switchStatement);
+      }
+
+      public void Visit(ITargetExpression targetExpression) {
+        this.traverser.Traverse(targetExpression);
+      }
+
+      public void Visit(IThisReference thisReference) {
+        this.traverser.Traverse(thisReference);
+      }
+
+      public void Visit(IThrowStatement throwStatement) {
+        this.traverser.Traverse(throwStatement);
+      }
+
+      public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+        this.traverser.Traverse(tryCatchFilterFinallyStatement);
+      }
+
+      public void Visit(ITokenOf tokenOf) {
+        this.traverser.Traverse(tokenOf);
+      }
+
+      public void Visit(ITypeOf typeOf) {
+        this.traverser.Traverse(typeOf);
+      }
+
+      public void Visit(IUnaryNegation unaryNegation) {
+        this.traverser.Traverse(unaryNegation);
+      }
+
+      public void Visit(IUnaryPlus unaryPlus) {
+        this.traverser.Traverse(unaryPlus);
+      }
+
+      public void Visit(IVectorLength vectorLength) {
+        this.traverser.Traverse(vectorLength);
+      }
+
+      public void Visit(IWhileDoStatement whileDoStatement) {
+        this.traverser.Traverse(whileDoStatement);
+      }
+
+      public void Visit(IYieldBreakStatement yieldBreakStatement) {
+        this.traverser.Traverse(yieldBreakStatement);
+      }
+
+      public void Visit(IYieldReturnStatement yieldReturnStatement) {
+        this.traverser.Traverse(yieldReturnStatement);
+      }
+
+    }
+
+    /// <summary>
+    /// Traverses the addition.
+    /// </summary>
+    public void Traverse(IAddition addition) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(addition);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(addition);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(addition);
+    }
+
+    /// <summary>
+    /// Traverses the addressable expression.
+    /// </summary>
+    public void Traverse(IAddressableExpression addressableExpression) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(addressableExpression);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(addressableExpression);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(addressableExpression);
+    }
+
+    /// <summary>
+    /// Traverses the address dereference expression.
+    /// </summary>
+    public void Traverse(IAddressDereference addressDereference) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(addressDereference);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(addressDereference);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(addressDereference);
+    }
+
+    /// <summary>
+    /// Traverses the AddressOf expression.
+    /// </summary>
+    public void Traverse(IAddressOf addressOf) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(addressOf);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(addressOf);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(addressOf);
+    }
+
+    /// <summary>
+    /// Traverses the anonymous delegate expression.
+    /// </summary>
+    public void Traverse(IAnonymousDelegate anonymousDelegate) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(anonymousDelegate);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(anonymousDelegate);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(anonymousDelegate);
+    }
+
+    /// <summary>
+    /// Traverses the array indexer expression.
+    /// </summary>
+    public void Traverse(IArrayIndexer arrayIndexer) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(arrayIndexer);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(arrayIndexer);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(arrayIndexer);
+    }
+
+    /// <summary>
+    /// Traverses the assert statement.
+    /// </summary>
+    public void Traverse(IAssertStatement assertStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(assertStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(assertStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(assertStatement);
+    }
+
+    /// <summary>
+    /// Traverses the assignment expression.
+    /// </summary>
+    public void Traverse(IAssignment assignment) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(assignment);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(assignment);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(assignment);
+    }
+
+    /// <summary>
+    /// Traverses the assume statement.
+    /// </summary>
+    public void Traverse(IAssumeStatement assumeStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(assumeStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(assumeStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(assumeStatement);
+    }
+
+    /// <summary>
+    /// Traverses the bitwise and expression.
+    /// </summary>
+    /// <param name="binaryOperation"></param>
+    public void Traverse(IBinaryOperation binaryOperation) {
+      binaryOperation.Dispatch(this.dispatchingVisitor);
+    }
+
+    /// <summary>
+    /// Traverses the bitwise and expression.
+    /// </summary>
+    public void Traverse(IBitwiseAnd bitwiseAnd) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(bitwiseAnd);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(bitwiseAnd);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(bitwiseAnd);
+    }
+
+    /// <summary>
+    /// Traverses the bitwise or expression.
+    /// </summary>
+    public void Traverse(IBitwiseOr bitwiseOr) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(bitwiseOr);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(bitwiseOr);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(bitwiseOr);
+    }
+
+    /// <summary>
+    /// Traverses the block expression.
+    /// </summary>
+    public void Traverse(IBlockExpression blockExpression) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(blockExpression);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(blockExpression);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(blockExpression);
+    }
+
+    /// <summary>
+    /// Traverses the statement block.
+    /// </summary>
+    public void Traverse(IBlockStatement block) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(block);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(block);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(block);
+    }
+
+    /// <summary>
+    /// Traverses the bound expression.
+    /// </summary>
+    public void Traverse(IBoundExpression boundExpression) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(boundExpression);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(boundExpression);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(boundExpression);
+    }
+
+    /// <summary>
+    /// Traverses the break statement.
+    /// </summary>
+    public void Traverse(IBreakStatement breakStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(breakStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(breakStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(breakStatement);
+    }
+
+    /// <summary>
+    /// Traverses the cast-if-possible expression.
+    /// </summary>
+    public void Traverse(ICastIfPossible castIfPossible) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(castIfPossible);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(castIfPossible);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(castIfPossible);
+    }
+
+    /// <summary>
+    /// Traverses the catch clause.
+    /// </summary>
+    public void Traverse(ICatchClause catchClause) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(catchClause);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(catchClause);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(catchClause);
+    }
+
+    /// <summary>
+    /// Traverses the check-if-instance expression.
+    /// </summary>
+    public void Traverse(ICheckIfInstance checkIfInstance) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(checkIfInstance);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(checkIfInstance);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(checkIfInstance);
+    }
+
+    /// <summary>
+    /// Traverses the compile time constant.
+    /// </summary>
+    public void Traverse(ICompileTimeConstant constant) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(constant);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(constant);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(constant);
+    }
+
+    /// <summary>
+    /// Traverses the conditional expression.
+    /// </summary>
+    public void Traverse(IConditional conditional) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(conditional);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(conditional);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(conditional);
+    }
+
+    /// <summary>
+    /// Traverses the conditional statement.
+    /// </summary>
+    public void Traverse(IConditionalStatement conditionalStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(conditionalStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(conditionalStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(conditionalStatement);
+    }
+
+    /// <summary>
+    /// Traverses the continue statement.
+    /// </summary>
+    public void Traverse(IContinueStatement continueStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(continueStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(continueStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(continueStatement);
+    }
+
+    /// <summary>
+    /// Traverses the conversion expression.
+    /// </summary>
+    public void Traverse(IConversion conversion) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(conversion);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(conversion);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(conversion);
+    }
+
+    /// <summary>
+    /// Traverses the array creation expression.
+    /// </summary>
+    public void Traverse(ICreateArray createArray) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(createArray);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(createArray);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(createArray);
+    }
+
+    /// <summary>
+    /// Traverses the delegate creation expression.
+    /// </summary>
+    public void Traverse(ICreateDelegateInstance createDelegateInstance) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(createDelegateInstance);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(createDelegateInstance);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(createDelegateInstance);
+    }
+
+    /// <summary>
+    /// Traverses the create object instance expression.
+    /// </summary>
+    public void Traverse(ICreateObjectInstance createObjectInstance) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(createObjectInstance);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(createObjectInstance);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(createObjectInstance);
+    }
+
+    /// <summary>
+    /// Traverses the debugger break statement.
+    /// </summary>
+    public void Traverse(IDebuggerBreakStatement debuggerBreakStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(debuggerBreakStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(debuggerBreakStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(debuggerBreakStatement);
+    }
+
+    /// <summary>
+    /// Traverses the defalut value expression.
+    /// </summary>
+    public void Traverse(IDefaultValue defaultValue) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(defaultValue);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(defaultValue);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(defaultValue);
+    }
+
+    /// <summary>
+    /// Traverses the division expression.
+    /// </summary>
+    public void Traverse(IDivision division) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(division);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(division);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(division);
+    }
+
+    /// <summary>
+    /// Traverses the do until statement.
+    /// </summary>
+    public void Traverse(IDoUntilStatement doUntilStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(doUntilStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(doUntilStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(doUntilStatement);
+    }
+
+    /// <summary>
+    /// Traverses the dup value expression.
+    /// </summary>
+    public void Traverse(IDupValue dupValue) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(dupValue);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(dupValue);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(dupValue);
+    }
+
+    /// <summary>
+    /// Traverses the empty statement.
+    /// </summary>
+    public void Traverse(IEmptyStatement emptyStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(emptyStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(emptyStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(emptyStatement);
+    }
+
+    /// <summary>
+    /// Traverses the equality expression.
+    /// </summary>
+    public void Traverse(IEquality equality) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(equality);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(equality);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(equality);
+    }
+
+    /// <summary>
+    /// Traverses the exclusive or expression.
+    /// </summary>
+    public void Traverse(IExclusiveOr exclusiveOr) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(exclusiveOr);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(exclusiveOr);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(exclusiveOr);
+    }
+
+    /// <summary>
+    /// Traverses the expression.
+    /// </summary>
+    public void Traverse(IExpression expression) {
+      expression.Dispatch(this.dispatchingVisitor);
+    }
+
+    /// <summary>
+    /// Traverses the expression statement.
+    /// </summary>
+    public void Traverse(IExpressionStatement expressionStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(expressionStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(expressionStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(expressionStatement);
+    }
+
+    /// <summary>
+    /// Traverses the foreach statement.
+    /// </summary>
+    public void Traverse(IForEachStatement forEachStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(forEachStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(forEachStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(forEachStatement);
+    }
+
+    /// <summary>
+    /// Traverses the for statement.
+    /// </summary>
+    public void Traverse(IForStatement forStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(forStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(forStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(forStatement);
+    }
+
+    /// <summary>
+    /// Traverses the get type of typed reference expression.
+    /// </summary>
+    public void Traverse(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(getTypeOfTypedReference);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(getTypeOfTypedReference);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(getTypeOfTypedReference);
+    }
+
+    /// <summary>
+    /// Traverses the get value of typed reference expression.
+    /// </summary>
+    public void Traverse(IGetValueOfTypedReference getValueOfTypedReference) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(getValueOfTypedReference);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(getValueOfTypedReference);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(getValueOfTypedReference);
+    }
+
+    /// <summary>
+    /// Traverses the goto statement.
+    /// </summary>
+    public void Traverse(IGotoStatement gotoStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(gotoStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(gotoStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(gotoStatement);
+    }
+
+    /// <summary>
+    /// Traverses the goto switch case statement.
+    /// </summary>
+    public void Traverse(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(gotoSwitchCaseStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(gotoSwitchCaseStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(gotoSwitchCaseStatement);
+    }
+
+    /// <summary>
+    /// Traverses the greater-than expression.
+    /// </summary>
+    public void Traverse(IGreaterThan greaterThan) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(greaterThan);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(greaterThan);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(greaterThan);
+    }
+
+    /// <summary>
+    /// Traverses the greater-than-or-equal expression.
+    /// </summary>
+    public void Traverse(IGreaterThanOrEqual greaterThanOrEqual) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(greaterThanOrEqual);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(greaterThanOrEqual);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(greaterThanOrEqual);
+    }
+
+    /// <summary>
+    /// Traverses the labeled statement.
+    /// </summary>
+    public void Traverse(ILabeledStatement labeledStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(labeledStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(labeledStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(labeledStatement);
+    }
+
+    /// <summary>
+    /// Traverses the left shift expression.
+    /// </summary>
+    public void Traverse(ILeftShift leftShift) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(leftShift);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(leftShift);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(leftShift);
+    }
+
+    /// <summary>
+    /// Traverses the less-than expression.
+    /// </summary>
+    public void Traverse(ILessThan lessThan) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(lessThan);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(lessThan);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(lessThan);
+    }
+
+    /// <summary>
+    /// Traverses the less-than-or-equal expression.
+    /// </summary>
+    public void Traverse(ILessThanOrEqual lessThanOrEqual) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(lessThanOrEqual);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(lessThanOrEqual);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(lessThanOrEqual);
+    }
+
+    /// <summary>
+    /// Traverses the local declaration statement.
+    /// </summary>
+    public void Traverse(ILocalDeclarationStatement localDeclarationStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(localDeclarationStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(localDeclarationStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(localDeclarationStatement);
+    }
+
+    /// <summary>
+    /// Traverses the lock statement.
+    /// </summary>
+    public void Traverse(ILockStatement lockStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(lockStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren((IStatement)lockStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(lockStatement);
+    }
+
+    /// <summary>
+    /// Traverses the logical not expression.
+    /// </summary>
+    public void Traverse(ILogicalNot logicalNot) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(logicalNot);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(logicalNot);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(logicalNot);
+    }
+
+    /// <summary>
+    /// Traverses the make typed reference expression.
+    /// </summary>
+    public void Traverse(IMakeTypedReference makeTypedReference) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(makeTypedReference);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(makeTypedReference);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(makeTypedReference);
+    }
+
+    /// <summary>
+    /// Traverses the the given method body.
+    /// </summary>
+    public override void Traverse(IMethodBody methodBody) {
+      var sourceMethodBody = methodBody as ISourceMethodBody;
+      if (sourceMethodBody != null)
+        this.Traverse(sourceMethodBody);
+      else
+        base.Traverse(methodBody);
+    }
+
+    /// <summary>
+    /// Traverses the method call.
+    /// </summary>
+    public void Traverse(IMethodCall methodCall) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(methodCall);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(methodCall);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(methodCall);
+    }
+
+    /// <summary>
+    /// Traverses the modulus expression.
+    /// </summary>
+    public void Traverse(IModulus modulus) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(modulus);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(modulus);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(modulus);
+    }
+
+    /// <summary>
+    /// Traverses the multiplication expression.
+    /// </summary>
+    public void Traverse(IMultiplication multiplication) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(multiplication);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(multiplication);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(multiplication);
+    }
+
+    /// <summary>
+    /// Traverses the named argument expression.
+    /// </summary>
+    public void Traverse(INamedArgument namedArgument) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(namedArgument);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(namedArgument);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(namedArgument);
+    }
+
+    /// <summary>
+    /// Traverses the not equality expression.
+    /// </summary>
+    public void Traverse(INotEquality notEquality) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(notEquality);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(notEquality);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(notEquality);
+    }
+
+    /// <summary>
+    /// Traverses the old value expression.
+    /// </summary>
+    public void Traverse(IOldValue oldValue) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(oldValue);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(oldValue);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(oldValue);
+    }
+
+    /// <summary>
+    /// Traverses the one's complement expression.
+    /// </summary>
+    public void Traverse(IOnesComplement onesComplement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(onesComplement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(onesComplement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(onesComplement);
+    }
+
+    /// <summary>
+    /// Traverses the out argument expression.
+    /// </summary>
+    public void Traverse(IOutArgument outArgument) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(outArgument);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(outArgument);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(outArgument);
+    }
+
+    /// <summary>
+    /// Traverses the pointer call.
+    /// </summary>
+    public void Traverse(IPointerCall pointerCall) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(pointerCall);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(pointerCall);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(pointerCall);
+    }
+
+    /// <summary>
+    /// Traverses the pop value expression.
+    /// </summary>
+    public void Traverse(IPopValue popValue) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(popValue);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(popValue);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(popValue);
+    }
+
+    /// <summary>
+    /// Traverses the push statement.
+    /// </summary>
+    public void Traverse(IPushStatement pushStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(pushStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(pushStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(pushStatement);
+    }
+
+    /// <summary>
+    /// Traverses the ref argument expression.
+    /// </summary>
+    public void Traverse(IRefArgument refArgument) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(refArgument);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(refArgument);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(refArgument);
+    }
+
+    /// <summary>
+    /// Traverses the resource usage statement.
+    /// </summary>
+    public void Traverse(IResourceUseStatement resourceUseStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(resourceUseStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(resourceUseStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(resourceUseStatement);
+    }
+
+    /// <summary>
+    /// Traverses the rethrow statement.
+    /// </summary>
+    public void Traverse(IRethrowStatement rethrowStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(rethrowStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(rethrowStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(rethrowStatement);
+    }
+
+    /// <summary>
+    /// Traverses the return statement.
+    /// </summary>
+    public void Traverse(IReturnStatement returnStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(returnStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(returnStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(returnStatement);
+    }
+
+    /// <summary>
+    /// Traverses the return value expression.
+    /// </summary>
+    public void Traverse(IReturnValue returnValue) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(returnValue);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(returnValue);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(returnValue);
+    }
+
+    /// <summary>
+    /// Traverses the right shift expression.
+    /// </summary>
+    public void Traverse(IRightShift rightShift) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(rightShift);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(rightShift);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(rightShift);
+    }
+
+    /// <summary>
+    /// Traverses the runtime argument handle expression.
+    /// </summary>
+    public void Traverse(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(runtimeArgumentHandleExpression);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(runtimeArgumentHandleExpression);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(runtimeArgumentHandleExpression);
+    }
+
+    /// <summary>
+    /// Traverses the sizeof() expression.
+    /// </summary>
+    public void Traverse(ISizeOf sizeOf) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(sizeOf);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(sizeOf);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(sizeOf);
+    }
+
+    /// <summary>
+    /// Traverses the the given source method body.
+    /// </summary>
+    public void Traverse(ISourceMethodBody sourceMethodBody) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(sourceMethodBody);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(sourceMethodBody);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(sourceMethodBody);
+    }
+
+    /// <summary>
+    /// Traverses the stack array create expression.
+    /// </summary>
+    public void Traverse(IStackArrayCreate stackArrayCreate) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(stackArrayCreate);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(stackArrayCreate);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(stackArrayCreate);
+    }
+
+    /// <summary>
+    /// Traverses the specified statement.
+    /// </summary>
+    /// <param name="statement">The statement.</param>
+    public void Traverse(IStatement statement) {
+      statement.Dispatch(this.dispatchingVisitor);
+    }
+
+    /// <summary>
+    /// Traverses the subtraction expression.
+    /// </summary>
+    public void Traverse(ISubtraction subtraction) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(subtraction);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(subtraction);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(subtraction);
+    }
+
+    /// <summary>
+    /// Traverses the switch case.
+    /// </summary>
+    public void Traverse(ISwitchCase switchCase) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(switchCase);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(switchCase);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(switchCase);
+    }
+
+    /// <summary>
+    /// Traverses the switch statement.
+    /// </summary>
+    public void Traverse(ISwitchStatement switchStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(switchStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(switchStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(switchStatement);
+    }
+
+    /// <summary>
+    /// Traverses the target expression.
+    /// </summary>
+    public void Traverse(ITargetExpression targetExpression) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(targetExpression);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(targetExpression);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(targetExpression);
+    }
+
+    /// <summary>
+    /// Traverses the this reference expression.
+    /// </summary>
+    public void Traverse(IThisReference thisReference) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(thisReference);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(thisReference);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(thisReference);
+    }
+
+    /// <summary>
+    /// Traverses the throw statement.
+    /// </summary>
+    public void Traverse(IThrowStatement throwStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(throwStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(throwStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(throwStatement);
+    }
+
+    /// <summary>
+    /// Traverses the try-catch-filter-finally statement.
+    /// </summary>
+    public void Traverse(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(tryCatchFilterFinallyStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(tryCatchFilterFinallyStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(tryCatchFilterFinallyStatement);
+    }
+
+    /// <summary>
+    /// Traverses the tokenof() expression.
+    /// </summary>
+    public void Traverse(ITokenOf tokenOf) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(tokenOf);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(tokenOf);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(tokenOf);
+    }
+
+    /// <summary>
+    /// Traverses the typeof() expression.
+    /// </summary>
+    public void Traverse(ITypeOf typeOf) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(typeOf);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(typeOf);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(typeOf);
+    }
+
+    /// <summary>
+    /// Traverses the unary negation expression.
+    /// </summary>
+    public void Traverse(IUnaryNegation unaryNegation) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(unaryNegation);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(unaryNegation);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(unaryNegation);
+    }
+
+    /// <summary>
+    /// Traverses the unary operation expression.
+    /// </summary>
+    /// <param name="unaryOperation"></param>
+    public void Traverse(IUnaryOperation unaryOperation) {
+      unaryOperation.Dispatch(this.dispatchingVisitor);
+    }
+
+    /// <summary>
+    /// Traverses the unary plus expression.
+    /// </summary>
+    public void Traverse(IUnaryPlus unaryPlus) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(unaryPlus);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(unaryPlus);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(unaryPlus);
+    }
+
+    /// <summary>
+    /// Traverses the vector length expression.
+    /// </summary>
+    public void Traverse(IVectorLength vectorLength) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(vectorLength);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(vectorLength);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(vectorLength);
+    }
+
+    /// <summary>
+    /// Traverses the while do statement.
+    /// </summary>
+    public void Traverse(IWhileDoStatement whileDoStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(whileDoStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(whileDoStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(whileDoStatement);
+    }
+
+    /// <summary>
+    /// Traverses the yield break statement.
+    /// </summary>
+    public void Traverse(IYieldBreakStatement yieldBreakStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(yieldBreakStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(yieldBreakStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(yieldBreakStatement);
+    }
+
+    /// <summary>
+    /// Traverses the yield return statement.
+    /// </summary>
+    public void Traverse(IYieldReturnStatement yieldReturnStatement) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(yieldReturnStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(yieldReturnStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(yieldReturnStatement);
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of catch clauses.
+    /// </summary>
+    public void Traverse(IEnumerable<ICatchClause> catchClauses) {
+      foreach (var catchClause in catchClauses) {
+        this.Traverse(catchClause);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of expressions.
+    /// </summary>
+    public void Traverse(IEnumerable<IExpression> expressions) {
+      foreach (var expression in expressions) {
+        this.Traverse(expression);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of switch cases.
+    /// </summary>
+    public void Traverse(IEnumerable<ISwitchCase> switchCases) {
+      foreach (var switchCase in switchCases) {
+        this.Traverse(switchCase);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of statements.
+    /// </summary>
+    public void Traverse(IEnumerable<IStatement> statements) {
+      foreach (var statement in statements) {
+        this.Traverse(statement);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the children of the addition.
+    /// </summary>
+    public virtual void TraverseChildren(IAddition addition) {
+      this.TraverseChildren((IBinaryOperation)addition);
+    }
+
+    /// <summary>
+    /// Traverses the children of the addressable expression.
+    /// </summary>
+    public virtual void TraverseChildren(IAddressableExpression addressableExpression) {
+      this.TraverseChildren((IExpression)addressableExpression);
+      if (this.StopTraversal) return;
+      var local = addressableExpression.Definition as ILocalDefinition;
+      if (local != null)
+        this.Traverse(local);
+      else {
+        var parameter = addressableExpression.Definition as IParameterDefinition;
+        if (parameter != null)
+          this.Traverse(parameter);
+        else {
+          var fieldReference = addressableExpression.Definition as IFieldReference;
+          if (fieldReference != null)
+            this.Traverse(fieldReference);
+          else {
+            var arrayIndexer = addressableExpression.Definition as IArrayIndexer;
+            if (arrayIndexer != null) {
+              this.Traverse(arrayIndexer);
+              return; //do not traverser Instance again
+            } else {
+              var addressDereference = addressableExpression.Definition as IAddressDereference;
+              if (addressDereference != null)
+                this.Traverse(addressDereference);
+              else {
+                var methodReference = addressableExpression.Definition as IMethodReference;
+                if (methodReference != null)
+                  this.Traverse(methodReference);
+                else {
+                  var thisReference = (IThisReference)addressableExpression.Definition;
+                  this.Traverse(thisReference);
+                }
+              }
+            }
+          }
+        }
+      }
+      if (this.StopTraversal) return;
+      if (addressableExpression.Instance != null) {
+        this.Traverse(addressableExpression.Instance);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the children of the address dereference expression.
+    /// </summary>
+    public virtual void TraverseChildren(IAddressDereference addressDereference) {
+      this.TraverseChildren((IExpression)addressDereference);
+      if (this.StopTraversal) return;
+      this.Traverse(addressDereference.Address);
+    }
+
+    /// <summary>
+    /// Traverses the children of the AddressOf expression.
+    /// </summary>
+    public virtual void TraverseChildren(IAddressOf addressOf) {
+      this.TraverseChildren((IExpression)addressOf);
+      if (this.StopTraversal) return;
+      this.Traverse(addressOf.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the anonymous delegate expression.
+    /// </summary>
+    public virtual void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
+      this.TraverseChildren((IExpression)anonymousDelegate);
+      if (this.StopTraversal) return;
+      this.Traverse(anonymousDelegate.Parameters);
+      if (this.StopTraversal) return;
+      this.Traverse(anonymousDelegate.Body);
+      if (this.StopTraversal) return;
+      this.Traverse(anonymousDelegate.ReturnType);
+      if (this.StopTraversal) return;
+      if (anonymousDelegate.ReturnValueIsModified)
+        this.Traverse(anonymousDelegate.ReturnValueCustomModifiers);
+    }
+
+    /// <summary>
+    /// Traverses the children of the array indexer expression.
+    /// </summary>
+    public virtual void TraverseChildren(IArrayIndexer arrayIndexer) {
+      this.TraverseChildren((IExpression)arrayIndexer);
+      if (this.StopTraversal) return;
+      this.Traverse(arrayIndexer.IndexedObject);
+      if (this.StopTraversal) return;
+      this.Traverse(arrayIndexer.Indices);
+    }
+
+    /// <summary>
+    /// Traverses the children of the assert statement.
+    /// </summary>
+    public virtual void TraverseChildren(IAssertStatement assertStatement) {
+      this.TraverseChildren((IStatement)assertStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(assertStatement.Condition);
+      if (this.StopTraversal) return;
+      if (assertStatement.Description != null)
+        this.Traverse(assertStatement.Description);
+    }
+
+    /// <summary>
+    /// Traverses the children of the assignment expression.
+    /// </summary>
+    public virtual void TraverseChildren(IAssignment assignment) {
+      this.TraverseChildren((IExpression)assignment);
+      if (this.StopTraversal) return;
+      this.Traverse(assignment.Target);
+      if (this.StopTraversal) return;
+      this.Traverse(assignment.Source);
+    }
+
+    /// <summary>
+    /// Traverses the children of the assume statement.
+    /// </summary>
+    public virtual void TraverseChildren(IAssumeStatement assumeStatement) {
+      this.TraverseChildren((IStatement)assumeStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(assumeStatement.Condition);
+      if (this.StopTraversal) return;
+      if (assumeStatement.Description != null)
+        this.Traverse(assumeStatement.Description);
+    }
+
+    /// <summary>
+    /// Called whenever a binary operation expression is about to be traversed by a type specific routine.
+    /// This gives the traverser the opportunity to take some uniform action for all binary operation expressions,
+    /// regardless of how the traversal gets to them.
+    /// </summary>
+    public virtual void TraverseChildren(IBinaryOperation binaryOperation) {
+      this.TraverseChildren((IExpression)binaryOperation);
+      this.Traverse(binaryOperation.LeftOperand);
+      this.Traverse(binaryOperation.RightOperand);
+    }
+
+    /// <summary>
+    /// Traverses the children of the bitwise and expression.
+    /// </summary>
+    public virtual void TraverseChildren(IBitwiseAnd bitwiseAnd) {
+      this.TraverseChildren((IBinaryOperation)bitwiseAnd);
+    }
+
+    /// <summary>
+    /// Traverses the children of the bitwise or expression.
+    /// </summary>
+    public virtual void TraverseChildren(IBitwiseOr bitwiseOr) {
+      this.TraverseChildren((IBinaryOperation)bitwiseOr);
+    }
+
+    /// <summary>
+    /// Traverses the children of the block expression.
+    /// </summary>
+    public virtual void TraverseChildren(IBlockExpression blockExpression) {
+      this.TraverseChildren((IExpression)blockExpression);
+      if (this.StopTraversal) return;
+      this.Traverse(blockExpression.BlockStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(blockExpression.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the statement block.
+    /// </summary>
+    public virtual void TraverseChildren(IBlockStatement block) {
+      this.TraverseChildren((IStatement)block);
+      if (this.StopTraversal) return;
+      this.Traverse(block.Statements);
+    }
+
+    /// <summary>
+    /// Traverses the children of the bound expression.
+    /// </summary>
+    public virtual void TraverseChildren(IBoundExpression boundExpression) {
+      this.TraverseChildren((IExpression)boundExpression);
+      if (this.StopTraversal) return;
+      if (boundExpression.Instance != null) {
+        this.Traverse(boundExpression.Instance);
+        if (this.StopTraversal) return;
+      }
+      var local = boundExpression.Definition as ILocalDefinition;
+      if (local != null)
+        this.Traverse(local);
+      else {
+        var parameter = boundExpression.Definition as IParameterDefinition;
+        if (parameter != null)
+          this.Traverse(parameter);
+        else {
+          var fieldReference = (IFieldReference)boundExpression.Definition;
+          this.Traverse(fieldReference);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Traverses the children of the break statement.
+    /// </summary>
+    public virtual void TraverseChildren(IBreakStatement breakStatement) {
+      this.TraverseChildren((IStatement)breakStatement);
+    }
+
+    /// <summary>
+    /// Traverses the cast-if-possible expression.
+    /// </summary>
+    public virtual void TraverseChildren(ICastIfPossible castIfPossible) {
+      this.TraverseChildren((IExpression)castIfPossible);
+      if (this.StopTraversal) return;
+      this.Traverse(castIfPossible.ValueToCast);
+      if (this.StopTraversal) return;
+      this.Traverse(castIfPossible.TargetType);
+    }
+
+    /// <summary>
+    /// Traverses the children of the catch clause.
+    /// </summary>
+    public virtual void TraverseChildren(ICatchClause catchClause) {
+      //base case
+      this.Traverse(catchClause.ExceptionType);
+      if (this.StopTraversal) return;
+      if (catchClause.ExceptionContainer != Dummy.LocalVariable) {
+        this.Traverse(catchClause.ExceptionContainer);
+        if (this.StopTraversal) return;
+      }
+      if (catchClause.FilterCondition != null) {
+        this.Traverse(catchClause.FilterCondition);
+        if (this.StopTraversal) return;
+      }
+      this.Traverse(catchClause.Body);
+    }
+
+    /// <summary>
+    /// Traverses the children of the check-if-instance expression.
+    /// </summary>
+    public virtual void TraverseChildren(ICheckIfInstance checkIfInstance) {
+      this.TraverseChildren((IExpression)checkIfInstance);
+      if (this.StopTraversal) return;
+      this.Traverse(checkIfInstance.Operand);
+      if (this.StopTraversal) return;
+      this.Traverse(checkIfInstance.TypeToCheck);
+    }
+
+    /// <summary>
+    /// Traverses the children of the compile time constant.
+    /// </summary>
+    public virtual void TraverseChildren(ICompileTimeConstant constant) {
+      this.TraverseChildren((IExpression)constant);
+    }
+
+    /// <summary>
+    /// Traverses the children of the conditional expression.
+    /// </summary>
+    public virtual void TraverseChildren(IConditional conditional) {
+      this.TraverseChildren((IExpression)conditional);
+      if (this.StopTraversal) return;
+      this.Traverse(conditional.Condition);
+      if (this.StopTraversal) return;
+      this.Traverse(conditional.ResultIfTrue);
+      if (this.StopTraversal) return;
+      this.Traverse(conditional.ResultIfFalse);
+    }
+
+    /// <summary>
+    /// Traverses the children of the conditional statement.
+    /// </summary>
+    public virtual void TraverseChildren(IConditionalStatement conditionalStatement) {
+      this.TraverseChildren((IStatement)conditionalStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(conditionalStatement.Condition);
+      if (this.StopTraversal) return;
+      this.Traverse(conditionalStatement.TrueBranch);
+      if (this.StopTraversal) return;
+      this.Traverse(conditionalStatement.FalseBranch);
+    }
+
+    /// <summary>
+    /// Traverses the children of the continue statement.
+    /// </summary>
+    public virtual void TraverseChildren(IContinueStatement continueStatement) {
+      this.TraverseChildren((IStatement)continueStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the conversion expression.
+    /// </summary>
+    public virtual void TraverseChildren(IConversion conversion) {
+      this.TraverseChildren((IExpression)conversion);
+      if (this.StopTraversal) return;
+      this.Traverse(conversion.ValueToConvert);
+      if (this.StopTraversal) return;
+      this.Traverse(conversion.TypeAfterConversion);
+    }
+
+    /// <summary>
+    /// Traverses the children of the array creation expression.
+    /// </summary>
+    public virtual void TraverseChildren(ICreateArray createArray) {
+      this.TraverseChildren((IExpression)createArray);
+      if (this.StopTraversal) return;
+      this.Traverse(createArray.ElementType);
+      if (this.StopTraversal) return;
+      this.Traverse(createArray.Sizes);
+      if (this.StopTraversal) return;
+      this.Traverse(createArray.Initializers);
+    }
+
+    /// <summary>
+    /// Traverses the children the delegate instance creation expression.
+    /// </summary>
+    public virtual void TraverseChildren(ICreateDelegateInstance createDelegateInstance) {
+      this.TraverseChildren((IExpression)createDelegateInstance);
+      if (this.StopTraversal) return;
+      if (createDelegateInstance.Instance != null)
+        this.Traverse(createDelegateInstance.Instance);
+      if (this.StopTraversal) return;
+      this.Traverse(createDelegateInstance.MethodToCallViaDelegate);
+    }
+
+    /// <summary>
+    /// Traverses the children of the create object instance expression.
+    /// </summary>
+    public virtual void TraverseChildren(ICreateObjectInstance createObjectInstance) {
+      this.TraverseChildren((IExpression)createObjectInstance);
+      if (this.StopTraversal) return;
+      this.Traverse(createObjectInstance.MethodToCall);
+      if (this.StopTraversal) return;
+      this.Traverse(createObjectInstance.Arguments);
+    }
+
+    /// <summary>
+    /// Traverses the children of the debugger break statement.
+    /// </summary>
+    public virtual void TraverseChildren(IDebuggerBreakStatement debuggerBreakStatement) {
+      this.TraverseChildren((IStatement)debuggerBreakStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the defalut value expression.
+    /// </summary>
+    public virtual void TraverseChildren(IDefaultValue defaultValue) {
+      this.TraverseChildren((IExpression)defaultValue);
+      if (this.StopTraversal) return;
+      this.Traverse(defaultValue.DefaultValueType);
+    }
+
+    /// <summary>
+    /// Traverses the children of the division expression.
+    /// </summary>
+    public virtual void TraverseChildren(IDivision division) {
+      this.TraverseChildren((IBinaryOperation)division);
+    }
+
+    /// <summary>
+    /// Traverses the children of the do until statement.
+    /// </summary>
+    public virtual void TraverseChildren(IDoUntilStatement doUntilStatement) {
+      this.TraverseChildren((IStatement)doUntilStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(doUntilStatement.Body);
+      if (this.StopTraversal) return;
+      this.Traverse(doUntilStatement.Condition);
+    }
+
+    /// <summary>
+    /// Traverses the children of the dup value expression.
+    /// </summary>
+    public virtual void TraverseChildren(IDupValue dupValue) {
+      this.TraverseChildren((IExpression)dupValue);
+    }
+
+    /// <summary>
+    /// Traverses the children of the empty statement.
+    /// </summary>
+    public virtual void TraverseChildren(IEmptyStatement emptyStatement) {
+      this.TraverseChildren((IStatement)emptyStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the equality expression.
+    /// </summary>
+    public virtual void TraverseChildren(IEquality equality) {
+      this.TraverseChildren((IBinaryOperation)equality);
+    }
+
+    /// <summary>
+    /// Traverses the children of the exclusive or expression.
+    /// </summary>
+    public virtual void TraverseChildren(IExclusiveOr exclusiveOr) {
+      this.TraverseChildren((IBinaryOperation)exclusiveOr);
+    }
+
+    /// <summary>
+    /// Called whenever an expression is about to be traversed by a type specific routine.
+    /// This gives the traverser the opportunity to take some uniform action for all expressions,
+    /// regardless of how the traversal gets to them.
+    /// </summary>
+    public virtual void TraverseChildren(IExpression expression) {
+      this.Traverse(expression.Type);
+    }
+
+    /// <summary>
+    /// Traverses the children of the expression statement.
+    /// </summary>
+    public virtual void TraverseChildren(IExpressionStatement expressionStatement) {
+      this.TraverseChildren((IStatement)expressionStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(expressionStatement.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the foreach statement.
+    /// </summary>
+    public virtual void TraverseChildren(IForEachStatement forEachStatement) {
+      this.TraverseChildren((IStatement)forEachStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(forEachStatement.Variable);
+      if (this.StopTraversal) return;
+      this.Traverse(forEachStatement.Collection);
+      if (this.StopTraversal) return;
+      this.Traverse(forEachStatement.Body);
+    }
+
+    /// <summary>
+    /// Traverses the children of the for statement.
+    /// </summary>
+    public virtual void TraverseChildren(IForStatement forStatement) {
+      this.TraverseChildren((IStatement)forStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(forStatement.InitStatements);
+      if (this.StopTraversal) return;
+      this.Traverse(forStatement.Condition);
+      if (this.StopTraversal) return;
+      this.Traverse(forStatement.IncrementStatements);
+      if (this.StopTraversal) return;
+      this.Traverse(forStatement.Body);
+    }
+
+    /// <summary>
+    /// Traverses the children of the get type of typed reference expression.
+    /// </summary>
+    public virtual void TraverseChildren(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      this.TraverseChildren((IExpression)getTypeOfTypedReference);
+      if (this.StopTraversal) return;
+      this.Traverse(getTypeOfTypedReference.TypedReference);
+    }
+
+    /// <summary>
+    /// Traverses the children of the get value of typed reference expression.
+    /// </summary>
+    public virtual void TraverseChildren(IGetValueOfTypedReference getValueOfTypedReference) {
+      this.TraverseChildren((IExpression)getValueOfTypedReference);
+      if (this.StopTraversal) return;
+      this.Traverse(getValueOfTypedReference.TypedReference);
+      if (this.StopTraversal) return;
+      this.Traverse(getValueOfTypedReference.TargetType);
+    }
+
+    /// <summary>
+    /// Traverses the children of the goto statement.
+    /// </summary>
+    public virtual void TraverseChildren(IGotoStatement gotoStatement) {
+      this.TraverseChildren((IStatement)gotoStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the goto switch case statement.
+    /// </summary>
+    public virtual void TraverseChildren(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      this.TraverseChildren((IStatement)gotoSwitchCaseStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the greater-than expression.
+    /// </summary>
+    public virtual void TraverseChildren(IGreaterThan greaterThan) {
+      this.TraverseChildren((IBinaryOperation)greaterThan);
+    }
+
+    /// <summary>
+    /// Traverses the children of the greater-than-or-equal expression.
+    /// </summary>
+    public virtual void TraverseChildren(IGreaterThanOrEqual greaterThanOrEqual) {
+      this.TraverseChildren((IBinaryOperation)greaterThanOrEqual);
+    }
+
+    /// <summary>
+    /// Traverses the children of the labeled statement.
+    /// </summary>
+    public virtual void TraverseChildren(ILabeledStatement labeledStatement) {
+      this.TraverseChildren((IStatement)labeledStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(labeledStatement.Statement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the left shift expression.
+    /// </summary>
+    public virtual void TraverseChildren(ILeftShift leftShift) {
+      this.TraverseChildren((IBinaryOperation)leftShift);
+    }
+
+    /// <summary>
+    /// Traverses the children of the less-than expression.
+    /// </summary>
+    public virtual void TraverseChildren(ILessThan lessThan) {
+      this.TraverseChildren((IBinaryOperation)lessThan);
+    }
+
+    /// <summary>
+    /// Traverses the children of the less-than-or-equal expression.
+    /// </summary>
+    public virtual void TraverseChildren(ILessThanOrEqual lessThanOrEqual) {
+      this.TraverseChildren((IBinaryOperation)lessThanOrEqual);
+    }
+
+    /// <summary>
+    /// Traverses the children of the local declaration statement.
+    /// </summary>
+    public virtual void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
+      this.TraverseChildren((IStatement)localDeclarationStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(localDeclarationStatement.LocalVariable);
+      if (this.StopTraversal) return;
+      if (localDeclarationStatement.InitialValue != null)
+        this.Traverse(localDeclarationStatement.InitialValue);
+    }
+
+    /// <summary>
+    /// Traverses the children of the lock statement.
+    /// </summary>
+    public virtual void TraverseChildren(ILockStatement lockStatement) {
+      this.TraverseChildren((IStatement)lockStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(lockStatement.Guard);
+      if (this.StopTraversal) return;
+      this.Traverse(lockStatement.Body);
+    }
+
+    /// <summary>
+    /// Traverses the children of the logical not expression.
+    /// </summary>
+    public virtual void TraverseChildren(ILogicalNot logicalNot) {
+      this.TraverseChildren((IUnaryOperation)logicalNot);
+    }
+
+    /// <summary>
+    /// Traverses the children of the make typed reference expression.
+    /// </summary>
+    public virtual void TraverseChildren(IMakeTypedReference makeTypedReference) {
+      this.TraverseChildren((IExpression)makeTypedReference);
+      if (this.StopTraversal) return;
+      this.Traverse(makeTypedReference.Operand);
+    }
+
+    /// <summary>
+    /// Traverses the children of the method call.
+    /// </summary>
+    public virtual void TraverseChildren(IMethodCall methodCall) {
+      this.TraverseChildren((IExpression)methodCall);
+      if (this.StopTraversal) return;
+      if (!methodCall.IsStaticCall) {
+        this.Traverse(methodCall.ThisArgument);
+        if (this.StopTraversal) return;
+      }
+      this.Traverse(methodCall.MethodToCall);
+      if (this.StopTraversal) return;
+      this.Traverse(methodCall.Arguments);
+    }
+
+    /// <summary>
+    /// Traverses the children of the modulus expression.
+    /// </summary>
+    public virtual void TraverseChildren(IModulus modulus) {
+      this.TraverseChildren((IBinaryOperation)modulus);
+    }
+
+    /// <summary>
+    /// Traverses the children of the multiplication expression.
+    /// </summary>
+    public virtual void TraverseChildren(IMultiplication multiplication) {
+      this.TraverseChildren((IBinaryOperation)multiplication);
+    }
+
+    /// <summary>
+    /// Traverses the children of the named argument expression.
+    /// </summary>
+    public virtual void TraverseChildren(INamedArgument namedArgument) {
+      this.TraverseChildren((IExpression)namedArgument);
+      if (this.StopTraversal) return;
+      this.Traverse(namedArgument.ArgumentValue);
+    }
+
+    /// <summary>
+    /// Traverses the children of the not equality expression.
+    /// </summary>
+    public virtual void TraverseChildren(INotEquality notEquality) {
+      this.TraverseChildren((IBinaryOperation)notEquality);
+    }
+
+    /// <summary>
+    /// Traverses the children of the old value expression.
+    /// </summary>
+    public virtual void TraverseChildren(IOldValue oldValue) {
+      this.TraverseChildren((IExpression)oldValue);
+      if (this.StopTraversal) return;
+      this.Traverse(oldValue.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the one's complement expression.
+    /// </summary>
+    public virtual void TraverseChildren(IOnesComplement onesComplement) {
+      this.TraverseChildren((IUnaryOperation)onesComplement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the out argument expression.
+    /// </summary>
+    public virtual void TraverseChildren(IOutArgument outArgument) {
+      this.TraverseChildren((IExpression)outArgument);
+      if (this.StopTraversal) return;
+      this.Traverse(outArgument.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the pointer call.
+    /// </summary>
+    public virtual void TraverseChildren(IPointerCall pointerCall) {
+      this.TraverseChildren((IExpression)pointerCall);
+      if (this.StopTraversal) return;
+      this.Traverse(pointerCall.Pointer);
+      if (this.StopTraversal) return;
+      this.Traverse(pointerCall.Arguments);
+    }
+
+    /// <summary>
+    /// Traverses the children of the pop value expression.
+    /// </summary>
+    public virtual void TraverseChildren(IPopValue popValue) {
+      this.TraverseChildren((IExpression)popValue);
+    }
+
+    /// <summary>
+    /// Traverses the children of the push statement.
+    /// </summary>
+    public virtual void TraverseChildren(IPushStatement pushStatement) {
+      this.TraverseChildren((IStatement)pushStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(pushStatement.ValueToPush);
+    }
+
+    /// <summary>
+    /// Traverses the children of the ref argument expression.
+    /// </summary>
+    public virtual void TraverseChildren(IRefArgument refArgument) {
+      this.TraverseChildren((IExpression)refArgument);
+      if (this.StopTraversal) return;
+      this.Traverse(refArgument.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the resource usage statement.
+    /// </summary>
+    public virtual void TraverseChildren(IResourceUseStatement resourceUseStatement) {
+      this.TraverseChildren((IStatement)resourceUseStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(resourceUseStatement.ResourceAcquisitions);
+      if (this.StopTraversal) return;
+      this.Traverse(resourceUseStatement.Body);
+    }
+
+    /// <summary>
+    /// Traverses the rethrow statement.
+    /// </summary>
+    public virtual void TraverseChildren(IRethrowStatement rethrowStatement) {
+      this.TraverseChildren((IStatement)rethrowStatement);
+    }
+
+    /// <summary>
+    /// Traverses the return statement.
+    /// </summary>
+    public virtual void TraverseChildren(IReturnStatement returnStatement) {
+      this.TraverseChildren((IStatement)returnStatement);
+      if (this.StopTraversal) return;
+      if (returnStatement.Expression != null)
+        this.Traverse(returnStatement.Expression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the return value expression.
+    /// </summary>
+    public virtual void TraverseChildren(IReturnValue returnValue) {
+      this.TraverseChildren((IExpression)returnValue);
+    }
+
+    /// <summary>
+    /// Traverses the children of the right shift expression.
+    /// </summary>
+    public virtual void TraverseChildren(IRightShift rightShift) {
+      this.TraverseChildren((IBinaryOperation)rightShift);
+    }
+
+    /// <summary>
+    /// Traverses the children of the runtime argument handle expression.
+    /// </summary>
+    public virtual void TraverseChildren(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      this.TraverseChildren((IExpression)runtimeArgumentHandleExpression);
+    }
+
+    /// <summary>
+    /// Traverses the children of the sizeof() expression.
+    /// </summary>
+    public virtual void TraverseChildren(ISizeOf sizeOf) {
+      this.TraverseChildren((IExpression)sizeOf);
+      if (this.StopTraversal) return;
+      this.Traverse(sizeOf.TypeToSize);
+    }
+
+    /// <summary>
+    /// Traverses the the given source method body.
+    /// </summary>
+    public virtual void TraverseChildren(ISourceMethodBody sourceMethodBody) {
+      //do not traverse the IL via IMethodBody
+      this.Traverse(sourceMethodBody.Block);
+    }
+
+    /// <summary>
+    /// Traverses the children of the stack array create expression.
+    /// </summary>
+    public virtual void TraverseChildren(IStackArrayCreate stackArrayCreate) {
+      this.TraverseChildren((IExpression)stackArrayCreate);
+      if (this.StopTraversal) return;
+      this.Traverse(stackArrayCreate.ElementType);
+      if (this.StopTraversal) return;
+      this.Traverse(stackArrayCreate.Size);
+    }
+
+    /// <summary>
+    /// Called whenever a statement is about to be traversed by a type specific routine.
+    /// This gives the traverser the opportunity to take some uniform action for all statements,
+    /// regardless of how the traversal gets to them.
+    /// </summary>
+    public virtual void TraverseChildren(IStatement statement) {
+      //this is just an extension hook
+    }
+
+    /// <summary>
+    /// Traverses the children of the subtraction expression.
+    /// </summary>
+    public virtual void TraverseChildren(ISubtraction subtraction) {
+      this.TraverseChildren((IBinaryOperation)subtraction);
+    }
+
+    /// <summary>
+    /// Traverses the children of the switch case.
+    /// </summary>
+    public virtual void TraverseChildren(ISwitchCase switchCase) {
+      if (!switchCase.IsDefault) {
+        this.Traverse(switchCase.Expression);
+        if (this.StopTraversal) return;
+      }
+      this.Traverse(switchCase.Body);
+    }
+
+    /// <summary>
+    /// Traverses the children of the switch statement.
+    /// </summary>
+    public virtual void TraverseChildren(ISwitchStatement switchStatement) {
+      this.TraverseChildren((IStatement)switchStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(switchStatement.Expression);
+      if (this.StopTraversal) return;
+      this.Traverse(switchStatement.Cases);
+    }
+
+    /// <summary>
+    /// Traverses the children of the target expression.
+    /// </summary>
+    public virtual void TraverseChildren(ITargetExpression targetExpression) {
+      this.TraverseChildren((IExpression)targetExpression);
+      if (this.StopTraversal) return;
+      var local = targetExpression.Definition as ILocalDefinition;
+      if (local != null)
+        this.Traverse(local);
+      else {
+        var parameter = targetExpression.Definition as IParameterDefinition;
+        if (parameter != null)
+          this.Traverse(parameter);
+        else {
+          var fieldReference = targetExpression.Definition as IFieldReference;
+          if (fieldReference != null)
+            this.Traverse(fieldReference);
+          else {
+            var arrayIndexer = targetExpression.Definition as IArrayIndexer;
+            if (arrayIndexer != null) {
+              this.Traverse(arrayIndexer);
+              return; //do not visit the instance again
+            } else {
+              var addressDereference = targetExpression.Definition as IAddressDereference;
+              if (addressDereference != null)
+                this.Traverse(addressDereference);
+              else {
+                var propertyDefinition = (IPropertyDefinition)targetExpression.Definition;
+                this.Traverse(propertyDefinition);
+              }
+            }
+          }
+        }
+      }
+      if (this.StopTraversal) return;
+      if (targetExpression.Instance != null)
+        this.Traverse(targetExpression.Instance);
+    }
+
+    /// <summary>
+    /// Traverses the children of the this reference expression.
+    /// </summary>
+    public virtual void TraverseChildren(IThisReference thisReference) {
+      this.TraverseChildren((IExpression)thisReference);
+    }
+
+    /// <summary>
+    /// Traverses the throw statement.
+    /// </summary>
+    public virtual void TraverseChildren(IThrowStatement throwStatement) {
+      this.TraverseChildren((IStatement)throwStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(throwStatement.Exception);
+    }
+
+    /// <summary>
+    /// Traverses the try-catch-filter-finally statement.
+    /// </summary>
+    public virtual void TraverseChildren(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      this.TraverseChildren((IStatement)tryCatchFilterFinallyStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(tryCatchFilterFinallyStatement.TryBody);
+      if (this.StopTraversal) return;
+      this.Traverse(tryCatchFilterFinallyStatement.CatchClauses);
+      if (this.StopTraversal) return;
+      if (tryCatchFilterFinallyStatement.FaultBody != null) {
+        this.Traverse(tryCatchFilterFinallyStatement.FaultBody);
+        if (this.StopTraversal) return;
+      }
+      if (tryCatchFilterFinallyStatement.FinallyBody != null)
+        this.Traverse(tryCatchFilterFinallyStatement.FinallyBody);
+    }
+
+    /// <summary>
+    /// Traverses the children of the tokenof() expression.
+    /// </summary>
+    public virtual void TraverseChildren(ITokenOf tokenOf) {
+      this.TraverseChildren((IExpression)tokenOf);
+      if (this.StopTraversal) return;
+      var fieldReference = tokenOf.Definition as IFieldReference;
+      if (fieldReference != null)
+        this.Traverse(fieldReference);
+      else {
+        var methodReference = tokenOf.Definition as IMethodReference;
+        if (methodReference != null)
+          this.Traverse(methodReference);
+        else {
+          var typeReference = (ITypeReference)tokenOf.Definition;
+          this.Traverse(typeReference);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Traverses the children of the typeof() expression.
+    /// </summary>
+    public virtual void TraverseChildren(ITypeOf typeOf) {
+      this.TraverseChildren((IExpression)typeOf);
+      if (this.StopTraversal) return;
+      this.Traverse(typeOf.TypeToGet);
+    }
+
+    /// <summary>
+    /// Traverses the children of the unary negation expression.
+    /// </summary>
+    public virtual void TraverseChildren(IUnaryNegation unaryNegation) {
+      this.TraverseChildren((IUnaryOperation)unaryNegation);
+    }
+
+    /// <summary>
+    /// Called whenever a unary operation expression is about to be traversed by a type specific routine.
+    /// This gives the traverser the opportunity to take some uniform action for all unary operation expressions,
+    /// regardless of how the traversal gets to them.
+    /// </summary>
+    public virtual void TraverseChildren(IUnaryOperation unaryOperation) {
+      this.TraverseChildren((IExpression)unaryOperation);
+      this.Traverse(unaryOperation.Operand);
+    }
+
+    /// <summary>
+    /// Traverses the children of the unary plus expression.
+    /// </summary>
+    public virtual void TraverseChildren(IUnaryPlus unaryPlus) {
+      this.TraverseChildren((IUnaryOperation)unaryPlus);
+    }
+
+    /// <summary>
+    /// Traverses the children of the vector length expression.
+    /// </summary>
+    public virtual void TraverseChildren(IVectorLength vectorLength) {
+      this.TraverseChildren((IExpression)vectorLength);
+      if (this.StopTraversal) return;
+      this.Traverse(vectorLength.Vector);
+    }
+
+    /// <summary>
+    /// Traverses the children of the while do statement.
+    /// </summary>
+    public virtual void TraverseChildren(IWhileDoStatement whileDoStatement) {
+      this.TraverseChildren((IStatement)whileDoStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(whileDoStatement.Condition);
+      if (this.StopTraversal) return;
+      this.Traverse(whileDoStatement.Body);
+    }
+
+    /// <summary>
+    /// Traverses the children of the yield break statement.
+    /// </summary>
+    public virtual void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
+      this.TraverseChildren((IStatement)yieldBreakStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the yield return statement.
+    /// </summary>
+    public virtual void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
+      this.TraverseChildren((IStatement)yieldReturnStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(yieldReturnStatement.Expression);
+    }
+  
+  }
+
+  /// <summary>
   /// A visitor base class that traverses the code model in depth first, left to right order.
   /// </summary>
   public class BaseCodeTraverser : BaseMetadataTraverser, ICodeVisitor {
@@ -388,7 +3489,7 @@ namespace Microsoft.Cci {
     #region ICodeVisitor Members
 
     /// <summary>
-    /// Performs some computation with the given addition.
+    /// Traverses the given addition.
     /// </summary>
     /// <param name="addition"></param>
     public virtual void Visit(IAddition addition)
@@ -404,7 +3505,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given addressable expression.
+    /// Traverses the given addressable expression.
     /// </summary>
     /// <param name="addressableExpression"></param>
     public virtual void Visit(IAddressableExpression addressableExpression)
@@ -426,9 +3527,10 @@ namespace Microsoft.Cci {
             this.Visit(fieldReference);
           else {
             var indexer = def as IArrayIndexer;
-            if (indexer != null)
+            if (indexer != null) {
               this.Visit(indexer);
-            else {
+              return; //do not visit Instance again
+            } else {
               var adr = def as IAddressDereference;
               if (adr != null)
                 this.Visit(adr);
@@ -451,7 +3553,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given address dereference expression.
+    /// Traverses the given address dereference expression.
     /// </summary>
     /// <param name="addressDereference"></param>
     public virtual void Visit(IAddressDereference addressDereference)
@@ -466,7 +3568,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given AddressOf expression.
+    /// Traverses the given AddressOf expression.
     /// </summary>
     /// <param name="addressOf"></param>
     public virtual void Visit(IAddressOf addressOf)
@@ -481,7 +3583,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given anonymous delegate expression.
+    /// Traverses the given anonymous delegate expression.
     /// </summary>
     /// <param name="anonymousDelegate"></param>
     public virtual void Visit(IAnonymousDelegate anonymousDelegate)
@@ -497,7 +3599,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given assert statement.
+    /// Traverses the given assert statement.
     /// </summary>
     /// <param name="assertStatement"></param>
     public virtual void Visit(IAssertStatement assertStatement)
@@ -530,7 +3632,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given assignment expression.
+    /// Traverses the given assignment expression.
     /// </summary>
     /// <param name="assignment"></param>
     public virtual void Visit(IAssignment assignment)
@@ -546,7 +3648,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given assume statement.
+    /// Traverses the given assume statement.
     /// </summary>
     /// <param name="assumeStatement"></param>
     public virtual void Visit(IAssumeStatement assumeStatement)
@@ -563,7 +3665,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given bitwise and expression.
+    /// Traverses the given bitwise and expression.
     /// </summary>
     /// <param name="bitwiseAnd"></param>
     public virtual void Visit(IBitwiseAnd bitwiseAnd)
@@ -579,7 +3681,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given bitwise or expression.
+    /// Traverses the given bitwise or expression.
     /// </summary>
     /// <param name="bitwiseOr"></param>
     public virtual void Visit(IBitwiseOr bitwiseOr)
@@ -595,7 +3697,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given block expression.
+    /// Traverses the given block expression.
     /// </summary>
     /// <param name="blockExpression"></param>
     public virtual void Visit(IBlockExpression blockExpression)
@@ -611,7 +3713,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given statement block.
+    /// Traverses the given statement block.
     /// </summary>
     /// <param name="block"></param>
     public virtual void Visit(IBlockStatement block)
@@ -626,7 +3728,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the cast-if-possible expression.
+    /// Traverses the cast-if-possible expression.
     /// </summary>
     /// <param name="castIfPossible"></param>
     public virtual void Visit(ICastIfPossible castIfPossible)
@@ -658,7 +3760,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given catch clause.
+    /// Traverses the given catch clause.
     /// </summary>
     /// <param name="catchClause"></param>
     public virtual void Visit(ICatchClause catchClause)
@@ -675,7 +3777,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given check-if-instance expression.
+    /// Traverses the given check-if-instance expression.
     /// </summary>
     /// <param name="checkIfInstance"></param>
     public virtual void Visit(ICheckIfInstance checkIfInstance)
@@ -691,7 +3793,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given compile time constant.
+    /// Traverses the given compile time constant.
     /// </summary>
     /// <param name="constant"></param>
     public virtual void Visit(ICompileTimeConstant constant)
@@ -700,7 +3802,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given conversion expression.
+    /// Traverses the given conversion expression.
     /// </summary>
     /// <param name="conversion"></param>
     public virtual void Visit(IConversion conversion)
@@ -715,7 +3817,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given conditional expression.
+    /// Traverses the given conditional expression.
     /// </summary>
     /// <param name="conditional"></param>
     public virtual void Visit(IConditional conditional)
@@ -732,7 +3834,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given conditional statement.
+    /// Traverses the given conditional statement.
     /// </summary>
     /// <param name="conditionalStatement"></param>
     public virtual void Visit(IConditionalStatement conditionalStatement)
@@ -749,7 +3851,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given continue statement.
+    /// Traverses the given continue statement.
     /// </summary>
     /// <param name="continueStatement"></param>
     public virtual void Visit(IContinueStatement continueStatement)
@@ -763,7 +3865,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given array creation expression.
+    /// Traverses the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
     public virtual void Visit(ICreateArray createArray)
@@ -779,7 +3881,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given constructor call expression.
+    /// Traverses the given constructor call expression.
     /// </summary>
     /// <param name="createObjectInstance"></param>
     public virtual void Visit(ICreateObjectInstance createObjectInstance)
@@ -794,7 +3896,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the anonymous object creation expression.
+    /// Traverses the anonymous object creation expression.
     /// </summary>
     /// <param name="createDelegateInstance"></param>
     public virtual void Visit(ICreateDelegateInstance createDelegateInstance)
@@ -810,7 +3912,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given array indexer expression.
+    /// Traverses the given array indexer expression.
     /// </summary>
     /// <param name="arrayIndexer"></param>
     public virtual void Visit(IArrayIndexer arrayIndexer)
@@ -826,7 +3928,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given bound expression.
+    /// Traverses the given bound expression.
     /// </summary>
     /// <param name="boundExpression"></param>
     public virtual void Visit(IBoundExpression boundExpression) {
@@ -851,7 +3953,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given custom attribute.
+    /// Traverses the given custom attribute.
     /// </summary>
     /// <param name="customAttribute"></param>
     public override void Visit(ICustomAttribute customAttribute)
@@ -868,7 +3970,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given defalut value expression.
+    /// Traverses the given defalut value expression.
     /// </summary>
     /// <param name="defaultValue"></param>
     public virtual void Visit(IDefaultValue defaultValue)
@@ -883,7 +3985,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given debugger break statement.
+    /// Traverses the given debugger break statement.
     /// </summary>
     /// <param name="debuggerBreakStatement"></param>
     public virtual void Visit(IDebuggerBreakStatement debuggerBreakStatement)
@@ -897,7 +3999,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given division expression.
+    /// Traverses the given division expression.
     /// </summary>
     /// <param name="division"></param>
     public virtual void Visit(IDivision division)
@@ -913,7 +4015,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given do until statement.
+    /// Traverses the given do until statement.
     /// </summary>
     /// <param name="doUntilStatement"></param>
     public virtual void Visit(IDoUntilStatement doUntilStatement)
@@ -929,7 +4031,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given dup value expression.
+    /// Traverses the given dup value expression.
     /// </summary>
     /// <param name="popValue"></param>
     public virtual void Visit(IDupValue popValue)
@@ -939,7 +4041,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given empty statement.
+    /// Traverses the given empty statement.
     /// </summary>
     /// <param name="emptyStatement"></param>
     public virtual void Visit(IEmptyStatement emptyStatement)
@@ -953,7 +4055,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given equality expression.
+    /// Traverses the given equality expression.
     /// </summary>
     /// <param name="equality"></param>
     public virtual void Visit(IEquality equality)
@@ -969,7 +4071,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given exclusive or expression.
+    /// Traverses the given exclusive or expression.
     /// </summary>
     /// <param name="exclusiveOr"></param>
     public virtual void Visit(IExclusiveOr exclusiveOr)
@@ -1001,7 +4103,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given expression.
+    /// Traverses the given expression.
     /// </summary>
     /// <param name="expression"></param>
     public virtual void Visit(IExpression expression) {
@@ -1010,7 +4112,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given expression statement.
+    /// Traverses the given expression statement.
     /// </summary>
     /// <param name="expressionStatement"></param>
     public virtual void Visit(IExpressionStatement expressionStatement)
@@ -1025,7 +4127,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given foreach statement.
+    /// Traverses the given foreach statement.
     /// </summary>
     /// <param name="forEachStatement"></param>
     public virtual void Visit(IForEachStatement forEachStatement)
@@ -1041,7 +4143,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given for statement.
+    /// Traverses the given for statement.
     /// </summary>
     /// <param name="forStatement"></param>
     public virtual void Visit(IForStatement forStatement)
@@ -1059,7 +4161,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given get type of typed reference expression.
+    /// Traverses the given get type of typed reference expression.
     /// </summary>
     /// <param name="getTypeOfTypedReference"></param>
     public virtual void Visit(IGetTypeOfTypedReference getTypeOfTypedReference)
@@ -1074,7 +4176,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given get value of typed reference expression.
+    /// Traverses the given get value of typed reference expression.
     /// </summary>
     /// <param name="getValueOfTypedReference"></param>
     public virtual void Visit(IGetValueOfTypedReference getValueOfTypedReference)
@@ -1090,7 +4192,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given goto statement.
+    /// Traverses the given goto statement.
     /// </summary>
     /// <param name="gotoStatement"></param>
     public virtual void Visit(IGotoStatement gotoStatement)
@@ -1104,7 +4206,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given goto switch case statement.
+    /// Traverses the given goto switch case statement.
     /// </summary>
     /// <param name="gotoSwitchCaseStatement"></param>
     public virtual void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement)
@@ -1113,7 +4215,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given greater-than expression.
+    /// Traverses the given greater-than expression.
     /// </summary>
     /// <param name="greaterThan"></param>
     public virtual void Visit(IGreaterThan greaterThan)
@@ -1129,7 +4231,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given greater-than-or-equal expression.
+    /// Traverses the given greater-than-or-equal expression.
     /// </summary>
     /// <param name="greaterThanOrEqual"></param>
     public virtual void Visit(IGreaterThanOrEqual greaterThanOrEqual)
@@ -1145,7 +4247,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given labeled statement.
+    /// Traverses the given labeled statement.
     /// </summary>
     /// <param name="labeledStatement"></param>
     public virtual void Visit(ILabeledStatement labeledStatement)
@@ -1160,7 +4262,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given left shift expression.
+    /// Traverses the given left shift expression.
     /// </summary>
     /// <param name="leftShift"></param>
     public virtual void Visit(ILeftShift leftShift)
@@ -1176,7 +4278,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given less-than expression.
+    /// Traverses the given less-than expression.
     /// </summary>
     /// <param name="lessThan"></param>
     public virtual void Visit(ILessThan lessThan)
@@ -1192,7 +4294,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given less-than-or-equal expression.
+    /// Traverses the given less-than-or-equal expression.
     /// </summary>
     /// <param name="lessThanOrEqual"></param>
     public virtual void Visit(ILessThanOrEqual lessThanOrEqual)
@@ -1208,7 +4310,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given local declaration statement.
+    /// Traverses the given local declaration statement.
     /// </summary>
     /// <param name="localDeclarationStatement"></param>
     public virtual void Visit(ILocalDeclarationStatement localDeclarationStatement)
@@ -1224,7 +4326,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given lock statement.
+    /// Traverses the given lock statement.
     /// </summary>
     /// <param name="lockStatement"></param>
     public virtual void Visit(ILockStatement lockStatement)
@@ -1240,7 +4342,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given logical not expression.
+    /// Traverses the given logical not expression.
     /// </summary>
     /// <param name="logicalNot"></param>
     public virtual void Visit(ILogicalNot logicalNot)
@@ -1255,7 +4357,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given break statement.
+    /// Traverses the given break statement.
     /// </summary>
     /// <param name="breakStatement"></param>
     public virtual void Visit(IBreakStatement breakStatement)
@@ -1269,7 +4371,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given make typed reference expression.
+    /// Traverses the given make typed reference expression.
     /// </summary>
     /// <param name="makeTypedReference"></param>
     public virtual void Visit(IMakeTypedReference makeTypedReference)
@@ -1300,7 +4402,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given method definition.
+    /// Traverses the given method definition.
     /// </summary>
     /// <param name="method"></param>
     public override void Visit(IMethodDefinition method)
@@ -1326,7 +4428,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given method body.
+    /// Traverses the given method body.
     /// </summary>
     /// <param name="methodBody"></param>
     public override void Visit(IMethodBody methodBody)
@@ -1345,7 +4447,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given method call.
+    /// Traverses the given method call.
     /// </summary>
     /// <param name="methodCall"></param>
     public virtual void Visit(IMethodCall methodCall)
@@ -1363,7 +4465,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given modulus expression.
+    /// Traverses the given modulus expression.
     /// </summary>
     /// <param name="modulus"></param>
     public virtual void Visit(IModulus modulus)
@@ -1379,7 +4481,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given multiplication expression.
+    /// Traverses the given multiplication expression.
     /// </summary>
     /// <param name="multiplication"></param>
     public virtual void Visit(IMultiplication multiplication)
@@ -1411,7 +4513,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given named argument expression.
+    /// Traverses the given named argument expression.
     /// </summary>
     /// <param name="namedArgument"></param>
     public virtual void Visit(INamedArgument namedArgument)
@@ -1426,7 +4528,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given not equality expression.
+    /// Traverses the given not equality expression.
     /// </summary>
     /// <param name="notEquality"></param>
     public virtual void Visit(INotEquality notEquality)
@@ -1442,7 +4544,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given old value expression.
+    /// Traverses the given old value expression.
     /// </summary>
     /// <param name="oldValue"></param>
     public virtual void Visit(IOldValue oldValue)
@@ -1457,7 +4559,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given one's complement expression.
+    /// Traverses the given one's complement expression.
     /// </summary>
     /// <param name="onesComplement"></param>
     public virtual void Visit(IOnesComplement onesComplement)
@@ -1472,7 +4574,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given out argument expression.
+    /// Traverses the given out argument expression.
     /// </summary>
     /// <param name="outArgument"></param>
     public virtual void Visit(IOutArgument outArgument)
@@ -1487,7 +4589,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given pointer call.
+    /// Traverses the given pointer call.
     /// </summary>
     /// <param name="pointerCall"></param>
     public virtual void Visit(IPointerCall pointerCall)
@@ -1503,7 +4605,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given pop value expression.
+    /// Traverses the given pop value expression.
     /// </summary>
     /// <param name="popValue"></param>
     public virtual void Visit(IPopValue popValue)
@@ -1513,7 +4615,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given push statement.
+    /// Traverses the given push statement.
     /// </summary>
     /// <param name="pushStatement"></param>
     public virtual void Visit(IPushStatement pushStatement)
@@ -1528,7 +4630,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given ref argument expression.
+    /// Traverses the given ref argument expression.
     /// </summary>
     /// <param name="refArgument"></param>
     public virtual void Visit(IRefArgument refArgument)
@@ -1543,7 +4645,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given resource usage statement.
+    /// Traverses the given resource usage statement.
     /// </summary>
     /// <param name="resourceUseStatement"></param>
     public virtual void Visit(IResourceUseStatement resourceUseStatement)
@@ -1559,7 +4661,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the rethrow statement.
+    /// Traverses the rethrow statement.
     /// </summary>
     /// <param name="rethrowStatement"></param>
     public virtual void Visit(IRethrowStatement rethrowStatement)
@@ -1573,7 +4675,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the return statement.
+    /// Traverses the return statement.
     /// </summary>
     /// <param name="returnStatement"></param>
     public virtual void Visit(IReturnStatement returnStatement)
@@ -1589,7 +4691,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given return value expression.
+    /// Traverses the given return value expression.
     /// </summary>
     public virtual void Visit(IReturnValue returnValue)
       //^ ensures this.path.Count == old(this.path.Count);
@@ -1597,7 +4699,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given right shift expression.
+    /// Traverses the given right shift expression.
     /// </summary>
     /// <param name="rightShift"></param>
     public virtual void Visit(IRightShift rightShift)
@@ -1613,7 +4715,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given stack array create expression.
+    /// Traverses the given stack array create expression.
     /// </summary>
     /// <param name="stackArrayCreate"></param>
     public virtual void Visit(IStackArrayCreate stackArrayCreate)
@@ -1629,7 +4731,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given runtime argument handle expression.
+    /// Traverses the given runtime argument handle expression.
     /// </summary>
     /// <param name="runtimeArgumentHandleExpression"></param>
     public virtual void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression)
@@ -1638,7 +4740,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given sizeof() expression.
+    /// Traverses the given sizeof() expression.
     /// </summary>
     /// <param name="sizeOf"></param>
     public virtual void Visit(ISizeOf sizeOf)
@@ -1678,7 +4780,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given subtraction expression.
+    /// Traverses the given subtraction expression.
     /// </summary>
     /// <param name="subtraction"></param>
     public virtual void Visit(ISubtraction subtraction)
@@ -1710,7 +4812,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given switch case.
+    /// Traverses the given switch case.
     /// </summary>
     /// <param name="switchCase"></param>
     public virtual void Visit(ISwitchCase switchCase)
@@ -1727,7 +4829,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given switch statement.
+    /// Traverses the given switch statement.
     /// </summary>
     /// <param name="switchStatement"></param>
     public virtual void Visit(ISwitchStatement switchStatement)
@@ -1743,7 +4845,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given target expression.
+    /// Traverses the given target expression.
     /// </summary>
     /// <param name="targetExpression"></param>
     public virtual void Visit(ITargetExpression targetExpression)
@@ -1791,7 +4893,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given this reference expression.
+    /// Traverses the given this reference expression.
     /// </summary>
     /// <param name="thisReference"></param>
     public virtual void Visit(IThisReference thisReference)
@@ -1800,7 +4902,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the throw statement.
+    /// Traverses the throw statement.
     /// </summary>
     /// <param name="throwStatement"></param>
     public virtual void Visit(IThrowStatement throwStatement)
@@ -1816,7 +4918,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the try-catch-filter-finally statement.
+    /// Traverses the try-catch-filter-finally statement.
     /// </summary>
     /// <param name="tryCatchFilterFinallyStatement"></param>
     public virtual void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement)
@@ -1836,7 +4938,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given tokenof() expression.
+    /// Traverses the given tokenof() expression.
     /// </summary>
     /// <param name="tokenOf"></param>
     public virtual void Visit(ITokenOf tokenOf)
@@ -1860,7 +4962,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given typeof() expression.
+    /// Traverses the given typeof() expression.
     /// </summary>
     /// <param name="typeOf"></param>
     public virtual void Visit(ITypeOf typeOf)
@@ -1875,7 +4977,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given unary negation expression.
+    /// Traverses the given unary negation expression.
     /// </summary>
     /// <param name="unaryNegation"></param>
     public virtual void Visit(IUnaryNegation unaryNegation)
@@ -1890,7 +4992,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given unary plus expression.
+    /// Traverses the given unary plus expression.
     /// </summary>
     /// <param name="unaryPlus"></param>
     public virtual void Visit(IUnaryPlus unaryPlus)
@@ -1905,7 +5007,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given vector length expression.
+    /// Traverses the given vector length expression.
     /// </summary>
     /// <param name="vectorLength"></param>
     public virtual void Visit(IVectorLength vectorLength)
@@ -1920,7 +5022,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given while do statement.
+    /// Traverses the given while do statement.
     /// </summary>
     /// <param name="whileDoStatement"></param>
     public virtual void Visit(IWhileDoStatement whileDoStatement)
@@ -1936,7 +5038,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given yield break statement.
+    /// Traverses the given yield break statement.
     /// </summary>
     /// <param name="yieldBreakStatement"></param>
     public virtual void Visit(IYieldBreakStatement yieldBreakStatement)
@@ -1945,7 +5047,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Performs some computation with the given yield return statement.
+    /// Traverses the given yield return statement.
     /// </summary>
     /// <param name="yieldReturnStatement"></param>
     public virtual void Visit(IYieldReturnStatement yieldReturnStatement)
@@ -1960,20 +5062,6 @@ namespace Microsoft.Cci {
     }
 
     #endregion
-
-    /// <summary>
-    /// Performs some computation on the reference to the given parameter definition.
-    /// </summary>
-    /// <param name="parameter">The parameter being referenced.</param>
-    public virtual void VisitReference(IParameterDefinition parameter) {
-    }
-
-    /// <summary>
-    /// Performs some computation on the reference to the given local definition.
-    /// </summary>
-    /// <param name="local">The local definition being referenced.</param>
-    public virtual void VisitReference(ILocalDefinition local) {
-    }
 
     /// <summary>
     /// Performs some computation on the reference to the given property definition.
@@ -2709,6 +5797,554 @@ namespace Microsoft.Cci.Contracts {
     /// Performs some computation with the given type invariant.
     /// </summary>
     void Visit(ITypeInvariant typeInvariant);
+  }
+
+  /// <summary>
+  /// Contains a specialized Visit routine for each standard type of object defined in the contract, code and metadata model. 
+  /// </summary>
+  public class CodeAndContractVisitor : CodeVisitor, ICodeAndContractVisitor {
+
+    /// <summary>
+    /// A map from code model objects to contract objects.
+    /// </summary>
+    protected readonly IContractProvider/*?*/ contractProvider;
+
+    /// <summary>
+    /// Contains a specialized Visit routine for each standard type of object defined in the contract, code and metadata model. 
+    /// </summary>
+    public CodeAndContractVisitor(IContractProvider/*?*/ contractProvider) {
+      this.contractProvider = contractProvider;
+    }
+
+    /// <summary>
+    /// Visits the given contract element.
+    /// </summary>
+    /// <param name="contractElement"></param>
+    public virtual void Visit(IContractElement contractElement) {
+    }
+
+    /// <summary>
+    /// Visits the given loop contract.
+    /// </summary>
+    public virtual void Visit(ILoopContract loopContract) {
+    }
+
+    /// <summary>
+    /// Visits the given loop invariant.
+    /// </summary>
+    public virtual void Visit(ILoopInvariant loopInvariant) {
+      this.Visit((IContractElement)loopInvariant);
+    }
+
+    /// <summary>
+    /// Visits the given loop variant.
+    /// </summary>
+    public virtual void Visit(ILoopVariant loopVariant) {
+      this.Visit((IContractElement)loopVariant);
+    }
+
+    /// <summary>
+    /// Visits the given method contract.
+    /// </summary>
+    public virtual void Visit(IMethodContract methodContract) {
+    }
+
+    /// <summary>
+    /// Visits the given variant.
+    /// </summary>
+    public virtual void Visit(IMethodVariant variant) {
+      this.Visit((IContractElement)variant);
+    }
+
+    /// <summary>
+    /// Visits the given postCondition.
+    /// </summary>
+    public virtual void Visit(IPostcondition postCondition) {
+      this.Visit((IContractElement)postCondition);
+    }
+
+    /// <summary>
+    /// Visits the given precondition.
+    /// </summary>
+    public virtual void Visit(IPrecondition precondition) {
+      this.Visit((IContractElement)precondition);
+    }
+
+    /// <summary>
+    /// Visits the given thrown exception.
+    /// </summary>
+    public virtual void Visit(IThrownException thrownException) {
+    }
+
+    /// <summary>
+    /// Visits the given type contract.
+    /// </summary>
+    public virtual void Visit(ITypeContract typeContract) {
+    }
+
+    /// <summary>
+    /// Visits the given type invariant.
+    /// </summary>
+    public virtual void Visit(ITypeInvariant typeInvariant) {
+      this.Visit((IContractElement)typeInvariant);
+    }
+
+  }
+
+  /// <summary>
+  /// A class that traverses the contract, code and metadata models in depth first, left to right order.
+  /// </summary>
+  public class CodeAndContractTraverser : CodeTraverser {
+
+    /// <summary>
+    /// A class that traverses the contract, code and metadata models in depth first, left to right order.
+    /// </summary>
+    public CodeAndContractTraverser(IContractProvider/*?*/ contractProvider) {
+      this.contractProvider = contractProvider;
+      this.dispatchingVisitor = new ContractElementDispatcher() { traverser = this };
+    }
+
+    /// <summary>
+    /// A map from code model objects to contract objects.
+    /// </summary>
+    protected readonly IContractProvider/*?*/ contractProvider;
+
+    ICodeAndContractVisitor/*?*/ preorderVisitor;
+    ICodeAndContractVisitor/*?*/ postorderVisitor;
+
+    /// <summary>
+    /// A visitor that should be called on each object being traversed, before any of its children are traversed. May be null.
+    /// </summary>
+    public new ICodeAndContractVisitor/*?*/ PreorderVisitor {
+      get { return this.preorderVisitor; }
+      set {
+        this.preorderVisitor = value;
+        base.PreorderVisitor = value;
+      }
+    }
+
+    /// <summary>
+    /// A visitor that should be called on each object being traversed, after all of its children are traversed. May be null. 
+    /// </summary>
+    public new ICodeAndContractVisitor/*?*/ PostorderVisitor {
+      get { return this.postorderVisitor; }
+      set {
+        this.postorderVisitor = value;
+        base.PostorderVisitor = value;
+      }
+    }
+
+    ContractElementDispatcher dispatchingVisitor;
+    class ContractElementDispatcher : CodeVisitor, ICodeAndContractVisitor {
+
+      internal CodeAndContractTraverser traverser;
+
+      public void Visit(ILoopInvariant loopInvariant) {
+        this.traverser.Traverse(loopInvariant);
+      }
+
+      public void Visit(ILoopVariant loopVariant) {
+        this.traverser.Traverse(loopVariant);
+      }
+
+      public void Visit(IMethodVariant methodVariant) {
+        this.traverser.Traverse(methodVariant);
+      }
+
+      public void Visit(IPostcondition postCondition) {
+        this.traverser.Traverse(postCondition);
+      }
+
+      public void Visit(IPrecondition precondition) {
+        this.traverser.Traverse(precondition);
+      }
+
+      public void Visit(ITypeInvariant typeInvariant) {
+        this.traverser.Traverse(typeInvariant);
+      }
+
+      public void Visit(ILoopContract loopContract) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IMethodContract methodContract) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IThrownException thrownException) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(ITypeContract typeContract) {
+        Contract.Assume(false);
+      }
+    }
+
+    /// <summary>
+    /// Traverses the contract element.
+    /// </summary>
+    public void Traverse(IContractElement contractElement) {
+      contractElement.Dispatch(this.dispatchingVisitor);
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of addressable expressions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<IAddressableExpression> addressableExpressions) {
+      foreach (var addressableExpression in addressableExpressions) {
+        this.Traverse(addressableExpression);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of trigger expressions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<IEnumerable<IExpression>> triggers) {
+      foreach (var trigs in triggers) {
+        this.Traverse(trigs);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of loop invariants.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<ILoopInvariant> loopInvariants) {
+      foreach (var loopInvariant in loopInvariants) {
+        this.Traverse(loopInvariant);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of loop variants.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<ILoopVariant> loopVariants) {
+      foreach (var loopVariant in loopVariants) {
+        if (this.StopTraversal) return;
+        this.Traverse(loopVariant);
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of post conditions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<IPostcondition> postConditions) {
+      foreach (var postCondition in postConditions) {
+        this.Traverse(postCondition);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of pre conditions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<IPrecondition> preconditions) {
+      foreach (var precondition in preconditions) {
+        this.Traverse(precondition);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of thrown exceptions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<IThrownException> thrownExceptions) {
+      foreach (var thrownException in thrownExceptions) {
+        this.Traverse(thrownException);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of addressable expressions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<ITypeInvariant> typeInvariants) {
+      foreach (var typeInvariant in typeInvariants) {
+        this.Traverse(typeInvariant);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the enumeration of post conditions.
+    /// </summary>
+    public virtual void Traverse(IEnumerable<IMethodVariant> variants) {
+      foreach (var variant in variants) {
+        this.Traverse(variant);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the loop contract.
+    /// </summary>
+    public void Traverse(ILoopContract loopContract) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(loopContract);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(loopContract);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(loopContract);
+    }
+
+    /// <summary>
+    /// Traverses the loop invariant.
+    /// </summary>
+    public void Traverse(ILoopInvariant loopInvariant) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(loopInvariant);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(loopInvariant);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(loopInvariant);
+    }
+
+    /// <summary>
+    /// Traverses the loop variant.
+    /// </summary>
+    public void Traverse(ILoopVariant loopVariant) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(loopVariant);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(loopVariant);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(loopVariant);
+    }
+
+    /// <summary>
+    /// Traverses the method contract.
+    /// </summary>
+    public void Traverse(IMethodContract methodContract) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(methodContract);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(methodContract);
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(methodContract);
+      if (this.StopTraversal) return;
+    }
+
+    /// <summary>
+    /// Traverses the method variant.
+    /// </summary>
+    public void Traverse(IMethodVariant variant) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(variant);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(variant);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(variant);
+    }
+
+    /// <summary>
+    /// Traverses the postCondition.
+    /// </summary>
+    public void Traverse(IPostcondition postCondition) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(postCondition);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(postCondition);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(postCondition);
+    }
+
+    /// <summary>
+    /// Traverses the pre condition.
+    /// </summary>
+    public void Traverse(IPrecondition precondition) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(precondition);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(precondition);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(precondition);
+    }
+
+    /// <summary>
+    /// Traverses the thrown exception.
+    /// </summary>
+    public void Traverse(IThrownException thrownException) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(thrownException);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(thrownException);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(thrownException);
+    }
+
+    /// <summary>
+    /// Traverses the type contract.
+    /// </summary>
+    public void Traverse(ITypeContract typeContract) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(typeContract);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(typeContract);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(typeContract);
+    }
+
+    /// <summary>
+    /// Traverses the type invariant.
+    /// </summary>
+    public void Traverse(ITypeInvariant typeInvariant) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(typeInvariant);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(typeInvariant);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(typeInvariant);
+    }
+
+    /// <summary>
+    /// Called whenever a contract element is about to be traversed by a type specific routine.
+    /// This gives the traverser the opportunity to take some uniform action for all contract elements,
+    /// regardless of how the traversal gets to them.
+    /// </summary>
+    public virtual void TraverseChildren(IContractElement contractElement) {
+      this.Traverse(contractElement.Condition);
+      if (this.StopTraversal) return;
+      if (contractElement.Description != null) {
+        this.Traverse(contractElement.Description);
+        if (this.StopTraversal) return;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the children of the loop contract.
+    /// </summary>
+    public virtual void TraverseChildren(ILoopContract loopContract) {
+      this.Traverse(loopContract.Invariants);
+      if (this.StopTraversal) return;
+      this.Traverse(loopContract.Variants);
+      if (this.StopTraversal) return;
+      this.Traverse(loopContract.Writes);
+    }
+
+    /// <summary>
+    /// Traverses the children of the loop invariant.
+    /// </summary>
+    public virtual void TraverseChildren(ILoopInvariant loopInvariant) {
+      this.TraverseChildren((IContractElement)loopInvariant);
+    }
+
+    /// <summary>
+    /// Traverses the children of the loop variant.
+    /// </summary>
+    public virtual void TraverseChildren(ILoopVariant loopVariant) {
+      this.TraverseChildren((IContractElement)loopVariant);
+    }
+
+    /// <summary>
+    /// Traverses the children of the method call.
+    /// </summary>
+    public override void TraverseChildren(IMethodCall methodCall) {
+      base.TraverseChildren(methodCall);
+      if (this.StopTraversal) return;
+      if (this.contractProvider == null) return;
+      IEnumerable<IEnumerable<IExpression>>/*?*/ triggers = this.contractProvider.GetTriggersFor(methodCall);
+      if (triggers != null)
+        this.Traverse(triggers);
+    }
+
+    /// <summary>
+    /// Traverses the children of the method contract.
+    /// </summary>
+    public virtual void TraverseChildren(IMethodContract methodContract) {
+      this.Traverse(methodContract.Allocates);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.Frees);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.ModifiedVariables);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.Postconditions);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.Preconditions);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.Reads);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.ThrownExceptions);
+      if (this.StopTraversal) return;
+      this.Traverse(methodContract.Writes);
+    }
+
+    /// <summary>
+    /// Traverses the children of the method definition.
+    /// </summary>
+    public override void TraverseChildren(IMethodDefinition method) {
+      base.TraverseChildren(method);
+      if (this.StopTraversal) return;
+      if (this.contractProvider == null) return;
+      IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(method);
+      if (methodContract != null)
+        this.Traverse(methodContract);
+    }
+
+    /// <summary>
+    /// Traverses the children of the method variant.
+    /// </summary>
+    public virtual void TraverseChildren(IMethodVariant variant) {
+      this.TraverseChildren((IContractElement)variant);
+    }
+
+    /// <summary>
+    /// Traverses the children of the postCondition.
+    /// </summary>
+    public virtual void TraverseChildren(IPostcondition postCondition) {
+      this.TraverseChildren((IContractElement)postCondition);
+    }
+
+    /// <summary>
+    /// Traverses the children of the pre condition.
+    /// </summary>
+    public virtual void TraverseChildren(IPrecondition precondition) {
+      this.TraverseChildren((IContractElement)precondition);
+      if (this.StopTraversal) return;
+      if (precondition.ExceptionToThrow != null)
+        this.Traverse(precondition.ExceptionToThrow);
+    }
+
+    /// <summary>
+    /// Traverses the children of the statement.
+    /// </summary>
+    public override void TraverseChildren(IStatement statement) {
+      base.TraverseChildren(statement);
+      if (this.contractProvider == null) return;
+      ILoopContract/*?*/ loopContract = this.contractProvider.GetLoopContractFor(statement);
+      if (loopContract != null)
+        this.Traverse(loopContract);
+    }
+
+    /// <summary>
+    /// Traverses the children of the thrown exception.
+    /// </summary>
+    public virtual void TraverseChildren(IThrownException thrownException) {
+      this.Traverse(thrownException.ExceptionType);
+      if (this.StopTraversal) return;
+      this.Traverse(thrownException.Postcondition);
+    }
+
+    /// <summary>
+    /// Traverses the children of the type contract.
+    /// </summary>
+    public virtual void TraverseChildren(ITypeContract typeContract) {
+      this.Traverse(typeContract.ContractFields);
+      if (this.StopTraversal) return;
+      this.Traverse(typeContract.ContractMethods);
+      if (this.StopTraversal) return;
+      this.Traverse(typeContract.Invariants);
+    }
+
+    /// <summary>
+    /// Traverses the children of the type definition.
+    /// </summary>
+    public override void TraverseChildren(ITypeDefinition typeDefinition) {
+      base.TraverseChildren(typeDefinition);
+      if (this.StopTraversal) return;
+      if (this.contractProvider == null) return;
+      ITypeContract/*?*/ typeContract = this.contractProvider.GetTypeContractFor(typeDefinition);
+      if (typeContract != null)
+        this.Traverse(typeContract);
+    }
+
+    /// <summary>
+    /// Traverses the children of the type invariant.
+    /// </summary>
+    public virtual void TraverseChildren(ITypeInvariant typeInvariant) {
+      this.TraverseChildren((IContractElement)typeInvariant);
+    }
+
   }
 
   /// <summary>

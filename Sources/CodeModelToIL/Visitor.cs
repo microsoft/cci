@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci;
 using Microsoft.Cci.Contracts;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
 
@@ -20,7 +21,7 @@ namespace Microsoft.Cci {
   /// An object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private
   /// helper types.
   /// </summary>
-  public class CodeModelToILConverter : BaseCodeTraverser, ISourceToILConverter {
+  public class CodeModelToILConverter : CodeTraverser, ISourceToILConverter {
 
     /// <summary>
     /// Initializes an object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private 
@@ -31,6 +32,8 @@ namespace Microsoft.Cci {
     /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider) {
+      Contract.Requires(host != null);
+      Contract.Requires(method != null);
       this.generator = new ILGenerator(host, method);
       this.host = host;
       this.method = method;
@@ -48,6 +51,8 @@ namespace Microsoft.Cci {
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
     public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
+      Contract.Requires(host != null);
+      Contract.Requires(method != null);
       this.generator = new ILGenerator(host, method);
       this.host = host;
       this.method = method;
@@ -121,15 +126,15 @@ namespace Microsoft.Cci {
         if (instance == null)
           this.generator.Emit(OperationCode.Ldsflda, field);
         else {
-          this.Visit(instance);
+          this.Traverse(instance);
           this.generator.Emit(OperationCode.Ldflda, field);
         }
         return;
       }
       IArrayIndexer/*?*/ arrayIndexer = container as IArrayIndexer;
       if (arrayIndexer != null) {
-        this.Visit(arrayIndexer.IndexedObject);
-        this.Visit(arrayIndexer.Indices);
+        this.Traverse(arrayIndexer.IndexedObject);
+        this.Traverse(arrayIndexer.Indices);
         if (emitReadonlyPrefix)
           this.generator.Emit(OperationCode.Readonly_);
         IArrayTypeReference arrayType = (IArrayTypeReference)arrayIndexer.IndexedObject.Type;
@@ -141,13 +146,13 @@ namespace Microsoft.Cci {
       }
       IAddressDereference/*?*/ addressDereference = container as IAddressDereference;
       if (addressDereference != null) {
-        this.Visit(addressDereference.Address);
+        this.Traverse(addressDereference.Address);
         return;
       }
       IMethodReference/*?*/ method = container as IMethodReference;
       if (method != null) {
         if (instance != null)
-          this.Visit(instance);
+          this.Traverse(instance);
         if (method.ResolvedMethod.IsVirtual) //TODO: need a way to do this without resolving the method
           this.generator.Emit(OperationCode.Ldvirtftn, method);
         else
@@ -177,7 +182,7 @@ namespace Microsoft.Cci {
       IExpression/*?*/ expression = container as IExpression;
       if (expression != null) {
         TemporaryVariable temp = new TemporaryVariable(expression.Type, this.method);
-        this.Visit(expression);
+        this.Traverse(expression);
         this.VisitAssignmentTo(temp);
         this.LoadAddressOf(temp, null);
         return;
@@ -198,7 +203,7 @@ namespace Microsoft.Cci {
           //The caller has already generated code to load the instance on the stack.
           this.generator.Emit(OperationCode.Ldfld, field);
       } else {
-        this.Visit(instance);
+        this.Traverse(instance);
         if (alignment != 0)
           this.generator.Emit(OperationCode.Unaligned_, alignment);
         if (isVolatile)
@@ -247,12 +252,12 @@ namespace Microsoft.Cci {
     ushort _stackSize;
 
     /// <summary>
-    /// Visits the specified addition.
+    /// Generates IL for the specified addition.
     /// </summary>
     /// <param name="addition">The addition.</param>
-    public override void Visit(IAddition addition) {
-      this.Visit(addition.LeftOperand);
-      this.Visit(addition.RightOperand);
+    public override void TraverseChildren(IAddition addition) {
+      this.Traverse(addition.LeftOperand);
+      this.Traverse(addition.RightOperand);
       OperationCode operationCode = OperationCode.Add;
       if (addition.CheckOverflow) {
         if (TypeHelper.IsSignedPrimitive(addition.Type))
@@ -273,19 +278,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified addressable expression.
+    /// Generates IL for the specified addressable expression.
     /// </summary>
     /// <param name="addressableExpression">The addressable expression.</param>
-    public override void Visit(IAddressableExpression addressableExpression) {
+    public override void TraverseChildren(IAddressableExpression addressableExpression) {
       Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
     }
 
     /// <summary>
-    /// Visits the specified address dereference.
+    /// Generates IL for the specified address dereference.
     /// </summary>
     /// <param name="addressDereference">The address dereference.</param>
-    public override void Visit(IAddressDereference addressDereference) {
-      this.Visit(addressDereference.Address);
+    public override void TraverseChildren(IAddressDereference addressDereference) {
+      this.Traverse(addressDereference.Address);
       if (addressDereference.IsUnaligned)
         this.generator.Emit(OperationCode.Unaligned_, addressDereference.Alignment);
       if (addressDereference.IsVolatile)
@@ -328,10 +333,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified address of.
+    /// Generates IL for the specified address of.
     /// </summary>
     /// <param name="addressOf">The address of.</param>
-    public override void Visit(IAddressOf addressOf) {
+    public override void TraverseChildren(IAddressOf addressOf) {
       object container = addressOf.Expression.Definition;
       IExpression/*?*/ instance = addressOf.Expression.Instance;
       this.LoadAddressOf(container, instance, addressOf.ObjectControlsMutability);
@@ -339,28 +344,28 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified alias for type.
+    /// Generates IL for the specified alias for type.
     /// </summary>
     /// <param name="aliasForType">Type of the alias for.</param>
-    public override void Visit(IAliasForType aliasForType) {
+    public override void TraverseChildren(IAliasForType aliasForType) {
       Debug.Assert(false);
     }
 
     /// <summary>
-    /// Visits the specified anonymous delegate.
+    /// Generates IL for the specified anonymous delegate.
     /// </summary>
     /// <param name="anonymousDelegate">The anonymous delegate.</param>
-    public override void Visit(IAnonymousDelegate anonymousDelegate) {
+    public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
       Debug.Assert(false);
     }
 
     /// <summary>
-    /// Visits the specified array indexer.
+    /// Generates IL for the specified array indexer.
     /// </summary>
     /// <param name="arrayIndexer">The array indexer.</param>
-    public override void Visit(IArrayIndexer arrayIndexer) {
-      this.Visit(arrayIndexer.IndexedObject);
-      this.Visit(arrayIndexer.Indices);
+    public override void TraverseChildren(IArrayIndexer arrayIndexer) {
+      this.Traverse(arrayIndexer.IndexedObject);
+      this.Traverse(arrayIndexer.Indices);
       IArrayTypeReference arrayType = (IArrayTypeReference)arrayIndexer.IndexedObject.Type;
       if (arrayType.IsVector)
         this.LoadVectorElement(arrayType.ElementType);
@@ -401,47 +406,31 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified array type reference.
+    /// Generates IL for the specified array type reference.
     /// </summary>
     /// <param name="arrayTypeReference">The array type reference.</param>
-    public override void Visit(IArrayTypeReference arrayTypeReference) {
+    public override void TraverseChildren(IArrayTypeReference arrayTypeReference) {
       Debug.Assert(false);
-    }
-
-    /// <summary>
-    /// Visits the specified assembly.
-    /// </summary>
-    /// <param name="assembly">The assembly.</param>
-    public override void Visit(IAssembly assembly) {
-      base.Visit(assembly);
-    }
-
-    /// <summary>
-    /// Visits the specified assembly reference.
-    /// </summary>
-    /// <param name="assemblyReference">The assembly reference.</param>
-    public override void Visit(IAssemblyReference assemblyReference) {
-      base.Visit(assemblyReference);
     }
 
     /// <summary>
     /// Throws an exception when executed: IAssertStatement nodes
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    public override void Visit(IAssertStatement assertStatement) {
+    public override void TraverseChildren(IAssertStatement assertStatement) {
       throw new InvalidOperationException("IAssertStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
-    /// Visits the specified assignment.
+    /// Generates IL for the specified assignment.
     /// </summary>
     /// <param name="assignment">The assignment.</param>
-    public override void Visit(IAssignment assignment) {
+    public override void TraverseChildren(IAssignment assignment) {
       this.VisitAssignment(assignment, false);
     }
 
     /// <summary>
-    /// Visits the assignment.
+    /// Generates IL for the assignment.
     /// </summary>
     /// <param name="assignment">The assignment.</param>
     /// <param name="treatAsStatement">if set to <c>true</c> [treat as statement].</param>
@@ -453,7 +442,7 @@ namespace Microsoft.Cci {
           this.LoadAddressOf(local, null);
           this.generator.Emit(OperationCode.Initobj, local.Type);
         } else {
-          this.Visit(assignment.Source);
+          this.Traverse(assignment.Source);
           this.VisitAssignmentTo(local);
         }
         if (!treatAsStatement) this.LoadLocal(local);
@@ -465,7 +454,7 @@ namespace Microsoft.Cci {
           this.LoadAddressOf(parameter, null);
           this.generator.Emit(OperationCode.Initobj, parameter.Type);
         } else {
-          this.Visit(assignment.Source);
+          this.Traverse(assignment.Source);
           ushort parIndex = GetParameterIndex(parameter);
           if (parIndex <= byte.MaxValue) this.generator.Emit(OperationCode.Starg_S, parameter);
           else this.generator.Emit(OperationCode.Starg, parameter);
@@ -489,13 +478,13 @@ namespace Microsoft.Cci {
             this.StackSize--;
         } else {
           if (assignment.Target.Instance != null) {
-            this.Visit(assignment.Target.Instance);
+            this.Traverse(assignment.Target.Instance);
             if (!treatAsStatement) {
               this.generator.Emit(OperationCode.Dup);
               this.StackSize++;
             }
           }
-          this.Visit(assignment.Source);
+          this.Traverse(assignment.Source);
           if (assignment.Target.IsUnaligned)
             this.generator.Emit(OperationCode.Unaligned_, assignment.Target.Alignment);
           if (assignment.Target.IsVolatile)
@@ -526,9 +515,9 @@ namespace Microsoft.Cci {
           else
             this.StackSize--;
         } else {
-          this.Visit(assignment.Target.Instance);
-          this.Visit(arrayIndexer.Indices);
-          this.Visit(assignment.Source);
+          this.Traverse(assignment.Target.Instance);
+          this.Traverse(arrayIndexer.Indices);
+          this.Traverse(assignment.Source);
           ILocalDefinition/*?*/ temp = null;
           if (!treatAsStatement) {
             temp = new TemporaryVariable(assignment.Source.Type, this.method);
@@ -547,7 +536,7 @@ namespace Microsoft.Cci {
       }
       IAddressDereference/*?*/ addressDereference = container as IAddressDereference;
       if (addressDereference != null) {
-        this.Visit(addressDereference.Address);
+        this.Traverse(addressDereference.Address);
         if (assignment.Source is IDefaultValue && !addressDereference.Type.ResolvedType.IsReferenceType) {
           if (!treatAsStatement) {
             this.generator.Emit(OperationCode.Dup);
@@ -563,13 +552,13 @@ namespace Microsoft.Cci {
             this.generator.Emit(OperationCode.Dup);
             this.StackSize++;
           }
-          this.Visit(((IAddressDereference)assignment.Source).Address);
+          this.Traverse(((IAddressDereference)assignment.Source).Address);
           this.generator.Emit(OperationCode.Cpobj, addressDereference.Type);
           this.StackSize-=2;
           if (!treatAsStatement)
             this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
         } else {
-          this.Visit(assignment.Source);
+          this.Traverse(assignment.Source);
           ILocalDefinition/*?*/ temp = null;
           if (!treatAsStatement) {
             temp = new TemporaryVariable(assignment.Source.Type, this.method);
@@ -661,51 +650,51 @@ namespace Microsoft.Cci {
     /// Throws an exception when executed: IAssumeStatement nodes
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    public override void Visit(IAssumeStatement assumeStatement) {
+    public override void TraverseChildren(IAssumeStatement assumeStatement) {
       throw new InvalidOperationException("IAssumeStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
-    /// Visits the specified bitwise and.
+    /// Generates IL for the specified bitwise and.
     /// </summary>
     /// <param name="bitwiseAnd">The bitwise and.</param>
-    public override void Visit(IBitwiseAnd bitwiseAnd) {
-      this.Visit(bitwiseAnd.LeftOperand);
-      this.Visit(bitwiseAnd.RightOperand);
+    public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
+      this.Traverse(bitwiseAnd.LeftOperand);
+      this.Traverse(bitwiseAnd.RightOperand);
       this.generator.Emit(OperationCode.And);
       this.StackSize--;
     }
 
     /// <summary>
-    /// Visits the specified bitwise or.
+    /// Generates IL for the specified bitwise or.
     /// </summary>
     /// <param name="bitwiseOr">The bitwise or.</param>
-    public override void Visit(IBitwiseOr bitwiseOr) {
-      this.Visit(bitwiseOr.LeftOperand);
-      this.Visit(bitwiseOr.RightOperand);
+    public override void TraverseChildren(IBitwiseOr bitwiseOr) {
+      this.Traverse(bitwiseOr.LeftOperand);
+      this.Traverse(bitwiseOr.RightOperand);
       this.generator.Emit(OperationCode.Or);
       this.StackSize--;
     }
 
     /// <summary>
-    /// Visits the specified block expression.
+    /// Generates IL for the specified block expression.
     /// </summary>
     /// <param name="blockExpression">The block expression.</param>
-    public override void Visit(IBlockExpression blockExpression) {
-      this.Visit(blockExpression.BlockStatement);
-      this.Visit(blockExpression.Expression);
+    public override void TraverseChildren(IBlockExpression blockExpression) {
+      this.Traverse(blockExpression.BlockStatement);
+      this.Traverse(blockExpression.Expression);
     }
 
     /// <summary>
-    /// Visits the specified block.
+    /// Generates IL for the specified block.
     /// </summary>
     /// <param name="block">The block.</param>
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       uint numberOfIteratorLocals = 0;
       if (this.iteratorLocalCount != null)
         this.iteratorLocalCount.TryGetValue(block, out numberOfIteratorLocals);
       this.generator.BeginScope(numberOfIteratorLocals);
-      this.Visit(block.Statements);
+      this.Traverse(block.Statements);
       this.generator.EndScope();
     }
 
@@ -713,7 +702,7 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given bound expression.
     /// </summary>
     /// <param name="boundExpression"></param>
-    public override void Visit(IBoundExpression boundExpression) {
+    public override void TraverseChildren(IBoundExpression boundExpression) {
       object/*?*/ container = boundExpression.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
       if (local != null) {
@@ -734,10 +723,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified break statement.
+    /// Generates IL for the specified break statement.
     /// </summary>
     /// <param name="breakStatement">The break statement.</param>
-    public override void Visit(IBreakStatement breakStatement) {
+    public override void TraverseChildren(IBreakStatement breakStatement) {
       if (this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
         this.generator.Emit(OperationCode.Leave, this.currentBreakTarget);
       else
@@ -746,23 +735,22 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified cast if possible.
+    /// Generates IL for the specified cast if possible.
     /// </summary>
     /// <param name="castIfPossible">The cast if possible.</param>
-    public override void Visit(ICastIfPossible castIfPossible) {
-      this.Visit(castIfPossible.ValueToCast);
+    public override void TraverseChildren(ICastIfPossible castIfPossible) {
+      this.Traverse(castIfPossible.ValueToCast);
       this.generator.Emit(OperationCode.Isinst, castIfPossible.TargetType);
     }
 
     /// <summary>
-    /// Visits the specified catch clause.
+    /// Generates IL for the specified catch clause.
     /// </summary>
     /// <param name="catchClause">The catch clause.</param>
-    public override void Visit(ICatchClause catchClause) {
-      this.lastStatementWasUnconditionalTransfer = false;
+    public override void TraverseChildren(ICatchClause catchClause) {
       if (catchClause.FilterCondition != null) {
         this.generator.BeginFilterBlock();
-        this.Visit(catchClause.FilterCondition);
+        this.Traverse(catchClause.FilterCondition);
         this.generator.BeginFilterBody();
       } else {
         this.generator.BeginCatchBlock(catchClause.ExceptionType);
@@ -772,17 +760,18 @@ namespace Microsoft.Cci {
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
       else
         this.generator.Emit(OperationCode.Pop);
-      this.Visit(catchClause.Body);
+      this.Traverse(catchClause.Body);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified check if instance.
+    /// Generates IL for the specified check if instance.
     /// </summary>
     /// <param name="checkIfInstance">The check if instance.</param>
-    public override void Visit(ICheckIfInstance checkIfInstance) {
-      this.Visit(checkIfInstance.Operand);
+    public override void TraverseChildren(ICheckIfInstance checkIfInstance) {
+      this.Traverse(checkIfInstance.Operand);
       this.generator.Emit(OperationCode.Isinst, checkIfInstance.TypeToCheck);
       this.generator.Emit(OperationCode.Ldnull);
       this.StackSize++;
@@ -791,10 +780,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified constant.
+    /// Generates IL for the specified constant.
     /// </summary>
     /// <param name="constant">The constant.</param>
-    public override void Visit(ICompileTimeConstant constant) {
+    public override void TraverseChildren(ICompileTimeConstant constant) {
       var ic = constant.Value as IConvertible;
       if (ic != null)
         this.EmitConstant(ic);
@@ -814,26 +803,26 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified conditional.
+    /// Generates IL for the specified conditional.
     /// </summary>
     /// <param name="conditional">The conditional.</param>
-    public override void Visit(IConditional conditional) {
+    public override void TraverseChildren(IConditional conditional) {
       ILGeneratorLabel falseCase = new ILGeneratorLabel();
       ILGeneratorLabel endif = new ILGeneratorLabel();
       this.VisitBranchIfFalse(conditional.Condition, falseCase);
-      this.Visit(conditional.ResultIfTrue);
+      this.Traverse(conditional.ResultIfTrue);
       this.generator.Emit(OperationCode.Br, endif);
       this.generator.MarkLabel(falseCase);
       this.StackSize--;
-      this.Visit(conditional.ResultIfFalse);
+      this.Traverse(conditional.ResultIfFalse);
       this.generator.MarkLabel(endif);
     }
 
     /// <summary>
-    /// Visits the specified conditional statement.
+    /// Generates IL for the specified conditional statement.
     /// </summary>
     /// <param name="conditionalStatement">The conditional statement.</param>
-    public override void Visit(IConditionalStatement conditionalStatement) {
+    public override void TraverseChildren(IConditionalStatement conditionalStatement) {
       ILGeneratorLabel/*?*/ endif = null;
       if (conditionalStatement.TrueBranch is IBreakStatement && !this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
         this.VisitBranchIfTrue(conditionalStatement.Condition, this.currentBreakTarget);
@@ -842,7 +831,7 @@ namespace Microsoft.Cci {
       else {
         ILGeneratorLabel falseCase = new ILGeneratorLabel();
         this.VisitBranchIfFalse(conditionalStatement.Condition, falseCase);
-        this.Visit(conditionalStatement.TrueBranch);
+        this.Traverse(conditionalStatement.TrueBranch);
         if (!this.lastStatementWasUnconditionalTransfer) {
           endif = new ILGeneratorLabel();
           this.generator.Emit(OperationCode.Br, endif);
@@ -850,9 +839,10 @@ namespace Microsoft.Cci {
         }
         this.generator.MarkLabel(falseCase);
       }
-      this.Visit(conditionalStatement.FalseBranch);
+      this.Traverse(conditionalStatement.FalseBranch);
       if (endif != null)
         this.generator.MarkLabel(endif);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     internal bool LabelIsOutsideCurrentExceptionBlock(ILGeneratorLabel label) {
@@ -862,10 +852,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified continue statement.
+    /// Generates IL for the specified continue statement.
     /// </summary>
     /// <param name="continueStatement">The continue statement.</param>
-    public override void Visit(IContinueStatement continueStatement) {
+    public override void TraverseChildren(IContinueStatement continueStatement) {
       if (this.LabelIsOutsideCurrentExceptionBlock(this.currentContinueTarget))
         this.generator.Emit(OperationCode.Leave, this.currentContinueTarget);
       else
@@ -874,11 +864,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified conversion.
+    /// Generates IL for the specified conversion.
     /// </summary>
     /// <param name="conversion">The conversion.</param>
-    public override void Visit(IConversion conversion) {
-      this.Visit(conversion.ValueToConvert);
+    public override void TraverseChildren(IConversion conversion) {
+      this.Traverse(conversion.ValueToConvert);
       //TODO: change IConversion to make it illegal to convert to or from enum types.
       ITypeReference sourceType = conversion.ValueToConvert.Type;
       if (sourceType.ResolvedType.IsEnum) sourceType = sourceType.ResolvedType.UnderlyingType;
@@ -894,10 +884,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified create array.
+    /// Generates IL for the specified create array.
     /// </summary>
     /// <param name="createArray">The create array instance to visit.</param>
-    public override void Visit(ICreateArray createArray) {
+    public override void TraverseChildren(ICreateArray createArray) {
       IEnumerator<int> bounds = createArray.LowerBounds.GetEnumerator();
       bool hasOneOrMoreBounds = bounds.MoveNext();
       bool hasMoreBounds = hasOneOrMoreBounds;
@@ -917,7 +907,7 @@ namespace Microsoft.Cci {
           }
           boundsEmitted++;
         }
-        this.Visit(size);
+        this.Traverse(size);
         if (size.Type.TypeCode == PrimitiveTypeCode.Int64 || size.Type.TypeCode == PrimitiveTypeCode.UInt64)
           this.generator.Emit(OperationCode.Conv_Ovf_U);
       }
@@ -941,7 +931,7 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Dup);
           this.StackSize++;
           this.EmitConstant(i++);
-          this.Visit(elemValue);
+          this.Traverse(elemValue);
           this.StoreVectorElement(createArray.ElementType);
         }
       } else {
@@ -973,7 +963,7 @@ namespace Microsoft.Cci {
             n = n % divisor;
             this.EmitConstant((int)indexInThisDimension);
           }
-          this.Visit(initializers[i]);
+          this.Traverse(initializers[i]);
           this.generator.Emit(OperationCode.Array_Set, arrayType);
           this.StackSize -= (ushort)(createArray.Rank + 2);
         }
@@ -981,15 +971,15 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified create delegate instance.
+    /// Generates IL for the specified create delegate instance.
     /// </summary>
     /// <param name="createDelegateInstance">The create delegate instance.</param>
-    public override void Visit(ICreateDelegateInstance createDelegateInstance) {
+    public override void TraverseChildren(ICreateDelegateInstance createDelegateInstance) {
       IPlatformType platformType = createDelegateInstance.Type.PlatformType;
       MethodReference constructor = new MethodReference(this.host, createDelegateInstance.Type, CallingConvention.Default|CallingConvention.HasThis,
         platformType.SystemVoid, this.host.NameTable.Ctor, 0, platformType.SystemObject, platformType.SystemIntPtr);
       if (createDelegateInstance.Instance != null) {
-        this.Visit(createDelegateInstance.Instance);
+        this.Traverse(createDelegateInstance.Instance);
         if (createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod.IsVirtual) {
           this.generator.Emit(OperationCode.Dup);
           this.StackSize++;
@@ -1008,37 +998,21 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified create object instance.
+    /// Generates IL for the specified create object instance.
     /// </summary>
     /// <param name="createObjectInstance">The create object instance.</param>
-    public override void Visit(ICreateObjectInstance createObjectInstance) {
-      this.Visit(createObjectInstance.Arguments);
+    public override void TraverseChildren(ICreateObjectInstance createObjectInstance) {
+      this.Traverse(createObjectInstance.Arguments);
       this.generator.Emit(OperationCode.Newobj, createObjectInstance.MethodToCall);
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(createObjectInstance.Arguments);
       this.StackSize++;
     }
 
     /// <summary>
-    /// Visits the specified custom attribute.
-    /// </summary>
-    /// <param name="customAttribute">The custom attribute.</param>
-    public override void Visit(ICustomAttribute customAttribute) {
-      base.Visit(customAttribute);
-    }
-
-    /// <summary>
-    /// Visits the specified custom modifier.
-    /// </summary>
-    /// <param name="customModifier">The custom modifier.</param>
-    public override void Visit(ICustomModifier customModifier) {
-      base.Visit(customModifier);
-    }
-
-    /// <summary>
-    /// Visits the specified default value.
+    /// Generates IL for the specified default value.
     /// </summary>
     /// <param name="defaultValue">The default value.</param>
-    public override void Visit(IDefaultValue defaultValue) {
+    public override void TraverseChildren(IDefaultValue defaultValue) {
       ILocalDefinition temp = new TemporaryVariable(defaultValue.Type, this.method);
       this.LoadAddressOf(temp, null);
       this.generator.Emit(OperationCode.Initobj, defaultValue.Type);
@@ -1047,20 +1021,20 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified debugger break statement.
+    /// Generates IL for the specified debugger break statement.
     /// </summary>
     /// <param name="debuggerBreakStatement">The debugger break statement.</param>
-    public override void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+    public override void TraverseChildren(IDebuggerBreakStatement debuggerBreakStatement) {
       this.generator.Emit(OperationCode.Break);
     }
 
     /// <summary>
-    /// Visits the specified division.
+    /// Generates IL for the specified division.
     /// </summary>
     /// <param name="division">The division.</param>
-    public override void Visit(IDivision division) {
-      this.Visit(division.LeftOperand);
-      this.Visit(division.RightOperand);
+    public override void TraverseChildren(IDivision division) {
+      this.Traverse(division.LeftOperand);
+      this.Traverse(division.RightOperand);
       if (division.TreatOperandsAsUnsignedIntegers)
         this.generator.Emit(OperationCode.Div_Un);
       else
@@ -1069,10 +1043,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified do until statement.
+    /// Generates IL for the specified do until statement.
     /// </summary>
     /// <param name="doUntilStatement">The do until statement.</param>
-    public override void Visit(IDoUntilStatement doUntilStatement) {
+    public override void TraverseChildren(IDoUntilStatement doUntilStatement) {
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
       this.currentBreakTarget = new ILGeneratorLabel();
@@ -1083,83 +1057,87 @@ namespace Microsoft.Cci {
       }
 
       this.generator.MarkLabel(this.currentContinueTarget);
-      this.Visit(doUntilStatement.Body);
+      this.Traverse(doUntilStatement.Body);
       this.VisitBranchIfFalse(doUntilStatement.Condition, this.currentContinueTarget);
       this.generator.MarkLabel(this.currentBreakTarget);
 
       this.currentBreakTarget = savedCurrentBreakTarget;
       this.currentContinueTarget = savedCurrentContinueTarget;
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
     /// Performs some computation with the given dup value expression.
     /// </summary>
     /// <param name="dupValue"></param>
-    public override void Visit(IDupValue dupValue) {
+    public override void TraverseChildren(IDupValue dupValue) {
       this.generator.Emit(OperationCode.Dup);
       this.StackSize++;
     }
 
     /// <summary>
-    /// Visits the specified empty statement.
+    /// Generates IL for the specified empty statement.
     /// </summary>
     /// <param name="emptyStatement">The empty statement.</param>
-    public override void Visit(IEmptyStatement emptyStatement) {
+    public override void TraverseChildren(IEmptyStatement emptyStatement) {
       if (!this.minizeCodeSize || IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations))
         this.generator.Emit(OperationCode.Nop);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified equality.
+    /// Generates IL for the specified equality.
     /// </summary>
     /// <param name="equality">The equality.</param>
-    public override void Visit(IEquality equality) {
-      this.Visit(equality.LeftOperand);
-      this.Visit(equality.RightOperand);
+    public override void TraverseChildren(IEquality equality) {
+      this.Traverse(equality.LeftOperand);
+      this.Traverse(equality.RightOperand);
       this.generator.Emit(OperationCode.Ceq);
       this.StackSize--;
     }
 
     /// <summary>
-    /// Visits the specified exclusive or.
+    /// Generates IL for the specified exclusive or.
     /// </summary>
     /// <param name="exclusiveOr">The exclusive or.</param>
-    public override void Visit(IExclusiveOr exclusiveOr) {
-      this.Visit(exclusiveOr.LeftOperand);
-      this.Visit(exclusiveOr.RightOperand);
+    public override void TraverseChildren(IExclusiveOr exclusiveOr) {
+      this.Traverse(exclusiveOr.LeftOperand);
+      this.Traverse(exclusiveOr.RightOperand);
       this.generator.Emit(OperationCode.Xor);
       this.StackSize--;
     }
 
     /// <summary>
-    /// Visits the specified expression statement.
+    /// Generates IL for the specified expression statement.
     /// </summary>
     /// <param name="expressionStatement">The expression statement.</param>
-    public override void Visit(IExpressionStatement expressionStatement) {
+    public override void TraverseChildren(IExpressionStatement expressionStatement) {
       IAssignment/*?*/ assigment = expressionStatement.Expression as IAssignment;
       if (assigment != null) {
         this.VisitAssignment(assigment, true);
         return;
       }
-      this.Visit(expressionStatement.Expression);
+      this.Traverse(expressionStatement.Expression);
       if (expressionStatement.Expression.Type.TypeCode != PrimitiveTypeCode.Void) {
         this.generator.Emit(OperationCode.Pop);
         this.StackSize--;
       }
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified for each statement.
+    /// Generates IL for the specified for each statement.
     /// </summary>
     /// <param name="forEachStatement">For each statement.</param>
-    public override void Visit(IForEachStatement forEachStatement) {
+    public override void TraverseChildren(IForEachStatement forEachStatement) {
       var arrayType = forEachStatement.Collection.Type as IArrayTypeReference;
       if (arrayType != null && arrayType.IsVector) {
         this.VisitForeachArrayElement(forEachStatement, arrayType);
         return;
       }
       //TODO: special case for enumerator that is sealed and does not implement IDisposable
-      base.Visit(forEachStatement);
+      base.TraverseChildren(forEachStatement);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
@@ -1183,7 +1161,7 @@ namespace Microsoft.Cci {
       ILGeneratorLabel loopStart = new ILGeneratorLabel();
 
       this.EmitSequencePoint(forEachStatement.Variable.Locations);
-      this.Visit(forEachStatement.Collection);
+      this.Traverse(forEachStatement.Collection);
       this.generator.Emit(OperationCode.Dup);
       var array = new TemporaryVariable(arrayType, this.method);
       this.VisitAssignmentTo(array);
@@ -1201,7 +1179,7 @@ namespace Microsoft.Cci {
       this.LoadLocal(counter);
       this.LoadVectorElement(arrayType.ElementType);
       this.VisitAssignmentTo(forEachStatement.Variable);
-      this.Visit(forEachStatement.Body);
+      this.Traverse(forEachStatement.Body);
       this.generator.MarkLabel(this.currentContinueTarget);
       this.LoadLocal(counter);
       this.generator.Emit(OperationCode.Ldc_I4_1);
@@ -1221,10 +1199,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified for statement.
+    /// Generates IL for the specified for statement.
     /// </summary>
     /// <param name="forStatement">For statement.</param>
-    public override void Visit(IForStatement forStatement) {
+    public override void TraverseChildren(IForStatement forStatement) {
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
       this.currentBreakTarget = new ILGeneratorLabel();
@@ -1236,12 +1214,12 @@ namespace Microsoft.Cci {
       ILGeneratorLabel conditionCheck = new ILGeneratorLabel();
       ILGeneratorLabel loopStart = new ILGeneratorLabel();
 
-      this.Visit(forStatement.InitStatements);
+      this.Traverse(forStatement.InitStatements);
       this.generator.Emit(OperationCode.Br, conditionCheck);
       this.generator.MarkLabel(loopStart);
-      this.Visit(forStatement.Body);
+      this.Traverse(forStatement.Body);
       this.generator.MarkLabel(this.currentContinueTarget);
-      this.Visit(forStatement.IncrementStatements);
+      this.Traverse(forStatement.IncrementStatements);
       this.generator.MarkLabel(conditionCheck);
       this.EmitSequencePoint(forStatement.Condition.Locations);
       this.VisitBranchIfTrue(forStatement.Condition, loopStart);
@@ -1249,31 +1227,32 @@ namespace Microsoft.Cci {
 
       this.currentBreakTarget = savedCurrentBreakTarget;
       this.currentContinueTarget = savedCurrentContinueTarget;
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified get type of typed reference.
+    /// Generates IL for the specified get type of typed reference.
     /// </summary>
     /// <param name="getTypeOfTypedReference">The get type of typed reference.</param>
-    public override void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
-      this.Visit(getTypeOfTypedReference.TypedReference);
+    public override void TraverseChildren(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      this.Traverse(getTypeOfTypedReference.TypedReference);
       this.generator.Emit(OperationCode.Refanytype);
     }
 
     /// <summary>
-    /// Visits the specified get value of typed reference.
+    /// Generates IL for the specified get value of typed reference.
     /// </summary>
     /// <param name="getValueOfTypedReference">The get value of typed reference.</param>
-    public override void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
-      this.Visit(getValueOfTypedReference.TypedReference);
+    public override void TraverseChildren(IGetValueOfTypedReference getValueOfTypedReference) {
+      this.Traverse(getValueOfTypedReference.TypedReference);
       this.generator.Emit(OperationCode.Refanyval, getValueOfTypedReference.TargetType);
     }
 
     /// <summary>
-    /// Visits the specified goto statement.
+    /// Generates IL for the specified goto statement.
     /// </summary>
     /// <param name="gotoStatement">The goto statement.</param>
-    public override void Visit(IGotoStatement gotoStatement) {
+    public override void TraverseChildren(IGotoStatement gotoStatement) {
       ILGeneratorLabel targetLabel;
       if (!this.labelFor.TryGetValue(gotoStatement.TargetStatement.Label.UniqueKey, out targetLabel)) {
         targetLabel = new ILGeneratorLabel();
@@ -1287,20 +1266,21 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified goto switch case statement.
+    /// Generates IL for the specified goto switch case statement.
     /// </summary>
     /// <param name="gotoSwitchCaseStatement">The goto switch case statement.</param>
-    public override void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
-      base.Visit(gotoSwitchCaseStatement);
+    public override void TraverseChildren(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      base.TraverseChildren(gotoSwitchCaseStatement);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified greater than.
+    /// Generates IL for the specified greater than.
     /// </summary>
     /// <param name="greaterThan">The greater than.</param>
-    public override void Visit(IGreaterThan greaterThan) {
-      this.Visit(greaterThan.LeftOperand);
-      this.Visit(greaterThan.RightOperand);
+    public override void TraverseChildren(IGreaterThan greaterThan) {
+      this.Traverse(greaterThan.LeftOperand);
+      this.Traverse(greaterThan.RightOperand);
       if (greaterThan.IsUnsignedOrUnordered)
         this.generator.Emit(OperationCode.Cgt_Un);
       else
@@ -1309,12 +1289,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified greater than or equal.
+    /// Generates IL for the specified greater than or equal.
     /// </summary>
     /// <param name="greaterThanOrEqual">The greater than or equal.</param>
-    public override void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
-      this.Visit(greaterThanOrEqual.LeftOperand);
-      this.Visit(greaterThanOrEqual.RightOperand);
+    public override void TraverseChildren(IGreaterThanOrEqual greaterThanOrEqual) {
+      this.Traverse(greaterThanOrEqual.LeftOperand);
+      this.Traverse(greaterThanOrEqual.RightOperand);
       if (greaterThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Clt_Un);
       else
@@ -1325,37 +1305,37 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified labeled statement.
+    /// Generates IL for the specified labeled statement.
     /// </summary>
     /// <param name="labeledStatement">The labeled statement.</param>
-    public override void Visit(ILabeledStatement labeledStatement) {
+    public override void TraverseChildren(ILabeledStatement labeledStatement) {
       ILGeneratorLabel targetLabel;
       if (!this.labelFor.TryGetValue(labeledStatement.Label.UniqueKey, out targetLabel)) {
         targetLabel = new ILGeneratorLabel();
         this.labelFor.Add(labeledStatement.Label.UniqueKey, targetLabel);
       }
       this.generator.MarkLabel(targetLabel);
-      this.Visit(labeledStatement.Statement);
+      this.Traverse(labeledStatement.Statement);
     }
 
     /// <summary>
-    /// Visits the specified left shift.
+    /// Generates IL for the specified left shift.
     /// </summary>
     /// <param name="leftShift">The left shift.</param>
-    public override void Visit(ILeftShift leftShift) {
-      this.Visit(leftShift.LeftOperand);
-      this.Visit(leftShift.RightOperand);
+    public override void TraverseChildren(ILeftShift leftShift) {
+      this.Traverse(leftShift.LeftOperand);
+      this.Traverse(leftShift.RightOperand);
       this.generator.Emit(OperationCode.Shl);
       this.StackSize--;
     }
 
     /// <summary>
-    /// Visits the specified less than.
+    /// Generates IL for the specified less than.
     /// </summary>
     /// <param name="lessThan">The less than.</param>
-    public override void Visit(ILessThan lessThan) {
-      this.Visit(lessThan.LeftOperand);
-      this.Visit(lessThan.RightOperand);
+    public override void TraverseChildren(ILessThan lessThan) {
+      this.Traverse(lessThan.LeftOperand);
+      this.Traverse(lessThan.RightOperand);
       if (lessThan.IsUnsignedOrUnordered)
         this.generator.Emit(OperationCode.Clt_Un);
       else
@@ -1364,12 +1344,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified less than or equal.
+    /// Generates IL for the specified less than or equal.
     /// </summary>
     /// <param name="lessThanOrEqual">The less than or equal.</param>
-    public override void Visit(ILessThanOrEqual lessThanOrEqual) {
-      this.Visit(lessThanOrEqual.LeftOperand);
-      this.Visit(lessThanOrEqual.RightOperand);
+    public override void TraverseChildren(ILessThanOrEqual lessThanOrEqual) {
+      this.Traverse(lessThanOrEqual.LeftOperand);
+      this.Traverse(lessThanOrEqual.RightOperand);
       if (lessThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Cgt_Un);
       else
@@ -1380,10 +1360,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified local declaration statement.
+    /// Generates IL for the specified local declaration statement.
     /// </summary>
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
-    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+    public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       if (localDeclarationStatement.LocalVariable.IsConstant) {
         this.generator.AddConstantToCurrentScope(localDeclarationStatement.LocalVariable);
         this.generator.Emit(OperationCode.Nop); //Make sure the constant always has a scope
@@ -1391,28 +1371,30 @@ namespace Microsoft.Cci {
         this.GetLocalIndex(localDeclarationStatement.LocalVariable);
         this.generator.AddVariableToCurrentScope(localDeclarationStatement.LocalVariable);
         if (localDeclarationStatement.InitialValue != null) {
-          this.Visit(localDeclarationStatement.InitialValue);
+          this.Traverse(localDeclarationStatement.InitialValue);
           this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
         }
       }
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified lock statement.
+    /// Generates IL for the specified lock statement.
     /// </summary>
     /// <param name="lockStatement">The lock statement.</param>
-    public override void Visit(ILockStatement lockStatement) {
-      base.Visit(lockStatement);
+    public override void TraverseChildren(ILockStatement lockStatement) {
+      base.TraverseChildren(lockStatement);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified logical not.
+    /// Generates IL for the specified logical not.
     /// </summary>
     /// <param name="logicalNot">The logical not.</param>
-    public override void Visit(ILogicalNot logicalNot) {
+    public override void TraverseChildren(ILogicalNot logicalNot) {
       if (logicalNot.Operand.Type.IsValueType) {
         //The type should be a primitive integer, a boolean or an enum.
-        this.Visit(logicalNot.Operand);
+        this.Traverse(logicalNot.Operand);
         var opsize = TypeHelper.SizeOfType(logicalNot.Operand.Type);
         if (opsize == 1 || opsize == 2 || opsize == 4) {
           this.generator.Emit(OperationCode.Ldc_I4_0);
@@ -1439,7 +1421,7 @@ namespace Microsoft.Cci {
         }
       } else {
         //pointer non null test
-        this.Visit(logicalNot.Operand);
+        this.Traverse(logicalNot.Operand);
         this.generator.Emit(OperationCode.Ldnull);
         this.StackSize++;
         this.generator.Emit(OperationCode.Ceq);
@@ -1448,10 +1430,10 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified make typed reference.
+    /// Generates IL for the specified make typed reference.
     /// </summary>
     /// <param name="makeTypedReference">The make typed reference.</param>
-    public override void Visit(IMakeTypedReference makeTypedReference) {
+    public override void TraverseChildren(IMakeTypedReference makeTypedReference) {
       this.LoadAddressOf(makeTypedReference.Operand, null);
       var type = makeTypedReference.Operand.Type;
       var mptr = type as IManagedPointerTypeReference;
@@ -1466,14 +1448,14 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified method call.
+    /// Generates IL for the specified method call.
     /// </summary>
     /// <param name="methodCall">The method call.</param>
-    public override void Visit(IMethodCall methodCall) {
+    public override void TraverseChildren(IMethodCall methodCall) {
       if (methodCall.MethodToCall == Dummy.MethodReference) return;
       if (!methodCall.IsStaticCall)
-        this.Visit(methodCall.ThisArgument);
-      this.Visit(methodCall.Arguments);
+        this.Traverse(methodCall.ThisArgument);
+      this.Traverse(methodCall.Arguments);
       OperationCode call = OperationCode.Call;
       if (methodCall.IsVirtualCall) {
         call = OperationCode.Callvirt;
@@ -1491,12 +1473,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified modulus.
+    /// Generates IL for the specified modulus.
     /// </summary>
     /// <param name="modulus">The modulus.</param>
-    public override void Visit(IModulus modulus) {
-      this.Visit(modulus.LeftOperand);
-      this.Visit(modulus.RightOperand);
+    public override void TraverseChildren(IModulus modulus) {
+      this.Traverse(modulus.LeftOperand);
+      this.Traverse(modulus.RightOperand);
       if (modulus.TreatOperandsAsUnsignedIntegers)
         this.generator.Emit(OperationCode.Rem_Un);
       else
@@ -1505,12 +1487,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified multiplication.
+    /// Generates IL for the specified multiplication.
     /// </summary>
     /// <param name="multiplication">The multiplication.</param>
-    public override void Visit(IMultiplication multiplication) {
-      this.Visit(multiplication.LeftOperand);
-      this.Visit(multiplication.RightOperand);
+    public override void TraverseChildren(IMultiplication multiplication) {
+      this.Traverse(multiplication.LeftOperand);
+      this.Traverse(multiplication.RightOperand);
       OperationCode operationCode = OperationCode.Mul;
       if (multiplication.CheckOverflow) {
         if (multiplication.TreatOperandsAsUnsignedIntegers)
@@ -1523,12 +1505,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified not equality.
+    /// Generates IL for the specified not equality.
     /// </summary>
     /// <param name="notEquality">The not equality.</param>
-    public override void Visit(INotEquality notEquality) {
-      this.Visit(notEquality.LeftOperand);
-      this.Visit(notEquality.RightOperand);
+    public override void TraverseChildren(INotEquality notEquality) {
+      this.Traverse(notEquality.LeftOperand);
+      this.Traverse(notEquality.RightOperand);
       var compileTimeConstant = notEquality.LeftOperand as ICompileTimeConstant;
       if (compileTimeConstant != null) {
         if (compileTimeConstant.Value == null) {
@@ -1555,35 +1537,35 @@ namespace Microsoft.Cci {
     /// Throws an exception when executed: IOldValue nodes
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    public override void Visit(IOldValue oldValue) {
+    public override void TraverseChildren(IOldValue oldValue) {
       throw new InvalidOperationException("IOldValue nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
 
     /// <summary>
-    /// Visits the specified ones complement.
+    /// Generates IL for the specified ones complement.
     /// </summary>
     /// <param name="onesComplement">The ones complement.</param>
-    public override void Visit(IOnesComplement onesComplement) {
-      this.Visit(onesComplement.Operand);
+    public override void TraverseChildren(IOnesComplement onesComplement) {
+      this.Traverse(onesComplement.Operand);
       this.generator.Emit(OperationCode.Not);
     }
 
     /// <summary>
-    /// Visits the specified out argument.
+    /// Generates IL for the specified out argument.
     /// </summary>
     /// <param name="outArgument">The out argument.</param>
-    public override void Visit(IOutArgument outArgument) {
+    public override void TraverseChildren(IOutArgument outArgument) {
       this.LoadAddressOf(outArgument.Expression, null);
     }
 
     /// <summary>
-    /// Visits the specified pointer call.
+    /// Generates IL for the specified pointer call.
     /// </summary>
     /// <param name="pointerCall">The pointer call.</param>
-    public override void Visit(IPointerCall pointerCall) {
-      this.Visit(pointerCall.Arguments);
-      this.Visit(pointerCall.Pointer);
+    public override void TraverseChildren(IPointerCall pointerCall) {
+      this.Traverse(pointerCall.Arguments);
+      this.Traverse(pointerCall.Pointer);
       this.generator.Emit(OperationCode.Calli, pointerCall.Pointer.Type);
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(pointerCall.Arguments);
       if (pointerCall.Type.TypeCode == PrimitiveTypeCode.Void)
@@ -1594,7 +1576,7 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given pop value expression.
     /// </summary>
     /// <param name="popValue"></param>
-    public override void Visit(IPopValue popValue) {
+    public override void TraverseChildren(IPopValue popValue) {
       //Do nothing. The containing expression or statement will consume the value.
     }
 
@@ -1602,42 +1584,44 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given push statement.
     /// </summary>
     /// <param name="pushStatement"></param>
-    public override void Visit(IPushStatement pushStatement) {
-      this.Visit(pushStatement.ValueToPush);
+    public override void TraverseChildren(IPushStatement pushStatement) {
+      this.Traverse(pushStatement.ValueToPush);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified ref argument.
+    /// Generates IL for the specified ref argument.
     /// </summary>
     /// <param name="refArgument">The ref argument.</param>
-    public override void Visit(IRefArgument refArgument) {
+    public override void TraverseChildren(IRefArgument refArgument) {
       this.LoadAddressOf(refArgument.Expression, null);
     }
 
     /// <summary>
-    /// Visits the specified resource use statement.
+    /// Generates IL for the specified resource use statement.
     /// </summary>
     /// <param name="resourceUseStatement">The resource use statement.</param>
-    public override void Visit(IResourceUseStatement resourceUseStatement) {
-      base.Visit(resourceUseStatement);
+    public override void TraverseChildren(IResourceUseStatement resourceUseStatement) {
+      base.TraverseChildren(resourceUseStatement);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified rethrow statement.
+    /// Generates IL for the specified rethrow statement.
     /// </summary>
     /// <param name="rethrowStatement">The rethrow statement.</param>
-    public override void Visit(IRethrowStatement rethrowStatement) {
+    public override void TraverseChildren(IRethrowStatement rethrowStatement) {
       this.generator.Emit(OperationCode.Rethrow);
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
     /// <summary>
-    /// Visits the specified return statement.
+    /// Generates IL for the specified return statement.
     /// </summary>
     /// <param name="returnStatement">The return statement.</param>
-    public override void Visit(IReturnStatement returnStatement) {
+    public override void TraverseChildren(IReturnStatement returnStatement) {
       if (returnStatement.Expression != null) {
-        this.Visit(returnStatement.Expression);
+        this.Traverse(returnStatement.Expression);
         if (!this.minizeCodeSize || this.currentTryCatch != null) {
           if (this.returnLocal == null)
             this.returnLocal = new TemporaryVariable(this.method.Type, this.method);
@@ -1658,17 +1642,17 @@ namespace Microsoft.Cci {
     /// Throws an exception when executed: IReturnValue nodes
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
-    public override void Visit(IReturnValue returnValue) {
+    public override void TraverseChildren(IReturnValue returnValue) {
       throw new InvalidOperationException("IReturnValue nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
-    /// Visits the specified right shift.
+    /// Generates IL for the specified right shift.
     /// </summary>
     /// <param name="rightShift">The right shift.</param>
-    public override void Visit(IRightShift rightShift) {
-      this.Visit(rightShift.LeftOperand);
-      this.Visit(rightShift.RightOperand);
+    public override void TraverseChildren(IRightShift rightShift) {
+      this.Traverse(rightShift.LeftOperand);
+      this.Traverse(rightShift.RightOperand);
       if (TypeHelper.IsUnsignedPrimitiveInteger(rightShift.LeftOperand.Type))
         this.generator.Emit(OperationCode.Shr_Un);
       else
@@ -1677,37 +1661,37 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified runtime argument handle expression.
+    /// Generates IL for the specified runtime argument handle expression.
     /// </summary>
     /// <param name="runtimeArgumentHandleExpression">The runtime argument handle expression.</param>
-    public override void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+    public override void TraverseChildren(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
       this.generator.Emit(OperationCode.Arglist);
       this.StackSize++;
     }
 
     /// <summary>
-    /// Visits the specified size of.
+    /// Generates IL for the specified size of.
     /// </summary>
     /// <param name="sizeOf">The size of.</param>
-    public override void Visit(ISizeOf sizeOf) {
+    public override void TraverseChildren(ISizeOf sizeOf) {
       this.generator.Emit(OperationCode.Sizeof, sizeOf.TypeToSize);
       this.StackSize++;
     }
 
     /// <summary>
-    /// Visits the specified method body.
+    /// Generates IL for the specified method body.
     /// </summary>
     /// <param name="methodBody">The method body.</param>
-    public override void Visit(ISourceMethodBody methodBody) {
-      base.Visit(methodBody);
+    public override void TraverseChildren(ISourceMethodBody methodBody) {
+      base.TraverseChildren(methodBody);
     }
 
     /// <summary>
-    /// Visits the specified stack array create.
+    /// Generates IL for the specified stack array create.
     /// </summary>
     /// <param name="stackArrayCreate">The stack array create.</param>
-    public override void Visit(IStackArrayCreate stackArrayCreate) {
-      this.Visit(stackArrayCreate.Size);
+    public override void TraverseChildren(IStackArrayCreate stackArrayCreate) {
+      this.Traverse(stackArrayCreate.Size);
       this.generator.Emit(OperationCode.Localloc);
     }
 
@@ -1715,20 +1699,19 @@ namespace Microsoft.Cci {
     /// Traverses the given statement.
     /// </summary>
     /// <param name="statement"></param>
-    public override void Visit(IStatement statement) {
-      this.lastStatementWasUnconditionalTransfer = false;
+    public override void TraverseChildren(IStatement statement) {
       if (!(statement is IBlockStatement))
         this.EmitSequencePoint(statement.Locations);
-      base.Visit(statement);
+      base.TraverseChildren(statement);
     }
 
     /// <summary>
-    /// Visits the specified subtraction.
+    /// Generates IL for the specified subtraction.
     /// </summary>
     /// <param name="subtraction">The subtraction.</param>
-    public override void Visit(ISubtraction subtraction) {
-      this.Visit(subtraction.LeftOperand);
-      this.Visit(subtraction.RightOperand);
+    public override void TraverseChildren(ISubtraction subtraction) {
+      this.Traverse(subtraction.LeftOperand);
+      this.Traverse(subtraction.RightOperand);
       OperationCode operationCode = OperationCode.Sub;
       if (subtraction.CheckOverflow) {
         if (subtraction.TreatOperandsAsUnsignedIntegers)
@@ -1741,19 +1724,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified switch case.
+    /// Generates IL for the specified switch case.
     /// </summary>
     /// <param name="switchCase">The switch case.</param>
-    public override void Visit(ISwitchCase switchCase) {
-      this.Visit(switchCase.Body);
+    public override void TraverseChildren(ISwitchCase switchCase) {
+      this.Traverse(switchCase.Body);
     }
 
     /// <summary>
-    /// Visits the specified switch statement.
+    /// Generates IL for the specified switch statement.
     /// </summary>
     /// <param name="switchStatement">The switch statement.</param>
-    public override void Visit(ISwitchStatement switchStatement) {
-      this.Visit(switchStatement.Expression);
+    public override void TraverseChildren(ISwitchStatement switchStatement) {
+      this.Traverse(switchStatement.Expression);
       uint numberOfCases;
       uint maxValue = GetMaxCaseExpressionValueAsUInt(switchStatement.Cases, out numberOfCases);
       if (numberOfCases == 0) { this.generator.Emit(OperationCode.Pop); return; }
@@ -1764,6 +1747,7 @@ namespace Microsoft.Cci {
       //this.VisitAssignmentTo(switchVar);
       //List<ISwitchCase> switchCases = this.GetSortedListOfSwitchCases(switchStatement.Cases);
       //TODO: special handling for switch over strings
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     private void GenerateSwitchInstruction(IEnumerable<ISwitchCase> switchCases, uint maxValue) {
@@ -1796,7 +1780,7 @@ namespace Microsoft.Cci {
         this.currentBreakTarget = new ILGeneratorLabel();
       foreach (ISwitchCase switchCase in switchCases) {
         this.generator.MarkLabel(labelFor[switchCase]);
-        this.Visit(switchCase);
+        this.Traverse(switchCase);
       }
       this.generator.MarkLabel(this.currentBreakTarget);
       this.currentBreakTarget = savedCurrentBreakTarget;
@@ -1881,65 +1865,66 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given target expression.
     /// </summary>
     /// <param name="targetExpression"></param>
-    public override void Visit(ITargetExpression targetExpression) {
+    public override void TraverseChildren(ITargetExpression targetExpression) {
       Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
     }
 
     /// <summary>
-    /// Visits the specified this reference.
+    /// Generates IL for the specified this reference.
     /// </summary>
     /// <param name="thisReference">The this reference.</param>
-    public override void Visit(IThisReference thisReference) {
+    public override void TraverseChildren(IThisReference thisReference) {
       this.generator.Emit(OperationCode.Ldarg_0);
       this.StackSize++;
     }
 
     /// <summary>
-    /// Visits the specified throw statement.
+    /// Generates IL for the specified throw statement.
     /// </summary>
     /// <param name="throwStatement">The throw statement.</param>
-    public override void Visit(IThrowStatement throwStatement) {
-      this.Visit(throwStatement.Exception);
+    public override void TraverseChildren(IThrowStatement throwStatement) {
+      this.Traverse(throwStatement.Exception);
       this.generator.Emit(OperationCode.Throw);
       this.StackSize = 0;
       this.lastStatementWasUnconditionalTransfer = true;
     }
 
     /// <summary>
-    /// Visits the specified try catch filter finally statement.
+    /// Generates IL for the specified try catch filter finally statement.
     /// </summary>
     /// <param name="tryCatchFilterFinallyStatement">The try catch filter finally statement.</param>
-    public override void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+    public override void TraverseChildren(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
       ITryCatchFinallyStatement/*?*/ savedCurrentTryCatch = this.currentTryCatch;
       this.currentTryCatch = tryCatchFilterFinallyStatement;
       ILGeneratorLabel/*?*/ savedCurrentTryCatchFinallyEnd = this.currentTryCatchFinallyEnd;
       this.currentTryCatchFinallyEnd = new ILGeneratorLabel();
       this.generator.BeginTryBody();
-      this.Visit(tryCatchFilterFinallyStatement.TryBody);
+      this.Traverse(tryCatchFilterFinallyStatement.TryBody);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
-      this.Visit(tryCatchFilterFinallyStatement.CatchClauses);
+      this.Traverse(tryCatchFilterFinallyStatement.CatchClauses);
       if (tryCatchFilterFinallyStatement.FinallyBody != null) {
         this.generator.BeginFinallyBlock();
-        this.Visit(tryCatchFilterFinallyStatement.FinallyBody);
+        this.Traverse(tryCatchFilterFinallyStatement.FinallyBody);
         this.generator.Emit(OperationCode.Endfinally);
       }
       if (tryCatchFilterFinallyStatement.FaultBody != null) {
         this.generator.BeginFaultBlock();
-        this.Visit(tryCatchFilterFinallyStatement.FaultBody);
+        this.Traverse(tryCatchFilterFinallyStatement.FaultBody);
         this.generator.Emit(OperationCode.Endfinally);
       }
       this.generator.EndTryBody();
       this.generator.MarkLabel(this.currentTryCatchFinallyEnd);
       this.currentTryCatchFinallyEnd = savedCurrentTryCatchFinallyEnd;
       this.currentTryCatch = savedCurrentTryCatch;
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified token of.
+    /// Generates IL for the specified token of.
     /// </summary>
     /// <param name="tokenOf">The token of.</param>
-    public override void Visit(ITokenOf tokenOf) {
+    public override void TraverseChildren(ITokenOf tokenOf) {
       IFieldReference/*?*/ fieldReference = tokenOf.Definition as IFieldReference;
       if (fieldReference != null)
         this.generator.Emit(OperationCode.Ldtoken, fieldReference);
@@ -1954,54 +1939,54 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Visits the specified type of.
+    /// Generates IL for the specified type of.
     /// </summary>
     /// <param name="typeOf">The type of.</param>
-    public override void Visit(ITypeOf typeOf) {
+    public override void TraverseChildren(ITypeOf typeOf) {
       this.generator.Emit(OperationCode.Ldtoken, typeOf.TypeToGet);
       this.generator.Emit(OperationCode.Call, this.GetTypeFromHandle);
       this.StackSize++;
     }
 
     /// <summary>
-    /// Visits the specified unary negation.
+    /// Generates IL for the specified unary negation.
     /// </summary>
     /// <param name="unaryNegation">The unary negation.</param>
-    public override void Visit(IUnaryNegation unaryNegation) {
+    public override void TraverseChildren(IUnaryNegation unaryNegation) {
       if (unaryNegation.CheckOverflow && TypeHelper.IsSignedPrimitiveInteger(unaryNegation.Type)) {
         this.generator.Emit(OperationCode.Ldc_I4_0);
         this.StackSize++;
-        this.Visit(unaryNegation.Operand);
+        this.Traverse(unaryNegation.Operand);
         this.generator.Emit(OperationCode.Sub_Ovf);
         this.StackSize--;
         return;
       }
-      this.Visit(unaryNegation.Operand);
+      this.Traverse(unaryNegation.Operand);
       this.generator.Emit(OperationCode.Neg);
     }
 
     /// <summary>
-    /// Visits the specified unary plus.
+    /// Generates IL for the specified unary plus.
     /// </summary>
     /// <param name="unaryPlus">The unary plus.</param>
-    public override void Visit(IUnaryPlus unaryPlus) {
-      this.Visit(unaryPlus.Operand);
+    public override void TraverseChildren(IUnaryPlus unaryPlus) {
+      this.Traverse(unaryPlus.Operand);
     }
 
     /// <summary>
-    /// Visits the specified vector length.
+    /// Generates IL for the specified vector length.
     /// </summary>
     /// <param name="vectorLength">Length of the vector.</param>
-    public override void Visit(IVectorLength vectorLength) {
-      this.Visit(vectorLength.Vector);
+    public override void TraverseChildren(IVectorLength vectorLength) {
+      this.Traverse(vectorLength.Vector);
       this.generator.Emit(OperationCode.Ldlen);
     }
 
     /// <summary>
-    /// Visits the specified while do statement.
+    /// Generates IL for the specified while do statement.
     /// </summary>
     /// <param name="whileDoStatement">The while do statement.</param>
-    public override void Visit(IWhileDoStatement whileDoStatement) {
+    public override void TraverseChildren(IWhileDoStatement whileDoStatement) {
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
       this.currentBreakTarget = new ILGeneratorLabel();
@@ -2014,29 +1999,32 @@ namespace Microsoft.Cci {
 
       this.generator.Emit(OperationCode.Br, this.currentContinueTarget);
       this.generator.MarkLabel(loopStart);
-      this.Visit(whileDoStatement.Body);
+      this.Traverse(whileDoStatement.Body);
       this.generator.MarkLabel(this.currentContinueTarget);
       this.VisitBranchIfTrue(whileDoStatement.Condition, loopStart);
       this.generator.MarkLabel(this.currentBreakTarget);
 
       this.currentBreakTarget = savedCurrentBreakTarget;
       this.currentContinueTarget = savedCurrentContinueTarget;
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     /// <summary>
-    /// Visits the specified yield break statement.
+    /// Generates IL for the specified yield break statement.
     /// </summary>
     /// <param name="yieldBreakStatement">The yield break statement.</param>
-    public override void Visit(IYieldBreakStatement yieldBreakStatement) {
-      base.Visit(yieldBreakStatement);
+    public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
+      base.TraverseChildren(yieldBreakStatement);
+      this.lastStatementWasUnconditionalTransfer = true;
     }
 
     /// <summary>
-    /// Visits the specified yield return statement.
+    /// Generates IL for the specified yield return statement.
     /// </summary>
     /// <param name="yieldReturnStatement">The yield return statement.</param>
-    public override void Visit(IYieldReturnStatement yieldReturnStatement) {
-      base.Visit(yieldReturnStatement);
+    public override void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
+      base.TraverseChildren(yieldReturnStatement);
+      this.lastStatementWasUnconditionalTransfer = false;
     }
 
     private void VisitCheckedConversion(ITypeReference sourceType, ITypeReference targetType) {
@@ -3779,11 +3767,11 @@ namespace Microsoft.Cci {
         }
       }
       if (branchOp == OperationCode.Brfalse || branchOp == OperationCode.Brtrue) {
-        this.Visit(expression);
+        this.Traverse(expression);
         this.StackSize--;
       } else {
-        this.Visit(binaryOperation.LeftOperand);
-        this.Visit(binaryOperation.RightOperand);
+        this.Traverse(binaryOperation.LeftOperand);
+        this.Traverse(binaryOperation.RightOperand);
         this.StackSize-=2;
       }
       this.generator.Emit(branchOp, targetLabel);
@@ -3869,11 +3857,11 @@ namespace Microsoft.Cci {
         }
       }
       if (branchOp == OperationCode.Brfalse || branchOp == OperationCode.Brtrue) {
-        this.Visit(expression);
+        this.Traverse(expression);
         this.StackSize--;
       } else {
-        this.Visit(binaryOperation.LeftOperand);
-        this.Visit(binaryOperation.RightOperand);
+        this.Traverse(binaryOperation.LeftOperand);
+        this.Traverse(binaryOperation.RightOperand);
         this.StackSize-=2;
       }
       this.generator.Emit(branchOp, targetLabel);
@@ -4060,9 +4048,9 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="body">A block of statements that are to be converted to IL.</param>
     public virtual void ConvertToIL(IBlockStatement body) {
-      ITypeReference returnType = method.Type;
-      new LabelAndTryBlockAssociater(this.mostNestedTryCatchFor).Visit(body);
-      this.Visit(body);
+      ITypeReference returnType = this.method.Type;
+      new LabelAndTryBlockAssociater(this.mostNestedTryCatchFor).Traverse(body);
+      this.Traverse(body);
       this.generator.MarkLabel(this.endOfMethod);
       if (this.returnLocal != null) {
         this.LoadLocal(this.returnLocal);
@@ -4073,7 +4061,7 @@ namespace Microsoft.Cci {
     }
   }
 
-  internal class LabelAndTryBlockAssociater : BaseCodeTraverser {
+  internal class LabelAndTryBlockAssociater : CodeTraverser {
 
     Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor;
 
@@ -4083,16 +4071,16 @@ namespace Microsoft.Cci {
       this.mostNestedTryCatchFor = mostNestedTryCatchFor;
     }
 
-    public override void Visit(ILabeledStatement labeledStatement) {
+    public override void TraverseChildren(ILabeledStatement labeledStatement) {
       if (this.currentTryCatch != null)
         this.mostNestedTryCatchFor.Add(labeledStatement, this.currentTryCatch);
-      base.Visit(labeledStatement);
+      base.TraverseChildren(labeledStatement);
     }
 
-    public override void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+    public override void TraverseChildren(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
       ITryCatchFinallyStatement/*?*/ savedCurrentTryCatch = this.currentTryCatch;
       this.currentTryCatch = tryCatchFilterFinallyStatement;
-      base.Visit(tryCatchFilterFinallyStatement);
+      base.TraverseChildren(tryCatchFilterFinallyStatement);
       this.currentTryCatch = savedCurrentTryCatch;
     }
 

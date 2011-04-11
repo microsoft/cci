@@ -14,8 +14,8 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IMethodDefinition methodDefinition) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(IMethodDefinition methodDefinition) {
       if (!this.printCompilerGeneratedMembers) {
         if (methodDefinition.IsConstructor && methodDefinition.ParameterCount == 0 && 
         AttributeHelper.Contains(methodDefinition.Attributes, methodDefinition.Type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
@@ -61,11 +61,11 @@ namespace CSharpSourceEmitter {
         PrintMethodDefinitionReturnType(methodDefinition);
 
       if (methodDefinition.IsGeneric) {
-        Visit(methodDefinition.GenericParameters);
+        Traverse(methodDefinition.GenericParameters);
       }
-      Visit(methodDefinition.Parameters);
+      Traverse(methodDefinition.Parameters);
       if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal)
-        Visit(methodDefinition.Body);
+        Traverse(methodDefinition.Body);
       else
         PrintToken(CSharpToken.Semicolon);
     }
@@ -229,10 +229,12 @@ namespace CSharpSourceEmitter {
         sourceEmitterOutput.Write(signature);
     }
 
-    public override void Visit(IMethodBody methodBody) {
+    public override void Traverse(IMethodBody methodBody) {
       PrintToken(CSharpToken.LeftCurly);
 
-      base.Visit(methodBody);
+      var sourceBody = methodBody as ISourceMethodBody;
+      if (sourceBody != null)
+        base.Traverse(sourceBody);
 
       PrintToken(CSharpToken.RightCurly);
     }

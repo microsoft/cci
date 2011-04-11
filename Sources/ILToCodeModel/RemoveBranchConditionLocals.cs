@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
-  internal class RemoveBranchConditionLocals : BaseCodeTraverser {
+  internal class RemoveBranchConditionLocals : CodeTraverser {
 
     private SourceMethodBody sourceMethodBody;
     private Dictionary<ILocalDefinition, bool> branchConditionLocals = new Dictionary<ILocalDefinition, bool>();
@@ -44,13 +44,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         || opCode == OperationCode.Stloc_2 || opCode == OperationCode.Stloc_3 || opCode == OperationCode.Stloc_S;
     }
 
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       BasicBlock bb = block as BasicBlock;
       if (bb != null) {
         FindPattern(bb.Statements);
         if (bb.Statements.Count > 0) {
           BasicBlock nbb = bb.Statements[bb.Statements.Count-1] as BasicBlock;
-          if (nbb != null) this.Visit(nbb);
+          if (nbb != null) this.Traverse(nbb);
         }
       }
     }

@@ -1718,7 +1718,7 @@ namespace Microsoft.Cci.Ast {
       bool result = false;
       // Check extension method validity
       if (this.IsExtensionMethod) {
-        TypeDefinition surroundingType = this.ContainingTypeDeclaration.TypeDefinition;
+        NamedTypeDefinition surroundingType = this.ContainingTypeDeclaration.TypeDefinition;
         // Extension methods can only be declared on types that are:
         //   classes, declared static, non-nested, not generic.
         Error error = Error.NotAnError;

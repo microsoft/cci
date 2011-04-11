@@ -11,10 +11,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Cci.Contracts;
-using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.ILToCodeModel;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.MutableCodeModel.Contracts;
 using Microsoft.Cci.MutableContracts;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.Contracts {
 
@@ -122,7 +123,7 @@ namespace Microsoft.Cci.Contracts {
         return null;
       }
       var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
-      cccc.Visit(contract);
+      cccc.Traverse(contract);
       contract = ContractHelper.CopyContract(this.host, contract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
       if (specializedProxyMethod != null || proxyMethod.IsGeneric || proxyMethod.ContainingTypeDefinition.IsGeneric) {
         SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedProxyMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
@@ -195,7 +196,7 @@ namespace Microsoft.Cci.Contracts {
 
     #endregion
 
-    private class ConvertContractClassContract : BaseCodeAndContractTraverser {
+    private class ConvertContractClassContract : CodeAndContractTraverser {
 
       private ITypeDefinition contractClass;
       private ITypeDefinition abstractType;
@@ -207,71 +208,25 @@ namespace Microsoft.Cci.Contracts {
       public ConvertContractClassContract(IMetadataHost host, ITypeDefinition contractClass, ITypeDefinition abstractType)
         : base(null)
       {
-        //^ Contract.Requires(contractClass.IsGeneric == abstractType.IsGeneric);
+        Contract.Requires(contractClass.IsGeneric == abstractType.IsGeneric);
         this.contractClass = contractClass;
         this.contractClassInternedKey = this.contractClass.InternedKey;
         this.abstractType = abstractType;
         this.host = host;
       }
 
-      public override void Visit(IMethodCall methodCall) {
+      public override void TraverseChildren(IMethodCall methodCall) {
         var mtc = methodCall.MethodToCall;
-        var smr = mtc as ISpecializedMethodReference;
-        IMethodReference possiblyUnspecializedMethodReference = smr == null ? mtc : smr.UnspecializedVersion;
-        var k = possiblyUnspecializedMethodReference.ContainingType.InternedKey;
-        if (k == this.contractClassInternedKey) {
-          IMethodReference abstractMember;
-          if (this.correspondingAbstractMember.TryGetValue(possiblyUnspecializedMethodReference.InternedKey, out abstractMember)) {
-          } else {
-            abstractMember = this.FindCorrespondingMember(possiblyUnspecializedMethodReference);
-            if (smr != null && abstractMember.ContainingType == this.abstractType) {
-              ITypeReference specializedType;
-
-              var b = TypeHelper.TryGetFullyInstantiatedSpecializedTypeReference(this.abstractType, out specializedType);
-
-              abstractMember = new SpecializedMethodReference() {
-                CallingConvention = abstractMember.CallingConvention,
-                ContainingType = specializedType,
-                InternFactory = this.host.InternFactory,
-                Name = abstractMember.Name,
-                Parameters = new List<IParameterTypeInformation>(abstractMember.Parameters), // REVIEW: Should these be copies that point to the smr?
-                Type = abstractMember.Type,
-                UnspecializedVersion = abstractMember,
-              };
-            }
-            this.correspondingAbstractMember.Add(possiblyUnspecializedMethodReference.InternedKey, abstractMember);
-          }
+        var ct = ContractHelper.UninstantiateAndUnspecialize(mtc).ContainingType;
+        if (ct.InternedKey != this.contractClass.InternedKey) return;
+        foreach (IMethodDefinition ifaceMethod in ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(mtc.ResolvedMethod)) {
           var mutableMethodCall = (MethodCall)methodCall;
-          mutableMethodCall.MethodToCall = abstractMember;
+          mutableMethodCall.MethodToCall = ifaceMethod;
           mutableMethodCall.IsVirtualCall = true;
+          base.TraverseChildren(methodCall);
+          return;
         }
-        base.Visit(methodCall);
-      }
-
-      private IMethodReference/*?*/ FindCorrespondingMember(IMethodReference methodReference) {
-        return ConvertContractClassContract.FindCorrespondingMember(methodReference, this.abstractType);
-      }
-      private static IMethodReference/*?*/ FindCorrespondingMember(IMethodReference methodReference, ITypeDefinition typeDefinition) {
-        var matchingMembers = typeDefinition.GetMatchingMembersNamed(methodReference.Name, false,
-          tdm => {
-            var mr = tdm as IMethodReference;
-            return mr != null && MemberHelper.SignaturesAreEqual(methodReference, mr);
-          });
-        var c = IteratorHelper.EnumerableCount(matchingMembers);
-        if (c == 0){
-          if (typeDefinition.IsInterface){
-            foreach(var baseInterface in typeDefinition.Interfaces){
-              var mr = FindCorrespondingMember(methodReference, baseInterface.ResolvedType);
-              if (mr != null) return mr;
-            }
-          }
-        }
-        if (c != 1) {
-          // TODO: thread error handler in and report error?
-          return null;
-        } else {
-          return IteratorHelper.First(matchingMembers) as IMethodReference;
-        }
+        return;
       }
 
     }
@@ -412,7 +367,9 @@ namespace Microsoft.Cci.Contracts {
         var tc = GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
         if (tc != null) {
           var derivedPreconditions = new List<IPrecondition>();
+          var locations = new List<ILocation>();
           foreach (var i in tc.Invariants) {
+            locations.AddRange(i.Locations);
             derivedPreconditions.Add(
               new Precondition() {
                 Condition = i.Condition,
@@ -423,9 +380,12 @@ namespace Microsoft.Cci.Contracts {
           }
           if (0 < derivedPreconditions.Count) {
             var derivedMethodContract = new MethodContract(){
-               Preconditions = derivedPreconditions,
+              Locations = locations,
+              Preconditions = derivedPreconditions,
             };
-            ContractHelper.AddMethodContract(derivedMethodContract, methodContract);
+            if (methodContract != null) {
+              ContractHelper.AddMethodContract(derivedMethodContract, methodContract);
+            }
             methodContract = derivedMethodContract;
           }
         }
@@ -687,7 +647,7 @@ namespace Microsoft.Cci.Contracts {
             if (methodReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
 
             MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-            var oobMethod = primaryToOobMapper.Visit(MetadataCopier.DeepCopy(this.host, methodReference));
+            var oobMethod = primaryToOobMapper.Visit(new MetadataDeepCopier(this.host).Copy(methodReference));
 
             if (oobMethod == null) continue;
 
@@ -751,10 +711,10 @@ namespace Microsoft.Cci.Contracts {
           var oobUnit = oobProvider.Unit;
 
           ITypeReference typeReference = type as ITypeReference;
-          if (typeReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
+          if (typeReference == null || typeReference is Dummy) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
 
           MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-          var oobType = primaryToOobMapper.Visit(MetadataCopier.DeepCopy(this.host, typeReference));
+          var oobType = primaryToOobMapper.Visit(new MetadataDeepCopier(this.host).Copy(typeReference));
 
           if (oobType == null) continue;
 

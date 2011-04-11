@@ -213,6 +213,11 @@ namespace CodeModelTestInput {
       x = y = null;
     }
 
+    void Method24() {
+      var a = "abc";
+      var b = a.Substring(1);
+    }
+
   }
 
   public class Class2 {

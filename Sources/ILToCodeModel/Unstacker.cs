@@ -233,7 +233,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.block.LocalVariables == null) this.block.LocalVariables = new List<ILocalDefinition>();
         this.block.LocalVariables.Add(temp);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() {
+        return new ExpressionStatement() { 
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -270,9 +270,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         IStatement newStatement;
-
+        
         newStatement = this.Visit(statement);
-
+        
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else

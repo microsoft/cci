@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal abstract class ControlFlowDecompiler : BaseCodeTraverser {
+  internal abstract class ControlFlowDecompiler : CodeTraverser {
 
     protected IPlatformType platformType;
     protected Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors;
@@ -27,13 +27,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.predecessors = predecessors;
     }
 
-    public override void Visit(IBlockStatement block) {
-      this.Visit(block.Statements);
+    public override void TraverseChildren(IBlockStatement block) {
+      this.Traverse(block.Statements);
       BasicBlock b = (BasicBlock)block;
-      this.Visit(b);
+      this.Traverse(b);
     }
 
-    protected abstract void Visit(BasicBlock b);
+    protected abstract void Traverse(BasicBlock b);
 
     protected static BasicBlock GetBasicBlockUpto(BasicBlock b, uint endOffset) {
       BasicBlock result = new BasicBlock(b.StartOffset);
@@ -165,10 +165,10 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class IfThenElseDecompiler : ControlFlowDecompiler {
 
     internal IfThenElseDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
-      : base(platformType, predecessors) {
+      : base(platformType, predecessors){
     }
 
-    protected override void Visit(BasicBlock b) {
+    protected override void Traverse(BasicBlock b) {
       for (int i = 0; i < b.Statements.Count; i++) {
         this.DecompileIfThenElseStatement(b, i);
       }
@@ -201,7 +201,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         branchesToThisLabel.Remove(gotoAfterThen);
       BasicBlock ifBlock = this.ExtractBasicBlockUpto(b, i, afterThen);
       GotoStatement/*?*/ gotoEndif = this.RemoveAndReturnLastGotoStatement(ifBlock);
-      this.Visit(ifBlock);
+      this.Traverse(ifBlock);
       BasicBlock elseBlock = null;
       if (gotoEndif != null) {
         var endif = this.FindLabeledStatement(statements, i, gotoEndif.TargetStatement.Label);
@@ -210,7 +210,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             branchesToThisLabel.Remove(gotoEndif);
           elseBlock = this.ExtractBasicBlockUpto(b, i, gotoEndif.TargetStatement);
           elseBlock.Statements.Add(gotoEndif.TargetStatement);
-          this.Visit(elseBlock);
+          this.Traverse(elseBlock);
           elseBlock.Statements.Remove(gotoEndif.TargetStatement);
         } else {
           ifBlock.Statements.Add(gotoEndif);
@@ -233,7 +233,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       : base(platformType, predecessors) {
     }
 
-    protected override void Visit(BasicBlock b) {
+    protected override void Traverse(BasicBlock b) {
       for (int i = 0; i < b.Statements.Count; i++) {
         this.DecompileSwitch(b.Statements, i);
       }
@@ -273,7 +273,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       : base(platformType, predecessors) {
     }
 
-    protected override void Visit(BasicBlock b) {
+    protected override void Traverse(BasicBlock b) {
       if (b.NumberOfTryBlocksStartingHere > 0) {
         BasicBlock firstHandler = null;
         TryCatchFinallyStatement/*?*/ tryStatement = new TryCatchFinallyStatement();

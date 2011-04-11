@@ -14,7 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
     public virtual void PrintAttributes(IReference target) {
       foreach (var attribute in target.Attributes) {
@@ -37,14 +37,14 @@ namespace CSharpSourceEmitter {
             first = false;
           else
             this.sourceEmitterOutput.Write(", ");
-          this.Visit(argument);
+          this.Traverse(argument);
         }
         foreach (var namedArgument in attribute.NamedArguments) {
           if (first)
             first = false;
           else
             this.sourceEmitterOutput.Write(", ");
-          this.Visit(namedArgument);
+          this.Traverse(namedArgument);
         }
         this.sourceEmitterOutput.Write(")");
       }

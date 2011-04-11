@@ -1213,7 +1213,7 @@ namespace Microsoft.Cci.Ast {
     /// will be an aggregate of multiple type declarations.
     /// </summary>
     /// <value></value>
-    public override TypeDefinition TypeDefinition {
+    public override NamedTypeDefinition TypeDefinition {
       get { return this.NamespaceTypeDefinition; }
     }
 
@@ -1968,7 +1968,7 @@ namespace Microsoft.Cci.Ast {
     /// will be an aggregate of multiple type declarations.
     /// </summary>
     /// <value></value>
-    public override TypeDefinition TypeDefinition {
+    public override NamedTypeDefinition TypeDefinition {
       get { return this.NestedTypeDefinition; }
     }
 
@@ -2627,7 +2627,7 @@ namespace Microsoft.Cci.Ast {
     /// The symbol table type definition that corresponds to this type declaration. If this type declaration is a partial type, the symbol table type
     /// will be an aggregate of multiple type declarations.
     /// </summary>
-    public abstract TypeDefinition TypeDefinition {
+    public abstract NamedTypeDefinition TypeDefinition {
       get;
     }
 

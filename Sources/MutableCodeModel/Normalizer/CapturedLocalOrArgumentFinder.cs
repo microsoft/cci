@@ -14,7 +14,7 @@ using Microsoft.Cci.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
-  internal class ClosureFinder : BaseCodeTraverser {
+  internal class ClosureFinder : CodeTraverser {
 
     /*\
      * 
@@ -47,7 +47,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal Dictionary<object, BoundField> fieldForCapturedLocalOrParameter;
     private Dictionary<INamedEntity, NestedTypeDefinition> localOrParameter2ClosureClass = new Dictionary<INamedEntity, NestedTypeDefinition>();
     private Dictionary<INamedEntity, bool> localsOrParametersInScope = new Dictionary<INamedEntity, bool>();
-    internal List<ITypeDefinition> classList = new List<ITypeDefinition>();
+    internal List<INamedTypeDefinition> classList = new List<INamedTypeDefinition>();
     internal List<FieldDefinition> outerClosures = new List<FieldDefinition>();
 
 
@@ -70,13 +70,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     int nestingDepth;
 
-    internal ClosureFinder(IMethodDefinition method, Dictionary<object, BoundField> fieldForCapturedLocalOrParameter, IMetadataHost host) {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="host"></param>
+    internal ClosureFinder(IMethodDefinition method, IMetadataHost host) {
       this.method = method;
-      this.fieldForCapturedLocalOrParameter = fieldForCapturedLocalOrParameter;
+      this.fieldForCapturedLocalOrParameter = new Dictionary<object, BoundField>();
       this.host = host;
       this.nameTable = host.NameTable;
       this.counter = 0;
-      this.classList.Add(method.ContainingTypeDefinition);
+      this.classList.Add((INamedTypeDefinition)method.ContainingTypeDefinition);
       this.nestingDepth = 1;
     }
 
@@ -149,7 +154,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.fieldForCapturedLocalOrParameter.Add(definition, be);
     }
 
-    internal NestedTypeDefinition CreateClosureClass(bool makeGeneric) {
+    private NestedTypeDefinition CreateClosureClass(bool makeGeneric) {
       CustomAttribute compilerGeneratedAttribute = new CustomAttribute();
       compilerGeneratedAttribute.Constructor = this.CompilerGeneratedCtor;
 
@@ -187,6 +192,7 @@ namespace Microsoft.Cci.MutableCodeModel {
               Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
               Index = (count++),
               InternFactory = this.host.InternFactory,
+              PlatformType = this.host.PlatformType,
             };
             this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
             newTypeParam.DefiningType = result;
@@ -214,7 +220,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
 
-    public override void Visit(IAnonymousDelegate anonymousDelegate) {
+    public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
       this.foundAnonymousDelegate = true;
       IAnonymousDelegate/*?*/ savedCurrentAnonymousDelegate = this.currentAnonymousDelegate;
       this.currentAnonymousDelegate = anonymousDelegate;
@@ -225,7 +231,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // containing the closures is generic.)
       // Otherwise any lambdas at this level will become methods in this level's closure class
       NestedTypeDefinition closureClass;
-      if (nestingDepth < this.classList.Count) {
+      if (this.nestingDepth < this.classList.Count) {
         closureClass = (NestedTypeDefinition)this.classList[nestingDepth];
       } else {
         closureClass = this.CreateClosureClass(savedCurrentClosureClass == null);
@@ -236,7 +242,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           InternFactory = this.host.InternFactory,
           Name = this.host.NameTable.GetNameFor("__outerClosure"),
           //Type = TypeDefinition.SelfInstance(savedCurrentClosureClass,this.host.InternFactory),
-          Type = TypeDefinition.SelfInstance(this.classList[nestingDepth - 1], this.host.InternFactory),
+          Type = NamedTypeDefinition.SelfInstance(this.classList[nestingDepth - 1], this.host.InternFactory),
           Visibility = TypeMemberVisibility.Public,
         };
         closureClass.Fields.Add(outerClosureField);
@@ -291,7 +297,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.lambda2method.Add(anonymousDelegate, L);
 
       this.nestingDepth++;
-      base.Visit(anonymousDelegate);
+      base.TraverseChildren(anonymousDelegate);
       this.nestingDepth--;
 
       // If they aren't removed, then uses outside of an inner lambda
@@ -308,14 +314,14 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
-    public override void Visit(IAddressableExpression addressableExpression) {
-      base.Visit(addressableExpression);
+    public override void TraverseChildren(IAddressableExpression addressableExpression) {
+      base.TraverseChildren(addressableExpression);
       if (this.currentAnonymousDelegate != null)
         this.CaptureDefinition(addressableExpression.Definition);
     }
 
-    public override void Visit(IBoundExpression boundExpression) {
-      base.Visit(boundExpression);
+    public override void TraverseChildren(IBoundExpression boundExpression) {
+      base.TraverseChildren(boundExpression);
       if (this.currentAnonymousDelegate != null) {
         if (boundExpression.Instance != null)
           this.CaptureDefinition(boundExpression.Instance);
@@ -323,31 +329,31 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
-    public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+    public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       this.localsOrParametersInScope[localDeclarationStatement.LocalVariable] = true;
-      base.Visit(localDeclarationStatement);
+      base.TraverseChildren(localDeclarationStatement);
     }
 
-    public override void Visit(ITargetExpression targetExpression) {
-      base.Visit(targetExpression);
+    public override void TraverseChildren(ITargetExpression targetExpression) {
+      base.TraverseChildren(targetExpression);
       if (this.currentAnonymousDelegate != null)
         this.CaptureDefinition(targetExpression.Definition);
     }
 
-    public override void Visit(IThisReference thisReference) {
-      base.Visit(thisReference);
+    public override void TraverseChildren(IThisReference thisReference) {
+      base.TraverseChildren(thisReference);
       if (this.currentAnonymousDelegate != null)
         this.CaptureDefinition(thisReference);
     }
 
-    public override void Visit(IYieldBreakStatement yieldBreakStatement) {
+    public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
       this.foundYield = true;
-      base.Visit(yieldBreakStatement);
+      base.TraverseChildren(yieldBreakStatement);
     }
 
-    public override void Visit(IYieldReturnStatement yieldReturnStatement) {
+    public override void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
       this.foundYield = true;
-      base.Visit(yieldReturnStatement);
+      base.TraverseChildren(yieldReturnStatement);
     }
 
   }

@@ -15,9 +15,9 @@ using Microsoft.Cci;
 
 namespace CSharpSourceEmitter
 {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter
   {
-    public override void Visit(IEventDefinition eventDefinition) {
+    public override void TraverseChildren(IEventDefinition eventDefinition) {
 
       PrintAttributes(eventDefinition);
       PrintToken(CSharpToken.Indent);

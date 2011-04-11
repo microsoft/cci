@@ -49,7 +49,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal ITypeReference ClosureDefinitionReference {
       get {
         if (this.closureDefinitionReference == null) {
-          this.closureDefinitionReference = TypeDefinition.SelfInstance(this.ClosureDefinition, this.host.InternFactory);
+          this.closureDefinitionReference = NamedTypeDefinition.SelfInstance(this.ClosureDefinition, this.host.InternFactory);
         }
         return closureDefinitionReference;
       }

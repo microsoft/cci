@@ -14,8 +14,8 @@ using System.Text;
 using Microsoft.Cci;
 
 namespace CSharpSourceEmitter {
-  public partial class SourceEmitter : BaseCodeTraverser, ICSharpSourceEmitter {
-    public override void Visit(IFieldDefinition fieldDefinition) {
+  public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
+    public override void TraverseChildren(IFieldDefinition fieldDefinition) {
       if (fieldDefinition.ContainingType.IsEnum && fieldDefinition.IsRuntimeSpecial && fieldDefinition.IsSpecialName)
         return; // implicit value field of an enum
 
@@ -98,7 +98,7 @@ namespace CSharpSourceEmitter {
           // Defining a core integral system type, can't reference the symbolic names, use constants
           sourceEmitterOutput.Write(fieldDefinition.CompileTimeValue.Value.ToString());
       } else {
-        this.Visit(fieldDefinition.CompileTimeValue);
+        this.Traverse(fieldDefinition.CompileTimeValue);
       }
     }
 
@@ -164,7 +164,7 @@ namespace CSharpSourceEmitter {
         if (TypeHelper.IsSignedPrimitiveInteger(type) && lv < 0) {
           castNeeded = true;
           sourceEmitterOutput.Write("unchecked((");
-          Visit(type);
+          PrintTypeReference(type);
           PrintToken(CSharpToken.RightParenthesis);
         }
       }
@@ -172,7 +172,7 @@ namespace CSharpSourceEmitter {
        if (isFlags)
          this.sourceEmitterOutput.Write(String.Format("0x{0:X}", val));
        else
-         Visit(fieldDefinition.CompileTimeValue);
+         Traverse(fieldDefinition.CompileTimeValue);
       if (castNeeded)
         PrintToken(CSharpToken.RightParenthesis);
       PrintToken(CSharpToken.Comma);

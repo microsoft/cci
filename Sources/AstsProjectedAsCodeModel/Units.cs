@@ -95,6 +95,20 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Calls visitor.Visit(IAssembly).
+    /// </summary>
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IAssemblyReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IAssemblyReference)this);
+    }
+
+    /// <summary>
     /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly.
     /// </summary>
     public virtual IEnumerable<IAliasForType> ExportedTypes {
@@ -224,6 +238,10 @@ namespace Microsoft.Cci.Ast {
       get { return this.AssemblyIdentity; }
     }
 
+    bool IAssemblyReference.ContainsForeignTypes {
+      get { return false; }
+    }
+
     #endregion
 
     #region IModuleReference Members
@@ -281,6 +299,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// Calls the visitor.Visit(IAssemblyReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public virtual bool IsRetargetable {
@@ -329,6 +354,14 @@ namespace Microsoft.Cci.Ast {
     public Version Version {
       get { return this.ResolvedAssembly.Version; }
     }
+
+    #region IAssemblyReference Members
+
+    bool IAssemblyReference.ContainsForeignTypes {
+      get { return false; }
+    }
+
+    #endregion
 
     #region IModuleReference Members
 
@@ -393,6 +426,20 @@ namespace Microsoft.Cci.Ast {
       //^ ensures result.RootOwner == this;
     {
       return new RootUnitNamespace(this.Compilation.NameTable.EmptyName, this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IModule).
+    /// </summary>
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(IModuleReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit((IModuleReference)this);
     }
 
     /// <summary>
@@ -691,6 +738,18 @@ namespace Microsoft.Cci.Ast {
     }
     readonly List<IWin32Resource> win32Resources = new List<IWin32Resource>();
 
+    #region IModule Members
+
+    IEnumerable<ITypeReference> IModule.GetTypeReferences() {
+      return IteratorHelper.GetEmptyEnumerable<ITypeReference>();
+    }
+
+    IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
+      return IteratorHelper.GetEmptyEnumerable<ITypeMemberReference>();
+    }
+
+    #endregion
+
     #region IModuleReference Members
 
     IAssemblyReference/*?*/ IModuleReference.ContainingAssembly {
@@ -728,6 +787,13 @@ namespace Microsoft.Cci.Ast {
     /// Calls the visitor.Visit(IModuleReference) method.
     /// </summary>
     public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(IModuleReference) method.
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
 
@@ -903,6 +969,11 @@ namespace Microsoft.Cci.Ast {
     public abstract void Dispatch(IMetadataVisitor visitor);
 
     /// <summary>
+    /// Calls visitor.Visit(IUnitReference).
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
+
+    /// <summary>
     /// Returns the identity of the unit reference.
     /// </summary>
     public abstract UnitIdentity UnitIdentity {
@@ -1005,11 +1076,14 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
-    /// of the object implementing IDoubleDispatcher. The dispatch method does not invoke Dispatch on any child objects. If child traversal
-    /// is desired, the implementations of the Visit methods should do the subsequent dispatching.
+    /// Calls visitor.Visit(IUnitReference).
     /// </summary>
     public abstract void Dispatch(IMetadataVisitor visitor);
+
+    /// <summary>
+    /// Calls visitor.Visit(IUnitReference).
+    /// </summary>
+    public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this IReference instance.

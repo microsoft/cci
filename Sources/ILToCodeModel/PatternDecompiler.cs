@@ -17,7 +17,7 @@ using System;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
-  internal class PatternDecompiler : BaseCodeTraverser {
+  internal class PatternDecompiler : CodeTraverser {
 
     INameTable nameTable;
     SourceMethodBody sourceMethodBody;
@@ -30,7 +30,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.predecessors = predecessors;
     }
 
-    public override void Visit(IBlockStatement block) {
+    public override void TraverseChildren(IBlockStatement block) {
       BasicBlock/*?*/ b = (BasicBlock)block;
       var blockTreeAsList = new List<BasicBlock>();
       for (; ; ) {
@@ -41,10 +41,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (b == null) break;
       }
       for (int i = blockTreeAsList.Count-1; i >= 0; i--)
-        this.Visit(blockTreeAsList[i]);
+        this.Traverse(blockTreeAsList[i]);
     }
 
-    private void Visit(BasicBlock b) {
+    private void Traverse(BasicBlock b) {
       this.blockLocalVariables = b.LocalVariables;
       for (int i = 0; i < b.Statements.Count; i++) {
         this.DeleteGotoNextStatement(b.Statements, i);
@@ -72,7 +72,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       for (int j = i + 1; j < i + count; j++) {
         PushStatement st = (PushStatement)statements[j];
         PopCounter pcc = new PopCounter();
-        pcc.Visit(st.ValueToPush);
+        new CodeTraverser() { PreorderVisitor = pcc }.Traverse(st.ValueToPush);
         int numberOfPushesToRemove = pushcount;
         if (pcc.count > 0) {
           if (pcc.count < numberOfPushesToRemove) numberOfPushesToRemove = pcc.count;
@@ -90,7 +90,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ExpressionStatement/*?*/ expressionStatement = statements[i + count] as ExpressionStatement;
       if (expressionStatement == null) return;
       PopCounter pc = new PopCounter();
-      pc.Visit(expressionStatement.Expression);
+      new CodeTraverser() { PreorderVisitor = pc }.Traverse(expressionStatement.Expression);
       if (pc.count == 0) return;
       if (pc.count < count) {
         i += count-pc.count; //adjust i to point to the first push statement to remove because of subsequent pops.
@@ -578,7 +578,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     IName/*?*/ initializeArray;
   }
 
-  internal class PopCounter : BaseCodeTraverser {
+  internal class PopCounter : CodeVisitor {
     internal int count;
 
     public override void Visit(IExpression expression) {
