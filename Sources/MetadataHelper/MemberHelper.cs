@@ -821,15 +821,18 @@ namespace Microsoft.Cci {
   /// </summary>
   public class SignatureFormatter {
 
-    TypeNameFormatter typeNameFormatter;
+    /// <summary>
+    /// The type name formatter object to use for formatting the type references that occur in the signatures.
+    /// </summary>
+    protected readonly TypeNameFormatter typeNameFormatter;
 
     /// <summary>
     /// Allocates an object with a collection of methods that format type member signatures as strings. The methods are virtual and reference each other. 
     /// By default, types are formatting according to C# conventions. However, by overriding one or more of the
     /// methods, the formatting can be customized for other languages.
     /// </summary>
-    public SignatureFormatter() {
-      this.typeNameFormatter = new TypeNameFormatter();
+    public SignatureFormatter()
+      : this(new TypeNameFormatter()) {
     }
 
     /// <summary>
