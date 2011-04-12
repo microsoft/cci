@@ -1600,7 +1600,10 @@ namespace Microsoft.Cci {
               if (bitFieldAlignment > fieldAlignment) fieldAlignment = bitFieldAlignment;
               bitFieldAlignment = 0; bitOffset = 0;
               result = ((result+fieldAlignment-1)/fieldAlignment) * fieldAlignment;
-              fieldSize = TypeHelper.SizeOfType(field.Type)*8;
+              if (rootType == fieldType || fieldType.IsReferenceType)
+                fieldSize = type.PlatformType.PointerSize*8u;
+              else
+                fieldSize = TypeHelper.SizeOfType(fieldType, rootType, mayUseSizeOfProperty)*8;
             }
             result += fieldSize;
           }
