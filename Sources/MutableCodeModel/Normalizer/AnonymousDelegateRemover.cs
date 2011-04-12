@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableContracts;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
@@ -54,11 +55,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     ISourceLocationProvider/*?*/ sourceLocationProvider;
 
-    //Dictionary<BlockStatement, NestedTypeDefinition> closureFor;
-
     NamedTypeDefinition currentClosure;
 
     IExpression currentClosureInstance;
+
+    List<IExpression> closureLocalInstances;
+
+    ILocalDefinition currentClosureLocal;
 
     IFieldDefinition fieldForThis;
 
@@ -66,7 +69,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     int idCounter;
 
-    //bool insideAnonymousDelegate;
+    bool isInsideAnonymousMethod;
 
     IMethodDefinition method;
 
@@ -95,21 +98,17 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.currentClosure = topLevelClosureClass;
         //declare a local to keep the parameter closure class
         var closureType = NamedTypeDefinition.SelfInstance(this.currentClosure, this.host.InternFactory);
-        var closureLocal = new LocalDefinition() { Type = closureType };
+        var closureLocal = new LocalDefinition() { Type = closureType, Name = this.host.NameTable.GetNameFor("CS$<>8__locals"+this.closureClasses.Count) };
+        this.currentClosureLocal = closureLocal;
         this.currentClosureInstance = new BoundExpression() { Definition = closureLocal, Type = closureType };
-        this.RewriteChildren(body); 
+        this.closureLocalInstances = new List<IExpression>();
+        this.closureLocalInstances.Add(this.currentClosureInstance);
+        this.RewriteChildren(body);
         //do this after rewriting so that parameter references are not rewritten into closure field references.
         this.InsertStatementsToAllocateAndInitializeTopLevelClosure(method, body, closureLocal);
       } else {
         this.RewriteChildren(body);
       }
-
-      //for each block declaring a local that has been captured, generate a closure class and keep a map from local to closure field
-      //for each closure class create a local that keeps the closure
-      //when entering a scope with a closure, initialize the local
-      //turn all reads/writes to captured locals/parameters to field reads/writes
-      //move the bodies of anonymous delegates into methods of the most nested closure classes (these methods will not be normalized)
-      //and turn anonymous delegate expressions into delegate creation expressions
     }
 
     private void InsertStatementsToAllocateAndInitializeTopLevelClosure(IMethodDefinition method, BlockStatement body, LocalDefinition closureLocal) {
@@ -159,7 +158,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         var field = this.CreateClosureField(result, parameter.Type, parameter.Name.Value);
         this.captures[parameter] = field;
       }
-      //TODO: run through parameters and look for captures
       if (this.anonymousDelegatesThatCaptureThis.Count > 0) {
         if (this.captures.Count == 0) {
           //The anonymous delegates have captured only "this", so they can become peer methods if method.ContainingType is mutable.
@@ -201,72 +199,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     private NestedTypeDefinition CreateClosureClass(IMethodDefinition method) {
-      NestedTypeDefinition result = new NestedTypeDefinition();
-      var containingType = method.ContainingTypeDefinition; //TODO: worry about closure chains
       if (this.closureClasses == null) this.closureClasses = new List<ITypeDefinition>();
-      this.closureClasses.Add(result);
-      result.Name = this.host.NameTable.GetNameFor("<>c__DisplayClass"+this.closureClasses.Count);
-      result.Attributes.Add(this.compilerGenerated);
-      result.BaseClasses.Add(this.host.PlatformType.SystemObject);
-      result.ContainingTypeDefinition = containingType;
-      result.InternFactory = this.host.InternFactory;
-      result.IsBeforeFieldInit = true;
-      result.IsClass = true;
-      result.IsSealed = true;
-      result.Layout = LayoutKind.Auto;
-      result.StringFormat = StringFormatKind.Ansi;
-      result.Visibility = TypeMemberVisibility.Private;
+      NestedTypeDefinition closure = new NestedTypeDefinition();
+      var containingType = method.ContainingTypeDefinition;
+      closure.Name = this.host.NameTable.GetNameFor("<>c__DisplayClass"+this.closureClasses.Count);
+      closure.Attributes.Add(this.compilerGenerated);
+      closure.BaseClasses.Add(this.host.PlatformType.SystemObject);
+      closure.ContainingTypeDefinition = containingType;
+      closure.InternFactory = this.host.InternFactory;
+      closure.IsBeforeFieldInit = true;
+      closure.IsClass = true;
+      closure.IsSealed = true;
+      closure.Layout = LayoutKind.Auto;
+      closure.StringFormat = StringFormatKind.Ansi;
+      closure.Visibility = TypeMemberVisibility.Private;
 
-      this.InjectDefaultConstructor(result);
+      this.InjectDefaultConstructor(closure);
 
-
-      
-    //  string signature = MemberHelper.GetMethodSignature(this.method, NameFormattingOptions.Signature | NameFormattingOptions.ReturnType | NameFormattingOptions.TypeParameters);
-    //  result.Attributes.Add(compilerGeneratedAttribute);
-
-    //  //BoundField/*?*/ capturedThis;
-    //  //var thisTypeReference = TypeDefinition.SelfInstance(this.method.ContainingTypeDefinition, this.host.InternFactory);
-    //  //if (this.closureLocals.Count == 0 && this.FieldForCapturedLocalOrParameter.TryGetValue(thisTypeReference.InternedKey, out capturedThis)) {
-    //  //  result.Fields.Add(capturedThis.Field);
-    //  //  capturedThis.Field.ContainingTypeDefinition = result;
-    //  //  capturedThis.Field.Type = this.Visit(capturedThis.Field.Type);
-    //  //}
-
-    //  if (makeGeneric) {
-    //    List<IGenericMethodParameter> genericMethodParameters = new List<IGenericMethodParameter>();
-    //    ushort count = 0;
-    //    if (this.method.IsGeneric) {
-    //      foreach (var genericMethodParameter in this.method.GenericParameters) {
-    //        genericMethodParameters.Add(genericMethodParameter);
-    //        GenericTypeParameter newTypeParam = new GenericTypeParameter() {
-    //          Name = this.host.NameTable.GetNameFor(genericMethodParameter.Name.Value + "_"),
-    //          Index = (count++),
-    //          InternFactory = this.host.InternFactory,
-    //          PlatformType = this.host.PlatformType,
-    //        };
-    //        this.genericTypeParameterMapping[genericMethodParameter.InternedKey] = newTypeParam;
-    //        newTypeParam.DefiningType = result;
-    //        result.GenericParameters.Add(newTypeParam);
-    //      }
-    //    }
-    //    this.copyTypeToClosure = new CopyTypeFromIteratorToClosure(this.host, genericTypeParameterMapping);
-    //    if (this.method.IsGeneric) {
-    //      // Duplicate Constraints
-    //      foreach (var genericMethodParameter in genericMethodParameters) {
-    //        GenericTypeParameter correspondingTypeParameter = (GenericTypeParameter)this.genericTypeParameterMapping[genericMethodParameter.InternedKey];
-    //        if (genericMethodParameter.Constraints != null) {
-    //          correspondingTypeParameter.Constraints = new List<ITypeReference>();
-    //          foreach (ITypeReference t in genericMethodParameter.Constraints) {
-    //            correspondingTypeParameter.Constraints.Add(copyTypeToClosure.Visit(t));
-    //          }
-    //        }
-    //      }
-    //    }
-    //  }
-
-    //  this.generatedclosureClass = result;
-    //  classList.Add(result);
-      return result;
+      this.closureClasses.Add(closure);
+      return closure;
     }
 
     private IFieldDefinition CreateStaticCacheField(ITypeReference fieldType) {
@@ -317,18 +268,48 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       if (isPeerMethod) {
         this.helperMembers.Add(method);
-        if (isStaticMethod) {
-          method.Attributes = new List<ICustomAttribute>(1);
-          method.Attributes.Add(this.compilerGenerated);
-        }
+        if (this.method.IsGeneric) this.MakeDelegateMethodGeneric(method);
+        method.Attributes = new List<ICustomAttribute>(1);
+        method.Attributes.Add(this.compilerGenerated);
       } else {
         this.currentClosure.Methods.Add(method);
-        //need to rewrite body (if not a peer)
+        this.isInsideAnonymousMethod = true;
+        method.Body = this.Rewrite(method.Body);
+        this.isInsideAnonymousMethod = false;
+      }
+
+      if (method.IsGeneric) {
+        return new GenericMethodInstanceReference() {
+          CallingConvention = method.CallingConvention,
+          ContainingType = method.ContainingTypeDefinition,
+          GenericArguments = new List<ITypeReference>(IteratorHelper.GetConversionEnumerable<IGenericMethodParameter, ITypeReference>(method.GenericParameters)),
+          GenericMethod = method,
+          InternFactory = this.host.InternFactory,
+          Name = method.Name,
+          Parameters = new List<IParameterTypeInformation>(((IMethodReference)method).Parameters),
+          Type = method.Type,
+        };
       }
 
       //need to return an instantiation (if generic)
 
       return method;
+    }
+
+    private IExpression GetClosureInstanceContaining(IFieldDefinition closureField) {
+      if (this.isInsideAnonymousMethod) {
+        IExpression result = new ThisReference() { Type = this.currentClosureLocal.Type };
+        while (!TypeHelper.TypesAreEquivalent(result.Type, closureField.ContainingType)) {
+          var outerClosureField = this.captures[result.Type];
+          result = new BoundExpression() { Instance = result, Definition = outerClosureField, Type = outerClosureField.Type };
+        }
+        return result;
+      } else {
+        foreach (var instance in this.closureLocalInstances) {
+          if (TypeHelper.TypesAreEquivalent(instance.Type, closureField.Type)) return instance;
+        }
+        return this.currentClosureInstance;
+      }
     }
 
     private void InjectDefaultConstructor(NestedTypeDefinition closureClass) {
@@ -369,16 +350,48 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     }
 
+    private void MakeDelegateMethodGeneric(MethodDefinition delegateMethod) {
+      delegateMethod.CallingConvention |= CallingConvention.Generic;
+      Dictionary<ushort, IGenericParameterReference> parameterMap = new Dictionary<ushort, IGenericParameterReference>();
+      delegateMethod.GenericParameters = new List<IGenericMethodParameter>(this.method.GenericParameterCount);
+      foreach (var genericParameter in this.method.GenericParameters) {
+        var delPar = new GenericMethodParameter();
+        delPar.Copy(genericParameter, this.host.InternFactory);
+        delPar.DefiningMethod = delegateMethod;
+        delegateMethod.GenericParameters.Add(delPar);
+        parameterMap.Add(genericParameter.Index, delPar);
+      }
+      new GenericParameterRewriter(this.host, parameterMap).RewriteChildren(delegateMethod);
+    }
+
+    class GenericParameterRewriter : CodeRewriter {
+      internal GenericParameterRewriter(IMetadataHost host, Dictionary<ushort, IGenericParameterReference> parameterMap)
+        : base(host) {
+        this.parameterMap = parameterMap;
+      }
+
+      Dictionary<ushort, IGenericParameterReference> parameterMap;
+
+      public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
+        IGenericParameterReference referenceToSubstitute;
+        if (this.parameterMap.TryGetValue(genericMethodParameterReference.Index, out referenceToSubstitute))
+          return referenceToSubstitute;
+        Contract.Assume(false); //An anonymous delegate body should not be able to reference generic method type parameters that are not defined by the containing method.
+        return base.Rewrite(genericMethodParameterReference);
+      }
+    }
+
     /// <summary>
     /// Rewrites the given anonymous delegate expression.
     /// </summary>
     public override IExpression Rewrite(IAnonymousDelegate anonymousDelegate) {
+      if (this.isInsideAnonymousMethod) return base.Rewrite(anonymousDelegate);
       IMethodReference method = this.CreateClosureMethod((AnonymousDelegate)anonymousDelegate);
       var createDelegate = new CreateDelegateInstance() {
         MethodToCallViaDelegate = method,
         Type = anonymousDelegate.Type
       };
-      if ((method.CallingConvention & CallingConvention.HasThis) != 0)
+      if ((method.CallingConvention & CallingConvention.HasThis) != 0 || (method.CallingConvention & CallingConvention.Generic) != 0)
         createDelegate.Instance = this.currentClosureInstance;
       else {
         //cache the delegate in a static field
@@ -414,7 +427,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void RewriteChildren(AddressableExpression addressableExpression) {
       IFieldDefinition closureField;
       if (this.captures.TryGetValue(addressableExpression.Definition, out closureField)) {
-        addressableExpression.Instance = this.currentClosureInstance; //TODO: closure chains
+        addressableExpression.Instance = this.GetClosureInstanceContaining(closureField);
         addressableExpression.Definition = closureField;
         addressableExpression.Type = this.Rewrite(addressableExpression.Type);
         return;
@@ -423,12 +436,58 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the children of the given statement block.
+    /// </summary>
+    public override void RewriteChildren(BlockStatement block) {
+      if (this.captures.ContainsKey(block)) {
+        var savedCurrentClosure = this.currentClosure;
+        var savedCurrentClosureInstance = this.currentClosureInstance;
+        var savedCurrentClosureLocal = this.currentClosureLocal;
+        this.currentClosure = this.CreateClosureClass(this.method);
+        IFieldDefinition outerClosure = null;
+        if (savedCurrentClosureLocal != null) {
+          outerClosure = this.CreateClosureField((NestedTypeDefinition)this.currentClosure, savedCurrentClosureLocal.Type, savedCurrentClosureLocal.Name.Value);
+          this.captures[this.currentClosure] = outerClosure;
+        }
+
+        var closureType = NamedTypeDefinition.SelfInstance(this.currentClosure, this.host.InternFactory);
+        var closureLocal = new LocalDefinition() { Type = closureType, Name = this.host.NameTable.GetNameFor("CS$<>8__locals"+this.closureClasses.Count) };
+        this.currentClosureInstance = new BoundExpression() { Definition = closureLocal, Type = closureType };
+        this.currentClosureLocal = closureLocal;
+        if (this.closureLocalInstances == null) this.closureLocalInstances = new List<IExpression>();
+        this.closureLocalInstances.Add(this.currentClosureInstance);
+        base.RewriteChildren(block);
+        block.Statements.Insert(0, new ExpressionStatement() {
+          Expression = new Assignment() {
+            Target = new TargetExpression() { Definition = closureLocal, Type = closureLocal.Type },
+            Source = new CreateObjectInstance() {
+              MethodToCall = TypeHelper.GetMethod(closureType, this.host.NameTable.Ctor),
+              Type = closureType
+            }
+          }
+        });
+        if (savedCurrentClosureLocal != null) {
+          block.Statements.Insert(1, new ExpressionStatement() {
+            Expression = new Assignment() {
+              Target = new TargetExpression() { Instance = new BoundExpression() { Definition = closureLocal }, Definition = outerClosure },
+              Source = new BoundExpression() { Definition = savedCurrentClosureLocal }
+            }
+          });
+        }
+        this.currentClosure = savedCurrentClosure;
+        this.currentClosureInstance = savedCurrentClosureInstance;
+        this.currentClosureLocal = savedCurrentClosureLocal;
+      } else
+        base.RewriteChildren(block);
+    }
+
+    /// <summary>
     /// Rewrites the children of the given bound expression.
     /// </summary>
     public override void RewriteChildren(BoundExpression boundExpression) {
       IFieldDefinition closureField;
       if (this.captures.TryGetValue(boundExpression.Definition, out closureField)) {
-        boundExpression.Instance = this.currentClosureInstance; //TODO: closure chains
+        boundExpression.Instance = this.GetClosureInstanceContaining(closureField);
         boundExpression.Definition = closureField;
         boundExpression.Type = this.Rewrite(boundExpression.Type);
         return;
@@ -437,12 +496,31 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the children of the given local declaration statement.
+    /// </summary>
+    public override IStatement Rewrite(ILocalDeclarationStatement localDeclarationStatement) {
+      var local = localDeclarationStatement.LocalVariable;
+      if (this.captures.ContainsKey(local)) {
+        var field = this.CreateClosureField((NestedTypeDefinition)this.currentClosure, local.Type, localDeclarationStatement.LocalVariable.Name.Value);
+        this.captures[local] = field;
+        if (localDeclarationStatement.InitialValue == null) return new EmptyStatement();
+        return new ExpressionStatement() {
+          Expression = new Assignment() {
+            Target = new TargetExpression() { Instance = this.currentClosureInstance, Definition = field, Type = local.Type },
+            Source = this.Rewrite(localDeclarationStatement.InitialValue)
+          }
+        };
+      }
+      return base.Rewrite(localDeclarationStatement);
+    }
+
+    /// <summary>
     /// Rewrites the children of the given target expression.
     /// </summary>
     public override void RewriteChildren(TargetExpression targetExpression) {
       IFieldDefinition closureField;
       if (this.captures.TryGetValue(targetExpression.Definition, out closureField)) {
-        targetExpression.Instance = this.currentClosureInstance; //TODO: closure chains
+        targetExpression.Instance = this.GetClosureInstanceContaining(closureField);
         targetExpression.Definition = closureField;
         targetExpression.Type = this.Rewrite(targetExpression.Type);
         return;
@@ -472,6 +550,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal Dictionary<IAnonymousDelegate, bool> anonymousDelegatesThatCaptureLocalsOrParameters = new Dictionary<IAnonymousDelegate, bool>();
 
     IAnonymousDelegate/*?*/ currentAnonymousDelegate;
+    IBlockStatement/*?*/ currentBlock;
     Dictionary<object, bool> definitionsToIgnore = new Dictionary<object, bool>();
 
     public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
@@ -486,6 +565,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       base.TraverseChildren(addressableExpression);
     }
 
+    public override void TraverseChildren(IBlockStatement block) {
+      var saved = this.currentBlock;
+      this.currentBlock = block;
+      base.TraverseChildren(block);
+      this.currentBlock = saved;
+    }
+
     public override void TraverseChildren(IBoundExpression boundExpression) {
       this.LookForCapturedDefinition(boundExpression.Definition);
       base.TraverseChildren(boundExpression);
@@ -494,6 +580,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       if (this.currentAnonymousDelegate != null)
         this.definitionsToIgnore[localDeclarationStatement.LocalVariable] = true;
+      else
+        this.captures[this.currentBlock] = Dummy.Field;
       base.TraverseChildren(localDeclarationStatement);
     }
 
