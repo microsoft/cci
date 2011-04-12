@@ -6966,30 +6966,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       return module;
     }
 
-    class TypeOrderPreserver : Comparer<INamedTypeDefinition> {
-      Dictionary<string, int> oldOrder = new Dictionary<string, int>();
-      internal TypeOrderPreserver(List<INamedTypeDefinition> oldTypeList) {
-        for (int i = 0, n = oldTypeList.Count; i < n; i++)
-          this.oldOrder.Add(TypeHelper.GetTypeName(oldTypeList[i], NameFormattingOptions.TypeParameters), i);
-      }
-
-      /// <summary>
-      /// 
-      /// </summary>
-      /// <param name="x"></param>
-      /// <param name="y"></param>
-      /// <returns></returns>
-      public override int Compare(INamedTypeDefinition x, INamedTypeDefinition y) {
-        int xi = 0;
-        int yi = int.MaxValue;
-        string xn = TypeHelper.GetTypeName(x, NameFormattingOptions.TypeParameters);
-        string yn = TypeHelper.GetTypeName(y, NameFormattingOptions.TypeParameters);
-        if (!this.oldOrder.TryGetValue(xn, out xi)) xi = int.MaxValue;
-        if (!this.oldOrder.TryGetValue(yn, out yi)) yi = int.MaxValue;
-        return xi - yi;
-      }
-    }
-
     /// <summary>
     /// Visits the specified module references.
     /// </summary>
