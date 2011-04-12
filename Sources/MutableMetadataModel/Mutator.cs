@@ -324,6 +324,21 @@ namespace Microsoft.Cci.MutableCodeModel {
       return (IFieldReference)this.dispatchingVisitor.result;
     }
 
+
+    /// <summary>
+    /// Rewrites the reference to a local definition.
+    /// </summary>
+    public virtual object RewriteReference(ILocalDefinition localDefinition) {
+      return localDefinition;
+    }
+
+    /// <summary>
+    /// Rewrites the reference to a parameter.
+    /// </summary>
+    public virtual object RewriteReference(IParameterDefinition parameterDefinition) {
+      return parameterDefinition;
+    }
+
     /// <summary>
     /// Rewrites the given field reference.
     /// </summary>
@@ -1714,6 +1729,16 @@ namespace Microsoft.Cci.MutableCodeModel {
           var methodReference = operation.Value as IMethodReference;
           if (methodReference != null)
             operation.Value = this.Rewrite(methodReference);
+          else {
+            var local = operation.Value as ILocalDefinition;
+            if (local != null)
+              operation.Value = this.RewriteReference(local);
+            else {
+              var parameter = operation.Value as IParameterDefinition;
+              if (parameter != null)
+                operation.Value = this.RewriteReference(parameter);
+            }
+          }
         }
       }
     }
