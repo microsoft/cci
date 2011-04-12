@@ -1504,7 +1504,7 @@ namespace Microsoft.Cci {
     public static uint SizeOfType(ITypeReference type) {
       Contract.Requires(type != null);
 
-      return SizeOfType(type, true);
+      return SizeOfType(type, mayUseSizeOfProperty:true);
     }
 
     /// <summary>
@@ -1603,7 +1603,7 @@ namespace Microsoft.Cci {
               if (rootType == fieldType || fieldType.IsReferenceType)
                 fieldSize = type.PlatformType.PointerSize*8u;
               else
-                fieldSize = TypeHelper.SizeOfType(fieldType, rootType, mayUseSizeOfProperty)*8;
+                fieldSize = TypeHelper.SizeOfType(fieldType, rootType, mayUseSizeOfProperty:true)*8;
             }
             result += fieldSize;
           }
