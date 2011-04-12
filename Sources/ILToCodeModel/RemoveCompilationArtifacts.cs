@@ -699,7 +699,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private CachedDelegateRemover(IMetadataHost host, Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals)
       : base(host, true) {
-        this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
+      this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
     }
 
     Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals;
@@ -860,11 +860,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// The original generic method in which the anonymous delegate is being re-created.
     /// </summary>
     readonly IMethodDefinition targetMethod;
-    /// <summary>
-    /// The constructed reference to the targetMethod that is used within any
-    /// generated generic method parameter reference.
-    /// </summary>
-    readonly Microsoft.Cci.MutableCodeModel.MethodReference targetMethodReference;
+    ///// <summary>
+    ///// The constructed reference to the targetMethod that is used within any
+    ///// generated generic method parameter reference.
+    ///// </summary>
+    //readonly Microsoft.Cci.MutableCodeModel.MethodReference targetMethodReference;
     /// <summary>
     /// Just a short-cut to the generic parameters so the list can be created once
     /// and then the individual parameters can be accessed with an indexer.
@@ -905,8 +905,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       : base(host) {
       this.targetMethod = targetMethod;
       this.targetMethodGenericParameters = new List<IGenericMethodParameter>(targetMethod.GenericParameters);
-      this.targetMethodReference = new Microsoft.Cci.MutableCodeModel.MethodReference();
-      this.targetMethodReference.Copy(this.targetMethod, this.host.InternFactory);
+      //this.targetMethodReference = new Microsoft.Cci.MutableCodeModel.MethodReference();
+      //this.targetMethodReference.Copy(this.targetMethod, this.host.InternFactory);
     }
 
     public override ITypeReference Visit(ITypeReference typeReference) {
