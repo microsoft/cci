@@ -106,12 +106,14 @@ namespace Microsoft.Cci {
       //^ requires this.currentDocument != null && this.currentDocument != SourceDummy.PrimarySourceDocument
       ISymUnmanagedDocumentWriter document = this.GetDocumentWriterFor(this.currentDocument);
       uint seqPointCount = (uint)this.offsets.Count;
-      uint[] offsets = this.offsets.ToArray();
-      uint[] startLines = this.startLines.ToArray();
-      uint[] startColumns = this.startColumns.ToArray();
-      uint[] endLines = this.endLines.ToArray();
-      uint[] endColumns = this.endColumns.ToArray();
-      this.SymWriter.DefineSequencePoints(document, seqPointCount, offsets, startLines, startColumns, endLines, endColumns);
+      if (seqPointCount > 0) {
+        uint[] offsets = this.offsets.ToArray();
+        uint[] startLines = this.startLines.ToArray();
+        uint[] startColumns = this.startColumns.ToArray();
+        uint[] endLines = this.endLines.ToArray();
+        uint[] endColumns = this.endColumns.ToArray();
+        this.SymWriter.DefineSequencePoints(document, seqPointCount, offsets, startLines, startColumns, endLines, endColumns);
+      }
       this.currentDocument = null;
       this.offsets.Clear();
       this.startLines.Clear();
