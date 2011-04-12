@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 using System.Configuration.Assemblies;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -341,7 +342,7 @@ namespace Microsoft.Cci {
       // TODO: This is not supported by the standard or by the ILAsm book, so perhaps this is wrong.
       if (versionStringData.Length < 12) return 12;
       if (versionStringSize >= 256) return 256; //The standard says the maximum length of the string is 255, but the stored size is rounded up to multiple of 4.
-      return Aligned(versionStringSize, 4); 
+      return Aligned(versionStringSize, 4);
     }
 
     private uint ComputeSizeOfMetadataTablesStream() {
@@ -847,7 +848,7 @@ namespace Microsoft.Cci {
     }
 
     private uint GetCustomAttributeTypeCodedIndex(IMethodReference methodReference) {
-      IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
+      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
         return (this.GetMethodDefIndex(methodReference) << 3)|2;
       else
@@ -873,6 +874,24 @@ namespace Microsoft.Cci {
       if (sectionWriter.BaseStream.Position == sectionWriter.BaseStream.Length)
         sectionWriter.Align(8);
       return result;
+    }
+
+    /// <summary>
+    /// Returns a reference to the unit that defines the given referenced type. If the referenced type is a structural type, such as a pointer or a generic type instance,
+    /// then the result is null.
+    /// </summary>
+    internal static IUnitReference/*?*/ GetDefiningUnitReference(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+
+      if (typeReference is ISpecializedNestedTypeReference) return null;
+      INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
+      while (nestedTypeReference != null) {
+        typeReference = nestedTypeReference.ContainingType;
+        nestedTypeReference = typeReference as INestedTypeReference;
+      }
+      INamespaceTypeReference/*?*/ namespaceTypeReference = typeReference as INamespaceTypeReference;
+      if (namespaceTypeReference == null) return null;
+      return namespaceTypeReference.ContainingUnitNamespace.Unit;
     }
 
     private static ushort GetEventFlags(IEventDefinition eventDef) {
@@ -924,7 +943,7 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetFieldToken(IFieldReference fieldReference) {
-      IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(fieldReference.ContainingType);
+      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(fieldReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
         return 0x04000000 | this.GetFieldDefIndex(fieldReference);
       else
@@ -1093,7 +1112,7 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetMethodDefOrRefCodedIndex(IMethodReference methodReference) {
-      IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
+      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
         return this.GetMethodDefIndex(methodReference) << 1;
       else
@@ -1216,7 +1235,7 @@ namespace Microsoft.Cci {
       IGenericMethodInstanceReference/*?*/ methodSpec = methodReference as IGenericMethodInstanceReference;
       if (methodSpec != null)
         return 0x2B000000 | this.GetMethodSpecIndex(methodSpec);
-      IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
+      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity) && !methodReference.AcceptsExtraArguments)
         return 0x06000000 | this.GetMethodDefIndex(methodReference);
       else
@@ -5208,7 +5227,7 @@ namespace Microsoft.Cci {
         this.Traverse(aliasForType.Attributes);
       //do not traverse the reference to aliased type, it does not get into the type ref table based only on its membership of the exported types collection.
       //but DO traverse the reference to assembly (if any) that defines the aliased type. That assembly might not already be in the assembly reference list.
-      var definingAssembly = TypeHelper.GetDefiningUnitReference(aliasForType.AliasedType) as IAssemblyReference;
+      var definingAssembly = PeWriter.GetDefiningUnitReference(aliasForType.AliasedType) as IAssemblyReference;
       if (definingAssembly != null) this.Traverse(definingAssembly);
     }
 
@@ -5235,7 +5254,7 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(IFieldReference fieldReference) {
-      IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(fieldReference.ContainingType);
+      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(fieldReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity)) return;
       this.TraverseTypeMemberReference(fieldReference);
       this.Traverse(fieldReference.Type);
@@ -5292,7 +5311,7 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(IMethodReference methodReference) {
-      IUnitReference/*?*/ definingUnit = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
+      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(methodReference.ContainingType);
       if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity)) return;
       this.TraverseTypeMemberReference(methodReference);
       this.Traverse(methodReference.Type);

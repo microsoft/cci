@@ -1009,21 +1009,28 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a reference to the unit that defines the given referenced type. If the referenced type is a structural type, such as a pointer or a generic type instance,
-    /// then the result is null.
+    /// Returns a reference to the unit that defines the given type. If the reference type is a reference to a structural type, such as a pointer the result is 
+    /// the a reference to the defining unit of the element type, or in the case of a generic type instance, the definining type of the generic template type.
     /// </summary>
     public static IUnitReference/*?*/ GetDefiningUnitReference(ITypeReference typeReference) {
       Contract.Requires(typeReference != null);
 
-      if (typeReference is ISpecializedNestedTypeReference) return null;
       INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
       while (nestedTypeReference != null) {
         typeReference = nestedTypeReference.ContainingType;
         nestedTypeReference = typeReference as INestedTypeReference;
       }
       INamespaceTypeReference/*?*/ namespaceTypeReference = typeReference as INamespaceTypeReference;
-      if (namespaceTypeReference == null) return null;
-      return namespaceTypeReference.ContainingUnitNamespace.Unit;
+      if (namespaceTypeReference != null) return namespaceTypeReference.ContainingUnitNamespace.Unit;
+      IGenericTypeInstanceReference/*?*/ genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstanceReference != null) return TypeHelper.GetDefiningUnitReference(genericTypeInstanceReference.GenericType);
+      IManagedPointerTypeReference/*?*/ managedPointerTypeReference = typeReference as IManagedPointerTypeReference;
+      if (managedPointerTypeReference != null) return TypeHelper.GetDefiningUnitReference(managedPointerTypeReference.TargetType);
+      IPointerTypeReference/*?*/ pointerTypeReference = typeReference as IPointerTypeReference;
+      if (pointerTypeReference != null) return TypeHelper.GetDefiningUnitReference(pointerTypeReference.TargetType);
+      IArrayTypeReference/*?*/ arrayTypeReference = typeReference as IArrayTypeReference;
+      if (arrayTypeReference != null) return TypeHelper.GetDefiningUnitReference(arrayTypeReference.ElementType);
+      return null;
     }
 
     /// <summary>
@@ -1504,7 +1511,7 @@ namespace Microsoft.Cci {
     public static uint SizeOfType(ITypeReference type) {
       Contract.Requires(type != null);
 
-      return SizeOfType(type, mayUseSizeOfProperty:true);
+      return SizeOfType(type, mayUseSizeOfProperty: true);
     }
 
     /// <summary>
@@ -1603,7 +1610,7 @@ namespace Microsoft.Cci {
               if (rootType == fieldType || fieldType.IsReferenceType)
                 fieldSize = type.PlatformType.PointerSize*8u;
               else
-                fieldSize = TypeHelper.SizeOfType(fieldType, rootType, mayUseSizeOfProperty:true)*8;
+                fieldSize = TypeHelper.SizeOfType(fieldType, rootType, mayUseSizeOfProperty: true)*8;
             }
             result += fieldSize;
           }
