@@ -206,8 +206,7 @@ namespace Microsoft.Cci.Contracts {
       private Dictionary<uint, IMethodReference> correspondingAbstractMember = new Dictionary<uint, IMethodReference>();
 
       public ConvertContractClassContract(IMetadataHost host, ITypeDefinition contractClass, ITypeDefinition abstractType)
-        : base(null)
-      {
+        : base(null) {
         Contract.Requires(contractClass.IsGeneric == abstractType.IsGeneric);
         this.contractClass = contractClass;
         this.contractClassInternedKey = this.contractClass.InternedKey;
@@ -230,7 +229,7 @@ namespace Microsoft.Cci.Contracts {
       }
 
     }
-  
+
   }
 
   /// <summary>
@@ -282,7 +281,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Disposes the PdbReader object, if any, that is used to obtain the source text locations corresponding to contracts.
     /// </summary>
-    public void Dispose() {
+    public virtual void Dispose() {
       this.Close();
       GC.SuppressFinalize(this);
     }
@@ -379,7 +378,7 @@ namespace Microsoft.Cci.Contracts {
               });
           }
           if (0 < derivedPreconditions.Count) {
-            var derivedMethodContract = new MethodContract(){
+            var derivedMethodContract = new MethodContract() {
               Locations = locations,
               Preconditions = derivedPreconditions,
             };
@@ -580,7 +579,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Disposes any constituent contract providers that implement the IDisposable interface.
     /// </summary>
-    public void Dispose() {
+    public virtual void Dispose() {
       this.Close();
       GC.SuppressFinalize(this);
     }
