@@ -16,7 +16,7 @@ using Microsoft.Cci;
 
 namespace Microsoft.Cci {
 
-  public class PdbWriter : IUnmanagedPdbWriter {
+  public sealed class PdbWriter : IUnmanagedPdbWriter {
 
     string fileName;
     ISourceLocationProvider sourceLocationProvider;
@@ -32,8 +32,8 @@ namespace Microsoft.Cci {
       GC.SuppressFinalize(this);
     }
 
-    ~PdbWriter(){
-       this.Close();
+    ~PdbWriter() {
+      this.Close();
     }
 
     private void Close() {

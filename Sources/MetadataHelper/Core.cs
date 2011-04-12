@@ -710,7 +710,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Calls IDiposable.Dispose on any disposable objects allocated by this host environment.
     /// </summary>
-    public void Dispose() {
+    public virtual void Dispose() {
       this.Close();
       GC.SuppressFinalize(this);
     }
