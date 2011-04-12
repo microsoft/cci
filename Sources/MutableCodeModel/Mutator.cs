@@ -1457,32 +1457,32 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="addressableExpression"></param>
     public virtual void RewriteChildren(AddressableExpression addressableExpression) {
       this.RewriteChildren((Expression)addressableExpression);
-      var local = addressableExpression.Definition as LocalDefinition;
+      var local = addressableExpression.Definition as ILocalDefinition;
       if (local != null)
-        addressableExpression.Definition = this.Rewrite(local);
+        addressableExpression.Definition = this.RewriteReference(local);
       else {
-        var parameter = addressableExpression.Definition as ParameterDefinition;
+        var parameter = addressableExpression.Definition as IParameterDefinition;
         if (parameter != null)
-          addressableExpression.Definition = this.Rewrite(parameter);
+          addressableExpression.Definition = this.RewriteReference(parameter);
         else {
           var fieldReference = addressableExpression.Definition as IFieldReference;
           if (fieldReference != null)
             addressableExpression.Definition = this.Rewrite(fieldReference);
           else {
-            var arrayIndexer = addressableExpression.Definition as ArrayIndexer;
+            var arrayIndexer = addressableExpression.Definition as IArrayIndexer;
             if (arrayIndexer != null) {
               addressableExpression.Definition = this.Rewrite(arrayIndexer);
               return; //do not rewrite Instance again
             } else {
-              var addressDereference = addressableExpression.Definition as AddressDereference;
+              var addressDereference = addressableExpression.Definition as IAddressDereference;
               if (addressDereference != null)
                 addressableExpression.Definition = this.Rewrite(addressDereference);
               else {
-                var methodReference = addressableExpression.Definition as MethodReference;
+                var methodReference = addressableExpression.Definition as IMethodReference;
                 if (methodReference != null)
                   addressableExpression.Definition = this.Rewrite(methodReference);
                 else {
-                  var thisReference = (ThisReference)addressableExpression.Definition;
+                  var thisReference = (IThisReference)addressableExpression.Definition;
                   addressableExpression.Definition = this.Rewrite(thisReference);
                 }
               }
@@ -1613,13 +1613,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.RewriteChildren((Expression)boundExpression);
       if (boundExpression.Instance != null)
         boundExpression.Instance = this.Rewrite(boundExpression.Instance);
-      var local = boundExpression.Definition as LocalDefinition;
+      var local = boundExpression.Definition as ILocalDefinition;
       if (local != null)
-        boundExpression.Definition = this.Rewrite(local);
+        boundExpression.Definition = this.RewriteReference(local);
       else {
-        var parameter = boundExpression.Definition as ParameterDefinition;
+        var parameter = boundExpression.Definition as IParameterDefinition;
         if (parameter != null)
-          boundExpression.Definition = this.Rewrite(parameter);
+          boundExpression.Definition = this.RewriteReference(parameter);
         else {
           var fieldReference = (IFieldReference)boundExpression.Definition;
           boundExpression.Definition = this.Rewrite(fieldReference);
@@ -1918,7 +1918,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual void RewriteChildren(LocalDeclarationStatement localDeclarationStatement) {
       this.RewriteChildren((Statement)localDeclarationStatement);
-      localDeclarationStatement.LocalVariable = this.Rewrite((LocalDefinition)localDeclarationStatement.LocalVariable);
+      localDeclarationStatement.LocalVariable = this.Rewrite(localDeclarationStatement.LocalVariable);
       if (localDeclarationStatement.InitialValue != null)
         localDeclarationStatement.InitialValue = this.Rewrite(localDeclarationStatement.InitialValue);
     }
@@ -2147,28 +2147,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual void RewriteChildren(TargetExpression targetExpression) {
       this.RewriteChildren((Expression)targetExpression);
-      var local = targetExpression.Definition as LocalDefinition;
+      var local = targetExpression.Definition as ILocalDefinition;
       if (local != null)
-        targetExpression.Definition = this.Rewrite(local);
+        targetExpression.Definition = this.RewriteReference(local);
       else {
-        var parameter = targetExpression.Definition as ParameterDefinition;
+        var parameter = targetExpression.Definition as IParameterDefinition;
         if (parameter != null)
-          targetExpression.Definition = this.Rewrite(parameter);
+          targetExpression.Definition = this.RewriteReference(parameter);
         else {
           var fieldReference = targetExpression.Definition as IFieldReference;
           if (fieldReference != null)
             targetExpression.Definition = this.Rewrite(fieldReference);
           else {
-            var arrayIndexer = targetExpression.Definition as ArrayIndexer;
+            var arrayIndexer = targetExpression.Definition as IArrayIndexer;
             if (arrayIndexer != null) {
               targetExpression.Definition = this.Rewrite(arrayIndexer);
               return; //do not rewrite Instance again.
             } else {
-              var addressDereference = targetExpression.Definition as AddressDereference;
+              var addressDereference = targetExpression.Definition as IAddressDereference;
               if (addressDereference != null)
                 targetExpression.Definition = this.Rewrite(addressDereference);
               else {
-                var propertyDefinition = (PropertyDefinition)targetExpression.Definition;
+                var propertyDefinition = (IPropertyDefinition)targetExpression.Definition;
                 targetExpression.Definition = this.Rewrite(propertyDefinition);
               }
             }
