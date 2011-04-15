@@ -256,8 +256,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The number of array dimensions.
     /// </summary>
     public virtual uint Rank {
-      get { 
-        return 1; 
+      get {
+        return 1;
       }
       set {
         Contract.Requires(!this.IsFrozen);
@@ -273,7 +273,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public virtual List<ulong>/*?*/ Sizes {
       get {
-        return null; 
+        return null;
       }
       set {
         Contract.Requires(!this.IsVector);
@@ -701,7 +701,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public override ITypeDefinition ResolvedType {
-      get { 
+      get {
         var result = ((IGenericMethodParameterReference)this).ResolvedType;
         if (result == Dummy.GenericMethodParameter) return Dummy.Type;
         return result;
@@ -1194,7 +1194,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override ITypeDefinition ResolvedType {
       get {
         var result = ((IGenericTypeParameterReference)this).ResolvedType;
-        return result is Dummy ? Dummy.Type : result; 
+        return result is Dummy ? Dummy.Type : result;
       }
     }
 
@@ -2729,9 +2729,13 @@ namespace Microsoft.Cci.MutableCodeModel {
           containingTypeReference = nestedType.ContainingTypeDefinition.InstanceType;
         else
           containingTypeReference = this.GetSpecializedType((INamedTypeDefinition)nestedType.ContainingTypeDefinition);
-        foreach (var nested in containingTypeReference.ResolvedType.NestedTypes) {
-          if (nested.Name == nestedType.Name && nested.GenericParameterCount == nested.GenericParameterCount) return nested;
-        }
+        return new SpecializedNestedTypeReference() {
+          ContainingType = containingTypeReference,
+          InternFactory = this.InternFactory,
+          Name = nestedType.Name,
+          PlatformType = this.PlatformType,
+          UnspecializedVersion = nestedType,
+        };
       }
       return typeDef;
     }
