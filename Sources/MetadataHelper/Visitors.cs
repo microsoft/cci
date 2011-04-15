@@ -3103,7 +3103,7 @@ namespace Microsoft.Cci {
       this.objectsThatHaveAlreadyBeenTraversed.Add(arrayTypeReference, arrayTypeReference);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(arrayTypeReference); //No need to dispatch. This call is already type specific.
       if (this.stopTraversal) return;
-      this.TraverseChildren((ITypeReference)arrayTypeReference);
+      this.TraverseChildren(arrayTypeReference);
       if (this.stopTraversal) return;
       if (this.postorderVisitor != null) this.postorderVisitor.Visit(arrayTypeReference);
     }
