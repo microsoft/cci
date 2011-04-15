@@ -5,7 +5,8 @@ using System.Text;
 namespace RoundtripTests.TestData.source {
   class TestClass1<T> {
     T t;
-    public TestClass1(T t): base() {
+    public TestClass1(T t)
+      : base() {
       this.t = t;
     }
     public void Print() {
@@ -158,7 +159,7 @@ namespace RoundtripTests.TestData.source {
       r = x | 0xFFFF;
       r = x & 0xFFFF;
       r = x % 2;
-      if ((x>0) || (x>= y) && !(x<3) && (x<=3) || (x ==0) )
+      if ((x>0) || (x>= y) && !(x<3) && (x<=3) || (x ==0))
         x++;
       else
         x--;
@@ -198,7 +199,7 @@ namespace RoundtripTests.TestData.source {
     /// Test generic method parameters
     /// </summary>
     private void MethodCallTest1<T1>(T1 t) {
-      T1 [] arr = new T1[1] {t};
+      T1[] arr = new T1[1] { t };
       Console.WriteLine("Test array whose element type is generic method parameter. We have {0}.", arr[0]);
     }
 
@@ -297,7 +298,8 @@ namespace RoundtripTests.TestData.source {
           var innerAction = new Action(() => Console.WriteLine("inner delegate sez x: " + x + " y: " + y));
           DoAction(innerAction);
         } catch (Exception exception) {
-          Console.WriteLine("inner delegate caught an exception" + exception.Message);
+          var innerAction = new Action(() => Console.WriteLine("inner delegate caught an exception" + exception.Message));
+          DoAction(innerAction);
         }
       });
       DoAction(outerAction);

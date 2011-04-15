@@ -54,19 +54,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       var finder = new ClosureFinder(method, this.host);
       finder.Traverse(body);
 
-      if (finder.foundAnonymousDelegate) {
-        body = InjectClosureFields.GetBodyAfterInjectingClosureFields(
-          method, finder.fieldForCapturedLocalOrParameter,
-          finder.classList,
-          finder.outerClosures,
-          this.host,
-          this.sourceLocationProvider,
-          finder.genericTypeParameterMapping,
-          finder.lambda2method,
-          body
-          );
-      }
-
       var privateHelperTypes = new List<ITypeDefinition>();
       if (finder.foundYield) {
         this.isIteratorBody = true;
@@ -77,12 +64,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       result.MethodDefinition = method;
       result.IsNormalized = true;
       result.LocalsAreZeroed = true;
-      if (finder.foundAnonymousDelegate) {
-        for (int i = 1; i < finder.classList.Count; i++) {
-          // the first element in classList is the containing type of "method": don't include that!
-          privateHelperTypes.Add(finder.classList[i]);
-        }
-      }
       result.PrivateHelperTypes = privateHelperTypes;
 
       return result;

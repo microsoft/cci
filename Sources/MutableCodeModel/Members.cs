@@ -110,11 +110,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       } else {
         //This object might already be immutable and we are just doing delayed initialization, so make a copy of this.Block.
         var mutableBlock = new CodeDeepCopier(this.host).Copy(this.Block);
-        //if (checker.foundAnonymousDelegate) {
-        //  var remover = new AnonymousDelegateRemover(this.host, this.sourceLocationProvider);
-        //  remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock);
-        //  privateHelperTypes = remover.closureClasses;
-        //}
+        if (checker.foundAnonymousDelegate) {
+          var remover = new AnonymousDelegateRemover(this.host, this.sourceLocationProvider);
+          remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock);
+          privateHelperTypes = remover.closureClasses;
+        }
         var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider);
         var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, mutableBlock);
         normalizedBody.isNormalized = true;
@@ -258,7 +258,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.PrivateHelperTypes == null)
           return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
         else
-          return this.PrivateHelperTypes.AsReadOnly(); 
+          return this.PrivateHelperTypes.AsReadOnly();
       }
     }
 

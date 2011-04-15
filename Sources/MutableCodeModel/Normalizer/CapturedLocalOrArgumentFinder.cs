@@ -55,20 +55,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The enclosing method that is being normalized, i.e., the one whose body will end up containing the lambdas.
     /// </summary>
     IMethodDefinition method;
-    IAnonymousDelegate/*?*/ currentAnonymousDelegate;
     IMetadataHost host;
     INameTable nameTable;
-    internal bool foundAnonymousDelegate;
     internal bool foundYield;
     internal NestedTypeDefinition/*?*/ generatedclosureClass;
     internal Dictionary<uint, IGenericTypeParameter> genericTypeParameterMapping = new Dictionary<uint, IGenericTypeParameter>();
     CopyTypeFromIteratorToClosure copyTypeToClosure;
     int counter;
-    /// <summary>
-    /// The depth in the current tree of lambdas. Level 0 is the original method.
-    /// invariant: 0 &lt;= nestingDepth &lt;= classList.Count
-    /// </summary>
-    int nestingDepth;
 
     /// <summary>
     /// 
@@ -82,7 +75,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.nameTable = host.NameTable;
       this.counter = 0;
       this.classList.Add((INamedTypeDefinition)method.ContainingTypeDefinition);
-      this.nestingDepth = 1;
     }
 
     private IMethodReference CompilerGeneratedCtor {
@@ -126,11 +118,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         IParameterDefinition/*?*/ par = definition as IParameterDefinition;
         if (par != null) {
           if (!this.localOrParameter2ClosureClass.TryGetValue(par, out containingClass)) return;
-          if (par.ContainingSignature == this.currentAnonymousDelegate) {
-            // A use of a parameter is captured only if it is found in a *nested* closure,
-            // not the closure to which the parameter belongs.
-            return;
-          }
           name = par.Name;
           type = par.Type;
         } else {
@@ -219,131 +206,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       return result;
     }
 
-
-    public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
-      this.foundAnonymousDelegate = true;
-      IAnonymousDelegate/*?*/ savedCurrentAnonymousDelegate = this.currentAnonymousDelegate;
-      this.currentAnonymousDelegate = anonymousDelegate;
-      NestedTypeDefinition/*?*/ savedCurrentClosureClass = this.generatedclosureClass;
-
-      // If this is a new level, then create a closure class to implement the lambda.
-      // (Only the outermost closure class can be a generic class and then only if the method
-      // containing the closures is generic.)
-      // Otherwise any lambdas at this level will become methods in this level's closure class
-      NestedTypeDefinition closureClass;
-      if (this.nestingDepth < this.classList.Count) {
-        closureClass = (NestedTypeDefinition)this.classList[nestingDepth];
-      } else {
-        closureClass = this.CreateClosureClass(savedCurrentClosureClass == null);
-        // Create a field that methods in this closure class can use to access fields in
-        // enclosing closure classes.
-        var outerClosureField = new FieldDefinition() {
-          ContainingTypeDefinition = closureClass,
-          InternFactory = this.host.InternFactory,
-          Name = this.host.NameTable.GetNameFor("__outerClosure"),
-          //Type = TypeDefinition.SelfInstance(savedCurrentClosureClass,this.host.InternFactory),
-          Type = NamedTypeDefinition.SelfInstance(this.classList[nestingDepth - 1], this.host.InternFactory),
-          Visibility = TypeMemberVisibility.Public,
-        };
-        closureClass.Fields.Add(outerClosureField);
-        this.outerClosures.Add(outerClosureField);
-      }
-
-      this.generatedclosureClass = closureClass;
-
-      // Keep a local list of the parameters and locals that, if captured,
-      // would become fields of the closure class for this lambda. An
-      // alternative would be to keep a stack of scopes instead of the single
-      // table "localOrParameter2ClosureClass". Then when leaving a lambda,
-      // the local table for that closure class could be popped from the
-      // stack. But then when potentially capturing a use of a local/parameter
-      // each table in the stack would have to be searched. Using one table
-      // makes that more efficient, but then requires the use of this local
-      // list so that the shared table can be purged after visiting the current
-      // lambda.
-      var localOrParametersInScopeForThisClosure = new List<INamedEntity>();
-
-      // Map all locals in scope to the closure class, in case they are captured.
-      foreach (var l in this.localsOrParametersInScope.Keys) {
-        this.localOrParameter2ClosureClass.Add(l, closureClass);
-        localOrParametersInScopeForThisClosure.Add(l);
-      }
-      // Add parameters of enclosing method, if this is the outermost lambda
-      if (savedCurrentAnonymousDelegate == null) {
-        foreach (var p in this.method.Parameters) {
-          this.localOrParameter2ClosureClass.Add(p, closureClass);
-          localOrParametersInScopeForThisClosure.Add(p);
-        }
-      }
-
-      // Clear set of locals in scope, start new scope within lambda
-      var savedLocalsOrParametersInScope = this.localsOrParametersInScope;
-      this.localsOrParametersInScope = new Dictionary<INamedEntity, bool>();
-
-      // The parameters of the lambda are available for capturing.
-      // This constitutes their definition point.
-      foreach (var p in anonymousDelegate.Parameters) {
-        this.localsOrParametersInScope[p] = true;
-      }
-
-      // Create a (partial) method so its containing type is correctly set.
-      // Then add it to map so that Normalizer can retrieve it and fill in
-      // the rest of the definition.
-      var L = new MethodDefinition();
-      L.InternFactory = this.host.InternFactory;
-      L.ContainingTypeDefinition = closureClass;
-      L.Name = this.host.NameTable.GetNameFor("__anonymous_method " + IteratorHelper.EnumerableCount(closureClass.Methods));
-      closureClass.Methods.Add(L);
-      this.lambda2method.Add(anonymousDelegate, L);
-
-      this.nestingDepth++;
-      base.TraverseChildren(anonymousDelegate);
-      this.nestingDepth--;
-
-      // If they aren't removed, then uses outside of an inner lambda
-      // (but inside of an outer lambda!) will get mistakenly captured.
-      foreach (var ne in localOrParametersInScopeForThisClosure) {
-        this.localOrParameter2ClosureClass.Remove(ne);
-      }
-
-      this.currentAnonymousDelegate = savedCurrentAnonymousDelegate;
-      this.localsOrParametersInScope = savedLocalsOrParametersInScope;
-      if (savedCurrentClosureClass != null) {
-        // leave the outermost one so that Normalizer can retrieve it
-        this.generatedclosureClass = savedCurrentClosureClass;
-      }
-    }
-
-    public override void TraverseChildren(IAddressableExpression addressableExpression) {
-      base.TraverseChildren(addressableExpression);
-      if (this.currentAnonymousDelegate != null)
-        this.CaptureDefinition(addressableExpression.Definition);
-    }
-
-    public override void TraverseChildren(IBoundExpression boundExpression) {
-      base.TraverseChildren(boundExpression);
-      if (this.currentAnonymousDelegate != null) {
-        if (boundExpression.Instance != null)
-          this.CaptureDefinition(boundExpression.Instance);
-        this.CaptureDefinition(boundExpression.Definition);
-      }
-    }
-
     public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       this.localsOrParametersInScope[localDeclarationStatement.LocalVariable] = true;
       base.TraverseChildren(localDeclarationStatement);
-    }
-
-    public override void TraverseChildren(ITargetExpression targetExpression) {
-      base.TraverseChildren(targetExpression);
-      if (this.currentAnonymousDelegate != null)
-        this.CaptureDefinition(targetExpression.Definition);
-    }
-
-    public override void TraverseChildren(IThisReference thisReference) {
-      base.TraverseChildren(thisReference);
-      if (this.currentAnonymousDelegate != null)
-        this.CaptureDefinition(thisReference);
     }
 
     public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {

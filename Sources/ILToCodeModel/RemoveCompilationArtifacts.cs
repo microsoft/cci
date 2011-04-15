@@ -151,6 +151,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     class CapturedLocalsFinder : CodeTraverser {
 
       CompilationArtifactRemover remover;
+      ILocalDefinition/*?*/ exceptionContainer;
 
       internal CapturedLocalsFinder(CompilationArtifactRemover remover) {
         this.remover = remover;
@@ -161,6 +162,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (blockStatement != null)
           this.FindCapturedLocals(blockStatement.Statements);
         base.TraverseChildren(block);
+      }
+
+      public override void TraverseChildren(ICatchClause catchClause) {
+        var savedExceptionContainer = this.exceptionContainer;
+        this.exceptionContainer = catchClause.ExceptionContainer;
+        base.TraverseChildren(catchClause);
+        this.exceptionContainer = savedExceptionContainer;
       }
 
       private void FindCapturedLocals(List<IStatement> statements) {
@@ -295,8 +303,10 @@ namespace Microsoft.Cci.ILToCodeModel {
                   // Check to see if it is closureLocal.f := other_closure_local
                   // If so, delete it.
                   var sourceLoc = ExpressionAsLocal(assignment.Source);
-                  if (sourceLoc != null && this.remover.currentClosureLocals.ContainsKey(sourceLoc)) {
+                  if (sourceLoc != null && (this.remover.currentClosureLocals.ContainsKey(sourceLoc) || this.exceptionContainer == sourceLoc)) {
                     statements.RemoveAt(j--);
+                    if (this.exceptionContainer == sourceLoc)
+                      this.remover.capturedBinding[unspecializedClosureField.InternedKey] = binding;
                   }
                   continue;
                 } else {
