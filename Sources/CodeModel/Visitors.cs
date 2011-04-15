@@ -1122,7 +1122,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public new ICodeVisitor/*?*/ PreorderVisitor {
       get { return this.preorderVisitor; }
-      set { 
+      set {
         this.preorderVisitor = value;
         base.PreorderVisitor = value;
       }
@@ -1131,9 +1131,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A visitor that should be called on each object being traversed, after all of its children are traversed. May be null. 
     /// </summary>
-    public new  ICodeVisitor/*?*/ PostorderVisitor {
+    public new ICodeVisitor/*?*/ PostorderVisitor {
       get { return this.postorderVisitor; }
-      set { 
+      set {
         this.postorderVisitor = value;
         base.PostorderVisitor = value;
       }
@@ -2039,7 +2039,7 @@ namespace Microsoft.Cci {
     public void Traverse(ILockStatement lockStatement) {
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(lockStatement);
       if (this.StopTraversal) return;
-      this.TraverseChildren((IStatement)lockStatement);
+      this.TraverseChildren(lockStatement);
       if (this.StopTraversal) return;
       if (this.postorderVisitor != null) this.postorderVisitor.Visit(lockStatement);
     }
@@ -3472,7 +3472,7 @@ namespace Microsoft.Cci {
       if (this.StopTraversal) return;
       this.Traverse(yieldReturnStatement.Expression);
     }
-  
+
   }
 
   /// <summary>
