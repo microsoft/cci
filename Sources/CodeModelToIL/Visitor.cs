@@ -187,7 +187,7 @@ namespace Microsoft.Cci {
         this.LoadAddressOf(temp, null);
         return;
       }
-      Debug.Assert(false);
+      Contract.Assume(false);
     }
 
     private void LoadField(byte alignment, bool isVolatile, IExpression/*?*/ instance, IFieldReference field, bool fieldIsStatic) {
@@ -282,7 +282,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="addressableExpression">The addressable expression.</param>
     public override void TraverseChildren(IAddressableExpression addressableExpression) {
-      Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
+      Contract.Assume(false, "The expression containing this as a subexpression should never allow a call to this routine.");
     }
 
     /// <summary>
@@ -344,19 +344,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Generates IL for the specified alias for type.
-    /// </summary>
-    /// <param name="aliasForType">Type of the alias for.</param>
-    public override void TraverseChildren(IAliasForType aliasForType) {
-      Debug.Assert(false);
-    }
-
-    /// <summary>
     /// Generates IL for the specified anonymous delegate.
     /// </summary>
     /// <param name="anonymousDelegate">The anonymous delegate.</param>
     public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
-      Debug.Assert(false);
+      Contract.Assume(false, "IAnonymousDelegate nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -406,19 +398,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Generates IL for the specified array type reference.
-    /// </summary>
-    /// <param name="arrayTypeReference">The array type reference.</param>
-    public override void TraverseChildren(IArrayTypeReference arrayTypeReference) {
-      Debug.Assert(false);
-    }
-
-    /// <summary>
     /// Throws an exception when executed: IAssertStatement nodes
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
     public override void TraverseChildren(IAssertStatement assertStatement) {
-      throw new InvalidOperationException("IAssertStatement nodes must be replaced before trying to convert the Code Model to IL.");
+      Contract.Assume(false, "IAssertStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -570,7 +554,7 @@ namespace Microsoft.Cci {
         }
         return;
       }
-      Debug.Assert(false);
+      Contract.Assume(false);
     }
 
     private void StoreVectorElement(ITypeReference elementTypeReference) {
@@ -651,7 +635,7 @@ namespace Microsoft.Cci {
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
     public override void TraverseChildren(IAssumeStatement assumeStatement) {
-      throw new InvalidOperationException("IAssumeStatement nodes must be replaced before trying to convert the Code Model to IL.");
+      Contract.Assume(false, "IAssumeStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -719,7 +703,7 @@ namespace Microsoft.Cci {
         this.LoadField(boundExpression.IsUnaligned ? boundExpression.Alignment : (byte)0, boundExpression.IsVolatile, boundExpression.Instance, field, boundExpression.Instance == null);
         return;
       }
-      Debug.Assert(false);
+      Contract.Assert(false);
     }
 
     /// <summary>
@@ -727,6 +711,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="breakStatement">The break statement.</param>
     public override void TraverseChildren(IBreakStatement breakStatement) {
+      this.EmitSequencePoint(breakStatement.Locations);
       if (this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
         this.generator.Emit(OperationCode.Leave, this.currentBreakTarget);
       else
@@ -823,6 +808,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="conditionalStatement">The conditional statement.</param>
     public override void TraverseChildren(IConditionalStatement conditionalStatement) {
+      this.EmitSequencePoint(conditionalStatement.Condition.Locations);
       ILGeneratorLabel/*?*/ endif = null;
       if (conditionalStatement.TrueBranch is IBreakStatement && !this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
         this.VisitBranchIfTrue(conditionalStatement.Condition, this.currentBreakTarget);
@@ -856,6 +842,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="continueStatement">The continue statement.</param>
     public override void TraverseChildren(IContinueStatement continueStatement) {
+      this.EmitSequencePoint(continueStatement.Locations);
       if (this.LabelIsOutsideCurrentExceptionBlock(this.currentContinueTarget))
         this.generator.Emit(OperationCode.Leave, this.currentContinueTarget);
       else
@@ -1025,6 +1012,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="debuggerBreakStatement">The debugger break statement.</param>
     public override void TraverseChildren(IDebuggerBreakStatement debuggerBreakStatement) {
+      this.EmitSequencePoint(debuggerBreakStatement.Locations);
       this.generator.Emit(OperationCode.Break);
     }
 
@@ -1058,6 +1046,7 @@ namespace Microsoft.Cci {
 
       this.generator.MarkLabel(this.currentContinueTarget);
       this.Traverse(doUntilStatement.Body);
+      this.EmitSequencePoint(doUntilStatement.Condition.Locations);
       this.VisitBranchIfFalse(doUntilStatement.Condition, this.currentContinueTarget);
       this.generator.MarkLabel(this.currentBreakTarget);
 
@@ -1080,8 +1069,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="emptyStatement">The empty statement.</param>
     public override void TraverseChildren(IEmptyStatement emptyStatement) {
-      if (!this.minizeCodeSize || IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations))
+      if (!this.minizeCodeSize || IteratorHelper.EnumerableIsNotEmpty(emptyStatement.Locations)) {
+        this.EmitSequencePoint(emptyStatement.Locations);
         this.generator.Emit(OperationCode.Nop);
+      }
       this.lastStatementWasUnconditionalTransfer = false;
     }
 
@@ -1112,6 +1103,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="expressionStatement">The expression statement.</param>
     public override void TraverseChildren(IExpressionStatement expressionStatement) {
+      this.EmitSequencePoint(expressionStatement.Locations);
       IAssignment/*?*/ assigment = expressionStatement.Expression as IAssignment;
       if (assigment != null) {
         this.VisitAssignment(assigment, true);
@@ -1253,6 +1245,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="gotoStatement">The goto statement.</param>
     public override void TraverseChildren(IGotoStatement gotoStatement) {
+      this.EmitSequencePoint(gotoStatement.Locations);
       ILGeneratorLabel targetLabel;
       if (!this.labelFor.TryGetValue(gotoStatement.TargetStatement.Label.UniqueKey, out targetLabel)) {
         targetLabel = new ILGeneratorLabel();
@@ -1270,6 +1263,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="gotoSwitchCaseStatement">The goto switch case statement.</param>
     public override void TraverseChildren(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      this.EmitSequencePoint(gotoSwitchCaseStatement.Locations);
       base.TraverseChildren(gotoSwitchCaseStatement);
       this.lastStatementWasUnconditionalTransfer = false;
     }
@@ -1364,6 +1358,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="localDeclarationStatement">The local declaration statement.</param>
     public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
+      this.EmitSequencePoint(localDeclarationStatement.Locations);
       if (localDeclarationStatement.LocalVariable.IsConstant) {
         this.generator.AddConstantToCurrentScope(localDeclarationStatement.LocalVariable);
         this.generator.Emit(OperationCode.Nop); //Make sure the constant always has a scope
@@ -1383,6 +1378,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="lockStatement">The lock statement.</param>
     public override void TraverseChildren(ILockStatement lockStatement) {
+      this.EmitSequencePoint(lockStatement.Locations);
       base.TraverseChildren(lockStatement);
       this.lastStatementWasUnconditionalTransfer = false;
     }
@@ -1408,7 +1404,7 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Ceq);
           this.StackSize--;
         } else {
-          Debug.Assert(opsize == 0); //If not, the CodeModel is invalid.
+          Contract.Assert(opsize == 0); //If not, the CodeModel is invalid.
           //the type is an unresolved reference, typically an enum, so we just don't know what size it is (at compile time, that is).
           var trueCase = new ILGeneratorLabel();
           var done = new ILGeneratorLabel();
@@ -1538,7 +1534,7 @@ namespace Microsoft.Cci {
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
     public override void TraverseChildren(IOldValue oldValue) {
-      throw new InvalidOperationException("IOldValue nodes must be replaced before trying to convert the Code Model to IL.");
+      Contract.Assume(false, "IOldValue nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
 
@@ -1602,6 +1598,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="resourceUseStatement">The resource use statement.</param>
     public override void TraverseChildren(IResourceUseStatement resourceUseStatement) {
+      this.EmitSequencePoint(resourceUseStatement.Locations);
       base.TraverseChildren(resourceUseStatement);
       this.lastStatementWasUnconditionalTransfer = false;
     }
@@ -1611,6 +1608,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="rethrowStatement">The rethrow statement.</param>
     public override void TraverseChildren(IRethrowStatement rethrowStatement) {
+      this.EmitSequencePoint(rethrowStatement.Locations);
       this.generator.Emit(OperationCode.Rethrow);
       this.lastStatementWasUnconditionalTransfer = true;
     }
@@ -1620,6 +1618,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="returnStatement">The return statement.</param>
     public override void TraverseChildren(IReturnStatement returnStatement) {
+      this.EmitSequencePoint(returnStatement.Locations);
       if (returnStatement.Expression != null) {
         this.Traverse(returnStatement.Expression);
         if (!this.minizeCodeSize || this.currentTryCatch != null) {
@@ -1643,7 +1642,7 @@ namespace Microsoft.Cci {
     /// must be replaced before converting the Code Model to IL.
     /// </summary>
     public override void TraverseChildren(IReturnValue returnValue) {
-      throw new InvalidOperationException("IReturnValue nodes must be replaced before trying to convert the Code Model to IL.");
+      Contract.Assume(false, "IReturnValue nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -1696,16 +1695,6 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Traverses the given statement.
-    /// </summary>
-    /// <param name="statement"></param>
-    public override void TraverseChildren(IStatement statement) {
-      if (!(statement is IBlockStatement))
-        this.EmitSequencePoint(statement.Locations);
-      base.TraverseChildren(statement);
-    }
-
-    /// <summary>
     /// Generates IL for the specified subtraction.
     /// </summary>
     /// <param name="subtraction">The subtraction.</param>
@@ -1736,12 +1725,13 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="switchStatement">The switch statement.</param>
     public override void TraverseChildren(ISwitchStatement switchStatement) {
+      this.EmitSequencePoint(switchStatement.Locations);
       this.Traverse(switchStatement.Expression);
       uint numberOfCases;
       uint maxValue = GetMaxCaseExpressionValueAsUInt(switchStatement.Cases, out numberOfCases);
       if (numberOfCases == 0) { this.generator.Emit(OperationCode.Pop); return; }
-      if (maxValue < uint.MaxValue && maxValue/2 < numberOfCases)
-        this.GenerateSwitchInstruction(switchStatement.Cases, maxValue);
+      //if (maxValue < uint.MaxValue && maxValue/2 < numberOfCases)
+      this.GenerateSwitchInstruction(switchStatement.Cases, maxValue);
       //TODO: generate binary search
       //TemporaryVariable switchVar = new TemporaryVariable(switchStatement.Expression.Type);
       //this.VisitAssignmentTo(switchVar);
@@ -1866,7 +1856,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="targetExpression"></param>
     public override void TraverseChildren(ITargetExpression targetExpression) {
-      Debug.Assert(false); //The expression containing this as a subexpression should never allow a call to this routine.
+      Contract.Assume(false, "The expression containing this as a subexpression should never allow a call to this routine.");
     }
 
     /// <summary>
@@ -1883,6 +1873,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="throwStatement">The throw statement.</param>
     public override void TraverseChildren(IThrowStatement throwStatement) {
+      this.EmitSequencePoint(throwStatement.Locations);
       this.Traverse(throwStatement.Exception);
       this.generator.Emit(OperationCode.Throw);
       this.StackSize = 0;
@@ -2001,6 +1992,7 @@ namespace Microsoft.Cci {
       this.generator.MarkLabel(loopStart);
       this.Traverse(whileDoStatement.Body);
       this.generator.MarkLabel(this.currentContinueTarget);
+      this.EmitSequencePoint(whileDoStatement.Condition.Locations);
       this.VisitBranchIfTrue(whileDoStatement.Condition, loopStart);
       this.generator.MarkLabel(this.currentBreakTarget);
 
@@ -2014,8 +2006,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="yieldBreakStatement">The yield break statement.</param>
     public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
-      base.TraverseChildren(yieldBreakStatement);
-      this.lastStatementWasUnconditionalTransfer = true;
+      Contract.Assume(false, "IYieldBreakStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     /// <summary>
@@ -2023,8 +2014,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="yieldReturnStatement">The yield return statement.</param>
     public override void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
-      base.TraverseChildren(yieldReturnStatement);
-      this.lastStatementWasUnconditionalTransfer = false;
+      Contract.Assume(false, "IYieldReturnStatement nodes must be replaced before trying to convert the Code Model to IL.");
     }
 
     private void VisitCheckedConversion(ITypeReference sourceType, ITypeReference targetType) {
@@ -3681,13 +3671,13 @@ namespace Microsoft.Cci {
               case PrimitiveTypeCode.UInt64: this.generator.Emit(OperationCode.Conv_U8); break;
               case PrimitiveTypeCode.UInt8: this.generator.Emit(OperationCode.Conv_U1); break;
               default:
-                Debug.Assert(false); //Not expected to happen. Please notify hermanv@microsoft.com with a way to reproduce this.
+                Contract.Assume(false, "Not expected to happen. Please notify hermanv@microsoft.com with a way to reproduce this.");
                 break;
             }
           } else if (!sourceType.IsValueType) {
             this.generator.Emit(OperationCode.Unbox_Any, targetType);
           } else {
-            Debug.Assert(false);  //Not expected to happen. Please notify hermanv@microsoft.com with a way to reproduce this.
+            Contract.Assume(false, "Not expected to happen. Please notify hermanv@microsoft.com with a way to reproduce this.");
           }
           break;
       }
