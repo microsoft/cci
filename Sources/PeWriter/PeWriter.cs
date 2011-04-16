@@ -5191,10 +5191,22 @@ namespace Microsoft.Cci {
 
   internal class ReferenceIndexer : MetadataTraverser {
 
+    // Enters references into tables so that they can have tokens.
+    // Non primitive namespace as well as nested types always need tokens, and structural types that are referred to from tables need tokens.
+    // However, types that are inside custom attributes and structural types that are never referred to from a table don't need tokens.
+
     Dictionary<object, bool> alreadyHasToken = new Dictionary<object, bool>();
+    Dictionary<ITypeReference, bool> alreadyHasBeenTaversed = new Dictionary<ITypeReference, bool>();
     PeWriter peWriter;
     bool traverseAttributes;
+    /// <summary>
+    /// True if the type reference is traversed from a location that needs a token for the type reference.
+    /// </summary>
     bool typeReferenceNeedsToken;
+    /// <summary>
+    /// True if the traversal is inside an attribute. If so, namespace and nested types do not need tokens.
+    /// </summary>
+    bool insideAttribute;
     IModule/*?*/ module;
 
     internal ReferenceIndexer(PeWriter peWriter, bool traverseAttributes) {
@@ -5237,7 +5249,9 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(ICustomAttribute customAttribute) {
+      this.insideAttribute = true;
       this.Traverse(customAttribute.Constructor);
+      this.insideAttribute = false;
     }
 
     public override void TraverseChildren(IEventDefinition eventDefinition) {
@@ -5250,7 +5264,6 @@ namespace Microsoft.Cci {
       this.Traverse(eventDefinition.Remover);
       this.typeReferenceNeedsToken = true;
       this.Traverse(eventDefinition.Type);
-      Debug.Assert(!this.typeReferenceNeedsToken);
     }
 
     public override void TraverseChildren(IFieldReference fieldReference) {
@@ -5345,25 +5358,16 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
-      this.TraverseChildren((ITypeReference)namespaceTypeReference);
+      if (this.insideAttribute) return;
       if (!this.typeReferenceNeedsToken && namespaceTypeReference.TypeCode != PrimitiveTypeCode.NotPrimitive) return;
-      this.typeReferenceNeedsToken = false;
-      if (this.alreadyHasToken.ContainsKey(namespaceTypeReference.InternedKey)) return;
-      this.peWriter.RecordTypeReference(namespaceTypeReference);
-      this.alreadyHasToken.Add(namespaceTypeReference.InternedKey, true);
-      var assemblyReference = namespaceTypeReference.ContainingUnitNamespace.Unit as IAssemblyReference;
-      if (assemblyReference != null) this.Traverse(assemblyReference);
+      this.typeReferenceNeedsToken = true;
+      base.TraverseChildren(namespaceTypeReference);
     }
 
     public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
-      this.TraverseChildren((ITypeReference)nestedTypeReference);
-      if (!this.typeReferenceNeedsToken) return;
-      this.typeReferenceNeedsToken = false;
-      if (this.alreadyHasToken.ContainsKey(nestedTypeReference.InternedKey)) return;
-      this.peWriter.RecordTypeReference(nestedTypeReference);
-      this.alreadyHasToken.Add(nestedTypeReference.InternedKey, true);
+      if (this.insideAttribute) return;
       this.typeReferenceNeedsToken = true;
-      this.Traverse(nestedTypeReference.ContainingType);
+      base.TraverseChildren(nestedTypeReference);
     }
 
     public override void TraverseChildren(IOperation operation) {
@@ -5375,7 +5379,6 @@ namespace Microsoft.Cci {
           this.Traverse(((IArrayTypeReference)operation.Value).ElementType);
         } else
           this.Traverse(typeReference);
-        Debug.Assert(!this.typeReferenceNeedsToken);
       } else {
         IFieldReference/*?*/ fieldReference = operation.Value as IFieldReference;
         if (fieldReference != null)
@@ -5386,6 +5389,13 @@ namespace Microsoft.Cci {
             this.Traverse(methodReference);
           }
         }
+      }
+    }
+
+    public override void TraverseChildren(IOperationExceptionInformation operationExceptionInformation) {
+      if (operationExceptionInformation.HandlerKind == HandlerKind.Catch || operationExceptionInformation.HandlerKind == HandlerKind.Filter) {
+        this.typeReferenceNeedsToken = true;
+        this.Traverse(operationExceptionInformation.ExceptionType);
       }
     }
 
@@ -5445,7 +5455,6 @@ namespace Microsoft.Cci {
       foreach (ITypeReference typeReference in typeReferences) {
         this.typeReferenceNeedsToken = true;
         this.Traverse(typeReference);
-        Debug.Assert(!this.typeReferenceNeedsToken);
       }
     }
 
@@ -5455,25 +5464,27 @@ namespace Microsoft.Cci {
         this.Traverse(typeMemberReference.Attributes);
       this.typeReferenceNeedsToken = true;
       this.Traverse(typeMemberReference.ContainingType);
-      Debug.Assert(!this.typeReferenceNeedsToken);
-    }
-
-    public new void Traverse(ITypeReference typeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(typeReference)) {
-        if (!this.typeReferenceNeedsToken) return;
-        this.typeReferenceNeedsToken = false;
-        if (this.alreadyHasToken.ContainsKey(typeReference.InternedKey)) return;
-        this.peWriter.RecordTypeReference(typeReference);
-        this.alreadyHasToken.Add(typeReference.InternedKey, true);
-        return;
-      }
-      base.Traverse(typeReference);
-      this.typeReferenceNeedsToken = false;
     }
 
     public override void TraverseChildren(ITypeReference typeReference) {
-      if (this.traverseAttributes && !(typeReference is ITypeDefinition))
-        this.Traverse(typeReference.Attributes);
+      if (this.typeReferenceNeedsToken) {
+        if (!this.alreadyHasToken.ContainsKey(typeReference.InternedKey)) {
+          this.peWriter.RecordTypeReference(typeReference);
+          this.alreadyHasToken.Add(typeReference.InternedKey, true);
+        }
+      } else {
+        //since this traversal of the reference did not need the reference to have a token
+        //we have to make sure that we taverse this reference again, in case another traversal
+        //actually needs the reference to have a token.
+        this.objectsThatHaveAlreadyBeenTraversed.Remove(typeReference);
+      }
+      if (this.traverseAttributes && !(typeReference is ITypeDefinition)) {
+        if (!this.alreadyHasBeenTaversed.ContainsKey(typeReference)) {
+          this.Traverse(typeReference.Attributes);
+          this.alreadyHasBeenTaversed.Add(typeReference, true);
+        }
+      }
+      this.typeReferenceNeedsToken = false;
     }
 
   }
