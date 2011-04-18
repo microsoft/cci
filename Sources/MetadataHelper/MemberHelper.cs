@@ -712,13 +712,14 @@ namespace Microsoft.Cci {
     /// <param name="containingSignature">The method or property that defines the described parameter.</param>
     /// <param name="index">The position in the parameter list where the described parameter can be found.</param>
     /// <param name="type">The type of argument value that corresponds to the described parameter.</param>
-    public SimpleParameterTypeInformation(ISignature containingSignature, ushort index, ITypeReference type) {
+    public SimpleParameterTypeInformation(ISignature containingSignature, ushort index, ITypeReference type, bool isByReference = false) {
       Contract.Requires(containingSignature != null);
       Contract.Requires(type != null);
 
       this.containingSignature = containingSignature;
       this.index = index;
       this.type = type;
+      this.isByReference = isByReference;
     }
 
     /// <summary>
@@ -738,6 +739,14 @@ namespace Microsoft.Cci {
     readonly ushort index;
 
     /// <summary>
+    /// True if the parameter is passed by reference (using a managed pointer).
+    /// </summary>
+    public bool IsByReference {
+      get { return this.isByReference; }
+    }
+    bool isByReference;
+
+    /// <summary>
     /// The type of argument value that corresponds to the described parameter.
     /// </summary>
     public ITypeReference Type {
@@ -747,10 +756,6 @@ namespace Microsoft.Cci {
 
     IEnumerable<ICustomModifier> IParameterTypeInformation.CustomModifiers {
       get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
-    }
-
-    bool IParameterTypeInformation.IsByReference {
-      get { return false; }
     }
 
     bool IParameterTypeInformation.IsModified {
