@@ -61,11 +61,35 @@ namespace Microsoft.Cci {
       this.iteratorLocalCount = iteratorLocalCount;
     }
 
+    /// <summary>
+    /// A label for the instruction to where a break statement should currently branch to.
+    /// </summary>
     ILGeneratorLabel currentBreakTarget = new ILGeneratorLabel();
+
+    /// <summary>
+    /// A label for the instruction to where a continue statement should currently branch to.
+    /// </summary>
     ILGeneratorLabel currentContinueTarget = new ILGeneratorLabel();
+
+    /// <summary>
+    /// A label for the first instruction that comes after the current TryCatchFinally statement.
+    /// </summary>
     ILGeneratorLabel/*?*/ currentTryCatchFinallyEnd;
-    ITryCatchFinallyStatement/*?*/ currentTryCatch;
+
+    /// <summary>
+    /// The TryCatchFinally statement for which IL is currently being generated.
+    /// </summary>
+    IStatement/*?*/ currentTryCatch;
+
+    /// <summary>
+    /// A label for the final (return) instruction in the current method, or the instruction that loads the argument of the final return instruction.
+    /// If there is no final return intruction, this is location of the instruction following the final instruction (which of course does not exist).
+    /// </summary>
     ILGeneratorLabel endOfMethod = new ILGeneratorLabel();
+
+    /// <summary>
+    /// On object into which IL instructions are generated.
+    /// </summary>
     ILGenerator generator;
 
     /// <summary>
@@ -74,12 +98,43 @@ namespace Microsoft.Cci {
     /// </summary>
     protected IMetadataHost host;
 
+    /// <summary>
+    /// A map from source label name unique keys to ILGenerator labels.
+    /// </summary>
     Dictionary<int, ILGeneratorLabel> labelFor = new Dictionary<int, ILGeneratorLabel>();
+
+    /// <summary>
+    /// True if the last generated statement tranferred control unconditionally, and hence an instruction at the current location can only
+    /// be reached via a branch.
+    /// </summary>
     bool lastStatementWasUnconditionalTransfer;
+
+    /// <summary>
+    /// A map from ILocalDefinition instances to indices that can be used in IL instructions referring to locals.
+    /// </summary>
     Dictionary<ILocalDefinition, ushort> localIndex = new Dictionary<ILocalDefinition, ushort>();
+
+    /// <summary>
+    /// The method whose CodeModel body is being converted to IL instructions.
+    /// </summary>
     IMethodDefinition method;
+
+    /// <summary>
+    /// If true, code generation emphasizes small code size over patterns that make debugging better.
+    /// </summary>
     bool minizeCodeSize;
-    Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor = new Dictionary<object, ITryCatchFinallyStatement>();
+
+    /// <summary>
+    /// A map from labels (and labeled statements) to the most nested try catch that contains them. If a branch is
+    /// enountered to a label and the current try catch is not the one that contains the label, then the branch leaves
+    /// the current try catch block (and thus must become a leave instruction).
+    /// </summary>
+    Dictionary<object, IStatement> mostNestedTryCatchFor = new Dictionary<object, IStatement>();
+
+    /// <summary>
+    /// A local (temporary) that holds the return value until control reaches the end of the method body.
+    /// Only used if minimizeCodeSize is false or if the return statement is inside a try catch.
+    /// </summary>
     ILocalDefinition/*?*/ returnLocal;
 
     /// <summary>
@@ -87,13 +142,20 @@ namespace Microsoft.Cci {
     /// </summary>
     protected ISourceLocationProvider/*?*/ sourceLocationProvider;
 
-    List<ILocalDefinition> temporaries = new List<ILocalDefinition>();
+    /// <summary>
+    /// A list of all the local variable definitions that were encountered during the translation to IL.
+    /// </summary>
+    List<ILocalDefinition> localVariables = new List<ILocalDefinition>();
 
     /// <summary>
     /// A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.
     /// </summary>
     IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
 
+    /// <summary>
+    /// Translates the parameter list position of the given parameter to an IL parameter index. In other words,
+    /// it adds 1 to the parameterDefinition.Index value if the containing method has an implicit this parameter.
+    /// </summary>
     private static ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
       ushort parameterIndex = parameterDefinition.Index;
       if ((parameterDefinition.ContainingSignature.CallingConvention & CallingConvention.HasThis) != 0)
@@ -832,7 +894,7 @@ namespace Microsoft.Cci {
     }
 
     internal bool LabelIsOutsideCurrentExceptionBlock(ILGeneratorLabel label) {
-      ITryCatchFinallyStatement tryCatchContainingTarget = null;
+      IStatement tryCatchContainingTarget = null;
       this.mostNestedTryCatchFor.TryGetValue(label, out tryCatchContainingTarget);
       return this.currentTryCatch != tryCatchContainingTarget;
     }
@@ -1138,9 +1200,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="forEachStatement">The foreach statement to visit.</param>
     /// <param name="arrayType">The vector type of the collection.</param>
-    public virtual void VisitForeachArrayElement(IForEachStatement forEachStatement, IArrayTypeReference arrayType)
-      //^ requires arrayType.IsVector;
-    {
+    public virtual void VisitForeachArrayElement(IForEachStatement forEachStatement, IArrayTypeReference arrayType) {
+      Contract.Requires(arrayType.IsVector);
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       ILGeneratorLabel savedCurrentContinueTarget = this.currentContinueTarget;
       this.currentBreakTarget = new ILGeneratorLabel();
@@ -1378,8 +1439,99 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="lockStatement">The lock statement.</param>
     public override void TraverseChildren(ILockStatement lockStatement) {
+      if (this.host.SystemCoreAssemblySymbolicIdentity.Version.Major < 4) {
+        this.GenerateDownLevelLockStatement(lockStatement);
+        return;
+      }
+      var systemThreading = new NestedUnitNamespaceReference(this.host.PlatformType.SystemObject.ContainingUnitNamespace,
+        this.host.NameTable.GetNameFor("Threading"));
+      var systemThreadingMonitor = new NamespaceTypeReference(this.host, systemThreading, this.host.NameTable.GetNameFor("Monitor"), 0,
+        isEnum: false, isValueType: false, typeCode: PrimitiveTypeCode.NotPrimitive);
+      var parameters = new IParameterTypeInformation[2];
+      var monitorEnter = new MethodReference(this.host, systemThreadingMonitor, CallingConvention.Default, this.host.PlatformType.SystemVoid,
+        this.host.NameTable.GetNameFor("Enter"), 0, parameters);
+      parameters[0] = new SimpleParameterTypeInformation(monitorEnter, 0, this.host.PlatformType.SystemObject);
+      parameters[1] = new SimpleParameterTypeInformation(monitorEnter, 1, this.host.PlatformType.SystemBoolean, isByReference: true);
+      var monitorExit = new MethodReference(this.host, systemThreadingMonitor, CallingConvention.Default, this.host.PlatformType.SystemVoid,
+        this.host.NameTable.GetNameFor("Exit"), 0, this.host.PlatformType.SystemObject);
+
       this.EmitSequencePoint(lockStatement.Locations);
-      base.TraverseChildren(lockStatement);
+      var guardObject = new TemporaryVariable(lockStatement.Guard.Type, this.method);
+      var lockTaken = new TemporaryVariable(this.host.PlatformType.SystemBoolean, this.method);
+      //try
+      var savedCurrentTryCatch = this.currentTryCatch;
+      this.currentTryCatch = lockStatement;
+      var savedCurrentTryCatchFinallyEnd = this.currentTryCatchFinallyEnd;
+      this.currentTryCatchFinallyEnd = new ILGeneratorLabel();
+      this.generator.BeginTryBody();
+      this.Traverse(lockStatement.Guard);
+      this.generator.Emit(OperationCode.Dup); this.StackSize++;
+      this.VisitAssignmentTo(guardObject);
+      this.LoadAddressOf(lockTaken, null);
+      this.generator.Emit(OperationCode.Call, monitorEnter);
+      this.StackSize-=2;
+      this.Traverse(lockStatement.Body);
+      if (!this.lastStatementWasUnconditionalTransfer)
+        this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
+      //finally
+      this.generator.BeginFinallyBlock();
+      //if (status)
+      var endIf = new ILGeneratorLabel();
+      this.LoadLocal(lockTaken);
+      this.generator.Emit(OperationCode.Brfalse_S, endIf);
+      this.StackSize--;
+      this.LoadLocal(guardObject);
+      this.generator.Emit(OperationCode.Call, monitorExit);
+      this.StackSize--;
+      this.generator.MarkLabel(endIf);
+      //monitor exit
+      this.generator.Emit(OperationCode.Endfinally);
+      this.generator.EndTryBody();
+      this.generator.MarkLabel(this.currentTryCatchFinallyEnd);
+      this.currentTryCatchFinallyEnd = savedCurrentTryCatchFinallyEnd;
+      this.currentTryCatch = savedCurrentTryCatch;
+      this.lastStatementWasUnconditionalTransfer = false;
+    }
+
+    private void GenerateDownLevelLockStatement(ILockStatement lockStatement) {
+      var systemThreading = new NestedUnitNamespaceReference(this.host.PlatformType.SystemObject.ContainingUnitNamespace,
+        this.host.NameTable.GetNameFor("Threading"));
+      var systemThreadingMonitor = new NamespaceTypeReference(this.host, systemThreading, this.host.NameTable.GetNameFor("Monitor"), 0,
+        isEnum: false, isValueType: false, typeCode: PrimitiveTypeCode.NotPrimitive);
+      var parameters = new IParameterTypeInformation[2];
+      var monitorEnter = new MethodReference(this.host, systemThreadingMonitor, CallingConvention.Default, this.host.PlatformType.SystemVoid,
+        this.host.NameTable.GetNameFor("Enter"), 0, this.host.PlatformType.SystemObject);
+      var monitorExit = new MethodReference(this.host, systemThreadingMonitor, CallingConvention.Default, this.host.PlatformType.SystemVoid,
+        this.host.NameTable.GetNameFor("Exit"), 0, this.host.PlatformType.SystemObject);
+
+      this.EmitSequencePoint(lockStatement.Locations);
+      var guardObject = new TemporaryVariable(lockStatement.Guard.Type, this.method);
+      this.Traverse(lockStatement.Guard);
+      this.generator.Emit(OperationCode.Dup); this.StackSize++;
+      this.VisitAssignmentTo(guardObject);
+      this.generator.Emit(OperationCode.Call, monitorEnter);
+      this.StackSize--;
+      //try
+      var savedCurrentTryCatch = this.currentTryCatch;
+      this.currentTryCatch = lockStatement;
+      var savedCurrentTryCatchFinallyEnd = this.currentTryCatchFinallyEnd;
+      this.currentTryCatchFinallyEnd = new ILGeneratorLabel();
+      this.generator.BeginTryBody();
+      this.Traverse(lockStatement.Body);
+      if (!this.lastStatementWasUnconditionalTransfer)
+        this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
+      //finally
+      this.generator.BeginFinallyBlock();
+      //if (status)
+      this.LoadLocal(guardObject);
+      this.generator.Emit(OperationCode.Call, monitorExit);
+      this.StackSize--;
+      //monitor exit
+      this.generator.Emit(OperationCode.Endfinally);
+      this.generator.EndTryBody();
+      this.generator.MarkLabel(this.currentTryCatchFinallyEnd);
+      this.currentTryCatchFinallyEnd = savedCurrentTryCatchFinallyEnd;
+      this.currentTryCatch = savedCurrentTryCatch;
       this.lastStatementWasUnconditionalTransfer = false;
     }
 
@@ -1885,7 +2037,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="tryCatchFilterFinallyStatement">The try catch filter finally statement.</param>
     public override void TraverseChildren(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
-      ITryCatchFinallyStatement/*?*/ savedCurrentTryCatch = this.currentTryCatch;
+      var savedCurrentTryCatch = this.currentTryCatch;
       this.currentTryCatch = tryCatchFilterFinallyStatement;
       ILGeneratorLabel/*?*/ savedCurrentTryCatchFinallyEnd = this.currentTryCatchFinallyEnd;
       this.currentTryCatchFinallyEnd = new ILGeneratorLabel();
@@ -3963,7 +4115,7 @@ namespace Microsoft.Cci {
       if (this.localIndex.TryGetValue(local, out localIndex)) return localIndex;
       localIndex = (ushort)this.localIndex.Count;
       this.localIndex.Add(local, localIndex);
-      this.temporaries.Add(local);
+      this.localVariables.Add(local);
       return localIndex;
     }
 
@@ -3988,7 +4140,7 @@ namespace Microsoft.Cci {
     /// of statements translated by this converter.
     /// </summary>
     public IEnumerable<ILocalDefinition> GetLocalVariables() {
-      return this.temporaries.AsReadOnly();
+      return this.localVariables.AsReadOnly();
     }
 
     /// <summary>
@@ -4053,11 +4205,11 @@ namespace Microsoft.Cci {
 
   internal class LabelAndTryBlockAssociater : CodeTraverser {
 
-    Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor;
+    Dictionary<object, IStatement> mostNestedTryCatchFor;
 
     ITryCatchFinallyStatement/*?*/ currentTryCatch;
 
-    internal LabelAndTryBlockAssociater(Dictionary<object, ITryCatchFinallyStatement> mostNestedTryCatchFor) {
+    internal LabelAndTryBlockAssociater(Dictionary<object, IStatement> mostNestedTryCatchFor) {
       this.mostNestedTryCatchFor = mostNestedTryCatchFor;
     }
 
