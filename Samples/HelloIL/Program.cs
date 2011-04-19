@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
+using System.Collections.Generic;
 
 namespace HelloCodeModel {
   class Program {
@@ -36,6 +37,7 @@ namespace HelloCodeModel {
           InternFactory = host.InternFactory,
           IsClass = true,
           IsPublic = true,
+          Methods = new List<IMethodDefinition>(1),
           Name = nameTable.GetNameFor("Test"),
         };
         rootUnitNamespace.Members.Add(testClass);

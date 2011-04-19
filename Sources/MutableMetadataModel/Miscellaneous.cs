@@ -26,9 +26,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Allocates a metadata custom attribute.
     /// </summary>
     public CustomAttribute() {
-      this.arguments = new List<IMetadataExpression>();
+      this.arguments = null;
       this.constructor = Dummy.MethodReference;
-      this.namedArguments = new List<IMetadataNamedArgument>();
+      this.namedArguments = null;
     }
 
     /// <summary>
@@ -37,20 +37,26 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="customAttribute"></param>
     /// <param name="internFactory"></param>
     public void Copy(ICustomAttribute customAttribute, IInternFactory internFactory) {
-      this.arguments = new List<IMetadataExpression>(customAttribute.Arguments);
+      if (IteratorHelper.EnumerableIsNotEmpty(customAttribute.Arguments))
+        this.arguments = new List<IMetadataExpression>(customAttribute.Arguments);
+      else
+        this.arguments = null;
       this.constructor = customAttribute.Constructor;
-      this.namedArguments = new List<IMetadataNamedArgument>(customAttribute.NamedArguments);
+      if (customAttribute.NumberOfNamedArguments > 0)
+        this.namedArguments = new List<IMetadataNamedArgument>(customAttribute.NamedArguments);
+      else
+        this.namedArguments = null;
     }
 
     /// <summary>
     /// Zero or more positional arguments for the attribute constructor.
     /// </summary>
     /// <value></value>
-    public List<IMetadataExpression> Arguments {
+    public List<IMetadataExpression>/*?*/ Arguments {
       get { return this.arguments; }
       set { this.arguments = value; }
     }
-    List<IMetadataExpression> arguments;
+    List<IMetadataExpression>/*?*/ arguments;
 
     /// <summary>
     /// A reference to the constructor that will be used to instantiate this custom attribute during execution (if the attribute is inspected via Reflection).
@@ -66,18 +72,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more named arguments that specify values for fields and properties of the attribute.
     /// </summary>
     /// <value></value>
-    public List<IMetadataNamedArgument> NamedArguments {
+    public List<IMetadataNamedArgument>/*?*/ NamedArguments {
       get { return this.namedArguments; }
       set { this.namedArguments = value; }
     }
-    List<IMetadataNamedArgument> namedArguments;
+    List<IMetadataNamedArgument>/*?*/ namedArguments;
 
     /// <summary>
     /// The number of named arguments.
     /// </summary>
     /// <value></value>
     public ushort NumberOfNamedArguments {
-      get { return (ushort)this.namedArguments.Count; }
+      get {
+        if (this.NamedArguments == null) return 0;
+        return (ushort)this.NamedArguments.Count;
+      }
     }
 
     /// <summary>
@@ -91,11 +100,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region ICustomAttribute Members
 
     IEnumerable<IMetadataExpression> ICustomAttribute.Arguments {
-      get { return this.arguments.AsReadOnly(); }
+      get {
+        if (this.Arguments == null) return Enumerable<IMetadataExpression>.Empty;
+        return this.Arguments.AsReadOnly();
+      }
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
-      get { return this.namedArguments.AsReadOnly(); }
+      get {
+        if (this.namedArguments == null) return Enumerable<IMetadataNamedArgument>.Empty;
+        return this.NamedArguments.AsReadOnly();
+      }
     }
 
     #endregion
@@ -639,7 +654,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Allocates a named data resource that is stored as part of CLR metadata.
     /// </summary>
     public Resource() {
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
       this.data = new List<byte>();
       this.definingAssembly = Dummy.Assembly;
       this.externalFile = Dummy.FileReference;
@@ -654,7 +669,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="resource"></param>
     /// <param name="internFactory"></param>
     public void Copy(IResource resource, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(resource.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(resource.Attributes))
+        this.attributes = new List<ICustomAttribute>(resource.Attributes);
+      else
+        this.attributes = null;
       this.data = new List<byte>(resource.Data);
       this.definingAssembly = resource.DefiningAssembly;
       if (resource.IsInExternalFile)
@@ -670,11 +688,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this resource.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// The resource data.
@@ -747,7 +765,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IResourceReference Members
 
     IEnumerable<ICustomAttribute> IResourceReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IResource IResourceReference.Resource {
@@ -766,7 +787,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Allocates a reference to an IResource instance.
     /// </summary>
     public ResourceReference() {
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
       this.definingAssembly = Dummy.Assembly;
       this.isPublic = false;
       this.name = Dummy.Name;
@@ -779,7 +800,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="resourceReference"></param>
     /// <param name="internFactory"></param>
     public void Copy(IResourceReference resourceReference, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(resourceReference.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(resourceReference.Attributes))
+        this.attributes = new List<ICustomAttribute>(resourceReference.Attributes);
+      else
+        this.attributes = null;
       this.definingAssembly = resourceReference.DefiningAssembly;
       this.isPublic = resourceReference.IsPublic;
       this.name = resourceReference.Name;
@@ -790,11 +814,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this resource.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// A symbolic reference to the IAssembly that defines the resource.
@@ -839,7 +863,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IResourceReference Members
 
     IEnumerable<ICustomAttribute> IResourceReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     #endregion
@@ -924,7 +951,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public SecurityAttribute() {
       this.action = (SecurityAction)0;
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
     }
 
     /// <summary>
@@ -934,7 +961,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(ISecurityAttribute securityAttribute, IInternFactory internFactory) {
       this.action = securityAttribute.Action;
-      this.attributes = new List<ICustomAttribute>(securityAttribute.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(securityAttribute.Attributes))
+        this.attributes = new List<ICustomAttribute>(securityAttribute.Attributes);
+      else
+        this.attributes = null;
     }
 
     /// <summary>
@@ -952,17 +982,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or permission set. The union of the sets, together with the individual permissions, define the set to which the action applies.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     #region ISecurityAttribute Members
 
 
     IEnumerable<ICustomAttribute> ISecurityAttribute.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     #endregion

@@ -1274,7 +1274,7 @@ namespace Microsoft.Cci {
       if (this.signatureIndex.TryGetValue(propertyDef, out result)) return result;
       MemoryStream sig = new MemoryStream();
       BinaryWriter writer = new BinaryWriter(sig);
-      this.SerializeSignature(propertyDef, 0, IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(), writer);
+      this.SerializeSignature(propertyDef, 0, Enumerable<IParameterTypeInformation>.Empty, writer);
       result = this.GetBlobIndex(sig.ToArray());
       this.signatureIndex.Add(propertyDef, result);
       return result;
@@ -4573,7 +4573,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     public CallingConvention CallingConvention {
@@ -4607,7 +4607,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsByRef {
@@ -4636,11 +4636,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IName Name {
@@ -4668,7 +4668,7 @@ namespace Microsoft.Cci {
     ISignature containingSignature;
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public ushort Index {
@@ -4761,7 +4761,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IMarshallingInformation MarshallingInformation {

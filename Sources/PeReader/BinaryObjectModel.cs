@@ -76,7 +76,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
     public virtual IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -701,7 +701,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<IName> IAssemblyReference.Aliases {
-      get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
+      get { return Enumerable<IName>.Empty; }
     }
 
     IAssembly IAssemblyReference.ResolvedAssembly {
@@ -946,7 +946,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<IName> IAssemblyReference.Aliases {
-      get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
+      get { return Enumerable<IName>.Empty; }
     }
 
     string IAssemblyReference.Culture {
@@ -1540,7 +1540,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers; 
+        return this.moduleCustomModifiers;
       }
     }
 
@@ -1549,7 +1549,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers.RawArray.Length > 0; 
+        return this.moduleCustomModifiers.RawArray.Length > 0;
       }
     }
 
@@ -2194,7 +2194,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -2222,7 +2222,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     public override bool IsGeneric {
@@ -2266,7 +2266,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit((IMethodReference)this); 
+      visitor.Visit((IMethodReference)this);
     }
 
     #region INamespaceMember Members
@@ -2742,7 +2742,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -2876,7 +2876,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -3348,7 +3348,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     public ushort ParameterCount {
@@ -3388,7 +3388,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     public override ushort GenericParameterCount {
@@ -3875,7 +3875,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -4011,7 +4011,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -4231,7 +4231,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public override IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -4265,7 +4265,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -4437,17 +4437,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (!this.signatureLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers; 
+        return this.moduleCustomModifiers;
       }
     }
 
-    public bool IsModified { 
+    public bool IsModified {
       get {
         if (!this.signatureLoaded) {
           this.InitFieldSignature();
         }
-        return this.moduleCustomModifiers.RawArray.Length > 0; 
-      } 
+        return this.moduleCustomModifiers.RawArray.Length > 0;
+      }
     }
 
     public bool IsStatic {

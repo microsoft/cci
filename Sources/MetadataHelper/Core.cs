@@ -1584,7 +1584,7 @@ namespace Microsoft.Cci {
         if (functionPointerTypeReference.ReturnValueIsModified)
           returnValueCustomModifiers = functionPointerTypeReference.ReturnValueCustomModifiers;
         else
-          returnValueCustomModifiers = IteratorHelper.GetEmptyEnumerable<ICustomModifier>();
+          returnValueCustomModifiers = Enumerable<ICustomModifier>.Empty;
         return this.GetFunctionPointerTypeReferenceInternId(
           functionPointerTypeReference.CallingConvention,
           functionPointerTypeReference.Parameters,

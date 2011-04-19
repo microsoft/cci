@@ -31,7 +31,7 @@ namespace ILMutator {
           Console.WriteLine(args[0] + " is not a PE file containing a CLR assembly, or an error occurred when loading it.");
           return 1;
         }
-        module = MetadataCopier.DeepCopy(host, module);
+        module = new MetadataDeepCopier(host).Copy(module);
 
         PdbReader/*?*/ pdbReader = null;
         string pdbFile = Path.ChangeExtension(module.Location, "pdb");
@@ -104,7 +104,7 @@ namespace ILMutator {
     public override MethodBody Mutate(MethodBody methodBody) {
       IMethodDefinition currentMethod = this.GetCurrentMethod();
       methodBody.MethodDefinition = currentMethod;
-      this.currentLocals = new List<ILocalDefinition>(methodBody.LocalVariables);
+      this.currentLocals = new List<ILocalDefinition>(methodBody.LocalVariables??Enumerable<ILocalDefinition>.Empty);
 
       try {
         ProcessOperations(methodBody);
@@ -120,7 +120,7 @@ namespace ILMutator {
 
     private void ProcessOperations(MethodBody methodBody) {
 
-      List<IOperation> operations = methodBody.Operations;
+      List<IOperation> operations = methodBody.Operations??new List<IOperation>();
       int count = methodBody.Operations.Count;
 
       ILGenerator generator = new ILGenerator(this.host, methodBody.MethodDefinition);
@@ -129,7 +129,7 @@ namespace ILMutator {
 
       #region Record all offsets that appear as part of an exception handler
       Dictionary<uint, bool> offsetsUsedInExceptionInformation = new Dictionary<uint, bool>();
-      foreach (var exceptionInfo in methodBody.OperationExceptionInformation) {
+      foreach (var exceptionInfo in methodBody.OperationExceptionInformation??Enumerable<IOperationExceptionInformation>.Empty) {
         uint x = exceptionInfo.TryStartOffset;
         if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
         x = exceptionInfo.TryEndOffset;

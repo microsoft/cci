@@ -206,7 +206,7 @@ namespace Microsoft.Cci {
       Contract.Requires(genericParameterCount >= 0);
       Contract.Requires(offset >= 0);
       Contract.Ensures(offset >= 0);
-    
+
       int savedOffset = offset;
       var nestedNamespaceDefinition = GetNamespace(nameTable, namespaceDefinition, typeName, ref offset);
       if (nestedNamespaceDefinition != null) {
@@ -226,7 +226,7 @@ namespace Microsoft.Cci {
       Contract.Requires(typeName != null);
       Contract.Requires(offset >= 0);
       Contract.Ensures(offset >= 0);
-     
+
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
@@ -273,7 +273,7 @@ namespace Microsoft.Cci {
       Contract.Requires(genericParameterCount >= 0);
       Contract.Requires(offset >= 0);
       Contract.Ensures(offset >= 0);
-      
+
       int len = typeName.Length;
       if (offset >= len) return null;
       int dotPos = typeName.IndexOf('.', offset);
@@ -468,7 +468,7 @@ namespace Microsoft.Cci {
   public abstract class AggregatedNamespace<ContainerType, ContainerMemberType> : AggregatedScope<INamespaceMember, ContainerType, ContainerMemberType>, INamespaceDefinition
     where ContainerType : class, IContainer<ContainerMemberType>
     where ContainerMemberType : class, IContainerMember<ContainerType> {
-    
+
     /// <summary>
     /// Allocates a namespace definition whose members are aggregations of the members of a collection of containers of the given container type.
     /// </summary>
@@ -530,7 +530,7 @@ namespace Microsoft.Cci {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public virtual IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion

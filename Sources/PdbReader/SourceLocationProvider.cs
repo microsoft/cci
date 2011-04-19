@@ -78,7 +78,7 @@ namespace Microsoft.Cci {
     /// Return zero or more locations in primary source documents that are the closest to corresponding to one or more of the given derived (non primary) document locations.
     /// </summary>
     /// <param name="locations">Zero or more locations in documents that have been derived from one or more source documents.</param>
-    public IEnumerable<IPrimarySourceLocation> GetClosestPrimarySourceLocationsFor(IEnumerable<ILocation> locations){
+    public IEnumerable<IPrimarySourceLocation> GetClosestPrimarySourceLocationsFor(IEnumerable<ILocation> locations) {
       foreach (ILocation location in locations) {
         IPrimarySourceLocation/*?*/ psloc = location as IPrimarySourceLocation;
         if (psloc != null) yield return psloc;
@@ -144,7 +144,7 @@ namespace Microsoft.Cci {
         if (slot != null && (slot.flags & 0x4) == 0)
           return IteratorHelper.GetSingletonEnumerable<IPrimarySourceLocation>(new LocalNameSourceLocation(slot.name));
       }
-      return IteratorHelper.GetEmptyEnumerable<IPrimarySourceLocation>();
+      return Enumerable<IPrimarySourceLocation>.Empty;
     }
 
     /// <summary>
@@ -197,7 +197,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
       PdbFunction/*?*/ pdbFunction = this.GetPdbFunctionFor(methodBody);
       if (pdbFunction == null || pdbFunction.iteratorScopes == null)
-        return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+        return Enumerable<ILocalScope>.Empty;
       foreach (var i in pdbFunction.iteratorScopes) {
         PdbIteratorScope pis = i as PdbIteratorScope;
         if (pis != null)
@@ -211,7 +211,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public IEnumerable<ILocalScope> GetLocalScopes(IMethodBody methodBody) {
       PdbFunction/*?*/ pdbFunction = this.GetPdbFunctionFor(methodBody);
-      if (pdbFunction == null) return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+      if (pdbFunction == null) return Enumerable<ILocalScope>.Empty;
       List<ILocalScope> scopes = new List<ILocalScope>();
       this.FillInScopesAndSubScopes(methodBody, pdbFunction.scopes, scopes);
       return scopes.AsReadOnly();
@@ -296,7 +296,7 @@ namespace Microsoft.Cci {
           return pdbFunction.namespaceScopes = this.GetNamespaceScopes(pdbFunction.usingCounts, pdbScope).AsReadOnly();
         }
       }
-      return IteratorHelper.GetEmptyEnumerable<INamespaceScope>();
+      return Enumerable<INamespaceScope>.Empty;
     }
 
     private List<INamespaceScope> GetNamespaceScopes(ushort[] usingCounts, PdbScope pdbScope) {
@@ -706,7 +706,7 @@ namespace Microsoft.Cci {
     IMetadataConstant/*?*/ compileTimeValue;
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); } //TODO: get from token
+      get { return Enumerable<ICustomModifier>.Empty; } //TODO: get from token
     }
 
     private ITypeReference GetTypeForConstant() {
@@ -760,7 +760,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); } //TODO: return a method body location or some such thing
+      get { return Enumerable<ILocation>.Empty; } //TODO: return a method body location or some such thing
     }
 
     public IMethodDefinition MethodDefinition {
@@ -810,7 +810,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {

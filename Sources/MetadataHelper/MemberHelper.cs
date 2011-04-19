@@ -560,7 +560,7 @@ namespace Microsoft.Cci {
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
       get {
         if (this.extraParameters == null)
-          this.extraParameters = IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>();
+          this.extraParameters = Enumerable<IParameterTypeInformation>.Empty;
         return this.extraParameters;
       }
     }
@@ -676,15 +676,15 @@ namespace Microsoft.Cci {
     readonly ITypeReference type;
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     bool ISignature.ReturnValueIsByRef {
@@ -712,6 +712,7 @@ namespace Microsoft.Cci {
     /// <param name="containingSignature">The method or property that defines the described parameter.</param>
     /// <param name="index">The position in the parameter list where the described parameter can be found.</param>
     /// <param name="type">The type of argument value that corresponds to the described parameter.</param>
+    /// <param name="isByReference">If true the parameter is passed by reference (using a managed pointer).</param>
     public SimpleParameterTypeInformation(ISignature containingSignature, ushort index, ITypeReference type, bool isByReference = false) {
       Contract.Requires(containingSignature != null);
       Contract.Requires(type != null);
@@ -755,7 +756,7 @@ namespace Microsoft.Cci {
     readonly ITypeReference type;
 
     IEnumerable<ICustomModifier> IParameterTypeInformation.CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     bool IParameterTypeInformation.IsModified {

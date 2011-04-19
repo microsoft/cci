@@ -66,7 +66,7 @@ namespace Microsoft.Cci {
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsForDefinitionOf(ILocalDefinition localDefinition) {
       ISourceLocationProvider/*?*/ provider = this.GetProvider(localDefinition);
       if (provider == null)
-        return IteratorHelper.GetEmptyEnumerable<IPrimarySourceLocation>();
+        return Enumerable<IPrimarySourceLocation>.Empty;
       else
         return provider.GetPrimarySourceLocationsForDefinitionOf(localDefinition);
     }
@@ -180,7 +180,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) {
-        return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+        return Enumerable<ILocalScope>.Empty;
       } else {
         return provider.GetIteratorScopes(methodBody);
       }
@@ -192,7 +192,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocalScope> GetLocalScopes(IMethodBody methodBody) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) {
-        return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+        return Enumerable<ILocalScope>.Empty;
       } else {
         return provider.GetLocalScopes(methodBody);
       }
@@ -207,7 +207,7 @@ namespace Microsoft.Cci {
     public IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(methodBody.MethodDefinition);
       if (provider == null) {
-        return IteratorHelper.GetEmptyEnumerable<INamespaceScope>();
+        return Enumerable<INamespaceScope>.Empty;
       } else {
         return provider.GetNamespaceScopes(methodBody);
       }
@@ -219,7 +219,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(scope.MethodDefinition);
       if (provider == null) {
-        return IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+        return Enumerable<ILocalDefinition>.Empty;
       } else {
         return provider.GetConstantsInScope(scope);
       }
@@ -231,7 +231,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocalDefinition> GetVariablesInScope(ILocalScope scope) {
       ILocalScopeProvider/*?*/ provider = this.GetProvider(scope.MethodDefinition);
       if (provider == null) {
-        return IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+        return Enumerable<ILocalDefinition>.Empty;
       } else {
         return provider.GetVariablesInScope(scope);
       }

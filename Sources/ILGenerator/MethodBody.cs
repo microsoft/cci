@@ -28,7 +28,7 @@ namespace Microsoft.Cci {
       this.localsAreZeroed = localsAreZeroed;
       this.operationExceptionInformation = generator.GetOperationExceptionInformation();
       this.operations = generator.GetOperations();
-      this.privateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
+      this.privateHelperTypes = Enumerable<ITypeDefinition>.Empty;
       this.generatorScopes = generator.GetLocalScopes();
       List<ILocalDefinition> locals = new List<ILocalDefinition>();
       foreach (var localScope in this.generatorScopes)
@@ -147,7 +147,7 @@ namespace Microsoft.Cci {
     /// calls to MoveNext.
     /// </summary>
     public virtual IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
-      return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+      return Enumerable<ILocalScope>.Empty;
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual IEnumerable<ILocalScope> GetLocalScopes(IMethodBody methodBody) {
       var ilGeneratorMethodBody = methodBody as ILGeneratorMethodBody;
-      if (ilGeneratorMethodBody == null) return IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+      if (ilGeneratorMethodBody == null) return Enumerable<ILocalScope>.Empty;
       return ilGeneratorMethodBody.GetLocalScopes();
     }
 
@@ -167,7 +167,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
       var ilGeneratorMethodBody = methodBody as ILGeneratorMethodBody;
-      if (ilGeneratorMethodBody == null) return IteratorHelper.GetEmptyEnumerable<INamespaceScope>();
+      if (ilGeneratorMethodBody == null) return Enumerable<INamespaceScope>.Empty;
       return ilGeneratorMethodBody.GetNamespaceScopes();
     }
 
@@ -175,7 +175,7 @@ namespace Microsoft.Cci {
     /// Returns zero or more local constant definitions that are local to the given scope.
     /// </summary>
     public virtual IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
-      return IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+      return Enumerable<ILocalDefinition>.Empty;
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual IEnumerable<ILocalDefinition> GetVariablesInScope(ILocalScope scope) {
       var ilGeneratorScope = scope as ILGeneratorScope;
-      if (ilGeneratorScope == null) return IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+      if (ilGeneratorScope == null) return Enumerable<ILocalDefinition>.Empty;
       return ilGeneratorScope.Locals;
     }
 
@@ -216,7 +216,7 @@ namespace Microsoft.Cci {
     /// Return zero or more locations in primary source documents that correspond to the definition of the given local.
     /// </summary>
     public virtual IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsForDefinitionOf(ILocalDefinition localDefinition) {
-      return IteratorHelper.GetEmptyEnumerable<IPrimarySourceLocation>();
+      return Enumerable<IPrimarySourceLocation>.Empty;
     }
 
     /// <summary>

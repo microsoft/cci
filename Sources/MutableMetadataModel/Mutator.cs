@@ -1036,7 +1036,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Rewrites the specified custom modifiers.
     /// </summary>
-    public virtual List<ICustomModifier> Rewrite(List<ICustomModifier> customModifiers) {
+    public virtual List<ICustomModifier>/*?*/ Rewrite(List<ICustomModifier>/*?*/ customModifiers) {
       if (customModifiers == null) return null;
       for (int i = 0, n = customModifiers.Count; i < n; i++)
         customModifiers[i] = this.Rewrite(customModifiers[i]);
@@ -3277,8 +3277,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="aliasesForTypes">The aliases for types.</param>
     /// <returns></returns>
-    public virtual List<IAliasForType> Visit(List<IAliasForType> aliasesForTypes) {
-      if (this.stopTraversal) return aliasesForTypes;
+    public virtual List<IAliasForType>/*?*/ Visit(List<IAliasForType/*?*/> aliasesForTypes) {
+      if (this.stopTraversal || aliasesForTypes == null) return aliasesForTypes;
       for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
         aliasesForTypes[i] = this.Visit(aliasesForTypes[i]);
       return aliasesForTypes;
@@ -3334,8 +3334,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assemblyReferences">The assembly references.</param>
     /// <returns></returns>
-    public virtual List<IAssemblyReference> Visit(List<IAssemblyReference> assemblyReferences) {
-      if (this.stopTraversal) return assemblyReferences;
+    public virtual List<IAssemblyReference>/*?*/ Visit(List<IAssemblyReference>/*?*/ assemblyReferences) {
+      if (this.stopTraversal || assemblyReferences == null) return assemblyReferences;
       for (int i = 0, n = assemblyReferences.Count; i < n; i++)
         assemblyReferences[i] = this.Visit(assemblyReferences[i]);
       return assemblyReferences;
@@ -3423,8 +3423,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="eventDefinitions">The event definitions.</param>
     /// <returns></returns>
-    public virtual List<IEventDefinition> Visit(List<IEventDefinition> eventDefinitions) {
-      if (this.stopTraversal) return eventDefinitions;
+    public virtual List<IEventDefinition>/*?*/ Visit(List<IEventDefinition>/*?*/ eventDefinitions) {
+      if (this.stopTraversal || eventDefinitions == null) return eventDefinitions;
       for (int i = 0, n = eventDefinitions.Count; i < n; i++)
         eventDefinitions[i] = this.Visit(eventDefinitions[i]);
       return eventDefinitions;
@@ -3463,8 +3463,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fieldDefinitions">The field definitions.</param>
     /// <returns></returns>
-    public virtual List<IFieldDefinition> Visit(List<IFieldDefinition> fieldDefinitions) {
-      if (this.stopTraversal) return fieldDefinitions;
+    public virtual List<IFieldDefinition>/*?*/ Visit(List<IFieldDefinition>/*?*/ fieldDefinitions) {
+      if (this.stopTraversal || fieldDefinitions == null) return fieldDefinitions;
       for (int i = 0, n = fieldDefinitions.Count; i < n; i++)
         fieldDefinitions[i] = this.Visit(fieldDefinitions[i]);
       return fieldDefinitions;
@@ -3544,8 +3544,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fileReferences">The file references.</param>
     /// <returns></returns>
-    public virtual List<IFileReference> Visit(List<IFileReference> fileReferences) {
-      if (this.stopTraversal) return fileReferences;
+    public virtual List<IFileReference>/*?*/ Visit(List<IFileReference>/*?*/ fileReferences) {
+      if (this.stopTraversal || fileReferences == null) return fileReferences;
       for (int i = 0, n = fileReferences.Count; i < n; i++)
         fileReferences[i] = this.Visit(this.GetMutableCopy(fileReferences[i]));
       return fileReferences;
@@ -3599,8 +3599,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="genericMethodParameters">The generic method parameters.</param>
     /// <param name="declaringMethod">The declaring method.</param>
     /// <returns></returns>
-    public virtual List<IGenericMethodParameter> Visit(List<IGenericMethodParameter> genericMethodParameters, IMethodDefinition declaringMethod) {
-      if (this.stopTraversal) return genericMethodParameters;
+    public virtual List<IGenericMethodParameter>/*?*/ Visit(List<IGenericMethodParameter>/*?*/ genericMethodParameters, IMethodDefinition declaringMethod) {
+      if (this.stopTraversal || genericMethodParameters == null) return genericMethodParameters;
       for (int i = 0, n = genericMethodParameters.Count; i < n; i++)
         genericMethodParameters[i] = this.Visit(this.GetMutableCopy(genericMethodParameters[i]));
       return genericMethodParameters;
@@ -3712,8 +3712,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="genericTypeParameters">The generic type parameters.</param>
     /// <returns></returns>
-    public virtual List<IGenericTypeParameter> Visit(List<IGenericTypeParameter> genericTypeParameters) {
-      if (this.stopTraversal) return genericTypeParameters;
+    public virtual List<IGenericTypeParameter>/*?*/ Visit(List<IGenericTypeParameter>/*?*/ genericTypeParameters) {
+      if (this.stopTraversal || genericTypeParameters == null) return genericTypeParameters;
       for (int i = 0, n = genericTypeParameters.Count; i < n; i++)
         genericTypeParameters[i] = this.Visit(this.GetMutableCopy(genericTypeParameters[i]));
       return genericTypeParameters;
@@ -3851,8 +3851,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="metadataExpressions">The metadata expressions.</param>
     /// <returns></returns>
-    public virtual List<IMetadataExpression> Visit(List<IMetadataExpression> metadataExpressions) {
-      if (this.stopTraversal) return metadataExpressions;
+    public virtual List<IMetadataExpression>/*?*/ Visit(List<IMetadataExpression>/*?*/ metadataExpressions) {
+      if (this.stopTraversal || metadataExpressions == null) return metadataExpressions;
       for (int i = 0, n = metadataExpressions.Count; i < n; i++)
         metadataExpressions[i] = this.Visit(metadataExpressions[i]);
       return metadataExpressions;
@@ -3879,8 +3879,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namedArguments">The named arguments.</param>
     /// <returns></returns>
-    public virtual List<IMetadataNamedArgument> Visit(List<IMetadataNamedArgument> namedArguments) {
-      if (this.stopTraversal) return namedArguments;
+    public virtual List<IMetadataNamedArgument>/*?*/ Visit(List<IMetadataNamedArgument>/*?*/ namedArguments) {
+      if (this.stopTraversal || namedArguments == null) return namedArguments;
       for (int i = 0, n = namedArguments.Count; i < n; i++)
         namedArguments[i] = this.Visit(this.GetMutableCopy(namedArguments[i]));
       return namedArguments;
@@ -3951,8 +3951,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="exceptionInformations">The exception informations.</param>
     /// <returns></returns>
-    public virtual List<IOperationExceptionInformation> Visit(List<IOperationExceptionInformation> exceptionInformations) {
-      if (this.stopTraversal) return exceptionInformations;
+    public virtual List<IOperationExceptionInformation>/*?*/ Visit(List<IOperationExceptionInformation>/*?*/ exceptionInformations) {
+      if (this.stopTraversal || exceptionInformations == null) return exceptionInformations;
       for (int i = 0, n = exceptionInformations.Count; i < n; i++)
         exceptionInformations[i] = this.Visit(this.GetMutableCopy(exceptionInformations[i]));
       return exceptionInformations;
@@ -3976,8 +3976,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="operations">The operations.</param>
     /// <returns></returns>
-    public virtual List<IOperation> Visit(List<IOperation> operations) {
-      if (this.stopTraversal) return operations;
+    public virtual List<IOperation>/*?*/ Visit(List<IOperation>/*?*/ operations) {
+      if (this.stopTraversal || operations == null) return operations;
       for (int i = 0, n = operations.Count; i < n; i++)
         operations[i] = this.Visit(this.GetMutableCopy(operations[i]));
       return operations;
@@ -4023,8 +4023,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="locals">The locals.</param>
     /// <returns></returns>
-    public virtual List<ILocalDefinition> Visit(List<ILocalDefinition> locals) {
-      if (this.stopTraversal) return locals;
+    public virtual List<ILocalDefinition>/*?*/ Visit(List<ILocalDefinition>/*?*/ locals) {
+      if (this.stopTraversal || locals == null) return locals;
       for (int i = 0, n = locals.Count; i < n; i++)
         locals[i] = this.Visit(locals[i]);
       return locals;
@@ -4035,8 +4035,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodDefinitions">The method definitions.</param>
     /// <returns></returns>
-    public virtual List<IMethodDefinition> Visit(List<IMethodDefinition> methodDefinitions) {
-      if (this.stopTraversal) return methodDefinitions;
+    public virtual List<IMethodDefinition>/*?*/ Visit(List<IMethodDefinition>/*?*/ methodDefinitions) {
+      if (this.stopTraversal || methodDefinitions == null) return methodDefinitions;
       for (int i = 0, n = methodDefinitions.Count; i < n; i++)
         methodDefinitions[i] = this.Visit(methodDefinitions[i]);
       return methodDefinitions;
@@ -4102,8 +4102,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodImplementations">The method implementations.</param>
     /// <returns></returns>
-    public virtual List<IMethodImplementation> Visit(List<IMethodImplementation> methodImplementations) {
-      if (this.stopTraversal) return methodImplementations;
+    public virtual List<IMethodImplementation>/*?*/ Visit(List<IMethodImplementation>/*?*/ methodImplementations) {
+      if (this.stopTraversal || methodImplementations == null) return methodImplementations;
       for (int i = 0, n = methodImplementations.Count; i < n; i++)
         methodImplementations[i] = this.Visit(this.GetMutableCopy(methodImplementations[i]));
       return methodImplementations;
@@ -4129,8 +4129,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodReferences">The method references.</param>
     /// <returns></returns>
-    public virtual List<IMethodReference> Visit(List<IMethodReference> methodReferences) {
-      if (this.stopTraversal) return methodReferences;
+    public virtual List<IMethodReference>/*?*/ Visit(List<IMethodReference>/*?*/ methodReferences) {
+      if (this.stopTraversal || methodReferences == null) return methodReferences;
       for (int i = 0, n = methodReferences.Count; i < n; i++)
         methodReferences[i] = this.Visit(methodReferences[i]);
       return methodReferences;
@@ -4196,8 +4196,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="modules">The modules.</param>
     /// <returns></returns>
-    public virtual List<IModule> Visit(List<IModule> modules) {
-      if (this.stopTraversal) return modules;
+    public virtual List<IModule>/*?*/ Visit(List<IModule>/*?*/ modules) {
+      if (this.stopTraversal || modules == null) return modules;
       for (int i = 0, n = modules.Count; i < n; i++) {
         modules[i] = this.Visit(this.GetMutableCopy(modules[i]));
         this.flatListOfTypes.Clear();
@@ -4313,8 +4313,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="moduleReferences">The module references.</param>
     /// <returns></returns>
-    public virtual List<IModuleReference> Visit(List<IModuleReference> moduleReferences) {
-      if (this.stopTraversal) return moduleReferences;
+    public virtual List<IModuleReference>/*?*/ Visit(List<IModuleReference>/*?*/ moduleReferences) {
+      if (this.stopTraversal || moduleReferences == null) return moduleReferences;
       for (int i = 0, n = moduleReferences.Count; i < n; i++)
         moduleReferences[i] = this.Visit(moduleReferences[i]);
       return moduleReferences;
@@ -4341,8 +4341,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namespaceMembers">The namespace members.</param>
     /// <returns></returns>
-    public virtual List<INamespaceMember> Visit(List<INamespaceMember> namespaceMembers) {
-      if (this.stopTraversal) return namespaceMembers;
+    public virtual List<INamespaceMember>/*?*/ Visit(List<INamespaceMember>/*?*/ namespaceMembers) {
+      if (this.stopTraversal || namespaceMembers == null) return namespaceMembers;
       for (int i = 0, n = namespaceMembers.Count; i < n; i++)
         namespaceMembers[i] = this.Visit(namespaceMembers[i]);
       return namespaceMembers;
@@ -4429,8 +4429,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="nestedTypeDefinitions">The nested type definitions.</param>
     /// <returns></returns>
-    public virtual List<INestedTypeDefinition> Visit(List<INestedTypeDefinition> nestedTypeDefinitions) {
-      if (this.stopTraversal) return nestedTypeDefinitions;
+    public virtual List<INestedTypeDefinition>/*?*/ Visit(List<INestedTypeDefinition>/*?*/ nestedTypeDefinitions) {
+      if (this.stopTraversal || nestedTypeDefinitions == null) return nestedTypeDefinitions;
       for (int i = 0, n = nestedTypeDefinitions.Count; i < n; i++)
         nestedTypeDefinitions[i] = this.Visit(nestedTypeDefinitions[i]);
       return nestedTypeDefinitions;
@@ -4535,8 +4535,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Visits the private helper members.
     /// </summary>
     /// <param name="typeDefinitions">The type definitions.</param>
-    public virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
-      if (this.stopTraversal) return;
+    public virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition>/*?*/ typeDefinitions) {
+      if (this.stopTraversal || typeDefinitions == null) return;
       for (int i = 0, n = typeDefinitions.Count; i < n; i++) {
         NamedTypeDefinition/*?*/ typeDef = typeDefinitions[i] as NamedTypeDefinition;
         if (typeDef == null) continue;
@@ -4551,8 +4551,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeDefinitionMembers">The type definition members.</param>
     /// <returns></returns>
-    public virtual List<ITypeDefinitionMember> Visit(List<ITypeDefinitionMember> typeDefinitionMembers) {
-      if (this.stopTraversal) return typeDefinitionMembers;
+    public virtual List<ITypeDefinitionMember>/*?*/ Visit(List<ITypeDefinitionMember>/*?*/ typeDefinitionMembers) {
+      if (this.stopTraversal || typeDefinitionMembers == null) return typeDefinitionMembers;
       for (int i = 0, n = typeDefinitionMembers.Count; i < n; i++)
         typeDefinitionMembers[i] = this.Visit(typeDefinitionMembers[i]);
       return typeDefinitionMembers;
@@ -4873,8 +4873,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="parameterDefinitions">The parameter definitions.</param>
     /// <returns></returns>
-    public virtual List<IParameterDefinition> Visit(List<IParameterDefinition> parameterDefinitions) {
-      if (this.stopTraversal) return parameterDefinitions;
+    public virtual List<IParameterDefinition>/*?*/ Visit(List<IParameterDefinition>/*?*/ parameterDefinitions) {
+      if (this.stopTraversal || parameterDefinitions == null) return parameterDefinitions;
       for (int i = 0, n = parameterDefinitions.Count; i < n; i++)
         parameterDefinitions[i] = this.Visit(parameterDefinitions[i]);
       return parameterDefinitions;
@@ -4947,8 +4947,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="propertyDefinitions">The property definitions.</param>
     /// <returns></returns>
-    public virtual List<IPropertyDefinition> Visit(List<IPropertyDefinition> propertyDefinitions) {
-      if (this.stopTraversal) return propertyDefinitions;
+    public virtual List<IPropertyDefinition>/*?*/ Visit(List<IPropertyDefinition>/*?*/ propertyDefinitions) {
+      if (this.stopTraversal || propertyDefinitions == null) return propertyDefinitions;
       for (int i = 0, n = propertyDefinitions.Count; i < n; i++)
         propertyDefinitions[i] = this.Visit(propertyDefinitions[i]);
       return propertyDefinitions;
@@ -5007,8 +5007,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="resourceReferences">The resource references.</param>
     /// <returns></returns>
-    public virtual List<IResourceReference> Visit(List<IResourceReference> resourceReferences) {
-      if (this.stopTraversal) return resourceReferences;
+    public virtual List<IResourceReference>/*?*/ Visit(List<IResourceReference>/*?*/ resourceReferences) {
+      if (this.stopTraversal || resourceReferences == null) return resourceReferences;
       for (int i = 0, n = resourceReferences.Count; i < n; i++)
         resourceReferences[i] = this.Visit(this.GetMutableCopy(resourceReferences[i]));
       return resourceReferences;
@@ -5031,8 +5031,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="securityAttributes">The security attributes.</param>
     /// <returns></returns>
-    public virtual List<ISecurityAttribute> Visit(List<ISecurityAttribute> securityAttributes) {
-      if (this.stopTraversal) return securityAttributes;
+    public virtual List<ISecurityAttribute>/*?*/ Visit(List<ISecurityAttribute>/*?*/ securityAttributes) {
+      if (this.stopTraversal || securityAttributes == null) return securityAttributes;
       for (int i = 0, n = securityAttributes.Count; i < n; i++)
         securityAttributes[i] = this.Visit(this.GetMutableCopy(securityAttributes[i]));
       return securityAttributes;
@@ -5187,8 +5187,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="win32Resources">The win32 resources.</param>
     /// <returns></returns>
-    public virtual List<IWin32Resource> Visit(List<IWin32Resource> win32Resources) {
-      if (this.stopTraversal) return win32Resources;
+    public virtual List<IWin32Resource>/*?*/ Visit(List<IWin32Resource>/*?*/ win32Resources) {
+      if (this.stopTraversal || win32Resources == null) return win32Resources;
       for (int i = 0, n = win32Resources.Count; i < n; i++)
         win32Resources[i] = this.Visit(this.GetMutableCopy(win32Resources[i]));
       return win32Resources;
@@ -5615,8 +5615,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="aliasesForTypes">The aliases for types.</param>
     /// <returns></returns>
-    public virtual List<IAliasForType> Mutate(List<IAliasForType> aliasesForTypes) {
-      if (this.stopTraversal) return aliasesForTypes;
+    public virtual List<IAliasForType>/*?*/ Mutate(List<IAliasForType>/*?*/ aliasesForTypes) {
+      if (this.stopTraversal || aliasesForTypes == null) return aliasesForTypes;
       for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
         aliasesForTypes[i] = this.Visit(aliasesForTypes[i]);
       return aliasesForTypes;
@@ -5705,8 +5705,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assemblyReferences">The assembly references.</param>
     /// <returns></returns>
-    public virtual List<IAssemblyReference> Mutate(List<IAssemblyReference> assemblyReferences) {
-      if (this.stopTraversal) return assemblyReferences;
+    public virtual List<IAssemblyReference>/*?*/ Mutate(List<IAssemblyReference>/*?*/ assemblyReferences) {
+      if (this.stopTraversal || assemblyReferences == null) return assemblyReferences;
       for (int i = 0, n = assemblyReferences.Count; i < n; i++)
         assemblyReferences[i] = this.Visit(assemblyReferences[i]);
       return assemblyReferences;
@@ -5772,7 +5772,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="customModifiers">The custom modifiers.</param>
     /// <returns></returns>
-    public virtual List<ICustomModifier> Mutate(List<ICustomModifier> customModifiers) {
+    public virtual List<ICustomModifier>/*?*/ Mutate(List<ICustomModifier>/*?*/ customModifiers) {
       if (this.stopTraversal || customModifiers == null) return customModifiers;
       for (int i = 0, n = customModifiers.Count; i < n; i++)
         customModifiers[i] = this.Visit(customModifiers[i]);
@@ -5797,8 +5797,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="eventDefinitions">The event definitions.</param>
     /// <returns></returns>
-    public virtual List<IEventDefinition> Mutate(List<IEventDefinition> eventDefinitions) {
-      if (this.stopTraversal) return eventDefinitions;
+    public virtual List<IEventDefinition>/*?*/ Mutate(List<IEventDefinition>/*?*/ eventDefinitions) {
+      if (this.stopTraversal || eventDefinitions == null) return eventDefinitions;
       for (int i = 0, n = eventDefinitions.Count; i < n; i++)
         eventDefinitions[i] = this.Visit(eventDefinitions[i]);
       return eventDefinitions;
@@ -5853,8 +5853,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fieldDefinitions">The field definitions.</param>
     /// <returns></returns>
-    public virtual List<IFieldDefinition> Mutate(List<IFieldDefinition> fieldDefinitions) {
-      if (this.stopTraversal) return fieldDefinitions;
+    public virtual List<IFieldDefinition>/*?*/ Mutate(List<IFieldDefinition>/*?*/ fieldDefinitions) {
+      if (this.stopTraversal || fieldDefinitions == null) return fieldDefinitions;
       for (int i = 0, n = fieldDefinitions.Count; i < n; i++)
         fieldDefinitions[i] = this.Visit(fieldDefinitions[i]);
       return fieldDefinitions;
@@ -5972,8 +5972,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fileReferences">The file references.</param>
     /// <returns></returns>
-    public virtual List<IFileReference> Mutate(List<IFileReference> fileReferences) {
-      if (this.stopTraversal) return fileReferences;
+    public virtual List<IFileReference>/*?*/ Mutate(List<IFileReference>/*?*/ fileReferences) {
+      if (this.stopTraversal || fileReferences == null) return fileReferences;
       for (int i = 0, n = fileReferences.Count; i < n; i++)
         fileReferences[i] = this.Visit(fileReferences[i]);
       return fileReferences;
@@ -6041,8 +6041,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="genericMethodParameters">The generic method parameters.</param>
     /// <returns></returns>
-    public virtual List<IGenericMethodParameter> Mutate(List<IGenericMethodParameter> genericMethodParameters) {
-      if (this.stopTraversal) return genericMethodParameters;
+    public virtual List<IGenericMethodParameter>/*?*/ Mutate(List<IGenericMethodParameter>/*?*/ genericMethodParameters) {
+      if (this.stopTraversal || genericMethodParameters == null) return genericMethodParameters;
       for (int i = 0, n = genericMethodParameters.Count; i < n; i++)
         genericMethodParameters[i] = this.Visit(genericMethodParameters[i]);
       return genericMethodParameters;
@@ -6139,8 +6139,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="genericTypeParameters">The generic type parameters.</param>
     /// <returns></returns>
-    public virtual List<IGenericTypeParameter> Mutate(List<IGenericTypeParameter> genericTypeParameters) {
-      if (this.stopTraversal) return genericTypeParameters;
+    public virtual List<IGenericTypeParameter>/*?*/ Mutate(List<IGenericTypeParameter>/*?*/ genericTypeParameters) {
+      if (this.stopTraversal || genericTypeParameters == null) return genericTypeParameters;
       for (int i = 0, n = genericTypeParameters.Count; i < n; i++)
         genericTypeParameters[i] = this.Visit(genericTypeParameters[i]);
       return genericTypeParameters;
@@ -6325,8 +6325,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="metadataExpressions">The metadata expressions.</param>
     /// <returns></returns>
-    public virtual List<IMetadataExpression> Mutate(List<IMetadataExpression> metadataExpressions) {
-      if (this.stopTraversal) return metadataExpressions;
+    public virtual List<IMetadataExpression>/*?*/ Mutate(List<IMetadataExpression>/*?*/ metadataExpressions) {
+      if (this.stopTraversal || metadataExpressions == null) return metadataExpressions;
       for (int i = 0, n = metadataExpressions.Count; i < n; i++)
         metadataExpressions[i] = this.Dispatch(metadataExpressions[i]);
       return metadataExpressions;
@@ -6436,8 +6436,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namedArguments">The named arguments.</param>
     /// <returns></returns>
-    public virtual List<IMetadataNamedArgument> Mutate(List<IMetadataNamedArgument> namedArguments) {
-      if (this.stopTraversal) return namedArguments;
+    public virtual List<IMetadataNamedArgument>/*?*/ Mutate(List<IMetadataNamedArgument>/*?*/ namedArguments) {
+      if (this.stopTraversal || namedArguments == null) return namedArguments;
       for (int i = 0, n = namedArguments.Count; i < n; i++)
         namedArguments[i] = (IMetadataNamedArgument)this.Dispatch(namedArguments[i]);
       return namedArguments;
@@ -6497,8 +6497,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="exceptionInformations">The exception informations.</param>
     /// <returns></returns>
-    public virtual List<IOperationExceptionInformation> Mutate(List<IOperationExceptionInformation> exceptionInformations) {
-      if (this.stopTraversal) return exceptionInformations;
+    public virtual List<IOperationExceptionInformation>/*?*/ Mutate(List<IOperationExceptionInformation>/*?*/ exceptionInformations) {
+      if (this.stopTraversal || exceptionInformations == null) return exceptionInformations;
       for (int i = 0, n = exceptionInformations.Count; i < n; i++)
         exceptionInformations[i] = this.Visit(exceptionInformations[i]);
       return exceptionInformations;
@@ -6542,8 +6542,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="operations">The operations.</param>
     /// <returns></returns>
-    public virtual List<IOperation> Mutate(List<IOperation> operations) {
-      if (this.stopTraversal) return operations;
+    public virtual List<IOperation>/*?*/ Mutate(List<IOperation>/*?*/ operations) {
+      if (this.stopTraversal || operations == null) return operations;
       for (int i = 0, n = operations.Count; i < n; i++)
         operations[i] = this.Visit(operations[i]);
       return operations;
@@ -6618,8 +6618,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="locals">The locals.</param>
     /// <returns></returns>
-    public virtual List<ILocalDefinition> Mutate(List<ILocalDefinition> locals) {
-      if (this.stopTraversal) return locals;
+    public virtual List<ILocalDefinition>/*?*/ Mutate(List<ILocalDefinition>/*?*/ locals) {
+      if (this.stopTraversal || locals == null) return locals;
       for (int i = 0, n = locals.Count; i < n; i++)
         locals[i] = this.Visit(locals[i]);
       return locals;
@@ -6630,8 +6630,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodDefinitions">The method definitions.</param>
     /// <returns></returns>
-    public virtual List<IMethodDefinition> Mutate(List<IMethodDefinition> methodDefinitions) {
-      if (this.stopTraversal) return methodDefinitions;
+    public virtual List<IMethodDefinition>/*?*/ Mutate(List<IMethodDefinition>/*?*/ methodDefinitions) {
+      if (this.stopTraversal || methodDefinitions == null) return methodDefinitions;
       for (int i = 0, n = methodDefinitions.Count; i < n; i++)
         methodDefinitions[i] = this.Visit(methodDefinitions[i]);
       return methodDefinitions;
@@ -6768,8 +6768,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodImplementations">The method implementations.</param>
     /// <returns></returns>
-    public virtual List<IMethodImplementation> Mutate(List<IMethodImplementation> methodImplementations) {
-      if (this.stopTraversal) return methodImplementations;
+    public virtual List<IMethodImplementation>/*?*/ Mutate(List<IMethodImplementation>/*?*/ methodImplementations) {
+      if (this.stopTraversal || methodImplementations == null) return methodImplementations;
       for (int i = 0, n = methodImplementations.Count; i < n; i++)
         methodImplementations[i] = this.Visit(methodImplementations[i]);
       return methodImplementations;
@@ -6818,8 +6818,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodReferences">The method references.</param>
     /// <returns></returns>
-    public virtual List<IMethodReference> Mutate(List<IMethodReference> methodReferences) {
-      if (this.stopTraversal) return methodReferences;
+    public virtual List<IMethodReference>/*?*/ Mutate(List<IMethodReference>/*?*/ methodReferences) {
+      if (this.stopTraversal || methodReferences == null) return methodReferences;
       for (int i = 0, n = methodReferences.Count; i < n; i++)
         methodReferences[i] = this.Visit(methodReferences[i]);
       return methodReferences;
@@ -6923,8 +6923,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="modules">The modules.</param>
     /// <returns></returns>
-    public virtual List<IModule> Mutate(List<IModule> modules) {
-      if (this.stopTraversal) return modules;
+    public virtual List<IModule>/*?*/ Mutate(List<IModule>/*?*/ modules) {
+      if (this.stopTraversal || modules == null) return modules;
       for (int i = 0, n = modules.Count; i < n; i++) {
         modules[i] = this.Visit(modules[i]);
       }
@@ -6996,8 +6996,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="moduleReferences">The module references.</param>
     /// <returns></returns>
-    public virtual List<IModuleReference> Mutate(List<IModuleReference> moduleReferences) {
-      if (this.stopTraversal) return moduleReferences;
+    public virtual List<IModuleReference>/*?*/ Mutate(List<IModuleReference>/*?*/ moduleReferences) {
+      if (this.stopTraversal || moduleReferences == null) return moduleReferences;
       for (int i = 0, n = moduleReferences.Count; i < n; i++)
         moduleReferences[i] = this.Visit(moduleReferences[i]);
       return moduleReferences;
@@ -7025,8 +7025,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namespaceMembers">The namespace members.</param>
     /// <returns></returns>
-    public virtual List<INamespaceMember> Mutate(List<INamespaceMember> namespaceMembers) {
-      if (this.stopTraversal) return namespaceMembers;
+    public virtual List<INamespaceMember>/*?*/ Mutate(List<INamespaceMember>/*?*/ namespaceMembers) {
+      if (this.stopTraversal || namespaceMembers == null) return namespaceMembers;
       for (int i = 0, n = namespaceMembers.Count; i < n; i++)
         namespaceMembers[i] = this.Dispatch(namespaceMembers[i]);
       return namespaceMembers;
@@ -7102,8 +7102,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="nestedTypeDefinitions">The nested type definitions.</param>
     /// <returns></returns>
-    public virtual List<INestedTypeDefinition> Mutate(List<INestedTypeDefinition> nestedTypeDefinitions) {
-      if (this.stopTraversal) return nestedTypeDefinitions;
+    public virtual List<INestedTypeDefinition>/*?*/ Mutate(List<INestedTypeDefinition>/*?*/ nestedTypeDefinitions) {
+      if (this.stopTraversal || nestedTypeDefinitions == null) return nestedTypeDefinitions;
       for (int i = 0, n = nestedTypeDefinitions.Count; i < n; i++)
         nestedTypeDefinitions[i] = this.Visit(nestedTypeDefinitions[i]);
       return nestedTypeDefinitions;
@@ -7347,8 +7347,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeDefinitionMembers">The type definition members.</param>
     /// <returns></returns>
-    public virtual List<ITypeDefinitionMember> Mutate(List<ITypeDefinitionMember> typeDefinitionMembers) {
-      if (this.stopTraversal) return typeDefinitionMembers;
+    public virtual List<ITypeDefinitionMember>/*?*/ Mutate(List<ITypeDefinitionMember>/*?*/ typeDefinitionMembers) {
+      if (this.stopTraversal || typeDefinitionMembers == null) return typeDefinitionMembers;
       for (int i = 0, n = typeDefinitionMembers.Count; i < n; i++)
         typeDefinitionMembers[i] = this.Dispatch(typeDefinitionMembers[i]);
       return typeDefinitionMembers;
@@ -7390,8 +7390,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeReferences">The type references.</param>
     /// <returns></returns>
-    public virtual List<ITypeReference> Mutate(List<ITypeReference> typeReferences) {
-      if (this.stopTraversal) return typeReferences;
+    public virtual List<ITypeReference>/*?*/ Mutate(List<ITypeReference>/*?*/ typeReferences) {
+      if (this.stopTraversal || typeReferences == null) return typeReferences;
       for (int i = 0, n = typeReferences.Count; i < n; i++)
         typeReferences[i] = this.Visit(typeReferences[i]);
       return typeReferences;
@@ -7822,8 +7822,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="parameters"></param>
     /// <returns></returns>
-    public virtual IEnumerable<IParameterTypeInformation> Mutate(IEnumerable<IParameterTypeInformation> parameters) {
-      if (this.stopTraversal) return parameters;
+    public virtual IEnumerable<IParameterTypeInformation>/*?*/ Mutate(IEnumerable<IParameterTypeInformation>/*?*/ parameters) {
+      if (this.stopTraversal || parameters == null) return parameters;
       var result = new List<IParameterTypeInformation>();
       bool changed = false;
       foreach (IParameterTypeInformation par in parameters) {
@@ -8139,8 +8139,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="parameterDefinitions">The parameter definitions.</param>
     /// <returns></returns>
-    public virtual List<IParameterDefinition> Mutate(List<IParameterDefinition> parameterDefinitions) {
-      if (this.stopTraversal) return parameterDefinitions;
+    public virtual List<IParameterDefinition>/*?*/ Mutate(List<IParameterDefinition>/*?*/ parameterDefinitions) {
+      if (this.stopTraversal || parameterDefinitions == null) return parameterDefinitions;
       for (int i = 0, n = parameterDefinitions.Count; i < n; i++)
         parameterDefinitions[i] = this.Visit(parameterDefinitions[i]);
       return parameterDefinitions;
@@ -8212,8 +8212,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="parameterTypeInformationList">The parameter type information list.</param>
     /// <returns></returns>
-    public virtual List<IParameterTypeInformation> Mutate(List<IParameterTypeInformation> parameterTypeInformationList) {
-      if (this.stopTraversal) return parameterTypeInformationList;
+    public virtual List<IParameterTypeInformation>/*?*/ Mutate(List<IParameterTypeInformation>/*?*/ parameterTypeInformationList) {
+      if (this.stopTraversal || parameterTypeInformationList == null) return parameterTypeInformationList;
       for (int i = 0, n = parameterTypeInformationList.Count; i < n; i++)
         parameterTypeInformationList[i] = this.Visit(parameterTypeInformationList[i]);
       return parameterTypeInformationList;
@@ -8292,8 +8292,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="propertyDefinitions">The property definitions.</param>
     /// <returns></returns>
-    public virtual List<IPropertyDefinition> Mutate(List<IPropertyDefinition> propertyDefinitions) {
-      if (this.stopTraversal) return propertyDefinitions;
+    public virtual List<IPropertyDefinition>/*?*/ Mutate(List<IPropertyDefinition>/*?*/ propertyDefinitions) {
+      if (this.stopTraversal || propertyDefinitions == null) return propertyDefinitions;
       for (int i = 0, n = propertyDefinitions.Count; i < n; i++)
         propertyDefinitions[i] = this.Visit(propertyDefinitions[i]);
       return propertyDefinitions;
@@ -8360,8 +8360,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="resourceReferences">The resource references.</param>
     /// <returns></returns>
-    public virtual List<IResourceReference> Mutate(List<IResourceReference> resourceReferences) {
-      if (this.stopTraversal) return resourceReferences;
+    public virtual List<IResourceReference>/*?*/ Mutate(List<IResourceReference>/*?*/ resourceReferences) {
+      if (this.stopTraversal || resourceReferences == null) return resourceReferences;
       for (int i = 0, n = resourceReferences.Count; i < n; i++)
         resourceReferences[i] = this.Visit(resourceReferences[i]);
       return resourceReferences;
@@ -8400,8 +8400,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="securityAttributes">The security attributes.</param>
     /// <returns></returns>
-    public virtual List<ISecurityAttribute> Mutate(List<ISecurityAttribute> securityAttributes) {
-      if (this.stopTraversal) return securityAttributes;
+    public virtual List<ISecurityAttribute>/*?*/ Mutate(List<ISecurityAttribute>/*?*/ securityAttributes) {
+      if (this.stopTraversal || securityAttributes == null) return securityAttributes;
       for (int i = 0, n = securityAttributes.Count; i < n; i++)
         securityAttributes[i] = this.Visit(securityAttributes[i]);
       return securityAttributes;
@@ -8612,8 +8612,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="win32Resources">The win32 resources.</param>
     /// <returns></returns>
-    public virtual List<IWin32Resource> Mutate(List<IWin32Resource> win32Resources) {
-      if (this.stopTraversal) return win32Resources;
+    public virtual List<IWin32Resource>/*?*/ Mutate(List<IWin32Resource>/*?*/ win32Resources) {
+      if (this.stopTraversal || win32Resources == null) return win32Resources;
       for (int i = 0, n = win32Resources.Count; i < n; i++)
         win32Resources[i] = this.Visit(win32Resources[i]);
       return win32Resources;
@@ -8633,7 +8633,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="customAttributes">The custom attributes.</param>
     /// <returns></returns>
-    public virtual List<ICustomAttribute> VisitPropertyReturnValueAttributes(List<ICustomAttribute> customAttributes) {
+    public virtual List<ICustomAttribute>/*?*/ VisitPropertyReturnValueAttributes(List<ICustomAttribute>/*?*/ customAttributes) {
       return this.Mutate(customAttributes);
     }
 
@@ -8642,7 +8642,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="customAttributes">The custom attributes.</param>
     /// <returns></returns>
-    public virtual List<ICustomAttribute> VisitMethodReturnValueAttributes(List<ICustomAttribute> customAttributes) {
+    public virtual List<ICustomAttribute>/*?*/ VisitMethodReturnValueAttributes(List<ICustomAttribute>/*?*/ customAttributes) {
       return this.Mutate(customAttributes);
     }
 
@@ -8651,7 +8651,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="customModifers">The custom modifers.</param>
     /// <returns></returns>
-    public virtual List<ICustomModifier> VisitMethodReturnValueCustomModifiers(List<ICustomModifier> customModifers) {
+    public virtual List<ICustomModifier>/*?*/ VisitMethodReturnValueCustomModifiers(List<ICustomModifier>/*?*/ customModifers) {
       return this.Mutate(customModifers);
     }
 

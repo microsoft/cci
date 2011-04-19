@@ -27,7 +27,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region IExpression Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -1386,7 +1386,7 @@ namespace Microsoft.Cci.MetadataReader {
               case 4: underlyingType = this.PEFileToObjectModel.SystemInt32; break;
               case 8: underlyingType = this.PEFileToObjectModel.SystemInt64; break;
               default:
-                this.decodeFailed = true; this.morePermutationsArePossible = false; 
+                this.decodeFailed = true; this.morePermutationsArePossible = false;
                 return new ConstantExpression(type, 0);
             }
             return new ConstantExpression(type, this.GetPrimitiveValue(underlyingType));

@@ -2388,181 +2388,181 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.SubstituteElements(mutableCopy.Attributes);
       }
 
-      private void SubstituteElements(List<IAliasForType> aliasesForTypes) {
+      private void SubstituteElements(List<IAliasForType>/*?*/ aliasesForTypes) {
         if (aliasesForTypes == null) return;
         for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
           aliasesForTypes[i] = this.SubstituteViaDispatcher(aliasesForTypes[i]);
       }
 
-      private void SubstituteElements(List<IAliasMember> aliasesMembers) {
+      private void SubstituteElements(List<IAliasMember>/*?*/ aliasesMembers) {
         if (aliasesMembers == null) return;
         for (int i = 0, n = aliasesMembers.Count; i < n; i++)
           aliasesMembers[i] = (IAliasMember)this.Substitute((INestedAliasForType)aliasesMembers[i]);
       }
 
-      private void SubstituteElements(List<IAssemblyReference> assemblyReferences) {
+      private void SubstituteElements(List<IAssemblyReference>/*?*/ assemblyReferences) {
         if (assemblyReferences == null) return;
         for (int i = 0, n = assemblyReferences.Count; i < n; i++)
           assemblyReferences[i] = this.Substitute(assemblyReferences[i]);
       }
 
-      private void SubstituteElements(List<ICustomAttribute> customAttributes) {
+      private void SubstituteElements(List<ICustomAttribute>/*?*/ customAttributes) {
         if (customAttributes == null) return;
         for (int i = 0, n = customAttributes.Count; i < n; i++)
           customAttributes[i] = this.Substitute(customAttributes[i]);
       }
 
-      private void SubstituteElements(List<ICustomModifier> customModifiers) {
+      private void SubstituteElements(List<ICustomModifier>/*?*/ customModifiers) {
         if (customModifiers == null) return;
         for (int i = 0, n = customModifiers.Count; i < n; i++)
           customModifiers[i] = this.Substitute(customModifiers[i]);
       }
 
-      private void SubstituteElements(List<IEventDefinition> events) {
+      private void SubstituteElements(List<IEventDefinition>/*?*/ events) {
         if (events == null) return;
         for (int i = 0, n = events.Count; i < n; i++)
           events[i] = this.Substitute(events[i]);
       }
 
-      private void SubstituteElements(List<IFieldDefinition> fields) {
+      private void SubstituteElements(List<IFieldDefinition>/*?*/ fields) {
         if (fields == null) return;
         for (int i = 0, n = fields.Count; i < n; i++)
           fields[i] = this.Substitute(fields[i]);
       }
 
-      private void SubstituteElements(List<IFileReference> fileReferences) {
+      private void SubstituteElements(List<IFileReference>/*?*/ fileReferences) {
         if (fileReferences == null) return;
         for (int i = 0, n = fileReferences.Count; i < n; i++)
           fileReferences[i] = this.Substitute(fileReferences[i]);
       }
 
-      private void SubstituteElements(List<IGenericMethodParameter> genericParameters) {
+      private void SubstituteElements(List<IGenericMethodParameter>/*?*/ genericParameters) {
         if (genericParameters == null) return;
         for (int i = 0, n = genericParameters.Count; i < n; i++)
           genericParameters[i] = this.Substitute(genericParameters[i]);
       }
 
-      private void SubstituteElements(List<IGenericTypeParameter> genericParameters) {
+      private void SubstituteElements(List<IGenericTypeParameter>/*?*/ genericParameters) {
         if (genericParameters == null) return;
         for (int i = 0, n = genericParameters.Count; i < n; i++)
           genericParameters[i] = this.Substitute(genericParameters[i]);
       }
 
-      private void SubstituteElements(List<ILocalDefinition> localDefinitions) {
+      private void SubstituteElements(List<ILocalDefinition>/*?*/ localDefinitions) {
         if (localDefinitions == null) return;
         for (int i = 0, n = localDefinitions.Count; i < n; i++)
           localDefinitions[i] = this.Substitute(localDefinitions[i]);
       }
 
-      private void SubstituteElements(List<IMetadataExpression> expressions) {
+      private void SubstituteElements(List<IMetadataExpression>/*?*/ expressions) {
         if (expressions == null) return;
         for (int i = 0, n = expressions.Count; i < n; i++)
           expressions[i] = this.SubstituteViaDispatcher(expressions[i]);
       }
 
-      private void SubstituteElements(List<IMetadataNamedArgument> namedArguments) {
+      private void SubstituteElements(List<IMetadataNamedArgument>/*?*/ namedArguments) {
         if (namedArguments == null) return;
         for (int i = 0, n = namedArguments.Count; i < n; i++)
           namedArguments[i] = this.Substitute(namedArguments[i]);
       }
 
-      private void SubstituteElements(List<IMethodDefinition> methods) {
+      private void SubstituteElements(List<IMethodDefinition>/*?*/ methods) {
         if (methods == null) return;
         for (int i = 0, n = methods.Count; i < n; i++)
           methods[i] = this.Substitute(methods[i]);
       }
 
-      private void SubstituteElements(List<IMethodImplementation> methodImplementations) {
+      private void SubstituteElements(List<IMethodImplementation>/*?*/ methodImplementations) {
         if (methodImplementations == null) return;
         for (int i = 0, n = methodImplementations.Count; i < n; i++)
           methodImplementations[i] = this.Substitute(methodImplementations[i]);
       }
 
-      private void SubstituteElements(List<IMethodReference> methodReferences) {
+      private void SubstituteElements(List<IMethodReference>/*?*/ methodReferences) {
         if (methodReferences == null) return;
         for (int i = 0, n = methodReferences.Count; i < n; i++)
           methodReferences[i] = this.Substitute(methodReferences[i]);
       }
 
-      private void SubstituteElements(List<IModule> modules) {
+      private void SubstituteElements(List<IModule>/*?*/ modules) {
         if (modules == null) return;
         for (int i = 0, n = modules.Count; i < n; i++)
           modules[i] = this.Substitute(modules[i]);
       }
 
-      private void SubstituteElements(List<IModuleReference> moduleReferences) {
+      private void SubstituteElements(List<IModuleReference>/*?*/ moduleReferences) {
         if (moduleReferences == null) return;
         for (int i = 0, n = moduleReferences.Count; i < n; i++)
           moduleReferences[i] = this.Substitute(moduleReferences[i]);
       }
 
-      private void SubstituteElements(List<INamespaceMember> namespaceMembers) {
+      private void SubstituteElements(List<INamespaceMember>/*?*/ namespaceMembers) {
         if (namespaceMembers == null) return;
         for (int i = 0, n = namespaceMembers.Count; i < n; i++)
           namespaceMembers[i] = this.SubstituteViaDispatcher(namespaceMembers[i]);
       }
 
-      private void SubstituteElements(List<INestedTypeDefinition> nestedTypes) {
+      private void SubstituteElements(List<INestedTypeDefinition>/*?*/ nestedTypes) {
         if (nestedTypes == null) return;
         for (int i = 0, n = nestedTypes.Count; i < n; i++)
           nestedTypes[i] = this.Substitute(nestedTypes[i]);
       }
 
-      private void SubstituteElements(List<IOperation> operations) {
+      private void SubstituteElements(List<IOperation>/*?*/ operations) {
         if (operations == null) return;
         for (int i = 0, n = operations.Count; i < n; i++)
           operations[i] = this.Substitute(operations[i]);
       }
 
-      private void SubstituteElements(List<IOperationExceptionInformation> operationExceptionInformations) {
+      private void SubstituteElements(List<IOperationExceptionInformation>/*?*/ operationExceptionInformations) {
         if (operationExceptionInformations == null) return;
         for (int i = 0, n = operationExceptionInformations.Count; i < n; i++)
           operationExceptionInformations[i] = this.Substitute(operationExceptionInformations[i]);
       }
 
-      private void SubstituteElements(List<IParameterDefinition> parameters) {
+      private void SubstituteElements(List<IParameterDefinition>/*?*/ parameters) {
         if (parameters == null) return;
         for (int i = 0, n = parameters.Count; i < n; i++)
           parameters[i] = this.Substitute(parameters[i]);
       }
 
-      private void SubstituteElements(List<IParameterTypeInformation> parameterTypeInformations) {
+      private void SubstituteElements(List<IParameterTypeInformation>/*?*/ parameterTypeInformations) {
         if (parameterTypeInformations == null) return;
         for (int i = 0, n = parameterTypeInformations.Count; i < n; i++)
           parameterTypeInformations[i] = this.Substitute(parameterTypeInformations[i]);
       }
 
-      private void SubstituteElements(List<IPropertyDefinition> properties) {
+      private void SubstituteElements(List<IPropertyDefinition>/*?*/ properties) {
         if (properties == null) return;
         for (int i = 0, n = properties.Count; i < n; i++)
           properties[i] = this.Substitute(properties[i]);
       }
 
-      private void SubstituteElements(List<IResourceReference> resourceReferences) {
+      private void SubstituteElements(List<IResourceReference>/*?*/ resourceReferences) {
         if (resourceReferences == null) return;
         for (int i = 0, n = resourceReferences.Count; i < n; i++)
           resourceReferences[i] = this.Substitute(resourceReferences[i]);
       }
 
-      private void SubstituteElements(List<ISecurityAttribute> securityAttributes) {
+      private void SubstituteElements(List<ISecurityAttribute>/*?*/ securityAttributes) {
         if (securityAttributes == null) return;
         for (int i = 0, n = securityAttributes.Count; i < n; i++)
           securityAttributes[i] = this.Substitute(securityAttributes[i]);
       }
 
-      private void SubstituteElements(List<ITypeDefinitionMember> typeMembers) {
+      private void SubstituteElements(List<ITypeDefinitionMember>/*?*/ typeMembers) {
         if (typeMembers == null) return;
         for (int i = 0, n = typeMembers.Count; i < n; i++)
           typeMembers[i] = this.SubstituteViaDispatcher(typeMembers[i]);
       }
 
-      private void SubstituteElements(List<ITypeReference> typeReferences) {
+      private void SubstituteElements(List<ITypeReference>/*?*/ typeReferences) {
         if (typeReferences == null) return;
         for (int i = 0, n = typeReferences.Count; i < n; i++)
           typeReferences[i] = this.SubstituteViaDispatcher(typeReferences[i]);
       }
 
-      private void SubstituteElements(List<IWin32Resource> win32Resources) {
+      private void SubstituteElements(List<IWin32Resource>/*?*/ win32Resources) {
         if (win32Resources == null) return;
         for (int i = 0, n = win32Resources.Count; i < n; i++)
           win32Resources[i] = this.Substitute(win32Resources[i]);
@@ -4496,7 +4496,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="genericMethodParameters">The generic method parameters.</param>
     /// <param name="declaringMethod">The declaring method.</param>
     /// <returns></returns>
-    protected virtual List<IGenericMethodParameter> DeepCopy(List<IGenericMethodParameter> genericMethodParameters, IMethodDefinition declaringMethod) {
+    protected virtual List<IGenericMethodParameter>/*?*/ DeepCopy(List<IGenericMethodParameter>/*?*/ genericMethodParameters, IMethodDefinition declaringMethod) {
+      if (genericMethodParameters == null) return null;
       for (int i = 0, n = genericMethodParameters.Count; i < n; i++)
         genericMethodParameters[i] = this.DeepCopy(this.GetMutableShallowCopy(genericMethodParameters[i]));
       return genericMethodParameters;
@@ -4896,7 +4897,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="aliasesForTypes">The aliases for types.</param>
     /// <returns></returns>
-    protected virtual List<IAliasForType> DeepCopy(List<IAliasForType> aliasesForTypes) {
+    protected virtual List<IAliasForType>/*?*/ DeepCopy(List<IAliasForType>/*?*/ aliasesForTypes) {
+      if (aliasesForTypes == null) return null;
       for (int i = 0, n = aliasesForTypes.Count; i < n; i++)
         aliasesForTypes[i] = this.DeepCopy(aliasesForTypes[i]);
       return aliasesForTypes;
@@ -4907,7 +4909,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="aliasMembers"></param>
     /// <returns></returns>
-    protected virtual List<IAliasMember> DeepCopy(List<IAliasMember> aliasMembers) {
+    protected virtual List<IAliasMember>/*?*/ DeepCopy(List<IAliasMember>/*?*/ aliasMembers) {
+      if (aliasMembers == null) return null;
       for (int i = 0, n = aliasMembers.Count; i < n; i++) {
         aliasMembers[i] = this.DeepCopy(aliasMembers[i]);
       }
@@ -4919,7 +4922,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assemblyReferences">The assembly references.</param>
     /// <returns></returns>
-    protected virtual List<IAssemblyReference> DeepCopy(List<IAssemblyReference> assemblyReferences) {
+    protected virtual List<IAssemblyReference>/*?*/ DeepCopy(List<IAssemblyReference>/*?*/ assemblyReferences) {
+      if (assemblyReferences == null) return null;
       for (int i = 0, n = assemblyReferences.Count; i < n; i++)
         assemblyReferences[i] = this.DeepCopy(assemblyReferences[i]);
       return assemblyReferences;
@@ -4954,7 +4958,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="eventDefinitions">The event definitions.</param>
     /// <returns></returns>
-    protected virtual List<IEventDefinition> DeepCopy(List<IEventDefinition> eventDefinitions) {
+    protected virtual List<IEventDefinition>/*?*/ DeepCopy(List<IEventDefinition>/*?*/ eventDefinitions) {
+      if (eventDefinitions == null) return null;
       for (int i = 0, n = eventDefinitions.Count; i < n; i++)
         eventDefinitions[i] = this.DeepCopy(eventDefinitions[i]);
       return eventDefinitions;
@@ -4965,7 +4970,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fieldDefinitions">The field definitions.</param>
     /// <returns></returns>
-    protected virtual List<IFieldDefinition> DeepCopy(List<IFieldDefinition> fieldDefinitions) {
+    protected virtual List<IFieldDefinition>/*?*/ DeepCopy(List<IFieldDefinition>/*?*/ fieldDefinitions) {
+      if (fieldDefinitions == null) return null;
       for (int i = 0, n = fieldDefinitions.Count; i < n; i++)
         fieldDefinitions[i] = this.DeepCopy(fieldDefinitions[i]);
       return fieldDefinitions;
@@ -4976,7 +4982,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fileReferences">The file references.</param>
     /// <returns></returns>
-    protected virtual List<IFileReference> DeepCopy(List<IFileReference> fileReferences) {
+    protected virtual List<IFileReference>/*?*/ DeepCopy(List<IFileReference>/*?*/ fileReferences) {
+      if (fileReferences == null) return null;
       for (int i = 0, n = fileReferences.Count; i < n; i++)
         fileReferences[i] = this.DeepCopy(this.GetMutableShallowCopy(fileReferences[i]));
       return fileReferences;
@@ -4987,7 +4994,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="genericTypeParameters">The generic type parameters.</param>
     /// <returns></returns>
-    protected virtual List<IGenericTypeParameter> DeepCopy(List<IGenericTypeParameter> genericTypeParameters) {
+    protected virtual List<IGenericTypeParameter>/*?*/ DeepCopy(List<IGenericTypeParameter>/*?*/ genericTypeParameters) {
+      if (genericTypeParameters == null) return null;
       for (int i = 0, n = genericTypeParameters.Count; i < n; i++)
         genericTypeParameters[i] = this.DeepCopy(this.GetMutableShallowCopy(genericTypeParameters[i]));
       return genericTypeParameters;
@@ -5013,7 +5021,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="moduleReferences">The module references.</param>
     /// <returns></returns>
-    protected virtual List<IModuleReference> DeepCopy(List<IModuleReference> moduleReferences) {
+    protected virtual List<IModuleReference>/*?*/ DeepCopy(List<IModuleReference>/*?*/ moduleReferences) {
+      if (moduleReferences == null) return null;
       for (int i = 0, n = moduleReferences.Count; i < n; i++)
         moduleReferences[i] = this.DeepCopy(moduleReferences[i]);
       return moduleReferences;
@@ -5037,7 +5046,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="locals">The locals.</param>
     /// <returns></returns>
-    protected virtual List<ILocalDefinition> DeepCopy(List<ILocalDefinition> locals) {
+    protected virtual List<ILocalDefinition>/*?*/ DeepCopy(List<ILocalDefinition>/*?*/ locals) {
+      if (locals == null) return null;
       for (int i = 0, n = locals.Count; i < n; i++)
         locals[i] = this.DeepCopy(this.GetMutableShallowCopy(locals[i]));
       return locals;
@@ -5048,7 +5058,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="metadataExpressions">The metadata expressions.</param>
     /// <returns></returns>
-    protected virtual List<IMetadataExpression> DeepCopy(List<IMetadataExpression> metadataExpressions) {
+    protected virtual List<IMetadataExpression>/*?*/ DeepCopy(List<IMetadataExpression>/*?*/ metadataExpressions) {
+      if (metadataExpressions == null) return null;
       for (int i = 0, n = metadataExpressions.Count; i < n; i++)
         metadataExpressions[i] = this.DeepCopy(metadataExpressions[i]);
       return metadataExpressions;
@@ -5059,7 +5070,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namedArguments">The named arguments.</param>
     /// <returns></returns>
-    protected virtual List<IMetadataNamedArgument> DeepCopy(List<IMetadataNamedArgument> namedArguments) {
+    protected virtual List<IMetadataNamedArgument>/*?*/ DeepCopy(List<IMetadataNamedArgument>/*?*/ namedArguments) {
+      if (namedArguments == null) return null;
       for (int i = 0, n = namedArguments.Count; i < n; i++)
         namedArguments[i] = this.DeepCopy(this.GetMutableShallowCopy(namedArguments[i]));
       return namedArguments;
@@ -5070,7 +5082,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodDefinitions">The method definitions.</param>
     /// <returns></returns>
-    protected virtual List<IMethodDefinition> DeepCopy(List<IMethodDefinition> methodDefinitions) {
+    protected virtual List<IMethodDefinition>/*?*/ DeepCopy(List<IMethodDefinition>/*?*/ methodDefinitions) {
+      if (methodDefinitions == null) return null;
       for (int i = 0, n = methodDefinitions.Count; i < n; i++)
         methodDefinitions[i] = this.DeepCopy(methodDefinitions[i]);
       return methodDefinitions;
@@ -5081,7 +5094,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodImplementations">The method implementations.</param>
     /// <returns></returns>
-    protected virtual List<IMethodImplementation> DeepCopy(List<IMethodImplementation> methodImplementations) {
+    protected virtual List<IMethodImplementation>/*?*/ DeepCopy(List<IMethodImplementation>/*?*/ methodImplementations) {
+      if (methodImplementations == null) return null;
       for (int i = 0, n = methodImplementations.Count; i < n; i++)
         methodImplementations[i] = this.DeepCopy(this.GetMutableShallowCopy(methodImplementations[i]));
       return methodImplementations;
@@ -5092,7 +5106,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodReferences">The method references.</param>
     /// <returns></returns>
-    protected virtual List<IMethodReference> DeepCopy(List<IMethodReference> methodReferences) {
+    protected virtual List<IMethodReference>/*?*/ DeepCopy(List<IMethodReference>/*?*/ methodReferences) {
+      if (methodReferences == null) return null;
       for (int i = 0, n = methodReferences.Count; i < n; i++)
         methodReferences[i] = this.DeepCopy(methodReferences[i]);
       return methodReferences;
@@ -5103,7 +5118,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="modules">The modules.</param>
     /// <returns></returns>
-    protected virtual List<IModule> DeepCopy(List<IModule> modules) {
+    protected virtual List<IModule>/*?*/ DeepCopy(List<IModule>/*?*/ modules) {
+      if (modules == null) return null;
       for (int i = 0, n = modules.Count; i < n; i++) {
         modules[i] = this.DeepCopy(this.GetMutableShallowCopy(modules[i]));
         this.flatListOfTypes.Clear();
@@ -5115,7 +5131,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Visits the private helper members.
     /// </summary>
     /// <param name="typeDefinitions">The type definitions.</param>
-    protected virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition> typeDefinitions) {
+    protected virtual void VisitPrivateHelperMembers(List<INamedTypeDefinition>/*?*/ typeDefinitions) {
+      if (typeDefinitions == null) return;
       for (int i = 0, n = typeDefinitions.Count; i < n; i++) {
         NamedTypeDefinition/*?*/ typeDef = typeDefinitions[i] as NamedTypeDefinition;
         if (typeDef == null) continue;
@@ -5128,7 +5145,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namespaceMembers">The namespace members.</param>
     /// <returns></returns>
-    protected virtual List<INamespaceMember> DeepCopy(List<INamespaceMember> namespaceMembers) {
+    protected virtual List<INamespaceMember>/*?*/ DeepCopy(List<INamespaceMember>/*?*/ namespaceMembers) {
+      if (namespaceMembers == null) return null;
       for (int i = 0, n = namespaceMembers.Count; i < n; i++)
         namespaceMembers[i] = this.DeepCopy(namespaceMembers[i]);
       return namespaceMembers;
@@ -5139,7 +5157,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="nestedTypeDefinitions">The nested type definitions.</param>
     /// <returns></returns>
-    protected virtual List<INestedTypeDefinition> DeepCopy(List<INestedTypeDefinition> nestedTypeDefinitions) {
+    protected virtual List<INestedTypeDefinition>/*?*/ DeepCopy(List<INestedTypeDefinition>/*?*/ nestedTypeDefinitions) {
+      if (nestedTypeDefinitions == null) return null;
       for (int i = 0, n = nestedTypeDefinitions.Count; i < n; i++)
         nestedTypeDefinitions[i] = this.DeepCopy(nestedTypeDefinitions[i]);
       return nestedTypeDefinitions;
@@ -5150,7 +5169,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="operations">The operations.</param>
     /// <returns></returns>
-    protected virtual List<IOperation> DeepCopy(List<IOperation> operations) {
+    protected virtual List<IOperation>/*?*/ DeepCopy(List<IOperation>/*?*/ operations) {
+      if (operations == null) return null;
       for (int i = 0, n = operations.Count; i < n; i++)
         operations[i] = this.DeepCopy(this.GetMutableShallowCopy(operations[i]));
       return operations;
@@ -5161,7 +5181,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="exceptionInformations">The exception informations.</param>
     /// <returns></returns>
-    protected virtual List<IOperationExceptionInformation> DeepCopy(List<IOperationExceptionInformation> exceptionInformations) {
+    protected virtual List<IOperationExceptionInformation>/*?*/ DeepCopy(List<IOperationExceptionInformation>/*?*/ exceptionInformations) {
+      if (exceptionInformations == null) return null;
       for (int i = 0, n = exceptionInformations.Count; i < n; i++)
         exceptionInformations[i] = this.DeepCopy(this.GetMutableShallowCopy(exceptionInformations[i]));
       return exceptionInformations;
@@ -5172,7 +5193,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeDefinitionMembers">The type definition members.</param>
     /// <returns></returns>
-    protected virtual List<ITypeDefinitionMember> DeepCopy(List<ITypeDefinitionMember> typeDefinitionMembers) {
+    protected virtual List<ITypeDefinitionMember>/*?*/ DeepCopy(List<ITypeDefinitionMember>/*?*/ typeDefinitionMembers) {
+      if (typeDefinitionMembers == null) return null;
       for (int i = 0, n = typeDefinitionMembers.Count; i < n; i++)
         typeDefinitionMembers[i] = this.DeepCopy(typeDefinitionMembers[i]);
       return typeDefinitionMembers;
@@ -5183,7 +5205,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="win32Resources">The win32 resources.</param>
     /// <returns></returns>
-    protected virtual List<IWin32Resource> DeepCopy(List<IWin32Resource> win32Resources) {
+    protected virtual List<IWin32Resource>/*?*/ DeepCopy(List<IWin32Resource>/*?*/ win32Resources) {
+      if (win32Resources == null) return null;
       for (int i = 0, n = win32Resources.Count; i < n; i++)
         win32Resources[i] = this.DeepCopy(this.GetMutableShallowCopy(win32Resources[i]));
       return win32Resources;
@@ -5825,7 +5848,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="parameterDefinitions">The parameter definitions.</param>
     /// <returns></returns>
-    protected virtual List<IParameterDefinition> DeepCopy(List<IParameterDefinition> parameterDefinitions) {
+    protected virtual List<IParameterDefinition>/*?*/ DeepCopy(List<IParameterDefinition>/*?*/ parameterDefinitions) {
+      if (parameterDefinitions == null) return null;
       for (int i = 0, n = parameterDefinitions.Count; i < n; i++)
         parameterDefinitions[i] = this.DeepCopy(this.GetMutableShallowCopy(parameterDefinitions[i]));
       return parameterDefinitions;
@@ -5890,6 +5914,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="propertyDefinitions">The property definitions.</param>
     /// <returns></returns>
     protected virtual List<IPropertyDefinition> DeepCopy(List<IPropertyDefinition> propertyDefinitions) {
+      if (propertyDefinitions == null) return null;
       for (int i = 0, n = propertyDefinitions.Count; i < n; i++)
         propertyDefinitions[i] = this.DeepCopy(propertyDefinitions[i]);
       return propertyDefinitions;
@@ -5912,13 +5937,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected virtual PropertyDefinition DeepCopy(PropertyDefinition propertyDefinition) {
       this.DeepCopy((TypeDefinitionMember)propertyDefinition);
       int getterIndex = -1, setterIndex = -1;
-      if (propertyDefinition.Accessors.Count > 0) {
-        if (propertyDefinition.Getter == propertyDefinition.Accessors[0]) getterIndex = 0;
-        else if (propertyDefinition.Setter == propertyDefinition.Accessors[0]) setterIndex = 0;
-      }
-      if (propertyDefinition.Accessors.Count > 1) {
-        if (propertyDefinition.Getter == propertyDefinition.Accessors[1]) getterIndex = 1;
-        else if (propertyDefinition.Setter == propertyDefinition.Accessors[1]) setterIndex = 1;
+      if (propertyDefinition.Accessors != null) {
+        if (propertyDefinition.Accessors.Count > 0) {
+          if (propertyDefinition.Getter == propertyDefinition.Accessors[0]) getterIndex = 0;
+          else if (propertyDefinition.Setter == propertyDefinition.Accessors[0]) setterIndex = 0;
+        }
+        if (propertyDefinition.Accessors.Count > 1) {
+          if (propertyDefinition.Getter == propertyDefinition.Accessors[1]) getterIndex = 1;
+          else if (propertyDefinition.Setter == propertyDefinition.Accessors[1]) setterIndex = 1;
+        }
       }
       propertyDefinition.Accessors = this.DeepCopy(propertyDefinition.Accessors);
       if (propertyDefinition.HasDefaultValue)
@@ -5960,6 +5987,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="resourceReferences">The resource references.</param>
     /// <returns></returns>
     protected virtual List<IResourceReference> DeepCopy(List<IResourceReference> resourceReferences) {
+      if (resourceReferences == null) return null;
       for (int i = 0, n = resourceReferences.Count; i < n; i++)
         resourceReferences[i] = this.DeepCopy(this.GetMutableShallowCopy(resourceReferences[i]));
       return resourceReferences;
@@ -5982,6 +6010,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="securityAttributes">The security attributes.</param>
     /// <returns></returns>
     protected virtual List<ISecurityAttribute> DeepCopy(List<ISecurityAttribute> securityAttributes) {
+      if (securityAttributes == null) return null;
       for (int i = 0, n = securityAttributes.Count; i < n; i++)
         securityAttributes[i] = this.DeepCopy(this.GetMutableShallowCopy(securityAttributes[i]));
       return securityAttributes;

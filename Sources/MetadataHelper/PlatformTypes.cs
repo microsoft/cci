@@ -45,7 +45,7 @@ namespace Microsoft.Cci {
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
     public IEnumerable<IName> Aliases {
-      get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
+      get { return Enumerable<IName>.Empty; }
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ namespace Microsoft.Cci {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
@@ -119,7 +119,7 @@ namespace Microsoft.Cci {
     /// A potentially empty collection of locations that correspond to this AssemblyReference instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     /// <summary>
@@ -225,7 +225,7 @@ namespace Microsoft.Cci {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
@@ -283,7 +283,7 @@ namespace Microsoft.Cci {
     /// A potentially empty collection of locations that correspond to this IReference instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     /// <summary>
@@ -336,7 +336,7 @@ namespace Microsoft.Cci {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
@@ -372,7 +372,7 @@ namespace Microsoft.Cci {
     /// A potentially empty collection of locations that correspond to this ModuleReference instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     /// <summary>
@@ -639,11 +639,11 @@ namespace Microsoft.Cci {
     }
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
   }
@@ -1678,11 +1678,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion

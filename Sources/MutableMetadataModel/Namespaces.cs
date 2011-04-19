@@ -166,7 +166,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.name; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.name = value; 
+        this.name = value;
       }
     }
     IName name;
@@ -305,7 +305,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       set {
         Contract.Requires(!this.IsFrozen);
         Contract.Requires(value != null);
-        this.unit = value; 
+        this.unit = value;
       }
     }
     IUnitReference unit;
@@ -321,9 +321,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     internal UnitNamespace() {
-      this.attributes = new List<ICustomAttribute>();
-      this.locations = new List<ILocation>(1);
-      this.members = new List<INamespaceMember>();
+      this.attributes = null;
+      this.locations = null;
+      this.members = null;
       this.name = Dummy.Name;
       this.unit = Dummy.Unit;
     }
@@ -334,8 +334,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="unitNamespace"></param>
     /// <param name="internFactory"></param>
     public virtual void Copy(IUnitNamespace unitNamespace, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(unitNamespace.Attributes);
-      this.locations = new List<ILocation>(unitNamespace.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(unitNamespace.Attributes))
+        this.attributes = new List<ICustomAttribute>(unitNamespace.Attributes);
+      else
+        this.attributes = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(unitNamespace.Locations))
+        this.locations = new List<ILocation>(unitNamespace.Locations);
+      else
+        this.locations = null;
       this.members = new List<INamespaceMember>(unitNamespace.Members);
       this.name = unitNamespace.Name;
       this.unit = unitNamespace.Unit;
@@ -345,11 +351,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     //^ [Pure]
     /// <summary>
@@ -424,21 +430,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The collection of member objects comprising the namespaces.
     /// </summary>
     /// <value></value>
     public List<INamespaceMember> Members {
-      get { return this.members; }
+      get {
+        if (this.members == null) this.members = new List<INamespaceMember>();
+        return this.members;
+      }
       set { this.members = value; }
     }
-    List<INamespaceMember> members;
+    List<INamespaceMember>/*?*/ members;
 
     /// <summary>
     /// The name of the entity.
@@ -472,7 +481,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
 
     IEnumerable<INamespaceMember> INamespaceDefinition.Members {
-      get { return this.members.AsReadOnly(); }
+      get { return this.Members.AsReadOnly(); }
     }
 
     #endregion
@@ -480,7 +489,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IContainer<INamespaceMember> Members
 
     IEnumerable<INamespaceMember> IContainer<INamespaceMember>.Members {
-      get { return this.members.AsReadOnly(); }
+      get { return this.Members.AsReadOnly(); }
     }
 
     #endregion
@@ -488,11 +497,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.Locations == null) return Enumerable<ILocation>.Empty;
+        return this.Locations.AsReadOnly();
+      }
     }
 
     #endregion
@@ -500,7 +515,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IScope<INamespaceMember> Members
 
     IEnumerable<INamespaceMember> IScope<INamespaceMember>.Members {
-      get { return this.members.AsReadOnly(); }
+      get { return this.Members.AsReadOnly(); }
     }
 
     #endregion
@@ -538,8 +553,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     internal UnitNamespaceReference() {
-      this.attributes = new List<ICustomAttribute>();
-      this.locations = new List<ILocation>();
+      this.attributes = null;
+      this.locations = null;
     }
 
     /// <summary>
@@ -548,19 +563,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="unitNamespaceReference"></param>
     /// <param name="internFactory"></param>
     public virtual void Copy(IUnitNamespaceReference unitNamespaceReference, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(unitNamespaceReference.Attributes);
-      this.locations = new List<ILocation>(unitNamespaceReference.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(unitNamespaceReference.Attributes))
+        this.attributes = new List<ICustomAttribute>(unitNamespaceReference.Attributes);
+      else
+        this.attributes = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(unitNamespaceReference.Locations))
+        this.locations = new List<ILocation>(unitNamespaceReference.Locations);
+      else
+        this.locations = null;
     }
 
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -602,11 +623,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The namespace definition being referred to.
@@ -635,11 +656,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.Locations == null) return Enumerable<ILocation>.Empty;
+        return this.Locations.AsReadOnly();
+      }
     }
 
     #endregion

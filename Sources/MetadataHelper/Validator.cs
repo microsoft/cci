@@ -69,7 +69,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// An empty enumeration of related error locations.
     /// </summary>
-    protected readonly static IEnumerable<ILocation> emptyLocations = IteratorHelper.GetEmptyEnumerable<ILocation>();
+    protected readonly static IEnumerable<ILocation> emptyLocations = Enumerable<ILocation>.Empty;
 
     /// <summary>
     /// A standard abstraction over the applications that host components that provide or consume objects from the metadata model.
@@ -306,8 +306,8 @@ namespace Microsoft.Cci {
           if (fieldDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray ||
             fieldDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValArray ||
             fieldDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValTStr) {
-              if (fieldDefinition.MarshallingInformation.NumberOfElements == 0)
-                this.ReportError(MetadataError.MarshalledArraysMustHaveSizeKnownAtCompileTime, fieldDefinition.MarshallingInformation, fieldDefinition);
+            if (fieldDefinition.MarshallingInformation.NumberOfElements == 0)
+              this.ReportError(MetadataError.MarshalledArraysMustHaveSizeKnownAtCompileTime, fieldDefinition.MarshallingInformation, fieldDefinition);
           }
 
 
@@ -798,7 +798,7 @@ namespace Microsoft.Cci {
       /// </summary>
       public void Visit(INamespaceAliasForType namespaceAliasForType) {
         this.Visit((IAliasForType)namespaceAliasForType);
-        if (!namespaceAliasForType.IsPublic && !(TypeHelper.GetDefiningUnitReference(namespaceAliasForType.AliasedType) is IAssemblyReference))          
+        if (!namespaceAliasForType.IsPublic && !(TypeHelper.GetDefiningUnitReference(namespaceAliasForType.AliasedType) is IAssemblyReference))
           this.ReportError(MetadataError.NonPublicTypeAlias, namespaceAliasForType);
       }
 

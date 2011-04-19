@@ -90,7 +90,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>(); } //TODO: run through top level types with special names and get the one that have been mangled with the full name of this method
+      get { return Enumerable<ITypeDefinition>.Empty; } //TODO: run through top level types with special names and get the one that have been mangled with the full name of this method
     }
 
     public ushort MaxStack {

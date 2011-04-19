@@ -17,29 +17,29 @@ using System.Text;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// 
+  /// An expression that does not change its value at runtime and can be evaluated at compile time.
   /// </summary>
   public sealed class MetadataConstant : MetadataExpression, IMetadataConstant, ICopyFrom<IMetadataConstant> {
 
     /// <summary>
-    /// 
+    /// An expression that does not change its value at runtime and can be evaluated at compile time.
     /// </summary>
     public MetadataConstant() {
       this.value = null;
     }
 
     /// <summary>
-    /// 
+    /// An expression that does not change its value at runtime and can be evaluated at compile time.
     /// </summary>
-    /// <param name="metadataConstant"></param>
-    /// <param name="internFactory"></param>
+    /// <param name="metadataConstant">A template from which to construct a shallow copy.</param>
+    /// <param name="internFactory">The intern factory to use for computing the interned identity (if applicable) of this mutable object.</param>
     public void Copy(IMetadataConstant metadataConstant, IInternFactory internFactory) {
       ((ICopyFrom<IMetadataExpression>)this).Copy(metadataConstant, internFactory);
       this.value = metadataConstant.Value;
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor(IMetadataConstant).
     /// </summary>
     /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -60,37 +60,40 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// An expression that creates an array instance in metadata. Only for use in custom attributes.
   /// </summary>
   public sealed class MetadataCreateArray : MetadataExpression, IMetadataCreateArray, ICopyFrom<IMetadataCreateArray> {
 
     /// <summary>
-    /// 
+    /// An expression that creates an array instance in metadata. Only for use in custom attributes.
     /// </summary>
     public MetadataCreateArray() {
       this.elementType = Dummy.TypeReference;
-      this.initializers = new List<IMetadataExpression>();
-      this.lowerBounds = new List<int>();
+      this.initializers = null;
+      this.lowerBounds = null;
       this.rank = 0;
-      this.sizes = new List<ulong>();
+      this.sizes = null;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of an expression that creates an array instance in metadata. Only for use in custom attributes.
     /// </summary>
     /// <param name="createArray"></param>
     /// <param name="internFactory"></param>
     public void Copy(IMetadataCreateArray createArray, IInternFactory internFactory) {
       ((ICopyFrom<IMetadataExpression>)this).Copy(createArray, internFactory);
       this.elementType = createArray.ElementType;
-      this.initializers = new List<IMetadataExpression>(createArray.Initializers);
-      this.lowerBounds = new List<int>(createArray.LowerBounds);
+      if (!IteratorHelper.EnumerableIsEmpty(createArray.Initializers))
+        this.initializers = new List<IMetadataExpression>(createArray.Initializers);
+      if (!IteratorHelper.EnumerableIsEmpty(createArray.LowerBounds))
+        this.lowerBounds = new List<int>(createArray.LowerBounds);
       this.rank = createArray.Rank;
-      this.sizes = new List<ulong>(createArray.Sizes);
+      if (!IteratorHelper.EnumerableIsEmpty(createArray.Sizes))
+        this.sizes = new List<ulong>(createArray.Sizes);
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IMetadataCreateArray).
     /// </summary>
     /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -111,21 +114,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The initial values of the array elements. May be empty.
     /// </summary>
     /// <value></value>
-    public List<IMetadataExpression> Initializers {
+    public List<IMetadataExpression>/*?*/ Initializers {
       get { return this.initializers; }
       set { this.initializers = value; }
     }
-    List<IMetadataExpression> initializers;
+    List<IMetadataExpression>/*?*/ initializers;
 
     /// <summary>
     /// The index value of the first element in each dimension.
     /// </summary>
     /// <value></value>
-    public List<int> LowerBounds {
+    public List<int>/*?*/ LowerBounds {
       get { return this.lowerBounds; }
       set { this.lowerBounds = value; }
     }
-    List<int> lowerBounds;
+    List<int>/*?*/ lowerBounds;
 
     /// <summary>
     /// The number of dimensions of the array.
@@ -141,54 +144,63 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The number of elements allowed in each dimension.
     /// </summary>
     /// <value></value>
-    public List<ulong> Sizes {
+    public List<ulong>/*?*/ Sizes {
       get { return this.sizes; }
       set { this.sizes = value; }
     }
-    List<ulong> sizes;
+    List<ulong>/*?*/ sizes;
 
 
     #region IMetadataCreateArray Members
 
 
     IEnumerable<IMetadataExpression> IMetadataCreateArray.Initializers {
-      get { return this.initializers.AsReadOnly(); }
+      get {
+        if (this.initializers == null) return Enumerable<IMetadataExpression>.Empty;
+        return this.initializers.AsReadOnly();
+      }
     }
 
     IEnumerable<int> IMetadataCreateArray.LowerBounds {
-      get { return this.lowerBounds.AsReadOnly(); }
+      get {
+        if (this.lowerBounds == null) return Enumerable<int>.Empty;
+        return this.lowerBounds.AsReadOnly();
+      }
     }
 
     IEnumerable<ulong> IMetadataCreateArray.Sizes {
-      get { return this.sizes.AsReadOnly(); }
+      get {
+        if (this.sizes == null) return Enumerable<ulong>.Empty;
+        return this.sizes.AsReadOnly();
+      }
     }
 
     #endregion
   }
 
   /// <summary>
-  /// 
+  /// An expression that can be represented directly in metadata.
   /// </summary>
   public abstract class MetadataExpression : IMetadataExpression, ICopyFrom<IMetadataExpression> {
 
     /// <summary>
-    /// 
+    /// An expression that can be represented directly in metadata.
     /// </summary>
     internal MetadataExpression() {
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.type = Dummy.TypeReference;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of an expression that can be represented directly in metadata.
     /// </summary>
     /// <param name="metadataExpression"></param>
     /// <param name="internFactory"></param>
     public void Copy(IMetadataExpression metadataExpression, IInternFactory internFactory) {
-      this.locations = new List<ILocation>(metadataExpression.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(metadataExpression.Locations))
+        this.locations = new List<ILocation>(metadataExpression.Locations);
       this.type = metadataExpression.Type;
     }
-
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -202,11 +214,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The type of value the expression represents.
@@ -220,21 +232,23 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #region IMetadataExpression Members
 
-
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.locations == null) return Enumerable<ILocation>.Empty;
+        return this.locations.AsReadOnly();
+      }
     }
 
     #endregion
   }
 
   /// <summary>
-  /// 
+  /// An expression that represents a (name, value) pair and that is typically used in method calls, custom attributes and object initializers.
   /// </summary>
   public sealed class MetadataNamedArgument : MetadataExpression, IMetadataNamedArgument, ICopyFrom<IMetadataNamedArgument> {
 
     /// <summary>
-    /// 
+    /// An expression that represents a (name, value) pair and that is typically used in method calls, custom attributes and object initializers.
     /// </summary>
     public MetadataNamedArgument() {
       this.argumentName = Dummy.Name;
@@ -244,7 +258,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of an expression that represents a (name, value) pair and that is typically used in method calls, custom attributes and object initializers.
     /// </summary>
     /// <param name="namedArgument"></param>
     /// <param name="internFactory"></param>
@@ -277,7 +291,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMetadataExpression argumentValue;
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IMetadataNamedArgument).
     /// </summary>
     /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -307,19 +321,19 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// An expression that results in a System.Type instance.
   /// </summary>
   public sealed class MetadataTypeOf : MetadataExpression, IMetadataTypeOf, ICopyFrom<IMetadataTypeOf> {
 
     /// <summary>
-    /// 
+    /// An expression that results in a System.Type instance.
     /// </summary>
     public MetadataTypeOf() {
       this.typeToGet = Dummy.TypeReference;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of an expression that results in a System.Type instance.
     /// </summary>
     /// <param name="typeOf"></param>
     /// <param name="internFactory"></param>
@@ -329,7 +343,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IMetadataTypeOf).
     /// </summary>
     /// <param name="visitor"></param>
     public override void Dispatch(IMetadataVisitor visitor) {

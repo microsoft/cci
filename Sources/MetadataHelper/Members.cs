@@ -65,7 +65,7 @@ namespace Microsoft.Cci {
     /// Calls visitor.Visit(IGenericMethodInstanceReference)
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit((IGenericMethodInstanceReference)this); 
+      visitor.Visit((IGenericMethodInstanceReference)this);
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     /// <summary>
@@ -586,7 +586,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -859,7 +859,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -998,7 +998,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
@@ -1020,7 +1020,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -2017,7 +2017,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion

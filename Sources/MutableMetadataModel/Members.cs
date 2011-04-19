@@ -18,12 +18,14 @@ using System.Diagnostics.Contracts;
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
-  /// 
+  /// An event is a member that enables an object or class to provide notifications. Clients can attach executable code for events by supplying event handlers.
+  /// This interface models the metadata representation of an event.
   /// </summary>
   public sealed class EventDefinition : TypeDefinitionMember, IEventDefinition, ICopyFrom<IEventDefinition> {
 
     /// <summary>
-    /// 
+    /// An event is a member that enables an object or class to provide notifications. Clients can attach executable code for events by supplying event handlers.
+    /// This interface models the metadata representation of an event.
     /// </summary>
     public EventDefinition() {
       this.accessors = new List<IMethodReference>();
@@ -34,7 +36,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of an event. An event is a member that enables an object or class to provide notifications.
+    /// Clients can attach executable code for events by supplying event handlers.
+    /// This interface models the metadata representation of an event.
     /// </summary>
     /// <param name="eventDefinition"></param>
     /// <param name="internFactory"></param>
@@ -157,7 +161,8 @@ namespace Microsoft.Cci.MutableCodeModel {
   public class FieldDefinition : TypeDefinitionMember, IFieldDefinition, ICopyFrom<IFieldDefinition> {
 
     /// <summary>
-    /// 
+    /// A field is a member that represents a variable associated with an object or class.
+    /// This interface models the metadata representation of a field.
     /// </summary>
     public FieldDefinition() {
       this.compileTimeValue = Dummy.Constant;
@@ -172,7 +177,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of a field.
+    /// A field is a member that represents a variable associated with an object or class.
+    /// This interface models the metadata representation of a field.
     /// </summary>
     /// <param name="fieldDefinition"></param>
     /// <param name="internFactory"></param>
@@ -466,7 +473,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
       get {
-        if (this.customModifiers == null) return Dummy.FieldReference.CustomModifiers;
+        if (this.customModifiers == null) return Enumerable<ICustomModifier>.Empty;
         return this.customModifiers.AsReadOnly();
       }
     }
@@ -491,12 +498,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a field.
   /// </summary>
   public class FieldReference : IFieldReference, ICopyFrom<IFieldReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a field.
     /// </summary>
     public FieldReference() {
       Contract.Ensures(!this.IsFrozen);
@@ -507,7 +514,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of a reference to a field.
     /// </summary>
     /// <param name="fieldReference"></param>
     /// <param name="internFactory"></param>
@@ -551,7 +558,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.containingType; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.containingType = value; 
+        this.containingType = value;
       }
     }
     ITypeReference containingType;
@@ -724,7 +731,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
       get {
-        if (this.customModifiers == null) return Dummy.FieldReference.CustomModifiers;
+        if (this.customModifiers == null) return Enumerable<ICustomModifier>.Empty;
         return this.CustomModifiers.AsReadOnly();
       }
     }
@@ -733,14 +740,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
-        if (this.attributes == null) return Dummy.FieldReference.Attributes;
+        if (this.attributes == null) return Enumerable<ICustomAttribute>.Empty;
         return this.attributes.AsReadOnly();
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
-        if (this.locations == null) return Dummy.FieldReference.Locations;
+        if (this.locations == null) return Enumerable<ILocation>.Empty;
         return this.locations.AsReadOnly();
       }
     }
@@ -871,7 +878,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public GenericMethodInstanceReference() {
-      this.genericArguments = new List<ITypeReference>();
+      this.genericArguments = null;
       this.genericMethod = Dummy.MethodReference;
     }
 
@@ -898,11 +905,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The type arguments that were used to instantiate this.GenericMethod in order to create this method.
     /// </summary>
     /// <value></value>
-    public List<ITypeReference> GenericArguments {
+    public List<ITypeReference>/*?*/ GenericArguments {
       get { return this.genericArguments; }
       set { this.genericArguments = value; }
     }
-    List<ITypeReference> genericArguments;
+    List<ITypeReference>/*?*/ genericArguments;
 
     /// <summary>
     /// Returns the generic method of which this method is an instance.
@@ -918,13 +925,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Resolves the reference to find the method being referred to.
     /// </summary>
     protected override IMethodDefinition Resolve() {
-      return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, this.GenericArguments.AsReadOnly(), this.InternFactory);
+      return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, ((IGenericMethodInstanceReference)this).GenericArguments, this.InternFactory);
     }
 
     #region IGenericMethodInstanceReference Members
 
     IEnumerable<ITypeReference> IGenericMethodInstanceReference.GenericArguments {
-      get { return this.genericArguments.AsReadOnly(); }
+      get {
+        if (this.genericArguments == null) return Enumerable<ITypeReference>.Empty;
+        return this.genericArguments.AsReadOnly();
+      }
     }
 
     #endregion
@@ -932,12 +942,12 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// The definition of a type parameter of a generic method.
   /// </summary>
   public sealed class GenericMethodParameter : GenericParameter, IGenericMethodParameter, ICopyFrom<IGenericMethodParameter> {
 
     /// <summary>
-    /// 
+    /// The definition of a type parameter of a generic method.
     /// </summary>
     //^ [NotDelayed]
     public GenericMethodParameter() {
@@ -947,7 +957,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of the definition of a type parameter of a generic method.
     /// </summary>
     /// <param name="genericMehodParameter"></param>
     /// <param name="internFactory"></param>
@@ -1144,6 +1154,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IMethodDefinition methodDefinition;
 
     /// <summary>
+    /// Returns the Name property of the LocalDefinition.
+    /// </summary>
+    public override string ToString() {
+      var x = this.Name.Value;
+      return x == null ? ":no name" : x;
+    }
+
+    /// <summary>
     /// The type of the local.
     /// </summary>
     /// <value></value>
@@ -1157,72 +1175,69 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomModifier> ILocalDefinition.CustomModifiers {
       get {
-        if (this.customModifiers == null) return Dummy.LocalVariable.CustomModifiers;
+        if (this.customModifiers == null) return Enumerable<ICustomModifier>.Empty;
         return this.customModifiers.AsReadOnly();
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
-        if (this.locations == null) return Dummy.LocalVariable.Locations;
+        if (this.locations == null) return Enumerable<ILocation>.Empty;
         return this.locations.AsReadOnly();
       }
     }
 
     #endregion
 
-    /// <summary>
-    /// Returns the Name property of the LocalDefinition.
-    /// </summary>
-    public override string ToString() {
-      var x = this.Name.Value;
-      return x == null ? ":no name" : x;
-    }
   }
 
   /// <summary>
-  /// 
+  /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
   /// </summary>
   public class MethodBody : IMethodBody, ICopyFrom<IMethodBody> {
 
     /// <summary>
-    /// 
+    /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
     /// </summary>
     public MethodBody() {
       this.localsAreZeroed = true;
-      this.localVariables = new List<ILocalDefinition>();
+      this.localVariables = null;
       this.maxStack = 0;
       this.methodDefinition = Dummy.Method;
-      this.operationExceptionInformation = new List<IOperationExceptionInformation>();
-      this.operations = new List<IOperation>();
-      this.privateHelperTypes = new List<ITypeDefinition>(0);
+      this.operationExceptionInformation = null;
+      this.operations = null;
+      this.privateHelperTypes = null;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of a metadata (IL) level represetation of the body of a method or of a property/event accessor.
     /// </summary>
     /// <param name="methodBody"></param>
     /// <param name="internFactory"></param>
     public void Copy(IMethodBody methodBody, IInternFactory internFactory) {
       this.localsAreZeroed = methodBody.LocalsAreZeroed;
-      this.localVariables = new List<ILocalDefinition>(methodBody.LocalVariables);
+      if (IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables))
+        this.localVariables = new List<ILocalDefinition>(methodBody.LocalVariables);
+      else
+        this.localVariables = null;
       this.maxStack = methodBody.MaxStack;
       this.methodDefinition = methodBody.MethodDefinition;
-      if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil) {
-        //^ assume false;
+      if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil)
         this.operationExceptionInformation = new List<IOperationExceptionInformation>(methodBody.OperationExceptionInformation);
-      } else
-        this.operationExceptionInformation = new List<IOperationExceptionInformation>(0);
-      if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil) {
-        //^ assume false;
+      else
+        this.operationExceptionInformation = null;
+      if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil)
         this.operations = new List<IOperation>(methodBody.Operations);
-      } else
-        this.operations = new List<IOperation>(0);
-      this.privateHelperTypes = new List<ITypeDefinition>(0);
+      else
+        this.operations = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(methodBody.PrivateHelperTypes))
+        this.privateHelperTypes = new List<ITypeDefinition>(methodBody.PrivateHelperTypes);
+      else
+        this.privateHelperTypes = null;
     }
 
     /// <summary>
-    /// 
+    /// Calls visitor.Visit(IMethodBody).
     /// </summary>
     /// <param name="visitor"></param>
     public void Dispatch(IMetadataVisitor visitor) {
@@ -1242,11 +1257,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// The local variables of the method.
     /// </summary>
-    public List<ILocalDefinition> LocalVariables {
+    public List<ILocalDefinition>/*?*/ LocalVariables {
       get { return this.localVariables; }
       set { this.localVariables = value; }
     }
-    List<ILocalDefinition> localVariables;
+    List<ILocalDefinition>/*?*/ localVariables;
 
     /// <summary>
     /// The maximum number of elements on the evaluation stack during the execution of the method.
@@ -1270,20 +1285,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A list CLR IL operations that implement this method body.
     /// </summary>
-    public List<IOperation> Operations {
+    public List<IOperation>/*?*/ Operations {
       get { return this.operations; }
       set { this.operations = value; }
     }
-    List<IOperation> operations;
+    List<IOperation>/*?*/ operations;
 
     /// <summary>
     /// A list exception data within the method body IL.
     /// </summary>
-    public List<IOperationExceptionInformation> OperationExceptionInformation {
+    public List<IOperationExceptionInformation>/*?*/ OperationExceptionInformation {
       get { return this.operationExceptionInformation; }
       set { this.operationExceptionInformation = value; }
     }
-    List<IOperationExceptionInformation> operationExceptionInformation;
+    List<IOperationExceptionInformation>/*?*/ operationExceptionInformation;
 
     /// <summary>
     /// Any types that are implicitly defined in order to implement the body semantics.
@@ -1291,59 +1306,71 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// In case of instructions to AST decompilation this should ideally be list of all types
     /// which are local to method.
     /// </summary>
-    public List<ITypeDefinition> PrivateHelperTypes {
+    public List<ITypeDefinition>/*?*/ PrivateHelperTypes {
       get { return this.privateHelperTypes; }
       set { this.privateHelperTypes = value; }
     }
-    List<ITypeDefinition> privateHelperTypes;
+    List<ITypeDefinition>/*?*/ privateHelperTypes;
 
 
     #region IMethodBody Members
 
     IEnumerable<IOperationExceptionInformation> IMethodBody.OperationExceptionInformation {
-      get { return this.operationExceptionInformation.AsReadOnly(); }
+      get {
+        if (this.operationExceptionInformation == null) return Enumerable<IOperationExceptionInformation>.Empty;
+        return this.operationExceptionInformation.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocalDefinition> IMethodBody.LocalVariables {
-      get { return this.localVariables.AsReadOnly(); }
+      get {
+        if (this.localVariables == null) return Enumerable<ILocalDefinition>.Empty;
+        return this.localVariables.AsReadOnly();
+      }
     }
 
     IEnumerable<IOperation> IMethodBody.Operations {
-      get { return this.operations.AsReadOnly(); }
+      get {
+        if (this.operations == null) return Enumerable<IOperation>.Empty;
+        return this.operations.AsReadOnly();
+      }
     }
 
     IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes {
-      get { return this.privateHelperTypes.AsReadOnly(); }
+      get {
+        if (this.privateHelperTypes == null) return Enumerable<ITypeDefinition>.Empty;
+        return this.privateHelperTypes.AsReadOnly();
+      }
     }
 
     #endregion
   }
 
   /// <summary>
-  /// 
+  /// The metadata representation of a method.
   /// </summary>
   public class MethodDefinition : TypeDefinitionMember, IMethodDefinition, ICopyFrom<IMethodDefinition> {
 
     /// <summary>
-    /// 
+    /// The metadata representation of a method.
     /// </summary>
     public MethodDefinition() {
       this.body = Dummy.MethodBody;
       this.callingConvention = CallingConvention.Default;
-      this.genericParameters = new List<IGenericMethodParameter>();
+      this.genericParameters = null;
       this.internFactory = Dummy.InternFactory;
-      this.parameters = new List<IParameterDefinition>();
+      this.parameters = null;
       this.platformInvokeData = Dummy.PlatformInvokeInformation;
       this.returnValueAttributes = new List<ICustomAttribute>();
       this.returnValueCustomModifiers = new List<ICustomModifier>();
       this.returnValueMarshallingInformation = Dummy.MarshallingInformation;
       this.returnValueName = Dummy.Name;
-      this.securityAttributes = new List<ISecurityAttribute>();
+      this.securityAttributes = null;
       this.type = Dummy.TypeReference;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of the metadata representation of a method.
     /// </summary>
     /// <param name="methodDefinition"></param>
     /// <param name="internFactory"></param>
@@ -1357,9 +1384,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (methodDefinition.IsGeneric)
         this.genericParameters = new List<IGenericMethodParameter>(methodDefinition.GenericParameters);
       else
-        this.genericParameters = new List<IGenericMethodParameter>(0);
+        this.genericParameters = null;
       this.internFactory = internFactory;
-      this.parameters = new List<IParameterDefinition>(methodDefinition.Parameters);
+      if (methodDefinition.ParameterCount > 0)
+        this.parameters = new List<IParameterDefinition>(methodDefinition.Parameters);
+      else
+        this.parameters = null;
       if (methodDefinition.IsPlatformInvoke)
         this.platformInvokeData = methodDefinition.PlatformInvokeData;
       else
@@ -1373,7 +1403,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.returnValueMarshallingInformation = methodDefinition.ReturnValueMarshallingInformation;
       else
         this.returnValueMarshallingInformation = Dummy.MarshallingInformation;
-      this.securityAttributes = new List<ISecurityAttribute>(methodDefinition.SecurityAttributes);
+      if (methodDefinition.HasDeclarativeSecurity && IteratorHelper.EnumerableIsNotEmpty(methodDefinition.SecurityAttributes))
+        this.securityAttributes = new List<ISecurityAttribute>(methodDefinition.SecurityAttributes);
+      else
+        this.securityAttributes = null;
       this.type = methodDefinition.Type;
       //^ base;
       this.AcceptsExtraArguments = methodDefinition.AcceptsExtraArguments;
@@ -1461,11 +1494,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// If the method is generic then this list contains the type parameters.
     /// </summary>
     /// <value></value>
-    public List<IGenericMethodParameter> GenericParameters {
+    public List<IGenericMethodParameter>/*?*/ GenericParameters {
       get { return this.genericParameters; }
       set { this.genericParameters = value; }
     }
-    List<IGenericMethodParameter> genericParameters;
+    List<IGenericMethodParameter>/*?*/ genericParameters;
 
     //^ [Pure]
     /// <summary>
@@ -1473,7 +1506,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public ushort GenericParameterCount {
-      get { return (ushort)this.genericParameters.Count; }
+      get {
+        if (this.genericParameters == null) return 0;
+        return (ushort)this.genericParameters.Count;
+      }
     }
 
     /// <summary>
@@ -1611,7 +1647,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
-      get { return this.genericParameters.Count > 0; }
+      get { return this.genericParameters != null && this.genericParameters.Count > 0; }
     }
 
     /// <summary>
@@ -1843,18 +1879,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The parameters forming part of this signature.
     /// </summary>
     /// <value></value>
-    public List<IParameterDefinition> Parameters {
+    public List<IParameterDefinition>/*?*/ Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
-    List<IParameterDefinition> parameters;
+    List<IParameterDefinition>/*?*/ parameters;
 
     /// <summary>
     /// The number of required parameters of the method.
     /// </summary>
     /// <value></value>
     public ushort ParameterCount {
-      get { return (ushort)this.parameters.Count; }
+      get {
+        if (this.parameters == null) return 0;
+        return (ushort)this.parameters.Count;
+      }
     }
 
     /// <summary>
@@ -1976,11 +2015,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Declarative security actions for this method.
     /// </summary>
     /// <value></value>
-    public List<ISecurityAttribute> SecurityAttributes {
+    public List<ISecurityAttribute>/*?*/ SecurityAttributes {
       get { return this.securityAttributes; }
       set { this.securityAttributes = value; }
     }
-    List<ISecurityAttribute> securityAttributes;
+    List<ISecurityAttribute>/*?*/ securityAttributes;
 
     /// <summary>
     /// The return type of the method or type of the property.
@@ -1995,11 +2034,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IMethodDefinition Members
 
     IEnumerable<IGenericMethodParameter> IMethodDefinition.GenericParameters {
-      get { return this.genericParameters.AsReadOnly(); }
+      get {
+        if (this.genericParameters == null) return Enumerable<IGenericMethodParameter>.Empty;
+        return this.genericParameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ISecurityAttribute> IMethodDefinition.SecurityAttributes {
-      get { return this.securityAttributes.AsReadOnly(); }
+      get {
+        if (this.securityAttributes == null) return Enumerable<ISecurityAttribute>.Empty;
+        return this.securityAttributes.AsReadOnly();
+      }
     }
 
     #endregion
@@ -2007,7 +2052,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.parameters); }
+      get {
+        if (this.parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
+        return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.parameters);
+      }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
@@ -2019,7 +2067,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IMethodDefinition Members
 
     IEnumerable<IParameterDefinition> IMethodDefinition.Parameters {
-      get { return this.parameters.AsReadOnly(); }
+      get {
+        if (this.parameters == null) return Enumerable<IParameterDefinition>.Empty;
+        return this.parameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ICustomAttribute> IMethodDefinition.ReturnValueAttributes {
@@ -2043,7 +2094,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -2051,49 +2102,61 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// A reference to a method.
   /// </summary>
   public class MethodReference : IMethodReference, ICopyFrom<IMethodReference> {
 
     /// <summary>
-    /// 
+    /// A reference to a method.
     /// </summary>
     public MethodReference() {
       Contract.Ensures(!this.IsFrozen);
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
       this.callingConvention = (CallingConvention)0;
       this.containingType = Dummy.TypeReference;
-      this.extraParameters = new List<IParameterTypeInformation>();
+      this.extraParameters = null;
       this.genericParameterCount = 0;
       this.internFactory = Dummy.InternFactory;
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.name = Dummy.Name;
-      this.parameters = new List<IParameterTypeInformation>();
-      this.returnValueCustomModifiers = new List<ICustomModifier>();
+      this.parameters = null;
+      this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = false;
       this.returnValueIsModified = false;
       this.type = Dummy.TypeReference;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of a reference to a method.
     /// </summary>
     /// <param name="methodReference"></param>
     /// <param name="internFactory"></param>
     public void Copy(IMethodReference methodReference, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(methodReference.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(methodReference.Attributes))
+        this.attributes = new List<ICustomAttribute>(methodReference.Attributes);
+      else
+        this.attributes = null;
       this.callingConvention = methodReference.CallingConvention;
       this.containingType = methodReference.ContainingType;
-      this.extraParameters = new List<IParameterTypeInformation>(methodReference.ExtraParameters);
+      if (methodReference.AcceptsExtraArguments)
+        this.extraParameters = new List<IParameterTypeInformation>(methodReference.ExtraParameters);
+      else
+        this.extraParameters = null;
       this.genericParameterCount = methodReference.GenericParameterCount;
       this.internFactory = internFactory;
-      this.locations = new List<ILocation>(methodReference.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(methodReference.Locations))
+        this.locations = new List<ILocation>(methodReference.Locations);
+      else
+        this.locations = null;
       this.name = methodReference.Name;
-      this.parameters = new List<IParameterTypeInformation>(methodReference.Parameters);
+      if (methodReference.ParameterCount > 0)
+        this.parameters = new List<IParameterTypeInformation>(methodReference.Parameters);
+      else
+        this.parameters = null;
       if (methodReference.ReturnValueIsModified)
         this.returnValueCustomModifiers = new List<ICustomModifier>(methodReference.ReturnValueCustomModifiers);
       else
-        this.returnValueCustomModifiers = new List<ICustomModifier>();
+        this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = methodReference.ReturnValueIsByRef;
       this.returnValueIsModified = methodReference.ReturnValueIsModified;
       this.type = methodReference.Type;
@@ -2111,13 +2174,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.attributes = value; }
+        this.attributes = value;
+      }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// Calling convention of the signature.
@@ -2163,14 +2227,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
     /// </summary>
     /// <value></value>
-    public List<IParameterTypeInformation> ExtraParameters {
+    public List<IParameterTypeInformation>/*?*/ ExtraParameters {
       get { return this.extraParameters; }
       set {
         Contract.Requires(!this.IsFrozen);
         this.extraParameters = value;
       }
     }
-    List<IParameterTypeInformation> extraParameters;
+    List<IParameterTypeInformation>/*?*/ extraParameters;
 
     /// <summary>
     /// The number of generic parameters of the method. Zero if the referenced method is not generic.
@@ -2240,14 +2304,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set {
         Contract.Requires(!this.IsFrozen);
         this.locations = value;
       }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The name of the entity.
@@ -2266,21 +2330,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The parameters forming part of this signature.
     /// </summary>
     /// <value></value>
-    public List<IParameterTypeInformation> Parameters {
+    public List<IParameterTypeInformation>/*?*/ Parameters {
       get { return this.parameters; }
       set {
         Contract.Requires(!this.IsFrozen);
         this.parameters = value;
       }
     }
-    List<IParameterTypeInformation> parameters;
+    List<IParameterTypeInformation>/*?*/ parameters;
 
     /// <summary>
     /// The number of required parameters of the method.
     /// </summary>
     /// <value></value>
     public ushort ParameterCount {
-      get { return (ushort)this.Parameters.Count; }
+      get {
+        if (this.Parameters == null) return 0;
+        return (ushort)this.Parameters.Count;
+      }
     }
 
     /// <summary>
@@ -2317,14 +2384,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> ReturnValueCustomModifiers {
+    public List<ICustomModifier>/*?*/ ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set {
         Contract.Requires(!this.IsFrozen);
         this.returnValueCustomModifiers = value;
       }
     }
-    List<ICustomModifier> returnValueCustomModifiers;
+    List<ICustomModifier>/*?*/ returnValueCustomModifiers;
 
     /// <summary>
     /// True if the return value is passed by reference (using a managed pointer).
@@ -2381,7 +2448,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
 
     IEnumerable<IParameterTypeInformation> IMethodReference.ExtraParameters {
-      get { return this.extraParameters.AsReadOnly(); }
+      get {
+        if (this.extraParameters == null) return Enumerable<IParameterTypeInformation>.Empty;
+        return this.extraParameters.AsReadOnly();
+      }
     }
 
     #endregion
@@ -2390,11 +2460,17 @@ namespace Microsoft.Cci.MutableCodeModel {
 
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return this.parameters.AsReadOnly(); }
+      get {
+        if (this.Parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
+        return this.Parameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return this.returnValueCustomModifiers.AsReadOnly(); }
+      get {
+        if (this.ReturnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.ReturnValueCustomModifiers.AsReadOnly();
+      }
     }
 
     #endregion
@@ -2402,31 +2478,37 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.locations == null) return Enumerable<ILocation>.Empty;
+        return this.locations.AsReadOnly();
+      }
     }
 
     #endregion
   }
 
   /// <summary>
-  /// 
+  /// The metadata representation of a method or property parameter.
   /// </summary>
   public sealed class ParameterDefinition : IParameterDefinition, ICopyFrom<IParameterDefinition> {
 
     /// <summary>
-    /// 
+    /// The metadata representation of a method or property parameter.
     /// </summary>
     public ParameterDefinition() {
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
       this.containingSignature = Dummy.Method;
-      this.customModifiers = new List<ICustomModifier>();
+      this.customModifiers = null;
       this.defaultValue = Dummy.Constant;
       this.index = 0;
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.marshallingInformation = Dummy.MarshallingInformation;
       this.paramArrayElementType = Dummy.TypeReference;
       this.name = Dummy.Name;
@@ -2434,23 +2516,29 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of the metadata representation of a method or property parameter.
     /// </summary>
     /// <param name="parameterDefinition"></param>
     /// <param name="internFactory"></param>
     public void Copy(IParameterDefinition parameterDefinition, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(parameterDefinition.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(parameterDefinition.Attributes))
+        this.attributes = new List<ICustomAttribute>(parameterDefinition.Attributes);
+      else
+        this.attributes = null;
       this.containingSignature = parameterDefinition.ContainingSignature;
       if (parameterDefinition.IsModified)
         this.customModifiers = new List<ICustomModifier>(parameterDefinition.CustomModifiers);
       else
-        this.customModifiers = new List<ICustomModifier>(0);
+        this.customModifiers = null;
       if (parameterDefinition.HasDefaultValue)
         this.defaultValue = parameterDefinition.DefaultValue;
       else
         this.defaultValue = Dummy.Constant;
       this.index = parameterDefinition.Index;
-      this.locations = new List<ILocation>(parameterDefinition.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(parameterDefinition.Locations))
+        this.locations = new List<ILocation>(parameterDefinition.Locations);
+      else
+        this.locations = null;
       if (parameterDefinition.IsMarshalledExplicitly)
         this.marshallingInformation = parameterDefinition.MarshallingInformation;
       else
@@ -2471,11 +2559,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// The method or property that defines this parameter.
@@ -2491,11 +2579,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> CustomModifiers {
+    public List<ICustomModifier>/*?*/ CustomModifiers {
       get { return this.customModifiers; }
       set { this.customModifiers = value; }
     }
-    List<ICustomModifier> customModifiers;
+    List<ICustomModifier>/*?*/ customModifiers;
 
     /// <summary>
     /// A compile time constant value that should be supplied as the corresponding argument value by callers that do not explicitly specify an argument value for this parameter.
@@ -2582,7 +2670,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsModified {
-      get { return this.customModifiers.Count > 0; }
+      get { return this.CustomModifiers != null && this.CustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -2625,11 +2713,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// Specifies how this parameter is marshalled when it is accessed from unmanaged code.
@@ -2674,7 +2762,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IParameterDefinition Members
 
     IEnumerable<ICustomModifier> IParameterTypeInformation.CustomModifiers {
-      get { return this.customModifiers.AsReadOnly(); }
+      get {
+        if (this.CustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.CustomModifiers.AsReadOnly();
+      }
     }
 
     #endregion
@@ -2682,11 +2773,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.Locations == null) return Enumerable<ILocation>.Empty;
+        return this.Locations.AsReadOnly();
+      }
     }
 
     #endregion
@@ -2718,7 +2815,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public ParameterTypeInformation() {
       this.containingSignature = Dummy.Method;
-      this.customModifiers = new List<ICustomModifier>();
+      this.customModifiers = null;
       this.index = 0;
       this.isByReference = false;
       this.type = Dummy.TypeReference;
@@ -2734,7 +2831,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (parameterTypeInformation.IsModified)
         this.customModifiers = new List<ICustomModifier>(parameterTypeInformation.CustomModifiers);
       else
-        this.customModifiers = new List<ICustomModifier>(0);
+        this.customModifiers = null;
       this.index = parameterTypeInformation.Index;
       this.isByReference = parameterTypeInformation.IsByReference;
       this.type = parameterTypeInformation.Type;
@@ -2754,11 +2851,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> CustomModifiers {
+    public List<ICustomModifier>/*?*/ CustomModifiers {
       get { return this.customModifiers; }
       set { this.customModifiers = value; }
     }
-    List<ICustomModifier> customModifiers;
+    List<ICustomModifier>/*?*/ customModifiers;
 
     /// <summary>
     /// The position in the parameter list where this instance can be found.
@@ -2785,7 +2882,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsModified {
-      get { return this.customModifiers.Count > 0; }
+      get { return this.CustomModifiers != null && this.CustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -2801,7 +2898,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IParameterTypeInformation Members
 
     IEnumerable<ICustomModifier> IParameterTypeInformation.CustomModifiers {
-      get { return this.customModifiers.AsReadOnly(); }
+      get {
+        if (this.CustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.CustomModifiers.AsReadOnly();
+      }
     }
 
     #endregion
@@ -2816,13 +2916,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public PropertyDefinition() {
-      this.accessors = new List<IMethodReference>();
+      this.accessors = null;
       this.callingConvention = CallingConvention.Default;
       this.defaultValue = Dummy.Constant;
       this.getter = null;
-      this.parameters = new List<IParameterDefinition>();
-      this.returnValueAttributes = new List<ICustomAttribute>();
-      this.returnValueCustomModifiers = new List<ICustomModifier>();
+      this.parameters = null;
+      this.returnValueAttributes = null;
+      this.returnValueCustomModifiers = null;
       this.setter = null;
       this.type = Dummy.TypeReference;
     }
@@ -2834,19 +2934,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IPropertyDefinition propertyDefinition, IInternFactory internFactory) {
       ((ICopyFrom<ITypeDefinitionMember>)this).Copy(propertyDefinition, internFactory);
-      this.accessors = new List<IMethodReference>(propertyDefinition.Accessors);
+      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.Accessors))
+        this.accessors = new List<IMethodReference>(propertyDefinition.Accessors);
+      else
+        this.accessors = null;
       this.callingConvention = propertyDefinition.CallingConvention;
       if (propertyDefinition.HasDefaultValue)
         this.defaultValue = propertyDefinition.DefaultValue;
       else
         this.defaultValue = Dummy.Constant;
       this.getter = propertyDefinition.Getter;
-      this.parameters = new List<IParameterDefinition>(propertyDefinition.Parameters);
-      this.returnValueAttributes = new List<ICustomAttribute>(propertyDefinition.ReturnValueAttributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.Parameters))
+        this.parameters = new List<IParameterDefinition>(propertyDefinition.Parameters);
+      else
+        this.parameters = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.ReturnValueAttributes))
+        this.returnValueAttributes = new List<ICustomAttribute>(propertyDefinition.ReturnValueAttributes);
+      else
+        this.returnValueAttributes = null;
       if (propertyDefinition.ReturnValueIsModified)
         this.returnValueCustomModifiers = new List<ICustomModifier>(propertyDefinition.ReturnValueCustomModifiers);
       else
-        this.returnValueCustomModifiers = new List<ICustomModifier>(0);
+        this.returnValueCustomModifiers = null;
       this.setter = propertyDefinition.Setter;
       this.type = propertyDefinition.Type;
       //^ base;
@@ -2859,11 +2968,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A list of methods that are associated with the property.
     /// </summary>
     /// <value></value>
-    public List<IMethodReference> Accessors {
+    public List<IMethodReference>/*?*/ Accessors {
       get { return this.accessors; }
       set { this.accessors = value; }
     }
-    List<IMethodReference> accessors;
+    List<IMethodReference>/*?*/ accessors;
 
     /// <summary>
     /// Calling convention of the signature.
@@ -2949,31 +3058,31 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The parameters forming part of this signature.
     /// </summary>
     /// <value></value>
-    public List<IParameterDefinition> Parameters {
+    public List<IParameterDefinition>/*?*/ Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
-    List<IParameterDefinition> parameters;
+    List<IParameterDefinition>/*?*/ parameters;
 
     /// <summary>
     /// Custom attributes associated with the property's return value.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> ReturnValueAttributes {
+    public List<ICustomAttribute>/*?*/ ReturnValueAttributes {
       get { return this.returnValueAttributes; }
       set { this.returnValueAttributes = value; }
     }
-    List<ICustomAttribute> returnValueAttributes;
+    List<ICustomAttribute>/*?*/ returnValueAttributes;
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> ReturnValueCustomModifiers {
+    public List<ICustomModifier>/*?*/ ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set { this.returnValueCustomModifiers = value; }
     }
-    List<ICustomModifier> returnValueCustomModifiers;
+    List<ICustomModifier>/*?*/ returnValueCustomModifiers;
 
     /// <summary>
     /// True if the return value is passed by reference (using a managed pointer).
@@ -2994,7 +3103,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
-      get { return this.returnValueCustomModifiers.Count > 0; }
+      get { return this.ReturnValueCustomModifiers != null && this.ReturnValueCustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -3020,15 +3129,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IPropertyDefinition Members
 
     IEnumerable<IMethodReference> IPropertyDefinition.Accessors {
-      get { return this.accessors.AsReadOnly(); }
+      get {
+        if (this.Accessors == null) return Enumerable<IMethodReference>.Empty;
+        return this.Accessors.AsReadOnly();
+      }
     }
 
     IEnumerable<IParameterDefinition> IPropertyDefinition.Parameters {
-      get { return this.parameters.AsReadOnly(); }
+      get {
+        if (this.Parameters == null) return Enumerable<IParameterDefinition>.Empty;
+        return this.Parameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ICustomAttribute> IPropertyDefinition.ReturnValueAttributes {
-      get { return this.returnValueAttributes.AsReadOnly(); }
+      get {
+        if (this.ReturnValueAttributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.ReturnValueAttributes.AsReadOnly();
+      }
     }
 
     #endregion
@@ -3036,11 +3154,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.parameters); }
+      get {
+        if (this.Parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
+        return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters);
+      }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return this.returnValueCustomModifiers.AsReadOnly(); }
+      get {
+        if (this.ReturnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.ReturnValueCustomModifiers.AsReadOnly();
+      }
     }
 
     #endregion
@@ -3055,33 +3179,36 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
-  /// 
+  /// The parameters and return type that makes up a method or property signature.
   /// </summary>
   public sealed class SignatureDefinition : ISignature, ICopyFrom<ISignature> {
 
     /// <summary>
-    /// 
+    /// The parameters and return type that makes up a method or property signature.
     /// </summary>
     public SignatureDefinition() {
       this.callingConvention = CallingConvention.Default;
-      this.parameters = new List<IParameterTypeInformation>();
-      this.returnValueCustomModifiers = new List<ICustomModifier>();
+      this.parameters = null;
+      this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = false;
       this.type = Dummy.TypeReference;
     }
 
     /// <summary>
-    /// 
+    /// Makes a shallow copy of the parameters and return type that makes up a method or property signature.
     /// </summary>
     /// <param name="signatureDefinition"></param>
     /// <param name="internFactory"></param>
     public void Copy(ISignature signatureDefinition, IInternFactory internFactory) {
       this.callingConvention = signatureDefinition.CallingConvention;
-      this.parameters = new List<IParameterTypeInformation>(signatureDefinition.Parameters);
+      if (IteratorHelper.EnumerableIsNotEmpty(signatureDefinition.Parameters))
+        this.parameters = new List<IParameterTypeInformation>(signatureDefinition.Parameters);
+      else
+        this.parameters = null;
       if (signatureDefinition.ReturnValueIsModified)
         this.returnValueCustomModifiers = new List<ICustomModifier>(signatureDefinition.ReturnValueCustomModifiers);
       else
-        this.returnValueCustomModifiers = new List<ICustomModifier>(0);
+        this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = signatureDefinition.ReturnValueIsByRef;
       this.type = signatureDefinition.Type;
     }
@@ -3100,21 +3227,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The parameters forming part of this signature.
     /// </summary>
     /// <value></value>
-    public List<IParameterTypeInformation> Parameters {
+    public List<IParameterTypeInformation>/*?*/ Parameters {
       get { return this.parameters; }
       set { this.parameters = value; }
     }
-    List<IParameterTypeInformation> parameters;
+    List<IParameterTypeInformation>/*?*/ parameters;
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> ReturnValueCustomModifiers {
+    public List<ICustomModifier>/*?*/ ReturnValueCustomModifiers {
       get { return this.returnValueCustomModifiers; }
       set { this.returnValueCustomModifiers = value; }
     }
-    List<ICustomModifier> returnValueCustomModifiers;
+    List<ICustomModifier>/*?*/ returnValueCustomModifiers;
 
     /// <summary>
     /// True if the return value is passed by reference (using a managed pointer).
@@ -3131,7 +3258,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
-      get { return this.returnValueCustomModifiers.Count > 0; }
+      get { return this.ReturnValueCustomModifiers != null && this.ReturnValueCustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -3148,11 +3275,17 @@ namespace Microsoft.Cci.MutableCodeModel {
 
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return this.parameters.AsReadOnly(); }
+      get {
+        if (this.Parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
+        return this.Parameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return this.returnValueCustomModifiers.AsReadOnly(); }
+      get {
+        if (this.ReturnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.ReturnValueCustomModifiers.AsReadOnly();
+      }
     }
 
     #endregion
@@ -3255,9 +3388,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     internal TypeDefinitionMember() {
-      this.attributes = new List<ICustomAttribute>();
+      this.attributes = null;
       this.containingTypeDefinition = Dummy.Type;
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.name = Dummy.Name;
       this.flags = 0;
     }
@@ -3268,9 +3401,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="typeDefinitionMember"></param>
     /// <param name="internFactory"></param>
     public void Copy(ITypeDefinitionMember typeDefinitionMember, IInternFactory internFactory) {
-      this.attributes = new List<ICustomAttribute>(typeDefinitionMember.Attributes);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinitionMember.Attributes))
+        this.attributes = new List<ICustomAttribute>(typeDefinitionMember.Attributes);
+      else
+        this.attributes = null;
       this.containingTypeDefinition = typeDefinitionMember.ContainingTypeDefinition;
-      this.locations = new List<ILocation>(typeDefinitionMember.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinitionMember.Locations))
+        this.locations = new List<ILocation>(typeDefinitionMember.Locations);
+      else
+        this.locations = null;
       this.name = typeDefinitionMember.Name;
       this.flags = (int)typeDefinitionMember.Visibility;
     }
@@ -3279,11 +3418,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// A reference to the containing type of the referenced type member.
@@ -3315,11 +3454,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The name of the entity.
@@ -3380,11 +3519,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.Locations == null) return Enumerable<ILocation>.Empty;
+        return this.Locations.AsReadOnly();
+      }
     }
 
     #endregion

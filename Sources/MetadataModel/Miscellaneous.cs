@@ -21,6 +21,17 @@ using System.Globalization;
 namespace Microsoft.Cci {
 
   /// <summary>
+  /// A helper class for efficiently getting hold of empty enumerables.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  public static class Enumerable<T> {
+    /// <summary>
+    /// An empty enumerable of element type T.
+    /// </summary>
+    public static IEnumerable<T> Empty = new T[0];
+  }
+
+  /// <summary>
   /// A Function that takes a single argument of type P and returns a value of type R.
   /// </summary>
   public delegate R Function<P, R>(P p);
@@ -76,6 +87,7 @@ namespace Microsoft.Cci {
     /// Returns an enumerable containing no objects.
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Please use Enumerable<T>.Empty instead")]
     public static IEnumerable<T> GetEmptyEnumerable<T>() {
       yield break;
     }
@@ -85,7 +97,9 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<T> GetSingletonEnumerable<T>(T t) {
-      yield return t;
+      var result = new List<T>(1);
+      result.Add(t);
+      return result.AsReadOnly();
     }
 
     /// <summary>
@@ -139,7 +153,7 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool EnumerableIsNotEmpty<T>(IEnumerable<T>/*?*/ enumerable) {
-      if (enumerable == null) return false;
+      if (enumerable == null || enumerable == Enumerable<T>.Empty) return false;
       var collection = enumerable as ICollection<T>;
       if (collection != null) return collection.Count > 0;
       return enumerable.GetEnumerator().MoveNext();
@@ -150,7 +164,10 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool EnumerableIsEmpty<T>(IEnumerable<T>/*?*/ enumerable) {
-      return !EnumerableIsNotEmpty<T>(enumerable);
+      if (enumerable == null || enumerable == Enumerable<T>.Empty) return true;
+      var collection = enumerable as ICollection<T>;
+      if (collection != null) return collection.Count == 0;
+      return !enumerable.GetEnumerator().MoveNext();
     }
 
     /// <summary>

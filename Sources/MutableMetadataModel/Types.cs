@@ -27,9 +27,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal AliasForType() {
       this.aliasedType = Dummy.TypeReference;
-      this.attributes = new List<ICustomAttribute>();
-      this.locations = new List<ILocation>();
-      this.members = new List<IAliasMember>();
+      this.attributes = null;
+      this.locations = null;
+      this.members = null;
     }
 
     /// <summary>
@@ -39,9 +39,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IAliasForType aliasForType, IInternFactory internFactory) {
       this.aliasedType = aliasForType.AliasedType;
-      this.attributes = new List<ICustomAttribute>(aliasForType.Attributes);
-      this.locations = new List<ILocation>(aliasForType.Locations);
-      this.members = new List<IAliasMember>(aliasForType.Members);
+      if (IteratorHelper.EnumerableIsNotEmpty(aliasForType.Attributes))
+        this.attributes = new List<ICustomAttribute>(aliasForType.Attributes);
+      else
+        this.attributes = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(aliasForType.Locations))
+        this.locations = new List<ILocation>(aliasForType.Locations);
+      else
+        this.locations = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(aliasForType.Members))
+        this.members = new List<IAliasMember>(aliasForType.Members);
+      else
+        this.members = null;
     }
 
     /// <summary>
@@ -58,11 +67,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     //^ [Pure]
     /// <summary>
@@ -71,6 +80,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="member"></param>
     /// <returns></returns>
     public bool Contains(IAliasMember member) {
+      if (this.Members == null) return false;
       foreach (IAliasMember tdmem in this.Members)
         if (member == tdmem) return true;
       return false;
@@ -98,6 +108,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="predicate"></param>
     /// <returns></returns>
     public IEnumerable<IAliasMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<IAliasMember, bool> predicate) {
+      if (this.Members == null) yield break;
       foreach (IAliasMember tdmem in this.Members) {
         if (tdmem.Name.UniqueKey == name.UniqueKey || ignoreCase && (name.UniqueKeyIgnoringCase == tdmem.Name.UniqueKeyIgnoringCase)) {
           if (predicate(tdmem)) yield return tdmem;
@@ -112,6 +123,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="predicate"></param>
     /// <returns></returns>
     public IEnumerable<IAliasMember> GetMatchingMembers(Function<IAliasMember, bool> predicate) {
+      if (this.Members == null) yield break;
       foreach (IAliasMember tdmem in this.Members) {
         if (predicate(tdmem)) yield return tdmem;
       }
@@ -125,6 +137,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="ignoreCase"></param>
     /// <returns></returns>
     public IEnumerable<IAliasMember> GetMembersNamed(IName name, bool ignoreCase) {
+      if (this.Members == null) yield break;
       foreach (IAliasMember tdmem in this.Members) {
         if (tdmem.Name.UniqueKey == name.UniqueKey || ignoreCase && (name.UniqueKeyIgnoringCase == tdmem.Name.UniqueKeyIgnoringCase)) {
           yield return tdmem;
@@ -136,26 +149,29 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// The collection of member objects comprising the type.
     /// </summary>
     /// <value></value>
-    public List<IAliasMember> Members {
+    public List<IAliasMember>/*?*/ Members {
       get { return this.members; }
       set { this.members = value; }
     }
-    List<IAliasMember> members;
+    List<IAliasMember>/*?*/ members;
 
     #region IAliasForType
 
     IEnumerable<IAliasMember> IAliasForType.Members {
-      get { return this.members.AsReadOnly(); }
+      get {
+        if (this.Members == null) return Enumerable<IAliasMember>.Empty;
+        return this.Members.AsReadOnly();
+      }
     }
 
     #endregion
@@ -163,11 +179,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.Locations == null) return Enumerable<ILocation>.Empty;
+        return this.Locations.AsReadOnly();
+      }
     }
 
     #endregion
@@ -175,7 +197,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IContainer<IAliasMember> Members
 
     IEnumerable<IAliasMember> IContainer<IAliasMember>.Members {
-      get { return this.members.AsReadOnly(); }
+      get { return ((IAliasForType)this).Members; }
     }
 
     #endregion
@@ -183,7 +205,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IScope<IAliasMember> Members
 
     IEnumerable<IAliasMember> IScope<IAliasMember>.Members {
-      get { return this.members.AsReadOnly(); }
+      get { return ((IAliasForType)this).Members; }
     }
 
     #endregion
@@ -720,7 +742,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     internal GenericParameter() {
-      this.constraints = new List<ITypeReference>();
+      this.constraints = null;
       this.index = 0;
       //^ base;
       this.MustBeReferenceType = false;
@@ -740,7 +762,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(IGenericParameter genericParameter, IInternFactory internFactory) {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(genericParameter, internFactory);
-      this.constraints = new List<ITypeReference>(genericParameter.Constraints);
+      if (IteratorHelper.EnumerableIsNotEmpty(genericParameter.Constraints))
+        this.constraints = new List<ITypeReference>(genericParameter.Constraints);
+      else
+        this.constraints = null;
       this.index = genericParameter.Index;
       this.MustBeReferenceType = genericParameter.MustBeReferenceType;
       this.MustBeValueType = genericParameter.MustBeValueType;
@@ -752,11 +777,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A list of classes or interfaces. All type arguments matching this parameter must be derived from all of the classes and implement all of the interfaces.
     /// </summary>
     /// <value></value>
-    public List<ITypeReference> Constraints {
+    public List<ITypeReference>/*?*/ Constraints {
       get { return this.constraints; }
       set { this.constraints = value; }
     }
-    List<ITypeReference> constraints;
+    List<ITypeReference>/*?*/ constraints;
 
     private ITypeDefinition GetEffectiveBaseClass() {
       ITypeDefinition mostDerivedBaseClass = this.PlatformType.SystemObject.ResolvedType;
@@ -882,7 +907,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IGenericParameter Members
 
     IEnumerable<ITypeReference> IGenericParameter.Constraints {
-      get { return this.constraints.AsReadOnly(); }
+      get {
+        if (this.Constraints == null) return Enumerable<ITypeReference>.Empty;
+        return this.Constraints.AsReadOnly();
+      }
     }
 
     #endregion
@@ -998,7 +1026,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ITypeReference> IGenericTypeInstanceReference.GenericArguments {
       [ContractVerification(false)]
       get {
-        if (this.genericArguments == null) return Dummy.GenericTypeInstance.GenericArguments;
+        if (this.genericArguments == null) return Enumerable<ITypeReference>.Empty;
         return this.genericArguments.AsReadOnly();
       }
     }
@@ -2381,24 +2409,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal NamedTypeDefinition() {
       this.alignment = 0;
-      this.attributes = new List<ICustomAttribute>();
-      this.baseClasses = new List<ITypeReference>();
-      this.explicitImplementationOverrides = new List<IMethodImplementation>();
-      this.events = new List<IEventDefinition>();
-      this.fields = new List<IFieldDefinition>();
-      this.genericParameters = new List<IGenericTypeParameter>();
-      this.interfaces = new List<ITypeReference>();
+      this.attributes = null;
+      this.baseClasses = null;
+      this.explicitImplementationOverrides = null;
+      this.events = null;
+      this.fields = null;
+      this.genericParameters = null;
+      this.interfaces = null;
       this.internFactory = Dummy.InternFactory;
       this.layout = LayoutKind.Auto;
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.MangleName = true;
-      this.methods = new List<IMethodDefinition>();
+      this.methods = null;
       this.name = Dummy.Name;
-      this.nestedTypes = new List<INestedTypeDefinition>();
+      this.nestedTypes = null;
       this.platformType = Dummy.PlatformType;
       this.privateHelperMembers = null;
-      this.properties = new List<IPropertyDefinition>();
-      this.securityAttributes = new List<ISecurityAttribute>();
+      this.properties = null;
+      this.securityAttributes = null;
       this.sizeOf = 0;
       this.stringFormat = StringFormatKind.Ansi;
       this.template = Dummy.Type;
@@ -2417,29 +2445,59 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(INamedTypeDefinition typeDefinition, IInternFactory internFactory) {
       this.alignment = typeDefinition.Alignment;
-      this.attributes = new List<ICustomAttribute>(typeDefinition.Attributes);
-      this.baseClasses = new List<ITypeReference>(typeDefinition.BaseClasses);
-      this.events = new List<IEventDefinition>(typeDefinition.Events);
-      this.explicitImplementationOverrides = new List<IMethodImplementation>(typeDefinition.ExplicitImplementationOverrides);
-      this.fields = new List<IFieldDefinition>(typeDefinition.Fields);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Attributes))
+        this.attributes = new List<ICustomAttribute>(typeDefinition.Attributes);
+      else
+        this.attributes = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.BaseClasses))
+        this.baseClasses = new List<ITypeReference>(typeDefinition.BaseClasses);
+      else
+        this.baseClasses = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Events))
+        this.events = new List<IEventDefinition>(typeDefinition.Events);
+      else
+        this.events = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.ExplicitImplementationOverrides))
+        this.explicitImplementationOverrides = new List<IMethodImplementation>(typeDefinition.ExplicitImplementationOverrides);
+      else
+        this.explicitImplementationOverrides = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Fields))
+        this.fields = new List<IFieldDefinition>(typeDefinition.Fields);
+      else
+        this.fields = null;
       if (typeDefinition.IsGeneric)
         this.genericParameters = new List<IGenericTypeParameter>(typeDefinition.GenericParameters);
       else
-        this.genericParameters = new List<IGenericTypeParameter>(0);
-      this.interfaces = new List<ITypeReference>(typeDefinition.Interfaces);
+        this.genericParameters = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Interfaces))
+        this.interfaces = new List<ITypeReference>(typeDefinition.Interfaces);
+      else
+        this.interfaces = null;
       this.internFactory = internFactory;
       this.layout = typeDefinition.Layout;
-      this.locations = new List<ILocation>(typeDefinition.Locations);
-      this.methods = new List<IMethodDefinition>(typeDefinition.Methods);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Locations))
+        this.locations = new List<ILocation>(typeDefinition.Locations);
+      else
+        this.locations = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Methods))
+        this.methods = new List<IMethodDefinition>(typeDefinition.Methods);
+      else
+        this.methods = null;
       this.name = typeDefinition.Name;
-      this.nestedTypes = new List<INestedTypeDefinition>(typeDefinition.NestedTypes);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.NestedTypes))
+        this.nestedTypes = new List<INestedTypeDefinition>(typeDefinition.NestedTypes);
+      else
+        this.nestedTypes = null;
       this.platformType = typeDefinition.PlatformType;
       this.privateHelperMembers = null;
-      this.properties = new List<IPropertyDefinition>(typeDefinition.Properties);
+      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Properties))
+        this.properties = new List<IPropertyDefinition>(typeDefinition.Properties);
+      else
+        this.properties = null;
       if (typeDefinition.HasDeclarativeSecurity)
         this.securityAttributes = new List<ISecurityAttribute>(typeDefinition.SecurityAttributes);
       else
-        this.securityAttributes = new List<ISecurityAttribute>(0);
+        this.securityAttributes = null;
       this.sizeOf = typeDefinition.SizeOf;
       this.stringFormat = typeDefinition.StringFormat;
       this.template = typeDefinition;
@@ -2481,22 +2539,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     /// <value></value>
-    public List<ICustomAttribute> Attributes {
+    public List<ICustomAttribute>/*?*/ Attributes {
       get { return this.attributes; }
       set { this.attributes = value; }
     }
-    List<ICustomAttribute> attributes;
+    List<ICustomAttribute>/*?*/ attributes;
 
     /// <summary>
     /// Zero or more classes from which this type is derived.
     /// For CLR types this collection is empty for interfaces and System.Object and populated with exactly one base type for all other types.
     /// </summary>
     /// <value></value>
-    public virtual List<ITypeReference> BaseClasses {
+    public virtual List<ITypeReference>/*?*/ BaseClasses {
       get { return this.baseClasses; }
       set { this.baseClasses = value; }
     }
-    List<ITypeReference> baseClasses;
+    List<ITypeReference>/*?*/ baseClasses;
 
     //^ [Pure]
     /// <summary>
@@ -2528,31 +2586,31 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more events defined by this type.
     /// </summary>
     /// <value></value>
-    public List<IEventDefinition> Events {
+    public List<IEventDefinition>/*?*/ Events {
       get { return this.events; }
       set { this.events = value; }
     }
-    List<IEventDefinition> events;
+    List<IEventDefinition>/*?*/ events;
 
     /// <summary>
     /// Zero or more implementation overrides provided by the class.
     /// </summary>
     /// <value></value>
-    public List<IMethodImplementation> ExplicitImplementationOverrides {
+    public List<IMethodImplementation>/*?*/ ExplicitImplementationOverrides {
       get { return this.explicitImplementationOverrides; }
       set { this.explicitImplementationOverrides = value; }
     }
-    List<IMethodImplementation> explicitImplementationOverrides;
+    List<IMethodImplementation>/*?*/ explicitImplementationOverrides;
 
     /// <summary>
     /// Zero or more fields defined by this type.
     /// </summary>
     /// <value></value>
-    public List<IFieldDefinition> Fields {
+    public List<IFieldDefinition>/*?*/ Fields {
       get { return this.fields; }
       set { this.fields = value; }
     }
-    List<IFieldDefinition> fields;
+    List<IFieldDefinition>/*?*/ fields;
 
     [Flags]
     internal enum Flags {
@@ -2624,18 +2682,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more parameters that can be used as type annotations.
     /// </summary>
     /// <value></value>
-    public virtual List<IGenericTypeParameter> GenericParameters {
+    public virtual List<IGenericTypeParameter>/*?*/ GenericParameters {
       get { return this.genericParameters; }
       set { this.genericParameters = value; }
     }
-    List<IGenericTypeParameter> genericParameters;
+    List<IGenericTypeParameter>/*?*/ genericParameters;
 
     /// <summary>
     /// The number of generic parameters. Zero if the type is not generic.
     /// </summary>
     /// <value></value>
     public ushort GenericParameterCount {
-      get { return (ushort)this.GenericParameters.Count; }
+      get {
+        if (this.GenericParameters == null) return 0;
+        return (ushort)this.GenericParameters.Count;
+      }
     }
 
     //^ [Pure]
@@ -2744,11 +2805,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more interfaces implemented by this type.
     /// </summary>
     /// <value></value>
-    public virtual List<ITypeReference> Interfaces {
+    public virtual List<ITypeReference>/*?*/ Interfaces {
       get { return this.interfaces; }
       set { this.interfaces = value; }
     }
-    List<ITypeReference> interfaces;
+    List<ITypeReference>/*?*/ interfaces;
 
     /// <summary>
     /// True if the type may not be instantiated.
@@ -2812,7 +2873,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsGeneric {
-      get { return this.GenericParameters.Count > 0; }
+      get { return this.GenericParameters != null && this.GenericParameters.Count > 0; }
     }
 
     /// <summary>
@@ -2981,11 +3042,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
-    public List<ILocation> Locations {
+    public List<ILocation>/*?*/ Locations {
       get { return this.locations; }
       set { this.locations = value; }
     }
-    List<ILocation> locations;
+    List<ILocation>/*?*/ locations;
 
     /// <summary>
     /// If true, the persisted type name is mangled by appending "`n" where n is the number of type parameters, if the number of type parameters is greater than 0.
@@ -3007,16 +3068,26 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IEnumerable<ITypeDefinitionMember> Members {
       get {
-        foreach (IEventDefinition eventDefinition in this.events)
-          yield return eventDefinition;
-        foreach (IFieldDefinition fieldDefinition in this.fields)
-          yield return fieldDefinition;
-        foreach (IMethodDefinition methodDefinition in this.methods)
-          yield return methodDefinition;
-        foreach (INestedTypeDefinition nestedTypeDefinition in this.nestedTypes)
-          yield return nestedTypeDefinition;
-        foreach (IPropertyDefinition propertyDefinition in this.properties)
-          yield return propertyDefinition;
+        if (this.Events != null) {
+          foreach (var eventDefinition in this.Events)
+            yield return eventDefinition;
+        }
+        if (this.Fields != null) {
+          foreach (var fieldDefinition in this.Fields)
+            yield return fieldDefinition;
+        }
+        if (this.Methods != null) {
+          foreach (var methodDefinition in this.Methods)
+            yield return methodDefinition;
+        }
+        if (this.NestedTypes != null) {
+          foreach (var nestedTypeDefinition in this.NestedTypes)
+            yield return nestedTypeDefinition;
+        }
+        if (this.Properties != null) {
+          foreach (var propertyDefinition in this.Properties)
+            yield return propertyDefinition;
+        }
       }
     }
 
@@ -3024,11 +3095,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more methods defined by this type.
     /// </summary>
     /// <value></value>
-    public List<IMethodDefinition> Methods {
+    public List<IMethodDefinition>/*?*/ Methods {
       get { return this.methods; }
       set { this.methods = value; }
     }
-    List<IMethodDefinition> methods;
+    List<IMethodDefinition>/*?*/ methods;
 
     /// <summary>
     /// The name of the entity.
@@ -3044,11 +3115,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more nested types defined by this type.
     /// </summary>
     /// <value></value>
-    public List<INestedTypeDefinition> NestedTypes {
+    public List<INestedTypeDefinition>/*?*/ NestedTypes {
       get { return this.nestedTypes; }
       set { this.nestedTypes = value; }
     }
-    List<INestedTypeDefinition> nestedTypes;
+    List<INestedTypeDefinition>/*?*/ nestedTypes;
 
     /// <summary>
     /// A way to get to platform types such as System.Object.
@@ -3082,21 +3153,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Zero or more properties defined by this type.
     /// </summary>
     /// <value></value>
-    public List<IPropertyDefinition> Properties {
+    public List<IPropertyDefinition>/*?*/ Properties {
       get { return this.properties; }
       set { this.properties = value; }
     }
-    List<IPropertyDefinition> properties;
+    List<IPropertyDefinition>/*?*/ properties;
 
     /// <summary>
     /// Declarative security actions for this type. Will be empty if this.HasSecurity is false.
     /// </summary>
     /// <value></value>
-    public List<ISecurityAttribute> SecurityAttributes {
+    public List<ISecurityAttribute>/*?*/ SecurityAttributes {
       get { return this.securityAttributes; }
       set { this.securityAttributes = value; }
     }
-    List<ISecurityAttribute> securityAttributes;
+    List<ISecurityAttribute>/*?*/ securityAttributes;
 
     /// <summary>
     /// Size of an object of this type. In bytes. If zero, the size is unspecified and will be determined at runtime.
@@ -3152,58 +3223,101 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region ITypeDefinition Members
 
     IEnumerable<IGenericTypeParameter> ITypeDefinition.GenericParameters {
-      get { return this.GenericParameters.AsReadOnly(); }
+      get {
+        if (this.GenericParameters == null) return Enumerable<IGenericTypeParameter>.Empty;
+        return this.GenericParameters.AsReadOnly();
+      }
     }
 
     IEnumerable<ITypeReference> ITypeDefinition.BaseClasses {
-      get { return this.BaseClasses.AsReadOnly(); }
+      get {
+        if (this.BaseClasses == null) return Enumerable<ITypeReference>.Empty;
+        return this.BaseClasses.AsReadOnly();
+      }
     }
 
     IEnumerable<IEventDefinition> ITypeDefinition.Events {
-      get { return this.Events.AsReadOnly(); }
+      get {
+        if (this.Events == null) return Enumerable<IEventDefinition>.Empty;
+        return this.Events.AsReadOnly();
+      }
     }
 
     IEnumerable<IMethodImplementation> ITypeDefinition.ExplicitImplementationOverrides {
-      get { return this.ExplicitImplementationOverrides.AsReadOnly(); }
+      get {
+        if (this.ExplicitImplementationOverrides == null) return Enumerable<IMethodImplementation>.Empty;
+        return this.ExplicitImplementationOverrides.AsReadOnly();
+      }
     }
 
     IEnumerable<IFieldDefinition> ITypeDefinition.Fields {
-      get { return this.Fields.AsReadOnly(); }
+      get {
+        if (this.Fields == null) return Enumerable<IFieldDefinition>.Empty;
+        return this.Fields.AsReadOnly();
+      }
     }
 
     IEnumerable<ITypeReference> ITypeDefinition.Interfaces {
-      get { return this.Interfaces.AsReadOnly(); }
+      get {
+        if (this.Interfaces == null) return Enumerable<ITypeReference>.Empty;
+        return this.Interfaces.AsReadOnly();
+      }
     }
 
     IEnumerable<IMethodDefinition> ITypeDefinition.Methods {
-      get { return this.Methods.AsReadOnly(); }
+      get {
+        if (this.Methods == null) return Enumerable<IMethodDefinition>.Empty;
+        return this.Methods.AsReadOnly();
+      }
     }
 
     IEnumerable<INestedTypeDefinition> ITypeDefinition.NestedTypes {
-      get { return this.NestedTypes.AsReadOnly(); }
+      get {
+        if (this.NestedTypes == null) return Enumerable<INestedTypeDefinition>.Empty;
+        return this.NestedTypes.AsReadOnly();
+      }
     }
 
     IEnumerable<ITypeDefinitionMember> ITypeDefinition.PrivateHelperMembers {
-      get { return this.PrivateHelperMembers.AsReadOnly(); }
+      get {
+        if (this.privateHelperMembers == null) return Enumerable<ITypeDefinitionMember>.Empty;
+        return EnumerateTolerantly(this.privateHelperMembers);
+      }
+    }
+
+    private static IEnumerable<ITypeDefinitionMember> EnumerateTolerantly(List<ITypeDefinitionMember> list) {
+      for (int i = 0; i < list.Count; i++) yield return list[i];
     }
 
     IEnumerable<IPropertyDefinition> ITypeDefinition.Properties {
-      get { return this.Properties.AsReadOnly(); }
+      get {
+        if (this.Properties == null) return Enumerable<IPropertyDefinition>.Empty;
+        return this.Properties.AsReadOnly();
+      }
     }
 
     IEnumerable<ISecurityAttribute> ITypeDefinition.SecurityAttributes {
-      get { return this.SecurityAttributes.AsReadOnly(); }
+      get {
+        if (this.SecurityAttributes == null) return Enumerable<ISecurityAttribute>.Empty;
+        return this.SecurityAttributes.AsReadOnly();
+      }
     }
     #endregion
 
     #region IReference Members
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
-      get { return this.attributes.AsReadOnly(); }
+      get {
+        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.Attributes.AsReadOnly();
+      }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
-      get { return this.locations.AsReadOnly(); }
+      get {
+        if (this.Locations == null) return Enumerable<ILocation>.Empty;
+        return this.Locations.AsReadOnly();
+      }
     }
 
     #endregion
@@ -3383,7 +3497,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.internFactory = Dummy.InternFactory;
       this.isEnum = false;
       this.isValueType = false;
-      this.locations = new List<ILocation>();
+      this.locations = null;
       this.platformType = Dummy.PlatformType;
       this.typeCode = PrimitiveTypeCode.Invalid;
     }
@@ -3654,15 +3768,15 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
-        if (this.attributes == null) return Dummy.TypeReference.Attributes;
-        return this.attributes.AsReadOnly();
+        if (this.Attributes == null) return Dummy.TypeReference.Attributes;
+        return this.Attributes.AsReadOnly();
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
-        if (this.locations == null) return Dummy.TypeReference.Locations;
-        return this.locations.AsReadOnly();
+        if (this.Locations == null) return Dummy.TypeReference.Locations;
+        return this.Locations.AsReadOnly();
       }
     }
 

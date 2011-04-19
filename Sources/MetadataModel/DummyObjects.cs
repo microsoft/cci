@@ -633,7 +633,7 @@ namespace Microsoft.Cci {
     #region IContainer<IAliasMember> Members
 
     public IEnumerable<IAliasMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<IAliasMember>(); }
+      get { return Enumerable<IAliasMember>.Empty; }
     }
 
     #endregion
@@ -641,7 +641,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -651,7 +651,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -663,15 +663,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IAliasMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<IAliasMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<IAliasMember>();
+      return Enumerable<IAliasMember>.Empty;
     }
 
     public IEnumerable<IAliasMember> GetMatchingMembers(Function<IAliasMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<IAliasMember>();
+      return Enumerable<IAliasMember>.Empty;
     }
 
     public IEnumerable<IAliasMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<IAliasMember>();
+      return Enumerable<IAliasMember>.Empty;
     }
 
     #endregion
@@ -682,7 +682,7 @@ namespace Microsoft.Cci {
     #region IAssembly Members
 
     public IEnumerable<ICustomAttribute> AssemblyAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public AssemblyIdentity ContractAssemblySymbolicIdentity {
@@ -698,23 +698,23 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IAliasForType> ExportedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<IAliasForType>(); }
+      get { return Enumerable<IAliasForType>.Empty; }
     }
 
     public IEnumerable<IResourceReference> Resources {
-      get { return IteratorHelper.GetEmptyEnumerable<IResourceReference>(); }
+      get { return Enumerable<IResourceReference>.Empty; }
     }
 
     public IEnumerable<IFileReference> Files {
-      get { return IteratorHelper.GetEmptyEnumerable<IFileReference>(); }
+      get { return Enumerable<IFileReference>.Empty; }
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public IEnumerable<IModule> MemberModules {
-      get { return IteratorHelper.GetEmptyEnumerable<IModule>(); }
+      get { return Enumerable<IModule>.Empty; }
     }
 
     public uint Flags {
@@ -726,7 +726,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<byte> PublicKey {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
+      get { return Enumerable<byte>.Empty; }
     }
 
     public new Version Version {
@@ -756,7 +756,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IAssemblyReference> AssemblyReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IAssemblyReference>(); }
+      get { return Enumerable<IAssemblyReference>.Empty; }
     }
 
     public ulong BaseAddress {
@@ -800,11 +800,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomAttribute> ModuleAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<IModuleReference> ModuleReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IModuleReference>(); }
+      get { return Enumerable<IModuleReference>.Empty; }
     }
 
     public Guid PersistentIdentifier {
@@ -860,23 +860,23 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IWin32Resource> Win32Resources {
-      get { return IteratorHelper.GetEmptyEnumerable<IWin32Resource>(); }
+      get { return Enumerable<IWin32Resource>.Empty; }
     }
 
     public IEnumerable<string> GetStrings() {
-      return IteratorHelper.GetEmptyEnumerable<string>();
+      return Enumerable<string>.Empty;
     }
 
     public IEnumerable<INamedTypeDefinition> GetAllTypes() {
-      return IteratorHelper.GetEmptyEnumerable<INamedTypeDefinition>();
+      return Enumerable<INamedTypeDefinition>.Empty;
     }
 
     public IEnumerable<ITypeReference> GetTypeReferences() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeReference>();
+      return Enumerable<ITypeReference>.Empty;
     }
 
     public IEnumerable<ITypeMemberReference> GetTypeMemberReferences() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeMemberReference>();
+      return Enumerable<ITypeMemberReference>.Empty;
     }
 
     public ModuleIdentity ModuleIdentity {
@@ -909,7 +909,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IUnitReference> UnitReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IUnitReference>(); }
+      get { return Enumerable<IUnitReference>.Empty; }
     }
 
     public UnitIdentity UnitIdentity {
@@ -952,11 +952,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -976,7 +976,7 @@ namespace Microsoft.Cci {
     #region IAssemblyReference Members
 
     public IEnumerable<IName> Aliases {
-      get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
+      get { return Enumerable<IName>.Empty; }
     }
 
     public bool IsRetargetable {
@@ -988,7 +988,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<byte> PublicKeyToken {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
+      get { return Enumerable<byte>.Empty; }
     }
 
     public AssemblyIdentity UnifiedAssemblyIdentity {
@@ -1082,7 +1082,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IUnit> LoadedUnits {
-      get { return IteratorHelper.GetEmptyEnumerable<IUnit>(); }
+      get { return Enumerable<IUnit>.Empty; }
     }
 
     public new IInternFactory InternFactory {
@@ -1116,7 +1116,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public new ITypeReference Type {
@@ -1132,7 +1132,7 @@ namespace Microsoft.Cci {
     #region ICustomAttribute Members
 
     public IEnumerable<IMetadataExpression> Arguments {
-      get { return IteratorHelper.GetEmptyEnumerable<IMetadataExpression>(); }
+      get { return Enumerable<IMetadataExpression>.Empty; }
     }
 
     public IMethodReference Constructor {
@@ -1140,7 +1140,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IMetadataNamedArgument> NamedArguments {
-      get { return IteratorHelper.GetEmptyEnumerable<IMetadataNamedArgument>(); }
+      get { return Enumerable<IMetadataNamedArgument>.Empty; }
     }
 
     public ushort NumberOfNamedArguments {
@@ -1178,7 +1178,7 @@ namespace Microsoft.Cci {
     #region IEventDefinition Members
 
     public IEnumerable<IMethodReference> Accessors {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodReference>(); }
+      get { return Enumerable<IMethodReference>.Empty; }
     }
 
     public IMethodReference Adder {
@@ -1190,7 +1190,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public bool IsRuntimeSpecial {
@@ -1254,7 +1254,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -1284,7 +1284,7 @@ namespace Microsoft.Cci {
     #region IMetadataExpression Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public new ITypeReference Type {
@@ -1318,7 +1318,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsCompileTimeConstant {
@@ -1358,7 +1358,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public uint Offset {
@@ -1419,7 +1419,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -1496,7 +1496,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<byte> HashValue {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
+      get { return Enumerable<byte>.Empty; }
     }
 
     #endregion
@@ -1509,7 +1509,7 @@ namespace Microsoft.Cci {
     #region IGenericTypeInstance Members
 
     public IEnumerable<ITypeReference> GenericArguments {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public INamedTypeReference GenericType {
@@ -1528,35 +1528,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -1567,7 +1567,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IGenericTypeInstanceReference InstanceType {
@@ -1623,7 +1623,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -1639,7 +1639,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -1651,7 +1651,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -1691,7 +1691,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -1703,15 +1703,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -1753,7 +1753,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -1761,7 +1761,7 @@ namespace Microsoft.Cci {
     #region IGenericParameter Members
 
     public IEnumerable<ITypeReference> Constraints {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool MustBeReferenceType {
@@ -1789,35 +1789,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -1832,7 +1832,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -1880,7 +1880,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -1896,7 +1896,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -1944,7 +1944,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -1962,15 +1962,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -2048,7 +2048,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -2056,7 +2056,7 @@ namespace Microsoft.Cci {
     #region IGenericParameter Members
 
     public IEnumerable<ITypeReference> Constraints {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool MustBeReferenceType {
@@ -2084,35 +2084,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -2127,7 +2127,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -2175,7 +2175,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -2191,7 +2191,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -2239,7 +2239,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -2257,15 +2257,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -2350,7 +2350,7 @@ namespace Microsoft.Cci {
     //}
 
     public IEnumerable<ILocalDefinition> LocalVariables {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocalDefinition>(); }
+      get { return Enumerable<ILocalDefinition>.Empty; }
     }
 
     public bool LocalsAreZeroed {
@@ -2358,11 +2358,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IOperation> Operations {
-      get { return IteratorHelper.GetEmptyEnumerable<IOperation>(); }
+      get { return Enumerable<IOperation>.Empty; }
     }
 
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>(); }
+      get { return Enumerable<ITypeDefinition>.Empty; }
     }
 
     public ushort MaxStack {
@@ -2370,7 +2370,7 @@ namespace Microsoft.Cci {
     }
 
     public new IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
-      get { return IteratorHelper.GetEmptyEnumerable<IOperationExceptionInformation>(); }
+      get { return Enumerable<IOperationExceptionInformation>.Empty; }
     }
 
     #endregion
@@ -2397,7 +2397,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -2508,7 +2508,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public CallingConvention CallingConvention {
@@ -2528,11 +2528,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsModified {
@@ -2552,7 +2552,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     #endregion
@@ -2564,7 +2564,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterDefinition> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
+      get { return Enumerable<IParameterDefinition>.Empty; }
     }
 
     public new ITypeReference Type {
@@ -2604,7 +2604,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -2631,7 +2631,7 @@ namespace Microsoft.Cci {
 
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -2655,7 +2655,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -2708,7 +2708,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -2720,11 +2720,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsByRef {
@@ -2756,11 +2756,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -2797,7 +2797,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IAssemblyReference> AssemblyReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IAssemblyReference>(); }
+      get { return Enumerable<IAssemblyReference>.Empty; }
     }
 
     public ulong BaseAddress {
@@ -2849,11 +2849,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomAttribute> ModuleAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<IModuleReference> ModuleReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IModuleReference>(); }
+      get { return Enumerable<IModuleReference>.Empty; }
     }
 
     public Guid PersistentIdentifier {
@@ -2909,23 +2909,23 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IWin32Resource> Win32Resources {
-      get { return IteratorHelper.GetEmptyEnumerable<IWin32Resource>(); }
+      get { return Enumerable<IWin32Resource>.Empty; }
     }
 
     public IEnumerable<string> GetStrings() {
-      return IteratorHelper.GetEmptyEnumerable<string>();
+      return Enumerable<string>.Empty;
     }
 
     public IEnumerable<INamedTypeDefinition> GetAllTypes() {
-      return IteratorHelper.GetEmptyEnumerable<INamedTypeDefinition>();
+      return Enumerable<INamedTypeDefinition>.Empty;
     }
 
     public IEnumerable<ITypeReference> GetTypeReferences() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeReference>();
+      return Enumerable<ITypeReference>.Empty;
     }
 
     public IEnumerable<ITypeMemberReference> GetTypeMemberReferences() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeMemberReference>();
+      return Enumerable<ITypeMemberReference>.Empty;
     }
 
     public ModuleIdentity ModuleIdentity {
@@ -2958,7 +2958,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IUnitReference> UnitReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IUnitReference>(); }
+      get { return Enumerable<IUnitReference>.Empty; }
     }
 
     public UnitIdentity UnitIdentity {
@@ -3001,11 +3001,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -3057,11 +3057,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -3141,7 +3141,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public new ITypeReference Type {
@@ -3161,35 +3161,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -3204,7 +3204,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -3252,7 +3252,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -3268,7 +3268,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -3280,7 +3280,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -3320,7 +3320,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -3338,15 +3338,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -3395,7 +3395,7 @@ namespace Microsoft.Cci {
     #region INamedTypeDefinition Members
 
     public IEnumerable<ICustomAttribute> AttributesFor(ITypeReference implementedInterface) {
-      return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
+      return Enumerable<ICustomAttribute>.Empty;
     }
 
     public bool IsForeignObject {
@@ -3426,35 +3426,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -3469,7 +3469,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -3517,7 +3517,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -3533,7 +3533,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -3545,7 +3545,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -3585,7 +3585,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -3597,15 +3597,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -3700,7 +3700,7 @@ namespace Microsoft.Cci {
     #region INamedTypeDefinition Members
 
     public IEnumerable<ICustomAttribute> AttributesFor(ITypeReference implementedInterface) {
-      return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
+      return Enumerable<ICustomAttribute>.Empty;
     }
 
     public bool IsForeignObject {
@@ -3757,7 +3757,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ICustomAttribute> Attributes {
       get { return this.attributes; }
     }
-    IEnumerable<ICustomAttribute> attributes = IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
+    IEnumerable<ICustomAttribute> attributes = Enumerable<ICustomAttribute>.Empty;
 
     public void Dispatch(IMetadataVisitor visitor) {
     }
@@ -3768,7 +3768,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocation> Locations {
       get { return this.locations; }
     }
-    IEnumerable<ILocation> locations = IteratorHelper.GetEmptyEnumerable<ILocation>();
+    IEnumerable<ILocation> locations = Enumerable<ILocation>.Empty;
 
     #endregion
 
@@ -3862,7 +3862,7 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -3872,7 +3872,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -4426,27 +4426,27 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -4456,11 +4456,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -4475,7 +4475,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -4523,7 +4523,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -4539,7 +4539,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -4551,7 +4551,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -4591,7 +4591,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -4603,15 +4603,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -4978,7 +4978,7 @@ namespace Microsoft.Cci {
     #region IPropertyDefinition Members
 
     public IEnumerable<IMethodReference> Accessors {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodReference>(); }
+      get { return Enumerable<IMethodReference>.Empty; }
     }
 
     public IMetadataConstant DefaultValue {
@@ -5002,7 +5002,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IMethodReference/*?*/ Setter {
@@ -5014,15 +5014,15 @@ namespace Microsoft.Cci {
     #region ISignature Members
 
     public IEnumerable<IParameterDefinition> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
+      get { return Enumerable<IParameterDefinition>.Empty; }
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsByRef {
@@ -5086,7 +5086,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -5115,7 +5115,7 @@ namespace Microsoft.Cci {
 
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -5139,35 +5139,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -5182,7 +5182,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -5230,7 +5230,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -5246,7 +5246,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -5258,7 +5258,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -5298,7 +5298,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -5316,15 +5316,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -5397,7 +5397,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ICustomAttribute> Attributes {
       get { return this.attributes; }
     }
-    IEnumerable<ICustomAttribute> attributes = IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
+    IEnumerable<ICustomAttribute> attributes = Enumerable<ICustomAttribute>.Empty;
 
     public void Dispatch(IMetadataVisitor visitor) {
     }
@@ -5408,7 +5408,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ILocation> Locations {
       get { return this.locations; }
     }
-    IEnumerable<ILocation> locations = IteratorHelper.GetEmptyEnumerable<ILocation>();
+    IEnumerable<ILocation> locations = Enumerable<ILocation>.Empty;
 
     #endregion
   }
@@ -5446,7 +5446,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IUnitReference> UnitReferences {
-      get { return IteratorHelper.GetEmptyEnumerable<IUnitReference>(); }
+      get { return Enumerable<IUnitReference>.Empty; }
     }
 
     public UnitIdentity UnitIdentity {
@@ -5489,11 +5489,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -5505,7 +5505,7 @@ namespace Microsoft.Cci {
     #region IUnitNamespace Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public new IUnit Unit {
@@ -5521,7 +5521,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<INamespaceMember>(); }
+      get { return Enumerable<INamespaceMember>.Empty; }
     }
 
     #endregion
@@ -5529,7 +5529,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -5555,15 +5555,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<INamespaceMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     public IEnumerable<INamespaceMember> GetMatchingMembers(Function<INamespaceMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     public IEnumerable<INamespaceMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     #endregion
@@ -5587,7 +5587,7 @@ namespace Microsoft.Cci {
     #region IUnitNamespace Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public new IUnit Unit {
@@ -5603,7 +5603,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<INamespaceMember>(); }
+      get { return Enumerable<INamespaceMember>.Empty; }
     }
 
     #endregion
@@ -5611,7 +5611,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -5631,15 +5631,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<INamespaceMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     public IEnumerable<INamespaceMember> GetMatchingMembers(Function<INamespaceMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     public IEnumerable<INamespaceMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     #endregion
@@ -5717,7 +5717,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IUnit> Units {
-      get { return IteratorHelper.GetEmptyEnumerable<IUnit>(); }
+      get { return Enumerable<IUnit>.Empty; }
     }
 
     public IUnitSetNamespace UnitSetNamespaceRoot {
@@ -5760,7 +5760,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<INamespaceMember>(); }
+      get { return Enumerable<INamespaceMember>.Empty; }
     }
 
     #endregion
@@ -5768,7 +5768,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -5778,7 +5778,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -5798,15 +5798,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<INamespaceMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<INamespaceMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     public IEnumerable<INamespaceMember> GetMatchingMembers(Function<INamespaceMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     public IEnumerable<INamespaceMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<INamespaceMember>();
+      return Enumerable<INamespaceMember>.Empty;
     }
 
     #endregion
@@ -5817,11 +5817,11 @@ namespace Microsoft.Cci {
     #region IResource Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<byte> Data {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
+      get { return Enumerable<byte>.Empty; }
     }
 
     public IAssemblyReference DefiningAssembly {
@@ -5857,7 +5857,7 @@ namespace Microsoft.Cci {
     #region IAssemblyReference Members
 
     public IEnumerable<IName> Aliases {
-      get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
+      get { return Enumerable<IName>.Empty; }
     }
 
     public string Culture {
@@ -5865,7 +5865,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<byte> PublicKeyToken {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
+      get { return Enumerable<byte>.Empty; }
     }
 
     public new Version Version {
@@ -5943,11 +5943,11 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -6005,7 +6005,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -6020,7 +6020,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsByReference {
@@ -6071,27 +6071,27 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -6101,11 +6101,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -6120,7 +6120,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -6168,7 +6168,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -6184,7 +6184,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -6196,7 +6196,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -6236,7 +6236,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -6248,15 +6248,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -6366,7 +6366,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsBitField {
@@ -6374,7 +6374,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public bool IsCompileTimeConstant {
@@ -6476,7 +6476,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -6568,7 +6568,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     [Pure]
@@ -6680,7 +6680,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public CallingConvention CallingConvention {
@@ -6700,11 +6700,11 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsModified {
@@ -6724,7 +6724,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     #endregion
@@ -6736,7 +6736,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterDefinition> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
+      get { return Enumerable<IParameterDefinition>.Empty; }
     }
 
     public new ITypeReference Type {
@@ -6776,7 +6776,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -6803,7 +6803,7 @@ namespace Microsoft.Cci {
 
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -6823,7 +6823,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -6855,7 +6855,7 @@ namespace Microsoft.Cci {
     #region IPropertyDefinition Members
 
     public IEnumerable<IMethodReference> Accessors {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodReference>(); }
+      get { return Enumerable<IMethodReference>.Empty; }
     }
 
     public IMetadataConstant DefaultValue {
@@ -6879,7 +6879,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IMethodReference/*?*/ Setter {
@@ -6891,15 +6891,15 @@ namespace Microsoft.Cci {
     #region ISignature Members
 
     public IEnumerable<IParameterDefinition> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
+      get { return Enumerable<IParameterDefinition>.Empty; }
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsByRef {
@@ -6963,7 +6963,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -6991,7 +6991,7 @@ namespace Microsoft.Cci {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -7015,15 +7015,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraArgumentTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsByRef {
@@ -7047,35 +7047,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -7090,7 +7090,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -7138,7 +7138,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -7154,7 +7154,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -7166,7 +7166,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -7206,7 +7206,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -7224,15 +7224,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -7273,7 +7273,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsConstant {
@@ -7293,7 +7293,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IMethodDefinition MethodDefinition {
@@ -7321,11 +7321,11 @@ namespace Microsoft.Cci {
     #region IFieldReference Members
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public uint InternedKey {
-      get { return 0; } 
+      get { return 0; }
     }
 
     public bool IsModified {
@@ -7361,7 +7361,7 @@ namespace Microsoft.Cci {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -7371,7 +7371,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -7430,7 +7430,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -7438,7 +7438,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -7468,7 +7468,7 @@ namespace Microsoft.Cci {
     #region IParameterTypeInformation Members
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsByReference {
@@ -7512,7 +7512,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<byte> Data {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); }
+      get { return Enumerable<byte>.Empty; }
     }
 
     #endregion
@@ -7568,7 +7568,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterDefinition> Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterDefinition>(); }
+      get { return Enumerable<IParameterDefinition>.Empty; }
     }
 
     public new ITypeReference Type {
@@ -7576,15 +7576,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsModified {
@@ -7626,7 +7626,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -7642,7 +7642,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     [Pure]
@@ -7782,7 +7782,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     #endregion
@@ -7827,7 +7827,7 @@ namespace Microsoft.Cci {
 
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -7847,7 +7847,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -7901,7 +7901,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -7921,7 +7921,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsBitField {
@@ -7929,7 +7929,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public bool IsCompileTimeConstant {
@@ -8226,35 +8226,35 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public IEnumerable<IEventDefinition> Events {
-      get { return IteratorHelper.GetEmptyEnumerable<IEventDefinition>(); }
+      get { return Enumerable<IEventDefinition>.Empty; }
     }
 
     public IEnumerable<IFieldDefinition> Fields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> Methods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<INestedTypeDefinition> NestedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<INestedTypeDefinition>(); }
+      get { return Enumerable<INestedTypeDefinition>.Empty; }
     }
 
     public IEnumerable<IPropertyDefinition> Properties {
-      get { return IteratorHelper.GetEmptyEnumerable<IPropertyDefinition>(); }
+      get { return Enumerable<IPropertyDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodImplementation>(); }
+      get { return Enumerable<IMethodImplementation>.Empty; }
     }
 
     public IEnumerable<IGenericTypeParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericTypeParameter>(); }
+      get { return Enumerable<IGenericTypeParameter>.Empty; }
     }
 
     public ushort GenericParameterCount {
@@ -8269,7 +8269,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> Interfaces {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     public bool IsAbstract {
@@ -8317,7 +8317,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> Members {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>(); }
+      get { return Enumerable<ITypeDefinitionMember>.Empty; }
     }
 
     public new IPlatformType PlatformType {
@@ -8333,7 +8333,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     public ITypeReference UnderlyingType {
@@ -8345,7 +8345,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public LayoutKind Layout {
@@ -8385,7 +8385,7 @@ namespace Microsoft.Cci {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public void Dispatch(IMetadataVisitor visitor) {
@@ -8403,15 +8403,15 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinitionMember>();
+      return Enumerable<ITypeDefinitionMember>.Empty;
     }
 
     #endregion
@@ -8449,7 +8449,7 @@ namespace Microsoft.Cci {
     public IEnumerable<int> LowerBounds {
       get { return this.lowerBounds; }
     }
-    IEnumerable<int> lowerBounds = IteratorHelper.GetEmptyEnumerable<int>();
+    IEnumerable<int> lowerBounds = Enumerable<int>.Empty;
 
     public uint Rank {
       get { return 0; }
@@ -8458,7 +8458,7 @@ namespace Microsoft.Cci {
     public IEnumerable<ulong> Sizes {
       get { return this.sizes; }
     }
-    IEnumerable<ulong> sizes = IteratorHelper.GetEmptyEnumerable<ulong>();
+    IEnumerable<ulong> sizes = Enumerable<ulong>.Empty;
 
     #endregion
   }
