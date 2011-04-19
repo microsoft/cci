@@ -150,7 +150,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -184,7 +184,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -203,7 +203,7 @@ namespace Microsoft.Cci {
     #region IBlockStatement Members
 
     public IEnumerable<IStatement> Statements {
-      get { return IteratorHelper.GetEmptyEnumerable<IStatement>(); }
+      get { return Enumerable<IStatement>.Empty; }
     }
 
     public bool UseCheckedArithmetic {
@@ -215,7 +215,7 @@ namespace Microsoft.Cci {
     #region IStatement Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -253,7 +253,7 @@ namespace Microsoft.Cci {
     #region IExpression Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -272,7 +272,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<IExpression> Initializers {
-      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public IEnumerable<int> LowerBounds {
@@ -295,7 +295,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -314,7 +314,7 @@ namespace Microsoft.Cci {
     #region IExpression Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -350,7 +350,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -360,7 +360,7 @@ namespace Microsoft.Cci {
     #region IMethodCall Members
 
     public IEnumerable<IExpression> Arguments {
-      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public bool IsVirtualCall {
@@ -391,7 +391,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {
@@ -409,7 +409,7 @@ namespace Microsoft.Cci {
     #region ISwitchCase Members
 
     public IEnumerable<IStatement> Body {
-      get { return IteratorHelper.GetEmptyEnumerable<IStatement>(); }
+      get { return Enumerable<IStatement>.Empty; }
     }
 
     public ICompileTimeConstant Expression {
@@ -421,7 +421,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -431,7 +431,7 @@ namespace Microsoft.Cci {
     #region ISwitchStatement Members
 
     public IEnumerable<ISwitchCase> Cases {
-      get { return IteratorHelper.GetEmptyEnumerable<ISwitchCase>(); }
+      get { return Enumerable<ISwitchCase>.Empty; }
     }
 
     public IExpression Expression {
@@ -446,7 +446,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -471,7 +471,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -509,7 +509,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public ITypeReference Type {

@@ -2500,7 +2500,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of metadata declarative security attributes that are associated with this type.
     /// </summary>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); } //TODO: extract these from the source attributes
+      get { return Enumerable<ISecurityAttribute>.Empty; } //TODO: extract these from the source attributes
     }
 
     /// <summary>

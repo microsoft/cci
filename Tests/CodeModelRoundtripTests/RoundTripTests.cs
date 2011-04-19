@@ -617,9 +617,11 @@ internal class AddGenericParameters : CodeRewriter {
       Index = 0
     };
     oneMoreGP.Add(gp1);
-    foreach (GenericTypeParameter gp in namespaceTypeDefinition.GenericParameters) {
-      gp.Index++;
-      oneMoreGP.Add(gp);
+    if (namespaceTypeDefinition.GenericParameters != null) {
+      foreach (GenericTypeParameter gp in namespaceTypeDefinition.GenericParameters) {
+        gp.Index++;
+        oneMoreGP.Add(gp);
+      }
     }
     namespaceTypeDefinition.GenericParameters = oneMoreGP;
   }
@@ -683,12 +685,13 @@ internal class AddGenericMethodParameters : CodeRewriter {
 
   public override void RewriteChildren(NamedTypeDefinition typeDefinition) {
     List<IMethodDefinition> genericMethods = new List<IMethodDefinition>();
-    for (int i = 0, n = typeDefinition.Methods.Count; i < n; i++) {
+    for (int i = 0, n = typeDefinition.Methods == null ? 0 : typeDefinition.Methods.Count; i < n; i++) {
       var member = typeDefinition.Methods[i];
       if (member.IsGeneric) {
         genericMethods.Add(member);
       }
     }
+    if (typeDefinition.Methods == null) typeDefinition.Methods = new List<IMethodDefinition>();
     this.WithMoreGenericParameters(genericMethods, typeDefinition.Methods);
     base.RewriteChildren(typeDefinition);
   }
@@ -719,9 +722,11 @@ internal class AddGenericMethodParameters : CodeRewriter {
     gp1.Index = 0;
     gp1.InternFactory = this.host.InternFactory;
     oneMoreGP.Add(gp1);
-    foreach (GenericMethodParameter gp in method.GenericParameters) {
-      gp.Index++;
-      oneMoreGP.Add(gp);
+    if (method.GenericParameterCount > 0) {
+      foreach (GenericMethodParameter gp in method.GenericParameters) {
+        gp.Index++;
+        oneMoreGP.Add(gp);
+      }
     }
     method.GenericParameters = oneMoreGP;
   }
@@ -747,7 +752,7 @@ internal class AddGenericMethodParameters : CodeRewriter {
           newArgs.Add(gmpr);
           break;
         }
-        foreach (var arg in genericMethodInstanceReference.GenericArguments) {
+        foreach (var arg in ((IGenericMethodInstanceReference)genericMethodInstanceReference).GenericArguments) {
           newArgs.Add(arg);
         }
         genericMethodInstanceReference.GenericArguments = newArgs;
@@ -824,7 +829,7 @@ internal class CopyMarkedNodes : MetadataRewriter {
   public override void RewriteChildren(NamedTypeDefinition typeDefinition) {
     List<IDefinition> methodsToDuplicate = new List<IDefinition>();
     List<IMethodDefinition> newMethods = new List<IMethodDefinition>();
-    for (int i = 0, n = typeDefinition.Methods.Count; i < n; i++) {
+    for (int i = 0, n = typeDefinition.Methods == null ? 0 : typeDefinition.Methods.Count; i < n; i++) {
       var member = typeDefinition.Methods[i];
       if (Marked(member)) {
         methodsToDuplicate.Add(member);
@@ -840,7 +845,7 @@ internal class CopyMarkedNodes : MetadataRewriter {
 
     List<IDefinition> fieldsToDuplicate = new List<IDefinition>();
     var newFields = new List<IFieldDefinition>();
-    for (int i = 0, n = typeDefinition.Fields.Count; i < n; i++) {
+    for (int i = 0, n = typeDefinition.Fields == null ? 0 : typeDefinition.Fields.Count; i < n; i++) {
       var member = typeDefinition.Fields[i];
       if (Marked(member)) {
         fieldsToDuplicate.Add(member);
@@ -855,7 +860,7 @@ internal class CopyMarkedNodes : MetadataRewriter {
 
     List<IDefinition> propertiesToDuplicate = new List<IDefinition>();
     var newProperties = new List<IPropertyDefinition>();
-    for (int i = 0, n = typeDefinition.Properties.Count; i < n; i++) {
+    for (int i = 0, n = typeDefinition.Properties == null ? 0 : typeDefinition.Properties.Count; i < n; i++) {
       var member = typeDefinition.Properties[i];
       if (Marked(member)) {
         propertiesToDuplicate.Add(member);

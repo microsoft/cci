@@ -4164,7 +4164,7 @@ namespace Microsoft.Cci {
     /// needed to compile anonymous delegate expressions (lambdas) will be returned by this method.
     /// </summary>
     public virtual IEnumerable<ITypeDefinition> GetPrivateHelperTypes() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
+      return Enumerable<ITypeDefinition>.Empty;
     }
 
     /// <summary>

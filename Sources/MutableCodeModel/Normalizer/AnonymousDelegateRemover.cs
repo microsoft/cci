@@ -321,14 +321,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       NestedTypeDefinition closure = new NestedTypeDefinition();
       var containingType = this.method.ContainingTypeDefinition;
       closure.Name = this.host.NameTable.GetNameFor("<"+this.method.Name+">c__DisplayClass"+closure.GetHashCode());
-      closure.Attributes.Add(this.compilerGenerated);
-      closure.BaseClasses.Add(this.host.PlatformType.SystemObject);
+      closure.Attributes = new List<ICustomAttribute>(1) { this.compilerGenerated };
+      closure.BaseClasses = new List<ITypeReference>(1) { this.host.PlatformType.SystemObject };
       closure.ContainingTypeDefinition = containingType;
+      closure.Fields = new List<IFieldDefinition>();
       closure.InternFactory = this.host.InternFactory;
       closure.IsBeforeFieldInit = true;
       closure.IsClass = true;
       closure.IsSealed = true;
       closure.Layout = LayoutKind.Auto;
+      closure.Methods = new List<IMethodDefinition>();
       closure.StringFormat = StringFormatKind.Ansi;
       closure.Visibility = TypeMemberVisibility.Private;
       this.closureClasses.Add(closure);
@@ -340,11 +342,12 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.genericMethodParameterMap = genericMethodParameterMap;
         bool foundConstraints = false;
         var genericTypeParameters = new List<IGenericTypeParameter>(this.method.GenericParameterCount);
+        closure.GenericParameters = genericTypeParameters;
         foreach (var genericMethodParameter in this.method.GenericParameters) {
           var genericTypeParameter = new GenericTypeParameter();
           genericTypeParameter.Copy(genericMethodParameter, this.host.InternFactory);
           genericTypeParameter.DefiningType = closure;
-          if (genericTypeParameter.Constraints != null) foundConstraints = true;
+          if (genericTypeParameter.Constraints != null && genericTypeParameter.Constraints.Count > 0) foundConstraints = true;
           genericTypeParameters.Add(genericTypeParameter);
           genericMethodParameterMap.Add(genericMethodParameter.Index, genericTypeParameter);
         }
@@ -425,8 +428,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         IsHiddenBySignature = true,
       };
       body.MethodDefinition = method;
-      foreach (ParameterDefinition parameterDefinition in method.Parameters)
-        parameterDefinition.ContainingSignature = method;
+      if (method.Parameters != null) {
+        foreach (ParameterDefinition parameterDefinition in method.Parameters)
+          parameterDefinition.ContainingSignature = method;
+      }
 
       if (isPeerMethod) {
         this.helperMembers.Add(method);
@@ -452,7 +457,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           GenericParameterCount = method.GenericParameterCount,
           InternFactory = this.host.InternFactory,
           Name = method.Name,
-          Parameters = new List<IParameterTypeInformation>(methodReference.Parameters),
+          Parameters = methodReference.ParameterCount == 0 ? null : new List<IParameterTypeInformation>(methodReference.Parameters),
           Type = method.Type,
         };
       }
@@ -465,7 +470,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         GenericMethod = methodReference,
         InternFactory = this.host.InternFactory,
         Name = method.Name,
-        Parameters = new List<IParameterTypeInformation>(methodReference.Parameters),
+        Parameters = methodReference.ParameterCount == 0 ? null : new List<IParameterTypeInformation>(methodReference.Parameters),
         Type = method.Type,
       };
     }

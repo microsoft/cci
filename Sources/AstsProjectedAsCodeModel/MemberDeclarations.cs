@@ -833,7 +833,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     protected internal virtual IEnumerable<CustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<CustomModifier>(); }
+      get { return Enumerable<CustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -2231,14 +2231,14 @@ namespace Microsoft.Cci.Ast {
     /// Custom attributes associated with the method's return value.
     /// </summary>
     public virtual IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); } //TODO: compute this
+      get { return Enumerable<ICustomAttribute>.Empty; } //TODO: compute this
     }
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the retuned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     public virtual IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); } //TODO: compute this
+      get { return Enumerable<ICustomModifier>.Empty; } //TODO: compute this
     }
 
     /// <summary>
@@ -2273,7 +2273,7 @@ namespace Microsoft.Cci.Ast {
     /// Declarative security actions for this method.
     /// </summary>
     public virtual IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); } //TODO: compute this
+      get { return Enumerable<ISecurityAttribute>.Empty; } //TODO: compute this
     }
 
     /// <summary>
@@ -2457,7 +2457,7 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     protected internal virtual IEnumerable<CustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<CustomModifier>(); }
+      get { return Enumerable<CustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -3037,14 +3037,14 @@ namespace Microsoft.Cci.Ast {
     /// Custom attributes associated with the property's return value.
     /// </summary>
     public virtual IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); } //TODO: implement this
+      get { return Enumerable<ICustomAttribute>.Empty; } //TODO: implement this
     }
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     public virtual IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -3285,14 +3285,14 @@ namespace Microsoft.Cci.Ast {
     /// 
     /// </summary>
     protected internal virtual IEnumerable<CustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<CustomAttribute>(); } //TODO: compute this
+      get { return Enumerable<CustomAttribute>.Empty; } //TODO: compute this
     }
 
     /// <summary>
     /// 
     /// </summary>
     protected internal virtual IEnumerable<CustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<CustomModifier>(); } //TODO: compute this
+      get { return Enumerable<CustomModifier>.Empty; } //TODO: compute this
     }
 
     /// <summary>

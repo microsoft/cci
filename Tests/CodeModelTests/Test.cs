@@ -13,7 +13,6 @@ using Microsoft.Cci;
 using System.IO;
 using CSharpSourceEmitter;
 using SourceEmitter=PeToText.SourceEmitter;
-using Microsoft.Cci.Contracts;
 using Xunit;
 
 namespace CodeModelTests {

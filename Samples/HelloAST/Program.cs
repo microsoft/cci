@@ -54,8 +54,8 @@ namespace HelloAST {
       /// <param name="programSources">A singleton collection whose member is a dummy source document.</param>
       internal HelloAssembly(IName name, ISourceEditHost host, IName moduleName,
         IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<HelloSourceDocument> programSources)
-        : base(name, "unknown://location", moduleName, assemblyReferences, IteratorHelper.GetEmptyEnumerable<IModuleReference>(),
-        IteratorHelper.GetEmptyEnumerable<IResourceReference>(), IteratorHelper.GetEmptyEnumerable<IFileReference>()) {
+        : base(name, "unknown://location", moduleName, assemblyReferences, Enumerable<IModuleReference>.Empty,
+        Enumerable<IResourceReference>.Empty, Enumerable<IFileReference>.Empty) {
         this.host = host;
         this.programSources = programSources;
       }

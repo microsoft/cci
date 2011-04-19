@@ -130,7 +130,7 @@ namespace Microsoft.Cci.Contracts {
         var sourceTypeReferences = stdm == null ? 
           (proxyMethod.ContainingTypeDefinition.IsGeneric ? 
             IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(methodDefinition.ContainingTypeDefinition.GenericParameters)
-            : IteratorHelper.GetEmptyEnumerable<ITypeReference>())
+            : Enumerable<ITypeReference>.Empty)
           : stdm.ContainingGenericTypeInstance.GenericArguments;
         contract = ContractHelper.SpecializeMethodContract(this.host, contract, unspec == null ? proxyMethod.ContainingTypeDefinition : unspec.ContainingTypeDefinition, unspec == null ? proxyMethod.ContainingTypeDefinition.GenericParameters : unspec.ContainingTypeDefinition.GenericParameters, sourceTypeReferences,
           unspec == null ? proxyMethod.GenericParameters : unspec.GenericParameters, methodDefinition.GenericParameters);

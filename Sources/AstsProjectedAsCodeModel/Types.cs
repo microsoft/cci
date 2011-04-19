@@ -51,7 +51,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value>The base classes.</value>
     public override IEnumerable<ITypeReference> BaseClasses {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeReference>(); }
+      get { return Enumerable<ITypeReference>.Empty; }
     }
 
     /// <summary>
@@ -616,7 +616,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     IEnumerable<ICustomAttribute> INamespaceTypeDefinition.AttributesFor(ITypeReference implementedInterface) {
-      return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>();
+      return Enumerable<ICustomAttribute>.Empty;
     }
 
     #endregion
@@ -1897,7 +1897,7 @@ namespace Microsoft.Cci.Ast {
     /// The list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     /// <summary>

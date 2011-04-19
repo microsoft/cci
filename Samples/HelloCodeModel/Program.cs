@@ -13,6 +13,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
 using System.IO;
+using System.Collections.Generic;
 
 namespace HelloCodeModel {
   class Program {
@@ -43,15 +44,16 @@ namespace HelloCodeModel {
         assembly.AllTypes.Add(moduleClass);
 
         var testClass = new NamespaceTypeDefinition() {
+          BaseClasses = new List<ITypeReference>(1) { host.PlatformType.SystemObject },
           ContainingUnitNamespace = rootUnitNamespace,
           InternFactory = host.InternFactory,
           IsClass = true,
           IsPublic = true,
+          Methods = new List<IMethodDefinition>(1),
           Name = nameTable.GetNameFor("Test"),
         };
         rootUnitNamespace.Members.Add(testClass);
         assembly.AllTypes.Add(testClass);
-        testClass.BaseClasses.Add(host.PlatformType.SystemObject);
 
         var mainMethod = new MethodDefinition() {
           ContainingTypeDefinition = testClass,

@@ -1705,7 +1705,7 @@ namespace Microsoft.Cci.Ast {
         return IteratorHelper.GetSingletonEnumerable<ILocation>(tdmem.Declaration.Name.SourceLocation);
       }
       //TODO: return a location that refers to the assembly name of the referenced member.
-      return IteratorHelper.GetEmptyEnumerable<ILocation>(); ;
+      return Enumerable<ILocation>.Empty; ;
     }
 
     /// <summary>
@@ -3339,9 +3339,9 @@ namespace Microsoft.Cci.Ast {
   /// </summary>
   internal sealed class LocalScopeProvider : ILocalScopeProvider {
 
-    internal static IEnumerable<ILocalScope> emptyLocalScopes = IteratorHelper.GetEmptyEnumerable<ILocalScope>();
-    internal static IEnumerable<INamespaceScope> emptyNamespaceScopes = IteratorHelper.GetEmptyEnumerable<INamespaceScope>();
-    internal static IEnumerable<ILocalDefinition> emptyLocals = IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+    internal static IEnumerable<ILocalScope> emptyLocalScopes = Enumerable<ILocalScope>.Empty;
+    internal static IEnumerable<INamespaceScope> emptyNamespaceScopes = Enumerable<INamespaceScope>.Empty;
+    internal static IEnumerable<ILocalDefinition> emptyLocals = Enumerable<ILocalDefinition>.Empty;
 
     /// <summary>
     /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
@@ -3664,7 +3664,7 @@ namespace Microsoft.Cci.Ast {
       LocalDefinition locDef = localDefinition as LocalDefinition;
       if (locDef != null)
         return this.GetPrimarySourceLocationsFor(locDef.LocalDeclaration.Name.SourceLocation);
-      return IteratorHelper.GetEmptyEnumerable<IPrimarySourceLocation>();
+      return Enumerable<IPrimarySourceLocation>.Empty;
     }
 
     public string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {

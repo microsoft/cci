@@ -204,10 +204,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// when methods that contain closures or iterators are compiled.
     /// </summary>
     public override void TraverseChildren(INamedTypeDefinition typeDefinition) {
-      var mutableTypeDefinition = (NamedTypeDefinition)typeDefinition;
-      foreach (ITypeDefinition nestedType in mutableTypeDefinition.NestedTypes)
+      foreach (ITypeDefinition nestedType in typeDefinition.NestedTypes)
         this.Traverse(nestedType);
-      foreach (IMethodDefinition method in mutableTypeDefinition.Methods)
+      foreach (IMethodDefinition method in typeDefinition.Methods)
         this.Traverse(method);
     }
 
@@ -309,26 +308,32 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public override void TraverseChildren(INamedTypeDefinition typeDefinition) {
       var mutableTypeDefinition = (NamedTypeDefinition)typeDefinition;
-      for (int i = 0; i < mutableTypeDefinition.NestedTypes.Count; i++) {
-        var nestedType = mutableTypeDefinition.NestedTypes[i];
-        if (this.helperTypes.ContainsKey(nestedType.InternedKey)) {
-          mutableTypeDefinition.NestedTypes.RemoveAt(i);
-          i--;
-        } else
-          this.Traverse(nestedType);
-      }
-      for (int i = 0; i < mutableTypeDefinition.Methods.Count; i++) {
-        var helperMethod = mutableTypeDefinition.Methods[i];
-        if (this.helperMethods.ContainsKey(helperMethod.InternedKey)) {
-          mutableTypeDefinition.Methods.RemoveAt(i);
-          i--;
+      if (mutableTypeDefinition.NestedTypes != null) {
+        for (int i = 0; i < mutableTypeDefinition.NestedTypes.Count; i++) {
+          var nestedType = mutableTypeDefinition.NestedTypes[i];
+          if (this.helperTypes.ContainsKey(nestedType.InternedKey)) {
+            mutableTypeDefinition.NestedTypes.RemoveAt(i);
+            i--;
+          } else
+            this.Traverse(nestedType);
         }
       }
-      for (int i = 0; i < mutableTypeDefinition.Fields.Count; i++) {
-        var helperField = mutableTypeDefinition.Fields[i];
-        if (this.helperFields.ContainsKey(helperField)) {
-          mutableTypeDefinition.Fields.RemoveAt(i);
-          i--;
+      if (mutableTypeDefinition.Methods != null) {
+        for (int i = 0; i < mutableTypeDefinition.Methods.Count; i++) {
+          var helperMethod = mutableTypeDefinition.Methods[i];
+          if (this.helperMethods.ContainsKey(helperMethod.InternedKey)) {
+            mutableTypeDefinition.Methods.RemoveAt(i);
+            i--;
+          }
+        }
+      }
+      if (mutableTypeDefinition.Fields != null) {
+        for (int i = 0; i < mutableTypeDefinition.Fields.Count; i++) {
+          var helperField = mutableTypeDefinition.Fields[i];
+          if (this.helperFields.ContainsKey(helperField)) {
+            mutableTypeDefinition.Fields.RemoveAt(i);
+            i--;
+          }
         }
       }
     }

@@ -640,7 +640,7 @@ namespace Microsoft.Cci.Contracts {
     /// that identifies the caller and the event won't be triggered for that client?
     /// </summary>
     MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody);
-  
+
   }
 
   /// <summary>
@@ -690,15 +690,15 @@ namespace Microsoft.Cci.Contracts {
     #region IMethodContract Members
 
     public IEnumerable<IExpression> Allocates {
-      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public IEnumerable<IExpression> Frees {
-      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public IEnumerable<IAddressableExpression> ModifiedVariables {
-      get { return IteratorHelper.GetEmptyEnumerable<IAddressableExpression>(); }
+      get { return Enumerable<IAddressableExpression>.Empty; }
     }
 
     public bool MustInline {
@@ -706,27 +706,27 @@ namespace Microsoft.Cci.Contracts {
     }
 
     public IEnumerable<IPostcondition> Postconditions {
-      get { return IteratorHelper.GetEmptyEnumerable<IPostcondition>(); }
+      get { return Enumerable<IPostcondition>.Empty; }
     }
 
     public IEnumerable<IPrecondition> Preconditions {
-      get { return IteratorHelper.GetEmptyEnumerable<IPrecondition>(); }
+      get { return Enumerable<IPrecondition>.Empty; }
     }
 
     public IEnumerable<IExpression> Reads {
-      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public IEnumerable<IThrownException> ThrownExceptions {
-      get { return IteratorHelper.GetEmptyEnumerable<IThrownException>(); }
+      get { return Enumerable<IThrownException>.Empty; }
     }
 
     public IEnumerable<IExpression> Writes {
-      get { return IteratorHelper.GetEmptyEnumerable<IExpression>(); }
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public IEnumerable<IMethodVariant> Variants {
-        get { return IteratorHelper.GetEmptyEnumerable<IMethodVariant>(); }
+      get { return Enumerable<IMethodVariant>.Empty; }
     }
 
     public bool IsPure {
@@ -738,7 +738,7 @@ namespace Microsoft.Cci.Contracts {
     #region IObjectWithLocations Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -747,15 +747,15 @@ namespace Microsoft.Cci.Contracts {
     #region ITypeContract Members
 
     public IEnumerable<IFieldDefinition> ContractFields {
-      get { return IteratorHelper.GetEmptyEnumerable<IFieldDefinition>(); }
+      get { return Enumerable<IFieldDefinition>.Empty; }
     }
 
     public IEnumerable<IMethodDefinition> ContractMethods {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
     public IEnumerable<ITypeInvariant> Invariants {
-      get { return IteratorHelper.GetEmptyEnumerable<ITypeInvariant>(); }
+      get { return Enumerable<ITypeInvariant>.Empty; }
     }
 
     #endregion
@@ -763,7 +763,7 @@ namespace Microsoft.Cci.Contracts {
     #region IObjectWithLocations Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -793,7 +793,7 @@ namespace Microsoft.Cci.Contracts {
     #region IObjectWithLocations Members
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion

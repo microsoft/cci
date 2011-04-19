@@ -26,7 +26,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsConstant {
@@ -50,7 +50,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     public IMethodDefinition MethodDefinition {

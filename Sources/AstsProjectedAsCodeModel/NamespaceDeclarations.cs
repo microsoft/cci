@@ -679,7 +679,7 @@ namespace Microsoft.Cci.Ast {
       this.InitializeIfNecessary();
       var sourceAttributes = this.sourceAttributes;
       this.sourceAttributes = null;
-      if (sourceAttributes == null) return IteratorHelper.GetEmptyEnumerable<SourceCustomAttribute>();
+      if (sourceAttributes == null) return Enumerable<SourceCustomAttribute>.Empty;
       for (int i = 0, n = sourceAttributes.Count; i < n; i++)
         sourceAttributes[i] = sourceAttributes[i].MakeShallowCopyFor(this.DummyBlock);
       return sourceAttributes.AsReadOnly();

@@ -3502,7 +3502,7 @@ namespace Microsoft.Cci.Ast {
       get
         //^ requires this.IsModified;
       {
-        return IteratorHelper.GetEmptyEnumerable<CustomModifier>();
+        return Enumerable<CustomModifier>.Empty;
       }
     }
 

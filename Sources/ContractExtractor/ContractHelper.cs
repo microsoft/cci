@@ -133,7 +133,9 @@ namespace Microsoft.Cci.MutableContracts {
           contractInvariantMethodAttribute.Constructor = contractInvariantMethodCtor;
           attributes.Add(contractInvariantMethodAttribute);
           #endregion
-          ((NamedTypeDefinition)typeDefinition).Methods.Add(m);
+          var namedTypeDefinition = (NamedTypeDefinition)typeDefinition;
+          if (namedTypeDefinition.Methods == null) namedTypeDefinition.Methods = new List<IMethodDefinition>(1);
+          namedTypeDefinition.Methods.Add(m);
           #endregion Define the method
         }
         base.Visit(typeDefinition);
@@ -266,7 +268,6 @@ namespace Microsoft.Cci.MutableContracts {
           GenericMethod = mref,
           InternFactory = this.host.InternFactory,
           Name = mref.Name,
-          Parameters = new List<IParameterTypeInformation>(),
           Type = returnValue.Type,
         };
         var methodCall = new MethodCall() {
@@ -647,7 +648,7 @@ namespace Microsoft.Cci.MutableContracts {
 
             if (specializedoverriddenMethod != null || overriddenMethod.IsGeneric) {
               SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedoverriddenMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
-              var sourceTypeReferences = stdm == null ? IteratorHelper.GetEmptyEnumerable<ITypeReference>() : stdm.ContainingGenericTypeInstance.GenericArguments;
+              var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
               var targetTypeParameters = overriddenMethod.ContainingTypeDefinition.GenericParameters;
               var justToSee = overriddenMethod.InternedKey;
               overriddenContract = SpecializeMethodContract(
@@ -774,7 +775,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
       if (specializedFromMethod != null || fromMethod.IsGeneric) {
         SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedFromMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
-        var sourceTypeReferences = stdm == null ? IteratorHelper.GetEmptyEnumerable<ITypeReference>() : stdm.ContainingGenericTypeInstance.GenericArguments;
+        var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
         var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
         var justToSee = fromMethod.InternedKey;
         fromMethodContract = SpecializeMethodContract(
@@ -835,7 +836,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
       if (specializedFromMethod != null || fromMethod.IsGeneric) {
         SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedFromMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
-        var sourceTypeReferences = stdm == null ? IteratorHelper.GetEmptyEnumerable<ITypeReference>() : stdm.ContainingGenericTypeInstance.GenericArguments;
+        var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
         var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
         var justToSee = fromMethod.InternedKey;
         fromMethodContract = SpecializeMethodContract(
@@ -982,7 +983,7 @@ namespace Microsoft.Cci.MutableContracts {
       public override void TraverseChildren(IMethodBody methodBody) {
         ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
         if (sourceMethodBody != null) {
-          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody, 
+          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody,
             this.pdbReader, this.localScopeProvider);
           this.contractProvider.AssociateMethodWithContract(methodBody.MethodDefinition, codeAndContractPair.MethodContract);
         }

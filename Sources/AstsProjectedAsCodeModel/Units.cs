@@ -48,7 +48,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
     public IEnumerable<IName> Aliases {
-      get { return IteratorHelper.GetEmptyEnumerable<IName>(); }
+      get { return Enumerable<IName>.Empty; }
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ namespace Microsoft.Cci.Ast {
     /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly.
     /// </summary>
     public virtual IEnumerable<IAliasForType> ExportedTypes {
-      get { return IteratorHelper.GetEmptyEnumerable<IAliasForType>(); }
+      get { return Enumerable<IAliasForType>.Empty; }
     }
 
     /// <summary>
@@ -171,7 +171,7 @@ namespace Microsoft.Cci.Ast {
     /// A list of the modules that constitute the assembly.
     /// </summary>
     public IEnumerable<IModule> MemberModules {
-      get { return IteratorHelper.GetEmptyEnumerable<IModule>(); }
+      get { return Enumerable<IModule>.Empty; }
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ namespace Microsoft.Cci.Ast {
     /// integrity of the assembly.
     /// </summary>
     public virtual IEnumerable<byte> PublicKey {
-      get { return IteratorHelper.GetEmptyEnumerable<byte>(); } //TODO: get this from an option or attribute
+      get { return Enumerable<byte>.Empty; } //TODO: get this from an option or attribute
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ namespace Microsoft.Cci.Ast {
     /// These apply by default to every method reachable from the module.
     /// </summary>
     public virtual IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); } //TODO: compute this
+      get { return Enumerable<ISecurityAttribute>.Empty; } //TODO: compute this
     }
 
     /// <summary>
@@ -265,7 +265,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="referencedAssembly">The assembly to reference.</param>
     public ResolvedAssemblyReference(IAssembly referencedAssembly)
       : base(referencedAssembly) {
-      this.aliases = IteratorHelper.GetEmptyEnumerable<IName>();
+      this.aliases = Enumerable<IName>.Empty;
     }
 
     /// <summary>
@@ -484,7 +484,7 @@ namespace Microsoft.Cci.Ast {
     /// prefix of the user string heap when writing out a module as a PE file.
     /// </summary>
     public IEnumerable<string> GetStrings() {
-      return IteratorHelper.GetEmptyEnumerable<string>();
+      return Enumerable<string>.Empty;
     }
 
     /// <summary>
@@ -741,11 +741,11 @@ namespace Microsoft.Cci.Ast {
     #region IModule Members
 
     IEnumerable<ITypeReference> IModule.GetTypeReferences() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeReference>();
+      return Enumerable<ITypeReference>.Empty;
     }
 
     IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
-      return IteratorHelper.GetEmptyEnumerable<ITypeMemberReference>();
+      return Enumerable<ITypeMemberReference>.Empty;
     }
 
     #endregion
@@ -1072,7 +1072,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
@@ -1089,7 +1089,7 @@ namespace Microsoft.Cci.Ast {
     /// A potentially empty collection of locations that correspond to this IReference instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     /// <summary>

@@ -300,8 +300,8 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
-    private static readonly IEnumerable<LoopInvariant> EmptyListOfInvariants = IteratorHelper.GetEmptyEnumerable<LoopInvariant>();
-    private static readonly IEnumerable<LoopVariant> EmptyListOfVariants = IteratorHelper.GetEmptyEnumerable<LoopVariant>();
+    private static readonly IEnumerable<LoopInvariant> EmptyListOfInvariants = Enumerable<LoopInvariant>.Empty;
+    private static readonly IEnumerable<LoopVariant> EmptyListOfVariants = Enumerable<LoopVariant>.Empty;
 
     /// <summary>
     /// Makes a copy of this contract, changing the containing block to the given block.
@@ -793,12 +793,12 @@ namespace Microsoft.Cci.Ast {
       return result;
     }
 
-    private static readonly IEnumerable<Expression> EmptyListOfExpressions = IteratorHelper.GetEmptyEnumerable<Expression>();
-    private static readonly IEnumerable<Precondition> EmptyListOfPreconditions = IteratorHelper.GetEmptyEnumerable<Precondition>();
-    private static readonly IEnumerable<Postcondition> EmptyListOfPostconditions = IteratorHelper.GetEmptyEnumerable<Postcondition>();
-    private static readonly IEnumerable<AddressableExpression> EmptyListOfTargetExpressions = IteratorHelper.GetEmptyEnumerable<AddressableExpression>();
-    private static readonly IEnumerable<ThrownException> EmptyListOfThrownExceptions = IteratorHelper.GetEmptyEnumerable<ThrownException>();
-    private static readonly IEnumerable<MethodVariant> EmptyListOfVariants = IteratorHelper.GetEmptyEnumerable<MethodVariant>();
+    private static readonly IEnumerable<Expression> EmptyListOfExpressions = Enumerable<Expression>.Empty;
+    private static readonly IEnumerable<Precondition> EmptyListOfPreconditions = Enumerable<Precondition>.Empty;
+    private static readonly IEnumerable<Postcondition> EmptyListOfPostconditions = Enumerable<Postcondition>.Empty;
+    private static readonly IEnumerable<AddressableExpression> EmptyListOfTargetExpressions = Enumerable<AddressableExpression>.Empty;
+    private static readonly IEnumerable<ThrownException> EmptyListOfThrownExceptions = Enumerable<ThrownException>.Empty;
+    private static readonly IEnumerable<MethodVariant> EmptyListOfVariants = Enumerable<MethodVariant>.Empty;
 
     /// <summary>
     /// Makes a copy of this contract, changing the containing block to the given block.
@@ -1396,9 +1396,9 @@ namespace Microsoft.Cci.Ast {
       visitor.Visit(this);
     }
 
-    private static readonly IEnumerable<FieldDeclaration> EmptyListOfFields = IteratorHelper.GetEmptyEnumerable<FieldDeclaration>();
-    private static readonly IEnumerable<MethodDeclaration> EmptyListOfMethods = IteratorHelper.GetEmptyEnumerable<MethodDeclaration>();
-    private static readonly IEnumerable<TypeInvariant> EmptyListOfInvariants = IteratorHelper.GetEmptyEnumerable<TypeInvariant>();
+    private static readonly IEnumerable<FieldDeclaration> EmptyListOfFields = Enumerable<FieldDeclaration>.Empty;
+    private static readonly IEnumerable<MethodDeclaration> EmptyListOfMethods = Enumerable<MethodDeclaration>.Empty;
+    private static readonly IEnumerable<TypeInvariant> EmptyListOfInvariants = Enumerable<TypeInvariant>.Empty;
 
     /// <summary>
     /// A possibly empty list of type invariants. Axioms are a special type of invariant.

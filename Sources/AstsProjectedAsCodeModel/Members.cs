@@ -54,7 +54,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     public bool HasDeclarativeSecurity {
@@ -171,11 +171,11 @@ namespace Microsoft.Cci.Ast {
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool ReturnValueIsByRef {
@@ -199,7 +199,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     //^ [Confined]
@@ -264,11 +264,11 @@ namespace Microsoft.Cci.Ast {
     #region IDefinition Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -310,7 +310,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -1591,11 +1591,11 @@ namespace Microsoft.Cci.Ast {
     #region IReference Members
 
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -1701,7 +1701,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IGenericMethodParameter>(); }
+      get { return Enumerable<IGenericMethodParameter>.Empty; }
     }
 
     /// <summary>
@@ -1939,7 +1939,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
@@ -1947,7 +1947,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -1994,7 +1994,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ISecurityAttribute>(); }
+      get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
     /// <summary>
@@ -2088,14 +2088,14 @@ namespace Microsoft.Cci.Ast {
     /// A collection of metadata custom attributes that are associated with this definition.
     /// </summary>
     public IEnumerable<ICustomAttribute> Attributes {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomAttribute>(); }
+      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
-      get { return IteratorHelper.GetEmptyEnumerable<ILocation>(); }
+      get { return Enumerable<ILocation>.Empty; }
     }
 
     #endregion
@@ -2762,12 +2762,12 @@ namespace Microsoft.Cci.Ast {
     {
       this.ilWasGenerated = true;
       if (this.block == null) {
-        this.localVariables = IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
+        this.localVariables = Enumerable<ILocalDefinition>.Empty;
         this.maxStack = 0;
-        this.operations = IteratorHelper.GetEmptyEnumerable<IOperation>();
-        this.operationExceptionInformation = IteratorHelper.GetEmptyEnumerable<IOperationExceptionInformation>();
-        this.localVariables = IteratorHelper.GetEmptyEnumerable<ILocalDefinition>();
-        this.privateHelperTypes = IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
+        this.operations = Enumerable<IOperation>.Empty;
+        this.operationExceptionInformation = Enumerable<IOperationExceptionInformation>.Empty;
+        this.localVariables = Enumerable<ILocalDefinition>.Empty;
+        this.privateHelperTypes = Enumerable<ITypeDefinition>.Empty;
         return;
       }
 
@@ -3478,7 +3478,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return IteratorHelper.GetEmptyEnumerable<IParameterTypeInformation>(); }
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion

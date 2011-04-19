@@ -468,9 +468,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     IMethodReference GetMethodReference(IteratorClosureInformation iteratorClosure, IMethodDefinition methodDefinition) {
       ITypeReference typeReference = GetClosureTypeReferenceFromIterator(iteratorClosure);
-      //foreach (var m in typeReference.ResolvedType.Methods) {
-      //  if (m.Name == methodDefinition.Name) return m;
-      //}
       IMethodReference methodReference = methodDefinition;
       ISpecializedNestedTypeReference specializedNestedTypeRef = typeReference as ISpecializedNestedTypeReference;
       IGenericTypeInstanceReference genericInstanceRef = typeReference as IGenericTypeInstanceReference;
@@ -483,11 +480,11 @@ namespace Microsoft.Cci.MutableCodeModel {
           Type = methodDefinition.Type,
           Name = methodDefinition.Name,
           CallingConvention = methodDefinition.CallingConvention,
-          Parameters = new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).Parameters),
-          ExtraParameters = new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).ExtraParameters),
+          Parameters = methodDefinition.ParameterCount == 0 ? null : new List<IParameterTypeInformation>(((IMethodReference)methodDefinition).Parameters),
+          ExtraParameters = null,
           ReturnValueIsByRef = methodDefinition.ReturnValueIsByRef,
           ReturnValueIsModified = methodDefinition.ReturnValueIsModified,
-          Attributes = new List<ICustomAttribute>(methodDefinition.Attributes)
+          Attributes = null,
         };
       }
       return methodReference;
@@ -503,7 +500,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       // Create the closure class with CompilerGeneratedAttribute, the list of generic type parameters isomorphic to 
       // those of the iterator method. 
-      NestedTypeDefinition iteratorClosureType = new NestedTypeDefinition();
+      NestedTypeDefinition iteratorClosureType = new NestedTypeDefinition() {
+        ExplicitImplementationOverrides = new List<IMethodImplementation>(),
+        Fields = new List<IFieldDefinition>(),
+        GenericParameters = new List<IGenericTypeParameter>(),
+        Interfaces = new List<ITypeReference>(),
+        Methods = new List<IMethodDefinition>(),
+        NestedTypes = new List<INestedTypeDefinition>(),
+      };
       this.privateHelperTypes.Add(iteratorClosureType);
       result.ClosureDefinition = iteratorClosureType;
       List<IGenericMethodParameter> genericMethodParameters = new List<IGenericMethodParameter>();
@@ -546,9 +550,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       // Set up the iterator closure class. 
       // TODO: name generation to follow the convention of csc. 
       iteratorClosureType.Name = this.host.NameTable.GetNameFor("<" + this.method.Name.Value + ">" + "ic__" + this.privateHelperTypes.Count);
-      iteratorClosureType.Attributes.Add(compilerGeneratedAttribute);
-      iteratorClosureType.BaseClasses.Add(this.host.PlatformType.SystemObject);
+      iteratorClosureType.Attributes = new List<ICustomAttribute>(1) { compilerGeneratedAttribute };
+      iteratorClosureType.BaseClasses = new List<ITypeReference>(1) { this.host.PlatformType.SystemObject };
       iteratorClosureType.ContainingTypeDefinition = this.method.ContainingTypeDefinition;
+      iteratorClosureType.ExplicitImplementationOverrides = new List<IMethodImplementation>(7);
       iteratorClosureType.InternFactory = this.host.InternFactory;
       iteratorClosureType.IsBeforeFieldInit = true;
       iteratorClosureType.IsClass = true;
@@ -578,8 +583,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// }
     /// </summary>
     private void CreateIteratorClosureConstructor(IteratorClosureInformation iteratorClosure) {
-      MethodDefinition constructor = new MethodDefinition();
-      constructor.InternFactory = this.host.InternFactory;
+      MethodDefinition constructor = new MethodDefinition() {
+        InternFactory = this.host.InternFactory,
+        Parameters = new List<IParameterDefinition>(1),
+      };
       // Parameter
       ParameterDefinition stateParameter = new ParameterDefinition() {
         ContainingSignature = constructor,
@@ -751,6 +758,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateResetMethod(IteratorClosureInformation iteratorClosure) {
       // System.Collections.IEnumerator.Reset: Simply throws an exception
       MethodDefinition reset = new MethodDefinition() {
+        Attributes = new List<ICustomAttribute>(1),
         InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("Reset")
       };
@@ -800,6 +808,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     private void CreateDisposeMethod(IteratorClosureInformation iteratorClosure) {
       MethodDefinition disposeMethod = new MethodDefinition() {
+        Attributes = new List<ICustomAttribute>(1),
         InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("Dispose")
       };
@@ -897,6 +906,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateGetEnumeratorMethodGeneric(IteratorClosureInformation iteratorClosure) {
       // Metadata
       MethodDefinition genericGetEnumerator = new MethodDefinition() {
+        Attributes = new List<ICustomAttribute>(1),
         InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.Generic.IEnumerable<" + iteratorClosure.ElementType.ToString()+">.GetEnumerator")
       };
@@ -1049,6 +1059,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       // GetEnumerator non-generic version, which delegates to the generic version. 
       // Metadata
       MethodDefinition nongenericGetEnumerator = new MethodDefinition() {
+        Attributes = new List<ICustomAttribute>(1),
         InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.IEnumerable.GetEnumerator")
       };
@@ -1104,6 +1115,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private void CreateIteratorClosureProperties(IteratorClosureInformation iteratorClosure) {
       // Non-generic version of the get_Current, which returns the generic version of get_Current. 
       MethodDefinition getterNonGenericCurrent = new MethodDefinition() {
+        Attributes = new List<ICustomAttribute>(1),
         InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.IEnumerator.get_Current")
       };
@@ -1167,6 +1179,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       // Create generic version of get_Current, the body of which is simply returning this.current.
       MethodDefinition getterGenericCurrent = new MethodDefinition() {
+        Attributes = new List<ICustomAttribute>(1),
         InternFactory = this.host.InternFactory,
         Name = this.host.NameTable.GetNameFor("System.Collections.Generic.IEnumerator<" + iteratorClosure.ElementType.ToString() +">.get_Current")
       };

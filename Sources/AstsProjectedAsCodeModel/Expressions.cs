@@ -1825,7 +1825,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     bool ISignature.ReturnValueIsByRef {
@@ -2034,7 +2034,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <value></value>
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return IteratorHelper.GetEmptyEnumerable<ICustomModifier>(); }
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -2936,7 +2936,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected virtual IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
+        return Enumerable<IMethodDefinition>.Empty;
       }
     }
 
@@ -5217,7 +5217,7 @@ namespace Microsoft.Cci.Ast {
     /// to determine how the operands are to be converted before the operation is carried out.
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
-      get { return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); }
+      get { return Enumerable<IMethodDefinition>.Empty; }
     }
 
   }
@@ -6520,7 +6520,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       //^ assume false;
-      return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
+      return Enumerable<IMethodDefinition>.Empty;
     }
 
     /// <summary>
@@ -7976,7 +7976,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
       //^ assume false;
-      return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
+      return Enumerable<IMethodDefinition>.Empty;
     }
   }
 
@@ -8727,7 +8727,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
+        return Enumerable<IMethodDefinition>.Empty; //TODO: implement this
       }
     }
 
@@ -10434,7 +10434,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
+        return Enumerable<IMethodDefinition>.Empty; //TODO: implement this
       }
     }
 
@@ -12470,7 +12470,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires methodExpressionType.IsDelegate;
     {
       IMethodDefinition invokeMethod = this.Helper.GetInvokeMethod(methodExpressionType);
-      if (invokeMethod == Dummy.Method) return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //Will get here only when referencing a malformed/malicious assembly. 
+      if (invokeMethod == Dummy.Method) return Enumerable<IMethodDefinition>.Empty; //Will get here only when referencing a malformed/malicious assembly. 
       return IteratorHelper.GetSingletonEnumerable<IMethodDefinition>(invokeMethod);
     }
 
@@ -13786,7 +13786,7 @@ namespace Microsoft.Cci.Ast {
     public virtual IEnumerable<ITypeDefinition> GetTypes(int numberOfTypeParameters) {
       ITypeDefinition/*?*/ type = this.GetNestedType(this.containingType, numberOfTypeParameters);
       if (type == null)
-        return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
+        return Enumerable<ITypeDefinition>.Empty;
       else
         return IteratorHelper.GetSingletonEnumerable<ITypeDefinition>(type);
     }
@@ -17258,7 +17258,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
+        return Enumerable<IMethodDefinition>.Empty; //TODO: implement this
       }
     }
 
@@ -17348,7 +17348,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
+        return Enumerable<IMethodDefinition>.Empty; //TODO: implement this
       }
     }
 
@@ -17408,7 +17408,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="allowMethodParameterInferencesToFail">This flag is ignored, since constructors cannot have generic parameters.</param>
     public override IEnumerable<IMethodDefinition> GetCandidateMethods(bool allowMethodParameterInferencesToFail) {
-      return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>();
+      return Enumerable<IMethodDefinition>.Empty;
     }
 
     /// <summary>
@@ -18674,7 +18674,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
+        return Enumerable<IMethodDefinition>.Empty; //TODO: implement this
       }
     }
 
@@ -20293,7 +20293,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IEnumerable<IMethodDefinition> StandardOperators {
       get {
-        return IteratorHelper.GetEmptyEnumerable<IMethodDefinition>(); //TODO: implement this
+        return Enumerable<IMethodDefinition>.Empty; //TODO: implement this
       }
     }
 

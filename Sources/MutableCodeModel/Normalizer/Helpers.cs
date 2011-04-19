@@ -86,7 +86,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.currentField == null) {
           this.currentField = value;
           this.ClosureDefinition.Fields.Add(value);
-        } else Debug.Assert(false); 
+        } else Debug.Assert(false);
       }
     }
     private IFieldDefinition currentField;
@@ -246,16 +246,16 @@ namespace Microsoft.Cci.MutableCodeModel {
           Type = method.Type,
           Name = method.Name,
           CallingConvention = method.CallingConvention,
-          Parameters = new List<IParameterTypeInformation>(((IMethodReference)method).Parameters),
-          ExtraParameters = new List<IParameterTypeInformation>(((IMethodReference)method).ExtraParameters),
+          Parameters = method.ParameterCount == 0 ? null : new List<IParameterTypeInformation>(((IMethodReference)method).Parameters),
+          ExtraParameters = null,
           ReturnValueIsByRef = method.ReturnValueIsByRef,
           ReturnValueIsModified = method.ReturnValueIsModified,
-          Attributes = new List<ICustomAttribute>(method.Attributes)
+          Attributes = null,
         };
       } else methodReference = method;
       return methodReference;
     }
-   
+
     /// <summary>
     /// The generic version of the GetEnumerator method. Should not be set more than once. The setter also add the member to the member list of the closure class.
     /// </summary>
@@ -277,7 +277,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal IMethodReference GenericGetEnumeratorReference {
       get {
         if (this.genericGetEnumeratorReference == null) {
-            this.genericGetEnumeratorReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetEnumerator);
+          this.genericGetEnumeratorReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetEnumerator);
         }
         return this.genericGetEnumeratorReference;
       }
@@ -305,7 +305,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal IMethodReference GenericGetCurrentReference {
       get {
         if (this.genericGetCurrentReference == null) {
-            this.genericGetCurrentReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetCurrent);
+          this.genericGetCurrentReference = this.GetReferenceOfMethodUsedByPeers(this.genericGetCurrent);
         }
         return this.genericGetCurrentReference;
       }
@@ -384,10 +384,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference NonGenericIEnumeratorInterface {
       get { return nonGenericIEnumeratorInterface; }
-      set { nonGenericIEnumeratorInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value)) {
-        this.ClosureDefinition.Interfaces.Add(value);
-      }
+      set {
+        nonGenericIEnumeratorInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value)) {
+          this.ClosureDefinition.Interfaces.Add(value);
+        }
       }
     }
     private ITypeReference nonGenericIEnumeratorInterface;
@@ -397,9 +398,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference GenericIEnumeratorInterface {
       get { return genericIEnumeratorInterface; }
-      set { genericIEnumeratorInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        genericIEnumeratorInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference genericIEnumeratorInterface;
@@ -409,9 +411,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference NonGenericIEnumerableInterface {
       get { return nonGenericIEnumerableInterface; }
-      set { nonGenericIEnumerableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        nonGenericIEnumerableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference nonGenericIEnumerableInterface;
@@ -422,9 +425,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference GenericIEnumerableInterface {
       get { return genericIEnumerableInterface; }
-      set { genericIEnumerableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        genericIEnumerableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference genericIEnumerableInterface;
@@ -434,9 +438,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal ITypeReference DisposableInterface {
       get { return this.disposableInterface; }
-      set { this.disposableInterface = value;
-      if (!this.ClosureDefinition.Interfaces.Contains(value))
-        this.ClosureDefinition.Interfaces.Add(value);
+      set {
+        this.disposableInterface = value;
+        if (!this.ClosureDefinition.Interfaces.Contains(value))
+          this.ClosureDefinition.Interfaces.Add(value);
       }
     }
     private ITypeReference disposableInterface;

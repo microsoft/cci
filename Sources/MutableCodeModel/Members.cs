@@ -166,7 +166,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       return this.iteratorScopes;
     }
     IEnumerable<ILocalScope> iteratorScopes = emptyLocalScopes;
-    static IEnumerable<ILocalScope> emptyLocalScopes = IteratorHelper.GetEmptyEnumerable<ILocalScope>();
+    static IEnumerable<ILocalScope> emptyLocalScopes = Enumerable<ILocalScope>.Empty;
 
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.
@@ -256,7 +256,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes {
       get {
         if (this.PrivateHelperTypes == null)
-          return IteratorHelper.GetEmptyEnumerable<ITypeDefinition>();
+          return Enumerable<ITypeDefinition>.Empty;
         else
           return this.PrivateHelperTypes.AsReadOnly();
       }

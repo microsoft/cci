@@ -150,9 +150,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       //result.Name = this.host.NameTable.GetNameFor("closureclass");
       result.Name = this.host.NameTable.GetNameFor(signature + " closure " + this.counter);
       this.counter++;
-      result.Attributes.Add(compilerGeneratedAttribute);
-      result.BaseClasses.Add(this.host.PlatformType.SystemObject);
+      result.Attributes = new List<ICustomAttribute>(1) { compilerGeneratedAttribute };
+      result.BaseClasses = new List<ITypeReference>(1) { this.host.PlatformType.SystemObject };
       result.ContainingTypeDefinition = this.generatedclosureClass != null ? this.generatedclosureClass : method.ContainingTypeDefinition;
+      result.Fields = new List<IFieldDefinition>();
+      if (makeGeneric) result.GenericParameters = new List<IGenericTypeParameter>();
+      result.Methods = new List<IMethodDefinition>();
       result.InternFactory = this.host.InternFactory;
       result.IsBeforeFieldInit = true;
       result.IsClass = true;
