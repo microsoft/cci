@@ -912,7 +912,7 @@ class NameChanger : CodeRewriter {
     }
 
     public override INamespaceTypeReference Rewrite(INamespaceTypeReference namespaceTypeReference) {
-      if (TypeHelper.GetDefiningUnitReference(namespaceTypeReference).ResolvedUnit != this.assembly) return namespaceTypeReference;
+      if (TypeHelper.GetDefiningUnitReference(namespaceTypeReference) != this.assembly) return namespaceTypeReference;
       var mutableNamespaceTypeReference = namespaceTypeReference as Microsoft.Cci.MutableCodeModel.NamespaceTypeReference;
       if (mutableNamespaceTypeReference == null || mutableNamespaceTypeReference.IsFrozen) return namespaceTypeReference;
       IReference result;
