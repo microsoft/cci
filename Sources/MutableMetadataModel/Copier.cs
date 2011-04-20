@@ -2371,9 +2371,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       private void Substitute(TypeReference mutableCopy) {
-        object copy;
-        if (this.DefinitionCache.TryGetValue(mutableCopy.AliasForType, out copy))
-          mutableCopy.AliasForType = (IAliasForType)copy;
         this.SubstituteElements(mutableCopy.Attributes);
         mutableCopy.InternFactory = this.host.InternFactory;
         mutableCopy.PlatformType = this.host.PlatformType;
@@ -2382,6 +2379,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       private void Substitute(UnitNamespace mutableCopy) {
         this.SubstituteElements(mutableCopy.Attributes);
         this.SubstituteElements(mutableCopy.Members);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.Unit, out copy))
+          mutableCopy.Unit = (IUnit)copy;
       }
 
       private void Substitute(UnitNamespaceReference mutableCopy) {
