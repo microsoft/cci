@@ -529,6 +529,16 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       Dictionary<ushort, IGenericParameterReference> genericMethodParameterMap;
 
+      /// <summary>
+      /// Rewrites the children of the given generic method instance reference.
+      /// </summary>
+      public override void RewriteChildren(GenericMethodInstanceReference genericMethodInstanceReference) {
+        this.RewriteChildren((MethodReference)genericMethodInstanceReference);
+        genericMethodInstanceReference.GenericArguments = this.Rewrite(genericMethodInstanceReference.GenericArguments);
+        //do not rewrite the generic method reference, it does not contain any references to generic method type parameters of this.method
+        //but it might have referenes to generic method type parameters, which will confuse the code below.
+      }
+
       public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
         IGenericParameterReference referenceToSubstitute;
         if (this.genericMethodParameterMap.TryGetValue(genericMethodParameterReference.Index, out referenceToSubstitute))
@@ -765,6 +775,16 @@ namespace Microsoft.Cci.MutableCodeModel {
           });
       } else
         base.RewriteChildren(forEachStatement);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given generic method instance reference.
+    /// </summary>
+    public override void RewriteChildren(GenericMethodInstanceReference genericMethodInstanceReference) {
+      this.RewriteChildren((MethodReference)genericMethodInstanceReference);
+      genericMethodInstanceReference.GenericArguments = this.Rewrite(genericMethodInstanceReference.GenericArguments);
+      //do not rewrite the generic method reference, it does not contain any references to generic method type parameters of this.method
+      //but it might have referenes to generic method type parameters, which will confuse the code below.
     }
 
     /// <summary>
