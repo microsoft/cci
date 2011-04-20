@@ -1752,6 +1752,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
+    /// </summary>
+    public override IAliasForType AliasForType {
+      get {
+        if (this.aliasForType == null)
+          this.Resolve();
+        return this.aliasForType;
+      }
+    }
+    IAliasForType/*?*/ aliasForType;
+
+    /// <summary>
     /// The namespace that contains the referenced type.
     /// </summary>
     /// <value></value>
@@ -1788,9 +1803,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     private INamespaceTypeDefinition Resolve() {
       Contract.Ensures(this.IsFrozen);
       this.isFrozen = true;
-      foreach (INamespaceMember member in this.containingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
+      this.aliasForType = Dummy.AliasForType;
+      foreach (INamespaceMember member in this.ContainingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
         INamespaceTypeDefinition/*?*/ nsType = member as INamespaceTypeDefinition;
         if (nsType != null && nsType.GenericParameterCount == this.genericParameterCount) return nsType;
+      }
+      var assembly = this.ContainingUnitNamespace.ResolvedUnitNamespace.Unit as IAssembly;
+      if (assembly != null) {
+        foreach (var alias in assembly.ExportedTypes) {
+          var nsAlias = alias as INamespaceAliasForType;
+          if (nsAlias == null) continue;
+          if (nsAlias.Name.UniqueKey != this.Name.UniqueKey) continue;
+          if (!UnitHelper.UnitNamespacesAreEquivalent((IUnitNamespaceReference)nsAlias.ContainingNamespace, this.ContainingUnitNamespace)) continue;
+          this.aliasForType = nsAlias;
+          var resolvedType = nsAlias.AliasedType.ResolvedType as INamespaceTypeDefinition;
+          if (resolvedType != null) return resolvedType;
+          break;
+        }
       }
       return Dummy.NamespaceTypeDefinition;
     }
@@ -2141,6 +2170,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
+    /// </summary>
+    public override IAliasForType AliasForType {
+      get {
+        if (this.aliasForType == null)
+          this.Resolve();
+        return this.aliasForType;
+      }
+    }
+    IAliasForType/*?*/ aliasForType;
+
+    /// <summary>
     /// A reference to the containing type of the referenced type member.
     /// </summary>
     /// <value></value>
@@ -2205,9 +2249,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Ensures(Contract.Result<INestedTypeDefinition>() != null);
       Contract.Ensures(this.IsFrozen);
       this.isFrozen = true;
-      foreach (ITypeDefinitionMember member in this.containingType.ResolvedType.GetMembersNamed(this.name, false)) {
+      this.aliasForType = Dummy.AliasForType;
+      foreach (ITypeDefinitionMember member in this.ContainingType.ResolvedType.GetMembersNamed(this.name, false)) {
         INestedTypeDefinition/*?*/ neType = member as INestedTypeDefinition;
-        if (neType != null && neType.GenericParameterCount == this.genericParameterCount) return neType;
+        if (neType != null && neType.GenericParameterCount == this.genericParameterCount) {
+          if (this.ContainingType.IsAlias) {
+            //Then there must be an entry for this nested type in the exported types collection.
+            var assembly = TypeHelper.GetDefiningUnitReference(this).ResolvedUnit as IAssembly;
+            if (assembly != null) {
+              foreach (var alias in assembly.ExportedTypes) {
+                var neAlias = alias as INestedAliasForType;
+                if (neAlias == null) continue;
+                if (neAlias.Name.UniqueKey != this.Name.UniqueKey) continue;
+                if (neAlias.ContainingAlias != this.ContainingType.AliasForType) continue;
+                this.aliasForType = neAlias;
+                break;
+              }
+            }
+          }
+          return neType;
+        }
       }
       return Dummy.NestedType;
     }
@@ -3492,7 +3553,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     internal TypeReference() {
-      this.aliasForType = Dummy.AliasForType;
       this.attributes = null;
       this.internFactory = Dummy.InternFactory;
       this.isEnum = false;
@@ -3504,7 +3564,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     [ContractInvariantMethod]
     void ObjectInvariant() {
-      Contract.Invariant(this.aliasForType != null);
       Contract.Invariant(this.internFactory != null);
       Contract.Invariant(this.platformType != null);
       Contract.Invariant(this.internedKey == 0 || this.IsFrozen);
@@ -3521,7 +3580,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// references to the given metadata model objects.   
     /// </param>
     public void Copy(ITypeReference typeReference, IInternFactory internFactory) {
-      this.aliasForType = typeReference.AliasForType;
       if (typeReference is ITypeDefinition)
         this.attributes = null; //the attributes of a type definition are not the same as the attributes of a type reference
       //so when a definition is being copied as a reference, it should get not attributes of its own.
@@ -3544,21 +3602,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     ITypeReference/*?*/ originalReference;
 
     /// <summary>
-    /// Gives the alias for the type
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
     /// </summary>
-    /// <value></value>
-    public IAliasForType AliasForType {
-      get {
-        return this.aliasForType;
-      }
-      set {
-        Contract.Requires(!this.IsFrozen);
-        Contract.Requires(value != null);
-        //Contract.Requires(this.IsAlias || value.AliasedType.ResolvedType == this.ResolvedType);
-        this.aliasForType = value;
-      }
+    public virtual IAliasForType AliasForType {
+      get { return Dummy.AliasForType; }
     }
-    IAliasForType aliasForType;
 
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition. May be null.
@@ -3638,7 +3689,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool IsAlias {
       get {
         Contract.Assume(!(this is ITypeDefinition));
-        return this.aliasForType != Dummy.AliasForType;
+        return this.AliasForType != Dummy.AliasForType;
       }
     }
 

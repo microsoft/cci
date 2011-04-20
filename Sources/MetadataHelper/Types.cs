@@ -508,7 +508,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsValueType {
-      get { return this.GenericType.ResolvedType.IsValueType; }
+      get { return this.GenericType.IsValueType; }
     }
 
     public bool IsStruct {
@@ -524,7 +524,7 @@ namespace Microsoft.Cci {
     }
 
     public IPlatformType PlatformType {
-      get { return this.GenericType.ResolvedType.PlatformType; }
+      get { return this.GenericType.PlatformType; }
     }
 
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
@@ -938,7 +938,7 @@ namespace Microsoft.Cci {
     }
 
     public override IPlatformType PlatformType {
-      get { return this.TargetType.ResolvedType.PlatformType; }
+      get { return this.TargetType.PlatformType; }
     }
 
     /// <summary>
@@ -1135,7 +1135,7 @@ namespace Microsoft.Cci {
     }
 
     public override IPlatformType PlatformType {
-      get { return this.TargetType.ResolvedType.PlatformType; }
+      get { return this.TargetType.PlatformType; }
     }
 
     /// <summary>
@@ -1475,7 +1475,7 @@ namespace Microsoft.Cci {
     }
 
     public IPlatformType PlatformType {
-      get { return this.UnmodifiedType.ResolvedType.PlatformType; }
+      get { return this.UnmodifiedType.PlatformType; }
     }
 
     public ITypeDefinition ResolvedType {

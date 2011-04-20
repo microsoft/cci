@@ -1610,9 +1610,6 @@ namespace Microsoft.Cci {
     }
 
     uint GetTypeReferenceInternId(ITypeReference typeReference) {
-      if (typeReference.IsAlias) {
-        return this.GetTypeReferenceInternId(typeReference.AliasForType.AliasedType);
-      }
       IModifiedTypeReference/*?*/ modifiedTypeReference = typeReference as IModifiedTypeReference;
       if (modifiedTypeReference != null) {
         return this.GetModifiedTypeReferenceInternId(modifiedTypeReference.UnmodifiedType, modifiedTypeReference.CustomModifiers);

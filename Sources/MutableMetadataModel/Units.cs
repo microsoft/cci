@@ -411,7 +411,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public AssemblyReference() {
       Contract.Ensures(!this.IsFrozen);
       this.aliases = null;
-      this.ResolvedModule = this.resolvedAssembly = Dummy.Assembly;
+      this.resolvedAssembly = null;
       this.culture = string.Empty;
       this.isRetargetable = false;
       this.containsForeignTypes = false;
@@ -432,7 +432,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.aliases = new List<IName>(assemblyReference.Aliases);
       else
         this.aliases = null;
-      this.ResolvedModule = this.resolvedAssembly = assemblyReference.ResolvedAssembly;
+      this.resolvedAssembly = null;
       this.culture = assemblyReference.Culture;
       this.isRetargetable = assemblyReference.IsRetargetable;
       this.containsForeignTypes = assemblyReference.ContainsForeignTypes;
@@ -1255,7 +1255,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public ModuleReference() {
       this.containingAssembly = Dummy.Assembly;
       this.moduleIdentity = Dummy.ModuleReference.ModuleIdentity;
-      this.resolvedModule = Dummy.Module;
+      this.resolvedModule = null;
     }
 
     /// <summary>
@@ -1267,7 +1267,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       ((ICopyFrom<IUnitReference>)this).Copy(moduleReference, internFactory);
       this.containingAssembly = moduleReference.ContainingAssembly;
       this.moduleIdentity = moduleReference.ModuleIdentity;
-      this.resolvedModule = moduleReference.ResolvedModule;
+      this.resolvedModule = null;
     }
 
     /// <summary>
