@@ -5203,10 +5203,6 @@ namespace Microsoft.Cci {
     /// True if the type reference is traversed from a location that needs a token for the type reference.
     /// </summary>
     bool typeReferenceNeedsToken;
-    /// <summary>
-    /// True if the traversal is inside an attribute. If so, namespace and nested types do not need tokens.
-    /// </summary>
-    bool insideAttribute;
     IModule/*?*/ module;
 
     internal ReferenceIndexer(PeWriter peWriter, bool traverseAttributes) {
@@ -5249,9 +5245,8 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(ICustomAttribute customAttribute) {
-      this.insideAttribute = true;
       this.Traverse(customAttribute.Constructor);
-      this.insideAttribute = false;
+      //do not traverse the arguments. Any references in them will be serialized and not need tokens
     }
 
     public override void TraverseChildren(IEventDefinition eventDefinition) {
@@ -5358,14 +5353,12 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
-      if (this.insideAttribute) return;
       if (!this.typeReferenceNeedsToken && namespaceTypeReference.TypeCode != PrimitiveTypeCode.NotPrimitive) return;
       this.typeReferenceNeedsToken = true;
       base.TraverseChildren(namespaceTypeReference);
     }
 
     public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
-      if (this.insideAttribute) return;
       this.typeReferenceNeedsToken = true;
       base.TraverseChildren(nestedTypeReference);
     }
