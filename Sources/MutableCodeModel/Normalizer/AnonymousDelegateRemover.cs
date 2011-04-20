@@ -344,12 +344,13 @@ namespace Microsoft.Cci.MutableCodeModel {
         var genericTypeParameters = new List<IGenericTypeParameter>(this.method.GenericParameterCount);
         closure.GenericParameters = genericTypeParameters;
         foreach (var genericMethodParameter in this.method.GenericParameters) {
+          var copyOfGenericMethodParameter = this.copier.Copy(genericMethodParameter); //so that we have mutable constraints to rewrite
           var genericTypeParameter = new GenericTypeParameter();
-          genericTypeParameter.Copy(genericMethodParameter, this.host.InternFactory);
+          genericTypeParameter.Copy(copyOfGenericMethodParameter, this.host.InternFactory);
           genericTypeParameter.DefiningType = closure;
           if (genericTypeParameter.Constraints != null && genericTypeParameter.Constraints.Count > 0) foundConstraints = true;
           genericTypeParameters.Add(genericTypeParameter);
-          genericMethodParameterMap.Add(genericMethodParameter.Index, genericTypeParameter);
+          genericMethodParameterMap.Add(copyOfGenericMethodParameter.Index, genericTypeParameter);
         }
         if (foundConstraints) {
           //Fix up any self references that might lurk inside constraints.
