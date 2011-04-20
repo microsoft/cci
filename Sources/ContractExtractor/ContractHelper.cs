@@ -61,12 +61,12 @@ namespace Microsoft.Cci.MutableContracts {
 
       public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
         this.VisitTypeDefinition(namespaceTypeDefinition);
-        return namespaceTypeDefinition;
+        return base.Visit(namespaceTypeDefinition);
       }
 
       public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
         this.VisitTypeDefinition(nestedTypeDefinition);
-        return nestedTypeDefinition;
+        return base.Visit(nestedTypeDefinition);
       }
 
       /// <summary>
@@ -138,7 +138,6 @@ namespace Microsoft.Cci.MutableContracts {
           namedTypeDefinition.Methods.Add(m);
           #endregion Define the method
         }
-        base.Visit(typeDefinition);
       }
 
       public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
@@ -967,6 +966,7 @@ namespace Microsoft.Cci.MutableContracts {
         this.pdbReader = pdbReader;
         this.localScopeProvider = localScopeProvider;
         this.contractProvider = contractProvider;
+        this.TraverseIntoMethodBodies = true;
       }
 
       public override void TraverseChildren(ITypeDefinition typeDefinition) {
@@ -980,13 +980,10 @@ namespace Microsoft.Cci.MutableContracts {
       /// <summary>
       /// For each method body, use the extractor to split it into the codeand contract.
       /// </summary>
-      public override void TraverseChildren(IMethodBody methodBody) {
-        ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
-        if (sourceMethodBody != null) {
-          var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody,
-            this.pdbReader, this.localScopeProvider);
-          this.contractProvider.AssociateMethodWithContract(methodBody.MethodDefinition, codeAndContractPair.MethodContract);
-        }
+      public override void TraverseChildren(ISourceMethodBody sourceMethodBody) {
+        var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody,
+        this.pdbReader, this.localScopeProvider);
+        this.contractProvider.AssociateMethodWithContract(sourceMethodBody.MethodDefinition, codeAndContractPair.MethodContract);
       }
 
     }
