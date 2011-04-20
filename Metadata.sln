@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToText", "Samples\PeToTex
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Contracts", "Sources\Microsoft.Contracts\Microsoft.Contracts.csproj", "{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflectionEmitter", "Sources\ReflectionEmitter\ReflectionEmitter.csproj", "{4343021F-2848-4770-A0F5-8C9768F9DA98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -256,6 +258,16 @@ Global
 		{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
 		{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.FastpathSim|Any CPU.ActiveCfg = Release|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.FastpathSim|Any CPU.Build.0 = Release|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.NightlyDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.NightlyDebug|Any CPU.Build.0 = Debug|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.NightlyRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.NightlyRelease|Any CPU.Build.0 = Release|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4343021F-2848-4770-A0F5-8C9768F9DA98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
