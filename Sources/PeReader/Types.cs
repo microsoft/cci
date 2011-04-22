@@ -99,7 +99,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IMetadataReaderNamedTypeReference/*?*/ ParentTypeReference { get; }
     IName/*?*/ NamespaceFullName { get; }
     IName MangledTypeName { get; }
+    /// <summary>
+    /// Must return a non null value if this.IsEnum returns true.
+    /// </summary>
     IMetadataReaderTypeReference/*?*/ EnumUnderlyingType { get; }
+    ExportedTypeAliasBase/*?*/ TryResolveAsExportedType();
   }
 
   /// <summary>
@@ -335,6 +339,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IMetadataReaderTypeReference/*?*/ EnumUnderlyingType {
       get { return null; }
+    }
+
+    public ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
+      return null;
     }
 
     #endregion
@@ -611,7 +619,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   }
 
-  internal abstract class TypeNameTypeReference : IMetadataReaderTypeReference {
+  internal abstract class TypeNameTypeReference : IMetadataReaderNamedTypeReference {
 
     internal readonly IMetadataReaderModuleReference Module;
     internal readonly PEFileToObjectModel PEFileToObjectModel;
@@ -626,8 +634,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public abstract void DispatchAsReference(IMetadataVisitor visitor);
-
-    protected abstract TypeBase Resolve();
 
     #region ITypeReference Members
 
@@ -650,10 +656,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsEnum {
-      get { return this.isEnum; }
-      set { this.isEnum = value; }
+      get { return false; }
     }
-    bool isEnum;
 
     public bool IsValueType {
       get { return false; }
@@ -665,8 +669,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     ITypeDefinition ITypeReference.ResolvedType {
       get {
-        ITypeDefinition/*?*/ result = this.ResolvedModuleType;
-        if (this.ResolvedModuleType == null) return Dummy.Type;
+        var result = this.GetResolvedType();
+        if (result == Dummy.NamedTypeDefinition) return Dummy.Type;
         return result;
       }
     }
@@ -700,16 +704,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IMetadataReaderTypeDefAndRef/*?*/ ResolvedModuleType {
-      get {
-        if (!this.resolvedModuleTypeHasValue) {
-          this.resolvedModuleType = this.Resolve();
-          this.resolvedModuleTypeHasValue = true;
-        }
-        return this.resolvedModuleType;
-      }
+      get { return this.GetResolvedType() as IMetadataReaderTypeDefAndRef; }
     }
-    TypeBase resolvedModuleType;
-    bool resolvedModuleTypeHasValue;
 
     public MetadataReaderTypeKind ModuleTypeKind {
       get { return MetadataReaderTypeKind.Nominal; }
@@ -718,6 +714,48 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public MetadataReaderSignatureTypeCode SignatureTypeCode {
       get { return MetadataReaderSignatureTypeCode.NotModulePrimitive; }
     }
+
+    #endregion
+
+    #region IMetadataReaderNamedTypeReference Members
+
+    public IMetadataReaderModuleReference ModuleReference {
+      get { return this.Module; }
+    }
+
+    public abstract IMetadataReaderNamedTypeReference/*?*/ ParentTypeReference { get; }
+
+    public abstract IName/*?*/ NamespaceFullName { get; }
+
+    public abstract IName MangledTypeName { get; }
+
+    public IMetadataReaderTypeReference/*?*/ EnumUnderlyingType {
+      get { return null; }
+    }
+
+    public ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
+      return null; //only type references that have entries in the TypeRef table can be redirected via the ExportedType table.
+    }
+
+    #endregion
+
+    #region INamedTypeReference Members
+
+    public abstract ushort GenericParameterCount { get; }
+
+    public abstract bool MangleName { get; }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { return this.GetResolvedType(); }
+    }
+
+    internal abstract INamedTypeDefinition GetResolvedType();
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public abstract IName Name { get; }
 
     #endregion
   }
@@ -735,7 +773,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    protected override TypeBase/*?*/ Resolve() {
+    INamedTypeDefinition/*?*/ Resolve() {
       if (this.Module != this.PEFileToObjectModel.Module) {
         AssemblyReference assemRef = this.Module as AssemblyReference;
         if (assemRef == null) return null;
@@ -797,7 +835,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region INamespaceTypeReference Members
 
-    public ushort GenericParameterCount {
+    public override ushort GenericParameterCount {
       get { return (ushort)this.NamespaceTypeName.GenericParameterCount; }
     }
 
@@ -808,6 +846,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         else
           return new NestedNamespaceTypeNameNamespaceReference(this.NamespaceTypeName.NamespaceName, this);
       }
+    }
+
+    internal override INamedTypeDefinition GetResolvedType() {
+      return this.ResolvedType;
     }
 
     public INamespaceTypeDefinition ResolvedType {
@@ -831,23 +873,19 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region INamedEntity Members
 
-    public IName Name {
-      get { return this.NamespaceTypeName.UnmanagledTypeName; }
+    public override IName Name {
+      get { return this.NamespaceTypeName.UnmangledTypeName; }
     }
 
     #endregion
 
     #region IMetadataReaderNamedTypeReference Members
 
-    public IMetadataReaderModuleReference ModuleReference {
-      get { return this.Module; }
+    public override IName MangledTypeName {
+      get { return this.NamespaceTypeName.Name; }
     }
 
-    public IMetadataReaderNamedTypeReference/*?*/ ParentTypeReference {
-      get { return null; }
-    }
-
-    public IName/*?*/ NamespaceFullName {
+    public override IName/*?*/ NamespaceFullName {
       get {
         if (this.NamespaceTypeName.NamespaceName == null)
           return this.PEFileToObjectModel.NameTable.EmptyName;
@@ -856,14 +894,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public IName MangledTypeName {
-      get {
-        if (this.GenericParameterCount == 0) return this.Name;
-        return this.PEFileToObjectModel.NameTable.GetNameFor(this.Name.Value + "`" + this.GenericParameterCount);
-      }
-    }
-
-    public IMetadataReaderTypeReference/*?*/ EnumUnderlyingType {
+    public override IMetadataReaderNamedTypeReference/*?*/ ParentTypeReference {
       get { return null; }
     }
 
@@ -871,7 +902,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region INamedTypeReference Members
 
-    public bool MangleName {
+    public override bool MangleName {
       get { return this.NamespaceTypeName.MangleName; }
     }
 
@@ -896,14 +927,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    protected override TypeBase Resolve() {
+    INamedTypeDefinition Resolve() {
       return this.NestedTypeName.ResolveNominalTypeName(this.PEFileToObjectModel);
     }
 
     #region INestedTypeReference Members
 
-    public ushort GenericParameterCount {
+    public override ushort GenericParameterCount {
       get { return (ushort)this.NestedTypeName.GenericParameterCount; }
+    }
+
+    internal override INamedTypeDefinition GetResolvedType() {
+      return this.ResolvedType;
     }
 
     public INestedTypeDefinition ResolvedType {
@@ -918,7 +953,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
     INestedTypeDefinition resolvedType;
-
 
     #endregion
 
@@ -936,39 +970,31 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region INamedEntity Members
 
-    public IName Name {
-      get { return this.NestedTypeName.UnmanagledTypeName; }
+    public override IName Name {
+      get { return this.NestedTypeName.UnmangledTypeName; }
     }
 
     #endregion
 
     #region IMetadataReaderNamedTypeReference Members
 
-    public IMetadataReaderModuleReference ModuleReference {
-      get { return this.Module; }
-    }
-
-    public IMetadataReaderNamedTypeReference/*?*/ ParentTypeReference {
-      get { return this.NestedTypeName.ContainingTypeName.GetAsTypeReference(this.PEFileToObjectModel, this.Module) as IMetadataReaderNamedTypeReference; }
-    }
-
-    public IName/*?*/ NamespaceFullName {
-      get { return null; }
-    }
-
-    public IName MangledTypeName {
+    public override IName MangledTypeName {
       get { return this.NestedTypeName.Name; }
     }
 
-    public IMetadataReaderTypeReference/*?*/ EnumUnderlyingType {
+    public override IName/*?*/ NamespaceFullName {
       get { return null; }
+    }
+
+    public override IMetadataReaderNamedTypeReference/*?*/ ParentTypeReference {
+      get { return this.NestedTypeName.ContainingTypeName.GetAsTypeReference(this.PEFileToObjectModel, this.Module) as IMetadataReaderNamedTypeReference; }
     }
 
     #endregion
 
     #region INamedTypeReference Members
 
-    public bool MangleName {
+    public override bool MangleName {
       get { return this.NestedTypeName.MangleName; }
     }
 
@@ -983,14 +1009,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   /// <summary>
   /// Represents type reference to types in TypeRef table. This could either be Namespace type reference or nested type reference.
   /// </summary>
-  internal abstract class TypeRefReference : MetadataObject, IMetadataReaderNamedTypeReference, IMetadataReaderTypeReference, INamedEntity {
+  internal abstract class TypeRefReference : MetadataObject, IMetadataReaderNamedTypeReference {
     internal readonly uint TypeRefRowId;
     readonly IMetadataReaderModuleReference moduleReference;
     protected readonly IName typeName;
     bool isResolved;
     bool isAliasIsInitialized;
     protected internal bool isValueType;
-    IMetadataReaderTypeDefAndRef/*?*/ resolvedTypeDefinition;
+    INamedTypeDefinition resolvedTypeDefinition;
     ExportedTypeAliasBase/*?*/ exportedAliasBase;
 
     internal TypeRefReference(
@@ -1011,20 +1037,20 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.TypeRef | this.TypeRefRowId; }
     }
 
-    internal abstract ExportedTypeAliasBase/*?*/ TryResolveAsExportedType();
+    public abstract ExportedTypeAliasBase/*?*/ TryResolveAsExportedType();
 
     internal void InitResolvedModuleType() {
       this.isResolved = true;
-      IMetadataReaderTypeDefAndRef/*?*/ moduleType = this.PEFileToObjectModel.ResolveModuleTypeRefReference(this);
+      var moduleType = this.PEFileToObjectModel.ResolveModuleTypeRefReference(this);
       if (moduleType != null) {
         this.resolvedTypeDefinition = moduleType;
         return;
       }
       if (!this.IsAlias) return;
-      IMetadataReaderTypeReference/*?*/ modTypeRef = this.exportedAliasBase.ModuleAliasedType;
+      var modTypeRef = this.exportedAliasBase.ModuleAliasedType;
       if (modTypeRef == null)
         return;
-      this.resolvedTypeDefinition = modTypeRef.ResolvedModuleType;
+      this.resolvedTypeDefinition = modTypeRef.ResolvedType;
     }
 
     internal void InitExportedAliasBase() {
@@ -1060,7 +1086,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (!this.isResolved) {
           this.InitResolvedModuleType();
         }
-        return this.resolvedTypeDefinition;
+        return this.resolvedTypeDefinition as IMetadataReaderTypeDefAndRef;
       }
     }
 
@@ -1095,9 +1121,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public INamedTypeDefinition ResolvedType {
       get {
-        IMetadataReaderTypeDefAndRef/*?*/ resolvedTypeDefRef = this.ResolvedModuleType;
-        if (resolvedTypeDefRef == null) return Dummy.NamedTypeDefinition;
-        return (INamedTypeDefinition)resolvedTypeDefRef;
+        if (!this.isResolved) {
+          this.InitResolvedModuleType();
+        }
+        return this.resolvedTypeDefinition;
       }
     }
 
@@ -1141,7 +1168,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsEnum {
-      get { return false; }
+      get { return this.EnumUnderlyingType != null; }
     }
 
     public virtual bool IsValueType {
@@ -1207,7 +1234,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    internal override ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
+    public override ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
       return this.PEFileToObjectModel.ResolveNamespaceTypeRefReferenceAsExportedType(this);
     }
 
@@ -1371,14 +1398,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal abstract class NestedTypeRefReference : TypeRefReference, IMetadataReaderNestedTypeReference {
-    readonly TypeRefReference parentTypeReference;
+    readonly IMetadataReaderNamedTypeReference parentTypeReference;
 
     internal NestedTypeRefReference(
       PEFileToObjectModel peFileToObjectModel,
       IName typeName,
       uint typeRefRowId,
       IMetadataReaderModuleReference moduleReference,
-      TypeRefReference parentTypeReference,
+      IMetadataReaderNamedTypeReference parentTypeReference,
       bool isValueType
     )
       : base(peFileToObjectModel, typeName, typeRefRowId, moduleReference, isValueType) {
@@ -1389,7 +1416,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit(this);
     }
 
-    internal override ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
+    public override ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
       ExportedTypeAliasBase/*?*/ parentExportedType = this.parentTypeReference.TryResolveAsExportedType();
       if (parentExportedType == null)
         return null;
@@ -1482,7 +1509,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       IName typeName,
       uint typeRefRowId,
       IMetadataReaderModuleReference moduleReference,
-      TypeRefReference parentTypeReference,
+      IMetadataReaderNamedTypeReference parentTypeReference,
       IName mangledTypeName,
       ushort genericParamCount,
       bool isValueType
@@ -1899,7 +1926,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool IsEnum {
       get {
-        return this.BaseTypeReference == this.PEFileToObjectModel.SystemEnum && this.IsSealed;
+        return this.BaseTypeReference == this.PEFileToObjectModel.SystemEnum && this.IsSealed && !this.IsGeneric;
       }
     }
 
@@ -2036,12 +2063,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public abstract IName/*?*/ NamespaceFullName { get; }
 
     public virtual IName MangledTypeName {
-      get {
-        return this.TypeName;
-      }
+      get { return this.TypeName; }
     }
 
     public abstract IMetadataReaderTypeReference/*?*/ EnumUnderlyingType { get; }
+
+    public ExportedTypeAliasBase/*?*/ TryResolveAsExportedType() {
+      return null;
+    }
 
     #endregion
 
@@ -2301,6 +2330,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
                 continue;
               this.enumUnderlyingType = mf.FieldType;
               break;
+            }
+            if (this.enumUnderlyingType == null) {
+              //TODO: emit error. The module is invalid.
+              this.enumUnderlyingType = this.PEFileToObjectModel.SystemInt32;
             }
           }
         }
@@ -2569,6 +2602,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
                 continue;
               this.enumUnderlyingType = mf.FieldType;
               break;
+            }
+            if (this.enumUnderlyingType == null) {
+              //TODO: emit error. The module is invalid.
+              this.enumUnderlyingType = this.PEFileToObjectModel.SystemInt32;
             }
           }
         }
@@ -6341,7 +6378,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal readonly uint ExportedTypeRowId;
     internal readonly TypeDefFlags TypeDefFlags;
     bool isAliasInited;
-    IMetadataReaderTypeReference/*?*/ aliasTypeReference;
+    IMetadataReaderNamedTypeReference/*?*/ aliasTypeReference;
 
     internal ExportedTypeAliasBase(
       PEFileToObjectModel peFileToObjectModel,
@@ -6369,7 +6406,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.ExportedType | this.ExportedTypeRowId; }
     }
 
-    internal IMetadataReaderTypeReference/*?*/ ModuleAliasedType {
+    internal IMetadataReaderNamedTypeReference/*?*/ ModuleAliasedType {
       get {
         if (!this.isAliasInited) {
           this.isAliasInited = true;

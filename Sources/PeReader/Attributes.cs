@@ -445,11 +445,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return this.GetAsNomimalType(peFileToObjectModel, module);
     }
 
-    internal abstract TypeBase/*?*/ ResolveNominalTypeName(
+    internal IMetadataReaderNamedTypeReference GetAsNamedTypeReference(
+      PEFileToObjectModel peFileToObjectModel, IMetadataReaderModuleReference module
+    ) {
+      return this.GetAsNomimalType(peFileToObjectModel, module);
+    }
+
+    internal abstract INamedTypeDefinition/*?*/ ResolveNominalTypeName(
       PEFileToObjectModel peFileToObjectModel
     );
 
-    internal abstract IName UnmanagledTypeName { get; }
+    internal abstract IName UnmangledTypeName { get; }
   }
 
   internal sealed class NamespaceTypeName : NominalTypeName {
@@ -482,13 +488,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return new NamespaceTypeNameTypeReference(module, this, peFileToObjectModel);
     }
 
-    internal override IName UnmanagledTypeName {
+    internal override IName UnmangledTypeName {
       get {
         return this.unmanagledTypeName;
       }
     }
 
-    internal override TypeBase/*?*/ ResolveNominalTypeName(
+    internal override INamedTypeDefinition/*?*/ ResolveNominalTypeName(
       PEFileToObjectModel peFileToObjectModel
     ) {
       if (this.NamespaceName == null)
@@ -539,16 +545,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return new NestedTypeNameTypeReference(module, this, peFileToObjectModel);
     }
 
-    internal override IName UnmanagledTypeName {
+    internal override IName UnmangledTypeName {
       get {
         return this.unmanagledTypeName;
       }
     }
 
-    internal override TypeBase/*?*/ ResolveNominalTypeName(
+    internal override INamedTypeDefinition/*?*/ ResolveNominalTypeName(
       PEFileToObjectModel peFileToObjectModel
     ) {
-      TypeBase/*?*/ containingType = this.ContainingTypeName.ResolveNominalTypeName(peFileToObjectModel);
+      var containingType = this.ContainingTypeName.ResolveNominalTypeName(peFileToObjectModel);
       if (containingType == null)
         return null;
       return peFileToObjectModel.ResolveNestedTypeDefinition(
@@ -1302,9 +1308,7 @@ namespace Microsoft.Cci.MetadataReader {
             string/*?*/ typeName = this.GetSerializedString();
             if (typeName == null)
               return null;
-            TypeNameTypeReference/*?*/ result = (TypeNameTypeReference)this.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeName);
-            if (result != null) result.IsEnum = true;
-            return result;
+            return (TypeNameTypeReference)this.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeName);
           }
       }
       this.decodeFailed = true;
@@ -1351,7 +1355,7 @@ namespace Microsoft.Cci.MetadataReader {
             }
             return new TypeOfExpression(this.PEFileToObjectModel, this.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeNameStr));
           }
-          IMetadataReaderNamedTypeReference/*?*/ typeDef = type.ResolvedType as IMetadataReaderNamedTypeReference;
+          var typeDef = type.ResolvedType as IMetadataReaderNamedTypeReference;
           if (typeDef != null && typeDef.IsEnum)
             return new ConstantExpression(type, this.GetPrimitiveValue(typeDef.EnumUnderlyingType));
           VectorType/*?*/ vectorType = type as VectorType;

@@ -4456,13 +4456,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public virtual IFieldDefinition ResolvedField {
       get {
-        IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null)
-          return Dummy.Field;
-        IMetadataReaderTypeDefAndRef/*?*/ moduleType = moduleTypeRef.ResolvedModuleType;
-        if (moduleType == null)
-          return Dummy.Field;
-        return moduleType.ResolveFieldReference(this);
+        var parent = this.ParentTypeReference;
+        if (parent == null) return Dummy.Field;
+        var moduleType = parent.ResolvedModuleType;
+        if (moduleType != null) return moduleType.ResolveFieldReference(this);
+        return TypeHelper.GetField(parent.ResolvedType, this.Name);
       }
     }
 

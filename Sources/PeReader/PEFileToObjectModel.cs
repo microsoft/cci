@@ -1381,15 +1381,20 @@ namespace Microsoft.Cci.MetadataReader {
     /// <param name="parentType"></param>
     /// <param name="typeName"></param>
     /// <returns></returns>
-    internal TypeBase/*?*/ ResolveNestedTypeDefinition(
-      TypeBase parentType,
+    internal INamedTypeDefinition/*?*/ ResolveNestedTypeDefinition(
+      INamedTypeDefinition parentType,
       IName typeName
     ) {
-      uint typeToken = this.NestedTypeTokenTable.Find(TokenTypeIds.TypeDef | parentType.TypeDefRowId, (uint)typeName.UniqueKey);
-      if (typeToken == 0 || ((typeToken & TokenTypeIds.TokenTypeMask) != TokenTypeIds.TypeDef)) {
-        return null;
+      var mdParentType = parentType as TypeBase;
+      if (mdParentType != null) {
+        uint typeToken = this.NestedTypeTokenTable.Find(TokenTypeIds.TypeDef | mdParentType.TypeDefRowId, (uint)typeName.UniqueKey);
+        if (typeToken == 0 || ((typeToken & TokenTypeIds.TokenTypeMask) != TokenTypeIds.TypeDef)) return null;
+        return this.GetTypeDefinitionAtRowWorker(typeToken & TokenTypeIds.RIDMask);
       }
-      return this.GetTypeDefinitionAtRowWorker(typeToken & TokenTypeIds.RIDMask);
+      ushort genericParamCount;
+      string unmangledTypeName;
+      TypeCache.SplitMangledTypeName(typeName.Value, out unmangledTypeName, out genericParamCount);
+      return TypeHelper.GetNestedType(parentType, this.NameTable.GetNameFor(unmangledTypeName), genericParamCount);
     }
 
     /// <summary>
@@ -1848,7 +1853,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// </summary>
     /// <param name="moduleTypeRefReference"></param>
     /// <returns></returns>
-    internal TypeBase/*?*/ ResolveModuleTypeRefReference(
+    internal INamedTypeDefinition/*?*/ ResolveModuleTypeRefReference(
       TypeRefReference moduleTypeRefReference
     ) {
       uint typeRefRowId = moduleTypeRefReference.TypeRefRowId;
@@ -1861,7 +1866,7 @@ namespace Microsoft.Cci.MetadataReader {
       uint resolutionScope = typeRefRow.ResolutionScope;
       uint tokenType = resolutionScope & TokenTypeIds.TokenTypeMask;
       uint rowId = resolutionScope & TokenTypeIds.RIDMask;
-      TypeBase/*?*/ retModuleType = null;
+      INamedTypeDefinition/*?*/ retModuleType = null;
       switch (tokenType) {
         case TokenTypeIds.Module:
           retModuleType = this.ResolveNamespaceTypeDefinition(namespaceName, typeName);
@@ -1900,9 +1905,13 @@ namespace Microsoft.Cci.MetadataReader {
             if (parentTypeReference == null) {
               return null;
             }
-            TypeBase/*?*/ parentModuleType = this.ResolveModuleTypeRefReference(parentTypeReference);
-            if (parentModuleType != null) {
-              retModuleType = parentModuleType.PEFileToObjectModel.ResolveNestedTypeDefinition(parentModuleType, typeName);
+            var parentType = this.ResolveModuleTypeRefReference(parentTypeReference);
+            if (parentType != null) {
+              var parentModuleType = parentType as TypeBase;
+              if (parentModuleType != null)
+                retModuleType = parentModuleType.PEFileToObjectModel.ResolveNestedTypeDefinition(parentModuleType, typeName);
+              else
+                retModuleType = this.ResolveNestedTypeDefinition(parentType, typeName);
             }
             break;
           }
@@ -1953,7 +1962,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// </summary>
     /// <param name="aliasAliasBase"></param>
     /// <returns></returns>
-    internal IMetadataReaderTypeReference/*?*/ FindExportedType(
+    internal IMetadataReaderNamedTypeReference/*?*/ FindExportedType(
       ExportedTypeAliasBase aliasAliasBase
     ) {
       Assembly/*?*/ thisAssembly = this.Module as Assembly;
@@ -1995,7 +2004,7 @@ namespace Microsoft.Cci.MetadataReader {
             ITypeDefinition parentType = parentModuleType.ResolvedType;
             if (parentType != Dummy.Type) {
               foreach (ITypeDefinitionMember tdm in parentModuleType.ResolvedType.GetMembersNamed(typeName, false)) {
-                IMetadataReaderTypeReference/*?*/ modTypeRef = tdm as IMetadataReaderTypeReference;
+                var modTypeRef = tdm as IMetadataReaderNamedTypeReference;
                 if (modTypeRef != null)
                   return modTypeRef;
               }
@@ -2003,12 +2012,12 @@ namespace Microsoft.Cci.MetadataReader {
               NamespaceTypeNameTypeReference/*?*/ nstr = parentModuleType as NamespaceTypeNameTypeReference;
               if (nstr != null) {
                 var nestedTypeName = new NestedTypeName(this.NameTable, nstr.NamespaceTypeName, typeName);
-                return nestedTypeName.GetAsTypeReference(this, nstr.Module);
+                return nestedTypeName.GetAsNamedTypeReference(this, nstr.Module);
               }
               NestedTypeNameTypeReference/*?*/ netr = parentModuleType as NestedTypeNameTypeReference;
               if (netr != null) {
                 var nestedTypeName = new NestedTypeName(this.NameTable, netr.NestedTypeName, typeName);
-                return nestedTypeName.GetAsTypeReference(this, netr.Module);
+                return nestedTypeName.GetAsNamedTypeReference(this, netr.Module);
               }
             }
             return null;
@@ -2033,7 +2042,7 @@ namespace Microsoft.Cci.MetadataReader {
               if (namespaceName.Value.Length > 0)
                 fullTypeName = namespaceName.Value+"."+typeName.Value;
               var parser = new TypeNameParser(this.NameTable, fullTypeName);
-              return parser.ParseTypeName().GetAsTypeReference(this, assemRef);
+              return parser.ParseTypeName().GetAsTypeReference(this, assemRef) as IMetadataReaderNamedTypeReference;
             }
           }
           break;
