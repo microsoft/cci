@@ -68,40 +68,30 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   /// Resolving returns null rather than Dummy in case of failure.
   /// </summary>
   internal interface IModuleTypeReference : ITypeReference {
-    IModuleTypeReference/*?*/ SpecializeTypeInstance(
-      IModuleGenericTypeInstance genericTypeInstance
-    );
-    IModuleTypeReference/*?*/ SpecializeMethodInstance(
-      IModuleGenericMethodInstance genericMethodInstance
-    );
+    IModuleTypeReference/*?*/ SpecializeTypeInstance(IModuleGenericTypeInstance genericTypeInstance);
+    IModuleTypeReference/*?*/ SpecializeMethodInstance(IModuleGenericMethodInstance genericMethodInstance);
     IModuleTypeDefAndRef/*?*/ ResolvedModuleType { get; }
     ModuleTypeKind ModuleTypeKind { get; }
     ModuleSignatureTypeCode SignatureTypeCode { get; }
   }
 
   internal interface IModuleSpecializedNestedTypeReference : ISpecializedNestedTypeReference {
-    IModuleNestedType/*!*/ UnspecializedModuleType {
-      get;
-    }
+    IModuleNestedType/*!*/ UnspecializedModuleType { get; }
   }
 
   /// <summary>
   /// Type that is a definition too. This supports resolving internal method and field references.
   /// </summary>
   internal interface IModuleTypeDefAndRef : ITypeDefinition, IModuleTypeReference {
-    IMethodDefinition ResolveMethodReference(
-      IModuleMethodReference methodReference
-    );
-    IFieldDefinition ResolveFieldReference(
-      IModuleFieldReference fieldReference
-    );
+    IMethodDefinition ResolveMethodReference(IModuleMethodReference methodReference);
+    IFieldDefinition ResolveFieldReference(IModuleFieldReference fieldReference);
   }
 
   /// <summary>
   /// This represents either a namespace or nested type. This supports fast comparision of nominal types using interned module is, namespace name, type name
   /// and parent type reference in case of nested type.
   /// </summary>
-  internal interface IModuleNominalType : IModuleTypeReference {
+  internal interface IModuleNominalType : IModuleTypeReference, INamedTypeReference {
     IModuleModuleReference ModuleReference { get; }
     IModuleNominalType/*?*/ ParentTypeReference { get; }
     IName/*?*/ NamespaceFullName { get; }
@@ -1104,11 +1094,19 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
+    public INamedTypeDefinition ResolvedType {
+      get {
+        IModuleTypeDefAndRef/*?*/ resolvedTypeDefRef = this.ResolvedModuleType;
+        if (resolvedTypeDefRef == null) return Dummy.NamedTypeDefinition;
+        return (INamedTypeDefinition)resolvedTypeDefRef;
+      }
+    }
+
     #endregion
 
     #region ITypeReference Members
 
-    public ITypeDefinition ResolvedType {
+    ITypeDefinition ITypeReference.ResolvedType {
       get {
         IModuleTypeDefAndRef/*?*/ resolvedTypeDefRef = this.ResolvedModuleType;
         if (resolvedTypeDefRef == null) return Dummy.Type;
@@ -1184,6 +1182,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get;
     }
 
+    public abstract ushort GenericParameterCount {
+      get;
+    }
+
     #endregion
   }
 
@@ -1223,10 +1225,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #region INamespaceTypeReference Members
-
-    public abstract ushort GenericParameterCount {
-      get;
-    }
 
     public IUnitNamespaceReference ContainingUnitNamespace {
       get {
@@ -1416,10 +1414,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #region INestedTypeReference Members
-
-    public abstract ushort GenericParameterCount {
-      get;
-    }
 
     public new INestedTypeDefinition ResolvedType {
       get {
