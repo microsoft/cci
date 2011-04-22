@@ -352,10 +352,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
   internal sealed class StandAloneMethodSignatureConverter : SignatureConverter {
     internal readonly byte FirstByte;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
-    internal readonly IModuleTypeReference/*?*/ ReturnTypeReference;
+    internal readonly IMetadataReaderTypeReference/*?*/ ReturnTypeReference;
     internal readonly bool IsReturnByReference;
-    internal readonly EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
-    internal readonly EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
+    internal readonly EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
+    internal readonly EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
     //^ [NotDelayed]
     internal StandAloneMethodSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
@@ -388,12 +388,12 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
         this.ReturnTypeReference = this.GetTypeReference();
       }
       if (paramCount > 0) {
-        IModuleParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
+        IMetadataReaderParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
         if (reqModuleParamArr.Length > 0)
-          this.RequiredParameters = new EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
-        IModuleParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - reqModuleParamArr.Length);
+          this.RequiredParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
+        IMetadataReaderParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - reqModuleParamArr.Length);
         if (varArgModuleParamArr.Length > 0)
-          this.VarArgParameters = new EnumerableArrayWrapper<IModuleParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
+          this.VarArgParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
       }
     }
   }
@@ -488,7 +488,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           rawParamNum--;
         }
       }
-      IModuleParameter[] mpa = this.MethodDefinition.RequiredModuleParameters.RawArray;
+      IMetadataReaderParameter[] mpa = this.MethodDefinition.RequiredModuleParameters.RawArray;
       if (rawParamNum < mpa.Length)
         return mpa[rawParamNum];
       //  Error...
@@ -522,7 +522,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     ITypeReference GetType(
       uint typeToken
     ) {
-      IModuleTypeReference/*?*/ mtr = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, typeToken);
+      IMetadataReaderTypeReference/*?*/ mtr = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, typeToken);
       if (mtr != null)
         return mtr;
       //  Error...
@@ -831,7 +831,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             break;
           case OperationCode.Newarr: {
               ITypeReference elementType = this.GetType(memReader.ReadUInt32());
-              IModuleTypeReference/*?*/ moduleTypeReference = elementType as IModuleTypeReference;
+              IMetadataReaderTypeReference/*?*/ moduleTypeReference = elementType as IMetadataReaderTypeReference;
               if (moduleTypeReference != null)
                 value = new VectorType(this.PEFileToObjectModel, 0xFFFFFFFF, moduleTypeReference);
               else
@@ -1003,7 +1003,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           uint handlerEnd = sehTableEntry.HandlerOffset + sehTableEntry.HandlerLength;
 
           if (sehTableEntry.SEHFlags == SEHFlags.Catch) {
-            IModuleTypeReference/*?*/ typeRef = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, sehTableEntry.ClassTokenOrFilterOffset);
+            IMetadataReaderTypeReference/*?*/ typeRef = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, sehTableEntry.ClassTokenOrFilterOffset);
             if (typeRef == null) {
               //  Error
               return false;

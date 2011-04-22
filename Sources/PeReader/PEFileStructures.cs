@@ -481,7 +481,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
 
     ImportImplementation = 0x00001000,
     SerializableImplementation = 0x00002000,
-    IsForeign = 0x00004000, 
+    IsForeign = 0x00004000,
     BeforeFieldInitImplementation = 0x00100000,
     ForwarderImplementation = 0x00200000,
 

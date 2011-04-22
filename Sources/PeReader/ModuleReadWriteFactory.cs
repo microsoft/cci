@@ -478,7 +478,7 @@ namespace Microsoft.Cci {
       if (internalAssembly == null) {
         return Dummy.Type;
       }
-      IModuleTypeReference/*?*/ moduleTypeRef = internalAssembly.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeName);
+      IMetadataReaderTypeReference/*?*/ moduleTypeRef = internalAssembly.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeName);
       if (moduleTypeRef == null) {
         return Dummy.Type;
       }
