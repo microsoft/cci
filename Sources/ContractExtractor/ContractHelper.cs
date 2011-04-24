@@ -815,21 +815,9 @@ namespace Microsoft.Cci.MutableContracts {
         fromMethod = UninstantiateAndUnspecialize(fromMethod).ResolvedMethod;
       }
 
-      //IMethodContract fromMethodContract = CopyContract(host, methodContract, toMethod, fromMethod);
-      //List<INamedTypeDefinition> list;
-      //var copier = new CodeAndContractCopier(host, null/*pdbReader*/, fromMethod, out list);
-      //var mutator = new CodeMutatingVisitor(host, null/*pdbReader*/);
-      //var mc = new MethodContract(methodContract);
-      //IMethodContract fromMethodContract = copier.Substitute(mc);
-
-      //var copier = new CodeAndContractCopier(host, null);
-      //var mc = new MethodContract(methodContract);
-      //IMethodContract fromMethodContract = copier.Substitute(mc);
-
-      var mc = new MethodContract(methodContract);
-      IMethodContract fromMethodContract = mc;
-      BetaReducer br = new BetaReducer(host, null, fromMethod, toMethod, expressions);
-      fromMethodContract = br.Substitute(fromMethodContract);
+      MethodContract fromMethodContract = (MethodContract) new CodeAndContractDeepCopier(host).Copy(methodContract);
+      BetaReducer brewriter = new BetaReducer(host, fromMethod, toMethod, expressions);
+      fromMethodContract = (MethodContract) brewriter.Rewrite(fromMethodContract);
 
       IGenericMethodInstance gmi = fromMethod as IGenericMethodInstance;
       if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
@@ -838,7 +826,7 @@ namespace Microsoft.Cci.MutableContracts {
         var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
         var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
         var justToSee = fromMethod.InternedKey;
-        fromMethodContract = SpecializeMethodContract(
+        fromMethodContract = (MethodContract) SpecializeMethodContract(
           host,
           fromMethodContract,
           fromMethod.ContainingTypeDefinition,
@@ -982,7 +970,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       public override void TraverseChildren(ISourceMethodBody sourceMethodBody) {
         var codeAndContractPair = ContractExtractor.SplitMethodBodyIntoContractAndCode(this.contractAwareHost, sourceMethodBody,
-        this.pdbReader, this.localScopeProvider);
+        this.pdbReader);
         this.contractProvider.AssociateMethodWithContract(sourceMethodBody.MethodDefinition, codeAndContractPair.MethodContract);
       }
 
@@ -1041,9 +1029,95 @@ namespace Microsoft.Cci.MutableContracts {
     /// each local points to is <paramref name="toMethod"/> instead of <paramref name="fromMethod"/>
     /// </summary>
     public static IMethodContract CopyContract(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
-      var copier = new ContractCopier(host, null, toMethod, fromMethod);
-      return copier.Substitute(methodContract);
+
+      var result = new CodeAndContractDeepCopier(host).Copy(methodContract);
+      var rewriter = new ContractRewriter(host, toMethod, fromMethod);
+      return rewriter.Rewrite(result);
+
+      //var copier = new ContractCopier(host, null, toMethod, fromMethod);
+      //return copier.Substitute(methodContract);
     }
+
+    /// <summary>
+    /// A rewriter that substitutes parameters from one method with the parameters
+    /// from another method as it is copying. It also re-parents any locals so that they point
+    /// to the method the contract is being copied "into".
+    /// </summary>
+    private class ContractRewriter : CodeAndContractRewriter {
+      private IMethodDefinition targetMethod;
+      private IMethodDefinition sourceMethod;
+      private ITypeReference targetType;
+      private ITypeReference sourceType;
+      private IThisReference ThisReference;
+      private List<IParameterDefinition> sourceParameters;
+      private List<IParameterDefinition> targetParameters;
+
+      public ContractRewriter(IMetadataHost host, IMethodDefinition toMethod, IMethodDefinition fromMethod)
+        : base(host) {
+        this.targetMethod = toMethod;
+        this.targetType = toMethod.ContainingType;
+        this.sourceMethod = fromMethod;
+        this.sourceType = fromMethod.ContainingType;
+        this.ThisReference = new ThisReference() {
+          Type = this.targetType,
+        };
+        this.sourceParameters = new List<IParameterDefinition>(fromMethod.Parameters);
+        this.targetParameters = new List<IParameterDefinition>(toMethod.Parameters);
+      }
+
+      public override void RewriteChildren(LocalDefinition localDefinition) {
+        if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
+          localDefinition.MethodDefinition = this.sourceMethod;
+        base.RewriteChildren(localDefinition);
+      }
+      public override object RewriteReference(ILocalDefinition localDefinition) {
+        if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey) {
+          var ld = localDefinition as LocalDefinition;
+          if (ld != null) {
+            this.RewriteChildren(ld);
+            return ld;
+          }
+        }
+        return base.RewriteReference(localDefinition);
+      }
+
+      public override IParameterDefinition Rewrite(IParameterDefinition parameterDefinition) {
+        if (parameterDefinition.ContainingSignature == this.sourceMethod)
+          return this.targetParameters[parameterDefinition.Index];
+        return base.Rewrite(parameterDefinition);
+      }
+      public override object RewriteReference(IParameterDefinition parameterDefinition) {
+        if (parameterDefinition.ContainingSignature == this.sourceMethod)
+          return this.targetParameters[parameterDefinition.Index];
+        return base.Rewrite(parameterDefinition);
+      }
+
+
+      public override IExpression Rewrite(IThisReference thisReference) {
+        var t = thisReference.Type;
+        var gt = t as IGenericTypeInstanceReference;
+        if (gt != null) t = gt.GenericType;
+        var k = t.InternedKey;
+        if (k == this.sourceType.InternedKey) {
+          ITypeReference st = this.targetType;
+          return new ThisReference() {
+            Type = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)st.ResolvedType, this.host.InternFactory),
+          };
+        }
+        return base.Rewrite(thisReference);
+      }
+
+      public override void RewriteChildren(MethodCall methodCall) {
+        base.RewriteChildren(methodCall);
+        if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+          methodCall.ThisArgument =
+              new ThisReference() {
+                Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
+              };
+          }
+      }
+    }
+
     /// <summary>
     /// A subtype of the Copier that substitutes parameters from one method with the parameters
     /// from another method as it is copying. It also re-parents any locals so that they point
@@ -1214,77 +1288,7 @@ namespace Microsoft.Cci.MutableContracts {
   /// <summary>
   /// A mutator that substitutes expressions for parameters in the expression/code/contract.
   /// </summary>
-  public sealed class BetaReducer2 : MethodBodyCodeAndContractMutator {
-
-    uint methodDefinitionInternedKey;
-    IExpression[] expressions;
-
-    /// <summary>
-    /// Creates a mutator that replaces all occurrences of parameters with expressions.
-    /// </summary>
-    public BetaReducer2(IMetadataHost host, IMethodDefinition methodDefinition, List<IExpression> expressions)
-      : base(host, true) {
-      //^ Contract.Requires(expressions.Count == IteratorHelper.EnumerableCount(methodDefinition.Parameters));
-      this.methodDefinitionInternedKey = methodDefinition.InternedKey;
-      this.expressions = new IExpression[methodDefinition.ParameterCount];
-      var i = 0;
-      foreach (var p in methodDefinition.Parameters) {
-        this.expressions[i] = expressions[i];
-        i++;
-      }
-    }
-
-    /// <summary>
-    /// If the <paramref name="addressableExpression"/> represents a parameter of the target method,
-    /// it is replaced with the equivalent parameter of the source method.
-    /// </summary>
-    /// <param name="addressableExpression">The addressable expression.</param>
-    public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
-      ParameterDefinition/*?*/ par = addressableExpression.Definition as ParameterDefinition;
-      if (par == null) return base.Visit(addressableExpression);
-      var md = par.ContainingSignature as IMethodDefinition;
-      if (md == null) return base.Visit(addressableExpression);
-      if (md.InternedKey != this.methodDefinitionInternedKey) return base.Visit(addressableExpression);
-      addressableExpression.Definition = this.expressions[par.Index];
-      if (addressableExpression.Instance != null) {
-        addressableExpression.Instance = this.Visit(addressableExpression.Instance);
-      }
-      addressableExpression.Type = this.Visit(addressableExpression.Type);
-      return addressableExpression;
-    }
-
-    /// <summary>
-    /// If the <paramref name="boundExpression"/> represents a parameter of the target method,
-    /// it is replaced with the equivalent parameter of the source method.
-    /// </summary>
-    /// <param name="boundExpression">The bound expression.</param>
-    public override IExpression Visit(BoundExpression boundExpression) {
-      ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
-      if (par != null) {
-        var md = par.ContainingSignature as IMethodDefinition;
-        if (md != null && md.InternedKey == this.methodDefinitionInternedKey) {
-          return this.expressions[par.Index];
-        } else {
-          return base.Visit(boundExpression);
-        }
-      } else {
-        return base.Visit(boundExpression);
-      }
-    }
-
-    //public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
-    //  //The referrer must refer to the same copy of the parameter definition that was (or will be) produced by a visit to the actual definition.
-    //  return this.Visit(parameterDefinition);
-    //}
-
-  }
-
-  /// <summary>
-  /// A subtype of the Copier that substitutes parameters from one method with the parameters
-  /// from another method as it is copying. It also re-parents any locals so that they point
-  /// to the method the contract is being copied "into".
-  /// </summary>
-  public class BetaReducer : CodeAndContractCopier {
+  public class BetaReducer : CodeAndContractRewriter {
     private IMethodDefinition targetMethod;
     private IMethodDefinition sourceMethod;
     private ITypeReference targetType;
@@ -1292,8 +1296,8 @@ namespace Microsoft.Cci.MutableContracts {
     private IThisReference ThisReference;
     private Dictionary<object, IExpression> values = new Dictionary<object, IExpression>();
 
-    public BetaReducer(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IMethodDefinition fromMethod, IMethodDefinition toMethod, List<IExpression> expressions)
-      : base(host, sourceLocationProvider) {
+    public BetaReducer(IMetadataHost host, IMethodDefinition fromMethod, IMethodDefinition toMethod, List<IExpression> expressions)
+        : base(host) {
       var fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
       for (ushort i = 0; i < fromMethod.ParameterCount; i++) {
         this.values.Add(fromParameters[i], expressions[i]);
@@ -1307,13 +1311,13 @@ namespace Microsoft.Cci.MutableContracts {
       };
     }
 
-    protected override LocalDefinition DeepCopy(LocalDefinition localDefinition) {
-      var loc = base.DeepCopy(localDefinition);
-      if (localDefinition.MethodDefinition.InternedKey == this.sourceMethod.InternedKey)
-        loc.MethodDefinition = this.sourceMethod;
-      return loc;
+    public override void RewriteChildren(LocalDefinition localDefinition) {
+      if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
+        localDefinition.MethodDefinition = this.sourceMethod;
+      base.RewriteChildren(localDefinition);
     }
-    protected override IExpression DeepCopy(ThisReference thisReference) {
+
+    public override IExpression Rewrite(IThisReference thisReference) {
       var t = thisReference.Type;
       var gt = t as IGenericTypeInstanceReference;
       if (gt != null) t = gt.GenericType;
@@ -1324,34 +1328,27 @@ namespace Microsoft.Cci.MutableContracts {
           Type = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)st.ResolvedType, this.host.InternFactory),
         };
       }
-      return base.DeepCopy(thisReference);
-    }
-    protected override IExpression DeepCopy(MethodCall methodCall) {
-      var x = base.DeepCopy(methodCall);
-      if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
-        var mc = x as MethodCall;
-        if (mc != null) {
-          mc.ThisArgument =
-            new ThisReference() {
-              Type = MutableModelHelper.GetManagedPointerTypeReference(mc.ThisArgument.Type, this.host.InternFactory, mc.ThisArgument.Type)
-            };
-          x = mc;
-        }
-      }
-      return x;
+      return base.Rewrite(thisReference);
     }
 
-    protected override IExpression DeepCopy(BoundExpression boundExpression) {
+    public override void RewriteChildren(MethodCall methodCall) {
+      base.RewriteChildren(methodCall);
+      if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+        methodCall.ThisArgument =
+            new ThisReference() {
+              Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
+            };
+      }
+    }
+
+    public override IExpression Rewrite(IBoundExpression boundExpression) {
       IExpression v;
       if (this.values.TryGetValue(boundExpression.Definition, out v)) {
         return v;
       }
-      return base.DeepCopy(boundExpression);
+      return base.Rewrite(boundExpression);
     }
-
-
   }
-
 
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;

@@ -37,12 +37,12 @@ namespace Microsoft.Cci.MutableContracts {
     /// list of statements within a block statement, i.e., that they form a linear
     /// linked list.
     /// </summary>
-    public static MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IContractAwareHost host, ISourceMethodBody sourceMethodBody, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
-      var e = new ContractExtractor(sourceMethodBody, host, pdbReader, localScopeProvider);
+    public static MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IContractAwareHost host, ISourceMethodBody sourceMethodBody, PdbReader/*?*/ pdbReader) {
+      var e = new ContractExtractor(sourceMethodBody, host, pdbReader);
       #region Special case for iterators (until decompiler always handles them)
       var moveNext = IteratorContracts.FindClosureMoveNext(host, sourceMethodBody);
       if (moveNext != null) {
-        var mc = IteratorContracts.GetMethodContractFromMoveNext(host, e, sourceMethodBody, moveNext, pdbReader, localScopeProvider);
+        var mc = IteratorContracts.GetMethodContractFromMoveNext(host, e, sourceMethodBody, moveNext, pdbReader);
         return new MethodContractAndMethodBody(mc, sourceMethodBody.Block);
       }
       #endregion
@@ -69,7 +69,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (sourceMethodBody == null) {
           sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, localScopeProvider);
         }
-        var e = new Microsoft.Cci.MutableContracts.ContractExtractor(sourceMethodBody, host, pdbReader, localScopeProvider);
+        var e = new Microsoft.Cci.MutableContracts.ContractExtractor(sourceMethodBody, host, pdbReader);
         BlockStatement b = sourceMethodBody.Block as BlockStatement;
         if (b != null) {
           var tc = e.ExtractObjectInvariants(b);
@@ -151,8 +151,7 @@ namespace Microsoft.Cci.MutableContracts {
     private ContractExtractor(
       ISourceMethodBody sourceMethodBody,
       IContractAwareHost host,
-      PdbReader/*?*/ pdbReader,
-      ILocalScopeProvider/*?*/ localScopeProvider)
+      PdbReader/*?*/ pdbReader)
       : base(host, true, pdbReader) {
       this.sourceMethodBody = sourceMethodBody;
       this.contractAwarehost = host;
@@ -433,13 +432,13 @@ namespace Microsoft.Cci.MutableContracts {
 
       var lastBlock = linearBlockIndex[linearBlockIndex.Count - 1];
       var currentClump2 = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, linearBlockIndex.Count - 1, lastBlock.Statements.Count - 1);
+      currentClump2 = LocalBinder.CloseClump(this.host, currentClump2);
       return currentClump2;
     }
 
     internal static MethodContractAndMethodBody MoveNextExtractor(
       IContractAwareHost host,
       PdbReader pdbReader,
-      ILocalScopeProvider localScopeProvider,
       ISourceMethodBody moveNextBody,
       BlockStatement blockStatement,
       int startBlock,
@@ -447,7 +446,7 @@ namespace Microsoft.Cci.MutableContracts {
       int lastBlockIndex,
       int lastStatementIndex
       ) {
-      var e = new ContractExtractor(moveNextBody, host, pdbReader, localScopeProvider);
+      var e = new ContractExtractor(moveNextBody, host, pdbReader);
       var linearBlockIndex = e.LinearizeBlocks(blockStatement);
       var result = e.ExtractContractsAndReturnRemainingStatements(linearBlockIndex, startBlock, startStatement, lastBlockIndex, lastStatementIndex);
       return new MethodContractAndMethodBody(e.currentMethodContract, new BlockStatement() { Statements = result, });
@@ -1197,6 +1196,9 @@ namespace Microsoft.Cci.MutableContracts {
         // then we don't need to replace this local, so put a dummy value in the table
         // so we don't muck with it.
         this.tableForLocalDefinition.Add(localDeclarationStatement.LocalVariable, null);
+        if (localDeclarationStatement.InitialValue != null) {
+          localDeclarationStatement.InitialValue = this.Visit(localDeclarationStatement.InitialValue);
+        }
         return localDeclarationStatement;
       }
 

@@ -23,7 +23,7 @@ namespace Microsoft.Cci.MutableContracts {
   /// then this class finds the MoveNext method and gets any contracts that the original iterator method
   /// had, but which the compiler put into the first state of the MoveNext state machine.
   /// </summary>
-  internal class IteratorContracts {
+  public class IteratorContracts {
 
     private static ICreateObjectInstance/*?*/ GetICreateObjectInstance(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
@@ -89,8 +89,7 @@ namespace Microsoft.Cci.MutableContracts {
       ContractExtractor extractor,
       ISourceMethodBody iteratorMethodBody,
       ISourceMethodBody moveNextBody,
-      PdbReader pdbReader,
-      ILocalScopeProvider localScopeProvider
+      PdbReader pdbReader
       ) {
       // Walk the iterator method and collect all of the state that is assigned to fields in the iterator class
       // That state needs to replace any occurrences of the fields in the contracts (if they exist...)
@@ -197,60 +196,6 @@ namespace Microsoft.Cci.MutableContracts {
       //return mc;
     }
 
-    private class FindLocals : BaseCodeTraverser {
-      List<ILocalDefinition> locals = new List<ILocalDefinition>();
-      List<ILocalDefinition> declaredLocals = new List<ILocalDefinition>();
-      public static List<ILocalDefinition> FindSetOfLocals(IStatement s) {
-        var fl = new FindLocals();
-        fl.Visit(s);
-        return fl.locals;
-      }
-      private FindLocals() {
-      }
-      public override void Visit(ILocalDeclarationStatement localDeclarationStatement) {
-        if (localDeclarationStatement.InitialValue != null) {
-          this.declaredLocals.Add(localDeclarationStatement.LocalVariable);
-        }
-        base.Visit(localDeclarationStatement);
-      }
-      public override void Visit(ILocalDefinition localDefinition) {
-        if (!this.declaredLocals.Contains(localDefinition) &&  !this.locals.Contains(localDefinition))
-          this.locals.Add(localDefinition);
-      }
-    }
-    private class FindBlock : BaseCodeTraverser {
-      ContractExtractor extractor;
-      IBlockStatement/*?*/ foundBlock = null;
-      public static IBlockStatement/*?*/ FindBlockLeadingToContract(ContractExtractor extractor, IBlockStatement blockStatement) {
-        var fb = new FindBlock(extractor);
-        fb.Visit(blockStatement);
-        return fb.foundBlock;
-      }
-      private FindBlock(ContractExtractor extractor) {
-      this.extractor = extractor;
-      }
-      public override void Visit(IBlockStatement block) {
-        var b = CheckLinearChain(block);
-        if (b != null) {
-          this.stopTraversal = true;
-          this.foundBlock = b;
-        } else {
-          base.Visit(block);
-        }
-      }
-      public IBlockStatement/*?*/ CheckLinearChain(IBlockStatement block) {
-        var stmts = new List<IStatement>(block.Statements);
-        foreach (var s in stmts) {
-          if (extractor.IsPrePostEndOrLegacy(s, true)) {
-            return block;
-          }
-        }
-        var nextBlockInChain = stmts[stmts.Count - 1] as IBlockStatement;
-        if (nextBlockInChain == null) return null;
-        var b = CheckLinearChain(nextBlockInChain);
-        return b == null ? null : block;
-      }
-    }
     private sealed class Replacer : MethodBodyCodeAndContractMutator {
 
       Dictionary<uint, IExpression> capturedThings = new Dictionary<uint, IExpression>();
@@ -287,19 +232,16 @@ namespace Microsoft.Cci.MutableContracts {
           if (spec != null) k = spec.UnspecializedVersion.InternedKey;
           if (this.capturedThings.TryGetValue(k, out capturedThing)) {
             var be = capturedThing as IBoundExpression;
-            if (be != null)
-              addressableExpression.Definition = be.Definition;
-            else
-              addressableExpression.Definition = capturedThing;
-            if (addressableExpression.Instance != null) {
-              addressableExpression.Instance = this.Visit(addressableExpression.Instance);
+            if (be == null) {
+              System.Diagnostics.Debug.Assert(false);
             }
+            addressableExpression.Definition = be.Definition;
+            addressableExpression.Instance = be.Instance;
             return addressableExpression;
           }
         }
         return base.Visit(addressableExpression);
       }
-
 
     }
 
@@ -466,6 +408,8 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       public static MethodContract/*?*/ ExtractContracts(IContractAwareHost contractAwareHost, PdbReader/*?*/ pdbReader, ContractExtractor extractor, ISourceMethodBody methodBody) {
+        // Need to tweak this to handle finding contracts in MoveNext methods within (compiler-generated) iterator classes.
+        //if (!FindAnyContract.Find(methodBody.Block)) return null;
         var definingUnit = TypeHelper.GetDefiningUnit(methodBody.MethodDefinition.ContainingType.ResolvedType);
         var methodIsInReferenceAssembly = ContractHelper.IsContractReferenceAssembly(contractAwareHost, definingUnit);
         var contractAssemblyReference = new AssemblyReference(contractAwareHost, definingUnit.ContractAssemblySymbolicIdentity);
@@ -841,7 +785,31 @@ namespace Microsoft.Cci.MutableContracts {
         return s;
       }
 
-
+      /// <summary>
+      /// TODO: Don't use string comparisons
+      /// </summary>
+      private class FindAnyContract : BaseCodeTraverser {
+        bool found = false;
+        public static bool Find(IBlockStatement block) {
+          var fac = new FindAnyContract();
+          fac.Visit(block);
+          return fac.found;
+        }
+        private FindAnyContract() {
+        }
+        public override void Visit(IMethodCall methodCall) {
+          var ct = TypeHelper.GetTypeName(methodCall.MethodToCall.ContainingType);
+          if (ct.Equals("System.Diagnostics.Contracts")){
+            var mName = methodCall.MethodToCall.Name.Value;
+            if (mName.Equals("Requires") || mName.Equals("Ensures") || mName.Equals("EndContractBlock")) {
+              this.found = true;
+              this.stopTraversal = true;
+              return;
+            }
+          }
+          base.Visit(methodCall);
+        }
+      }
 
     }
   }

@@ -470,7 +470,7 @@ namespace Microsoft.Cci.Contracts {
     /// contract extracted and added to the contract provider.
     /// </summary>
     public MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(ISourceMethodBody sourceMethodBody) {
-      return Microsoft.Cci.MutableContracts.ContractExtractor.SplitMethodBodyIntoContractAndCode(this.host, sourceMethodBody, this.pdbReader, this.pdbReader);
+      return Microsoft.Cci.MutableContracts.ContractExtractor.SplitMethodBodyIntoContractAndCode(this.host, sourceMethodBody, this.pdbReader);
     }
 
     #endregion
@@ -480,15 +480,42 @@ namespace Microsoft.Cci.Contracts {
   /// A mutator that changes all references defined in one unit into being
   /// references defined in another unit.
   /// It does so by substituting the target unit's identity for the source
-  /// unit's identity whenever it visits a unit reference.
-  /// Other than that, it overrides all visit methods that visit things which could be either
-  /// a reference or a definition. The base class does *not* visit definitions
-  /// when they are being seen as references because it assumes that the definitions
-  /// will get visited during a top-down visit of the unit. But this visitor can
-  /// be used on just small snippets of trees. A side effect is that all definitions
-  /// are replaced by references so it doesn't preserve that aspect of the object model.
+  /// unit's identity whenever it rewrites a unit reference.
   /// </summary>
-  internal class MappingMutator : CodeAndContractMutatingVisitor {
+  internal class MappingMutator {
+
+    private IMetadataHost host;
+    private UnitIdentity sourceUnitIdentity;
+    private IUnit targetUnit = null;
+
+    public MappingMutator(IMetadataHost host, IUnit targetUnit, IUnit sourceUnit) {
+      this.host = host;
+      this.sourceUnitIdentity = sourceUnit.UnitIdentity;
+      this.targetUnit = targetUnit;
+    }
+
+    public IMethodReference Map(IMethodReference methodReference) {
+      var result = new MetadataDeepCopier(host).Copy(methodReference);
+      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      return rewriter.Rewrite(result);
+    }
+    public ITypeReference Map(ITypeReference typeReference) {
+      var result = new MetadataDeepCopier(host).Copy(typeReference);
+      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      return rewriter.Rewrite(result);
+    }
+    public IMethodContract Map(IMethodContract methodContract) {
+      var result = new CodeAndContractDeepCopier(host).Copy(methodContract);
+      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      return rewriter.Rewrite(result);
+    }
+    public ITypeContract Map(ITypeContract typeContract) {
+      var result = new CodeAndContractDeepCopier(host).Copy(typeContract);
+      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      return rewriter.Rewrite(result);
+    }
+
+    private class ActualMutator : CodeAndContractRewriter {
 
     private UnitIdentity sourceUnitIdentity;
     private IUnit targetUnit = null;
@@ -507,20 +534,26 @@ namespace Microsoft.Cci.Contracts {
     /// <param name="sourceUnit">
     /// The unit from which references will be mapped into references from the <paramref name="targetUnit"/>
     /// </param>
-    public MappingMutator(IMetadataHost host, IUnit targetUnit, IUnit sourceUnit)
+    public ActualMutator(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
       : base(host) {
-      this.sourceUnitIdentity = sourceUnit.UnitIdentity;
+      this.sourceUnitIdentity = sourceUnitIdentity;
       this.targetUnit = targetUnit;
     }
 
-    public override IUnitReference Visit(IUnitReference unitReference) {
-      if (unitReference.UnitIdentity.Equals(this.sourceUnitIdentity))
-        return targetUnit;
-      else
-        return base.Visit(unitReference);
+    public override IModuleReference Rewrite(IModuleReference moduleReference) {
+      if (moduleReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
+        return (IModuleReference)this.targetUnit;
+      }
+      return base.Rewrite(moduleReference);
     }
-
+    public override IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
+      if (assemblyReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
+        return (IAssemblyReference)this.targetUnit;
+      }
+      return base.Rewrite(assemblyReference);
+    }
   }
+}
 
   /// <summary>
   /// A contract extractor that serves up the union of the contracts found from a set of contract extractors.
@@ -646,7 +679,7 @@ namespace Microsoft.Cci.Contracts {
             if (methodReference == null) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
 
             MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-            var oobMethod = primaryToOobMapper.Visit(new MetadataDeepCopier(this.host).Copy(methodReference));
+            var oobMethod = primaryToOobMapper.Map(methodReference);
 
             if (oobMethod == null) continue;
 
@@ -655,7 +688,7 @@ namespace Microsoft.Cci.Contracts {
             if (oobContract == null) continue;
 
             MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
-            oobContract = oobToPrimaryMapper.Visit(CodeAndContractCopier.DeepCopy(this.host, oobContract));
+            oobContract = oobToPrimaryMapper.Map(oobContract);
 
             var sps = new Microsoft.Cci.MutableContracts.SubstituteParameters(this.host, oobMethod.ResolvedMethod, methodReference.ResolvedMethod);
             oobContract = sps.Visit(oobContract);
@@ -713,7 +746,7 @@ namespace Microsoft.Cci.Contracts {
           if (typeReference == null || typeReference is Dummy) continue; // REVIEW: Is there anything else it could be and still find a contract for it?
 
           MappingMutator primaryToOobMapper = this.mapperForPrimaryToOob[oobProvider];
-          var oobType = primaryToOobMapper.Visit(new MetadataDeepCopier(this.host).Copy(typeReference));
+          var oobType = primaryToOobMapper.Map(typeReference);
 
           if (oobType == null) continue;
 
@@ -722,7 +755,7 @@ namespace Microsoft.Cci.Contracts {
           if (oobContract == null) continue;
 
           MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
-          oobContract = oobToPrimaryMapper.Visit(CodeAndContractCopier.DeepCopy(this.host, oobContract));
+          oobContract = oobToPrimaryMapper.Map(oobContract);
           ContractHelper.AddTypeContract(result, oobContract);
           found = true;
 
