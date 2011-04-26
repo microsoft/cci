@@ -48,6 +48,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// or the body of the MoveNext method of the corresponding closure class if it does.
     /// </returns>
     public static ISourceMethodBody/*?*/ FindClosureMoveNext(IMetadataHost host, ISourceMethodBody/*!*/ possibleIterator) {
+      if (possibleIterator == Dummy.MethodBody) return null;
       var nameTable = host.NameTable;
       var possibleIteratorBody = possibleIterator.Block;
       foreach (var statement in possibleIteratorBody.Statements) {
@@ -633,7 +634,7 @@ namespace Microsoft.Cci.MutableContracts {
               if (mname == "Requires") {
                 IExpression thrownException = null;
                 IGenericMethodInstanceReference genericMethodInstance = methodToCall as IGenericMethodInstanceReference;
-                if (genericMethodInstance != null && 0 < genericMethodInstance.GenericParameterCount) {
+                if (genericMethodInstance != null && 0 < genericMethodInstance.GenericMethod.GenericParameterCount) {
                   foreach (var a in genericMethodInstance.GenericArguments) {
                     thrownException = new TypeOf() {
                       Type = this.contractAwareHost.PlatformType.SystemType,

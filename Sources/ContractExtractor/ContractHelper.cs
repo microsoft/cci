@@ -602,6 +602,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static IMethodContract GetMethodContractFor(IContractAwareHost host, IMethodDefinition methodDefinition) {
 
+      if (methodDefinition is Dummy) return null;
       methodDefinition = UninstantiateAndUnspecialize(methodDefinition).ResolvedMethod;
       IUnit/*?*/ unit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingType.ResolvedType);
       if (unit == null) return null;

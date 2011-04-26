@@ -119,8 +119,6 @@ namespace Microsoft.Cci.MutableContracts {
     private ITypeReference contractClass;
     private ITypeReference contractClassDefinedInReferenceAssembly;
 
-    private IUnit definingUnit;
-
     private bool methodIsInReferenceAssembly;
 
     private static ITypeReference/*?*/ TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
@@ -159,11 +157,11 @@ namespace Microsoft.Cci.MutableContracts {
 
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
-      this.definingUnit = TypeHelper.GetDefiningUnit(sourceMethodBody.MethodDefinition.ContainingType.ResolvedType);
+       var definingUnit = TypeHelper.GetDefiningUnit(sourceMethodBody.MethodDefinition.ContainingType.ResolvedType);
 
-      this.methodIsInReferenceAssembly = ContractHelper.IsContractReferenceAssembly(this.host, this.definingUnit);
+      this.methodIsInReferenceAssembly = definingUnit == null ? false : ContractHelper.IsContractReferenceAssembly(this.host, definingUnit);
 
-      AssemblyReference contractAssemblyReference = new AssemblyReference(host, this.definingUnit.ContractAssemblySymbolicIdentity);
+      AssemblyReference contractAssemblyReference = new AssemblyReference(host, this.host.ContractAssemblySymbolicIdentity);
       this.contractClass = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
 
       IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
@@ -548,7 +546,7 @@ namespace Microsoft.Cci.MutableContracts {
             if (mname == "Requires") {
               IExpression thrownException = null;
               IGenericMethodInstanceReference genericMethodInstance = methodToCall as IGenericMethodInstanceReference;
-              if (genericMethodInstance != null && 0 < genericMethodInstance.GenericParameterCount) {
+              if (genericMethodInstance != null && 0 < genericMethodInstance.GenericMethod.GenericParameterCount) {
                 foreach (var a in genericMethodInstance.GenericArguments) {
                   thrownException = new TypeOf() {
                     Type = this.host.PlatformType.SystemType,
