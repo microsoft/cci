@@ -389,7 +389,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           var targetType = targetLocal.Type;
           var sourceType = sourceLocal.Type;
           var mergedType = TypeHelper.MergedType(TypeHelper.StackType(targetType), TypeHelper.StackType(sourceType));
-          if (targetType != mergedType) {
+          if (targetType != mergedType && !(targetType.TypeCode == PrimitiveTypeCode.Boolean && mergedType.TypeCode == PrimitiveTypeCode.Int32)) {
             targetLocal.Type = mergedType;
             targetType = mergedType;
             if (targetType is Dummy || sourceType is Dummy) targetLocal.isPolymorphic = true;

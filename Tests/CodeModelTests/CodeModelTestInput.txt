@@ -1334,7 +1334,7 @@ namespace CodeModelTestInput
             public Class4Inner1(System.Collections.Generic.List<T> xs, System.Collections.Generic.List<T2> ys)
             {
                 System.Collections.Generic.List<T2> __temp_2;
-                int __temp_3;
+                bool __temp_3;
                 this.list_inner = new System.Collections.Generic.List<T2>();
                 this.fieldJustForCtorTest = false;
                 this.object();
@@ -1342,13 +1342,13 @@ namespace CodeModelTestInput
                 if (__temp_1.TrueForAll((T i) => (((object)i) != null)))
                 {
                     __temp_2 = ys;
-                    __temp_3 = ((int)__temp_2.TrueForAll((T2 i) => (((object)i) != null)));
+                    __temp_3 = __temp_2.TrueForAll((T2 i) => (((object)i) != null));
                 }
                 else
                 {
-                    __temp_3 = 0;
+                    __temp_3 = false;
                 }
-                this.fieldJustForCtorTest = ((bool)__temp_3);
+                this.fieldJustForCtorTest = __temp_3;
                 return;
 
             }
