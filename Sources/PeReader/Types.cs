@@ -4027,7 +4027,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class PointerType : SimpleStructuralType, IPointerTypeReference {
+  internal sealed class PointerType : SimpleStructuralType, IPointerType {
     internal readonly IMetadataReaderTypeReference/*?*/ TargetType;
 
     internal PointerType(
