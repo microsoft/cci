@@ -15,6 +15,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Microsoft.Cci;
+using Microsoft.Cci.Immutable;
 using Microsoft.Cci.UtilityDataStructures;
 
 //^ using Microsoft.Contracts;

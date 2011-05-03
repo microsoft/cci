@@ -6002,7 +6002,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       var mutable1 = genericMethodInstanceReference as GenericMethodInstanceReference;
       if (mutable1 != null) return this.Mutate(this.GetReferenceCopy(mutable1));
-      var mutable2 = genericMethodInstanceReference as GenericMethodInstance;
+      var mutable2 = genericMethodInstanceReference as Immutable.GenericMethodInstance;
       if (mutable2 != null) return this.Mutate(this.GetReferenceCopy(mutable2));
       if (this.visitImmutableNodes) {
         this.path.Push(genericMethodInstanceReference);
@@ -7156,7 +7156,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       var mutable1 = specializedFieldReference as SpecializedFieldReference;
       if (mutable1 != null) return this.Mutate(this.GetReferenceCopy(mutable1));
-      var mutable2 = specializedFieldReference as SpecializedFieldDefinition;
+      var mutable2 = specializedFieldReference as Immutable.SpecializedFieldDefinition;
       if (mutable2 != null) return this.Mutate(this.GetReferenceCopy(mutable2));
       if (this.visitImmutableNodes) {
         this.path.Push(specializedFieldReference);
@@ -7202,7 +7202,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       var mutable1 = specializedMethodReference as SpecializedMethodReference;
       if (mutable1 != null) return this.Mutate(this.GetReferenceCopy(mutable1));
-      var mutable2 = specializedMethodReference as SpecializedMethodDefinition;
+      var mutable2 = specializedMethodReference as Immutable.SpecializedMethodDefinition;
       if (mutable2 != null) return this.Mutate(this.GetReferenceCopy(mutable2));
       if (this.visitImmutableNodes) {
         this.path.Push(specializedMethodReference);

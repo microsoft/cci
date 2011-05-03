@@ -8,18 +8,12 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //-----------------------------------------------------------------------------
-using System;
 using System.Collections.Generic;
-using System.Text;
-
-using Microsoft.Cci.MetadataReader.PEFileFlags;
-using Microsoft.Cci.MetadataReader.PEFile;
-using Microsoft.Cci.UtilityDataStructures;
-using System.Diagnostics;
-using System.IO;
 using Microsoft.Cci.MetadataReader.Errors;
-
-//^ using Microsoft.Contracts;
+using Microsoft.Cci.MetadataReader.PEFile;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
+using Microsoft.Cci.UtilityDataStructures;
+using Microsoft.Cci.Immutable;
 
 namespace Microsoft.Cci.MetadataReader.MethodBody {
   using Microsoft.Cci.MetadataReader.ObjectModelImplementation;

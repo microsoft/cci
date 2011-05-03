@@ -10,13 +10,11 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.Cci.UtilityDataStructures;
 using System.Diagnostics;
-using Microsoft.Cci.MetadataReader.PEFileFlags;
 using System.Diagnostics.Contracts;
-
-//^ using Microsoft.Contracts;
+using Microsoft.Cci.Immutable;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 

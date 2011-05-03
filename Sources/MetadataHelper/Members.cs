@@ -16,7 +16,7 @@ using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.Immutable {
 
   /// <summary>
   /// 

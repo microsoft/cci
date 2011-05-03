@@ -925,7 +925,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Resolves the reference to find the method being referred to.
     /// </summary>
     protected override IMethodDefinition Resolve() {
-      return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, ((IGenericMethodInstanceReference)this).GenericArguments, this.InternFactory);
+      return new Immutable.GenericMethodInstance(this.GenericMethod.ResolvedMethod, ((IGenericMethodInstanceReference)this).GenericArguments, this.InternFactory);
     }
 
     #region IGenericMethodInstanceReference Members

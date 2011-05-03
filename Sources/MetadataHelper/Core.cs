@@ -10,15 +10,11 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Threading;
-using System.IO;
-using System.Globalization;
-using Microsoft.Cci.UtilityDataStructures;
 using System.Diagnostics.Contracts;
-
-//^ using Microsoft.Contracts;
+using System.IO;
+using System.Threading;
+using Microsoft.Cci.Immutable;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci {
 

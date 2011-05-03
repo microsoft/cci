@@ -391,6 +391,9 @@ namespace Microsoft.Cci {
     }
 
   }
+}
+
+namespace Microsoft.Cci.Immutable {
 
   /// <summary>
   /// A set of units that all contribute to a unified root namespace. For example the set of assemblies referenced by a C# project.

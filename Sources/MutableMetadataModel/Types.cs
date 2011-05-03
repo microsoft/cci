@@ -10,10 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics.Contracts;
-
-//^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
@@ -515,7 +512,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.resolvedFunctionPointer == null) {
           this.isFrozen = true;
           var self = (IFunctionPointerTypeReference)this;
-          this.resolvedFunctionPointer = new FunctionPointerType(this.callingConvention, this.returnValueIsByRef, this.type, self.ReturnValueCustomModifiers, self.Parameters,
+          this.resolvedFunctionPointer = new Immutable.FunctionPointerType(this.callingConvention, this.returnValueIsByRef, this.type, self.ReturnValueCustomModifiers, self.Parameters,
           self.ExtraArgumentTypes, this.InternFactory);
           //Contract.Assume(this.resolvedFunctionPointer.InternedKey == this.InternedKey);
         }
@@ -1006,7 +1003,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.resolvedGenericTypeInstance == null) {
           this.isFrozen = true;
           var self = (IGenericTypeInstanceReference)this;
-          this.resolvedGenericTypeInstance = GenericTypeInstance.GetGenericTypeInstance(this.genericType, self.GenericArguments, this.InternFactory);
+          this.resolvedGenericTypeInstance = Immutable.GenericTypeInstance.GetGenericTypeInstance(this.genericType, self.GenericArguments, this.InternFactory);
         }
         return this.resolvedGenericTypeInstance;
       }
@@ -1281,7 +1278,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         Contract.Ensures(this.IsFrozen);
         if (this.resolvedType == null) {
           this.isFrozen = true;
-          this.resolvedType = ManagedPointerType.GetManagedPointerType(this.targetType, this.InternFactory);
+          this.resolvedType = Immutable.ManagedPointerType.GetManagedPointerType(this.targetType, this.InternFactory);
         }
         return this.resolvedType;
       }
@@ -1406,7 +1403,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     protected override IArrayType Resolve() {
       var self = (IArrayTypeReference)this;
-      return Matrix.GetMatrix(this.ElementType, this.Rank, self.LowerBounds, self.Sizes, this.InternFactory);
+      return Immutable.Matrix.GetMatrix(this.ElementType, this.Rank, self.LowerBounds, self.Sizes, this.InternFactory);
     }
 
   }
@@ -2369,7 +2366,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         Contract.Ensures(Contract.Result<IPointerType>() != null);
         if (this.resolvedType == null) {
           this.isFrozen = true;
-          this.resolvedType = PointerType.GetPointerType(this.targetType, this.InternFactory);
+          this.resolvedType = Immutable.PointerType.GetPointerType(this.targetType, this.InternFactory);
         }
         return this.resolvedType;
       }
@@ -2716,25 +2713,25 @@ namespace Microsoft.Cci.MutableCodeModel {
       INamedTypeDefinition result = typeDefinition;
       if (nestedTypeDefinition != null) {
         var containingTypeDefinition = SelfInstance((INamedTypeDefinition)nestedTypeDefinition.ContainingTypeDefinition, internFactory);
-        var genericTypeInstance = containingTypeDefinition as GenericTypeInstance;
+        var genericTypeInstance = containingTypeDefinition as Immutable.GenericTypeInstance;
         while (genericTypeInstance == null) {
           var specializedNestedTypeRef = containingTypeDefinition as ISpecializedNestedTypeReference;
           if (specializedNestedTypeRef != null) {
             containingTypeDefinition = specializedNestedTypeRef.ContainingType.ResolvedType;
-            genericTypeInstance = containingTypeDefinition as GenericTypeInstance;
+            genericTypeInstance = containingTypeDefinition as Immutable.GenericTypeInstance;
           } else {
             break;
           }
         }
         if (genericTypeInstance != null) {
-          result = new Microsoft.Cci.SpecializedNestedTypeDefinition(nestedTypeDefinition, nestedTypeDefinition, containingTypeDefinition, genericTypeInstance, internFactory);
+          result = new Immutable.SpecializedNestedTypeDefinition(nestedTypeDefinition, nestedTypeDefinition, containingTypeDefinition, genericTypeInstance, internFactory);
         }
       }
       if (typeDefinition.IsGeneric) {
         var args = new List<ITypeReference>();
         foreach (var gpar in typeDefinition.GenericParameters)
           args.Add(gpar);
-        return GenericTypeInstance.GetGenericTypeInstance(result, args, internFactory);
+        return Immutable.GenericTypeInstance.GetGenericTypeInstance(result, args, internFactory);
       }
       return result;
     }
@@ -2829,7 +2826,7 @@ namespace Microsoft.Cci.MutableCodeModel {
             if (this.instanceType == null) {
               List<ITypeReference> arguments = new List<ITypeReference>();
               foreach (IGenericTypeParameter gpar in this.GenericParameters) arguments.Add(gpar);
-              this.instanceType = GenericTypeInstance.GetGenericTypeInstance(this.GetSpecializedType(this), arguments, this.InternFactory);
+              this.instanceType = Immutable.GenericTypeInstance.GetGenericTypeInstance(this.GetSpecializedType(this), arguments, this.InternFactory);
             }
           }
         }
@@ -3874,7 +3871,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <returns></returns>
     protected override IArrayType Resolve() {
-      return Vector.GetVector(this.ElementType, this.InternFactory);
+      return Immutable.Vector.GetVector(this.ElementType, this.InternFactory);
     }
 
   }

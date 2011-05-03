@@ -9,12 +9,11 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.IO;
-using Microsoft.Cci;
-using Microsoft.Cci.MetadataReader;
-using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization; // needed for defining exception .ctors
+using Microsoft.Cci;
+using Microsoft.Cci.MutableCodeModel;
 
 namespace ILMutator {
 
@@ -86,7 +85,7 @@ namespace ILMutator {
       var systemString = platformType.SystemString;
       var systemVoid = platformType.SystemVoid;
       var SystemDotConsoleType =
-        new Microsoft.Cci.NamespaceTypeReference(
+        new Microsoft.Cci.Immutable.NamespaceTypeReference(
           host,
           systemString.ContainingUnitNamespace,
           nameTable.GetNameFor("Console"),

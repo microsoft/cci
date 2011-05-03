@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Immutable;
 
 //^ using Microsoft.Contracts;
 

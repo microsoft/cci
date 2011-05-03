@@ -17,7 +17,7 @@ using System.Diagnostics.Contracts;
 //^ using Microsoft.Contracts;
 #pragma warning disable 1591
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.Immutable {
 
   public abstract class ArrayType : SystemDefinedStructuralType, IArrayType {
 

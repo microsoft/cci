@@ -2931,7 +2931,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Returns a deep copy of the given method definition.
     /// </summary>
     public MethodDefinition Copy(IMethodDefinition method) {
-      Contract.Requires(!(method is Dummy || method is SpecializedMethodDefinition));
+      Contract.Requires(!(method is Dummy || method is ISpecializedMethodDefinition));
       this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(method);
       return (MethodDefinition)this.SubstituteCopiesForOriginals.Substitute(method);
     }

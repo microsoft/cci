@@ -10,21 +10,17 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
-
-using Microsoft.Cci.MetadataReader.PEFileFlags;
-using Microsoft.Cci.MetadataReader.PEFile;
-using Microsoft.Cci.UtilityDataStructures;
+using System.Diagnostics.Contracts;
+using Microsoft.Cci.Immutable;
 using Microsoft.Cci.MetadataReader.Errors;
 using Microsoft.Cci.MetadataReader.MethodBody;
-
-//^ using Microsoft.Contracts;
-
+using Microsoft.Cci.MetadataReader.PEFile;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci.MetadataReader {
   using Microsoft.Cci.MetadataReader.ObjectModelImplementation;
-  using System.Diagnostics.Contracts;
 
   internal enum LoadState : byte {
     Uninitialized=0,
