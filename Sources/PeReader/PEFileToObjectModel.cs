@@ -24,6 +24,7 @@ using Microsoft.Cci.MetadataReader.MethodBody;
 
 namespace Microsoft.Cci.MetadataReader {
   using Microsoft.Cci.MetadataReader.ObjectModelImplementation;
+  using System.Diagnostics.Contracts;
 
   internal enum LoadState : byte {
     Uninitialized=0,
@@ -37,6 +38,7 @@ namespace Microsoft.Cci.MetadataReader {
   internal sealed class PEFileToObjectModel {
     internal readonly PeReader ModuleReader;
     internal readonly Assembly/*?*/ ContainingAssembly;
+    internal readonly IInternFactory InternFactory;
     internal readonly PEFileReader PEFileReader;
     internal readonly INameTable NameTable;
     internal readonly TypeCache typeCache;
@@ -151,6 +153,7 @@ namespace Microsoft.Cci.MetadataReader {
       this.ModuleReader = peReader;
       this.PEFileReader = peFileReader;
       this.NameTable = peReader.metadataReaderHost.NameTable;
+      this.InternFactory = peReader.metadataReaderHost.InternFactory;
       this.StringIndexToNameTable = new Hashtable<IName>();
       this.StringIndexToUnmangledNameTable = new Hashtable<IName>();
       this.typeCache = new TypeCache(this);
@@ -194,10 +197,10 @@ namespace Microsoft.Cci.MetadataReader {
 
       this.ModuleGenericParamArray = new GenericParameter[peFileReader.GenericParamTable.NumberOfRows + 1];
       if (peFileReader.MethodSpecTable.NumberOfRows > 0) {
-        this.ModuleMethodSpecHashtable = new DoubleHashtable<GenericMethodInstanceReference>(peFileReader.MethodSpecTable.NumberOfRows + 1);
+        this.ModuleMethodSpecHashtable = new DoubleHashtable<IGenericMethodInstanceReference>(peFileReader.MethodSpecTable.NumberOfRows + 1);
       }
 
-      this.ModuleTypeRefReferenceArray = new TypeRefReference[peFileReader.TypeRefTable.NumberOfRows + 1];
+      this.ModuleTypeRefReferenceArray = new IMetadataReaderNamedTypeReference[peFileReader.TypeRefTable.NumberOfRows + 1];
       this.ModuleTypeRefReferenceLoadState = new LoadState[peFileReader.TypeRefTable.NumberOfRows + 1];
       this.ModuleTypeRefReferenceLoadState[0] = LoadState.Loaded;
       if (peFileReader.TypeSpecTable.NumberOfRows > 0) {
@@ -225,13 +228,6 @@ namespace Microsoft.Cci.MetadataReader {
         throw new MetadataReaderException("<Module> Type not present");
       }
       this._Module_ = _module_;
-      //^ NonNullType.AssertInitialized(this.ModuleGenericParamArray);
-      //^ NonNullType.AssertInitialized(this.ModuleTypeRefReferenceArray);
-      //^ NonNullType.AssertInitialized(this.ModuleFieldArray);
-      //^ NonNullType.AssertInitialized(this.ModuleMethodArray);
-      //^ NonNullType.AssertInitialized(this.ModuleEventArray);
-      //^ NonNullType.AssertInitialized(this.ModulePropertyArray);
-
     }
 
     /*^
@@ -742,7 +738,6 @@ namespace Microsoft.Cci.MetadataReader {
             IName name = this.GetNameFromOffset(fileRow.Name);
             fileReferenceArray[i] = new FileReference(this, i, fileRow.Flags, name);
           }
-          //^ NonNullType.AssertInitialized(fileReferenceArray);
           this.FileReferenceArray = fileReferenceArray;
         }
       }
@@ -800,7 +795,6 @@ namespace Microsoft.Cci.MetadataReader {
               //  MDError
             }
           }
-          //^ NonNullType.AssertInitialized(resourceReferenceArray);
           this.ResourceReferenceArray = resourceReferenceArray;
         }
       }
@@ -1453,7 +1447,7 @@ namespace Microsoft.Cci.MetadataReader {
       genericParamRowIdStart = this.PEFileReader.GenericParamTable.FindGenericParametersForType(typeDefRowId, out genericParamCount);
       genericParamRowIdEnd = genericParamRowIdStart + genericParamCount;
     }
-    internal IMetadataReaderTypeReference/*?*/ GetBaseTypeForType(
+    internal ITypeReference/*?*/ GetBaseTypeForType(
       TypeBase moduleType
     ) {
       uint baseTypeToken = this.PEFileReader.TypeDefTable.GetExtends(moduleType.TypeDefRowId);
@@ -1489,7 +1483,7 @@ namespace Microsoft.Cci.MetadataReader {
       genericParamConstraintRowIdStart = this.PEFileReader.GenericParamConstraintTable.FindConstraintForGenericParam(genericParam.GenericParameterRowId, out constraintCount);
       genericParamConstraintRowIdEnd = genericParamConstraintRowIdStart + constraintCount;
     }
-    internal IMetadataReaderTypeReference/*?*/ GetInterfaceForInterfaceRowId(
+    internal ITypeReference/*?*/ GetInterfaceForInterfaceRowId(
       TypeBase moduleType,
       uint interfaceRowId
     ) {
@@ -1505,17 +1499,17 @@ namespace Microsoft.Cci.MetadataReader {
       IMethodReference methodBody = this.GetMethodReferenceForToken(moduleType, methodImplRow.MethodBody);
       return new MethodImplementation(moduleType, methodDecl, methodBody);
     }
-    internal IMetadataReaderTypeReference/*?*/ GetTypeReferenceForGenericConstraintRowId(
+    internal ITypeReference/*?*/ GetTypeReferenceForGenericConstraintRowId(
       GenericParameter genParam,
       uint interfaceRowId
     ) {
       uint constraintTypeToken = this.PEFileReader.GenericParamConstraintTable.GetConstraint(interfaceRowId);
       return this.GetTypeReferenceForToken(genParam, constraintTypeToken);
     }
-    internal IMetadataReaderTypeReference/*?*/ GetSerializedTypeNameAsTypeReference(
+    internal ITypeReference/*?*/ GetSerializedTypeNameAsTypeReference(
       TypeName typeName
     ) {
-      IMetadataReaderTypeReference/*?*/ typeRef = typeName.GetAsTypeReference(this, this.ContainingAssembly);
+      ITypeReference/*?*/ typeRef = typeName.GetAsTypeReference(this, this.ContainingAssembly);
       if (typeRef != null)
         return typeRef;
       Assembly/*?*/ assem = this.ModuleReader.CoreAssembly;
@@ -1523,7 +1517,7 @@ namespace Microsoft.Cci.MetadataReader {
         return null;
       return typeName.GetAsTypeReference(assem.PEFileToObjectModel, assem);
     }
-    internal IMetadataReaderTypeReference/*?*/ GetSerializedTypeNameAsTypeReference(
+    internal ITypeReference/*?*/ GetSerializedTypeNameAsTypeReference(
       string serializedTypeName
     ) {
       TypeNameParser typeNameParser = new TypeNameParser(this.NameTable, serializedTypeName);
@@ -1549,7 +1543,7 @@ namespace Microsoft.Cci.MetadataReader {
 
     internal GenericTypeParameter/*?*/ GetGenericTypeParamAtRow(
       uint genericParamRowId,
-      IMetadataReaderGenericType moduleTypeOwner
+      TypeBase moduleTypeOwner
     )
       //^ requires genericParamRowId >= 1;
     {
@@ -1589,7 +1583,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// <summary>
     /// Cache for type ref's in the module.
     /// </summary>
-    readonly TypeRefReference[] ModuleTypeRefReferenceArray;
+    readonly IMetadataReaderNamedTypeReference[] ModuleTypeRefReferenceArray;
     readonly LoadState[] ModuleTypeRefReferenceLoadState;
 
     readonly DoubleHashtable<TypeSpecReference>/*?*/ ModuleTypeSpecHashtable;
@@ -1598,7 +1592,7 @@ namespace Microsoft.Cci.MetadataReader {
     TypeRefReference CreateTypeRefReference(
       uint typeRefRowId,
       TypeRefRow typeRefRow,
-      TypeRefReference/*?*/ parentModuleTypeReference,
+      IMetadataReaderNamedTypeReference/*?*/ parentModuleTypeReference,
       IMetadataReaderModuleReference moduleReference,
       MetadataReaderSignatureTypeCode signatureTypeCode
     ) {
@@ -1670,7 +1664,7 @@ namespace Microsoft.Cci.MetadataReader {
       return moduleTypeRefReference;
     }
 
-    internal TypeRefReference GetPredefinedTypeRefReferenceAtRowWorker(
+    internal IMetadataReaderNamedTypeReference GetPredefinedTypeRefReferenceAtRowWorker(
       uint typeRefRowId,
       MetadataReaderSignatureTypeCode signatureTypeCode
     ) {
@@ -1689,12 +1683,12 @@ namespace Microsoft.Cci.MetadataReader {
       return this.ModuleTypeRefReferenceArray[typeRefRowId];
     }
 
-    TypeRefReference/*?*/ GetTypeRefReferenceAtRowWorker(
+    IMetadataReaderNamedTypeReference/*?*/ GetTypeRefReferenceAtRowWorker(
       uint typeRefRowId
     ) {
       return this.GetTypeRefReferenceAtRowWorker(typeRefRowId, false);
     }
-    TypeRefReference/*?*/ GetTypeRefReferenceAtRowWorker(
+    IMetadataReaderNamedTypeReference/*?*/ GetTypeRefReferenceAtRowWorker(
       uint typeRefRowId,
       bool mustBeStruct
     ) {
@@ -1710,7 +1704,7 @@ namespace Microsoft.Cci.MetadataReader {
         uint resolutionScopeKind = (typeRefRow.ResolutionScope & TokenTypeIds.TokenTypeMask);
         uint resolutionScopeRowId = typeRefRow.ResolutionScope & TokenTypeIds.RIDMask;
         if (resolutionScopeKind == TokenTypeIds.TypeRef) {
-          TypeRefReference/*?*/ parentModuleTypeReference = this.GetTypeRefReferenceAtRowWorker(resolutionScopeRowId);
+          var parentModuleTypeReference = this.GetTypeRefReferenceAtRowWorker(resolutionScopeRowId);
           if (parentModuleTypeReference == null) {
             this.PEFileReader.ErrorContainer.AddMetadataError(TableIndices.TypeRef, typeRefRowId, MetadataReaderErrorKind.NestedClassParentError);
             this.ModuleTypeRefReferenceLoadState[typeRefRowId] = LoadState.Loaded;
@@ -1762,14 +1756,14 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
-    internal TypeRefReference/*?*/ GetTypeRefReferenceAtRow(
+    internal INamedTypeReference/*?*/ GetTypeRefReferenceAtRow(
       uint typeRefRowId
     )
       //^ requires typeRefRowId >=1;
     {
       return this.GetTypeRefReferenceAtRow(typeRefRowId, false);
     }
-    internal TypeRefReference/*?*/ GetTypeRefReferenceAtRow(
+    internal IMetadataReaderNamedTypeReference/*?*/ GetTypeRefReferenceAtRow(
       uint typeRefRowId,
       bool mustBeStruct
     )
@@ -1783,9 +1777,9 @@ namespace Microsoft.Cci.MetadataReader {
           this.GetTypeRefReferenceAtRowWorker(typeRefRowId, mustBeStruct);
         }
       }
-      TypeRefReference/*?*/ result = this.ModuleTypeRefReferenceArray[typeRefRowId];
-      if (mustBeStruct && result != null) result.isValueType = true;
-      return result;
+      var typeRefReference = this.ModuleTypeRefReferenceArray[typeRefRowId] as TypeRefReference;
+      if (mustBeStruct && typeRefReference != null) typeRefReference.isValueType = true;
+      return this.ModuleTypeRefReferenceArray[typeRefRowId];
     }
     internal TypeSpecReference/*?*/ GetTypeSpecReferenceAtRow(
       MetadataObject owningObject,
@@ -1811,13 +1805,13 @@ namespace Microsoft.Cci.MetadataReader {
       }
       return typeSpecReference;
     }
-    internal IMetadataReaderTypeReference/*?*/ GetTypeReferenceForToken(
+    internal ITypeReference/*?*/ GetTypeReferenceForToken(
       MetadataObject owningObject,
       uint token
     ) {
       return this.GetTypeReferenceForToken(owningObject, token, false);
     }
-    internal IMetadataReaderTypeReference/*?*/ GetTypeReferenceForToken(
+    internal ITypeReference/*?*/ GetTypeReferenceForToken(
       MetadataObject owningObject,
       uint token,
       bool mustBeStruct
@@ -1851,11 +1845,13 @@ namespace Microsoft.Cci.MetadataReader {
     ///  This method resolves TypeRef as a non exported type. i.e. the said type reference refers to the type
     ///  in the type def table direcly rather than exported type table of the assembly.
     /// </summary>
-    /// <param name="moduleTypeRefReference"></param>
+    /// <param name="namedTypeReference"></param>
     /// <returns></returns>
     internal INamedTypeDefinition/*?*/ ResolveModuleTypeRefReference(
-      TypeRefReference moduleTypeRefReference
+      IMetadataReaderNamedTypeReference namedTypeReference
     ) {
+      var moduleTypeRefReference = namedTypeReference as TypeRefReference;
+      if (moduleTypeRefReference == null) return namedTypeReference.ResolvedType;
       uint typeRefRowId = moduleTypeRefReference.TypeRefRowId;
       if (typeRefRowId == 0) {
         return null;
@@ -1901,7 +1897,7 @@ namespace Microsoft.Cci.MetadataReader {
             break;
           }
         case TokenTypeIds.TypeRef: {
-            TypeRefReference/*?*/ parentTypeReference = this.GetTypeRefReferenceAtRowWorker(rowId);
+            var parentTypeReference = this.GetTypeRefReferenceAtRowWorker(rowId);
             if (parentTypeReference == null) {
               return null;
             }
@@ -1997,7 +1993,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (parentExportedType == null) {
               return null;
             }
-            IMetadataReaderTypeReference/*?*/ parentModuleType = this.FindExportedType(parentExportedType);
+            ITypeReference/*?*/ parentModuleType = this.FindExportedType(parentExportedType);
             if (parentModuleType == null) {
               return null;
             }
@@ -2050,7 +2046,7 @@ namespace Microsoft.Cci.MetadataReader {
       return null;
     }
 
-    internal IMetadataReaderTypeReference/*?*/ UnderlyingModuleTypeSpecReference(
+    internal ITypeReference/*?*/ UnderlyingModuleTypeSpecReference(
       TypeSpecReference moduleTypeSpecReference
     )
       //^ requires moduleTypeSpecReference.TypeSpecRowId >= 1;
@@ -2611,7 +2607,7 @@ namespace Microsoft.Cci.MetadataReader {
       }
       return (ushort)memoryReader.ReadCompressedUInt32();
     }
-    internal IMetadataReaderTypeReference/*?*/ GetEventType(
+    internal ITypeReference/*?*/ GetEventType(
       EventDefinition moduleEvent
     ) {
       uint typeToken = this.PEFileReader.EventTable.GetEventType(moduleEvent.EventRowId);
@@ -2715,7 +2711,7 @@ namespace Microsoft.Cci.MetadataReader {
         case PrimitiveTypeCode.Pointer:
           return this.pointerSize;
       }
-      var modifiedTypeReference = typeReference as ModifiedTypeReference;
+      var modifiedTypeReference = typeReference as IModifiedTypeReference;
       if (modifiedTypeReference != null) typeReference = modifiedTypeReference.UnmodifiedType;
       ITypeDefinition/*?*/ typeDefinition = typeReference as ITypeDefinition;
       if (typeDefinition != null) return TypeHelper.SizeOfType(typeDefinition);
@@ -2959,10 +2955,10 @@ namespace Microsoft.Cci.MetadataReader {
 
     #region Member Reference Information
     readonly MemberReference/*?*/[] ModuleMemberReferenceArray;
-    readonly DoubleHashtable<GenericMethodInstanceReference>/*?*/ ModuleMethodSpecHashtable;
+    readonly DoubleHashtable<IGenericMethodInstanceReference>/*?*/ ModuleMethodSpecHashtable;
     //^ invariant this.PEFileReader.MethodSpecTable.NumberOfRows >= 1 ==> this.MethodSpecHashtable != null;
 
-    internal MemberReference/*?*/ GetModuleMemberReferenceAtRowWorker(
+    internal ITypeMemberReference/*?*/ GetModuleMemberReferenceAtRowWorker(
       MetadataObject owningObject,
       uint memberRefRowId
     ) {
@@ -2973,7 +2969,7 @@ namespace Microsoft.Cci.MetadataReader {
         MemberRefRow memberRefRow = this.PEFileReader.MemberRefTable[memberRefRowId];
         uint classTokenType = memberRefRow.Class & TokenTypeIds.TokenTypeMask;
         uint classRowId = memberRefRow.Class & TokenTypeIds.RIDMask;
-        IMetadataReaderTypeReference/*?*/ parentTypeReference = null;
+        ITypeReference/*?*/ parentTypeReference = null;
         switch (classTokenType) {
           case TokenTypeIds.TypeDef:
             parentTypeReference = this.GetTypeDefinitionAtRowWorker(classRowId);
@@ -3020,25 +3016,23 @@ namespace Microsoft.Cci.MetadataReader {
         MemberReference retModuleMemberReference;
         IName name = this.GetNameFromOffset(memberRefRow.Name);
         byte firstByte = this.PEFileReader.BlobStream.GetByteAt(memberRefRow.Signature, 0);
-        IMetadataReaderGenericTypeInstance/*?*/ genericTypeInstance = parentTypeReference as IMetadataReaderGenericTypeInstance;
-        IMetadataReaderSpecializedNestedTypeReference/*?*/ specializedNestedTypeReference = parentTypeReference as IMetadataReaderSpecializedNestedTypeReference;
+        var genericTypeInstance = parentTypeReference as IGenericTypeInstanceReference;
+        var specializedNestedTypeReference = parentTypeReference as ISpecializedNestedTypeReference;
         if (SignatureHeader.IsFieldSignature(firstByte)) {
-          if (genericTypeInstance != null) {
-            //The same memberRef token can be shared by distinct instance references, therefore recompute every time.
-            return new GenericInstanceFieldReference(this, memberRefRowId, genericTypeInstance, name);
-          } else if (specializedNestedTypeReference != null) {
-            //The same memberRef token can be shared by distinct instance references, therefore recompute every time.
-            return new SpecializedNestedTypeFieldReference(this, memberRefRowId, parentTypeReference, specializedNestedTypeReference, name);
+          if (genericTypeInstance != null || specializedNestedTypeReference != null) {
+            //The same memberRef token can be shared by distinct instance references, therefore recompute this every time.
+            var unspecializedFieldReference = new FieldReference(this, memberRefRowId, TypeCache.Unspecialize(parentTypeReference), name);
+            //TODO: it is possible to cache the unspecialized reference
+            return new SpecializedFieldReference(parentTypeReference, unspecializedFieldReference, this.InternFactory);
           } else {
             retModuleMemberReference = new FieldReference(this, memberRefRowId, parentTypeReference, name);
           }
         } else if (SignatureHeader.IsMethodSignature(firstByte)) {
-          if (genericTypeInstance != null) {
-            //The same memberRef token can be shared by distinct instance references, therefore recompute every time.
-            return new GenericInstanceMethodReference(this, memberRefRowId, genericTypeInstance, name, firstByte);
-          } else if (specializedNestedTypeReference != null) {
-            //The same memberRef token can be shared by distinct instance references, therefore recompute every time.
-            return new SpecializedNestedTypeMethodReference(this, memberRefRowId, parentTypeReference, specializedNestedTypeReference, name, firstByte);
+          if (genericTypeInstance != null || specializedNestedTypeReference != null) {
+            //The same memberRef token can be shared by distinct instance references, therefore recompute this every time.
+            var unspecializedMethodReference = new MethodReference(this, memberRefRowId, TypeCache.Unspecialize(parentTypeReference), name, firstByte);
+            //TODO: it is possible to cache the unspecialized reference
+            return new SpecializedMethodReference(parentTypeReference, unspecializedMethodReference, this.InternFactory);
           } else {
             retModuleMemberReference = new MethodReference(this, memberRefRowId, parentTypeReference, name, firstByte);
           }
@@ -3051,7 +3045,8 @@ namespace Microsoft.Cci.MetadataReader {
       MemberReference/*?*/ ret = this.ModuleMemberReferenceArray[memberRefRowId];
       return ret;
     }
-    internal MemberReference/*?*/ GetModuleMemberReferenceAtRow(
+
+    internal ITypeMemberReference/*?*/ GetModuleMemberReferenceAtRow(
       MetadataObject owningObject,
       uint memberRefRowId
     ) {
@@ -3130,7 +3125,7 @@ namespace Microsoft.Cci.MetadataReader {
         return null;
       }
       uint ownerId = owningObject.TokenValue;
-      GenericMethodInstanceReference/*?*/ methodSpecReference = this.ModuleMethodSpecHashtable.Find(ownerId, methodSpecRowId);
+      IGenericMethodInstanceReference/*?*/ methodSpecReference = this.ModuleMethodSpecHashtable.Find(ownerId, methodSpecRowId);
       if (methodSpecReference == null) {
         lock (GlobalLock.LockingObject) {
           methodSpecReference = this.ModuleMethodSpecHashtable.Find(ownerId, methodSpecRowId);
@@ -3139,11 +3134,11 @@ namespace Microsoft.Cci.MetadataReader {
             uint methToken = methodSpecRow.Method;
             uint tokenKind = methToken & TokenTypeIds.TokenTypeMask;
             uint rowId = methToken & TokenTypeIds.RIDMask;
-            IMetadataReaderMethodReference/*?*/ moduleMethod;
+            IMethodReference/*?*/ moduleMethod;
             if (tokenKind == TokenTypeIds.MethodDef) {
               moduleMethod = this.GetMethodDefAtRow(rowId);
             } else if (tokenKind == TokenTypeIds.MemberRef) {
-              moduleMethod = this.GetModuleMemberReferenceAtRow(owningObject, rowId) as IMetadataReaderMethodReference;
+              moduleMethod = this.GetModuleMemberReferenceAtRow(owningObject, rowId) as IMethodReference;
             } else {
               //  MDError...
               return null;
@@ -3156,15 +3151,10 @@ namespace Microsoft.Cci.MetadataReader {
             MemoryBlock signatureMemoryBlock = this.PEFileReader.BlobStream.GetMemoryBlockAt(methodSpecRow.Instantiation);
             //  TODO: Error checking enough space in signature memoryBlock.
             MemoryReader memoryReader = new MemoryReader(signatureMemoryBlock);
-            //  TODO: Check if this is really field signature there.
+            //  TODO: Check if this is really a method spec signature there.
             MethodSpecSignatureConverter methodSpecSigConv = new MethodSpecSignatureConverter(this, owningObject, memoryReader);
-            methodSpecReference =
-              new GenericMethodInstanceReference(
-                this,
-                methodSpecRowId | TokenTypeIds.MethodSpec,
-                moduleMethod,
-                methodSpecSigConv.GenericTypeArguments
-              );
+            methodSpecReference = new GenericMethodInstanceReferenceWithToken(moduleMethod, methodSpecSigConv.GenericTypeArguments, this.InternFactory,
+              methodSpecRowId | TokenTypeIds.MethodSpec);
             this.ModuleMethodSpecHashtable.Add(ownerId, methodSpecRowId, methodSpecReference);
           }
         }
@@ -3211,7 +3201,7 @@ namespace Microsoft.Cci.MetadataReader {
           else
             return fieldDef;
         case TokenTypeIds.MemberRef: {
-            IMetadataReaderFieldReference/*?*/ fieldRef = this.GetModuleMemberReferenceAtRow(owningObject, rowId) as IMetadataReaderFieldReference;
+            var fieldRef = this.GetModuleMemberReferenceAtRow(owningObject, rowId) as IFieldReference;
             if (fieldRef == null) {
               //  MDError/ILError?
               return Dummy.FieldReference;
@@ -3468,12 +3458,12 @@ namespace Microsoft.Cci.MetadataReader {
   }
 
   #region Signature Converters
-  //  These are short term objects. All the work happens in the constructor and fields are copied into contianing structure...
+  //  These are short term objects. All the work happens in the constructor and fields are copied into containing structure...
   internal abstract class SignatureConverter {
     protected readonly PEFileToObjectModel PEFileToObjectModel;
     protected readonly MetadataObject MetadataOwnerObject;
-    protected readonly IMetadataReaderGenericType/*?*/ ModuleGenericType;
-    protected readonly IMetadataReaderGenericMethod/*?*/ ModuleGenericMethod;
+    protected readonly TypeBase/*?*/ ModuleGenericType;
+    protected readonly GenericMethod/*?*/ ModuleGenericMethod;
     protected readonly IMetadataReaderMethodReference/*?*/ ModuleMethodReference;
     protected readonly IMetadataReaderTypeMemberReference/*?*/ ModuleMemberReference;
     protected MemoryReader SignatureMemoryReader;
@@ -3491,11 +3481,11 @@ namespace Microsoft.Cci.MetadataReader {
       this.ModuleMemberReference = metadataOwnerObject as IMetadataReaderTypeMemberReference;
       TypeMember/*?*/ moduleTypeMember = metadataOwnerObject as TypeMember;
       if (moduleTypeMember != null) {
-        this.ModuleGenericType = moduleTypeMember.ContainingTypeDefinition as IMetadataReaderGenericType;
-        this.ModuleGenericMethod = moduleTypeMember as IMetadataReaderGenericMethod;
+        this.ModuleGenericType = moduleTypeMember.ContainingTypeDefinition as TypeBase;
+        this.ModuleGenericMethod = moduleTypeMember as GenericMethod;
         return;
       }
-      IMetadataReaderGenericType/*?*/ moduleGenericType = metadataOwnerObject as IMetadataReaderGenericType;
+      var moduleGenericType = metadataOwnerObject as TypeBase;
       if (moduleGenericType != null) {
         this.ModuleGenericType = moduleGenericType;
         return;
@@ -3507,7 +3497,7 @@ namespace Microsoft.Cci.MetadataReader {
       }
       GenericMethodParameter/*?*/ genericMethodParam = metadataOwnerObject as GenericMethodParameter;
       if (genericMethodParam != null) {
-        this.ModuleGenericType = genericMethodParam.OwningGenericMethod.ContainingTypeDefinition as IMetadataReaderGenericType;
+        this.ModuleGenericType = genericMethodParam.OwningGenericMethod.ContainingTypeDefinition as TypeBase;
         this.ModuleGenericMethod = genericMethodParam.OwningGenericMethod;
         return;
       }
@@ -3558,15 +3548,13 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
-    protected GenericTypeInstanceReference/*?*/ GetModuleGenericTypeInstanceReference(
-      uint typeSpecToken
-    ) {
+    protected ITypeReference/*?*/ GetModuleGenericTypeInstanceReference(uint typeSpecToken) {
       byte headByte = this.SignatureMemoryReader.ReadByte();
       uint templateTypeEncoded = (uint)this.SignatureMemoryReader.ReadCompressedUInt32();
       uint templateTypeToken = TypeDefOrRefTag.ConvertToToken(templateTypeEncoded);
       uint templateTypeTokenKind = templateTypeToken & TokenTypeIds.TokenTypeMask;
       uint templateTypeRowId = templateTypeToken & TokenTypeIds.RIDMask;
-      IMetadataReaderNamedTypeReference/*?*/ templateTypeReference = null;
+      INamedTypeReference/*?*/ templateTypeReference = null;
       if (templateTypeTokenKind == TokenTypeIds.TypeDef) {
         templateTypeReference = this.PEFileToObjectModel.GetTypeDefinitionAtRowWorker(templateTypeRowId);
       } else if (templateTypeTokenKind == TokenTypeIds.TypeRef) {
@@ -3579,80 +3567,79 @@ namespace Microsoft.Cci.MetadataReader {
         //  Error...
         return null;
       }
-      //  they can be per session most likely dumpable on some big events...
-      int genArgCount = this.SignatureMemoryReader.ReadCompressedUInt32();
-      IMetadataReaderTypeReference/*?*/[] genericArgArray = new IMetadataReaderTypeReference/*?*/[genArgCount];
-      for (int i = 0; i < genArgCount; ++i) {
-        genericArgArray[i] = this.GetTypeReference();
+      var genericArgumentCount = (ushort)this.SignatureMemoryReader.ReadCompressedUInt32();
+      return Specialize(typeSpecToken, templateTypeReference, ref genericArgumentCount, outer: true);
+    }
+
+    private ITypeReference Specialize(uint typeSpecToken, INamedTypeReference namedTypeReference, ref ushort genericArgumentCount, bool outer) {
+      if (genericArgumentCount == 0) return namedTypeReference;
+      var nestedTypeReference = namedTypeReference as INestedTypeReference;
+      if (nestedTypeReference != null) {
+        Contract.Assume(!(nestedTypeReference is ISpecializedNestedTypeReference)); //the type reference comes from the metadata, which is always fully unspecialized
+        var containingType = this.Specialize(0, (INamedTypeReference)nestedTypeReference.ContainingType, ref genericArgumentCount, outer: false);
+        if (containingType != nestedTypeReference.ContainingType)
+          namedTypeReference = new SpecializedNestedTypeReference(nestedTypeReference, containingType, this.PEFileToObjectModel.InternFactory);
       }
-      GenericTypeInstanceReference genericTypeInstanceRef =
-        this.PEFileToObjectModel.typeCache.GetGenericTypeInstanceReference(
-          typeSpecToken,
-          templateTypeReference,
-          genericArgArray
-        );
-      return genericTypeInstanceRef;
+      var genericParametersCount = namedTypeReference.GenericParameterCount;
+      if (genericParametersCount == 0) {
+        if (genericArgumentCount == 0 || !outer) return namedTypeReference;
+        //If we get here we believed that namedTypeReference has no type parameters because it has no tick in its name.
+        //However, there actually are generic types without ticks, so we better now change our belief to match this signature.
+        //This does not work for nested generics, but that is just too bad.
+        genericParametersCount = genericArgumentCount;
+      }
+      genericArgumentCount -= genericParametersCount;
+      var genericArgumentArray = new ITypeReference[genericParametersCount];
+      for (int i = 0; i < genericParametersCount; ++i) genericArgumentArray[i] = this.GetTypeReference()??Dummy.TypeReference;
+      if (outer)
+        return new GenericTypeInstanceReferenceWithToken(typeSpecToken, namedTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
+      else
+        return new GenericTypeInstanceReference(namedTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
     }
 
-    protected ManagedPointerType/*?*/ GetModuleManagedPointerType(
-      uint typeSpecToken
-    ) {
-      IMetadataReaderTypeReference/*?*/ targetType = this.GetTypeReference();
-      if (targetType == null)
-        return null;
-      return new ManagedPointerType(this.PEFileToObjectModel, typeSpecToken, targetType);
+    protected ManagedPointerType/*?*/ GetModuleManagedPointerType(uint typeSpecToken) {
+      ITypeReference/*?*/ targetType = this.GetTypeReference();
+      if (targetType == null) return null;
+      return new ManagedPointerTypeWithToken(typeSpecToken, targetType, this.PEFileToObjectModel.InternFactory);
     }
 
-    protected PointerType/*?*/ GetModulePointerType(
-      uint typeSpecToken
-    ) {
-      IMetadataReaderTypeReference/*?*/ targetType = this.GetTypeReference();
-      if (targetType == null)
-        return null;
-      return new PointerType(this.PEFileToObjectModel, typeSpecToken, targetType);
+    protected PointerType/*?*/ GetModulePointerType(uint typeSpecToken) {
+      ITypeReference/*?*/ targetType = this.GetTypeReference();
+      if (targetType == null) return null;
+      return new PointerTypeWithToken(typeSpecToken, targetType, this.PEFileToObjectModel.InternFactory);
     }
 
-    protected MatrixType/*?*/ GetModuleMatrixType(
-      uint typeSpecToken
-    ) {
-      IMetadataReaderTypeReference/*?*/ elementType = this.GetTypeReference();
-      if (elementType == null)
-        return null;
-      int rank = this.SignatureMemoryReader.ReadCompressedUInt32();
+    protected Matrix/*?*/ GetModuleMatrixType(uint typeSpecToken) {
+      ITypeReference/*?*/ elementType = this.GetTypeReference();
+      if (elementType == null) return null;
+      uint rank = (uint)this.SignatureMemoryReader.ReadCompressedUInt32();
       int numSizes = this.SignatureMemoryReader.ReadCompressedUInt32();
-      List<ulong> sizeList = new List<ulong>(numSizes);
-      for (int i = 0; i < numSizes; ++i) {
-        sizeList.Add((ulong)this.SignatureMemoryReader.ReadCompressedUInt32());
-      }
+      ulong[] sizes = numSizes == 0 ? null : new ulong[numSizes];
+      for (int i = 0; i < numSizes; ++i)
+        sizes[i] = (ulong)this.SignatureMemoryReader.ReadCompressedUInt32();
       int numLowerBounds = this.SignatureMemoryReader.ReadCompressedUInt32();
-      List<int> lowerBoundList = new List<int>(numLowerBounds);
-      for (int i = 0; i < numLowerBounds; ++i) {
-        lowerBoundList.Add(this.SignatureMemoryReader.ReadCompressedInt32());
-      }
-      return new MatrixType(this.PEFileToObjectModel, typeSpecToken, elementType, rank, new EnumerableArrayWrapper<ulong>(sizeList.ToArray()), new EnumerableArrayWrapper<int>(lowerBoundList.ToArray()));
+      int[] lowerBounds = numLowerBounds == 0 ? null : new int[numLowerBounds];
+      for (int i = 0; i < numLowerBounds; ++i)
+        lowerBounds[i] = this.SignatureMemoryReader.ReadCompressedInt32();
+      return new MatrixWithToken(typeSpecToken, elementType, rank, IteratorHelper.GetReadonly(lowerBounds), IteratorHelper.GetReadonly(sizes), this.PEFileToObjectModel.InternFactory);
     }
 
-    protected VectorType/*?*/ GetModuleVectorType(
-      uint typeSpecToken
-    ) {
-      IMetadataReaderTypeReference/*?*/ elementType = this.GetTypeReference();
-      if (elementType == null)
-        return null;
-      return new VectorType(this.PEFileToObjectModel, typeSpecToken, elementType);
+    protected Vector/*?*/ GetModuleVectorType(uint typeSpecToken) {
+      var elementType = this.GetTypeReference();
+      if (elementType == null) return null;
+      return new VectorWithToken(typeSpecToken, elementType, this.PEFileToObjectModel.InternFactory);
     }
 
-    protected FunctionPointerType/*?*/ GetModuleFuntionPointer(
-      uint typeSpecToken
-    ) {
+    protected FunctionPointerType/*?*/ GetModuleFuntionPointer(uint typeSpecToken) {
       byte firstByte = this.SignatureMemoryReader.ReadByte();
       if ((firstByte & SignatureHeader.GenericInstance) == SignatureHeader.GenericInstance) {
         this.SignatureMemoryReader.ReadCompressedUInt32();
-        Debug.Fail("Please mail this PE file to hermanv");
+        Debug.Fail("Please mail this PE file to hermanv@microsoft.com");
       }
       int paramCount = this.SignatureMemoryReader.ReadCompressedUInt32();
       bool dummyPinned;
       EnumerableArrayWrapper<CustomModifier, ICustomModifier> returnCustomModifiers = this.GetCustomModifiers(out dummyPinned);
-      IMetadataReaderTypeReference/*?*/ returnTypeReference;
+      ITypeReference/*?*/ returnTypeReference;
       bool isReturnByReference = false;
       byte retByte = this.SignatureMemoryReader.PeekByte(0);
       if (retByte == ElementType.Void) {
@@ -3670,32 +3657,23 @@ namespace Microsoft.Cci.MetadataReader {
       }
       if (returnTypeReference == null)
         return null;
-      EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> moduleParameters = TypeCache.EmptyParameterInfoArray;
+      EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> moduleParameters = TypeCache.EmptyParameterInfoArray;
       if (paramCount > 0) {
-        IMetadataReaderParameterTypeInformation[] moduleParameterArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
+        IParameterTypeInformation[] moduleParameterArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
         if (moduleParameterArr.Length > 0)
-          moduleParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(moduleParameterArr, Dummy.ParameterTypeInformation);
+          moduleParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(moduleParameterArr, Dummy.ParameterTypeInformation);
       }
-      EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> moduleVarargsParameters = TypeCache.EmptyParameterInfoArray;
+      EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> moduleVarargsParameters = TypeCache.EmptyParameterInfoArray;
       if (paramCount > moduleParameters.RawArray.Length) {
-        IMetadataReaderParameterTypeInformation[] moduleParameterArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - moduleParameters.RawArray.Length);
+        IParameterTypeInformation[] moduleParameterArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - moduleParameters.RawArray.Length);
         if (moduleParameterArr.Length > 0)
-          moduleVarargsParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(moduleParameterArr, Dummy.ParameterTypeInformation);
+          moduleVarargsParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(moduleParameterArr, Dummy.ParameterTypeInformation);
       }
-      return
-        new FunctionPointerType(
-          this.PEFileToObjectModel,
-          typeSpecToken,
-          (CallingConvention)firstByte,
-          returnCustomModifiers,
-          isReturnByReference,
-          returnTypeReference,
-          moduleParameters,
-          moduleVarargsParameters
-        );
+      return new FunctionPointerTypeWithToken(typeSpecToken, (CallingConvention)firstByte, isReturnByReference, returnTypeReference, returnCustomModifiers, moduleParameters,
+        moduleVarargsParameters, this.PEFileToObjectModel.InternFactory);
     }
 
-    protected IMetadataReaderTypeReference/*?*/ GetTypeReference() {
+    protected ITypeReference/*?*/ GetTypeReference() {
       byte headByte = this.SignatureMemoryReader.ReadByte();
       switch (headByte) {
         case ElementType.Void:
@@ -3735,11 +3713,11 @@ namespace Microsoft.Cci.MetadataReader {
         case ElementType.ByReference:
           return this.GetModuleManagedPointerType(0xFFFFFFFF);
         case ElementType.Pointer:
-          return this.GetModulePointerType(0xFFFFFFFF);
+          return PointerType.GetPointerType(this.GetTypeReference()??Dummy.TypeReference, this.PEFileToObjectModel.InternFactory);
         case ElementType.Array:
           return this.GetModuleMatrixType(0xFFFFFFFF);
         case ElementType.SzArray:
-          return this.GetModuleVectorType(0xFFFFFFFF);
+          return Vector.GetVector(this.GetTypeReference()??Dummy.TypeReference, this.PEFileToObjectModel.InternFactory);
         case ElementType.Class:
         case ElementType.ValueType: {
             uint typeEncoded = (uint)this.SignatureMemoryReader.ReadCompressedUInt32();
@@ -3747,38 +3725,34 @@ namespace Microsoft.Cci.MetadataReader {
             return this.PEFileToObjectModel.GetTypeReferenceForToken(this.MetadataOwnerObject, typeToken, headByte == ElementType.ValueType);
           }
         case ElementType.GenericTypeParameter: {
-            ushort ordinal = (ushort)this.SignatureMemoryReader.ReadCompressedUInt32();
+            var ordinal = (ushort)this.SignatureMemoryReader.ReadCompressedUInt32();
             if (this.ModuleGenericType == null) {
               if (this.ModuleMemberReference == null) {
                 //  Error
                 return null;
               }
-              IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.ModuleMemberReference.OwningTypeReference;
-              if (moduleTypeRef == null) {
+              var typeRef = this.ModuleMemberReference.OwningTypeReference;
+              if (typeRef == null) {
                 //  Error
                 return null;
               }
-              return new SignatureGenericTypeParameter(
-                this.PEFileToObjectModel,
-                moduleTypeRef,
-                ordinal
-              );
+              //if we get here, we are parsing the signature of member reference
+              return new SignatureGenericTypeParameter(this.PEFileToObjectModel, typeRef, ordinal);
             }
+            //if we get here, we are parsing the signature of member definition
             return this.ModuleGenericType.GetGenericTypeParameterFromOrdinal(ordinal);
           }
         case ElementType.GenericMethodParameter: {
             ushort ordinal = (ushort)this.SignatureMemoryReader.ReadCompressedUInt32();
             if (this.ModuleGenericMethod == null) {
               if (this.ModuleMethodReference != null) {
-                return new SignatureGenericMethodParameter(
-                  this.PEFileToObjectModel,
-                  this.ModuleMethodReference,
-                  ordinal
-                );
+                //if we get here, we are parsing the signature of generic method instance reference
+                return new SignatureGenericMethodParameter(this.PEFileToObjectModel, this.ModuleMethodReference, ordinal);
               }
               //  TODO: Error
               return null;
             }
+            //if we get here we are parsing the signature of a generic method definition
             return this.ModuleGenericMethod.GetGenericMethodParameterFromOrdinal(ordinal);
           }
         case ElementType.GenericTypeInstance:
@@ -3790,7 +3764,7 @@ namespace Microsoft.Cci.MetadataReader {
             bool dummyPinned;
             this.SignatureMemoryReader.SkipBytes(-1);
             EnumerableArrayWrapper<CustomModifier, ICustomModifier> customModifiers = this.GetCustomModifiers(out dummyPinned);
-            IMetadataReaderTypeReference/*?*/ typeReference = this.GetTypeReference();
+            ITypeReference/*?*/ typeReference = this.GetTypeReference();
             if (typeReference == null)
               return null;
             return new ModifiedTypeReference(this.PEFileToObjectModel, typeReference, customModifiers);
@@ -3800,14 +3774,6 @@ namespace Microsoft.Cci.MetadataReader {
           break;
       }
       return null;
-    }
-
-    private IMetadataReaderGenericTypeInstance/*?*/ GetAsTypeInstanceReference(ITypeReference typeRef) {
-      IMetadataReaderGenericTypeInstance/*?*/ result = typeRef as IMetadataReaderGenericTypeInstance;
-      if (result != null) return result;
-      INestedTypeReference/*?*/ nestedTypeRef = typeRef as INestedTypeReference;
-      if (nestedTypeRef == null) return null;
-      return this.GetAsTypeInstanceReference(nestedTypeRef.ContainingType);
     }
 
     internal struct ParamInfo {
@@ -3834,14 +3800,14 @@ namespace Microsoft.Cci.MetadataReader {
       return null;
     }
 
-    protected IMetadataReaderParameter[] GetModuleParameters(
+    protected IParameterDefinition[] GetModuleParameters(
       bool useParamInfo,
       ISignature signatureDefinition,
       int paramCount
     ) {
       MethodDefinition/*?*/ moduleMethod = signatureDefinition as MethodDefinition;
       int paramIndex = 0;
-      List<IMetadataReaderParameter> moduleParamList = new List<IMetadataReaderParameter>();
+      List<IParameterDefinition> moduleParamList = new List<IParameterDefinition>();
       while (paramIndex < paramCount) {
         bool dummyPinned;
         EnumerableArrayWrapper<CustomModifier, ICustomModifier> customModifiers = this.GetCustomModifiers(out dummyPinned);
@@ -3851,7 +3817,7 @@ namespace Microsoft.Cci.MetadataReader {
           break;
         }
         bool isByReference = false;
-        IMetadataReaderTypeReference/*?*/ typeReference;
+        ITypeReference/*?*/ typeReference;
         if (currByte == ElementType.TypedReference) {
           this.SignatureMemoryReader.SkipBytes(1);
           typeReference = this.PEFileToObjectModel.SystemTypedReference;
@@ -3863,8 +3829,9 @@ namespace Microsoft.Cci.MetadataReader {
           typeReference = this.GetTypeReference();
         }
         ParamInfo? paramInfo = useParamInfo ? this.GetParamInfo(paramIndex + 1) : null;
-        IMetadataReaderParameter moduleParameter;
+        IParameterDefinition moduleParameter;
         if (paramInfo.HasValue) {
+          var paramArrayType = typeReference as IArrayTypeReference;
           //^ assert moduleMethod != null;
           moduleParameter =
             new ParameterWithMetadata(
@@ -3874,7 +3841,7 @@ namespace Microsoft.Cci.MetadataReader {
               typeReference,
               moduleMethod,
               isByReference,
-              (paramIndex == paramCount - 1) && (typeReference is VectorType),
+              (paramIndex == paramCount - 1) && paramArrayType != null && paramArrayType.IsVector,
               paramInfo.Value.ParamRowId,
               paramInfo.Value.ParamName,
               paramInfo.Value.ParamFlags
@@ -3896,9 +3863,9 @@ namespace Microsoft.Cci.MetadataReader {
       return moduleParamList.ToArray();
     }
 
-    protected IMetadataReaderParameterTypeInformation[] GetModuleParameterTypeInformations(ISignature signatureDefinition, int paramCount) {
+    protected IParameterTypeInformation[] GetModuleParameterTypeInformations(ISignature signatureDefinition, int paramCount) {
       int paramIndex = 0;
-      List<IMetadataReaderParameterTypeInformation> moduleParamTypeInfoList = new List<IMetadataReaderParameterTypeInformation>();
+      List<IParameterTypeInformation> moduleParamTypeInfoList = new List<IParameterTypeInformation>();
       while (paramIndex < paramCount) {
         bool dummyPinned;
         EnumerableArrayWrapper<CustomModifier, ICustomModifier> customModifiers = this.GetCustomModifiers(out dummyPinned);
@@ -3908,7 +3875,7 @@ namespace Microsoft.Cci.MetadataReader {
           break;
         }
         bool isByReference = false;
-        IMetadataReaderTypeReference/*?*/ typeReference;
+        ITypeReference/*?*/ typeReference;
         if (currByte == ElementType.TypedReference) {
           this.SignatureMemoryReader.SkipBytes(1);
           typeReference = this.PEFileToObjectModel.SystemTypedReference;
@@ -3919,7 +3886,7 @@ namespace Microsoft.Cci.MetadataReader {
           }
           typeReference = this.GetTypeReference();
         }
-        IMetadataReaderParameterTypeInformation moduleParameter =
+        IParameterTypeInformation moduleParameter =
           new ParameterInfo(
             this.PEFileToObjectModel,
             paramIndex,
@@ -3938,7 +3905,7 @@ namespace Microsoft.Cci.MetadataReader {
 
   internal sealed class FieldSignatureConverter : SignatureConverter {
     internal readonly byte FirstByte;
-    internal readonly IMetadataReaderTypeReference/*?*/ TypeReference;
+    internal readonly ITypeReference/*?*/ TypeReference;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ModuleCustomModifiers;
     //^ [NotDelayed]
     internal FieldSignatureConverter(
@@ -3963,8 +3930,8 @@ namespace Microsoft.Cci.MetadataReader {
     internal readonly byte FirstByte;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
     internal readonly bool ReturnValueIsByReference;
-    internal readonly IMetadataReaderTypeReference/*?*/ ReturnTypeReference;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> Parameters;
+    internal readonly ITypeReference/*?*/ ReturnTypeReference;
+    internal readonly EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> Parameters;
     //^ [NotDelayed]
     internal PropertySignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
@@ -3990,9 +3957,9 @@ namespace Microsoft.Cci.MetadataReader {
       }
       this.ReturnTypeReference = this.GetTypeReference();
       if (paramCount > 0) {
-        IMetadataReaderParameter[] moduleParamArr = this.GetModuleParameters(false, moduleProperty, paramCount);
+        IParameterDefinition[] moduleParamArr = this.GetModuleParameters(false, moduleProperty, paramCount);
         if (moduleParamArr.Length > 0)
-          this.Parameters = new EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>(moduleParamArr, Dummy.ParameterDefinition);
+          this.Parameters = new EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>(moduleParamArr, Dummy.ParameterDefinition);
       }
     }
   }
@@ -4001,8 +3968,8 @@ namespace Microsoft.Cci.MetadataReader {
     internal readonly byte FirstByte;
     internal readonly uint GenericParamCount;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
-    internal readonly IMetadataReaderTypeReference/*?*/ ReturnTypeReference;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> Parameters;
+    internal readonly ITypeReference/*?*/ ReturnTypeReference;
+    internal readonly EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> Parameters;
     internal readonly ReturnParameter ReturnParameter;
     readonly ParamInfo[] ParamInfoArray;
     //^ [NotDelayed]
@@ -4071,9 +4038,9 @@ namespace Microsoft.Cci.MetadataReader {
       }
       this.ParamInfoArray = paramInfoArray;
       if (paramCount > 0) {
-        IMetadataReaderParameter[] moduleParamArr = this.GetModuleParameters(true, moduleMethod, paramCount);
+        IParameterDefinition[] moduleParamArr = this.GetModuleParameters(true, moduleMethod, paramCount);
         if (moduleParamArr.Length > 0)
-          this.Parameters = new EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>(moduleParamArr, Dummy.ParameterDefinition);
+          this.Parameters = new EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>(moduleParamArr, Dummy.ParameterDefinition);
       }
     }
     protected override ParamInfo? GetParamInfo(
@@ -4088,7 +4055,7 @@ namespace Microsoft.Cci.MetadataReader {
   }
 
   internal sealed class TypeSpecSignatureConverter : SignatureConverter {
-    internal readonly IMetadataReaderTypeReference/*?*/ TypeReference;
+    internal readonly ITypeReference/*?*/ TypeReference;
     //^ [NotDelayed]
     internal TypeSpecSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
@@ -4148,7 +4115,7 @@ namespace Microsoft.Cci.MetadataReader {
             bool dummyPinned;
             this.SignatureMemoryReader.SkipBytes(-1);
             EnumerableArrayWrapper<CustomModifier, ICustomModifier> customModifiers = this.GetCustomModifiers(out dummyPinned);
-            IMetadataReaderTypeReference/*?*/ typeReference = this.GetTypeReference();
+            ITypeReference/*?*/ typeReference = this.GetTypeReference();
             if (typeReference == null) {
               //  TODO: Error
             } else {
@@ -4217,10 +4184,10 @@ namespace Microsoft.Cci.MetadataReader {
   internal sealed class MethodRefSignatureConverter : SignatureConverter {
     internal readonly ushort GenericParamCount;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
-    internal readonly IMetadataReaderTypeReference/*?*/ ReturnTypeReference;
+    internal readonly ITypeReference/*?*/ ReturnTypeReference;
     internal readonly bool IsReturnByReference;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
+    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
+    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
     //^ [NotDelayed]
     internal MethodRefSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
@@ -4256,18 +4223,18 @@ namespace Microsoft.Cci.MetadataReader {
         this.ReturnTypeReference = this.GetTypeReference();
       }
       if (paramCount > 0) {
-        IMetadataReaderParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount);
+        IParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount);
         if (reqModuleParamArr.Length > 0)
-          this.RequiredParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
-        IMetadataReaderParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount - reqModuleParamArr.Length);
+          this.RequiredParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
+        IParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount - reqModuleParamArr.Length);
         if (varArgModuleParamArr.Length > 0)
-          this.VarArgParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
+          this.VarArgParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
       }
     }
   }
 
   internal sealed class MethodSpecSignatureConverter : SignatureConverter {
-    internal readonly EnumerableArrayWrapper<IMetadataReaderTypeReference/*?*/, ITypeReference> GenericTypeArguments;
+    internal readonly EnumerableArrayWrapper<ITypeReference/*?*/, ITypeReference> GenericTypeArguments;
     //^ [NotDelayed]
     internal MethodSpecSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
@@ -4283,11 +4250,11 @@ namespace Microsoft.Cci.MetadataReader {
         //  MDError
       }
       int typeArgCount = this.SignatureMemoryReader.ReadCompressedUInt32();
-      IMetadataReaderTypeReference/*?*/[] typeRefArr = new IMetadataReaderTypeReference/*?*/[typeArgCount];
+      ITypeReference/*?*/[] typeRefArr = new ITypeReference/*?*/[typeArgCount];
       for (int i = 0; i < typeArgCount; ++i) {
         typeRefArr[i] = this.GetTypeReference();
       }
-      this.GenericTypeArguments = new EnumerableArrayWrapper<IMetadataReaderTypeReference/*?*/, ITypeReference>(typeRefArr, Dummy.TypeReference);
+      this.GenericTypeArguments = new EnumerableArrayWrapper<ITypeReference/*?*/, ITypeReference>(typeRefArr, Dummy.TypeReference);
     }
   }
   #endregion Signature Converters

@@ -624,8 +624,8 @@ namespace Microsoft.Cci {
   internal sealed class DummyAliasForType : Dummy, IAliasForType {
     #region IAliasForType Members
 
-    public ITypeReference AliasedType {
-      get { return Dummy.TypeReference; }
+    public INamedTypeReference AliasedType {
+      get { return Dummy.NamedTypeReference; }
     }
 
     #endregion

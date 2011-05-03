@@ -4327,7 +4327,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="aliasForType"></param>
     /// <returns></returns>
     protected virtual AliasForType DeepCopy(AliasForType aliasForType) {
-      aliasForType.AliasedType = this.DeepCopy(aliasForType.AliasedType);
+      aliasForType.AliasedType = (INamedTypeReference)this.DeepCopy(aliasForType.AliasedType);
       aliasForType.Members = this.DeepCopy(aliasForType.Members);
       return aliasForType;
     }
@@ -5451,7 +5451,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="namespaceAliasForType">Type of the namespace alias for.</param>
     /// <returns></returns>
     protected virtual NamespaceAliasForType DeepCopy(NamespaceAliasForType namespaceAliasForType) {
-      namespaceAliasForType.AliasedType = this.DeepCopy(namespaceAliasForType.AliasedType);
+      namespaceAliasForType.AliasedType = (INamedTypeReference)this.DeepCopy(namespaceAliasForType.AliasedType);
       namespaceAliasForType.Attributes = this.DeepCopy(namespaceAliasForType.Attributes);
       namespaceAliasForType.Locations = this.DeepCopy(namespaceAliasForType.Locations);
       namespaceAliasForType.Members = this.DeepCopy(namespaceAliasForType.Members);
@@ -5486,7 +5486,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="nestedAliasForType">Type of the nested alias for.</param>
     /// <returns></returns>
     protected virtual NestedAliasForType DeepCopy(NestedAliasForType nestedAliasForType) {
-      nestedAliasForType.AliasedType = this.DeepCopy(nestedAliasForType.AliasedType);
+      nestedAliasForType.AliasedType = (INamedTypeReference)this.DeepCopy(nestedAliasForType.AliasedType);
       nestedAliasForType.Attributes = this.DeepCopy(nestedAliasForType.Attributes);
       nestedAliasForType.Locations = this.DeepCopy(nestedAliasForType.Locations);
       nestedAliasForType.ContainingAlias = this.GetMutableShallowCopy(nestedAliasForType.ContainingAlias);

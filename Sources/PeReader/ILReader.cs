@@ -41,8 +41,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       this.IsLocalsInited = isLocalsInited;
       this.LocalVariables = ILReader.EmptyLocalVariables;
       this.StackSize = stackSize;
-      //^ this.cilInstructions = new EnumerableArrayWrapper<CilInstruction, IOperation>(new CilInstruction[0], Dummy.Operation);
-      //^ this.cilExceptionInformation = new EnumerableArrayWrapper<CilExceptionInformation, IOperationExceptionInformation>(new CilExceptionInformation[0], Dummy.OperationExceptionInformation);
     }
 
     internal void SetLocalVariables(
@@ -69,10 +67,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       get { return this.MethodDefinition; }
     }
 
-    //public IBlockStatement Block {
-    //  get { return Dummy.Block; }
-    //}
-
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -90,7 +84,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
-      get { return Enumerable<ITypeDefinition>.Empty; } //TODO: run through top level types with special names and get the one that have been mangled with the full name of this method
+      get { return Enumerable<ITypeDefinition>.Empty; }
     }
 
     public ushort MaxStack {
@@ -324,7 +318,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       );
     }
 
-    //^ [NotDelayed]
     internal LocalVariableSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
       MethodBody owningMethodBody,
@@ -332,9 +325,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     )
       : base(peFileToObjectModel, signatureMemoryReader, owningMethodBody.MethodDefinition) {
       this.OwningMethodBody = owningMethodBody;
-      //^ this.LocalVariables = ILReader.EmptyLocalVariables;
-      //^ this.SignatureMemoryReader = signatureMemoryReader;
-      //^ base;
       byte firstByte = this.SignatureMemoryReader.ReadByte();
       if (!SignatureHeader.IsLocalVarSignature(firstByte)) {
         //  MDError
@@ -344,7 +334,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       for (int i = 0; i < locVarCount; ++i) {
         locVarArr[i] = this.GetLocalVariable((uint)i);
       }
-      //^ NonNullType.AssertInitialized(locVarArr);
       this.LocalVariables = new EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition>(locVarArr, Dummy.LocalVariable);
     }
   }
@@ -352,22 +341,18 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
   internal sealed class StandAloneMethodSignatureConverter : SignatureConverter {
     internal readonly byte FirstByte;
     internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
-    internal readonly IMetadataReaderTypeReference/*?*/ ReturnTypeReference;
+    internal readonly ITypeReference/*?*/ ReturnTypeReference;
     internal readonly bool IsReturnByReference;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
-    //^ [NotDelayed]
+    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
+    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
     internal StandAloneMethodSignatureConverter(
       PEFileToObjectModel peFileToObjectModel,
       MethodDefinition moduleMethodDef,
       MemoryReader signatureMemoryReader
     )
       : base(peFileToObjectModel, signatureMemoryReader, moduleMethodDef) {
-      //^ this.ReturnCustomModifiers = TypeCache.EmptyCustomModifierArray;
       this.RequiredParameters = TypeCache.EmptyParameterInfoArray;
       this.VarArgParameters = TypeCache.EmptyParameterInfoArray;
-      //^ base;
-      //^ this.SignatureMemoryReader = signatureMemoryReader; //TODO: Spec# bug. This assignment should not be necessary.
       //  TODO: Check minimum required size of the signature...
       this.FirstByte = this.SignatureMemoryReader.ReadByte();
       int paramCount = this.SignatureMemoryReader.ReadCompressedUInt32();
@@ -388,12 +373,12 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
         this.ReturnTypeReference = this.GetTypeReference();
       }
       if (paramCount > 0) {
-        IMetadataReaderParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
+        IParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
         if (reqModuleParamArr.Length > 0)
-          this.RequiredParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
-        IMetadataReaderParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - reqModuleParamArr.Length);
+          this.RequiredParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
+        IParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - reqModuleParamArr.Length);
         if (varArgModuleParamArr.Length > 0)
-          this.VarArgParameters = new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
+          this.VarArgParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
       }
     }
   }
@@ -464,19 +449,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       MemoryReader memoryReader = new MemoryReader(signatureMemoryBlock);
       //  TODO: Check if this is really field signature there.
       StandAloneMethodSignatureConverter standAloneSigConv = new StandAloneMethodSignatureConverter(this.PEFileToObjectModel, this.MethodDefinition, memoryReader);
-      if (standAloneSigConv.ReturnTypeReference == null)
-        return null;
-      return
-        new FunctionPointerType(
-          this.PEFileToObjectModel,
-          0xFFFFFFFF,
-          (CallingConvention)standAloneSigConv.FirstByte,
-            standAloneSigConv.ReturnCustomModifiers,
-            standAloneSigConv.IsReturnByReference,
-            standAloneSigConv.ReturnTypeReference,
-            standAloneSigConv.RequiredParameters,
-            standAloneSigConv.VarArgParameters
-        );
+      if (standAloneSigConv.ReturnTypeReference == null) return null;
+      return new FunctionPointerType((CallingConvention)standAloneSigConv.FirstByte, standAloneSigConv.IsReturnByReference, standAloneSigConv.ReturnTypeReference,
+        standAloneSigConv.ReturnCustomModifiers, standAloneSigConv.RequiredParameters, standAloneSigConv.VarArgParameters, this.PEFileToObjectModel.InternFactory);
     }
 
     IParameterDefinition/*?*/ GetParameter(uint rawParamNum) {
@@ -488,7 +463,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           rawParamNum--;
         }
       }
-      IMetadataReaderParameter[] mpa = this.MethodDefinition.RequiredModuleParameters.RawArray;
+      IParameterDefinition[] mpa = this.MethodDefinition.RequiredModuleParameters.RawArray;
       if (rawParamNum < mpa.Length)
         return mpa[rawParamNum];
       //  Error...
@@ -522,7 +497,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     ITypeReference GetType(
       uint typeToken
     ) {
-      IMetadataReaderTypeReference/*?*/ mtr = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, typeToken);
+      ITypeReference/*?*/ mtr = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, typeToken);
       if (mtr != null)
         return mtr;
       //  Error...
@@ -830,10 +805,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             value = this.GetType(memReader.ReadUInt32());
             break;
           case OperationCode.Newarr: {
-              ITypeReference elementType = this.GetType(memReader.ReadUInt32());
-              IMetadataReaderTypeReference/*?*/ moduleTypeReference = elementType as IMetadataReaderTypeReference;
-              if (moduleTypeReference != null)
-                value = new VectorType(this.PEFileToObjectModel, 0xFFFFFFFF, moduleTypeReference);
+              var elementType = this.GetType(memReader.ReadUInt32());
+              if (elementType != null)
+                value = Vector.GetVector(elementType, PEFileToObjectModel.InternFactory);
               else
                 value = Dummy.ArrayType;
             }
@@ -945,7 +919,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             value = this.GetLocal(memReader.ReadUInt16());
             break;
           case OperationCode.Localloc:
-            value = new PointerType(this.PEFileToObjectModel, 0xFFFFFFFF, this.PEFileToObjectModel.SystemVoid);
+            value = PointerType.GetPointerType(this.PEFileToObjectModel.SystemVoid, this.PEFileToObjectModel.InternFactory);
             break;
           case OperationCode.Endfilter:
             break;
@@ -1003,7 +977,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           uint handlerEnd = sehTableEntry.HandlerOffset + sehTableEntry.HandlerLength;
 
           if (sehTableEntry.SEHFlags == SEHFlags.Catch) {
-            IMetadataReaderTypeReference/*?*/ typeRef = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, sehTableEntry.ClassTokenOrFilterOffset);
+            ITypeReference/*?*/ typeRef = this.PEFileToObjectModel.GetTypeReferenceForToken(this.MethodDefinition, sehTableEntry.ClassTokenOrFilterOffset);
             if (typeRef == null) {
               //  Error
               return false;

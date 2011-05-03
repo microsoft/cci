@@ -889,8 +889,24 @@ namespace Microsoft.Cci {
     /// <param name="index"></param>
     /// <param name="host"></param>
     public GenericMethodParameterReference(IName name, ushort index, IMetadataHost host) {
+      Contract.Ensures(this.DefiningMethod == Dummy.MethodReference);
       this.name = name;
       this.index = index;
+      this.definingMethod = Dummy.MethodReference;
+      this.host = host;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="index"></param>
+    /// <param name="definingMethod"></param>
+    /// <param name="host"></param>
+    public GenericMethodParameterReference(IName name, ushort index, IMethodReference definingMethod, IMetadataHost host) {
+      this.name = name;
+      this.index = index;
+      this.definingMethod = definingMethod;
       this.host = host;
     }
 
@@ -903,10 +919,14 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public IMethodReference DefiningMethod {
-      get { return this.defininingMethod; }
-      set { this.defininingMethod = value; }
+      get { return this.definingMethod; }
+      set {
+        Contract.Requires(this.DefiningMethod == Dummy.MethodReference);
+        Contract.Requires(value != Dummy.MethodReference);
+        this.definingMethod = value;
+      }
     }
-    IMethodReference defininingMethod = Dummy.MethodReference;
+    IMethodReference definingMethod;
 
     /// <summary>
     /// The generic method parameter this reference resolves to.
@@ -940,7 +960,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public uint InternedKey {
-      get { return this.host.InternFactory.GetGenericMethodParameterReferenceInternedKey(this.defininingMethod, this.index); }
+      get { return this.host.InternFactory.GetGenericMethodParameterReferenceInternedKey(this.definingMethod, this.index); }
     }
 
     /// <summary>
@@ -977,7 +997,10 @@ namespace Microsoft.Cci {
     }
 
     ITypeDefinition ITypeReference.ResolvedType {
-      get { return this.ResolvedType; }
+      get {
+        if (this.ResolvedType == Dummy.GenericMethodParameter) return Dummy.Type;
+        return this.ResolvedType;
+      }
     }
 
     /// <summary>
@@ -1494,6 +1517,182 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// A reference to a field of a generic type instance or one of its nested types. It is specialized because any occurrences of the type parameters have been replaced with the
+  /// corresponding type arguments from the instance.
+  /// </summary>
+  public class SpecializedFieldReference : ISpecializedFieldReference {
+
+    /// <summary>
+    /// A reference to a field of a generic type instance or one of its nested types. It is specialized because any occurrences of the type parameters have been replaced with the
+    /// corresponding type arguments from the instance.
+    /// </summary>
+    public SpecializedFieldReference(ITypeReference containingType, IFieldReference unspecializedVersion, IInternFactory internFactory) {
+      this.containingType = containingType;
+      this.unspecializedVersion = unspecializedVersion;
+      this.internFactory = internFactory;
+    }
+
+    IInternFactory internFactory;
+
+    #region ISpecializedFieldReference Members
+
+    /// <summary>
+    /// A reference to the field definition that has been specialized to obtain the field definition referred to by this field reference.
+    /// When the containing type of the referenced specialized field definition is itself a specialized nested type of a generic type instance,
+    /// then the unspecialized field reference refers to the corresponding field definition from the unspecialized containing type definition.
+    /// (I.e. the unspecialized field reference always refers to a field definition that is not obtained via specialization.)
+    /// </summary>
+    public IFieldReference UnspecializedVersion {
+      get { return this.unspecializedVersion; }
+    }
+    readonly IFieldReference unspecializedVersion;
+
+    #endregion
+
+    #region IFieldReference Members
+
+    /// <summary>
+    /// Custom modifiers associated with the referenced field.
+    /// </summary>
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return this.UnspecializedVersion.CustomModifiers; }
+    }
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.internFactory.GetFieldInternedKey(this);
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    /// <summary>
+    /// The referenced field has custom modifiers.
+    /// </summary>
+    public bool IsModified {
+      get { return this.UnspecializedVersion.IsModified; }
+    }
+
+    /// <summary>
+    /// This field is static (shared by all instances of its declaring type).
+    /// </summary>
+    public bool IsStatic {
+      get { return this.UnspecializedVersion.IsStatic; }
+    }
+
+    /// <summary>
+    /// The type of value that is stored in this field.
+    /// </summary>
+    public ITypeReference Type {
+      get {
+        if (this.type == null)
+          this.type = TypeHelper.SpecializeTypeReference(this.UnspecializedVersion.Type, this.ContainingType, this.internFactory);
+        return this.type;
+      }
+    }
+    ITypeReference/*?*/ type;
+
+    /// <summary>
+    /// The Field being referred to.
+    /// </summary>
+    public IFieldDefinition ResolvedField {
+      get {
+        if (this.resolvedField == null)
+          this.resolvedField = TypeHelper.GetField(this.ContainingType.ResolvedType, this);
+        return this.resolvedField;
+      }
+    }
+    IFieldDefinition resolvedField;
+
+    /// <summary>
+    /// Returns a <see cref="System.String"/> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
+    public override string ToString() {
+      return MemberHelper.GetMemberSignature(this, NameFormattingOptions.None);
+    }
+
+    #endregion
+
+    #region ITypeMemberReference Members
+
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    public ITypeReference ContainingType {
+      get { return this.containingType; }
+    }
+    readonly ITypeReference containingType;
+
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get {
+        var result = this.ResolvedField;
+        if (result == Dummy.Field) return Dummy.Field; //TODO: need Dummy.TypeDefinitionMember;
+        return result;
+      }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { return this.UnspecializedVersion.Attributes; }
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedFieldReference).
+    /// </summary>
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedFieldReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public IEnumerable<ILocation> Locations {
+      get { return Enumerable<ILocation>.Empty; }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    public IName Name {
+      get { return this.UnspecializedVersion.Name; }
+    }
+
+    #endregion
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public class SpecializedGenericMethodParameter : SpecializedGenericParameter<IGenericMethodParameter>, IGenericMethodParameter {
@@ -1582,6 +1781,137 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  internal class SpecializedGenericMethodParameterReference : IGenericMethodParameterReference {
+
+    internal SpecializedGenericMethodParameterReference(IMethodReference definingMethod, IGenericMethodParameterReference unspecializedVersion, IInternFactory internFactory) {
+      this.definingMethod = definingMethod;
+      this.unspecializedVersion = unspecializedVersion;
+      this.internFactory = internFactory;
+    }
+
+    readonly IGenericMethodParameterReference unspecializedVersion;
+    readonly IInternFactory internFactory;
+
+    #region IGenericMethodParameterReference Members
+
+    public IMethodReference DefiningMethod {
+      get { return this.definingMethod; }
+    }
+    readonly IMethodReference definingMethod;
+
+    public IGenericMethodParameter ResolvedType {
+      get {
+        if (this.resolvedType == null)
+          this.resolvedType = this.Resolve();
+        return this.resolvedType;
+      }
+    }
+    IGenericMethodParameter/*?*/ resolvedType;
+
+    IGenericMethodParameter Resolve() {
+      var definingMethodDefinition = this.DefiningMethod.ResolvedMethod;
+      if (definingMethodDefinition.IsGeneric) {
+        int index = this.Index;
+        int i = 0;
+        foreach (var parameter in definingMethodDefinition.GenericParameters)
+          if (index == i++) return parameter;
+      }
+      return Dummy.GenericMethodParameter;
+
+    }
+
+    #endregion
+
+    #region ITypeReference Members
+
+    public IAliasForType AliasForType {
+      get { return Dummy.AliasForType; }
+    }
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedField from all other fields obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.internFactory.GetGenericMethodParameterReferenceInternedKey(this.DefiningMethod, this.Index);
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    public bool IsAlias {
+      get { return false; }
+    }
+
+    public bool IsEnum {
+      get { return false; }
+    }
+
+    public bool IsValueType {
+      get { return this.unspecializedVersion.IsValueType; }
+    }
+
+    public IPlatformType PlatformType {
+      get { return this.unspecializedVersion.PlatformType; }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get {
+        var result = this.ResolvedType;
+        if (result == Dummy.GenericMethodParameter) return Dummy.Type;
+        return result;
+      }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { return PrimitiveTypeCode.NotPrimitive; }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { return this.unspecializedVersion.Attributes; }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { return this.unspecializedVersion.Locations; }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { return this.unspecializedVersion.Name; }
+    }
+
+    #endregion
+
+    #region IParameterListEntry Members
+
+    public ushort Index {
+      get { return this.unspecializedVersion.Index; }
+    }
+
+    #endregion
+  }
+
   /// <summary>
   /// 
   /// </summary>
@@ -1649,8 +1979,6 @@ namespace Microsoft.Cci {
       }
     }
     IEnumerable<IGenericMethodParameter>/*?*/ genericParameters;
-
-
 
     /// <summary>
     /// The number of generic parameters of the method. Zero if the referenced method is not generic.
@@ -2088,6 +2416,262 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// A reference to a method of a generic type instance or one of its nested types.
+  /// It is specialized because any occurrences of the type parameters have been replaced with the corresponding type arguments from the instance.
+  /// </summary>
+  public class SpecializedMethodReference : ISpecializedMethodReference {
+
+    /// <summary>
+    /// A reference to a method of a generic type instance or one of its nested types. 
+    /// It is specialized because any occurrences of the type parameters have been replaced with the corresponding type arguments from the instance.
+    /// </summary>
+    public SpecializedMethodReference(ITypeReference containingType, IMethodReference unspecializedVersion, IInternFactory internFactory) {
+      this.containingType = containingType;
+      this.unspecializedVersion = unspecializedVersion;
+      this.internFactory = internFactory;
+    }
+
+    readonly IInternFactory internFactory;
+
+    #region ISpecializedMethodReference Members
+
+    /// <summary>
+    /// A reference to the method definition that has been specialized to obtain the method definition referred to by this method reference.
+    /// When the containing type of the referenced specialized method definition is itself a specialized nested type of a generic type instance,
+    /// then the unspecialized method reference refers to the corresponding method definition from the unspecialized containing type definition.
+    /// (I.e. the unspecialized method reference always refers to a method definition that is not obtained via specialization.)
+    /// </summary>
+    public IMethodReference UnspecializedVersion {
+      get { return this.unspecializedVersion; }
+    }
+    readonly IMethodReference unspecializedVersion;
+
+    #endregion
+
+    #region IMethodReference Members
+
+    /// <summary>
+    /// True if the call sites that references the method with this object supply extra arguments.
+    /// </summary>
+    public bool AcceptsExtraArguments {
+      get { return this.UnspecializedVersion.AcceptsExtraArguments; }
+    }
+
+    /// <summary>
+    /// The number of generic parameters of the method. Zero if the referenced method is not generic.
+    /// </summary>
+    public ushort GenericParameterCount {
+      get { return this.UnspecializedVersion.GenericParameterCount; }
+    }
+
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
+    /// </summary>
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.internFactory.GetMethodInternedKey(this);
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    /// <summary>
+    /// True if the method has generic parameters;
+    /// </summary>
+    public bool IsGeneric {
+      get { return this.UnspecializedVersion.IsGeneric; }
+    }
+
+    /// <summary>
+    /// The number of required parameters of the method.
+    /// </summary>
+    public ushort ParameterCount {
+      get { return this.UnspecializedVersion.ParameterCount; }
+    }
+
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    public IMethodDefinition ResolvedMethod {
+      get {
+        if (this.resolvedMethod == null)
+          this.resolvedMethod = TypeHelper.GetMethod(this.ContainingType.ResolvedType, this);
+        return this.resolvedMethod;
+      }
+    }
+    IMethodDefinition/*?*/ resolvedMethod;
+
+    /// <summary>
+    /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
+    /// </summary>
+    public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      get {
+        if (this.extraParameters == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.extraParameters == null) {
+              var pars = new List<IParameterTypeInformation>();
+              foreach (var parameter in this.UnspecializedVersion.ExtraParameters)
+                pars.Add(new SpecializedMethodParameterTypeInformation(this, parameter, this.internFactory));
+              this.extraParameters = pars.AsReadOnly();
+            }
+          }
+        }
+        return this.extraParameters;
+      }
+    }
+    IEnumerable<IParameterTypeInformation>/*?*/ extraParameters;
+
+    #endregion
+
+    #region ISignature Members
+
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    public CallingConvention CallingConvention {
+      get { return this.UnspecializedVersion.CallingConvention; }
+    }
+
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    public IEnumerable<IParameterTypeInformation> Parameters {
+      get {
+        if (this.parameters == null) {
+          lock (GlobalLock.LockingObject) {
+            if (this.parameters == null) {
+              var pars = new List<IParameterTypeInformation>(this.ParameterCount);
+              foreach (var parameter in this.UnspecializedVersion.Parameters)
+                pars.Add(new SpecializedMethodParameterTypeInformation(this, parameter, this.internFactory));
+              this.parameters = pars.AsReadOnly();
+            }
+          }
+        }
+        return this.parameters;
+      }
+    }
+    IEnumerable<IParameterTypeInformation>/*?*/ parameters;
+
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { return this.UnspecializedVersion.ReturnValueCustomModifiers; }
+    }
+
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    public bool ReturnValueIsByRef {
+      get { return this.UnspecializedVersion.AcceptsExtraArguments; }
+    }
+
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    public bool ReturnValueIsModified {
+      get { return this.UnspecializedVersion.AcceptsExtraArguments; }
+    }
+
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    public ITypeReference Type {
+      get {
+        if (this.type == null)
+          this.type = TypeHelper.SpecializeTypeReference(this.UnspecializedVersion.Type, this, this.internFactory);
+        return this.type;
+      }
+    }
+    ITypeReference/*?*/ type;
+
+    #endregion
+
+    #region ITypeMemberReference Members
+
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    public ITypeReference ContainingType {
+      get { return this.containingType; }
+    }
+    readonly ITypeReference containingType;
+
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get {
+        var result = this.ResolvedMethod;
+        if (result == Dummy.Method) return Dummy.Method; //TODO: introduce Dummy.TypeDefinitionMember
+        return result;
+      }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { return this.UnspecializedVersion.Attributes; }
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedMethodReference).
+    /// </summary>
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedMethodReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public IEnumerable<ILocation> Locations {
+      get { return this.UnspecializedVersion.Locations; }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    public IName Name {
+      get { return this.UnspecializedVersion.Name; }
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Returns a <see cref="System.String"/> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
+    public override string ToString() {
+      return MemberHelper.GetMethodSignature(this,
+        NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters|NameFormattingOptions.TypeConstraints);
+    }
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public class SpecializedParameterDefinition : IParameterDefinition {
@@ -2492,6 +3076,86 @@ namespace Microsoft.Cci {
     /// <value></value>
     public bool IsModified {
       get { return this.partiallySpecializedParameter.IsModified; }
+    }
+
+
+  }
+
+  internal class SpecializedMethodParameterTypeInformation : IParameterTypeInformation {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    internal SpecializedMethodParameterTypeInformation(ISpecializedMethodReference containingMethod, IParameterTypeInformation unspecializedVersion, IInternFactory internFactory) {
+      this.containingMethod = containingMethod;
+      this.unspecializedVersion = unspecializedVersion;
+      this.internFactory = internFactory;
+    }
+
+    readonly IParameterTypeInformation unspecializedVersion;
+    readonly IInternFactory internFactory;
+
+    /// <summary>
+    /// The method or property that defines this parameter.
+    /// </summary>
+    /// <value></value>
+    public ISignature ContainingSignature {
+      get { return this.containingMethod; }
+    }
+    readonly ISpecializedMethodReference containingMethod;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="visitor"></param>
+    public virtual void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// The type of argument value that corresponds to this parameter.
+    /// </summary>
+    /// <value></value>
+    public ITypeReference Type {
+      get {
+        if (this.type == null) {
+          this.type = TypeHelper.SpecializeTypeReference(this.unspecializedVersion.Type, this.containingMethod, this.internFactory);
+        }
+        return this.type;
+      }
+    }
+    ITypeReference/*?*/ type;
+
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
+    /// </summary>
+    /// <value></value>
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return this.unspecializedVersion.CustomModifiers; }
+    }
+
+    /// <summary>
+    /// The position in the parameter list where this instance can be found.
+    /// </summary>
+    /// <value></value>
+    public ushort Index {
+      get { return this.unspecializedVersion.Index; }
+    }
+
+    /// <summary>
+    /// True if the parameter is passed by reference (using a managed pointer).
+    /// </summary>
+    /// <value></value>
+    public bool IsByReference {
+      get { return this.unspecializedVersion.IsByReference; }
+    }
+
+    /// <summary>
+    /// This parameter has one or more custom modifiers associated with it.
+    /// </summary>
+    /// <value></value>
+    public bool IsModified {
+      get { return this.unspecializedVersion.IsModified; }
     }
 
 

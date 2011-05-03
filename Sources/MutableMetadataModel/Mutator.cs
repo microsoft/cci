@@ -4374,7 +4374,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual NamespaceAliasForType Visit(NamespaceAliasForType namespaceAliasForType) {
       if (this.stopTraversal) return namespaceAliasForType;
       this.path.Push(namespaceAliasForType);
-      namespaceAliasForType.AliasedType = this.Visit(namespaceAliasForType.AliasedType);
+      namespaceAliasForType.AliasedType = (INamedTypeReference)this.Visit(namespaceAliasForType.AliasedType);
       namespaceAliasForType.Attributes = this.Visit(namespaceAliasForType.Attributes);
       namespaceAliasForType.Locations = this.Visit(namespaceAliasForType.Locations);
       //TODO: what about the containing namespace? Should that be a reference?
@@ -4416,7 +4416,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual NestedAliasForType Visit(NestedAliasForType nestedAliasForType) {
       if (this.stopTraversal) return nestedAliasForType;
       this.path.Push(nestedAliasForType);
-      nestedAliasForType.AliasedType = this.Visit(nestedAliasForType.AliasedType);
+      nestedAliasForType.AliasedType = (INamedTypeReference)this.Visit(nestedAliasForType.AliasedType);
       nestedAliasForType.Attributes = this.Visit(nestedAliasForType.Attributes);
       nestedAliasForType.Locations = this.Visit(nestedAliasForType.Locations);
       //TODO: what about the containing type? Should that be a reference?
@@ -7058,7 +7058,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual NamespaceAliasForType Mutate(NamespaceAliasForType namespaceAliasForType) {
       if (this.stopTraversal) return namespaceAliasForType;
       this.path.Push(namespaceAliasForType);
-      namespaceAliasForType.AliasedType = this.Visit(namespaceAliasForType.AliasedType);
+      namespaceAliasForType.AliasedType = (INamedTypeReference)this.Visit(namespaceAliasForType.AliasedType);
       namespaceAliasForType.Attributes = this.Mutate(namespaceAliasForType.Attributes);
       namespaceAliasForType.Locations = this.Mutate(namespaceAliasForType.Locations);
       //TODO: what about the containing namespace? Should that be a reference?
@@ -7089,7 +7089,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual NestedAliasForType Mutate(NestedAliasForType nestedAliasForType) {
       if (this.stopTraversal) return nestedAliasForType;
       this.path.Push(nestedAliasForType);
-      nestedAliasForType.AliasedType = this.Visit(nestedAliasForType.AliasedType);
+      nestedAliasForType.AliasedType = (INamedTypeReference)this.Visit(nestedAliasForType.AliasedType);
       nestedAliasForType.Attributes = this.Mutate(nestedAliasForType.Attributes);
       nestedAliasForType.Locations = this.Mutate(nestedAliasForType.Locations);
       //TODO: what about the containing type? Should that be a reference?

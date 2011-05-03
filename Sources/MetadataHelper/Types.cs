@@ -233,6 +233,18 @@ namespace Microsoft.Cci {
       return new CustomModifier(customModifier.IsOptional, copiedModifier);
     }
 
+    internal static ICustomModifier Specialize(ICustomModifier customModifier, ITypeReference targetContainer, IInternFactory internFactory) {
+      ITypeReference copiedModifier = TypeHelper.SpecializeTypeReference(customModifier.Modifier, targetContainer, internFactory);
+      if (copiedModifier == customModifier.Modifier) return customModifier;
+      return new CustomModifier(customModifier.IsOptional, copiedModifier);
+    }
+
+    internal static ICustomModifier Specialize(ICustomModifier customModifier, IMethodReference targetContainer, IInternFactory internFactory) {
+      ITypeReference copiedModifier = TypeHelper.SpecializeTypeReference(customModifier.Modifier, targetContainer, internFactory);
+      if (copiedModifier == customModifier.Modifier) return customModifier;
+      return new CustomModifier(customModifier.IsOptional, copiedModifier);
+    }
+
     /// <summary>
     /// If the given custom modifier has a modifier that involves a type parameter from the generic method from which the given method was instantiated,
     /// then return a new custom modifier using a modifier type that has been specialized with the type arguments of the given generic method instance.
@@ -254,11 +266,11 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given custom modifier has a modifier that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
-    /// then return a new custom modifier using a modifier type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// If the given custom modifier has a modifier that involves a method type parameter of the partially specialized version of specializedMethodReference,
+    /// then return a new custom modifier using a modifier type that is the corresponding method type parameter from specializedMethodReference.
     /// </summary>
-    internal static ICustomModifier SpecializeIfConstructedFromApplicableMethodTypeParameter(ICustomModifier customModifier, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
-      ITypeReference copiedModifier = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(customModifier.Modifier, specializedMethodDefinition, internFactory);
+    internal static ICustomModifier SpecializeIfConstructedFromApplicableMethodTypeParameter(ICustomModifier customModifier, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
+      ITypeReference copiedModifier = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(customModifier.Modifier, specializedMethodReference, internFactory);
       if (copiedModifier == customModifier.Modifier) return customModifier;
       return new CustomModifier(customModifier.IsOptional, copiedModifier);
     }
@@ -567,6 +579,46 @@ namespace Microsoft.Cci {
       return GetGenericTypeInstance(copiedGenericType, copiedArguments, internFactory);
     }
 
+    internal static ITypeReference SpecializeTypeReference(IGenericTypeInstanceReference genericTypeInstance, ITypeReference targetContainer, IInternFactory internFactory) {
+      var copiedGenericType = (INamedTypeReference)TypeHelper.SpecializeTypeReference(genericTypeInstance.GenericType, targetContainer, internFactory);
+      List<ITypeReference>/*?*/ copiedArguments = null;
+      int i = 0;
+      foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
+        ITypeReference copiedArgType = TypeHelper.SpecializeTypeReference(argType, targetContainer, internFactory);
+        if (argType != copiedArgType) {
+          if (copiedArguments == null) copiedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
+          copiedArguments[i] = copiedArgType;
+        }
+        i++;
+      }
+      if (copiedArguments == null) {
+        if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
+        return GetGenericTypeInstance(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+      }
+      return GetGenericTypeInstance(copiedGenericType, copiedArguments, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IGenericTypeInstanceReference genericTypeInstance, IMethodReference targetContainer, IInternFactory internFactory) {
+      var copiedGenericType = (INamedTypeReference)TypeHelper.SpecializeTypeReference(genericTypeInstance.GenericType, targetContainer, internFactory);
+      List<ITypeReference>/*?*/ copiedArguments = null;
+      int i = 0;
+      foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
+        ITypeReference copiedArgType = TypeHelper.SpecializeTypeReference(argType, targetContainer, internFactory);
+        if (argType != copiedArgType) {
+          if (copiedArguments == null) copiedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
+          copiedArguments[i] = copiedArgType;
+        }
+        i++;
+      }
+      if (copiedArguments == null) {
+        if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
+        return GetGenericTypeInstance(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+      }
+      return GetGenericTypeInstance(copiedGenericType, copiedArguments, internFactory);
+    }
+
     /// <summary>
     /// Specialize component type references of genericTypeInstance and (if necessary) return a new instance of the 
     /// specialized version of genericTypeInstance.GenericType using the specialized type arguments. Specialization here
@@ -621,14 +673,14 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Specialize the type arguments of genericTypeIntance and (if necessary) return a new instance of containingTypeInstance.GenericType using
     /// the specialized type arguments. Specialization means replacing any references to the method type parameters of 
-    /// specializedMethodDefinition.UnspecializedVersion with the corresponding values of specializedMethodDefinition.
+    /// the partially specialized version of specializedMethodReference with the corresponding references to method type parameters of specializedMethodReference.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IGenericTypeInstanceReference genericTypeInstance, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
-      var specializedGenericType = (INamedTypeReference)TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeInstance.GenericType, specializedMethodDefinition, internFactory);
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IGenericTypeInstanceReference genericTypeInstance, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
+      var specializedGenericType = (INamedTypeReference)TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeInstance.GenericType, specializedMethodReference, internFactory);
       List<ITypeReference>/*?*/ specializedArguments = null;
       int i = 0;
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
-        ITypeReference specializedArgType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(argType, specializedMethodDefinition, internFactory);
+        ITypeReference specializedArgType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(argType, specializedMethodReference, internFactory);
         if (argType != specializedArgType) {
           if (specializedArguments == null) specializedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
@@ -811,6 +863,119 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  public class GenericTypeInstanceReference : IGenericTypeInstanceReference {
+
+    public GenericTypeInstanceReference(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory) {
+      this.genericType = genericType;
+      this.genericArguments = genericArguments;
+      this.internFactory = internFactory;
+    }
+
+    #region IGenericTypeInstanceReference Members
+
+    public IEnumerable<ITypeReference> GenericArguments {
+      get { return this.genericArguments; }
+    }
+    readonly IEnumerable<ITypeReference> genericArguments;
+
+    public INamedTypeReference GenericType {
+      get { return this.genericType; }
+    }
+    readonly INamedTypeReference genericType; //^ invariant genericType.ResolvedType.IsGeneric;
+
+    #endregion
+
+    #region ITypeReference Members
+
+    public IAliasForType AliasForType {
+      get { return Dummy.AliasForType; }
+    }
+
+    /// <summary>
+    /// A collection of methods that associate unique integers with metadata model entities.
+    /// The association is based on the identities of the entities and the factory does not retain
+    /// references to the given metadata model objects.
+    /// </summary>
+    public IInternFactory InternFactory {
+      get { return this.internFactory; }
+    }
+    readonly IInternFactory internFactory;
+
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0) {
+          this.internedKey = this.InternFactory.GetTypeReferenceInternedKey(this);
+        }
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    public bool IsAlias {
+      get { return false; }
+    }
+
+    public bool IsEnum {
+      get { return false; }
+    }
+
+    public bool IsValueType {
+      get { return this.GenericType.IsValueType; }
+    }
+
+    public IPlatformType PlatformType {
+      get { return this.GenericType.PlatformType; }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get {
+        if (this.resolvedType == null) {
+          var template = this.GenericType.ResolvedType;
+          if (template == Dummy.NamedTypeDefinition)
+            this.resolvedType = Dummy.Type;
+          else
+            this.resolvedType = GenericTypeInstance.GetGenericTypeInstance(template, this.GenericArguments, this.InternFactory);
+        }
+        return this.resolvedType;
+      }
+    }
+    ITypeDefinition/*?*/ resolvedType;
+
+    public PrimitiveTypeCode TypeCode {
+      get { return PrimitiveTypeCode.NotPrimitive; }
+    }
+
+    public override string ToString() {
+      return TypeHelper.GetTypeName(this);
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public virtual IEnumerable<ICustomAttribute> Attributes {
+      get { return Enumerable<ICustomAttribute>.Empty; }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public virtual IEnumerable<ILocation> Locations {
+      get { return Enumerable<ILocation>.Empty; }
+    }
+
+    #endregion
+  }
+
   internal static class GenericParameter {
 
     /// <summary>
@@ -853,6 +1018,34 @@ namespace Microsoft.Cci {
       return genericTypeParameter;
     }
 
+    internal static ITypeReference SpecializeTypeReference(IGenericTypeParameterReference genericTypeParameter, ITypeReference targetContainer) {
+      var index = genericTypeParameter.Index;
+      while (true) {
+        var specializedNestedType = targetContainer as ISpecializedNestedTypeReference;
+        if (specializedNestedType != null) { targetContainer = specializedNestedType.ContainingType; continue; }
+        var genericTypeInstance = targetContainer as IGenericTypeInstanceReference;
+        if (genericTypeInstance == null) return genericTypeParameter;
+        var genericType = genericTypeInstance.GenericType;
+        specializedNestedType = genericType as ISpecializedNestedTypeReference;
+        if (specializedNestedType != null) genericType = specializedNestedType.UnspecializedVersion;
+        if (!TypeHelper.TypesAreEquivalent(genericType, genericTypeParameter.DefiningType)) {
+          targetContainer = genericTypeInstance.GenericType; continue;
+        }
+        var i = 0;
+        foreach (var typeRef in genericTypeInstance.GenericArguments) if (index == i++) return typeRef;
+        Contract.Assume(false); //The type parameter claims it is defined by genericTypeInstance.GenericType, so we should never get here legitimately.
+        return Dummy.TypeReference;
+      }
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IGenericTypeParameterReference genericTypeParameter, IMethodReference targetContainer) {
+      return SpecializeTypeReference(genericTypeParameter, targetContainer.ContainingType);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IGenericMethodParameterReference genericMethodParameter, IMethodReference targetContainer, IInternFactory internFactory) {
+      return new SpecializedGenericMethodParameterReference(targetContainer, genericMethodParameter, internFactory);
+    }
+
     /// <summary>
     /// If the given generic parameter is a generic parameter of the generic method of which the given method is an instance, then return the corresponding type argument that
     /// was used to create the method instance.
@@ -886,14 +1079,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given genericParameter is a generic method parameter of the unspecialized version of specializedMethodDefinition,
-    /// then return the corresponding generic method parameter of specializedMethodDefinition. If it is a generic type parameter
-    /// of a containing specialized nested type definition of the specializedMethodDefinition, then return the specialized version 
-    /// of the type parameter. 
+    /// If the given genericMethodParameter is a generic method parameter of the unspecialized version of specializedMethodDefinition,
+    /// then return the corresponding generic method parameter of specializedMethodDefinition.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IGenericParameterReference genericParameter, SpecializedMethodDefinition specializedMethodDefinition) {
-      var genericMethodParameter = genericParameter as IGenericMethodParameterReference;
-      if (genericMethodParameter != null && genericMethodParameter.DefiningMethod.InternedKey == specializedMethodDefinition.PartiallySpecializedVersion.InternedKey) {
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IGenericMethodParameterReference genericMethodParameter, ISpecializedMethodReference specializedMethodReference) {
+      var specializedMethodDefinition = specializedMethodReference as SpecializedMethodDefinition;
+      if (specializedMethodDefinition != null && genericMethodParameter.DefiningMethod.InternedKey == specializedMethodDefinition.PartiallySpecializedVersion.InternedKey) {
         ushort i = 0;
         ushort n = genericMethodParameter.Index;
         IEnumerator<IGenericMethodParameter> genericParameters = specializedMethodDefinition.GenericParameters.GetEnumerator();
@@ -901,18 +1092,25 @@ namespace Microsoft.Cci {
           if (i++ == n) return genericParameters.Current;
         }
       }
-      IGenericTypeParameterReference genericTypeParameter = genericParameter as IGenericTypeParameterReference;
-      if (genericTypeParameter != null) {
-        var specializedNestedType = specializedMethodDefinition.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
-        if (specializedNestedType != null) return DeepCopyTypeReference(genericTypeParameter, specializedNestedType);
-      }
-      return genericParameter;
+      return genericMethodParameter;
     }
+
+    /// <summary>
+    /// If the given genericTypeParameter is a generic type parameter
+    /// of a containing specialized nested type definition of the specializedMethodReference, then return the specialized version 
+    /// of the type parameter. 
+    /// </summary>
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IGenericTypeParameterReference genericTypeParameter, ISpecializedMethodReference specializedMethodReference) {
+      var specializedNestedType = specializedMethodReference.ContainingType as SpecializedNestedTypeDefinition;
+      if (specializedNestedType != null) return DeepCopyTypeReference(genericTypeParameter, specializedNestedType);
+      return genericTypeParameter;
+    }
+
   }
 
   public class ManagedPointerType : SystemDefinedStructuralType, IManagedPointerType {
 
-    private ManagedPointerType(ITypeReference targetType, IInternFactory internFactory)
+    protected ManagedPointerType(ITypeReference targetType, IInternFactory internFactory)
       : base(internFactory) {
       this.targetType = targetType;
     }
@@ -957,6 +1155,20 @@ namespace Microsoft.Cci {
       return GetManagedPointerType(specializedtargetType, internFactory);
     }
 
+    internal static ITypeReference SpecializeTypeReference(IManagedPointerTypeReference pointer, ITypeReference targetContainer, IInternFactory internFactory) {
+      ITypeReference targetType = pointer.TargetType;
+      ITypeReference specializedtargetType = TypeHelper.SpecializeTypeReference(targetType, targetContainer, internFactory);
+      if (targetType == specializedtargetType) return pointer;
+      return GetManagedPointerType(specializedtargetType, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IManagedPointerTypeReference pointer, IMethodReference targetContainer, IInternFactory internFactory) {
+      ITypeReference targetType = pointer.TargetType;
+      ITypeReference specializedtargetType = TypeHelper.SpecializeTypeReference(targetType, targetContainer, internFactory);
+      if (targetType == specializedtargetType) return pointer;
+      return GetManagedPointerType(specializedtargetType, internFactory);
+    }
+
     /// <summary>
     /// If the given managed pointer has a target type that involves a type parameter from the generic method from which the given method was instantiated,
     /// then return a new pointer using a target type that has been specialized with the type arguments of the given generic method instance.
@@ -980,12 +1192,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given managed pointer has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
-    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// If the given managed pointer has a target type that involves a method type parameter of the partially specialized version of specializedMethodReference,
+    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodReference.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IManagedPointerTypeReference pointer, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IManagedPointerTypeReference pointer, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
       ITypeReference targetType = pointer.TargetType;
-      ITypeReference specializedtargetType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(targetType, specializedMethodDefinition, internFactory);
+      ITypeReference specializedtargetType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(targetType, specializedMethodReference, internFactory);
       if (targetType == specializedtargetType) return pointer;
       return GetManagedPointerType(specializedtargetType, internFactory);
     }
@@ -1008,7 +1220,7 @@ namespace Microsoft.Cci {
 
   public class Matrix : ArrayType {
 
-    private Matrix(ITypeReference elementType, uint rank, IEnumerable<int>/*?*/ lowerBounds, IEnumerable<ulong>/*?*/ sizes, IInternFactory internFactory)
+    protected Matrix(ITypeReference elementType, uint rank, IEnumerable<int>/*?*/ lowerBounds, IEnumerable<ulong>/*?*/ sizes, IInternFactory internFactory)
       : base(elementType, internFactory) {
       this.rank = rank;
       this.lowerBounds = lowerBounds;
@@ -1069,6 +1281,33 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns a deep copy of an array type (a vector). In the copy, every reference to a partially specialized type parameter defined by
+    /// the partially specialized version of targetContainer or of one of targetContainer's parents (if the parent is a SpecializedNestedTypeDefinition 
+    /// and generic) will be replaced with the specialized type parameter, defined by targetContainer or its parents.
+    /// </summary>
+    /// <param name="array">An array type reference to be deep copied. </param>
+    /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
+    /// replace the occurrences of matching type parameters in <paramref name="array"/>.</param>
+    ///  /// <param name="internFactory">An intern factory. </param>
+    internal static ITypeReference SpecializeTypeReference(IArrayTypeReference array, ITypeReference targetContainer, IInternFactory internFactory)
+      //^ requires !array.IsVector;
+    {
+      ITypeReference elementType = array.ElementType;
+      ITypeReference specializedElementType = TypeHelper.SpecializeTypeReference(elementType, targetContainer, internFactory);
+      if (elementType == specializedElementType) return array;
+      return GetMatrix(specializedElementType, array.Rank, array.LowerBounds, array.Sizes, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IArrayTypeReference array, IMethodReference targetContainer, IInternFactory internFactory)
+      //^ requires !array.IsVector;
+    {
+      ITypeReference elementType = array.ElementType;
+      ITypeReference specializedElementType = TypeHelper.SpecializeTypeReference(elementType, targetContainer, internFactory);
+      if (elementType == specializedElementType) return array;
+      return GetMatrix(specializedElementType, array.Rank, array.LowerBounds, array.Sizes, internFactory);
+    }
+
+    /// <summary>
     /// If the given matrix has an element type that involves a type parameter from the generic method from which the given method was instantiated,
     /// then return a new matrix using an element type that has been specialized with the type arguments of the given generic method instance.
     /// </summary>
@@ -1095,14 +1334,14 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given matrix has an element type that involves a method type parameter from the unspecialized version of specializedMethodDefinition,
-    /// then return a new matrix using an element type that has been specialized with the corresponding method type parameter from specializedMethodDefinition.
+    /// If the given matrix has an element type that involves a method type parameter from the partially specialized version of specializedMethodReference,
+    /// then return a new matrix using an element type that has been specialized with the corresponding method type parameter from specializedMethodReference.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IArrayTypeReference array, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory)
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IArrayTypeReference array, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory)
       //^ requires !array.IsVector;
     {
       ITypeReference elementType = array.ElementType;
-      ITypeReference specializedElementType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(elementType, specializedMethodDefinition, internFactory);
+      ITypeReference specializedElementType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(elementType, specializedMethodReference, internFactory);
       if (elementType == specializedElementType) return array;
       return GetMatrix(specializedElementType, array.Rank, array.LowerBounds, array.Sizes, internFactory);
     }
@@ -1110,7 +1349,7 @@ namespace Microsoft.Cci {
 
   public class PointerType : SystemDefinedStructuralType, IPointerType {
 
-    internal PointerType(ITypeReference targetType, IInternFactory internFactory)
+    protected PointerType(ITypeReference targetType, IInternFactory internFactory)
       : base(internFactory) {
       this.targetType = targetType;
     }
@@ -1154,6 +1393,20 @@ namespace Microsoft.Cci {
       return GetPointerType(specializedtargetType, internFactory);
     }
 
+    internal static ITypeReference SpecializeTypeReference(IPointerTypeReference pointer, ITypeReference targetContainer, IInternFactory internFactory) {
+      ITypeReference targetType = pointer.TargetType;
+      ITypeReference specializedtargetType = TypeHelper.SpecializeTypeReference(targetType, targetContainer, internFactory);
+      if (targetType == specializedtargetType) return pointer;
+      return GetPointerType(specializedtargetType, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IPointerTypeReference pointer, IMethodReference targetContainer, IInternFactory internFactory) {
+      ITypeReference targetType = pointer.TargetType;
+      ITypeReference specializedtargetType = TypeHelper.SpecializeTypeReference(targetType, targetContainer, internFactory);
+      if (targetType == specializedtargetType) return pointer;
+      return GetPointerType(specializedtargetType, internFactory);
+    }
+
     /// <summary>
     /// If the given pointer has a target type that involves a type parameter from the generic method from which the given method was instantiated,
     /// then return a new pointer using a target type that has been specialized with the type arguments of the given generic method instance.
@@ -1177,12 +1430,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given pointer has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
-    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// If the given pointer has a target type that involves a method type parameter of the partially specialized version of specializedMethodReference,
+    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodReference.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceReplacingGenericMethodParamter(IPointerTypeReference pointer, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+    internal static ITypeReference DeepCopyTypeReferenceReplacingGenericMethodParameter(IPointerTypeReference pointer, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
       ITypeReference targetType = pointer.TargetType;
-      ITypeReference specializedtargetType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(targetType, specializedMethodDefinition, internFactory);
+      ITypeReference specializedtargetType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(targetType, specializedMethodReference, internFactory);
       if (targetType == specializedtargetType) return pointer;
       return GetPointerType(specializedtargetType, internFactory);
     }
@@ -1229,6 +1482,44 @@ namespace Microsoft.Cci {
       int i = 0;
       foreach (var modifier in modifiedPointer.CustomModifiers) {
         var copiedModifier = CustomModifier.CopyModifierToNewContainer(modifier, targetContainer, internFactory);
+        if (modifier != copiedModifier) {
+          if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedPointer.CustomModifiers);
+          copiedModifiers[i] = copiedModifier;
+        }
+        i++;
+      }
+      if (copiedModifiers == null) {
+        if (copiedTargetType == modifiedPointer.TargetType) return modifiedPointer;
+        return GetModifiedPointerType(copiedTargetType, modifiedPointer.CustomModifiers, internFactory);
+      }
+      return GetModifiedPointerType(copiedTargetType, copiedModifiers, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(ModifiedPointerType modifiedPointer, ITypeReference targetContainer, IInternFactory internFactory) {
+      var copiedTargetType = TypeHelper.SpecializeTypeReference(modifiedPointer.TargetType, targetContainer, internFactory);
+      List<ICustomModifier>/*?*/ copiedModifiers = null;
+      int i = 0;
+      foreach (var modifier in modifiedPointer.CustomModifiers) {
+        var copiedModifier = CustomModifier.Specialize(modifier, targetContainer, internFactory);
+        if (modifier != copiedModifier) {
+          if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedPointer.CustomModifiers);
+          copiedModifiers[i] = copiedModifier;
+        }
+        i++;
+      }
+      if (copiedModifiers == null) {
+        if (copiedTargetType == modifiedPointer.TargetType) return modifiedPointer;
+        return GetModifiedPointerType(copiedTargetType, modifiedPointer.CustomModifiers, internFactory);
+      }
+      return GetModifiedPointerType(copiedTargetType, copiedModifiers, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(ModifiedPointerType modifiedPointer, IMethodReference targetContainer, IInternFactory internFactory) {
+      var copiedTargetType = TypeHelper.SpecializeTypeReference(modifiedPointer.TargetType, targetContainer, internFactory);
+      List<ICustomModifier>/*?*/ copiedModifiers = null;
+      int i = 0;
+      foreach (var modifier in modifiedPointer.CustomModifiers) {
+        var copiedModifier = CustomModifier.Specialize(modifier, targetContainer, internFactory);
         if (modifier != copiedModifier) {
           if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedPointer.CustomModifiers);
           copiedModifiers[i] = copiedModifier;
@@ -1289,15 +1580,15 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given modified pointer has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
-    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// If the given modified pointer has a target type that involves a method type parameter of the partially specialized version of specializedMethodReference,
+    /// then return a new pointer using a target type that is the corresponding method type parameter from specializedMethodReference.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(ModifiedPointerType modifiedPointer, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
-      var copiedTargetType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedPointer.TargetType, specializedMethodDefinition, internFactory);
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(ModifiedPointerType modifiedPointer, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
+      var copiedTargetType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedPointer.TargetType, specializedMethodReference, internFactory);
       List<ICustomModifier>/*?*/ copiedModifiers = null;
       int i = 0;
       foreach (var modifier in modifiedPointer.CustomModifiers) {
-        var copiedModifier = CustomModifier.SpecializeIfConstructedFromApplicableMethodTypeParameter(modifier, specializedMethodDefinition, internFactory);
+        var copiedModifier = CustomModifier.SpecializeIfConstructedFromApplicableMethodTypeParameter(modifier, specializedMethodReference, internFactory);
         if (modifier != copiedModifier) {
           if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedPointer.CustomModifiers);
           copiedModifiers[i] = copiedModifier;
@@ -1377,6 +1668,44 @@ namespace Microsoft.Cci {
       return GetModifiedTypeReference(copiedUnmodifiedType, copiedModifiers, internFactory);
     }
 
+    internal static ITypeReference SpecializeTypeReference(IModifiedTypeReference modifiedTypeReference, ITypeReference targetContainer, IInternFactory internFactory) {
+      ITypeReference copiedUnmodifiedType = TypeHelper.SpecializeTypeReference(modifiedTypeReference.UnmodifiedType, targetContainer, internFactory);
+      List<ICustomModifier>/*?*/ copiedModifiers = null;
+      int i = 0;
+      foreach (var modifier in modifiedTypeReference.CustomModifiers) {
+        var copiedModifier = CustomModifier.Specialize(modifier, targetContainer, internFactory);
+        if (modifier != copiedModifier) {
+          if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedTypeReference.CustomModifiers);
+          copiedModifiers[i] = copiedModifier;
+        }
+        i++;
+      }
+      if (copiedModifiers == null) {
+        if (copiedUnmodifiedType == modifiedTypeReference.UnmodifiedType) return modifiedTypeReference;
+        return GetModifiedTypeReference(copiedUnmodifiedType, modifiedTypeReference.CustomModifiers, internFactory);
+      }
+      return GetModifiedTypeReference(copiedUnmodifiedType, copiedModifiers, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IModifiedTypeReference modifiedTypeReference, IMethodReference targetContainer, IInternFactory internFactory) {
+      ITypeReference copiedUnmodifiedType = TypeHelper.SpecializeTypeReference(modifiedTypeReference.UnmodifiedType, targetContainer, internFactory);
+      List<ICustomModifier>/*?*/ copiedModifiers = null;
+      int i = 0;
+      foreach (var modifier in modifiedTypeReference.CustomModifiers) {
+        var copiedModifier = CustomModifier.Specialize(modifier, targetContainer, internFactory);
+        if (modifier != copiedModifier) {
+          if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedTypeReference.CustomModifiers);
+          copiedModifiers[i] = copiedModifier;
+        }
+        i++;
+      }
+      if (copiedModifiers == null) {
+        if (copiedUnmodifiedType == modifiedTypeReference.UnmodifiedType) return modifiedTypeReference;
+        return GetModifiedTypeReference(copiedUnmodifiedType, modifiedTypeReference.CustomModifiers, internFactory);
+      }
+      return GetModifiedTypeReference(copiedUnmodifiedType, copiedModifiers, internFactory);
+    }
+
     /// <summary>
     /// If the given pointer has a target type that involves a type parameter from the generic method from which the given method was instantiated,
     /// then return a new pointer using a target type that has been specialized with the type arguments of the given generic method instance.
@@ -1424,15 +1753,15 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given modified type reference has a target type that involves a method type parameter of the unspecialized version of specializedMethodDefinition,
-    /// then return a new type reference using a target type that is the corresponding method type parameter from specializedMethodDefinition.
+    /// If the given modified type reference has a target type that involves a method type parameter of the partially specialized version of specializedMethodReference,
+    /// then return a new type reference using a target type that is the corresponding method type parameter from specializedMethodReference.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IModifiedTypeReference modifiedTypeReference, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
-      ITypeReference copiedUnmodifiedType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedTypeReference.UnmodifiedType, specializedMethodDefinition, internFactory);
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IModifiedTypeReference modifiedTypeReference, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
+      ITypeReference copiedUnmodifiedType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedTypeReference.UnmodifiedType, specializedMethodReference, internFactory);
       List<ICustomModifier>/*?*/ copiedModifiers = null;
       int i = 0;
       foreach (var modifier in modifiedTypeReference.CustomModifiers) {
-        var copiedModifier = CustomModifier.SpecializeIfConstructedFromApplicableMethodTypeParameter(modifier, specializedMethodDefinition, internFactory);
+        var copiedModifier = CustomModifier.SpecializeIfConstructedFromApplicableMethodTypeParameter(modifier, specializedMethodReference, internFactory);
         if (modifier != copiedModifier) {
           if (copiedModifiers == null) copiedModifiers = new List<ICustomModifier>(modifiedTypeReference.CustomModifiers);
           copiedModifiers[i] = copiedModifier;
@@ -2370,13 +2699,25 @@ namespace Microsoft.Cci {
       return TypeHelper.GetNestedType(parentCopy.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
     }
 
+    internal static ITypeReference SpecializeTypeReference(INestedTypeReference nestedType, ITypeReference targetContainer, IInternFactory internFactory) {
+      var parentCopy = TypeHelper.SpecializeTypeReference(nestedType.ContainingType, targetContainer, internFactory);
+      if (parentCopy == nestedType.ContainingType) return nestedType;
+      return TypeHelper.GetNestedType(parentCopy.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(INestedTypeReference nestedType, IMethodReference targetContainer, IInternFactory internFactory) {
+      var parentCopy = TypeHelper.SpecializeTypeReference(nestedType.ContainingType, targetContainer, internFactory);
+      if (parentCopy == nestedType.ContainingType) return nestedType;
+      return TypeHelper.GetNestedType(parentCopy.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+    }
+
     /// <summary>
     /// Make a copy of the nested type, with every reference to a (partially specialized version of) generic parameter defined in the 
-    /// partially specialized version of specializedMethodDefinition or its containing specialized nested type replaced with the specialized 
-    /// version of the generic parameter defined in either specializedMethodDefinition or its containing specialized nested type. 
+    /// partially specialized version of specializedMethodReference or its containing specialized nested type replaced with the specialized 
+    /// version of the generic parameter defined in either specializedMethodReference or its containing specialized nested type. 
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(INestedTypeReference nestedType, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
-      var specializedParent = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(nestedType.ContainingType, specializedMethodDefinition, internFactory);
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(INestedTypeReference nestedType, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
+      var specializedParent = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(nestedType.ContainingType, specializedMethodReference, internFactory);
       if (specializedParent == nestedType.ContainingType) return nestedType;
       return TypeHelper.GetNestedType(specializedParent.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
     }
@@ -2979,6 +3320,185 @@ namespace Microsoft.Cci {
     #endregion
   }
 
+  public class SpecializedNestedTypeReference : ISpecializedNestedTypeReference {
+
+    /// <summary>
+    /// A reference to a field of a generic type instance. It is specialized because any occurrences of the type parameters have been replaced with the
+    /// corresponding type arguments from the instance.
+    /// </summary>
+    /// <param name="unspecializedVersion"></param>
+    /// <param name="containingType"></param>
+    /// <param name="internFactory"></param>
+    public SpecializedNestedTypeReference(INestedTypeReference unspecializedVersion, ITypeReference containingType, IInternFactory internFactory) {
+      Contract.Requires(!(unspecializedVersion is ISpecializedNestedTypeReference));
+      Contract.Requires(!(unspecializedVersion.ContainingType is ISpecializedNestedTypeReference));
+      Contract.Requires(!(unspecializedVersion.ContainingType is IGenericTypeInstanceReference));
+      this.unspecializedVersion = unspecializedVersion;
+      this.containingType = containingType;
+      this.internFactory = internFactory;
+    }
+
+    IInternFactory internFactory;
+
+    /// <summary>
+    /// The corresponding (unspecialized) member from the generic type (template) that was instantiated to obtain the containing type
+    /// of this member.
+    /// </summary>
+    public INestedTypeReference/*!*/ UnspecializedVersion {
+      get { return this.unspecializedVersion; }
+    }
+    readonly INestedTypeReference/*!*/ unspecializedVersion;
+
+    #region INestedTypeReference Members
+
+    public ushort GenericParameterCount {
+      get { return this.UnspecializedVersion.GenericParameterCount; }
+    }
+
+    public INestedTypeDefinition ResolvedType {
+      get {
+        if (this.resolvedType == null)
+          this.resolvedType = TypeHelper.GetNestedType(this.ContainingType.ResolvedType, this.Name, this.GenericParameterCount);
+        return this.resolvedType;
+      }
+    }
+    INestedTypeDefinition resolvedType;
+
+    public override string ToString() {
+      return TypeHelper.GetTypeName(this);
+    }
+
+    #endregion
+
+    #region INamedTypeReference Members
+
+
+    public bool MangleName {
+      get { return this.UnspecializedVersion.MangleName; }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get {
+        if (this.ResolvedType == Dummy.NestedType) return Dummy.NamedTypeDefinition;
+        return this.ResolvedType;
+      }
+    }
+
+    #endregion
+
+    #region ITypeMemberReference Members
+
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    /// <value></value>
+    public ITypeReference ContainingType {
+      get { return this.containingType; }
+    }
+    ITypeReference containingType;
+
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    /// <value></value>
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get {
+        return this.ResolvedType;
+      }
+    }
+    #endregion
+
+    #region ITypeReference Members
+
+    public IAliasForType AliasForType {
+      get { return Dummy.AliasForType; }
+    }
+
+    public uint InternedKey {
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.internFactory.GetNestedTypeReferenceInternedKey(this.ContainingType, this.Name, this.GenericParameterCount);
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    public bool IsAlias {
+      get { return false; }
+    }
+
+    public bool IsEnum {
+      get { return false; }
+    }
+
+    public bool IsValueType {
+      get { return this.UnspecializedVersion.IsValueType; }
+    }
+
+    public IPlatformType PlatformType {
+      get { return this.UnspecializedVersion.PlatformType; }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get {
+        if (this.ResolvedType == Dummy.NestedType) return Dummy.Type;
+        return this.ResolvedType;
+      }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { return PrimitiveTypeCode.NotPrimitive; }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    /// <value></value>
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { return this.UnspecializedVersion.Attributes; }
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedNestedTypeReference).
+    /// </summary>
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(ISpecializedNestedTypeReference).
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    /// <value></value>
+    public IEnumerable<ILocation> Locations {
+      get { return this.UnspecializedVersion.Locations; }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    public IName Name {
+      get { return this.UnspecializedVersion.Name; }
+    }
+
+    #endregion
+
+  }
+
   public abstract class SystemDefinedStructuralType : ITypeDefinition {
 
     protected SystemDefinedStructuralType(IInternFactory internFactory) {
@@ -3370,33 +3890,35 @@ namespace Microsoft.Cci {
     /// the original type reference X[T2, T3] (called partially specialized version). We must obtain a copy of the partially specialized version in which we replace 
     /// the references of T2, T3 with their corresponding specialized versions, namely T2+ and T3+. 
     /// </remarks>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(ITypeReference partiallySpecializedTypeReference, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory) {
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(ITypeReference partiallySpecializedTypeReference, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
       var arrayType = partiallySpecializedTypeReference as IArrayTypeReference;
       if (arrayType != null) {
-        if (arrayType.IsVector) return Vector.DeepCopyTypeReferenceWRTSpecializedMethod(arrayType, specializedMethodDefinition, internFactory);
-        return Matrix.DeepCopyTypeReferenceWRTSpecializedMethod(arrayType, specializedMethodDefinition, internFactory);
+        if (arrayType.IsVector) return Vector.DeepCopyTypeReferenceWRTSpecializedMethod(arrayType, specializedMethodReference, internFactory);
+        return Matrix.DeepCopyTypeReferenceWRTSpecializedMethod(arrayType, specializedMethodReference, internFactory);
       }
-      var genericParameter = partiallySpecializedTypeReference as IGenericParameterReference;
-      if (genericParameter != null) return GenericParameter.DeepCopyTypeReferenceWRTSpecializedMethod(genericParameter, specializedMethodDefinition);
+      var genericMethodParameter = partiallySpecializedTypeReference as IGenericMethodParameterReference;
+      if (genericMethodParameter != null) return GenericParameter.DeepCopyTypeReferenceWRTSpecializedMethod(genericMethodParameter, specializedMethodReference);
+      var genericTypeParameter = partiallySpecializedTypeReference as IGenericTypeParameterReference;
+      if (genericTypeParameter != null) return GenericParameter.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeParameter, specializedMethodReference);
       var genericTypeInstance = partiallySpecializedTypeReference as IGenericTypeInstanceReference;
-      if (genericTypeInstance != null) return GenericTypeInstance.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeInstance, specializedMethodDefinition, internFactory);
+      if (genericTypeInstance != null) return GenericTypeInstance.DeepCopyTypeReferenceWRTSpecializedMethod(genericTypeInstance, specializedMethodReference, internFactory);
       var managedPointerType = partiallySpecializedTypeReference as IManagedPointerTypeReference;
-      if (managedPointerType != null) return ManagedPointerType.DeepCopyTypeReferenceWRTSpecializedMethod(managedPointerType, specializedMethodDefinition, internFactory);
+      if (managedPointerType != null) return ManagedPointerType.DeepCopyTypeReferenceWRTSpecializedMethod(managedPointerType, specializedMethodReference, internFactory);
       var modifiedPointer = partiallySpecializedTypeReference as ModifiedPointerType;
-      if (modifiedPointer != null) return ModifiedPointerType.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedPointer, specializedMethodDefinition, internFactory);
+      if (modifiedPointer != null) return ModifiedPointerType.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedPointer, specializedMethodReference, internFactory);
       var modifiedType = partiallySpecializedTypeReference as IModifiedTypeReference;
-      if (modifiedType != null) return ModifiedTypeReference.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedType, specializedMethodDefinition, internFactory);
+      if (modifiedType != null) return ModifiedTypeReference.DeepCopyTypeReferenceWRTSpecializedMethod(modifiedType, specializedMethodReference, internFactory);
       var pointerType = partiallySpecializedTypeReference as IPointerTypeReference;
-      if (pointerType != null) return PointerType.DeepCopyTypeReferenceReplacingGenericMethodParamter(pointerType, specializedMethodDefinition, internFactory);
+      if (pointerType != null) return PointerType.DeepCopyTypeReferenceReplacingGenericMethodParameter(pointerType, specializedMethodReference, internFactory);
       var nestedType = partiallySpecializedTypeReference as INestedTypeReference;
-      if (nestedType != null) return SpecializedNestedTypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(nestedType, specializedMethodDefinition, internFactory);
+      if (nestedType != null) return SpecializedNestedTypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(nestedType, specializedMethodReference, internFactory);
       return partiallySpecializedTypeReference;
     }
   }
 
   public class Vector : ArrayType {
 
-    private Vector(ITypeReference elementType, IInternFactory internFactory)
+    protected Vector(ITypeReference elementType, IInternFactory internFactory)
       : base(elementType, internFactory) {
     }
 
@@ -3439,6 +3961,24 @@ namespace Microsoft.Cci {
       return GetVector(specializedElementType, internFactory);
     }
 
+    internal static ITypeReference SpecializeTypeReference(IArrayTypeReference array, ITypeReference targetContainer, IInternFactory internFactory)
+      //^ requires array.IsVector;
+    {
+      ITypeReference elementType = array.ElementType;
+      ITypeReference specializedElementType = TypeHelper.SpecializeTypeReference(elementType, targetContainer, internFactory);
+      if (elementType == specializedElementType) return array;
+      return GetVector(specializedElementType, internFactory);
+    }
+
+    internal static ITypeReference SpecializeTypeReference(IArrayTypeReference array, IMethodReference targetContainer, IInternFactory internFactory)
+      //^ requires array.IsVector;
+    {
+      ITypeReference elementType = array.ElementType;
+      ITypeReference specializedElementType = TypeHelper.SpecializeTypeReference(elementType, targetContainer, internFactory);
+      if (elementType == specializedElementType) return array;
+      return GetVector(specializedElementType, internFactory);
+    }
+
     public static Vector GetVector(ITypeReference elementType, IInternFactory internFactory) {
       Contract.Ensures(Contract.Result<Vector>() != null);
 
@@ -3472,14 +4012,14 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// If the given vector has an element type that involves a method type parameter from the unspecialized version of specializedMethodDefinition,
-    /// then return a new vector using an element type that is the corresponding method type paramter from specializedMethodDefinition.
+    /// If the given vector has an element type that involves a method type parameter from the partially specialized version of specializedMethodReference,
+    /// then return a new vector using an element type that is the corresponding method type parameter from specializedMethodDefinition.
     /// </summary>
-    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IArrayTypeReference array, SpecializedMethodDefinition specializedMethodDefinition, IInternFactory internFactory)
+    internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(IArrayTypeReference array, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory)
       //^ requires array.IsVector;
     {
       ITypeReference elementType = array.ElementType;
-      ITypeReference specializedElementType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(elementType, specializedMethodDefinition, internFactory);
+      ITypeReference specializedElementType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(elementType, specializedMethodReference, internFactory);
       if (elementType == specializedElementType) return array;
       return GetVector(specializedElementType, internFactory);
     }

@@ -1911,6 +1911,53 @@ namespace Microsoft.Cci {
         && TypeHelper.TypesAreEquivalent(nstType1.ContainingType, nstType2.ContainingType);
     }
 
+    internal static ITypeReference SpecializeTypeReference(ITypeReference typeReference, ITypeReference context, IInternFactory internFactory) {
+      var arrayType = typeReference as IArrayTypeReference;
+      if (arrayType != null) {
+        if (arrayType.IsVector) return Vector.SpecializeTypeReference(arrayType, context, internFactory);
+        return Matrix.SpecializeTypeReference(arrayType, context, internFactory);
+      }
+      var genericTypeParameter = typeReference as IGenericTypeParameterReference;
+      if (genericTypeParameter != null) return GenericParameter.SpecializeTypeReference(genericTypeParameter, context);
+      var genericTypeInstance = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstance != null) return GenericTypeInstance.SpecializeTypeReference(genericTypeInstance, context, internFactory);
+      var managedPointerType = typeReference as IManagedPointerTypeReference;
+      if (managedPointerType != null) return ManagedPointerType.SpecializeTypeReference(managedPointerType, context, internFactory);
+      var modifiedPointer = typeReference as ModifiedPointerType;
+      if (modifiedPointer != null) return ModifiedPointerType.SpecializeTypeReference(modifiedPointer, context, internFactory);
+      var modifiedType = typeReference as IModifiedTypeReference;
+      if (modifiedType != null) return ModifiedTypeReference.SpecializeTypeReference(modifiedType, context, internFactory);
+      var nestedType = typeReference as INestedTypeReference;
+      if (nestedType != null) return SpecializedNestedTypeDefinition.SpecializeTypeReference(nestedType, context, internFactory);
+      var pointerType = typeReference as IPointerTypeReference;
+      if (pointerType != null) return PointerType.SpecializeTypeReference(pointerType, context, internFactory);
+      return typeReference;
+    }
+
+    internal static ITypeReference SpecializeTypeReference(ITypeReference typeReference, IMethodReference context, IInternFactory internFactory) {
+      var arrayType = typeReference as IArrayTypeReference;
+      if (arrayType != null) {
+        if (arrayType.IsVector) return Vector.SpecializeTypeReference(arrayType, context, internFactory);
+        return Matrix.SpecializeTypeReference(arrayType, context, internFactory);
+      }
+      var genericTypeParameter = typeReference as IGenericTypeParameterReference;
+      if (genericTypeParameter != null) return GenericParameter.SpecializeTypeReference(genericTypeParameter, context);
+      var genericMethodTypeParameter = typeReference as IGenericMethodParameterReference;
+      if (genericMethodTypeParameter != null) return GenericParameter.SpecializeTypeReference(genericMethodTypeParameter, context, internFactory);
+      var genericTypeInstance = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstance != null) return GenericTypeInstance.SpecializeTypeReference(genericTypeInstance, context, internFactory);
+      var managedPointerType = typeReference as IManagedPointerTypeReference;
+      if (managedPointerType != null) return ManagedPointerType.SpecializeTypeReference(managedPointerType, context, internFactory);
+      var modifiedPointer = typeReference as ModifiedPointerType;
+      if (modifiedPointer != null) return ModifiedPointerType.SpecializeTypeReference(modifiedPointer, context, internFactory);
+      var modifiedType = typeReference as IModifiedTypeReference;
+      if (modifiedType != null) return ModifiedTypeReference.SpecializeTypeReference(modifiedType, context, internFactory);
+      var nestedType = typeReference as INestedTypeReference;
+      if (nestedType != null) return SpecializedNestedTypeDefinition.SpecializeTypeReference(nestedType, context, internFactory);
+      var pointerType = typeReference as IPointerTypeReference;
+      if (pointerType != null) return PointerType.SpecializeTypeReference(pointerType, context, internFactory);
+      return typeReference;
+    }
 
     /// <summary>
     /// Returns true if the given two types are to be considered equivalent for the purpose of signature matching and so on.

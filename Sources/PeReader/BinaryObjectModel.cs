@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.Cci.UtilityDataStructures;
 using System.Diagnostics;
 using Microsoft.Cci.MetadataReader.PEFileFlags;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -26,19 +27,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal interface IMetadataReaderTypeMemberReference : ITypeMemberReference {
-    IMetadataReaderTypeReference/*?*/ OwningTypeReference { get; }
+    ITypeReference/*?*/ OwningTypeReference { get; }
   }
 
   internal interface IMetadataReaderFieldReference : IMetadataReaderTypeMemberReference, IFieldReference {
-    IMetadataReaderTypeReference/*?*/ FieldType { get; }
+    ITypeReference/*?*/ FieldType { get; }
   }
 
   internal interface IMetadataReaderMethodReference : IMetadataReaderTypeMemberReference, IMethodReference {
     EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers { get; }
-    IMetadataReaderTypeReference/*?*/ ReturnType { get; }
-    bool IsReturnByReference { get; }
-    EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos { get; }
-    EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos { get; }
+    EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos { get; }
+    EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos { get; }
   }
 
   /// <summary>
@@ -107,12 +106,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     Loaded,
   }
 
-  ///// <summary>
-  ///// Contains generic implementation of being a container as well as a scope.
-  ///// </summary>
-  ///// <typeparam name="InternalMemberType">The type of actual objects that are stored</typeparam>
-  ///// <typeparam name="ExternalMemberType">The type of objects as they are exposed outside</typeparam>
-  ///// <typeparam name="ExternalContainerType">Externally visible container type</typeparam>
+  /// <summary>
+  /// Contains generic implementation of being a container as well as a scope.
+  /// </summary>
+  /// <typeparam name="InternalMemberType">The type of actual objects that are stored</typeparam>
+  /// <typeparam name="ExternalMemberType">The type of objects as they are exposed outside</typeparam>
+  /// <typeparam name="ExternalContainerType">Externally visible container type</typeparam>
   internal abstract class ScopedContainerMetadataObject<InternalMemberType, ExternalMemberType, ExternalContainerType> : MetadataDefinitionObject, IContainer<ExternalMemberType>, IScope<ExternalMemberType>
     where InternalMemberType : class, ExternalMemberType
     where ExternalMemberType : class, IScopeMember<IScope<ExternalMemberType>>, IContainerMember<ExternalContainerType> {
@@ -181,7 +180,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IContainer<ExternalMemberType> Members
 
-    //^ [Pure]
+    [Pure]
     public bool Contains(ExternalMemberType/*!*/ member) {
       if (this.ContainerState != ContainerState.Loaded) {
         this.LoadMembers();
@@ -197,7 +196,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IScope<ExternalMemberType> Members
 
-    //^ [Pure]
+    [Pure]
     public IEnumerable<ExternalMemberType> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ExternalMemberType, bool> predicate) {
       if (this.ContainerState != ContainerState.Loaded) {
         this.LoadMembers();
@@ -212,7 +211,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    //^ [Pure]
+    [Pure]
     public IEnumerable<ExternalMemberType> GetMatchingMembers(Function<ExternalMemberType, bool> predicate) {
       if (this.ContainerState != ContainerState.Loaded) {
         this.LoadMembers();
@@ -223,7 +222,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           yield return member;
     }
 
-    //^ [Pure]
+    [Pure]
     public IEnumerable<ExternalMemberType> GetMembersNamed(IName name, bool ignoreCase) {
       if (this.ContainerState != ContainerState.Loaded) {
         this.LoadMembers();
@@ -288,7 +287,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.Module | (uint)0x00000001; }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return this.ModuleIdentity.ToString();
     }
@@ -608,7 +606,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.MemberModules = memberModules;
     }
 
-    //^ [Confined]
     public override string ToString() {
       return this.AssemblyIdentity.ToString();
     }
@@ -656,7 +653,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     IEnumerable<byte> IAssembly.PublicKey {
       get {
-        return new EnumerableArrayWrapper<byte>(this.publicKey);
+        return IteratorHelper.GetReadonly(this.publicKey);
       }
     }
 
@@ -768,7 +765,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return this.ModuleIdentity.ToString();
     }
@@ -846,7 +842,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal uint InternedId {
       get {
         if (this.internedId == 0) {
-          this.internedId = (uint)this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(this.UnifiedAssemblyIdentity);
+          this.internedId = (uint)this.PEFileToObjectModel.InternFactory.GetAssemblyInternedKey(this.UnifiedAssemblyIdentity);
         }
         return this.internedId;
       }
@@ -890,7 +886,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
     AssemblyIdentity/*?*/ unifiedAssemblyIdentity;
 
-    //^ [Confined]
     public override string ToString() {
       return this.AssemblyIdentity.ToString();
     }
@@ -1021,7 +1016,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return TypeHelper.GetNamespaceName((IUnitNamespaceReference)this, NameFormattingOptions.None);
     }
@@ -1068,12 +1062,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class RootNamespace : Namespace, IRootUnitNamespace {
-    //^ [NotDelayed]
     internal RootNamespace(
       PEFileToObjectModel peFileToObjectModel
     )
       : base(peFileToObjectModel, peFileToObjectModel.NameTable.EmptyName, peFileToObjectModel.NameTable.EmptyName) {
-      //^ base;
       this.SetNamespaceNameOffset(0);
     }
 
@@ -1170,7 +1162,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return 0xFFFFFFFF; }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return TypeHelper.GetNamespaceName(this, NameFormattingOptions.None);
     }
@@ -1271,9 +1262,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   #region TypeMember Level Object Model
 
-  internal abstract class TypeMember : MetadataDefinitionObject, IMetadataReaderTypeDefinitionMember {
+  internal abstract class TypeMember : MetadataDefinitionObject, ITypeDefinitionMember {
     protected readonly IName MemberName;
-    //^ [SpecPublic]
     internal readonly TypeBase OwningModuleType;
 
     protected TypeMember(
@@ -1286,18 +1276,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.OwningModuleType = owningModuleType;
     }
 
-    //^ [Confined]
     public override string ToString() {
       return MemberHelper.GetMemberSignature(this, NameFormattingOptions.None);
     }
-
-    #region IMetadataReaderTypeDefinitionMember Members
-
-    public abstract ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
-      GenericTypeInstance genericTypeInstance
-    );
-
-    #endregion
 
     #region ITypeDefinitionMember Members
 
@@ -1356,10 +1337,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal readonly uint FieldDefRowId;
     FieldFlags FieldFlags;
     EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ moduleCustomModifiers;
-    IMetadataReaderTypeReference/*?*/ fieldType;
+    ITypeReference/*?*/ fieldType;
     //^ invariant ((this.FieldFlags & FieldFlags.FieldLoaded) == FieldFlags.FieldLoaded) ==> this.FieldType != null;
 
-    //^ [NotDelayed]
     internal FieldDefinition(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -1400,19 +1380,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFieldInternedKey(this);
+          this.internedKey = this.PEFileToObjectModel.InternFactory.GetFieldInternedKey(this);
         }
         return this.internedKey;
       }
     }
     uint internedKey;
-
-    public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
-      GenericTypeInstance genericTypeInstance
-    ) {
-      Debug.Assert(genericTypeInstance.RawTemplateModuleType == this.OwningModuleType);
-      return new GenericTypeInstanceField(genericTypeInstance, this);
-    }
 
     public override TypeMemberVisibility Visibility {
       get {
@@ -1498,7 +1471,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public ITypeReference Type {
       get {
-        IMetadataReaderTypeReference/*?*/ fieldType = this.FieldType;
+        ITypeReference/*?*/ fieldType = this.FieldType;
         if (fieldType == null) return Dummy.TypeReference;
         return fieldType;
       }
@@ -1512,7 +1485,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IMetadataReaderTypeMemberReference Members
 
-    public IMetadataReaderTypeReference/*?*/ OwningTypeReference {
+    public ITypeReference/*?*/ OwningTypeReference {
       get { return this.OwningModuleType; }
     }
 
@@ -1520,7 +1493,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IMetadataReaderFieldReference Members
 
-    public IMetadataReaderTypeReference/*?*/ FieldType {
+    public ITypeReference/*?*/ FieldType {
       get {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           this.InitFieldSignature();
@@ -1573,7 +1546,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly Namespace ParentModuleNamespace;
     readonly IName NamespaceMemberName;
 
-    //^ [NotDelayed]
     internal GlobalFieldDefinition(
       PEFileToObjectModel peFileToObjectModel,
       IName typeMemberName,
@@ -1586,7 +1558,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, typeMemberName, parentModuleType, fieldDefRowId, fieldFlags) {
       this.NamespaceMemberName = namespaceMemberName;
       this.ParentModuleNamespace = parentModuleNamespace;
-      //^ base;
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -1686,7 +1657,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override void DispatchAsReference(IMetadataVisitor visitor) {
     }
 
-    //^[Pure]
+    [Pure]
     public bool IsMarshalledExplicitly {
       get { return (this.ReturnParamFlags & ParamFlags.HasFieldMarshalReserved) == ParamFlags.HasFieldMarshalReserved; }
     }
@@ -1795,15 +1766,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     MethodFlags MethodFlags;
     MethodImplFlags MethodImplFlags;
     EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnCustomModifiers;
-    IMetadataReaderTypeReference/*?*/ returnType;
+    ITypeReference/*?*/ returnType;
     byte FirstSignatureByte;
-    EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>/*?*/ moduleParameters;
+    EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>/*?*/ moduleParameters;
     ReturnParameter/*?*/ returnParameter;
     //^ invariant this.returnCustomModifiers != null ==> this.returnType != null;
     //^ invariant this.returnCustomModifiers != null ==> this.moduleParameters != null;
     //^ invariant this.returnCustomModifiers != null ==> this.returnParameter != null;
 
-    //^ [NotDelayed]
     internal MethodDefinition(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -1854,10 +1824,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     void InitMethodSignature() {
+      Contract.Ensures(this.returnType != null);
+      Contract.Ensures(this.returnParameter != null);
       lock (this) {
         if (this.returnCustomModifiers == null) {
           MethodDefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodSignature(this);
-          this.returnType = methodSignature.ReturnTypeReference;
+          this.returnType = methodSignature.ReturnTypeReference??Dummy.TypeReference;
           this.FirstSignatureByte = methodSignature.FirstByte;
           this.moduleParameters = methodSignature.Parameters;
           this.returnParameter = methodSignature.ReturnParameter;
@@ -1872,7 +1844,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters);
     }
@@ -1889,8 +1860,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IMethodBody Body {
-      get { return this.PEFileToObjectModel.GetMethodBody(this); }
+      get {
+        var result = this.body == null ? null : this.body.Target as IMethodBody;
+        if (result == null)
+          result = this.PEFileToObjectModel.GetMethodBody(this);
+        if (this.body == null)
+          this.body = new WeakReference(result);
+        else
+          this.body.Target = result;
+        return result;
+      }
     }
+    WeakReference body;
 
     public abstract IEnumerable<IGenericMethodParameter> GenericParameters { get; }
 
@@ -2090,7 +2071,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool ReturnValueIsByRef {
       get {
-        return this.IsReturnByReference;
+        if (this.returnCustomModifiers == null) {
+          this.InitMethodSignature();
+        }
+        return (this.returnParameter.ReturnParamFlags & ParamFlags.ByReference) == ParamFlags.ByReference;
       }
     }
 
@@ -2102,9 +2086,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public ITypeReference Type {
       get {
-        IMetadataReaderTypeReference/*?*/ typeRef = this.ReturnType;
-        if (typeRef == null) return Dummy.TypeReference;
-        return typeRef;
+        if (this.returnCustomModifiers == null) {
+          this.InitMethodSignature();
+        }
+        return this.returnType;
       }
     }
 
@@ -2121,7 +2106,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IMetadataReaderMethodReference Members
 
-    public IMetadataReaderTypeReference/*?*/ OwningTypeReference {
+    public ITypeReference/*?*/ OwningTypeReference {
       get { return this.OwningModuleType; }
     }
 
@@ -2135,16 +2120,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public IMetadataReaderTypeReference/*?*/ ReturnType {
-      get {
-        if (this.returnCustomModifiers == null) {
-          this.InitMethodSignature();
-        }
-        return this.returnType;
-      }
-    }
-
-    public EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> RequiredModuleParameters {
+    public EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> RequiredModuleParameters {
       get {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
@@ -2154,25 +2130,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
+    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
       get {
-        return new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(
+        return new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(
           this.RequiredModuleParameters.RawArray, Dummy.ParameterTypeInformation);
       }
     }
 
-    public EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
+    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
       get { return TypeCache.EmptyParameterInfoArray; }
-    }
-
-    public bool IsReturnByReference {
-      get {
-        if (this.returnCustomModifiers == null) {
-          this.InitMethodSignature();
-        }
-        //^ assert this.returnParameter != null;
-        return (this.returnParameter.ReturnParamFlags & ParamFlags.ByReference) == ParamFlags.ByReference;
-      }
     }
 
     #endregion
@@ -2182,7 +2148,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetMethodInternedKey(this);
+          this.internedKey = this.PEFileToObjectModel.InternFactory.GetMethodInternedKey(this);
         }
         return this.internedKey;
       }
@@ -2202,7 +2168,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal class NonGenericMethod : MethodDefinition {
-    //^ [NotDelayed]
     internal NonGenericMethod(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -2212,13 +2177,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       MethodImplFlags methodImplFlags
     )
       : base(peFileToObjectModel, memberName, parentModuleType, methodDefRowId, methodFlags, methodImplFlags) {
-    }
-
-    public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
-      GenericTypeInstance genericTypeInstance
-    ) {
-      Debug.Assert(genericTypeInstance.RawTemplateModuleType == this.OwningModuleType);
-      return new GenericTypeInstanceNonGenericMethod(genericTypeInstance, this);
     }
 
     public override IEnumerable<IGenericMethodParameter> GenericParameters {
@@ -2233,7 +2191,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return 0; }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
     }
@@ -2244,7 +2201,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly Namespace ParentModuleNamespace;
     readonly IName NamespaceMemberName;
 
-    //^ [NotDelayed]
     internal GlobalNonGenericMethod(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -2258,7 +2214,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, memberName, parentModuleType, methodDefRowId, methodFlags, methodImplFlags) {
       this.NamespaceMemberName = namespaceMemberName;
       this.ParentModuleNamespace = parentModuleNamespace;
-      //^ base;
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -2298,11 +2253,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal class GenericMethod : MethodDefinition, IMetadataReaderGenericMethod {
+  internal class GenericMethod : MethodDefinition {
     internal readonly uint GenericParamRowIdStart;
     internal readonly uint GenericParamRowIdEnd;
 
-    //^ [NotDelayed]
     internal GenericMethod(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -2316,13 +2270,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, memberName, parentModuleType, methodDefRowId, methodFlags, methodImplFlags) {
       this.GenericParamRowIdStart = genericParamRowIdStart;
       this.GenericParamRowIdEnd = genericParamRowIdEnd;
-    }
-
-    public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
-      GenericTypeInstance genericTypeInstance
-    ) {
-      Debug.Assert(genericTypeInstance.RawTemplateModuleType == this.OwningModuleType);
-      return new GenericTypeInstanceGenericMethod(genericTypeInstance, this);
     }
 
     public override IEnumerable<IGenericMethodParameter> GenericParameters {
@@ -2358,7 +2305,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public IMetadataReaderTypeReference/*?*/ GetGenericMethodParameterFromOrdinal(
+    public ITypeReference/*?*/ GetGenericMethodParameterFromOrdinal(
       ushort genericParamOrdinal
     ) {
       if (genericParamOrdinal >= this.GenericMethodParameterCardinality)
@@ -2374,7 +2321,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly Namespace ParentModuleNamespace;
     readonly IName NamespaceMemberName;
 
-    //^ [NotDelayed]
     internal GlobalGenericMethod(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -2390,7 +2336,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       : base(peFileToObjectModel, memberName, parentModuleType, methodDefRowId, methodFlags, methodImplFlags, genericParamRowIdStart, genericParamRowIdEnd) {
       this.NamespaceMemberName = namespaceMemberName;
       this.ParentModuleNamespace = parentModuleNamespace;
-      //^ base;
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -2430,11 +2375,47 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
+  internal sealed class GenericMethodInstanceReferenceWithToken : GenericMethodInstanceReference, IMetadataObjectWithToken {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="genericMethod"></param>
+    /// <param name="genericArguments"></param>
+    /// <param name="internFactory"></param>
+    /// <param name="tokenValue">
+    /// The most significant byte identifies a metadata table, using the values specified by ECMA-335.
+    /// The least significant three bytes represent the row number in the table, with the first row being numbered as one.
+    /// If, for some implemenation reason, a metadata object implements this interface but was not obtained from a metadata table
+    /// (for example it might be an array type reference that only occurs in a signature blob), the the value is UInt32.MaxValue.
+    /// </param>
+    internal GenericMethodInstanceReferenceWithToken(IMethodReference genericMethod, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory, uint tokenValue)
+      : base(genericMethod, genericArguments, internFactory) {
+      Contract.Requires(genericMethod.IsGeneric);
+      this.tokenValue = tokenValue;
+    }
+
+    /// <summary>
+    /// The most significant byte identifies a metadata table, using the values specified by ECMA-335.
+    /// The least significant three bytes represent the row number in the table, with the first row being numbered as one.
+    /// If, for some implemenation reason, a metadata object implements this interface but was not obtained from a metadata table
+    /// (for example it might be an array type reference that only occurs in a signature blob), the the value is UInt32.MaxValue.
+    /// </summary>
+    public uint TokenValue {
+      get { return this.tokenValue; }
+    }
+    uint tokenValue;
+
+  }
+
   internal sealed class EventDefinition : TypeMember, IEventDefinition {
     internal readonly uint EventRowId;
     EventFlags EventFlags;
     bool eventTypeInited;
-    IMetadataReaderTypeReference/*?*/ eventType;
+    ITypeReference/*?*/ eventType;
     IMethodDefinition/*?*/ adderMethod;
     IMethodDefinition/*?*/ removerMethod;
     MethodDefinition/*?*/ fireMethod;
@@ -2442,7 +2423,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     //^ invariant ((this.EventFlags & EventFlags.AdderLoaded) == EventFlags.AdderLoaded) ==> this.adderMethod != null;
     //^ invariant ((this.EventFlags & EventFlags.RemoverLoaded) == EventFlags.RemoverLoaded) ==> this.removerMethod != null;
 
-    //^ [NotDelayed]
     internal EventDefinition(
       PEFileToObjectModel peFileToObjectModel,
       IName memberName,
@@ -2454,13 +2434,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.EventRowId = eventRowId;
       this.EventFlags = eventFlags;
       this.visibility = TypeMemberVisibility.Mask;
-    }
-
-    public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
-      GenericTypeInstance genericTypeInstance
-    ) {
-      Debug.Assert(genericTypeInstance.RawTemplateModuleType == this.OwningModuleType);
-      return new GenericTypeInstanceEvent(genericTypeInstance, this);
     }
 
     internal override uint TokenValue {
@@ -2526,7 +2499,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    internal IMetadataReaderTypeReference/*?*/ EventType {
+    internal ITypeReference/*?*/ EventType {
       get {
         if (!this.eventTypeInited) {
           this.eventTypeInited = true;
@@ -2570,7 +2543,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public ITypeReference Type {
       get {
-        IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.EventType;
+        ITypeReference/*?*/ moduleTypeRef = this.EventType;
         if (moduleTypeRef == null) return Dummy.TypeReference;
         return moduleTypeRef;
       }
@@ -2585,8 +2558,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     PropertyFlags PropertyFlags;
     byte FirstSignatureByte;
     EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnModuleCustomModifiers;
-    IMetadataReaderTypeReference/*?*/ returnType;
-    EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>/*?*/ moduleParameters;
+    ITypeReference/*?*/ returnType;
+    EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>/*?*/ moduleParameters;
     MethodDefinition/*?*/ getterMethod;
     MethodDefinition/*?*/ setterMethod;
     TypeMemberVisibility visibility;
@@ -2605,13 +2578,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.PropertyRowId = propertyRowId;
       this.PropertyFlags = propertyFlags;
       this.visibility = TypeMemberVisibility.Mask;
-    }
-
-    public override ITypeDefinitionMember SpecializeTypeDefinitionMemberInstance(
-      GenericTypeInstance genericTypeInstance
-    ) {
-      Debug.Assert(genericTypeInstance.RawTemplateModuleType == this.OwningModuleType);
-      return new GenericTypeInstanceProperty(genericTypeInstance, this);
     }
 
     internal override uint TokenValue {
@@ -2665,7 +2631,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    internal IMetadataReaderTypeReference ReturnType {
+    internal ITypeReference ReturnType {
       get {
         if (this.returnModuleCustomModifiers == null) {
           this.InitPropertySignature();
@@ -2675,7 +2641,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    internal EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> ModuleParameters {
+    internal EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> ModuleParameters {
       get {
         if (this.returnModuleCustomModifiers == null) {
           this.InitPropertySignature();
@@ -2806,1521 +2772,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   #endregion TypeMember Level Object Model
 
-
-  #region Generic TypeMember Level Object Model
-
-  internal abstract class GenericTypeInstanceMember : ITypeDefinitionMember {
-    protected readonly GenericTypeInstance OwningModuleGenericTypeInstance;
-
-    protected GenericTypeInstanceMember(
-      GenericTypeInstance owningModuleGenericTypeInstance
-    ) {
-      this.OwningModuleGenericTypeInstance = owningModuleGenericTypeInstance;
-    }
-
-    internal abstract TypeMember RawTemplateModuleTypeMember { get; }
-
-    //^ [Confined]
-    public override string ToString() {
-      return MemberHelper.GetMemberSignature(this, NameFormattingOptions.None);
-    }
-
-    #region ITypeDefinitionMember Members
-
-    public ITypeDefinition ContainingTypeDefinition {
-      get { return this.OwningModuleGenericTypeInstance; }
-    }
-
-    public TypeMemberVisibility Visibility {
-      get { return this.RawTemplateModuleTypeMember.Visibility; }
-    }
-
-    public abstract void Dispatch(IMetadataVisitor visitor);
-
-    public abstract void DispatchAsReference(IMetadataVisitor visitor);
-
-    #endregion
-
-    #region ITypeMemberReference Members
-
-    public ITypeReference ContainingType {
-      get { return this.ContainingTypeDefinition; }
-    }
-
-    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
-      get { return this; }
-    }
-
-    #endregion
-
-    #region IContainerMember<ITypeDefinition> Members
-
-    public ITypeDefinition Container {
-      get { return this.OwningModuleGenericTypeInstance; }
-    }
-
-    #endregion
-
-    #region INamedEntity Members
-
-    public IName Name {
-      get { return this.RawTemplateModuleTypeMember.Name; }
-    }
-
-    #endregion
-
-    #region IDefinition Members
-
-    public IEnumerable<ICustomAttribute> Attributes {
-      get { return this.RawTemplateModuleTypeMember.Attributes; }
-    }
-
-    public IEnumerable<ILocation> Locations {
-      get { return Enumerable<ILocation>.Empty; }
-    }
-
-    #endregion
-
-    #region IScopeMember<IScope<ITypeDefinitionMember>> Members
-
-    public IScope<ITypeDefinitionMember> ContainingScope {
-      get { return this.OwningModuleGenericTypeInstance; }
-    }
-
-    #endregion
-  }
-
-  internal sealed class GenericTypeInstanceField : GenericTypeInstanceMember, IMetadataReaderFieldReference, ISpecializedFieldDefinition {
-    readonly FieldDefinition RawTemplateModuleField;
-    bool fieldTypeInited;
-    IMetadataReaderTypeReference/*?*/ fieldType;
-
-    internal GenericTypeInstanceField(
-      GenericTypeInstance owningModuleGenericTypeInstance,
-      FieldDefinition rawTemplateModuleField
-    )
-      : base(owningModuleGenericTypeInstance) {
-      this.RawTemplateModuleField = rawTemplateModuleField;
-    }
-
-    internal override TypeMember RawTemplateModuleTypeMember {
-      get { return this.RawTemplateModuleField; }
-    }
-
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit((ISpecializedFieldDefinition)this);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit((ISpecializedFieldReference)this);
-    }
-
-    #region IFieldDefinition Members
-
-    public uint BitLength {
-      get { return this.RawTemplateModuleField.BitLength; }
-    }
-
-    public bool IsBitField {
-      get { return this.RawTemplateModuleField.IsBitField; }
-    }
-
-    public bool IsCompileTimeConstant {
-      get { return this.RawTemplateModuleField.IsCompileTimeConstant; }
-    }
-
-    public bool IsMapped {
-      get { return this.RawTemplateModuleField.IsMapped; }
-    }
-
-    public bool IsMarshalledExplicitly {
-      get { return this.RawTemplateModuleField.IsMarshalledExplicitly; }
-    }
-
-    public bool IsNotSerialized {
-      get { return this.RawTemplateModuleField.IsNotSerialized; }
-    }
-
-    public bool IsReadOnly {
-      get { return this.RawTemplateModuleField.IsReadOnly; }
-    }
-
-    public bool IsRuntimeSpecial {
-      get { return this.RawTemplateModuleField.IsRuntimeSpecial; }
-    }
-
-    public bool IsSpecialName {
-      get { return this.RawTemplateModuleField.IsSpecialName; }
-    }
-
-    public bool IsStatic {
-      get { return this.RawTemplateModuleField.IsStatic; }
-    }
-
-    public uint Offset {
-      get { return this.RawTemplateModuleField.Offset; }
-    }
-
-    public int SequenceNumber {
-      get { return this.RawTemplateModuleField.SequenceNumber; }
-    }
-
-    public IMetadataConstant CompileTimeValue {
-      get { return this.RawTemplateModuleField.CompileTimeValue; }
-    }
-
-    public IMarshallingInformation MarshallingInformation {
-      get { return this.RawTemplateModuleField.MarshallingInformation; }
-    }
-
-    public ITypeReference Type {
-      get {
-        IMetadataReaderTypeReference/*?*/ moduleFieldType = this.FieldType;
-        if (moduleFieldType == null) return Dummy.TypeReference;
-        return moduleFieldType;
-      }
-    }
-
-    public ISectionBlock FieldMapping {
-      get { return this.RawTemplateModuleField.FieldMapping; }
-    }
-
-    #endregion
-
-    #region IMetadataReaderTypeMemberReference Members
-
-    public IMetadataReaderTypeReference/*?*/ OwningTypeReference {
-      get { return this.OwningModuleGenericTypeInstance; }
-    }
-
-    #endregion
-
-    #region ISpecializedFieldDefinition Members
-
-    public IFieldDefinition UnspecializedVersion {
-      get { return this.RawTemplateModuleField; }
-    }
-
-    #endregion
-
-    #region IMetadataReaderFieldReference Members
-
-    public IMetadataReaderTypeReference/*?*/ FieldType {
-      get {
-        if (!this.fieldTypeInited) {
-          this.fieldTypeInited = true;
-          IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.RawTemplateModuleField.FieldType;
-          if (moduleTypeRef != null)
-            this.fieldType = moduleTypeRef.SpecializeTypeInstance(this.OwningModuleGenericTypeInstance);
-        }
-        return this.fieldType;
-      }
-    }
-
-    #endregion
-
-    #region IFieldReference Members
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return this.RawTemplateModuleField.CustomModifiers; }
-    }
-
-    public uint InternedKey {
-      get {
-        if (this.internedKey == 0) {
-          this.internedKey = this.RawTemplateModuleField.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFieldInternedKey(this);
-        }
-        return this.internedKey;
-      }
-    }
-    uint internedKey;
-
-    public bool IsModified {
-      get { return this.RawTemplateModuleField.IsModified; }
-    }
-
-    public IFieldDefinition ResolvedField {
-      get { return this; }
-    }
-
-    #endregion
-
-    #region IMetadataConstantContainer
-
-    IMetadataConstant IMetadataConstantContainer.Constant {
-      get { return this.CompileTimeValue; }
-    }
-
-    #endregion
-
-    #region ISpecializedFieldReference Members
-
-    IFieldReference ISpecializedFieldReference.UnspecializedVersion {
-      get { return this.RawTemplateModuleField; }
-    }
-
-    #endregion
-  }
-
-  internal abstract class GenericTypeInstanceMethod : GenericTypeInstanceMember, ISpecializedMethodDefinition, IMetadataReaderMethodReference {
-    bool returnTypeInited;
-    IMetadataReaderTypeReference/*?*/ returnType;
-    EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>/*?*/ moduleParameters;
-
-    internal GenericTypeInstanceMethod(
-      GenericTypeInstance owningModuleGenericTypeInstance
-    )
-      : base(owningModuleGenericTypeInstance) {
-    }
-
-    internal abstract MethodDefinition RawTemplateModuleMethod { get; }
-
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit((ISpecializedMethodReference)this);
-    }
-
-    //^ [Confined]
-    public override string ToString() {
-      return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters);
-    }
-
-    #region IMethodDefinition Members
-
-    public bool AcceptsExtraArguments {
-      get { return this.RawTemplateModuleMethod.AcceptsExtraArguments; }
-    }
-
-    public IMethodBody Body {
-      get { return Dummy.MethodBody; }
-    }
-
-    public abstract IEnumerable<IGenericMethodParameter> GenericParameters { get; }
-
-    public abstract ushort GenericParameterCount { get; }
-
-    public bool HasDeclarativeSecurity {
-      get { return this.RawTemplateModuleMethod.HasDeclarativeSecurity; }
-    }
-
-    public bool HasExplicitThisParameter {
-      get { return this.RawTemplateModuleMethod.HasExplicitThisParameter; }
-    }
-
-    public bool IsAbstract {
-      get { return this.RawTemplateModuleMethod.IsAbstract; }
-    }
-
-    public bool IsAccessCheckedOnOverride {
-      get { return this.RawTemplateModuleMethod.IsAccessCheckedOnOverride; }
-    }
-
-    public bool IsCil {
-      get { return this.RawTemplateModuleMethod.IsCil; }
-    }
-
-    public bool IsExternal {
-      get { return this.RawTemplateModuleMethod.IsExternal; }
-    }
-
-    public bool IsForwardReference {
-      get { return this.RawTemplateModuleMethod.IsForwardReference; }
-    }
-
-    public abstract bool IsGeneric { get; }
-
-    public bool IsHiddenBySignature {
-      get { return this.RawTemplateModuleMethod.IsHiddenBySignature; }
-    }
-
-    public bool IsNativeCode {
-      get { return this.RawTemplateModuleMethod.IsNativeCode; }
-    }
-
-    public bool IsNewSlot {
-      get { return this.RawTemplateModuleMethod.IsNewSlot; }
-    }
-
-    public bool IsNeverInlined {
-      get { return this.RawTemplateModuleMethod.IsNeverInlined; }
-    }
-
-    public bool IsNeverOptimized {
-      get { return this.RawTemplateModuleMethod.IsNeverOptimized; }
-    }
-
-    public bool IsPlatformInvoke {
-      get { return this.RawTemplateModuleMethod.IsPlatformInvoke; }
-    }
-
-    public bool IsRuntimeImplemented {
-      get { return this.RawTemplateModuleMethod.IsRuntimeImplemented; }
-    }
-
-    public bool IsRuntimeInternal {
-      get { return this.RawTemplateModuleMethod.IsRuntimeInternal; }
-    }
-
-    public bool IsRuntimeSpecial {
-      get { return this.RawTemplateModuleMethod.IsRuntimeSpecial; }
-    }
-
-    public bool IsSealed {
-      get { return this.RawTemplateModuleMethod.IsSealed; }
-    }
-
-    public bool IsSpecialName {
-      get { return this.RawTemplateModuleMethod.IsSpecialName; }
-    }
-
-    public bool IsStatic {
-      get { return this.RawTemplateModuleMethod.IsStatic; }
-    }
-
-    public bool IsSynchronized {
-      get { return this.RawTemplateModuleMethod.IsSynchronized; }
-    }
-
-    public bool IsVirtual {
-      get { return this.RawTemplateModuleMethod.IsVirtual; }
-    }
-
-    public bool IsUnmanaged {
-      get { return this.RawTemplateModuleMethod.IsUnmanaged; }
-    }
-
-    public bool PreserveSignature {
-      get { return this.RawTemplateModuleMethod.PreserveSignature; }
-    }
-
-    public IPlatformInvokeInformation PlatformInvokeData {
-      get { return this.RawTemplateModuleMethod.PlatformInvokeData; }
-    }
-
-    public bool RequiresSecurityObject {
-      get { return this.RawTemplateModuleMethod.RequiresSecurityObject; }
-    }
-
-    public bool ReturnValueIsMarshalledExplicitly {
-      get { return this.RawTemplateModuleMethod.ReturnValueIsMarshalledExplicitly; }
-    }
-
-    public IMarshallingInformation ReturnValueMarshallingInformation {
-      get { return this.RawTemplateModuleMethod.ReturnValueMarshallingInformation; }
-    }
-
-    public IName ReturnValueName {
-      get { return this.RawTemplateModuleMethod.ReturnValueName; }
-    }
-
-    public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return this.RawTemplateModuleMethod.SecurityAttributes; }
-    }
-
-    public bool IsConstructor {
-      get { return this.RawTemplateModuleMethod.IsConstructor; }
-    }
-
-    public bool IsStaticConstructor {
-      get { return this.RawTemplateModuleMethod.IsStaticConstructor; }
-    }
-
-    #endregion
-
-    #region ISignature Members
-
-    public IEnumerable<IParameterDefinition> Parameters {
-      get { return this.RequiredModuleParameters; }
-    }
-
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return this.RawTemplateModuleMethod.ReturnValueAttributes; }
-    }
-
-    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return this.RawTemplateModuleMethod.ReturnValueCustomModifiers; }
-    }
-
-    public bool ReturnValueIsByRef {
-      get { return this.RawTemplateModuleMethod.ReturnValueIsByRef; }
-    }
-
-    public bool ReturnValueIsModified {
-      get { return this.RawTemplateModuleMethod.ReturnValueIsModified; }
-    }
-
-    public ITypeReference Type {
-      get {
-        IMetadataReaderTypeReference/*?*/ typeRef = this.ReturnType;
-        if (typeRef == null) return Dummy.TypeReference;
-        return typeRef;
-      }
-    }
-
-    public CallingConvention CallingConvention {
-      get { return this.RawTemplateModuleMethod.CallingConvention; }
-    }
-
-    #endregion
-
-    #region ISpecializedMethodDefinition Members
-
-    public IMethodDefinition UnspecializedVersion {
-      get { return this.RawTemplateModuleMethod; }
-    }
-
-    #endregion
-
-    #region IMetadataReaderMethodReference Members
-
-    public IMetadataReaderTypeReference/*?*/ OwningTypeReference {
-      get { return this.OwningModuleGenericTypeInstance; }
-    }
-
-    public EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers {
-      get { return this.RawTemplateModuleMethod.ReturnCustomModifiers; }
-    }
-
-    public IMetadataReaderTypeReference/*?*/ ReturnType {
-      get {
-        if (!this.returnTypeInited) {
-          this.returnTypeInited = true;
-          IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.RawTemplateModuleMethod.ReturnType;
-          if (moduleTypeRef != null)
-            this.returnType = moduleTypeRef.SpecializeTypeInstance(this.OwningModuleGenericTypeInstance);
-        }
-        return this.returnType;
-      }
-    }
-
-    public EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> RequiredModuleParameters {
-      get {
-        if (this.moduleParameters == null) {
-          this.moduleParameters = TypeCache.SpecializeInstantiatedParameters(this, this.RawTemplateModuleMethod.RequiredModuleParameters, this.OwningModuleGenericTypeInstance);
-        }
-        return this.moduleParameters;
-      }
-    }
-
-    public EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
-      get {
-        return new EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>(
-          this.RequiredModuleParameters.RawArray, Dummy.ParameterTypeInformation);
-      }
-    }
-
-    public EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
-      get { return TypeCache.EmptyParameterInfoArray; }
-    }
-
-    public bool IsReturnByReference {
-      get { return this.RawTemplateModuleMethod.IsReturnByReference; }
-    }
-
-    #endregion
-
-    #region ISpecializedMethodReference Members
-
-    IMethodReference ISpecializedMethodReference.UnspecializedVersion {
-      get { return this.RawTemplateModuleMethod; }
-    }
-
-    #endregion
-
-
-    #region IMethodReference Members
-
-    public uint InternedKey {
-      get {
-        if (this.internedKey == 0) {
-          this.internedKey = this.RawTemplateModuleMethod.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetMethodInternedKey(this);
-        }
-        return this.internedKey;
-      }
-    }
-    uint internedKey;
-
-    public IMethodDefinition ResolvedMethod {
-      get { return this; }
-    }
-
-    public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return Enumerable<IParameterTypeInformation>.Empty; }
-    }
-
-    public ushort ParameterCount {
-      get { return this.RawTemplateModuleMethod.ParameterCount; }
-    }
-
-    #endregion
-
-    #region ISignature Members
-
-
-    IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
-    }
-
-    #endregion
-
-  }
-
-  internal sealed class GenericTypeInstanceNonGenericMethod : GenericTypeInstanceMethod {
-    readonly NonGenericMethod RawTemplateModuleNonGenericMethod;
-
-    internal GenericTypeInstanceNonGenericMethod(
-      GenericTypeInstance owningModuleGenericTypeInstance,
-      NonGenericMethod rawTemplateModuleNonGenericMethod
-    )
-      : base(owningModuleGenericTypeInstance) {
-      this.RawTemplateModuleNonGenericMethod = rawTemplateModuleNonGenericMethod;
-    }
-
-    internal override MethodDefinition RawTemplateModuleMethod {
-      get { return this.RawTemplateModuleNonGenericMethod; }
-    }
-
-    internal override TypeMember RawTemplateModuleTypeMember {
-      get { return this.RawTemplateModuleNonGenericMethod; }
-    }
-
-    public override IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return Enumerable<IGenericMethodParameter>.Empty; }
-    }
-
-    public override ushort GenericParameterCount {
-      get { return 0; }
-    }
-
-    public override bool IsGeneric {
-      get { return false; }
-    }
-  }
-
-  internal sealed class GenericTypeInstanceGenericMethod : GenericTypeInstanceMethod, IMetadataReaderGenericMethod {
-    readonly GenericMethod RawTemplateModuleGenericMethod;
-    readonly EnumerableArrayWrapper<IMetadataReaderGenericMethodParameter, IGenericMethodParameter> GenericMethodParameters;
-
-    //^ [NotDelayed]
-    internal GenericTypeInstanceGenericMethod(
-      GenericTypeInstance owningModuleGenericTypeInstance,
-      GenericMethod rawTemplateModuleGenericMethod
-    )
-      : base(owningModuleGenericTypeInstance) {
-      this.RawTemplateModuleGenericMethod = rawTemplateModuleGenericMethod;
-      //^ this.GenericMethodParameters = TypeCache.EmptyGenericMethodParameters;
-      //^ base;
-      uint genericParams = rawTemplateModuleGenericMethod.GenericMethodParameterCardinality;
-      IMetadataReaderGenericMethodParameter[] specializedGenericParamArray = new IMetadataReaderGenericMethodParameter[genericParams];
-      for (uint i = 0; i < genericParams; ++i) {
-        uint genericRowId = rawTemplateModuleGenericMethod.GenericParamRowIdStart + i;
-        GenericMethodParameter/*?*/ mgmp = rawTemplateModuleGenericMethod.PEFileToObjectModel.GetGenericMethodParamAtRow(genericRowId, rawTemplateModuleGenericMethod);
-        if (mgmp != null)
-          specializedGenericParamArray[i] = new TypeSpecializedGenericMethodParameter(owningModuleGenericTypeInstance, this, mgmp);
-      }
-      //^ NonNullType.AssertInitialized(specializedGenericParamArray);
-      this.GenericMethodParameters = new EnumerableArrayWrapper<IMetadataReaderGenericMethodParameter, IGenericMethodParameter>(specializedGenericParamArray, Dummy.GenericMethodParameter);
-    }
-
-    internal override MethodDefinition RawTemplateModuleMethod {
-      get { return this.RawTemplateModuleGenericMethod; }
-    }
-
-    internal override TypeMember RawTemplateModuleTypeMember {
-      get { return this.RawTemplateModuleGenericMethod; }
-    }
-
-    #region IMetadataReaderGenericMethod Members
-
-    public ushort GenericMethodParameterCardinality {
-      get { return this.RawTemplateModuleGenericMethod.GenericMethodParameterCardinality; }
-    }
-
-    public IMetadataReaderTypeReference/*?*/ GetGenericMethodParameterFromOrdinal(ushort genericParamOrdinal) {
-      if (genericParamOrdinal >= this.GenericMethodParameters.RawArray.Length)
-        return null;
-      return this.GenericMethodParameters.RawArray[genericParamOrdinal];
-    }
-
-    #endregion
-
-    public override IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return this.GenericMethodParameters; }
-    }
-
-    public override ushort GenericParameterCount {
-      get { return this.RawTemplateModuleGenericMethod.GenericParameterCount; }
-    }
-
-    public override bool IsGeneric {
-      get { return this.RawTemplateModuleGenericMethod.IsGeneric; }
-    }
-
-  }
-
-  internal sealed class GenericTypeInstanceEvent : GenericTypeInstanceMember, ISpecializedEventDefinition {
-    readonly EventDefinition RawTemplateModuleEvent;
-    bool eventTypeInited;
-    IMetadataReaderTypeReference/*?*/ eventType;
-    IMethodReference/*?*/ adderMethod;
-    IMethodReference/*?*/ removerMethod;
-    IMethodReference/*?*/ fireMethod;
-    EventFlags EventFlags;
-    //^ invariant ((this.EventFlags & EventFlags.AdderLoaded) == EventFlags.AdderLoaded) ==> this.adderMethod != null;
-    //^ invariant ((this.EventFlags & EventFlags.RemoverLoaded) == EventFlags.RemoverLoaded) ==> this.removerMethod != null;
-
-    internal GenericTypeInstanceEvent(
-      GenericTypeInstance owningModuleGenericTypeInstance,
-      EventDefinition rawTemplateModuleEvent
-    )
-      : base(owningModuleGenericTypeInstance) {
-      this.RawTemplateModuleEvent = rawTemplateModuleEvent;
-    }
-
-    internal override TypeMember RawTemplateModuleTypeMember {
-      get { return this.RawTemplateModuleEvent; }
-    }
-
-    internal IMetadataReaderTypeReference/*?*/ EventType {
-      get {
-        if (!this.eventTypeInited) {
-          this.eventTypeInited = true;
-          IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.RawTemplateModuleEvent.EventType;
-          if (moduleTypeRef != null)
-            this.eventType = moduleTypeRef.SpecializeTypeInstance(this.OwningModuleGenericTypeInstance);
-        }
-        return this.eventType;
-      }
-    }
-
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      throw new InvalidOperationException();
-    }
-
-    #region IEventDefinition Members
-
-    public IEnumerable<IMethodReference> Accessors {
-      get {
-        foreach (IMethodDefinition otherMethIter in this.RawTemplateModuleEvent.Accessors) {
-          IMethodDefinition/*?*/ mappedMeth = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)otherMethIter) as TypeMember) as IMethodDefinition;
-          if (mappedMeth == null)
-            continue;
-          yield return mappedMeth;
-        }
-      }
-    }
-
-    public IMethodReference Adder {
-      get {
-        if ((this.EventFlags & EventFlags.AdderLoaded) != EventFlags.AdderLoaded) {
-          this.adderMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)this.RawTemplateModuleEvent.AdderMethod) as TypeMember) as IMethodDefinition;
-          if (this.adderMethod == null) {
-            //  MDError
-            this.adderMethod = Dummy.MethodReference;
-          }
-          this.EventFlags |= EventFlags.AdderLoaded;
-        }
-        //^ assert this.adderMethod != null;
-        return this.adderMethod;
-      }
-    }
-
-    public IMethodReference/*?*/ Caller {
-      get {
-        if ((this.EventFlags & EventFlags.FireLoaded) != EventFlags.FireLoaded) {
-          this.fireMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)this.RawTemplateModuleEvent.FireMethod) as TypeMember) as IMethodDefinition;
-          this.EventFlags |= EventFlags.FireLoaded;
-        }
-        return this.fireMethod;
-      }
-    }
-
-    public bool IsRuntimeSpecial {
-      get { return this.RawTemplateModuleEvent.IsRuntimeSpecial; }
-    }
-
-    public bool IsSpecialName {
-      get { return this.RawTemplateModuleEvent.IsSpecialName; }
-    }
-
-    public IMethodReference Remover {
-      get {
-        if ((this.EventFlags & EventFlags.RemoverLoaded) != EventFlags.RemoverLoaded) {
-          this.removerMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)this.RawTemplateModuleEvent.RemoverMethod) as TypeMember) as IMethodReference;
-          if (this.removerMethod == null) {
-            //  MDError
-            this.removerMethod = Dummy.MethodReference;
-          }
-          this.EventFlags |= EventFlags.RemoverLoaded;
-        }
-        //^ assert this.removerMethod != null;
-        return this.removerMethod;
-      }
-    }
-
-    public ITypeReference Type {
-      get {
-        IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.EventType;
-        if (moduleTypeRef == null) return Dummy.TypeReference;
-        return moduleTypeRef;
-      }
-    }
-
-    #endregion
-
-    #region ISpecializedEventDefinition Members
-
-    public IEventDefinition UnspecializedVersion {
-      get { return this.RawTemplateModuleEvent; }
-    }
-
-    #endregion
-
-  }
-
-  internal sealed class GenericTypeInstanceProperty : GenericTypeInstanceMember, ISpecializedPropertyDefinition {
-    readonly PropertyDefinition RawTemplateModuleProperty;
-    bool returnTypeInited;
-    IMetadataReaderTypeReference/*?*/ returnType;
-    EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>/*?*/ moduleParameters;
-    IMethodDefinition/*?*/ getterMethod;
-    IMethodDefinition/*?*/ setterMethod;
-    PropertyFlags PropertyFlags;
-
-    internal GenericTypeInstanceProperty(
-      GenericTypeInstance owningModuleGenericTypeInstance,
-      PropertyDefinition rawTemplateModuleProperty
-    )
-      : base(owningModuleGenericTypeInstance) {
-      this.RawTemplateModuleProperty = rawTemplateModuleProperty;
-    }
-
-    internal override TypeMember RawTemplateModuleTypeMember {
-      get { return this.RawTemplateModuleProperty; }
-    }
-
-    internal IMetadataReaderTypeReference/*?*/ ReturnType {
-      get {
-        if (!this.returnTypeInited) {
-          this.returnTypeInited = true;
-          IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.RawTemplateModuleProperty.ReturnType;
-          if (moduleTypeRef != null)
-            this.returnType = moduleTypeRef.SpecializeTypeInstance(this.OwningModuleGenericTypeInstance);
-        }
-        return this.returnType;
-      }
-    }
-
-    EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> ModuleParameters {
-      get {
-        if (this.moduleParameters == null) {
-          this.moduleParameters = TypeCache.SpecializeInstantiatedParameters(this, this.RawTemplateModuleProperty.ModuleParameters, this.OwningModuleGenericTypeInstance);
-        }
-        return this.moduleParameters;
-      }
-    }
-
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      throw new InvalidOperationException();
-    }
-
-    #region IPropertyDefinition Members
-
-    public IMetadataConstant DefaultValue {
-      get { return this.RawTemplateModuleProperty.DefaultValue; }
-    }
-
-    public IMethodReference/*?*/ Getter {
-      get {
-        if ((this.PropertyFlags & PropertyFlags.GetterLoaded) != PropertyFlags.GetterLoaded) {
-          this.getterMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(this.RawTemplateModuleProperty.GetterMethod as TypeMember) as IMethodDefinition;
-          this.PropertyFlags |= PropertyFlags.GetterLoaded;
-        }
-        return this.getterMethod;
-      }
-    }
-
-    public bool HasDefaultValue {
-      get { return this.RawTemplateModuleProperty.HasDefaultValue; }
-    }
-
-    public bool IsRuntimeSpecial {
-      get { return this.RawTemplateModuleProperty.IsRuntimeSpecial; }
-    }
-
-    public bool IsSpecialName {
-      get { return this.RawTemplateModuleProperty.IsSpecialName; }
-    }
-
-    public IEnumerable<IMethodReference> Accessors {
-      get {
-        foreach (IMethodReference otherMethIter in this.RawTemplateModuleProperty.Accessors) {
-          IMethodReference/*?*/ mappedMeth = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(((object)otherMethIter) as TypeMember) as IMethodReference;
-          if (mappedMeth == null)
-            continue;
-          yield return mappedMeth;
-        }
-      }
-    }
-
-    public IMethodReference/*?*/ Setter {
-      get {
-        if ((this.PropertyFlags & PropertyFlags.SetterLoaded) != PropertyFlags.SetterLoaded) {
-          this.setterMethod = this.OwningModuleGenericTypeInstance.FindInstantiatedMemberFor(this.RawTemplateModuleProperty.SetterMethod as TypeMember) as IMethodDefinition;
-          this.PropertyFlags |= PropertyFlags.SetterLoaded;
-        }
-        return this.setterMethod;
-      }
-    }
-
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return this.RawTemplateModuleProperty.ReturnValueAttributes; }
-    }
-
-    public IEnumerable<IParameterDefinition> Parameters {
-      get { return this.ModuleParameters; }
-    }
-
-    #endregion
-
-    #region ISignature Members
-
-    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return this.RawTemplateModuleProperty.ReturnValueCustomModifiers; }
-    }
-
-    public bool ReturnValueIsByRef {
-      get { return this.RawTemplateModuleProperty.ReturnValueIsByRef; }
-    }
-
-    public bool ReturnValueIsModified {
-      get { return this.RawTemplateModuleProperty.ReturnValueIsModified; }
-    }
-
-    public ITypeReference Type {
-      get {
-        IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.ReturnType;
-        if (moduleTypeRef == null) return Dummy.TypeReference;
-        return moduleTypeRef;
-      }
-    }
-
-    public CallingConvention CallingConvention {
-      get { return this.RawTemplateModuleProperty.CallingConvention; }
-    }
-
-    IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
-    }
-
-    #endregion
-
-    #region ISpecializedPropertyDefinition Members
-
-    public IPropertyDefinition UnspecializedVersion {
-      get { return this.RawTemplateModuleProperty; }
-    }
-
-    #endregion
-
-    #region IMetadataConstantContainer
-
-    IMetadataConstant IMetadataConstantContainer.Constant {
-      get { return this.DefaultValue; }
-    }
-
-    #endregion
-  }
-
-  #endregion Generic TypeMember Level Object Model
-
-
-  #region Generic Method level object model
-
-  internal sealed class GenericMethodInstanceReference : MetadataObject, IMetadataReaderGenericMethodInstance {
-    internal readonly uint MethodSpecToken;
-    internal readonly IMetadataReaderMethodReference ModuleMethodReference;
-    internal readonly EnumerableArrayWrapper<IMetadataReaderTypeReference/*?*/, ITypeReference> CummulativeTypeArguments;
-    IMethodDefinition/*?*/ resolvedGenericMethodInstance;
-    EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>/*?*/ moduleParameters;
-    bool returnTypeInited;
-    IMetadataReaderTypeReference/*?*/ returnType;
-
-    internal GenericMethodInstanceReference(
-      PEFileToObjectModel peFileToObjectModel,
-      uint methodSpecToken,
-      IMetadataReaderMethodReference moduleMethodReference,
-      EnumerableArrayWrapper<IMetadataReaderTypeReference/*?*/, ITypeReference> cummulativeTypeArguments
-    )
-      : base(peFileToObjectModel) {
-      this.MethodSpecToken = methodSpecToken;
-      this.ModuleMethodReference = moduleMethodReference;
-      this.CummulativeTypeArguments = cummulativeTypeArguments;
-    }
-
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    internal IMetadataReaderTypeReference/*?*/ ReturnType {
-      get {
-        if (!this.returnTypeInited) {
-          this.returnTypeInited = true;
-          IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.ModuleMethodReference.ReturnType;
-          if (moduleTypeRef != null)
-            this.returnType = moduleTypeRef.SpecializeMethodInstance(this);
-        }
-        return this.returnType;
-      }
-    }
-
-    internal EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> ModuleParameters {
-      get {
-        if (this.moduleParameters == null) {
-          this.moduleParameters = TypeCache.SpecializeInstantiatedParameters(this, this.ModuleMethodReference.RequiredModuleParameterInfos, this);
-        }
-        return this.moduleParameters;
-      }
-    }
-
-    internal override uint TokenValue {
-      get { return this.MethodSpecToken; }
-    }
-
-    //^ [Confined]
-    public override string ToString() {
-      return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.TypeParameters|NameFormattingOptions.Signature);
-    }
-
-    #region IMetadataReaderGenericMethodInstance Members
-
-    public IMetadataReaderMethodReference RawGenericTemplate {
-      get { return this.ModuleMethodReference; }
-    }
-
-    public ushort GenericMethodArgumentCardinality {
-      get { return (ushort)this.CummulativeTypeArguments.RawArray.Length; }
-    }
-
-    public IMetadataReaderTypeReference/*?*/ GetGenericMethodArgumentFromOrdinal(ushort genericArgumentOrdinal) {
-      IMetadataReaderTypeReference/*?*/[] arr = this.CummulativeTypeArguments.RawArray;
-      if (genericArgumentOrdinal >= arr.Length) {
-        return null;
-      }
-      return arr[genericArgumentOrdinal];
-    }
-
-    PEFileToObjectModel IMetadataReaderGenericMethodInstance.PEFileToObjectModel {
-      get { return this.PEFileToObjectModel; }
-    }
-
-    #endregion
-
-    #region IMethodReference Members
-
-    public bool AcceptsExtraArguments {
-      get { return (this.ModuleMethodReference.CallingConvention & (CallingConvention)0x7) == CallingConvention.ExtraArguments; }
-    }
-
-    public ushort GenericParameterCount {
-      get { return this.ModuleMethodReference.GenericParameterCount; }
-    }
-
-    public uint InternedKey {
-      get {
-        if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetMethodInternedKey(this);
-        }
-        return this.internedKey;
-      }
-    }
-    uint internedKey;
-
-    public bool IsGeneric {
-      get { return this.ModuleMethodReference.GenericParameterCount > 0; }
-    }
-
-    public ushort ParameterCount {
-      get { return this.ModuleMethodReference.ParameterCount; }
-    }
-
-    public IMethodDefinition ResolvedMethod {
-      get {
-        if (this.resolvedGenericMethodInstance == null) {
-          IMetadataReaderGenericMethod/*?*/ moduleGenericMethod = this.ModuleMethodReference.ResolvedMethod as IMetadataReaderGenericMethod;
-          if (moduleGenericMethod != null) {
-            this.resolvedGenericMethodInstance = new GenericMethodInstance(this.PEFileToObjectModel, this, moduleGenericMethod);
-          } else {
-            //  Error
-            this.resolvedGenericMethodInstance = Dummy.Method;
-          }
-        }
-        return this.resolvedGenericMethodInstance;
-      }
-    }
-
-    public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return Enumerable<IParameterTypeInformation>.Empty; }
-    }
-
-    #endregion
-
-    #region ISignature Members
-
-    public CallingConvention CallingConvention {
-      get { return this.ModuleMethodReference.CallingConvention; }
-    }
-
-    public IEnumerable<IParameterTypeInformation> Parameters {
-      get { return this.ModuleParameters; }
-    }
-
-    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return this.ModuleMethodReference.ReturnValueCustomModifiers; }
-    }
-
-    public bool ReturnValueIsByRef {
-      get { return this.ModuleMethodReference.ReturnValueIsByRef; }
-    }
-
-    public bool ReturnValueIsModified {
-      get { return this.ModuleMethodReference.ReturnValueIsModified; }
-    }
-
-    public ITypeReference Type {
-      get { return this.ReturnType; }
-    }
-
-    #endregion
-
-    #region ITypeMemberReference Members
-
-    public ITypeReference ContainingType {
-      get { return this.ModuleMethodReference.ContainingType; }
-    }
-
-    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
-      get { return this.ResolvedMethod; }
-    }
-
-    #endregion
-
-    #region INamedEntity Members
-
-    public IName Name {
-      get { return this.ModuleMethodReference.Name; }
-    }
-
-    #endregion
-
-    #region IGenericMethodInstance Members
-
-    public IEnumerable<ITypeReference> GenericArguments {
-      get { return this.CummulativeTypeArguments; }
-    }
-
-    public IMethodReference GenericMethod {
-      get { return this.ModuleMethodReference; }
-    }
-
-    #endregion
-  }
-
-  internal sealed class GenericMethodInstance : MetadataObject, IGenericMethodInstance, IMetadataReaderGenericMethodInstance {
-    readonly GenericMethodInstanceReference GenericMethodInstanceReference;
-    readonly IMetadataReaderGenericMethod ModuleGenericMethodTemplate;
-    bool returnTypeInited;
-    IMetadataReaderTypeReference/*?*/ returnType;
-    EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition>/*?*/ moduleParameters;
-
-    internal GenericMethodInstance(
-      PEFileToObjectModel peFileToObjectModel,
-      GenericMethodInstanceReference genericMethodInstanceReference,
-      IMetadataReaderGenericMethod moduleGenericMethodTemplate
-    )
-      : base(peFileToObjectModel) {
-      this.GenericMethodInstanceReference = genericMethodInstanceReference;
-      this.ModuleGenericMethodTemplate = moduleGenericMethodTemplate;
-    }
-
-    internal override uint TokenValue {
-      get { return 0xFFFFFFFF; }
-    }
-
-    internal IMetadataReaderTypeReference/*?*/ ReturnType {
-      get {
-        if (!this.returnTypeInited) {
-          this.returnTypeInited = true;
-          IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.ModuleGenericMethodTemplate.ReturnType;
-          if (moduleTypeRef != null)
-            this.returnType = moduleTypeRef.SpecializeMethodInstance(this);
-        }
-        return this.returnType;
-      }
-    }
-
-    internal EnumerableArrayWrapper<IMetadataReaderParameter, IParameterDefinition> ModuleParameters {
-      get {
-        if (this.moduleParameters == null) {
-          this.moduleParameters = TypeCache.SpecializeInstantiatedParameters(this, this.ModuleGenericMethodTemplate.RequiredModuleParameters, this);
-        }
-        return this.moduleParameters;
-      }
-    }
-
-    //^ [Confined]
-    public override string ToString() {
-      return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
-    }
-
-    #region IGenericMethodInstance Members
-
-    public IEnumerable<ITypeReference> GenericArguments {
-      get { return this.GenericMethodInstanceReference.CummulativeTypeArguments; }
-    }
-
-    public IMethodReference GenericMethod {
-      get { return this.ModuleGenericMethodTemplate; }
-    }
-
-    #endregion
-
-    #region IMethodDefinition Members
-
-    public bool AcceptsExtraArguments {
-      get { return this.ModuleGenericMethodTemplate.AcceptsExtraArguments; }
-    }
-
-    public IMethodBody Body {
-      get { return Dummy.MethodBody; }
-    }
-
-    public IEnumerable<IGenericMethodParameter> GenericParameters {
-      get { return Enumerable<IGenericMethodParameter>.Empty; }
-    }
-
-    public ushort GenericParameterCount {
-      get { return 0; }
-    }
-
-    public bool HasDeclarativeSecurity {
-      get { return this.ModuleGenericMethodTemplate.HasDeclarativeSecurity; }
-    }
-
-    public bool HasExplicitThisParameter {
-      get { return this.ModuleGenericMethodTemplate.HasExplicitThisParameter; }
-    }
-
-    public bool IsAbstract {
-      get { return this.ModuleGenericMethodTemplate.IsAbstract; }
-    }
-
-    public bool IsAccessCheckedOnOverride {
-      get { return this.ModuleGenericMethodTemplate.IsAccessCheckedOnOverride; }
-    }
-
-    public bool IsCil {
-      get { return this.ModuleGenericMethodTemplate.IsCil; }
-    }
-
-    public bool IsExternal {
-      get { return this.ModuleGenericMethodTemplate.IsExternal; }
-    }
-
-    public bool IsForwardReference {
-      get { return this.ModuleGenericMethodTemplate.IsForwardReference; }
-    }
-
-    public bool IsGeneric {
-      get { return false; }
-    }
-
-    public bool IsHiddenBySignature {
-      get { return this.ModuleGenericMethodTemplate.IsHiddenBySignature; }
-    }
-
-    public bool IsNativeCode {
-      get { return this.ModuleGenericMethodTemplate.IsNativeCode; }
-    }
-
-    public bool IsNewSlot {
-      get { return this.ModuleGenericMethodTemplate.IsNewSlot; }
-    }
-
-    public bool IsNeverInlined {
-      get { return this.ModuleGenericMethodTemplate.IsNeverInlined; }
-    }
-
-    public bool IsNeverOptimized {
-      get { return this.ModuleGenericMethodTemplate.IsNeverOptimized; }
-    }
-
-    public bool IsPlatformInvoke {
-      get { return this.ModuleGenericMethodTemplate.IsPlatformInvoke; }
-    }
-
-    public bool IsRuntimeImplemented {
-      get { return this.ModuleGenericMethodTemplate.IsRuntimeImplemented; }
-    }
-
-    public bool IsRuntimeInternal {
-      get { return this.ModuleGenericMethodTemplate.IsRuntimeInternal; }
-    }
-
-    public bool IsRuntimeSpecial {
-      get { return this.ModuleGenericMethodTemplate.IsRuntimeSpecial; }
-    }
-
-    public bool IsSealed {
-      get { return this.ModuleGenericMethodTemplate.IsSealed; }
-    }
-
-    public bool IsSpecialName {
-      get { return this.ModuleGenericMethodTemplate.IsSpecialName; }
-    }
-
-    public bool IsStatic {
-      get { return this.ModuleGenericMethodTemplate.IsStatic; }
-    }
-
-    public bool IsSynchronized {
-      get { return this.ModuleGenericMethodTemplate.IsSynchronized; }
-    }
-
-    public bool IsVirtual {
-      get { return this.ModuleGenericMethodTemplate.IsVirtual; }
-    }
-
-    public bool IsUnmanaged {
-      get { return this.ModuleGenericMethodTemplate.IsUnmanaged; }
-    }
-
-    public bool PreserveSignature {
-      get { return this.ModuleGenericMethodTemplate.PreserveSignature; }
-    }
-
-    public bool RequiresSecurityObject {
-      get { return this.ModuleGenericMethodTemplate.RequiresSecurityObject; }
-    }
-
-    public bool ReturnValueIsMarshalledExplicitly {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueIsMarshalledExplicitly; }
-    }
-
-    public IMarshallingInformation ReturnValueMarshallingInformation {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueMarshallingInformation; }
-    }
-
-    public IEnumerable<ISecurityAttribute> SecurityAttributes {
-      get { return this.ModuleGenericMethodTemplate.SecurityAttributes; }
-    }
-
-    public bool IsConstructor {
-      get { return this.ModuleGenericMethodTemplate.IsConstructor; }
-    }
-
-    public bool IsStaticConstructor {
-      get { return this.ModuleGenericMethodTemplate.IsStaticConstructor; }
-    }
-
-    public IPlatformInvokeInformation PlatformInvokeData {
-      get { return this.ModuleGenericMethodTemplate.PlatformInvokeData; }
-    }
-
-    #endregion
-
-    #region ISignature Members
-
-    public IEnumerable<IParameterDefinition> Parameters {
-      get { return this.ModuleParameters; }
-    }
-
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueAttributes; }
-    }
-
-    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueCustomModifiers; }
-    }
-
-    public bool ReturnValueIsByRef {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueIsByRef; }
-    }
-
-    public bool ReturnValueIsModified {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueIsModified; }
-    }
-
-    public IName ReturnValueName {
-      get { return this.ModuleGenericMethodTemplate.ReturnValueName; }
-    }
-
-    public ITypeReference Type {
-      get {
-        IMetadataReaderTypeReference/*?*/ moduleType = this.ReturnType;
-        if (moduleType == null) return Dummy.TypeReference;
-        return moduleType;
-      }
-    }
-
-    public CallingConvention CallingConvention {
-      get { return ((IMetadataReaderMethodReference)this.ModuleGenericMethodTemplate).CallingConvention; }
-    }
-
-    IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
-    }
-
-    #endregion
-
-    #region ITypeDefinitionMember Members
-
-    public ITypeDefinition ContainingTypeDefinition {
-      get { return this.ModuleGenericMethodTemplate.ContainingTypeDefinition; }
-    }
-
-    public override void Dispatch(IMetadataVisitor visitor) {
-      visitor.Visit((IGenericMethodInstanceReference)this);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit((IGenericMethodInstanceReference)this);
-    }
-
-    public TypeMemberVisibility Visibility {
-      get { return this.ModuleGenericMethodTemplate.Visibility; }
-    }
-
-    #endregion
-
-    #region IContainerMember<ITypeDefinition> Members
-
-    public ITypeDefinition Container {
-      get { return this.ModuleGenericMethodTemplate.Container; }
-    }
-
-    #endregion
-
-    #region INamedEntity Members
-
-    public IName Name {
-      get { return ((INamedEntity)this.ModuleGenericMethodTemplate).Name; }
-    }
-
-    #endregion
-
-    #region IReference Members
-
-    public override IEnumerable<ICustomAttribute> Attributes {
-      get { return this.ModuleGenericMethodTemplate.Attributes; }
-    }
-
-    public override IEnumerable<ILocation> Locations {
-      get { return Enumerable<ILocation>.Empty; }
-    }
-
-    #endregion
-
-    #region IScopeMember<IScope<ITypeDefinitionMember>> Members
-
-    public IScope<ITypeDefinitionMember> ContainingScope {
-      get { return this.ModuleGenericMethodTemplate.ContainingScope; }
-    }
-
-    #endregion
-
-    #region IMethodReference Members
-
-    public uint InternedKey {
-      get {
-        if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetMethodInternedKey(this);
-        }
-        return this.internedKey;
-      }
-    }
-    uint internedKey;
-
-    public ushort ParameterCount {
-      get { return this.GenericMethod.ParameterCount; }
-    }
-
-    public IMethodDefinition ResolvedMethod {
-      get { return this; }
-    }
-
-    public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return Enumerable<IParameterTypeInformation>.Empty; }
-    }
-
-    #endregion
-
-    #region ITypeMemberReference Members
-
-    public ITypeReference ContainingType {
-      get { return this.GenericMethodInstanceReference.ContainingType; }
-    }
-
-    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
-      get { return this; }
-    }
-
-    #endregion
-
-    #region IMetadataReaderGenericMethodInstance Members
-
-    public IMetadataReaderMethodReference RawGenericTemplate {
-      get { return this.GenericMethodInstanceReference.RawGenericTemplate; }
-    }
-
-    public ushort GenericMethodArgumentCardinality {
-      get { return (ushort)this.GenericMethodInstanceReference.CummulativeTypeArguments.RawArray.Length; }
-    }
-
-    public IMetadataReaderTypeReference/*?*/ GetGenericMethodArgumentFromOrdinal(ushort genericArgumentOrdinal) {
-      IMetadataReaderTypeReference/*?*/[] arr = this.GenericMethodInstanceReference.CummulativeTypeArguments.RawArray;
-      if (genericArgumentOrdinal >= arr.Length) {
-        return null;
-      }
-      return arr[genericArgumentOrdinal];
-    }
-
-    PEFileToObjectModel IMetadataReaderGenericMethodInstance.PEFileToObjectModel {
-      get { return this.PEFileToObjectModel; }
-    }
-
-    #endregion
-  }
-
-  #endregion Generic Method level object model
-
-
   #region Member Ref level Object Model
 
   internal abstract class MemberReference : MetadataObject, IMetadataReaderTypeMemberReference {
     internal readonly uint MemberRefRowId;
     internal readonly IName Name;
-    internal readonly IMetadataReaderTypeReference/*?*/ ParentTypeReference;
+    internal readonly ITypeReference/*?*/ ParentTypeReference;
 
     internal MemberReference(
       PEFileToObjectModel peFileToObjectModel,
       uint memberRefRowId,
-      IMetadataReaderTypeReference/*?*/ parentTypeReference,
+      ITypeReference/*?*/ parentTypeReference,
       IName name
     )
       : base(peFileToObjectModel) {
@@ -4333,7 +2795,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.MemberRef | this.MemberRefRowId; }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return MemberHelper.GetMemberSignature(this, NameFormattingOptions.None);
     }
@@ -4344,7 +2805,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IMetadataReaderTypeMemberReference Members
 
-    public IMetadataReaderTypeReference/*?*/ OwningTypeReference {
+    public ITypeReference/*?*/ OwningTypeReference {
       get { return this.ParentTypeReference; }
     }
 
@@ -4378,12 +2839,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal class FieldReference : MemberReference, IMetadataReaderFieldReference {
     protected bool signatureLoaded;
     protected EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers;
-    protected IMetadataReaderTypeReference/*?*/ typeReference;
+    protected ITypeReference/*?*/ typeReference;
     internal bool isStatic;
     internal FieldReference(
       PEFileToObjectModel peFileToObjectModel,
       uint memberRefRowId,
-      IMetadataReaderTypeReference/*?*/ parentTypeReference,
+      ITypeReference/*?*/ parentTypeReference,
       IName name
     )
       : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
@@ -4405,7 +2866,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetFieldInternedKey(this);
+          this.internedKey = this.PEFileToObjectModel.InternFactory.GetFieldInternedKey(this);
         }
         return this.internedKey;
       }
@@ -4418,7 +2879,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IMetadataReaderFieldReference Members
 
-    public IMetadataReaderTypeReference/*?*/ FieldType {
+    public ITypeReference/*?*/ FieldType {
       get {
         if (!this.signatureLoaded) {
           this.InitFieldSignature();
@@ -4458,9 +2919,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         var parent = this.ParentTypeReference;
         if (parent == null) return Dummy.Field;
-        var moduleType = parent.ResolvedModuleType;
-        if (moduleType != null) return moduleType.ResolveFieldReference(this);
-        return TypeHelper.GetField(parent.ResolvedType, this.Name);
+        return TypeHelper.GetField(parent.ResolvedType, this);
       }
     }
 
@@ -4483,143 +2942,19 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal sealed class GenericInstanceFieldReference : FieldReference, ISpecializedFieldReference {
-    internal GenericInstanceFieldReference(
-      PEFileToObjectModel peFileToObjectModel,
-      uint memberRefRowId,
-      IMetadataReaderGenericTypeInstance/*?*/ parentTypeReference,
-      IName name
-    )
-      : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
-      this.unspecializedVersion = new FieldReference(peFileToObjectModel, memberRefRowId, parentTypeReference.ModuleGenericTypeReference, name);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    protected override void InitFieldSignature() {
-      FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldRefSignature(this);
-      //^ assume this.ParentTypeReference is IMetadataReaderGenericTypeInstance; //gauranteed by constructor
-      IMetadataReaderGenericTypeInstance moduleGenericTypeInstance = (IMetadataReaderGenericTypeInstance)this.ParentTypeReference;
-      if (fieldSignature.TypeReference != null) {
-        this.typeReference = fieldSignature.TypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
-      }
-      this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
-      this.signatureLoaded = true;
-    }
-
-    public override IFieldDefinition ResolvedField {
-      get {
-        IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null)
-          return Dummy.Field;
-        IMetadataReaderTypeDefAndRef/*?*/ moduleType = moduleTypeRef.ResolvedModuleType;
-        if (moduleType == null)
-          return Dummy.Field;
-        return moduleType.ResolveFieldReference(this.unspecializedVersion);
-      }
-    }
-
-    #region ISpecializedFieldReference Members
-
-    public IFieldReference UnspecializedVersion {
-      get { return this.unspecializedVersion; }
-    }
-    readonly FieldReference unspecializedVersion;
-
-    #endregion
-
-    #region INamedEntity Members
-
-    IName INamedEntity.Name {
-      get { return this.Name; }
-    }
-
-    #endregion
-  }
-
-  internal sealed class SpecializedNestedTypeFieldReference : FieldReference, ISpecializedFieldReference {
-
-    IMetadataReaderSpecializedNestedTypeReference specializedParentTypeReference;
-
-    internal SpecializedNestedTypeFieldReference(
-      PEFileToObjectModel peFileToObjectModel,
-      uint memberRefRowId,
-      IMetadataReaderTypeReference parentTypeReference,
-      IMetadataReaderSpecializedNestedTypeReference specializedParentTypeReference,
-      IName name
-    )
-      : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
-      this.unspecializedVersion = new FieldReference(peFileToObjectModel, memberRefRowId, specializedParentTypeReference.UnspecializedModuleType, name);
-      this.specializedParentTypeReference = specializedParentTypeReference;
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    protected override void InitFieldSignature() {
-      FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldRefSignature(this);
-      IMetadataReaderSpecializedNestedTypeReference/*?*/ neType = this.specializedParentTypeReference;
-      while (neType.ContainingType is IGenericTypeInstanceReference) {
-        neType = neType.ContainingType as IMetadataReaderSpecializedNestedTypeReference;
-        if (neType == null) {
-          //TODO: error
-          return;
-        }
-      }
-      IMetadataReaderGenericTypeInstance/*?*/ moduleGenericTypeInstance = (IMetadataReaderGenericTypeInstance)neType.ContainingType;
-      if (fieldSignature.TypeReference != null) {
-        this.typeReference = fieldSignature.TypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
-      }
-      this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
-      this.signatureLoaded = true;
-    }
-
-    public override IFieldDefinition ResolvedField {
-      get {
-        IMetadataReaderTypeReference/*?*/ moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null)
-          return Dummy.Field;
-        IMetadataReaderTypeDefAndRef/*?*/ moduleType = moduleTypeRef.ResolvedModuleType;
-        if (moduleType == null)
-          return Dummy.Field;
-        return moduleType.ResolveFieldReference(this.unspecializedVersion);
-      }
-    }
-
-    #region ISpecializedFieldReference Members
-
-    public IFieldReference UnspecializedVersion {
-      get { return this.unspecializedVersion; }
-    }
-    readonly FieldReference unspecializedVersion;
-
-    #endregion
-
-    #region INamedEntity Members
-
-    IName INamedEntity.Name {
-      get { return this.Name; }
-    }
-
-    #endregion
-  }
-
   internal class MethodReference : MemberReference, IMetadataReaderMethodReference {
     internal readonly byte FirstByte;
     protected ushort genericParameterCount;
     protected EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnCustomModifiers;
-    protected IMetadataReaderTypeReference/*?*/ returnTypeReference;
+    protected ITypeReference/*?*/ returnTypeReference;
     protected bool isReturnByReference;
-    protected EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>/*?*/ requiredParameters;
-    protected EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation>/*?*/ varArgParameters;
+    protected EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>/*?*/ requiredParameters;
+    protected EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>/*?*/ varArgParameters;
 
     internal MethodReference(
       PEFileToObjectModel peFileToObjectModel,
       uint memberRefRowId,
-      IMetadataReaderTypeReference/*?*/ parentTypeReference,
+      ITypeReference/*?*/ parentTypeReference,
       IName name,
       byte firstByte
     )
@@ -4649,7 +2984,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.ResolvedMethod; }
     }
 
-    //^ [Confined]
     public override string ToString() {
       return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.TypeParameters|NameFormattingOptions.Signature);
     }
@@ -4666,17 +3000,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public IMetadataReaderTypeReference/*?*/ ReturnType {
-      get {
-        if (this.returnCustomModifiers == null) {
-          this.InitMethodSignature();
-        }
-        //^ assert this.returnTypeReference != null;
-        return this.returnTypeReference;
-      }
-    }
-
-    public EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
+    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
       get {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
@@ -4686,22 +3010,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public EnumerableArrayWrapper<IMetadataReaderParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
+    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
       get {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
         }
         //^ assert this.varArgParameters != null;
         return this.varArgParameters;
-      }
-    }
-
-    public bool IsReturnByReference {
-      get {
-        if (this.returnCustomModifiers == null) {
-          this.InitMethodSignature();
-        }
-        return this.isReturnByReference;
       }
     }
 
@@ -4725,7 +3040,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.InternFactory.GetMethodInternedKey(this);
+          this.internedKey = this.PEFileToObjectModel.InternFactory.GetMethodInternedKey(this);
         }
         return this.internedKey;
       }
@@ -4743,13 +3058,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public virtual IMethodDefinition ResolvedMethod {
       get {
-        IMetadataReaderTypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null)
-          return Dummy.Method;
-        IMetadataReaderTypeDefAndRef/*?*/ moduleType = this.OwningTypeReference.ResolvedModuleType;
-        if (moduleType == null)
-          return Dummy.Method;
-        return moduleType.ResolveMethodReference(this);
+        ITypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
+        if (moduleTypeRef == null) return Dummy.Method;
+        return TypeHelper.GetMethod(moduleTypeRef.ResolvedType, this);
       }
     }
 
@@ -4783,7 +3094,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool ReturnValueIsByRef {
-      get { return this.IsReturnByReference; }
+      get {
+        if (this.returnCustomModifiers == null) {
+          this.InitMethodSignature();
+        }
+        return this.isReturnByReference;
+      }
     }
 
     public bool ReturnValueIsModified {
@@ -4792,10 +3108,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public ITypeReference Type {
       get {
-        if (this.ReturnType == null) {
+        if (this.returnCustomModifiers == null) {
+          this.InitMethodSignature();
+        }
+        if (this.returnTypeReference == null) {
           return Dummy.TypeReference;
         }
-        return this.ReturnType;
+        return this.returnTypeReference;
       }
     }
 
@@ -4806,143 +3125,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IName INamedEntity.Name {
       get { return this.Name; }
     }
-
-    #endregion
-  }
-
-  internal sealed class GenericInstanceMethodReference : MethodReference, ISpecializedMethodReference {
-
-    internal GenericInstanceMethodReference(
-      PEFileToObjectModel peFileToObjectModel,
-      uint memberRefRowId,
-      IMetadataReaderGenericTypeInstance/*?*/ parentTypeReference,
-      IName name,
-      byte firstByte
-    )
-      : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name, firstByte) {
-      this.unspecializedMethodReference = new MethodReference(peFileToObjectModel, memberRefRowId, parentTypeReference.ModuleGenericTypeReference, name, firstByte);
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    protected override void InitMethodSignature() {
-      lock (this) {
-        if (this.returnCustomModifiers == null) {
-          MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
-          this.genericParameterCount = methodSignature.GenericParamCount;
-          this.isReturnByReference = methodSignature.IsReturnByReference;
-          this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
-          this.varArgParameters = methodSignature.VarArgParameters; //Ditto
-          //^ assume this.ParentTypeReference is IMetadataReaderGenericTypeInstance; //ensured by the constructor
-          IMetadataReaderGenericTypeInstance moduleGenericTypeInstance = (IMetadataReaderGenericTypeInstance)this.ParentTypeReference;
-          if (methodSignature.ReturnTypeReference != null) {
-            this.returnTypeReference = methodSignature.ReturnTypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
-          }
-          this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
-          this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
-        }
-      }
-    }
-
-    public override IMethodDefinition ResolvedMethod {
-      get {
-        if (this.resolvedMethod == null) {
-          IMetadataReaderTypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
-          if (moduleTypeRef == null)
-            this.resolvedMethod = Dummy.Method;
-          else {
-            IMetadataReaderTypeDefAndRef/*?*/ moduleType = this.OwningTypeReference.ResolvedModuleType;
-            if (moduleType == null)
-              this.resolvedMethod = Dummy.Method;
-            else
-              this.resolvedMethod = moduleType.ResolveMethodReference(this.unspecializedMethodReference);
-          }
-        }
-        return this.resolvedMethod;
-      }
-    }
-    IMethodDefinition/*?*/ resolvedMethod;
-
-    #region ISpecializedMethodReference Members
-
-    public IMethodReference UnspecializedVersion {
-      get { return this.unspecializedMethodReference; }
-    }
-    readonly MethodReference unspecializedMethodReference;
-
-    #endregion
-  }
-
-  internal sealed class SpecializedNestedTypeMethodReference : MethodReference, ISpecializedMethodReference {
-
-    IMetadataReaderSpecializedNestedTypeReference specializedParentTypeReference;
-
-    internal SpecializedNestedTypeMethodReference(
-      PEFileToObjectModel peFileToObjectModel,
-      uint memberRefRowId,
-      IMetadataReaderTypeReference parentTypeReference,
-      IMetadataReaderSpecializedNestedTypeReference/*?*/ specializedParentTypeReference,
-      IName name,
-      byte firstByte
-    )
-      : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name, firstByte) {
-      this.unspecializedMethodReference = new MethodReference(peFileToObjectModel, memberRefRowId, specializedParentTypeReference.UnspecializedModuleType, name, firstByte);
-      this.specializedParentTypeReference = specializedParentTypeReference;
-    }
-
-    public override void DispatchAsReference(IMetadataVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    protected override void InitMethodSignature() {
-      lock (this) {
-        if (this.returnCustomModifiers == null) {
-          MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
-          this.genericParameterCount = methodSignature.GenericParamCount;
-          this.isReturnByReference = methodSignature.IsReturnByReference;
-          this.requiredParameters = methodSignature.RequiredParameters; //Needed so that the method reference can be interned during specialization
-          this.varArgParameters = methodSignature.VarArgParameters; //Ditto
-          IMetadataReaderSpecializedNestedTypeReference/*?*/ neType = this.specializedParentTypeReference;
-          while (neType.ContainingType is IGenericTypeInstanceReference) {
-            neType = neType.ContainingType as IMetadataReaderSpecializedNestedTypeReference;
-            if (neType == null) {
-              //TODO: error
-              return;
-            }
-          }
-          //TODO: add methods to IMetadataReaderSpecializedNestedTypeReference that will allow the cast below to go away.
-          IMetadataReaderGenericTypeInstance/*?*/ moduleGenericTypeInstance = (IMetadataReaderGenericTypeInstance)neType.ContainingType;
-          if (methodSignature.ReturnTypeReference != null) {
-            this.returnTypeReference = methodSignature.ReturnTypeReference.SpecializeTypeInstance(moduleGenericTypeInstance);
-          }
-          this.requiredParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.RequiredParameters, moduleGenericTypeInstance);
-          this.varArgParameters = TypeCache.SpecializeInstantiatedParameters(this, methodSignature.VarArgParameters, moduleGenericTypeInstance);
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
-        }
-      }
-    }
-
-    public override IMethodDefinition ResolvedMethod {
-      get {
-        IMetadataReaderTypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null)
-          return Dummy.Method;
-        IMetadataReaderTypeDefAndRef/*?*/ moduleType = this.OwningTypeReference.ResolvedModuleType;
-        if (moduleType == null)
-          return Dummy.Method;
-        return moduleType.ResolveMethodReference(this.unspecializedMethodReference);
-      }
-    }
-
-    #region ISpecializedMethodReference Members
-
-    public IMethodReference UnspecializedVersion {
-      get { return this.unspecializedMethodReference; }
-    }
-    readonly MethodReference unspecializedMethodReference;
 
     #endregion
   }
@@ -5499,7 +3681,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal sealed class Resource : ResourceReference, IResource {
 
-    //^ [NotDelayed]
     internal Resource(
       PEFileToObjectModel peFileToObjectModel,
       uint resourceRowId,

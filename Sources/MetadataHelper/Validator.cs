@@ -725,7 +725,7 @@ namespace Microsoft.Cci {
             this.ReportError(MetadataError.MethodCannotBeAnOverride, resolvedImplementedMethod, methodImplementation);
         }
 
-        if (resolvedImplementedMethod.IsGeneric) {
+        if (methodImplementation.ImplementingMethod.IsGeneric) {
           if (!MemberHelper.GenericMethodSignaturesAreEqual(methodImplementation.ImplementedMethod, methodImplementation.ImplementingMethod))
             this.ReportError(MetadataError.ExplicitOverrideDoesNotMatchSignatureOfOverriddenMethod, methodImplementation);
         } else {

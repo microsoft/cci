@@ -34,7 +34,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A reference to the type for which this is an alias.
     /// </summary>
-    ITypeReference AliasedType { get; }
+    INamedTypeReference AliasedType { get; }
 
     /// <summary>
     /// The collection of member objects comprising the type.
@@ -46,9 +46,9 @@ namespace Microsoft.Cci {
 
   [ContractClassFor(typeof(IAliasForType))]
   abstract class IAliasForTypeContract : IAliasForType {
-    public ITypeReference AliasedType {
+    public INamedTypeReference AliasedType {
       get {
-        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        Contract.Ensures(Contract.Result<INamedTypeReference>() != null);
         throw new NotImplementedException();
       }
     }

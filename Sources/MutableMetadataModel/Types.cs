@@ -26,7 +26,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     internal AliasForType() {
-      this.aliasedType = Dummy.TypeReference;
+      this.aliasedType = Dummy.NamedTypeReference;
       this.attributes = null;
       this.locations = null;
       this.members = null;
@@ -57,11 +57,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Type reference of the type for which this is the alias
     /// </summary>
     /// <value></value>
-    public ITypeReference AliasedType {
+    public INamedTypeReference AliasedType {
       get { return this.aliasedType; }
       set { this.aliasedType = value; }
     }
-    ITypeReference aliasedType;
+    INamedTypeReference aliasedType;
 
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.

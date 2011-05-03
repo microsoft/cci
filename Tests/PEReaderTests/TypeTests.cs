@@ -819,7 +819,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.AssemblyAssembly);
       prettyPrinter.TypeDefinition(type);
       string result =
-@".class auto unicode void*(int32,float32)
+@".class auto autochar void*(int32,float32)
 {
   .flags
   .pack 0
@@ -836,7 +836,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.AssemblyAssembly);
       prettyPrinter.TypeDefinition(type);
       string result =
-@".class auto unicode void*(int32,float32)
+@".class auto autochar void*(int32,float32)
 {
   .flags
   .pack 0
@@ -976,7 +976,7 @@ namespace ModuleReaderTests {
       ILDasmPrettyPrinter prettyPrinter = new ILDasmPrettyPrinter(stringPaper, this.ModuleReaderTest.ILAsmAssembly);
       prettyPrinter.TypeDefinition(type);
       string result =
-@".class auto unicode[mscorlib]System.Object modopt([mscorlib]System.Runtime.CompilerServices.IsConst)*
+@".class auto autochar[mscorlib]System.Object modopt([mscorlib]System.Runtime.CompilerServices.IsConst)*
 {
   .flags
   .pack 0

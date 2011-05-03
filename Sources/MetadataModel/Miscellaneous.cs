@@ -93,13 +93,39 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns an enumerable wrapper for the array that cannot be cast back down to the array. If the array is null, the result is null.
+    /// </summary>
+    /// <typeparam name="T">The element type of the array.</typeparam>
+    /// <param name="array">The array to wrap. May be null.</param>
+    public static IEnumerable<T> GetReadonly<T>(T[]/*?*/ array) {
+      if (array == null) return null;
+      return new ReaonlyOnlyArrayWrapper<T>(array);
+    }
+
+    sealed class ReaonlyOnlyArrayWrapper<T> : IEnumerable<T> {
+
+      internal ReaonlyOnlyArrayWrapper(T[] array) {
+        this.array = array;
+      }
+
+      T[] array;
+
+      public IEnumerator<T> GetEnumerator() {
+        return ((IEnumerable<T>)this.array).GetEnumerator();
+      }
+
+      IEnumerator IEnumerable.GetEnumerator() {
+        return this.array.GetEnumerator();
+      }
+
+    }
+
+    /// <summary>
     /// Returns an enumerable containing single object.
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<T> GetSingletonEnumerable<T>(T t) {
-      var result = new List<T>(1);
-      result.Add(t);
-      return result.AsReadOnly();
+      yield return t;
     }
 
     /// <summary>
