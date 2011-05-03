@@ -484,6 +484,19 @@ namespace CodeModelTestInput
 
         }
 
+        public int Method25(object o)
+        {
+            int local_1;
+            int x = 3;
+            if (!(!(o is CodeModelTestInput.Class3) && !(o is CodeModelTestInput.Class1)))
+            {
+                x = 27;
+            }
+            local_1 = x;
+            return local_1;
+
+        }
+
         public Class1()
         {
             this.c = 0;

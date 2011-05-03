@@ -218,6 +218,13 @@ namespace CodeModelTestInput {
       var b = a.Substring(1);
     }
 
+    public int Method25(object o) {
+      var x = 3;
+      if (o is Class3 || o is Class1)
+        x = 27;
+      return x;
+    }
+
   }
 
   public class Class2 {

@@ -655,8 +655,20 @@ namespace Microsoft.Cci.ILToCodeModel {
           Type = this.host.PlatformType.SystemBoolean,
           Locations = logicalNot.Locations
         };
-      else
+      else {
+        var castIfPossible = logicalNot.Operand as CastIfPossible;
+        if (castIfPossible != null) {
+          var operand = new CheckIfInstance() {
+            Locations = castIfPossible.Locations,
+            Operand = castIfPossible.ValueToCast,
+            Type = this.host.PlatformType.SystemBoolean,
+            TypeToCheck = castIfPossible.TargetType,
+          };
+          logicalNot.Operand = operand;
+          return logicalNot;
+        }
         return base.Visit(logicalNot);
+      }
     }
 
     public override IExpression Visit(MethodCall methodCall) {
