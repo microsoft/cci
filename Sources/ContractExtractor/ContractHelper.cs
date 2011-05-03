@@ -16,6 +16,9 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
+  using SpecializedFieldReference = Microsoft.Cci.MutableCodeModel.SpecializedFieldReference;
+  using SpecializedMethodReference = Microsoft.Cci.MutableCodeModel.SpecializedMethodReference;
+  using SpecializedNestedTypeReference = Microsoft.Cci.MutableCodeModel.SpecializedNestedTypeReference;
 
   /// <summary>
   /// Helper class for performing common tasks on mutable contracts

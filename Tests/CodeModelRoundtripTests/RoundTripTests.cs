@@ -23,6 +23,7 @@ using Microsoft.Cci.ILToCodeModel;
 using Xunit;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 using System.Diagnostics.Contracts;
+using GenericTypeInstanceReference = Microsoft.Cci.MutableCodeModel.GenericTypeInstanceReference;
 
 public class CodeModelRoundTripTests {
 
@@ -243,7 +244,7 @@ public class CodeModelRoundTripTests {
     Assert.True(File.Exists(assemblyName));
 
     IModule module = host.LoadUnitFrom(assemblyName) as IModule;
-    Assert.False (module == null || module == Dummy.Module || module == Dummy.Assembly, "Failed to load the module...");
+    Assert.False(module == null || module == Dummy.Module || module == Dummy.Assembly, "Failed to load the module...");
 
     IAssembly assembly = module as IAssembly;
     Assert.NotNull(module);

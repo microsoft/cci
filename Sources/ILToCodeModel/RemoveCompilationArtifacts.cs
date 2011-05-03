@@ -225,7 +225,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           this.remover.sourceMethodBody.privateHelperFieldsToRemove.Add(field, field);
         }
 
-        if (resolvedClosureType.IsGeneric)
+        if (resolvedClosureType.IsGeneric && this.remover.sourceMethodBody.MethodDefinition.IsGeneric)
           this.remover.genericParameterMapper = new GenericMethodParameterMapper(this.remover.host, this.remover.sourceMethodBody.MethodDefinition, resolvedClosureType);
 
         statements.RemoveAt(i - 1);
@@ -430,13 +430,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       ITypeDefinition/*?*/ dctct = dctnt == null ? null : dctnt.ContainingTypeDefinition;
       if ((TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) || TypeHelper.TypesAreEquivalent(dctct, this.containingType)) &&
         UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
-        return ConvertToAnonymousDelegate(createDelegateInstance, iteratorsHaveNotBeenDecompiled: false);
+        return ConvertToAnonymousDelegate(createDelegateInstance, iteratorsHaveNotBeenDecompiled:false);
       // REVIEW: This is needed only when iterators are *not* decompiled. When they are, then that happens before this phase and the create delegate instances
       // have been moved into the iterator method (from the MoveNext method) so the above pattern catches everything.
       if (UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition)) {
         var containingTypeAsNestedType = this.containingType as INestedTypeDefinition;
         if (containingTypeAsNestedType != null && dctnt != null && TypeHelper.TypesAreEquivalent(dctnt.ContainingType, containingTypeAsNestedType.ContainingType)) {
-          return ConvertToAnonymousDelegate(createDelegateInstance, iteratorsHaveNotBeenDecompiled: true);
+          return ConvertToAnonymousDelegate(createDelegateInstance, iteratorsHaveNotBeenDecompiled:true);
         }
       }
       return base.Visit(createDelegateInstance);
@@ -485,7 +485,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (iteratorsHaveNotBeenDecompiled && unspecializedClosureMethod.ContainingTypeDefinition.IsGeneric && 
         unspecializedClosureMethod.ContainingTypeDefinition.GenericParameterCount == 
         this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition.GenericParameterCount) {
-        var mapper = new GenericTypeParameterMapper(this.host, this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition,
+        var mapper = new GenericTypeParameterMapper(this.host, this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition, 
           unspecializedClosureMethod.ContainingTypeDefinition);
         mapper.Rewrite(anonDel);
       }
@@ -717,7 +717,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private CachedDelegateRemover(IMetadataHost host, Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals)
       : base(host, true) {
-      this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
+        this.cachedDelegateFieldsOrLocals = cachedDelegateFieldsOrLocals;
     }
 
     Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals;
@@ -986,9 +986,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public GenericTypeParameterMapper(IMetadataHost host, ITypeDefinition targetType, ITypeDefinition sourceType)
       : base(host) {
-      this.targetType = targetType;
-      this.sourceType = sourceType;
-      this.targetTypeGenericParameters = new List<IGenericTypeParameter>(targetType.GenericParameters);
+        this.targetType = targetType;
+        this.sourceType = sourceType;
+        this.targetTypeGenericParameters = new List<IGenericTypeParameter>(targetType.GenericParameters);
     }
 
     public override ITypeReference Rewrite(IGenericTypeParameterReference genericTypeParameterReference) {
