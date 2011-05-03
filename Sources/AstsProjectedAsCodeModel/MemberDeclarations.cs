@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
+using Microsoft.Cci.Immutable;
 
 //^ using Microsoft.Contracts;
 
@@ -832,8 +833,8 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
-    protected internal virtual IEnumerable<CustomModifier> CustomModifiers {
-      get { return Enumerable<CustomModifier>.Empty; }
+    protected internal virtual IEnumerable<ICustomModifier> CustomModifiers {
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -2456,8 +2457,8 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
-    protected internal virtual IEnumerable<CustomModifier> CustomModifiers {
-      get { return Enumerable<CustomModifier>.Empty; }
+    protected internal virtual IEnumerable<ICustomModifier> CustomModifiers {
+      get { return Enumerable<ICustomModifier>.Empty; }
     }
 
     /// <summary>
@@ -3291,8 +3292,8 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
-    protected internal virtual IEnumerable<CustomModifier> ReturnValueCustomModifiers {
-      get { return Enumerable<CustomModifier>.Empty; } //TODO: compute this
+    protected internal virtual IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { return Enumerable<ICustomModifier>.Empty; } //TODO: compute this
     }
 
     /// <summary>

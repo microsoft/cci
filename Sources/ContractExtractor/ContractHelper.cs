@@ -16,9 +16,6 @@ using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
-  using SpecializedFieldReference = Microsoft.Cci.MutableCodeModel.SpecializedFieldReference;
-  using SpecializedMethodReference = Microsoft.Cci.MutableCodeModel.SpecializedMethodReference;
-  using SpecializedNestedTypeReference = Microsoft.Cci.MutableCodeModel.SpecializedNestedTypeReference;
 
   /// <summary>
   /// Helper class for performing common tasks on mutable contracts
@@ -115,7 +112,7 @@ namespace Microsoft.Cci.MutableContracts {
           statements.Add(new ReturnStatement());
           #endregion
           #region Add [ContractInvariantMethod]
-          var contractInvariantMethodType = new NamespaceTypeReference(
+          var contractInvariantMethodType = new Immutable.NamespaceTypeReference(
             this.host,
             this.host.PlatformType.SystemDiagnosticsContractsContract.ContainingUnitNamespace,
             this.host.NameTable.GetNameFor("ContractInvariantMethodAttribute"),
@@ -424,7 +421,7 @@ namespace Microsoft.Cci.MutableContracts {
         return null;
       } else if (methodDefinition.IsAbstract) {
         if (typeHoldingContractDefinition.IsGeneric) {
-          var instant = GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition,
+          var instant = Immutable.GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition,
             IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(definingType.GenericParameters),
             host.InternFactory);
           typeHoldingContractDefinition = instant;
@@ -485,12 +482,12 @@ namespace Microsoft.Cci.MutableContracts {
     /// Creates a type reference anchored in the given assembly reference and whose names are relative to the given host.
     /// When the type name has periods in it, a structured reference with nested namespaces is created.
     /// </summary>
-    public static NamespaceTypeReference CreateTypeReference(IMetadataHost host, IAssemblyReference assemblyReference, string typeName) {
-      IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
+    public static INamespaceTypeReference CreateTypeReference(IMetadataHost host, IAssemblyReference assemblyReference, string typeName) {
+      IUnitNamespaceReference ns = new Immutable.RootUnitNamespaceReference(assemblyReference);
       string[] names = typeName.Split('.');
       for (int i = 0, n = names.Length - 1; i < n; i++)
-        ns = new NestedUnitNamespaceReference(ns, host.NameTable.GetNameFor(names[i]));
-      return new NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, PrimitiveTypeCode.NotPrimitive);
+        ns = new Immutable.NestedUnitNamespaceReference(ns, host.NameTable.GetNameFor(names[i]));
+      return new Immutable.NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, PrimitiveTypeCode.NotPrimitive);
     }
 
     /// <summary>
@@ -499,7 +496,7 @@ namespace Microsoft.Cci.MutableContracts {
     public static bool IsAutoPropertyMember(IMetadataHost host, ITypeDefinitionMember member) {
       if (AttributeHelper.Contains(member.Attributes, host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return true;
       if (systemDiagnosticsDebuggerNonUserCodeAttribute == null) {
-        systemDiagnosticsDebuggerNonUserCodeAttribute = CreateTypeReference(host, new AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.DebuggerNonUserCodeAttribute");
+        systemDiagnosticsDebuggerNonUserCodeAttribute = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.DebuggerNonUserCodeAttribute");
       }
       return AttributeHelper.Contains(member.Attributes, systemDiagnosticsDebuggerNonUserCodeAttribute);
     }
@@ -510,7 +507,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static bool IsContractClass(IMetadataHost host, ITypeDefinition typeDefinition) {
       if (contractClassFor == null) {
-        contractClassFor = CreateTypeReference(host, new AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractClassForAttribute");
+        contractClassFor = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractClassForAttribute");
       }
       return AttributeHelper.Contains(typeDefinition.Attributes, contractClassFor);
     }
@@ -521,7 +518,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static bool IsInvariantMethod(IMetadataHost host, IMethodDefinition methodDefinition) {
       if (contractInvariantMethod == null) {
-        contractInvariantMethod = CreateTypeReference(host, new AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
+        contractInvariantMethod = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
       }
       return AttributeHelper.Contains(methodDefinition.Attributes, contractInvariantMethod);
     }
@@ -650,7 +647,7 @@ namespace Microsoft.Cci.MutableContracts {
             overriddenContract = FilterUserMessage(host, overriddenContract, methodDefinition.ContainingTypeDefinition);
 
             if (specializedoverriddenMethod != null || overriddenMethod.IsGeneric) {
-              SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedoverriddenMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
+              var stdm = specializedoverriddenMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
               var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
               var targetTypeParameters = overriddenMethod.ContainingTypeDefinition.GenericParameters;
               var justToSee = overriddenMethod.InternedKey;
@@ -777,7 +774,7 @@ namespace Microsoft.Cci.MutableContracts {
       IGenericMethodInstance gmi = fromMethod as IGenericMethodInstance;
       if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
       if (specializedFromMethod != null || fromMethod.IsGeneric) {
-        SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedFromMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
+        var stdm = specializedFromMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
         var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
         var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
         var justToSee = fromMethod.InternedKey;
@@ -819,18 +816,18 @@ namespace Microsoft.Cci.MutableContracts {
         fromMethod = UninstantiateAndUnspecialize(fromMethod).ResolvedMethod;
       }
 
-      MethodContract fromMethodContract = (MethodContract) new CodeAndContractDeepCopier(host).Copy(methodContract);
+      MethodContract fromMethodContract = (MethodContract)new CodeAndContractDeepCopier(host).Copy(methodContract);
       BetaReducer brewriter = new BetaReducer(host, fromMethod, toMethod, expressions);
-      fromMethodContract = (MethodContract) brewriter.Rewrite(fromMethodContract);
+      fromMethodContract = (MethodContract)brewriter.Rewrite(fromMethodContract);
 
       IGenericMethodInstance gmi = fromMethod as IGenericMethodInstance;
       if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
       if (specializedFromMethod != null || fromMethod.IsGeneric) {
-        SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedFromMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
+        var stdm = specializedFromMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
         var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
         var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
         var justToSee = fromMethod.InternedKey;
-        fromMethodContract = (MethodContract) SpecializeMethodContract(
+        fromMethodContract = (MethodContract)SpecializeMethodContract(
           host,
           fromMethodContract,
           fromMethod.ContainingTypeDefinition,
@@ -1118,7 +1115,7 @@ namespace Microsoft.Cci.MutableContracts {
               new ThisReference() {
                 Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
               };
-          }
+        }
       }
     }
 
@@ -1301,7 +1298,7 @@ namespace Microsoft.Cci.MutableContracts {
     private Dictionary<object, IExpression> values = new Dictionary<object, IExpression>();
 
     public BetaReducer(IMetadataHost host, IMethodDefinition fromMethod, IMethodDefinition toMethod, List<IExpression> expressions)
-        : base(host) {
+      : base(host) {
       var fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
       for (ushort i = 0; i < fromMethod.ParameterCount; i++) {
         this.values.Add(fromParameters[i], expressions[i]);

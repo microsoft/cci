@@ -1,4 +1,5 @@
-﻿//-----------------------------------------------------------------------------
+﻿using System;
+//-----------------------------------------------------------------------------
 //
 // Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
@@ -9,11 +10,9 @@
 //
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
-using Microsoft.Cci.MutableCodeModel;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.MutableCodeModel;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -290,7 +289,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (parameter != null) {
           type = parameter.Type;
           if (parameter.IsByReference)
-            type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+            type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
         } else {
           IFieldReference/*?*/ field = addressableExpression.Definition as IFieldReference;
           if (field != null)
@@ -311,12 +310,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (targetType == Dummy.TypeReference) {
         IMethodReference/*?*/ method = addressOf.Expression.Definition as IMethodReference;
         if (method != null) {
-          ((AddressOf)addressOf).Type = new FunctionPointerType(method.CallingConvention, method.ReturnValueIsByRef, method.Type,
+          ((AddressOf)addressOf).Type = new Immutable.FunctionPointerType(method.CallingConvention, method.ReturnValueIsByRef, method.Type,
             method.ReturnValueIsModified ? method.ReturnValueCustomModifiers : null, method.Parameters, null, this.host.InternFactory);
           return;
         }
       }
-      ((AddressOf)addressOf).Type = ManagedPointerType.GetManagedPointerType(targetType, this.host.InternFactory);
+      ((AddressOf)addressOf).Type = Immutable.ManagedPointerType.GetManagedPointerType(targetType, this.host.InternFactory);
     }
 
     public override void TraverseChildren(IAddressDereference addressDereference) {
@@ -408,13 +407,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (local != null) {
         type = local.Type;
         if (local.IsReference)
-          type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+          type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
       } else {
         IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
         if (parameter != null) {
           type = parameter.Type;
           if (parameter.IsByReference)
-            type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+            type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
         } else {
           IFieldReference/*?*/ field = boundExpression.Definition as IFieldReference;
           if (field != null)
@@ -524,9 +523,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.TraverseChildren(createArray);
       IArrayTypeReference arrayType;
       if (createArray.Rank == 1 && IteratorHelper.EnumerableIsEmpty(createArray.LowerBounds))
-        arrayType = Vector.GetVector(createArray.ElementType, this.host.InternFactory);
+        arrayType = Immutable.Vector.GetVector(createArray.ElementType, this.host.InternFactory);
       else
-        arrayType = Matrix.GetMatrix(createArray.ElementType, createArray.Rank, this.host.InternFactory);
+        arrayType = Immutable.Matrix.GetMatrix(createArray.ElementType, createArray.Rank, this.host.InternFactory);
       ((CreateArray)createArray).Type = arrayType;
     }
 
@@ -578,7 +577,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void TraverseChildren(IGetValueOfTypedReference getValueOfTypedReference) {
       base.TraverseChildren(getValueOfTypedReference);
       var type = getValueOfTypedReference.TargetType;
-      if (type.IsValueType) type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+      if (type.IsValueType) type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
       ((GetValueOfTypedReference)getValueOfTypedReference).Type = type;
     }
 
@@ -726,7 +725,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IStackArrayCreate stackArrayCreate) {
       base.TraverseChildren(stackArrayCreate);
-      ((StackArrayCreate)stackArrayCreate).Type = Vector.GetVector(stackArrayCreate.ElementType, this.host.InternFactory);
+      ((StackArrayCreate)stackArrayCreate).Type = Immutable.Vector.GetVector(stackArrayCreate.ElementType, this.host.InternFactory);
     }
 
     public override void TraverseChildren(ISubtraction subtraction) {
@@ -767,7 +766,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.TraverseChildren(thisReference);
       var typeForThis = this.containingType.ResolvedType;
       if (typeForThis.IsValueType)
-        ((ThisReference)thisReference).Type = ManagedPointerType.GetManagedPointerType(NamedTypeDefinition.SelfInstance(typeForThis, this.host.InternFactory),this.host.InternFactory);
+        ((ThisReference)thisReference).Type = Immutable.ManagedPointerType.GetManagedPointerType(NamedTypeDefinition.SelfInstance(typeForThis, this.host.InternFactory), this.host.InternFactory);
       else
         ((ThisReference)thisReference).Type = NamedTypeDefinition.SelfInstance(typeForThis, this.host.InternFactory);
     }

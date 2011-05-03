@@ -586,7 +586,7 @@ namespace Microsoft.Cci.Ast {
         CompileTimeConstant cc = expr as CompileTimeConstant;
         if (cc != null && cc.Value is string) {
           IName moduleName = expr.NameTable.GetNameFor((string)cc.Value);
-          this.importModule = new ModuleReference(dllImportAttribute.ContainingBlock.Compilation.HostEnvironment, new ModuleIdentity(moduleName, string.Empty));
+          this.importModule = new Immutable.ModuleReference(dllImportAttribute.ContainingBlock.Compilation.HostEnvironment, new ModuleIdentity(moduleName, string.Empty));
           continue;
         }
         NamedArgument narg = expr as NamedArgument;

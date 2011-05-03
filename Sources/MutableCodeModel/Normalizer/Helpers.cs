@@ -459,8 +459,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal void InitializeInterfaces(ITypeReference elementType, bool isEnumerable) {
       var methodTypeArguments = new List<ITypeReference>();
       methodTypeArguments.Add(elementType);
-      ITypeReference genericEnumeratorType = GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerator, methodTypeArguments, this.host.InternFactory);
-      ITypeReference genericEnumerableType = GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerable, methodTypeArguments, this.host.InternFactory);
+      ITypeReference genericEnumeratorType = Immutable.GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerator, methodTypeArguments, this.host.InternFactory);
+      ITypeReference genericEnumerableType = Immutable.GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerable, methodTypeArguments, this.host.InternFactory);
       ITypeReference nongenericEnumeratorType = this.host.PlatformType.SystemCollectionsIEnumerator;
       ITypeReference nongenericEnumerableType = this.host.PlatformType.SystemCollectionsIEnumerable;
       ITypeReference iDisposable = this.PlatformIDisposable;
@@ -480,7 +480,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     private ITypeReference PlatformIDisposable {
       get {
         if (this.platformIDisposable == null) {
-          this.platformIDisposable = new Microsoft.Cci.NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
+          this.platformIDisposable = new Immutable.NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
             this.host.NameTable.GetNameFor("IDisposable"), 0, false, false, PrimitiveTypeCode.Reference);
         }
         return this.platformIDisposable;

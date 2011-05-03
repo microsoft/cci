@@ -157,11 +157,11 @@ namespace Microsoft.Cci.MutableContracts {
 
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
-       var definingUnit = TypeHelper.GetDefiningUnit(sourceMethodBody.MethodDefinition.ContainingType.ResolvedType);
+      var definingUnit = TypeHelper.GetDefiningUnit(sourceMethodBody.MethodDefinition.ContainingType.ResolvedType);
 
       this.methodIsInReferenceAssembly = definingUnit == null ? false : ContractHelper.IsContractReferenceAssembly(this.host, definingUnit);
 
-      AssemblyReference contractAssemblyReference = new AssemblyReference(host, this.host.ContractAssemblySymbolicIdentity);
+      var contractAssemblyReference = new Immutable.AssemblyReference(host, this.host.ContractAssemblySymbolicIdentity);
       this.contractClass = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
 
       IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
@@ -402,7 +402,7 @@ namespace Microsoft.Cci.MutableContracts {
       int startStatement,
       int lastBlockIndex,
       int lastStatementIndex
-      ){
+      ) {
 
       int currentBlockIndex = startBlock;
       int currentStatementIndex = startStatement;
@@ -664,7 +664,7 @@ namespace Microsoft.Cci.MutableContracts {
       return false;
     }
     private bool LastIndexOf(Predicate<IStatement> predicate, List<BlockStatement> blocks, out int blockIndex, out int stmtIndex) {
-      for (int bIndex = blocks.Count - 1; 0 <= bIndex; bIndex--){
+      for (int bIndex = blocks.Count - 1; 0 <= bIndex; bIndex--) {
         List<IStatement> statements = blocks[bIndex].Statements;
         // search from the end, stop at first statement which satisfies predicate
         for (int i = statements.Count - 1; 0 <= i; i--) {
@@ -970,7 +970,7 @@ namespace Microsoft.Cci.MutableContracts {
           Type = this.host.PlatformType.SystemBoolean,
         },
         ExceptionToThrow = failureBehavior,
-//        Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))), //new List<ILocation>(locations),
+        //        Locations = new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations))), //new List<ILocation>(locations),
         Locations = new List<ILocation>(locations),
         OriginalSource = origSource,
       };

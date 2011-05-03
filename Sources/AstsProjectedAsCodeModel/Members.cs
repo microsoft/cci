@@ -344,7 +344,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     readonly INameTable nameTable;
-    readonly PlatformType platformType;
+    readonly Immutable.PlatformType platformType;
 
     /// <summary>
     /// bool operator op(bool x, bool y)
@@ -1276,7 +1276,7 @@ namespace Microsoft.Cci.Ast {
     /// The list of custom modifiers, if any, associated with the field. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
-    public IEnumerable<CustomModifier> CustomModifiers {
+    public IEnumerable<ICustomModifier> CustomModifiers {
       get { return this.FieldDeclaration.CustomModifiers; }
     }
 
@@ -1462,8 +1462,8 @@ namespace Microsoft.Cci.Ast {
       get {
         if (this.type == null) {
           if (this.FieldDeclaration.IsVolatile) {
-            ICustomModifier volatileModifier = new CustomModifier(true, this.FieldDeclaration.PlatformType.SystemRuntimeCompilerServicesIsVolatile);
-            this.type = ModifiedTypeReference.GetModifiedTypeReference(this.FieldDeclaration.Type.ResolvedType,
+            ICustomModifier volatileModifier = new Immutable.CustomModifier(true, this.FieldDeclaration.PlatformType.SystemRuntimeCompilerServicesIsVolatile);
+            this.type = Immutable.ModifiedTypeReference.GetModifiedTypeReference(this.FieldDeclaration.Type.ResolvedType,
               IteratorHelper.GetSingletonEnumerable(volatileModifier), this.fieldDeclaration.Compilation.HostEnvironment.InternFactory);
           } else
             this.type = this.FieldDeclaration.Type.ResolvedType;
@@ -1500,12 +1500,6 @@ namespace Microsoft.Cci.Ast {
     #endregion
 
     #region IFieldReference Members
-
-    IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
-      get {
-        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
-      }
-    }
 
     /// <summary>
     /// The Field being referred to.
@@ -2374,7 +2368,7 @@ namespace Microsoft.Cci.Ast {
     /// The list of custom modifiers, if any, associated with the field. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
-    public IEnumerable<CustomModifier> CustomModifiers {
+    public IEnumerable<ICustomModifier> CustomModifiers {
       get { return this.GlobalFieldDeclaration.CustomModifiers; }
     }
 
@@ -2623,12 +2617,6 @@ namespace Microsoft.Cci.Ast {
     #endregion
 
     #region IFieldReference Members
-
-    IEnumerable<ICustomModifier> IFieldReference.CustomModifiers {
-      get {
-        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
-      }
-    }
 
     IFieldDefinition IFieldReference.ResolvedField {
       get { return this; }
@@ -3516,7 +3504,7 @@ namespace Microsoft.Cci.Ast {
     /// The list of custom modifiers, if any, associated with the parameter. Evaluate this property only if IsModified is true.
     /// </summary>
     /// <value></value>
-    public IEnumerable<CustomModifier> CustomModifiers {
+    public IEnumerable<ICustomModifier> CustomModifiers {
       get { return this.declaration.CustomModifiers; }
     }
 
@@ -3675,12 +3663,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     #region IParameterDefinition Members
-
-    IEnumerable<ICustomModifier> IParameterTypeInformation.CustomModifiers {
-      get {
-        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
-      }
-    }
 
     IMetadataConstant IParameterDefinition.DefaultValue {
       get { return this.DefaultValue; }
@@ -3980,7 +3962,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     /// <value></value>
-    public IEnumerable<CustomModifier> ReturnValueCustomModifiers {
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return this.declaration.ReturnValueCustomModifiers; }
     }
 
@@ -4034,12 +4016,6 @@ namespace Microsoft.Cci.Ast {
       }
     }
 
-    IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get {
-        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.ReturnValueCustomModifiers);
-      }
-    }
-
     #endregion
   }
 
@@ -4056,7 +4032,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <param name="unspecializedVersion"></param>
     /// <param name="containingGenericTypeInstance"></param>
-    protected SpecializedTypeDefinitionMember(MemberType/*!*/ unspecializedVersion, GenericTypeInstance containingGenericTypeInstance) {
+    protected SpecializedTypeDefinitionMember(MemberType/*!*/ unspecializedVersion, IGenericTypeInstance containingGenericTypeInstance) {
       this.unspecializedVersion = unspecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
     }
@@ -4064,10 +4040,10 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// 
     /// </summary>
-    public GenericTypeInstance ContainingGenericTypeInstance {
+    public IGenericTypeInstance ContainingGenericTypeInstance {
       get { return this.containingGenericTypeInstance; }
     }
-    readonly GenericTypeInstance containingGenericTypeInstance;
+    readonly IGenericTypeInstance containingGenericTypeInstance;
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type

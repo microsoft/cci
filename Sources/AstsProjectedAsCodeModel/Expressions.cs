@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Cci.Contracts;
 using System.Globalization;
+using Microsoft.Cci.Immutable;
 
 //^ using Microsoft.Contracts;
 
@@ -5793,7 +5794,7 @@ namespace Microsoft.Cci.Ast {
     /// When type inference fails, Dummy.Type is returned.
     /// </summary>
     public override ITypeDefinition InferType() {
-      PlatformType platformType = this.PlatformType;
+      var platformType = this.PlatformType;
       object/*?*/ value = this.Value;
       IConvertible/*?*/ ic = value as IConvertible;
       if (ic == null) {
@@ -9005,7 +9006,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
-    public PlatformType PlatformType {
+    public IPlatformType PlatformType {
       get { return this.Compilation.PlatformType; }
     }
 

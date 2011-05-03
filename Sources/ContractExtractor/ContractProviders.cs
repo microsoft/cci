@@ -10,12 +10,12 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using Microsoft.Cci.ILToCodeModel;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 using Microsoft.Cci.MutableContracts;
-using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.Contracts {
 
@@ -126,7 +126,7 @@ namespace Microsoft.Cci.Contracts {
       cccc.Traverse(contract);
       contract = ContractHelper.CopyContract(this.host, contract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
       if (specializedProxyMethod != null || proxyMethod.IsGeneric || proxyMethod.ContainingTypeDefinition.IsGeneric) {
-        SpecializedTypeDefinitionMember<IMethodDefinition> stdm = specializedProxyMethod as SpecializedTypeDefinitionMember<IMethodDefinition>;
+        var stdm = specializedProxyMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
         var sourceTypeReferences = stdm == null ? 
           (proxyMethod.ContainingTypeDefinition.IsGeneric ? 
             IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(methodDefinition.ContainingTypeDefinition.GenericParameters)
@@ -517,43 +517,43 @@ namespace Microsoft.Cci.Contracts {
 
     private class ActualMutator : CodeAndContractRewriter {
 
-    private UnitIdentity sourceUnitIdentity;
-    private IUnit targetUnit = null;
+      private UnitIdentity sourceUnitIdentity;
+      private IUnit targetUnit = null;
 
-    /// <summary>
-    /// A mutator that, when it visits anything, converts any references defined in the <paramref name="sourceUnit"/>
-    /// into references defined in the <paramref name="targetUnit"/>
-    /// </summary>
-    /// <param name="host">
-    /// The host that loaded the <paramref name="targetUnit"/>
-    /// </param>
-    /// <param name="targetUnit">
-    /// The unit to which all references in the <paramref name="sourceUnit"/>
-    /// will mapped.
-    /// </param>
-    /// <param name="sourceUnit">
-    /// The unit from which references will be mapped into references from the <paramref name="targetUnit"/>
-    /// </param>
-    public ActualMutator(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
-      : base(host) {
-      this.sourceUnitIdentity = sourceUnitIdentity;
-      this.targetUnit = targetUnit;
-    }
+      /// <summary>
+      /// A mutator that, when it visits anything, converts any references defined in the <paramref name="sourceUnit"/>
+      /// into references defined in the <paramref name="targetUnit"/>
+      /// </summary>
+      /// <param name="host">
+      /// The host that loaded the <paramref name="targetUnit"/>
+      /// </param>
+      /// <param name="targetUnit">
+      /// The unit to which all references in the <paramref name="sourceUnit"/>
+      /// will mapped.
+      /// </param>
+      /// <param name="sourceUnit">
+      /// The unit from which references will be mapped into references from the <paramref name="targetUnit"/>
+      /// </param>
+      public ActualMutator(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
+        : base(host) {
+        this.sourceUnitIdentity = sourceUnitIdentity;
+        this.targetUnit = targetUnit;
+      }
 
-    public override IModuleReference Rewrite(IModuleReference moduleReference) {
-      if (moduleReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
-        return (IModuleReference)this.targetUnit;
+      public override IModuleReference Rewrite(IModuleReference moduleReference) {
+        if (moduleReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
+          return (IModuleReference)this.targetUnit;
+        }
+        return base.Rewrite(moduleReference);
       }
-      return base.Rewrite(moduleReference);
-    }
-    public override IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
-      if (assemblyReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
-        return (IAssemblyReference)this.targetUnit;
+      public override IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
+        if (assemblyReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
+          return (IAssemblyReference)this.targetUnit;
+        }
+        return base.Rewrite(assemblyReference);
       }
-      return base.Rewrite(assemblyReference);
     }
   }
-}
 
   /// <summary>
   /// A contract extractor that serves up the union of the contracts found from a set of contract extractors.

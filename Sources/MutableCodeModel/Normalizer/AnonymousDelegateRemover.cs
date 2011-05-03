@@ -358,7 +358,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         }
         var instanceType = closure.InstanceType;
         var genericArguments = IteratorHelper.GetConversionEnumerable<IGenericMethodParameter, ITypeReference>(this.method.GenericParameters);
-        this.currentClosureInstance = GenericTypeInstance.GetGenericTypeInstance(instanceType.GenericType, genericArguments, this.host.InternFactory);
+        this.currentClosureInstance = Immutable.GenericTypeInstance.GetGenericTypeInstance(instanceType.GenericType, genericArguments, this.host.InternFactory);
         this.currentClosureSelfInstance = instanceType;
       } else {
         //if any of the containing types are generic, we need an instance or a specialized nested type.

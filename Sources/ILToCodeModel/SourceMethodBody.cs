@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
-using System.Text;
 
 namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
@@ -710,12 +709,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       var parameter = result.Definition as IParameterDefinition;
       if (parameter != null) {
         result.Type = parameter.Type;
-        if (parameter.IsByReference) result.Type = ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
+        if (parameter.IsByReference) result.Type = Immutable.ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
       } else {
         var local = result.Definition as ILocalDefinition;
         if (local != null) {
           result.Type = local.Type;
-          if (local.IsReference) result.Type = ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
+          if (local.IsReference) result.Type = Immutable.ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
         } else {
           var field = (IFieldReference)result.Definition;
           result.Type = field.Type;
@@ -884,7 +883,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Conv_R8:
           result.TypeAfterConversion = this.platformType.SystemFloat64; break;
         case OperationCode.Unbox:
-          result.TypeAfterConversion = ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory); break;
+          result.TypeAfterConversion = Immutable.ManagedPointerType.GetManagedPointerType((ITypeReference)currentOperation.Value, this.host.InternFactory); break;
         case OperationCode.Unbox_Any:
           result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
       }
@@ -950,7 +949,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Expression operand  = this.PopOperandStack();
       var type = (ITypeReference)currentOperation.Value;
       if (type.IsValueType)
-        type = ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+        type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
       operand.Type = type;
       result.Operand = operand;
       return result;

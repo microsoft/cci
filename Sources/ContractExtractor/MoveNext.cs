@@ -9,13 +9,10 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.IO;
-using Microsoft.Cci;
-using Microsoft.Cci.MutableCodeModel;
-using Microsoft.Cci.MutableCodeModel.Contracts;
 using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
-using Microsoft.Cci.ILToCodeModel;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.MutableCodeModel.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
   /// <summary>
@@ -185,13 +182,13 @@ namespace Microsoft.Cci.MutableContracts {
       //  int endStmt;
       //  var found = extractor.IndexOf(s => extractor.IsPrePostEndOrLegacy(s, true),
       //    index, 0, 0, out endBlock, out endStmt);
-        //while (found) {
-        //  var locals = FindLocals.FindSetOfLocals(b.Statements[endStmt]);
-        //  if (0 == locals.Count) {
-        //    extractor.
+      //while (found) {
+      //  var locals = FindLocals.FindSetOfLocals(b.Statements[endStmt]);
+      //  if (0 == locals.Count) {
+      //    extractor.
 
-        //}
-       
+      //}
+
       //}
 
       //return mc;
@@ -381,7 +378,7 @@ namespace Microsoft.Cci.MutableContracts {
     //}
 
     public class HermansAlwaysRight : BaseCodeTraverser {
-      
+
       ContractExtractor extractor;
       IContractAwareHost contractAwareHost;
       ISourceMethodBody sourceMethodBody;
@@ -413,7 +410,7 @@ namespace Microsoft.Cci.MutableContracts {
         //if (!FindAnyContract.Find(methodBody.Block)) return null;
         var definingUnit = TypeHelper.GetDefiningUnit(methodBody.MethodDefinition.ContainingType.ResolvedType);
         var methodIsInReferenceAssembly = ContractHelper.IsContractReferenceAssembly(contractAwareHost, definingUnit);
-        var contractAssemblyReference = new AssemblyReference(contractAwareHost, definingUnit.ContractAssemblySymbolicIdentity);
+        var contractAssemblyReference = new Immutable.AssemblyReference(contractAwareHost, definingUnit.ContractAssemblySymbolicIdentity);
         var contractClass = ContractHelper.CreateTypeReference(contractAwareHost, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
         var oldAndResultExtractor = new OldAndResultExtractor(contractAwareHost, methodBody, null, contractClass);
         var har = new HermansAlwaysRight(contractAwareHost, extractor, methodBody, methodIsInReferenceAssembly, oldAndResultExtractor, pdbReader);
@@ -422,7 +419,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
       public override void Visit(IStatement statement) {
         if (extractor.IsPrePostEndOrLegacy(statement, true)) {
-          
+
           //this.stopTraversal = true;
 
           var tempStack = new System.Collections.Stack();
@@ -480,7 +477,7 @@ namespace Microsoft.Cci.MutableContracts {
           }
 
           // walking backwards means need to prepend onto the accumulating clump
-          clump.InsertRange(0,stmts.GetRange(firstStmtIndex + 1, lastStmtIndex - firstStmtIndex));
+          clump.InsertRange(0, stmts.GetRange(firstStmtIndex + 1, lastStmtIndex - firstStmtIndex));
           stmts.RemoveRange(firstStmtIndex + 1, lastStmtIndex - firstStmtIndex);
           b.Statements = stmts;
 
@@ -800,7 +797,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
         public override void Visit(IMethodCall methodCall) {
           var ct = TypeHelper.GetTypeName(methodCall.MethodToCall.ContainingType);
-          if (ct.Equals("System.Diagnostics.Contracts")){
+          if (ct.Equals("System.Diagnostics.Contracts")) {
             var mName = methodCall.MethodToCall.Name.Value;
             if (mName.Equals("Requires") || mName.Equals("Ensures") || mName.Equals("EndContractBlock")) {
               this.found = true;

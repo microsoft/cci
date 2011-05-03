@@ -108,7 +108,7 @@ namespace Microsoft.Cci {
       List<IUnit> units = new List<IUnit>();
       foreach (IUnitReference uref in assembly.UnitReferences) units.Add(uref.ResolvedUnit);
       units.Add(assembly);
-      this.unitSet = new Microsoft.Cci.UnitSet(units.AsReadOnly());
+      this.unitSet = new Immutable.UnitSet(units.AsReadOnly());
       base.Visit(assembly);
     }
 
@@ -218,7 +218,7 @@ namespace Microsoft.Cci {
       List<IUnit> units = new List<IUnit>();
       foreach (IUnitReference uref in module.UnitReferences) units.Add(uref.ResolvedUnit);
       units.Add(module);
-      this.unitSet = new Microsoft.Cci.UnitSet(units.AsReadOnly());
+      this.unitSet = new Immutable.UnitSet(units.AsReadOnly());
       base.Visit(module);
     }
 
@@ -289,7 +289,7 @@ namespace Microsoft.Cci {
       List<IUnit> units = new List<IUnit>();
       foreach (IUnitReference uref in unit.UnitReferences) units.Add(uref.ResolvedUnit);
       units.Add(unit);
-      this.unitSet = new Microsoft.Cci.UnitSet(units.AsReadOnly());
+      this.unitSet = new Immutable.UnitSet(units.AsReadOnly());
       base.Visit(unit);
     }
 

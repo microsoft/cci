@@ -10,10 +10,8 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Microsoft.Cci;
-using Microsoft.Cci.Contracts;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.Immutable;
 
 namespace Microsoft.Cci {
 

@@ -3498,11 +3498,11 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Custom modifiers associated with local definition.
     /// </summary>
-    public virtual IEnumerable<CustomModifier> CustomModifiers {
+    public virtual IEnumerable<ICustomModifier> CustomModifiers {
       get
         //^ requires this.IsModified;
       {
-        return Enumerable<CustomModifier>.Empty;
+        return Enumerable<ICustomModifier>.Empty;
       }
     }
 
@@ -3568,15 +3568,6 @@ namespace Microsoft.Cci.Ast {
     IMetadataConstant ILocalDefinition.CompileTimeValue {
       get {
         return this.CompileTimeValue;
-      }
-    }
-
-    IEnumerable<ICustomModifier> ILocalDefinition.CustomModifiers {
-      get
-        //^^ requires this.IsModified;
-      {
-        //^ assume this.IsModified;
-        return IteratorHelper.GetConversionEnumerable<CustomModifier, ICustomModifier>(this.CustomModifiers);
       }
     }
 
@@ -4525,7 +4516,7 @@ namespace Microsoft.Cci.Ast {
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
-    public PlatformType PlatformType {
+    public IPlatformType PlatformType {
       get { return this.Compilation.PlatformType; }
     }
 
