@@ -44,7 +44,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal sealed class ConstantExpression : ExpressionBase, IMetadataConstant {
     readonly ITypeReference TypeReference;
-    readonly object/*?*/ value;
+    internal object/*?*/ value;
 
     internal ConstantExpression(
       ITypeReference typeReference,
@@ -245,15 +245,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class CustomAttribute : MetadataObject, ICustomAttribute {
-    internal readonly IMetadataReaderMethodReference Constructor;
+    internal readonly IMethodReference Constructor;
     internal readonly EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> Arguments;
-    internal readonly EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> NamedArguments;
+    internal EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> NamedArguments;
     internal readonly uint AttributeRowId;
 
     internal CustomAttribute(
       PEFileToObjectModel peFileToObjectModel,
       uint attributeRowId,
-      IMetadataReaderMethodReference constructor,
+      IMethodReference constructor,
       EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> arguments,
       EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments
     )
@@ -296,7 +296,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public ITypeReference Type {
       get {
-        ITypeReference/*?*/ moduleTypeRef = this.Constructor.OwningTypeReference;
+        ITypeReference/*?*/ moduleTypeRef = this.Constructor.ContainingType;
         if (moduleTypeRef == null)
           return Dummy.TypeReference;
         return moduleTypeRef;
@@ -461,17 +461,21 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal readonly IName Name;
     internal readonly IName unmanagledTypeName;
 
-    internal NamespaceTypeName(
-      INameTable nameTable,
-      NamespaceName/*?*/ namespaceName,
-      IName name
-    ) {
+    internal NamespaceTypeName(INameTable nameTable, NamespaceName/*?*/ namespaceName, IName name) {
       this.NamespaceName = namespaceName;
       this.Name = name;
-      this.unmanagledTypeName = name;
       string nameStr = null;
       TypeCache.SplitMangledTypeName(name.Value, out nameStr, out this.genericParameterCount);
-      this.unmanagledTypeName = nameTable.GetNameFor(nameStr);
+      if (this.genericParameterCount > 0)
+        this.unmanagledTypeName = nameTable.GetNameFor(nameStr);
+      else
+        this.unmanagledTypeName = name;
+    }
+
+    private NamespaceTypeName(INameTable nameTable, NamespaceName/*?*/ namespaceName, IName name, IName unmangledTypeName) {
+      this.NamespaceName = namespaceName;
+      this.Name = name;
+      this.unmanagledTypeName = unmangledTypeName;
     }
 
     internal override uint GenericParameterCount {
@@ -482,7 +486,23 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       PEFileToObjectModel peFileToObjectModel,
       IMetadataReaderModuleReference module
     ) {
-      return new NamespaceTypeNameTypeReference(module, this, peFileToObjectModel);
+      var typeRef = new NamespaceTypeNameTypeReference(module, this, peFileToObjectModel);
+      var redirectedTypeRef = peFileToObjectModel.ModuleReader.metadataReaderHost.Redirect(peFileToObjectModel.Module, typeRef) as INamespaceTypeReference;
+      if (redirectedTypeRef != typeRef && redirectedTypeRef != null) {
+        var namespaceName = this.GetNamespaceName(peFileToObjectModel.NameTable, redirectedTypeRef.ContainingUnitNamespace as INestedUnitNamespaceReference);
+        var mangledName = redirectedTypeRef.Name;
+        if (redirectedTypeRef.GenericParameterCount > 0)
+          mangledName = peFileToObjectModel.NameTable.GetNameFor(redirectedTypeRef.Name.Value+"`"+redirectedTypeRef.GenericParameterCount);
+        var redirectedNamespaceTypeName = new NamespaceTypeName(peFileToObjectModel.NameTable, namespaceName, mangledName, redirectedTypeRef.Name);
+        return new NamespaceTypeNameTypeReference(module, redirectedNamespaceTypeName, peFileToObjectModel);
+      }
+      return typeRef;
+    }
+
+    private NamespaceName/*?*/ GetNamespaceName(INameTable nameTable, INestedUnitNamespaceReference/*?*/ nestedUnitNamespaceReference) {
+      if (nestedUnitNamespaceReference == null) return null;
+      var parentNamespaceName = this.GetNamespaceName(nameTable, nestedUnitNamespaceReference.ContainingUnitNamespace as INestedUnitNamespaceReference);
+      return new NamespaceName(nameTable, parentNamespaceName, nestedUnitNamespaceReference.Name);
     }
 
     internal override IName UnmangledTypeName {
@@ -1376,23 +1396,17 @@ namespace Microsoft.Cci.MetadataReader {
 
   internal sealed class CustomAttributeDecoder : AttributeDecoder {
     internal readonly ICustomAttribute CustomAttribute;
-    internal CustomAttributeDecoder(
-      PEFileToObjectModel peFileToObjectModel,
-      MemoryReader signatureMemoryReader,
-      uint customAttributeRowId,
-      IMetadataReaderMethodReference attributeConstructor
-    )
+    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId, 
+      IMethodReference attributeConstructor)
       : base(peFileToObjectModel, signatureMemoryReader) {
       this.CustomAttribute = Dummy.CustomAttribute;
       ushort prolog = this.SignatureMemoryReader.ReadUInt16();
-      if (prolog != SerializationType.CustomAttributeStart) {
-        return;
-      }
-      IParameterTypeInformation[] modParams = attributeConstructor.RequiredModuleParameterInfos.RawArray;
-      int len = modParams.Length;
+      if (prolog != SerializationType.CustomAttributeStart) return;
+      int len = attributeConstructor.ParameterCount;
       ExpressionBase[]/*?*/ exprList = len == 0 ? null : new ExpressionBase[len];
-      for (int i = 0; i < len; ++i) {
-        var parameterType = modParams[i].Type;
+      int i = 0;
+      foreach (var parameter in attributeConstructor.Parameters) {
+        var parameterType = parameter.Type;
         if (parameterType == Dummy.TypeReference) {
           //  Error...
           return;
@@ -1403,13 +1417,13 @@ namespace Microsoft.Cci.MetadataReader {
           this.decodeFailed = true;
           return;
         }
-        exprList[i] = argument;
+        exprList[i++] = argument;
       }
       ushort numOfNamedArgs = this.SignatureMemoryReader.ReadUInt16();
       FieldOrPropertyNamedArgumentExpression[]/*?*/ namedArgumentArray = null;
       if (numOfNamedArgs > 0) {
         namedArgumentArray = new FieldOrPropertyNamedArgumentExpression[numOfNamedArgs];
-        for (ushort i = 0; i < numOfNamedArgs; ++i) {
+        for (i = 0; i < numOfNamedArgs; ++i) {
           bool isField = this.SignatureMemoryReader.ReadByte() == SerializationType.Field;
           ITypeReference/*?*/ memberType = this.GetFieldOrPropType();
           if (memberType == null) {
@@ -1425,7 +1439,7 @@ namespace Microsoft.Cci.MetadataReader {
             //  Error...
             return;
           }
-          ITypeReference/*?*/ moduleTypeRef = attributeConstructor.OwningTypeReference;
+          ITypeReference/*?*/ moduleTypeRef = attributeConstructor.ContainingType;
           if (moduleTypeRef == null) {
             //  Error...
             return;
@@ -1440,7 +1454,8 @@ namespace Microsoft.Cci.MetadataReader {
       EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments = TypeCache.EmptyNamedArgumentList;
       if (namedArgumentArray != null)
         namedArguments = new EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument>(namedArgumentArray, Dummy.NamedArgument);
-      this.CustomAttribute = new CustomAttribute(this.PEFileToObjectModel, customAttributeRowId, attributeConstructor, arguments, namedArguments);
+      this.CustomAttribute = peFileToObjectModel.ModuleReader.metadataReaderHost.Rewrite(peFileToObjectModel.Module,
+        new CustomAttribute(peFileToObjectModel, customAttributeRowId, attributeConstructor, arguments, namedArguments));
     }
   }
 

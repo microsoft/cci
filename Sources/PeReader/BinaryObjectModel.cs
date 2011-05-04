@@ -24,20 +24,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     uint InternedModuleId { get; }
   }
 
-  internal interface IMetadataReaderTypeMemberReference : ITypeMemberReference {
-    ITypeReference/*?*/ OwningTypeReference { get; }
-  }
-
-  internal interface IMetadataReaderFieldReference : IMetadataReaderTypeMemberReference, IFieldReference {
-    ITypeReference/*?*/ FieldType { get; }
-  }
-
-  internal interface IMetadataReaderMethodReference : IMetadataReaderTypeMemberReference, IMethodReference {
-    EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers { get; }
-    EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos { get; }
-    EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos { get; }
-  }
-
   /// <summary>
   /// Represents a metadata entity. This has an associated Token Value...
   /// This is used in maintaining type spec cache.
@@ -1331,7 +1317,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal class FieldDefinition : TypeMember, IFieldDefinition, IMetadataReaderFieldReference {
+  internal class FieldDefinition : TypeMember, IFieldDefinition {
     internal readonly uint FieldDefRowId;
     FieldFlags FieldFlags;
     EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ moduleCustomModifiers;
@@ -1759,10 +1745,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal abstract class MethodDefinition : TypeMember, IMethodDefinition, IMetadataReaderMethodReference {
+  internal abstract class MethodDefinition : TypeMember, IMethodDefinition {
     internal readonly uint MethodDefRowId;
-    MethodFlags MethodFlags;
-    MethodImplFlags MethodImplFlags;
+    internal MethodFlags MethodFlags;
+    internal MethodImplFlags MethodImplFlags;
     EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnCustomModifiers;
     ITypeReference/*?*/ returnType;
     byte FirstSignatureByte;
@@ -2416,7 +2402,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ITypeReference/*?*/ eventType;
     IMethodDefinition/*?*/ adderMethod;
     IMethodDefinition/*?*/ removerMethod;
-    MethodDefinition/*?*/ fireMethod;
+    IMethodDefinition/*?*/ fireMethod;
     TypeMemberVisibility visibility;
     //^ invariant ((this.EventFlags & EventFlags.AdderLoaded) == EventFlags.AdderLoaded) ==> this.adderMethod != null;
     //^ invariant ((this.EventFlags & EventFlags.RemoverLoaded) == EventFlags.RemoverLoaded) ==> this.removerMethod != null;
@@ -2476,7 +2462,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    internal MethodDefinition/*?*/ FireMethod {
+    internal IMethodDefinition/*?*/ FireMethod {
       get {
         if ((this.EventFlags & EventFlags.FireLoaded) != EventFlags.FireLoaded) {
           this.fireMethod = this.PEFileToObjectModel.GetEventAddOrRemoveOrFireMethod(this, MethodSemanticsFlags.Fire);
@@ -2558,8 +2544,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnModuleCustomModifiers;
     ITypeReference/*?*/ returnType;
     EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>/*?*/ moduleParameters;
-    MethodDefinition/*?*/ getterMethod;
-    MethodDefinition/*?*/ setterMethod;
+    IMethodDefinition/*?*/ getterMethod;
+    IMethodDefinition/*?*/ setterMethod;
     TypeMemberVisibility visibility;
     //^ invariant this.ReturnModuleCustomModifiers != null ==> this.ReturnType != null;
     //^ invariant this.ReturnModuleCustomModifiers != null ==> this.ModuleParameters != null;
@@ -2593,8 +2579,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override TypeMemberVisibility Visibility {
       get {
         if (this.visibility == TypeMemberVisibility.Mask) {
-          MethodDefinition/*?*/ getterMethod = this.GetterMethod;
-          MethodDefinition/*?*/ setterMethod = this.SetterMethod;
+          var getterMethod = this.GetterMethod;
+          var setterMethod = this.SetterMethod;
           TypeMemberVisibility getterVisibility = getterMethod == null ? TypeMemberVisibility.Other : getterMethod.Visibility;
           TypeMemberVisibility setterVisibility = setterMethod == null ? TypeMemberVisibility.Other : setterMethod.Visibility;
           this.visibility = TypeCache.LeastUpperBound(getterVisibility, setterVisibility);
@@ -2649,7 +2635,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    internal MethodDefinition/*?*/ GetterMethod {
+    internal IMethodDefinition/*?*/ GetterMethod {
       get {
         if ((this.PropertyFlags & PropertyFlags.GetterLoaded) != PropertyFlags.GetterLoaded) {
           this.getterMethod = this.PEFileToObjectModel.GetPropertyGetterOrSetterMethod(this, MethodSemanticsFlags.Getter);
@@ -2659,7 +2645,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    internal MethodDefinition/*?*/ SetterMethod {
+    internal IMethodDefinition/*?*/ SetterMethod {
       get {
         if ((this.PropertyFlags & PropertyFlags.SetterLoaded) != PropertyFlags.SetterLoaded) {
           this.setterMethod = this.PEFileToObjectModel.GetPropertyGetterOrSetterMethod(this, MethodSemanticsFlags.Setter);
@@ -2772,7 +2758,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   #region Member Ref level Object Model
 
-  internal abstract class MemberReference : MetadataObject, IMetadataReaderTypeMemberReference {
+  internal abstract class MemberReference : MetadataObject, ITypeMemberReference {
     internal readonly uint MemberRefRowId;
     internal readonly IName Name;
     internal readonly ITypeReference/*?*/ ParentTypeReference;
@@ -2834,7 +2820,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal class FieldReference : MemberReference, IMetadataReaderFieldReference {
+  internal class FieldReference : MemberReference, IFieldReference {
     protected bool signatureLoaded;
     protected EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers;
     protected ITypeReference/*?*/ typeReference;
@@ -2940,7 +2926,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal class MethodReference : MemberReference, IMetadataReaderMethodReference {
+  internal class MethodReference : MemberReference, IMethodReference {
     internal readonly byte FirstByte;
     protected ushort genericParameterCount;
     protected EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnCustomModifiers;

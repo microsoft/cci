@@ -653,7 +653,10 @@ namespace Microsoft.Cci.Immutable {
   /// </summary>
   public class PlatformType : IPlatformType {
 
-    IMetadataHost host;
+    /// <summary>
+    /// An object that provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
+    /// </summary>
+    protected readonly IMetadataHost host;
 
     /// <summary>
     /// Allocates a collection of references to types from the core platform, such as System.Object and System.String.

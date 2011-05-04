@@ -2819,12 +2819,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class SignatureGenericMethodParameter : SignatureGenericParameter, IGenericMethodParameterReference {
-    readonly IMetadataReaderMethodReference ModuleMethodReference;
+    readonly IMethodReference ModuleMethodReference;
     readonly ushort GenericParameterOrdinality;
 
     internal SignatureGenericMethodParameter(
       PEFileToObjectModel peFileToObjectModel,
-      IMetadataReaderMethodReference moduleMethodReference,
+      IMethodReference moduleMethodReference,
       ushort genericParameterOrdinality
     )
       : base(peFileToObjectModel) {
@@ -3885,7 +3885,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       if (possibleParamArray) {
         foreach (ICustomAttribute ica in this.Attributes) {
           CustomAttribute/*?*/ ca = ica as CustomAttribute;
-          if (ca == null || ca.Constructor.OwningTypeReference != peFileToObjectModel.SystemParamArrayAttribute)
+          if (ca == null || !TypeHelper.TypesAreEquivalent(ca.Constructor.ContainingType, peFileToObjectModel.SystemParamArrayAttribute))
             continue;
           this.ParameterFlags |= ParamFlags.ParamArray;
           break;
