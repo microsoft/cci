@@ -5274,7 +5274,6 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(IGenericMethodInstanceReference genericMethodInstanceReference) {
-      this.TraverseChildren((IMethodReference)genericMethodInstanceReference);
       this.Traverse(genericMethodInstanceReference.GenericArguments);
       this.Traverse(genericMethodInstanceReference.GenericMethod);
     }
