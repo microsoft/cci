@@ -94,9 +94,10 @@ namespace CSharpSourceEmitter {
       var type = attr.Type;
       var typeName = TypeHelper.GetTypeName(type);
       var attrUnit = TypeHelper.GetDefiningUnitReference(type);
+      var mscorlibUnit = TypeHelper.GetDefiningUnitReference(type.PlatformType.SystemObject);
 
       // mscorlib
-      if (UnitHelper.UnitsAreEquivalent(TypeHelper.GetDefiningUnitReference(type), TypeHelper.GetDefiningUnitReference(type.PlatformType.SystemObject))) {
+      if (UnitHelper.UnitsAreEquivalent(attrUnit, mscorlibUnit) || (attrUnit != null && mscorlibUnit != null && attrUnit.ResolvedUnit == mscorlibUnit.ResolvedUnit)) {
         switch (typeName) {
           case "System.FlagsAttribute": return SpecialAttribute.Flags;
           case "System.Runtime.CompilerServices.FixedBufferAttribute": return SpecialAttribute.FixedBuffer;
