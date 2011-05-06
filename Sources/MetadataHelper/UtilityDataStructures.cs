@@ -475,7 +475,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint tableIndex = hash1 & mask;
         while (this.KeyValueTable[tableIndex].Value != null) {
           if (this.KeyValueTable[tableIndex].Key == key) {
-            Debug.Assert(this.KeyValueTable[tableIndex].Value == value);
+            this.KeyValueTable[tableIndex].Value = value;
             return;
           }
           tableIndex = (tableIndex + hash2) & mask;
