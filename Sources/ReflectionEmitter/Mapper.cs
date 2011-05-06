@@ -44,14 +44,23 @@ namespace Microsoft.Cci.ReflectionEmitter {
         name.Name = ident.Name.Value;
         name.SetPublicKeyToken(new List<byte>(ident.PublicKeyToken).ToArray());
         name.Version = ident.Version;
-        try {
-          result = Assembly.Load(name);
-        } catch (System.UriFormatException) {
-        } catch (System.IO.FileNotFoundException) {
-        } catch (System.IO.FileLoadException) {
-        } catch (System.BadImageFormatException) {
+        var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+        foreach (var loadedAssem in loadedAssemblies) {
+          if (AssemblyName.ReferenceMatchesDefinition(name, loadedAssem.GetName())) {
+            result = loadedAssem;
+            break;
+          }
         }
-        this.assemblyMap.Add(ident, result);
+        if (result == null) {
+          try {
+            result = Assembly.Load(name);
+          } catch (System.UriFormatException) {
+          } catch (System.IO.FileNotFoundException) {
+          } catch (System.IO.FileLoadException) {
+          } catch (System.BadImageFormatException) {
+          }
+          this.assemblyMap.Add(ident, result);
+        }
       }
       return result;
     }
@@ -74,8 +83,6 @@ namespace Microsoft.Cci.ReflectionEmitter {
     /// </summary>
     public FieldInfo/*?*/ GetField(IFieldReference/*?*/ fieldReference) {
       if (fieldReference == null) return null;
-      var specializedFieldReference = fieldReference as ISpecializedFieldReference;
-      if (specializedFieldReference != null) return this.GetSpecializedField(specializedFieldReference);
       var result = this.fieldMap.Find(fieldReference.ContainingType.InternedKey, (uint)fieldReference.Name.UniqueKey);
       if (result == null) {
         var containingType = this.GetType(fieldReference.ContainingType);
@@ -96,17 +103,6 @@ namespace Microsoft.Cci.ReflectionEmitter {
     }
 
     /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="specializedFieldReference"></param>
-    /// <returns></returns>
-    private FieldInfo GetSpecializedField(ISpecializedFieldReference specializedFieldReference) {
-      var containingType = this.GetType(specializedFieldReference.ContainingType);
-      var unspecializedField = this.GetField(specializedFieldReference.UnspecializedVersion);
-      return TypeBuilder.GetField(containingType, unspecializedField);
-    }
-
-    /// <summary>
     /// Returns a "live" System.Reflection.MethodBase object that provides reflective access to the referenced method.
     /// If the method cannot be found or cannot be loaded, the result is null.
     /// </summary>
@@ -114,8 +110,6 @@ namespace Microsoft.Cci.ReflectionEmitter {
       if (methodReference == null) return null;
       var genericMethodInstanceReference = methodReference as IGenericMethodInstanceReference;
       if (genericMethodInstanceReference != null) return this.GetGenericMethodInstance(genericMethodInstanceReference);
-      var specializedMethodReference = methodReference as ISpecializedMethodReference;
-      if (specializedMethodReference != null) return this.GetSpecializedMethod(specializedMethodReference);
       MethodBase result = this.methodMap.Find(methodReference.InternedKey);
       if (result != null) return result;
       MemberInfo[] members = this.membersMap.Find(methodReference.ContainingType.InternedKey, (uint)methodReference.Name.UniqueKey);
@@ -262,7 +256,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       }
       var genericTypeInstance = typeReference as IGenericTypeInstanceReference;
       if (genericTypeInstance != null) {
-        if (!type.IsGenericTypeDefinition) return false;
+        if (!type.IsGenericType) return false;
         if (!this.TypesMatch(genericTypeInstance.GenericType, type.GetGenericTypeDefinition(), genericMethod)) return false;
         var genericArguments = type.GetGenericArguments();
         if (genericArguments == null || genericArguments.Length != genericTypeInstance.GenericType.GenericParameterCount) return false;
@@ -275,21 +269,9 @@ namespace Microsoft.Cci.ReflectionEmitter {
       return this.GetType(typeReference) == type;
     }
 
-    private MethodBase GetSpecializedMethod(ISpecializedMethodReference specializedMethodReference) {
-      var unspecializedMethod = this.GetMethod(specializedMethodReference.UnspecializedVersion);
-      Type containingType = this.GetType(specializedMethodReference.ContainingType);
-      MethodBase specializedMethod = null;
-      if (unspecializedMethod.IsConstructor)
-        specializedMethod = TypeBuilder.GetConstructor(containingType, (ConstructorInfo)unspecializedMethod);
-      else
-        specializedMethod = TypeBuilder.GetMethod(containingType, (MethodInfo)unspecializedMethod);
-      this.methodMap.Add(specializedMethodReference.InternedKey, specializedMethod);
-      return specializedMethod;
-    }
-
     private MethodBase GetGenericMethodInstance(IGenericMethodInstanceReference genericMethodInstanceReference) {
       var genericMethodReference = genericMethodInstanceReference.GenericMethod;
-      var genericMethod = (MethodInfo)GetMethod(genericMethodReference);
+      var genericMethod = (MethodInfo)this.GetMethod(genericMethodReference);
       var typeArguments = new Type[genericMethodReference.GenericParameterCount];
       var i = 0; foreach (var arg in genericMethodInstanceReference.GenericArguments) typeArguments[i++] = this.GetType(arg);
       var genericMethodInstance = genericMethod.MakeGenericMethod(typeArguments);
