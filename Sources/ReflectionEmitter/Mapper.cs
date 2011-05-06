@@ -74,6 +74,8 @@ namespace Microsoft.Cci.ReflectionEmitter {
     /// </summary>
     public FieldInfo/*?*/ GetField(IFieldReference/*?*/ fieldReference) {
       if (fieldReference == null) return null;
+      var specializedFieldReference = fieldReference as ISpecializedFieldReference;
+      if (specializedFieldReference != null) return this.GetSpecializedField(specializedFieldReference);
       var result = this.fieldMap.Find(fieldReference.ContainingType.InternedKey, (uint)fieldReference.Name.UniqueKey);
       if (result == null) {
         var containingType = this.GetType(fieldReference.ContainingType);
@@ -94,96 +96,212 @@ namespace Microsoft.Cci.ReflectionEmitter {
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="specializedFieldReference"></param>
+    /// <returns></returns>
+    private FieldInfo GetSpecializedField(ISpecializedFieldReference specializedFieldReference) {
+      var containingType = this.GetType(specializedFieldReference.ContainingType);
+      var unspecializedField = this.GetField(specializedFieldReference.UnspecializedVersion);
+      return TypeBuilder.GetField(containingType, unspecializedField);
+    }
+
+    /// <summary>
     /// Returns a "live" System.Reflection.MethodBase object that provides reflective access to the referenced method.
     /// If the method cannot be found or cannot be loaded, the result is null.
     /// </summary>
     public MethodBase/*?*/ GetMethod(IMethodReference/*?*/ methodReference) {
       if (methodReference == null) return null;
+      var genericMethodInstanceReference = methodReference as IGenericMethodInstanceReference;
+      if (genericMethodInstanceReference != null) return this.GetGenericMethodInstance(genericMethodInstanceReference);
+      var specializedMethodReference = methodReference as ISpecializedMethodReference;
+      if (specializedMethodReference != null) return this.GetSpecializedMethod(specializedMethodReference);
       MethodBase result = this.methodMap.Find(methodReference.InternedKey);
-      if (result == null) {
-        MemberInfo[] members = this.membersMap.Find(methodReference.ContainingType.InternedKey, (uint)methodReference.Name.UniqueKey);
-        if (members == null) {
-          Type containingType = this.GetType(methodReference.ContainingType);
-          if (containingType == null) return null;
-          members = containingType.GetMember(methodReference.Name.Value, BindingFlags.NonPublic|BindingFlags.DeclaredOnly);
-          this.membersMap.Add(methodReference.ContainingType.InternedKey, (uint)methodReference.Name.UniqueKey, members);
-        }
-        var methodReturnType = this.GetType(methodReference.Type);
-        if (methodReturnType == null) return null;
-        if (methodReference.ReturnValueIsByRef) methodReturnType = methodReturnType.MakeByRefType();
-        var parameterCount = methodReference.ParameterCount;
-        var parameters = new IParameterTypeInformation[parameterCount];
-        var parameterTypes = parameterCount == 0 ? null : new Type[parameterCount];
-        int parameterIndex = 0;
-        foreach (var parameter in methodReference.Parameters) {
-          parameters[parameterIndex] = parameter;
-          var ptype = this.GetType(parameter.Type);
-          if (ptype == null) return null;
-          if (parameter.IsByReference) ptype = ptype.MakeByRefType();
-          parameterTypes[parameterIndex++] = ptype;
-        }
-        var referencedMethodIsStatic = (methodReference.CallingConvention & CallingConvention.HasThis) == 0;
-        foreach (var member in members) {
-          var methodBase = member as MethodBase;
-          if (methodBase == null) continue;
-          if (methodBase.IsStatic && !referencedMethodIsStatic) continue;
-          switch (methodBase.CallingConvention&(CallingConventions)3) {
-            case CallingConventions.Any:
-              if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.Standard && 
-                (methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.ExtraArguments)
-                continue;
-              break;
-            case CallingConventions.Standard:
-              if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.Standard) continue;
-              break;
-            case CallingConventions.VarArgs:
-              if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.ExtraArguments) continue;
-              break;
-          }
-          if ((methodBase.CallingConvention & CallingConventions.HasThis) != 0 &&
-            (methodReference.CallingConvention & CallingConvention.HasThis) == 0) continue;
-          if ((methodBase.CallingConvention & CallingConventions.ExplicitThis) != 0 &&
-            (methodReference.CallingConvention & CallingConvention.ExplicitThis) == 0) continue;
-          if (methodBase.IsConstructor) {
-            if (methodReference.Type.TypeCode != PrimitiveTypeCode.Void) continue;
-          } else {
-            var method = (MethodInfo)methodBase;
-            if (methodReturnType != method.ReturnType) continue;
-            if (methodReference.ReturnValueIsModified) {
-              if (!this.ModifiersMatch(method.ReturnParameter.GetOptionalCustomModifiers(), method.ReturnParameter.GetRequiredCustomModifiers(), methodReference.ReturnValueCustomModifiers)) continue;
-            }
-            if (method.IsGenericMethod) {
-              if (methodReference.GenericParameterCount != method.GetGenericArguments().Length) continue;
-            }
-          }
-          var memberParameterInfos = methodBase.GetParameters();
-          if (parameterCount != memberParameterInfos.Length) continue;
-          bool matched = true;
-          for (int i = 0; i < parameterCount; i++) {
-            var mparInfo = memberParameterInfos[i];
-            var ipar = parameters[i];
-            var part = parameterTypes[i];
-            if (mparInfo.ParameterType == part) { matched = false; break; }
-            if (ipar.IsModified) {
-              if (!this.ModifiersMatch(mparInfo.GetOptionalCustomModifiers(), mparInfo.GetRequiredCustomModifiers(), ipar.CustomModifiers)) continue;
-            }
-          }
-          if (!matched) continue;
-          result = methodBase;
-          break;
-        }
-        //if resuslt is null, the reference might be to a dummy array access method
-        //call GetArrayMethod on a ModuleBuilder. (this means that a module builder must be supplied to the constructor of this class).        
-        this.methodMap.Add(methodReference.InternedKey, result);
+      if (result != null) return result;
+      MemberInfo[] members = this.membersMap.Find(methodReference.ContainingType.InternedKey, (uint)methodReference.Name.UniqueKey);
+      if (members == null) {
+        Type containingType = this.GetType(methodReference.ContainingType);
+        if (containingType == null) return null;
+        var bindingFlags = BindingFlags.NonPublic|BindingFlags.DeclaredOnly|BindingFlags.Static|BindingFlags.Public|BindingFlags.Instance;
+        members = containingType.GetMember(methodReference.Name.Value, bindingFlags);
+        this.membersMap.Add(methodReference.ContainingType.InternedKey, (uint)methodReference.Name.UniqueKey, members);
       }
+      return this.GetMethodFrom(methodReference, members);
+    }
+
+    private MethodBase/*?*/ GetMethodFrom(IMethodReference methodReference, MemberInfo[] members) {
+      //Generic methods need special treatment because their signatures refer to their generic parameters
+      //and we can't map those to types unless we can first map the generic method. 
+      if (methodReference.IsGeneric) return this.GetGenericMethodFrom(methodReference, members);
+      MethodBase result = null;
+      var methodReturnType = this.GetType(methodReference.Type);
+      if (methodReturnType == null) return null;
+      if (methodReference.ReturnValueIsByRef) methodReturnType = methodReturnType.MakeByRefType();
+      var parameterCount = methodReference.ParameterCount;
+      var parameters = new IParameterTypeInformation[parameterCount];
+      var parameterTypes = parameterCount == 0 ? null : new Type[parameterCount];
+      int parameterIndex = 0;
+      foreach (var parameter in methodReference.Parameters) {
+        parameters[parameterIndex] = parameter;
+        var ptype = this.GetType(parameter.Type);
+        if (ptype == null) return null;
+        if (parameter.IsByReference) ptype = ptype.MakeByRefType();
+        parameterTypes[parameterIndex++] = ptype;
+      }
+      foreach (var member in members) {
+        var methodBase = member as MethodBase;
+        if (methodBase == null || methodBase.IsGenericMethodDefinition) continue;
+        if (!this.CallingConventionsMatch(methodBase, methodReference)) continue;
+        if (methodBase.IsConstructor) {
+          if (methodReference.Type.TypeCode != PrimitiveTypeCode.Void) continue;
+        } else {
+          var method = (MethodInfo)methodBase;
+          if (methodReturnType != method.ReturnType) continue;
+          if (methodReference.ReturnValueIsModified) {
+            if (!this.ModifiersMatch(method.ReturnParameter.GetOptionalCustomModifiers(), method.ReturnParameter.GetRequiredCustomModifiers(), methodReference.ReturnValueCustomModifiers)) continue;
+          }
+        }
+        var memberParameterInfos = methodBase.GetParameters();
+        if (parameterCount != memberParameterInfos.Length) continue;
+        bool matched = true;
+        for (int i = 0; i < parameterCount; i++) {
+          var mparInfo = memberParameterInfos[i];
+          var ipar = parameters[i];
+          var part = parameterTypes[i];
+          if (mparInfo.ParameterType != part) { matched = false; break; }
+          if (ipar.IsModified) {
+            if (!this.ModifiersMatch(mparInfo.GetOptionalCustomModifiers(), mparInfo.GetRequiredCustomModifiers(), ipar.CustomModifiers)) continue;
+          }
+        }
+        if (!matched) continue;
+        result = methodBase;
+        break;
+      }
+      if (result != null)
+        this.methodMap.Add(methodReference.InternedKey, result);
       return result;
+    }
+
+    private bool CallingConventionsMatch(MethodBase methodBase, IMethodReference methodReference) {
+      if (methodBase.IsStatic && (methodReference.CallingConvention & CallingConvention.HasThis) != 0) return false;
+      switch (methodBase.CallingConvention&(CallingConventions)3) {
+        case CallingConventions.Any:
+          if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.Default && 
+                (methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.ExtraArguments)
+            return false;
+          break;
+        case CallingConventions.Standard:
+          if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.Default) return false;
+          break;
+        case CallingConventions.VarArgs:
+          if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.ExtraArguments) return false;
+          break;
+      }
+      if ((methodBase.CallingConvention & CallingConventions.HasThis) != 0 &&
+            (methodReference.CallingConvention & CallingConvention.HasThis) == 0) return false;
+      if ((methodBase.CallingConvention & CallingConventions.ExplicitThis) != 0 &&
+            (methodReference.CallingConvention & CallingConvention.ExplicitThis) == 0) return false;
+      return true;
+    }
+
+    private MethodInfo GetGenericMethodFrom(IMethodReference methodReference, MemberInfo[] members) {
+      MethodInfo result = null;
+      var parameterCount = methodReference.ParameterCount;
+      var parameters = new IParameterTypeInformation[parameterCount];
+      int i = 0; foreach (var par in methodReference.Parameters) parameters[i++] = par;
+      var referencedMethodIsStatic = (methodReference.CallingConvention & CallingConvention.HasThis) == 0;
+      foreach (var member in members) {
+        var method = member as MethodInfo;
+        if (method == null || !method.IsGenericMethodDefinition) continue;
+        if (methodReference.GenericParameterCount != method.GetGenericArguments().Length) continue;
+        if (!this.CallingConventionsMatch(method, methodReference)) continue;
+        var mrtype = method.ReturnType;
+        if (methodReference.ReturnValueIsByRef) mrtype = mrtype.GetElementType();
+        if (!this.TypesMatch(methodReference.Type, mrtype, method)) continue;
+        if (methodReference.ReturnValueIsModified) {
+          if (!this.ModifiersMatch(method.ReturnParameter.GetOptionalCustomModifiers(), method.ReturnParameter.GetRequiredCustomModifiers(), methodReference.ReturnValueCustomModifiers)) continue;
+        }
+        var memberParameterInfos = method.GetParameters();
+        if (parameterCount != memberParameterInfos.Length) continue;
+        bool matched = true;
+        for (i = 0; i < parameterCount; i++) {
+          var mparInfo = memberParameterInfos[i];
+          var mparType = mparInfo.ParameterType;
+          var ipar = parameters[i];
+          if (ipar.IsByReference) mparType = mparType.GetElementType();
+          if (!this.TypesMatch(ipar.Type, mparType, method)) { matched = false; break; }
+          if (ipar.IsModified) {
+            if (!this.ModifiersMatch(mparInfo.GetOptionalCustomModifiers(), mparInfo.GetRequiredCustomModifiers(), ipar.CustomModifiers)) continue;
+          }
+        }
+        if (!matched) continue;
+        result = method;
+        break;
+      }
+      if (result != null)
+        this.methodMap.Add(methodReference.InternedKey, result);
+      return result;
+    }
+
+    private bool TypesMatch(ITypeReference typeReference, Type/*?*/ type, MethodInfo genericMethod) {
+      if (type == null) return false;
+      var arrayType = typeReference as IArrayTypeReference;
+      if (arrayType != null) return this.TypesMatch(arrayType.ElementType, type.GetElementType(), genericMethod);
+      var managedPointerType = typeReference as IManagedPointerTypeReference;
+      if (managedPointerType != null) return this.TypesMatch(managedPointerType.TargetType, type.GetElementType(), genericMethod);
+      var pointerType = typeReference as IPointerTypeReference;
+      if (pointerType != null) return this.TypesMatch(pointerType.TargetType, type.GetElementType(), genericMethod);
+      var modifiedType = typeReference as IModifiedTypeReference;
+      if (modifiedType != null) return this.TypesMatch(modifiedType.UnmodifiedType, type, genericMethod);
+      var genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
+      if (genericMethodParameterReference != null) {
+        var genericMethodParameters = genericMethod.GetGenericArguments();
+        if (genericMethodParameterReference.Index >= genericMethodParameters.Length) return false;
+        var genPar = genericMethodParameters[genericMethodParameterReference.Index];
+        return genPar == type;
+      }
+      var genericTypeInstance = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstance != null) {
+        if (!type.IsGenericTypeDefinition) return false;
+        if (!this.TypesMatch(genericTypeInstance.GenericType, type.GetGenericTypeDefinition(), genericMethod)) return false;
+        var genericArguments = type.GetGenericArguments();
+        if (genericArguments == null || genericArguments.Length != genericTypeInstance.GenericType.GenericParameterCount) return false;
+        int i = 0;
+        foreach (var genarg in genericTypeInstance.GenericArguments) {
+          if (!this.TypesMatch(genarg, genericArguments[i++], genericMethod)) return false;
+        }
+        return true;
+      }
+      return this.GetType(typeReference) == type;
+    }
+
+    private MethodBase GetSpecializedMethod(ISpecializedMethodReference specializedMethodReference) {
+      var unspecializedMethod = this.GetMethod(specializedMethodReference.UnspecializedVersion);
+      Type containingType = this.GetType(specializedMethodReference.ContainingType);
+      MethodBase specializedMethod = null;
+      if (unspecializedMethod.IsConstructor)
+        specializedMethod = TypeBuilder.GetConstructor(containingType, (ConstructorInfo)unspecializedMethod);
+      else
+        specializedMethod = TypeBuilder.GetMethod(containingType, (MethodInfo)unspecializedMethod);
+      this.methodMap.Add(specializedMethodReference.InternedKey, specializedMethod);
+      return specializedMethod;
+    }
+
+    private MethodBase GetGenericMethodInstance(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      var genericMethodReference = genericMethodInstanceReference.GenericMethod;
+      var genericMethod = (MethodInfo)GetMethod(genericMethodReference);
+      var typeArguments = new Type[genericMethodReference.GenericParameterCount];
+      var i = 0; foreach (var arg in genericMethodInstanceReference.GenericArguments) typeArguments[i++] = this.GetType(arg);
+      var genericMethodInstance = genericMethod.MakeGenericMethod(typeArguments);
+      this.methodMap.Add(genericMethodInstanceReference.InternedKey, genericMethodInstance);
+      return genericMethodInstance;
     }
 
     private bool ModifiersMatch(Type[] optional, Type[] required, IEnumerable<ICustomModifier> modifiers) {
       int optionalCount = 0;
       int requiredCount = 0;
       int modifierCount = 0;
-      foreach (var modifier in modifiers) {        
+      foreach (var modifier in modifiers) {
         var modifierType = this.GetType(modifier.Modifier);
         if (modifierType == null) return false;
         if (modifier.IsOptional) {

@@ -14,9 +14,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
     public DynamicLoader(ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
       this.sourceLocationProvider = sourceLocationProvider;
       this.localScopeProvider = localScopeProvider;
-      this.emitter = new Emitter(this);
+      this.emitter = new Emitter(this, sourceLocationProvider, localScopeProvider);
       this.initializingTraverser = new MetadataTraverser() { PostorderVisitor = this.emitter, TraverseIntoMethodBodies = true };
       this.typeBuilderAllocator = new TypeBuilderAllocater(this);
+      this.typeCreator = new TypeCreator(this);
       this.memberBuilderAllocator = new MemberBuilderAllocator(this);
       this.mapper = new ReflectionMapper();
       this.builderMap = new Dictionary<object, object>();
@@ -27,11 +28,12 @@ namespace Microsoft.Cci.ReflectionEmitter {
     Emitter emitter;
     MetadataTraverser initializingTraverser; //TODO: need the traverser to traverse private helper types/members
     TypeBuilderAllocater typeBuilderAllocator;
+    TypeCreator typeCreator;
     MemberBuilderAllocator memberBuilderAllocator;
     ReflectionMapper mapper;
     Dictionary<object, object> builderMap;
 
-    public AssemblyBuilder AssemblyBuilder {
+    internal AssemblyBuilder AssemblyBuilder {
       get {
         if (this.assemblyBuilder == null)
           this.assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
@@ -39,34 +41,34 @@ namespace Microsoft.Cci.ReflectionEmitter {
             AssemblyBuilderAccess.RunAndCollect);
         return this.assemblyBuilder;
       }
-      set {
-        this.assemblyBuilder = value;
-      }
     }
     AssemblyBuilder/*?*/ assemblyBuilder;
 
-    ModuleBuilder ModuleBuilder {
+    public ModuleBuilder ModuleBuilder {
       get {
-        if (this.ModuleBuilder == null)
-          this.moduleBuilder = this.AssemblyBuilder.DefineDynamicModule(this.AssemblyBuilder.GetName().Name+".module");
+        if (this.moduleBuilder == null)
+          this.moduleBuilder = this.AssemblyBuilder.DefineDynamicModule(this.AssemblyBuilder.GetName().Name+".manifest module", true);
         return this.moduleBuilder;
+      }
+      set {
+        this.moduleBuilder = value;
+        this.assemblyBuilder = (AssemblyBuilder)value.Assembly;
       }
     }
     ModuleBuilder/*?*/ moduleBuilder;
-    
-    public Assembly Load(IAssembly assembly) {
+
+    public AssemblyBuilder Load(IAssembly assembly) {
       //first create (but do not initialize) all typeBuilder builders, since they are needed to create member builders.
       this.typeBuilderAllocator.Traverse(assembly);
       //next create (but do not initialize) builder for all other kinds of typeBuilder members, since there may be forward references during initialization
       this.memberBuilderAllocator.Traverse(assembly);
       //now initialize all the builders
       this.initializingTraverser.TraverseChildren(assembly);
-      //finally create all of the types
-      foreach (var definition in this.builderMap.Values) {
-        var nsType = definition as INamespaceTypeDefinition;
-        if (nsType == null) continue;
-        this.CreateTypeAndNestedTypes(nsType);
-      }
+      //create all of the types
+      this.typeCreator.Traverse(assembly.GetAllTypes());
+      //set entry point on assembly if defined
+      if (!(assembly.EntryPoint is Dummy)) this.AssemblyBuilder.SetEntryPoint((MethodInfo)this.mapper.GetMethod(assembly.EntryPoint));
+      //now the assembly is ready for action
       return this.AssemblyBuilder;
     }
 
@@ -78,16 +80,8 @@ namespace Microsoft.Cci.ReflectionEmitter {
       //now initialize all the builders
       this.initializingTraverser.TraverseChildren(namespaceTypeDefinition);
       //finally create the type and return it
-      return this.CreateTypeAndNestedTypes(namespaceTypeDefinition);
-    }
-
-    private Type CreateTypeAndNestedTypes(INamedTypeDefinition type) {
-      var typeBuilder = (TypeBuilder)this.mapper.GetType(type);
-      var result = typeBuilder.CreateType();
-      this.mapper.DefineMapping(type, result);
-      foreach (var nestedType in type.NestedTypes)
-        this.CreateTypeAndNestedTypes(nestedType);
-      return result;
+      this.typeCreator.Traverse(namespaceTypeDefinition);
+      return this.mapper.GetType(namespaceTypeDefinition);
     }
 
     public DynamicMethod Load(IMethodDefinition method, bool skipVisibility) {
@@ -119,10 +113,11 @@ namespace Microsoft.Cci.ReflectionEmitter {
       DynamicLoader loader;
 
       public override void TraverseChildren(INamespaceTypeDefinition namespaceTypeDefinition) {
-        var name = TypeHelper.GetTypeName(namespaceTypeDefinition);
+        var name = TypeHelper.GetTypeName(namespaceTypeDefinition, NameFormattingOptions.UseGenericTypeNameSuffix);
         var attributes = GetTypeAttributes(namespaceTypeDefinition);
         if (namespaceTypeDefinition.IsPublic) attributes |= TypeAttributes.Public;
-        var typeBuilder = this.loader.moduleBuilder.DefineType(name, attributes);
+        var typeBuilder = this.loader.ModuleBuilder.DefineType(name, attributes);
+        this.AllocateGenericParametersIfNecessary(namespaceTypeDefinition, typeBuilder);
         this.loader.builderMap.Add(namespaceTypeDefinition, typeBuilder);
         this.loader.mapper.DefineMapping(namespaceTypeDefinition, typeBuilder); //so that typeBuilder references can be treated uniformly later on
         foreach (var nestedType in namespaceTypeDefinition.NestedTypes)
@@ -131,14 +126,31 @@ namespace Microsoft.Cci.ReflectionEmitter {
       }
 
       public override void TraverseChildren(INestedTypeDefinition nestedTypeDefinition) {
+        var name = nestedTypeDefinition.Name.Value;
+        if (nestedTypeDefinition.IsGeneric) name = name + "`" + nestedTypeDefinition.GenericParameterCount;
         var attributes = GetTypeAttributes(nestedTypeDefinition);
         attributes |= GetNestedTypeVisibility(nestedTypeDefinition);
         var containingType = (TypeBuilder)this.loader.mapper.GetType(nestedTypeDefinition.ContainingTypeDefinition);
-        var typeBuilder = containingType.DefineNestedType(nestedTypeDefinition.Name.Value);
+        var typeBuilder = containingType.DefineNestedType(name);
+        this.AllocateGenericParametersIfNecessary(nestedTypeDefinition, typeBuilder);
         this.loader.builderMap.Add(nestedTypeDefinition, typeBuilder); //so that typeBuilder references can be treated uniformly later on
         this.loader.mapper.DefineMapping(nestedTypeDefinition, typeBuilder);
         foreach (var nestedType in nestedTypeDefinition.NestedTypes)
           this.TraverseChildren(nestedType);
+      }
+
+      private void AllocateGenericParametersIfNecessary(ITypeDefinition typeDefinition, TypeBuilder typeBuilder) {
+        if (!typeDefinition.IsGeneric) return;
+        //We don't need these to be allocated in this pass, but it is more convenient to do it here.
+        var names = new string[typeDefinition.GenericParameterCount];
+        foreach (var genericParameter in typeDefinition.GenericParameters)
+          names[genericParameter.Index] = genericParameter.Name.Value;
+        var genericParameterBuilders = typeBuilder.DefineGenericParameters(names);
+        foreach (var genericParameter in typeDefinition.GenericParameters) {
+          var genericParameterBuilder = genericParameterBuilders[genericParameter.Index];
+          this.loader.builderMap.Add(genericParameter, genericParameterBuilder);
+          this.loader.mapper.DefineMapping(genericParameter, genericParameterBuilder);
+        }
       }
 
       private static TypeAttributes GetTypeAttributes(ITypeDefinition typeDefinition) {
@@ -233,6 +245,55 @@ namespace Microsoft.Cci.ReflectionEmitter {
         return attributes;
       }
 
+      public override void TraverseChildren(IGenericParameter genericParameter) {
+        //Setting the constraints here seems a little out of place since no new builders are being allocated
+        //and setting the constraints of generic parameter really is initializing its builder, not allocating a builder.
+        //However, the code for allocating a generic method builder is just a little bit saner when combined with the code for
+        //allocating non generic mehods and constructors. Making all that hang together requires us to initialize the generic method parameters
+        //in this pass so that we can set the signature of the generic method builder without inviting an exception from Reflection.Emit.
+
+        var genericTypeParameterBuilder = (GenericTypeParameterBuilder)this.loader.builderMap[genericParameter];
+        var genericParameterAttributes = GetAttributes(genericParameter);
+        genericTypeParameterBuilder.SetGenericParameterAttributes(genericParameterAttributes);
+        List<Type> interfaceConstraints;
+        Type classConstraint;
+        this.GetConstraints(genericParameter, out interfaceConstraints, out classConstraint);
+        if (classConstraint != null)
+          genericTypeParameterBuilder.SetBaseTypeConstraint(classConstraint);
+        if (interfaceConstraints != null)
+          genericTypeParameterBuilder.SetInterfaceConstraints(interfaceConstraints.ToArray());
+      }
+
+      private void GetConstraints(IGenericParameter genericParameter, out List<Type> interfaceConstraints, out Type classConstraint) {
+        interfaceConstraints = null;
+        classConstraint = null;
+        foreach (var constraint in genericParameter.Constraints) {
+          var constraintType = this.loader.mapper.GetType(constraint);
+          if (constraintType == null) continue;
+          if (constraintType.IsClass)
+            classConstraint = constraintType;
+          else {
+            if (interfaceConstraints == null) interfaceConstraints = new List<Type>();
+            interfaceConstraints.Add(constraintType);
+          }
+        }
+      }
+
+      private static GenericParameterAttributes GetAttributes(IGenericParameter genericParameter) {
+        var result = GenericParameterAttributes.None;
+        if (genericParameter.Variance == TypeParameterVariance.Covariant)
+          result |= GenericParameterAttributes.Covariant;
+        else if (genericParameter.Variance == TypeParameterVariance.Contravariant)
+          result |= GenericParameterAttributes.Contravariant;
+        if (genericParameter.MustBeReferenceType)
+          result |= GenericParameterAttributes.ReferenceTypeConstraint;
+        if (genericParameter.MustBeValueType)
+          result |= GenericParameterAttributes.NotNullableValueTypeConstraint;
+        if (genericParameter.MustHaveDefaultConstructor)
+          result |= GenericParameterAttributes.DefaultConstructorConstraint;
+        return result;
+      }
+
       public override void TraverseChildren(IPropertyDefinition propertyDefinition) {
         var containingType = (TypeBuilder)this.loader.mapper.GetType(propertyDefinition.ContainingTypeDefinition);
         PropertyAttributes attributes = PropertyAttributes.None;
@@ -256,6 +317,26 @@ namespace Microsoft.Cci.ReflectionEmitter {
         var containingType = (TypeBuilder)this.loader.mapper.GetType(method.ContainingTypeDefinition);
         var attributes = GetMethodAttributes(method);
         var callingConvention = GetCallingConvention(method.CallingConvention);
+
+        MethodBuilder/*?*/ genericMethodBuilder = null;
+        if (method.IsGeneric) {
+          //We need to establish mappings from IGenericMethodParameter values to GenericTypeParameterBuilder values
+          //before the return type and parameter types of the method are mapped.
+          genericMethodBuilder = containingType.DefineMethod(method.Name.Value, attributes, callingConvention);
+          string[] genericParameterNames = new string[method.GenericParameterCount];
+          foreach (var genPar in method.GenericParameters)
+            genericParameterNames[genPar.Index] = genPar.Name.Value;
+          var genParBuilders = genericMethodBuilder.DefineGenericParameters(genericParameterNames);
+          foreach (var genPar in method.GenericParameters) {
+            var genParBuilder = genParBuilders[genPar.Index];
+            this.loader.builderMap.Add(genPar, genParBuilder);
+            this.loader.mapper.DefineMapping(genPar, genParBuilder);
+          }
+          this.loader.builderMap.Add(method, genericMethodBuilder);
+          this.loader.mapper.DefineMapping(method, genericMethodBuilder);
+          this.Traverse(method.GenericParameters);
+        }
+
         var returnType = this.loader.mapper.GetType(method.Type);
         Type[] rtReqMods = null;
         Type[] rtOptMods = null;
@@ -273,9 +354,14 @@ namespace Microsoft.Cci.ReflectionEmitter {
           builder = containingType.DefinePInvokeMethod(method.Name.Value, method.PlatformInvokeData.ImportModule.Name.Value,
             method.PlatformInvokeData.ImportName.Value, attributes, callingConvention, returnType, rtReqMods, rtOptMods,
             parameterTypes, ptReqMods, ptOptMods, GetNativeCallingConvention(method), GetNativeCharset(method));
-        else
+        else {
+          if (genericMethodBuilder != null) {
+            genericMethodBuilder.SetSignature(returnType, rtReqMods, rtOptMods, parameterTypes, ptReqMods, ptOptMods);
+            return;
+          }
           builder = containingType.DefineMethod(method.Name.Value, attributes, callingConvention, returnType, rtReqMods, rtOptMods,
             parameterTypes, ptReqMods, ptOptMods);
+        }
         this.loader.builderMap.Add(method, builder);
         this.loader.mapper.DefineMapping(method, builder);
       }
@@ -388,10 +474,6 @@ namespace Microsoft.Cci.ReflectionEmitter {
 
     class Emitter : MetadataVisitor {
 
-      internal Emitter(DynamicLoader loader) {
-        this.loader = loader;
-      }
-
       internal Emitter(DynamicLoader loader, ISourceLocationProvider sourceLocationProvider, ILocalScopeProvider localScopeProvider) {
         this.loader = loader;
         this.sourceLocationProvider = sourceLocationProvider;
@@ -399,7 +481,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       }
 
       DynamicLoader loader;
-      Dictionary<int, Label> labelFor;
+      Dictionary<uint, Label> labelFor;
       Dictionary<ILocalDefinition, LocalBuilder> localFor;
       ILGenerator ilGenerator;
       IMethodBody methodBody;
@@ -575,12 +657,8 @@ namespace Microsoft.Cci.ReflectionEmitter {
               methodBuilder.AddDeclarativeSecurity(GetSecurityAction(securityAttribute), GetPermissionSet(securityAttribute));
           }
           if (method.IsGeneric) {
-            string[] genericParameterNames = new string[method.GenericParameterCount];
             foreach (var genPar in method.GenericParameters)
-              genericParameterNames[genPar.Index] = genPar.Name.Value;
-            var genParBuilders = methodBuilder.DefineGenericParameters(genericParameterNames);
-            foreach (var genPar in method.GenericParameters)
-              this.Visit(genPar, genParBuilders[genPar.Index]);            
+              this.Visit(genPar);
           }
           foreach (var parDef in method.Parameters) {
             if (parDef.HasDefaultValue || parDef.IsOptional || parDef.IsOut || parDef.IsMarshalledExplicitly ||
@@ -628,48 +706,11 @@ namespace Microsoft.Cci.ReflectionEmitter {
         return result;
       }
 
-      private void Visit(IGenericParameter genericParameter, GenericTypeParameterBuilder genericTypeParameterBuilder) {
+      public override void Visit(IGenericParameter genericParameter) {
+        var genericTypeParameterBuilder = (GenericTypeParameterBuilder)this.loader.builderMap[genericParameter];
         foreach (var customAttribute in genericParameter.Attributes) {
           var customAttributeBuilder = this.GetCustomAttributeBuilder(customAttribute);
           genericTypeParameterBuilder.SetCustomAttribute(customAttributeBuilder);
-        }
-        genericTypeParameterBuilder.SetGenericParameterAttributes(GetAttributes(genericParameter));
-        List<Type> interfaceConstraints;
-        Type classConstraint;
-        this.GetConstraints(genericParameter, out interfaceConstraints, out classConstraint);
-        if (classConstraint != null)
-          genericTypeParameterBuilder.SetBaseTypeConstraint(classConstraint);
-        if (interfaceConstraints != null)
-          genericTypeParameterBuilder.SetInterfaceConstraints(interfaceConstraints.ToArray());
-      }
-
-      private static GenericParameterAttributes GetAttributes(IGenericParameter genericParameter) {
-        var result = GenericParameterAttributes.None;
-        if (genericParameter.Variance == TypeParameterVariance.Covariant)
-          result |= GenericParameterAttributes.Covariant;
-        else if (genericParameter.Variance == TypeParameterVariance.Contravariant)
-          result |= GenericParameterAttributes.Contravariant;
-        if (genericParameter.MustBeReferenceType)
-          result |= GenericParameterAttributes.ReferenceTypeConstraint;
-        if (genericParameter.MustBeValueType)
-          result |= GenericParameterAttributes.NotNullableValueTypeConstraint;
-        if (genericParameter.MustHaveDefaultConstructor)
-          result |= GenericParameterAttributes.DefaultConstructorConstraint;
-        return result;
-      }
-
-      private void GetConstraints(IGenericParameter genericParameter, out List<Type> interfaceConstraints, out Type classConstraint) {
-        interfaceConstraints = null;
-        classConstraint = null;
-        foreach (var constraint in genericParameter.Constraints) {
-          var constraintType = this.loader.mapper.GetType(constraint);
-          if (constraintType == null) continue;
-          if (constraintType.IsClass)
-            classConstraint = constraintType;
-          else {
-            if (interfaceConstraints == null) interfaceConstraints = new List<Type>();
-            interfaceConstraints.Add(constraintType);
-          }
         }
       }
 
@@ -793,12 +834,8 @@ namespace Microsoft.Cci.ReflectionEmitter {
             (MethodInfo)this.loader.mapper.GetMethod(explicitOverride.ImplementedMethod));
         }
         if (typeDefinition.IsGeneric) {
-          var names = new string[typeDefinition.GenericParameterCount];
           foreach (var genericParameter in typeDefinition.GenericParameters)
-            names[genericParameter.Index] = genericParameter.Name.Value;
-          var genericParameterBuilders = typeBuilder.DefineGenericParameters(names);
-          foreach (var genericParameter in typeDefinition.GenericParameters)
-            this.Visit(genericParameter, genericParameterBuilders[genericParameter.Index]);
+            this.Visit(genericParameter);
         }
         foreach (var customAttribute in typeDefinition.Attributes) {
           var customAttributeBuilder = this.GetCustomAttributeBuilder(customAttribute);
@@ -818,10 +855,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.CreateLocalBuilders();
         this.EmitNamespaceScopes();
         foreach (IOperation operation in methodBody.Operations) {
-          this.CallAppropriateBeginsAndEnds(operation);
+          this.CallAppropriateBeginsAndEnds(operation.Offset);
           this.EmitPdbInformationFor(operation);
           Label label;
-          if (labelFor.TryGetValue((int)operation.Offset, out label)) ilGenerator.MarkLabel(label);
+          if (labelFor.TryGetValue((uint)operation.Offset, out label)) ilGenerator.MarkLabel(label);
           switch (operation.OperationCode) {
             case OperationCode.Array_Addr:
               ilGenerator.Emit(OpCodes.Call, this.loader.mapper.GetArrayAddrMethod((IArrayTypeReference)operation.Value, this.loader.ModuleBuilder));
@@ -866,8 +903,8 @@ namespace Microsoft.Cci.ReflectionEmitter {
             case OperationCode.Brfalse_S:
             case OperationCode.Brtrue_S:
             case OperationCode.Leave_S:
-              //^ assume operation.Value is int;
-              ilGenerator.Emit(OpCodeFor(operation.OperationCode), labelFor[(int)operation.Value]);
+              //^ assume operation.Value is uint;
+              ilGenerator.Emit(OpCodeFor(operation.OperationCode), labelFor[(uint)operation.Value]);
               continue;
             case OperationCode.Box:
             case OperationCode.Castclass:
@@ -895,7 +932,11 @@ namespace Microsoft.Cci.ReflectionEmitter {
             case OperationCode.Ldvirtftn:
               //TODO: if the reference has extra arguments, use EmitCall
               //^ assume operation.Value is IMethodReference;
-              ilGenerator.Emit(OpCodeFor(operation.OperationCode), (MethodInfo)this.loader.mapper.GetMethod((IMethodReference)operation.Value)); 
+              var methodBase = this.loader.mapper.GetMethod((IMethodReference)operation.Value);
+              if (methodBase.IsConstructor)
+                ilGenerator.Emit(OpCodeFor(operation.OperationCode), (ConstructorInfo)methodBase);
+              else
+                ilGenerator.Emit(OpCodeFor(operation.OperationCode), (MethodInfo)methodBase);
               break;
             case OperationCode.Newobj:
               //^ assume operation.Value is IMethodReference;
@@ -988,17 +1029,19 @@ namespace Microsoft.Cci.ReflectionEmitter {
               //^ assume operation.Value is uint[];
               uint[] targets = (uint[])operation.Value;
               Label[] labels = new Label[targets.Length];
-              for (int j = 0; j < targets.Length; j++) labels[j] = labelFor[(int)targets[j]];
+              for (int j = 0; j < targets.Length; j++) labels[j] = labelFor[targets[j]];
               ilGenerator.Emit(OpCodes.Switch, labels);
               continue;
-            //case OperationCode.Unaligned_:
-            //  //^ assume operation.Value is byte;
-            //  writer.WriteByte((byte)operation.Value); break;
+            case OperationCode.Unaligned_:
+              //^ assume operation.Value is byte;
+              ilGenerator.Emit(OpCodes.Unaligned, (byte)operation.Value);
+              continue;
             default:
               ilGenerator.Emit(OpCodeFor(operation.OperationCode));
               break;
           }
         }
+        this.CallAppropriateBeginsAndEnds((uint)ilGenerator.ILOffset);
         this.ilGenerator = null;
         this.methodBody = null;
         this.labelFor = null;
@@ -1025,8 +1068,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       List<uint> exceptionOffsets;
       List<uint>/*?*/ scopeOffsets;
 
-      private void CallAppropriateBeginsAndEnds(IOperation operation) {
-        uint offset = operation.Offset;
+      private void CallAppropriateBeginsAndEnds(uint offset) {
         if (this.exceptionOffsets.Contains(offset)) {
           foreach (var exceptionInformation in this.methodBody.OperationExceptionInformation) {
             if (exceptionInformation.TryStartOffset == offset) {
@@ -1064,8 +1106,41 @@ namespace Microsoft.Cci.ReflectionEmitter {
             this.exceptionOffsets.Add(exceptionInformation.FilterDecisionStartOffset);
           this.exceptionOffsets.Add(exceptionInformation.HandlerEndOffset);
         }
-        //TODO: run through the operations and create labels for the targets of every branch instruction.
-        throw new NotImplementedException();
+        this.labelFor = new Dictionary<uint, Label>();
+        foreach (var operation in this.methodBody.Operations) {
+          switch (operation.OperationCode) {
+            case OperationCode.Beq:
+            case OperationCode.Bge:
+            case OperationCode.Bge_Un:
+            case OperationCode.Bgt:
+            case OperationCode.Bgt_Un:
+            case OperationCode.Ble:
+            case OperationCode.Ble_Un:
+            case OperationCode.Blt:
+            case OperationCode.Blt_Un:
+            case OperationCode.Bne_Un:
+            case OperationCode.Br:
+            case OperationCode.Brfalse:
+            case OperationCode.Brtrue:
+            case OperationCode.Leave:
+            case OperationCode.Beq_S:
+            case OperationCode.Bge_S:
+            case OperationCode.Bge_Un_S:
+            case OperationCode.Bgt_S:
+            case OperationCode.Bgt_Un_S:
+            case OperationCode.Ble_S:
+            case OperationCode.Ble_Un_S:
+            case OperationCode.Blt_S:
+            case OperationCode.Blt_Un_S:
+            case OperationCode.Bne_Un_S:
+            case OperationCode.Br_S:
+            case OperationCode.Brfalse_S:
+            case OperationCode.Brtrue_S:
+            case OperationCode.Leave_S:
+              this.labelFor[(uint)operation.Value] = this.ilGenerator.DefineLabel();
+              continue;
+          }
+        }
       }
 
       private void CreateLocalBuilders() {
@@ -1119,7 +1194,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
           vendor = sourceDocument.LanguageVendor;
           type = sourceDocument.DocumentType;
         }
-        this.currentDocumentWriter = this.loader.moduleBuilder.DefineDocument(document.Location, language, vendor, type);
+        this.currentDocumentWriter = this.loader.ModuleBuilder.DefineDocument(document.Location, language, vendor, type);
         return this.currentDocumentWriter;
       }
 
@@ -1173,7 +1248,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
           case OperationCode.Ckfinite: return OpCodes.Ckfinite;
           case OperationCode.Clt: return OpCodes.Clt;
           case OperationCode.Clt_Un: return OpCodes.Clt_Un;
-          //case OperationCode.Constrained_: return OpCodes.Constrained_;
+          case OperationCode.Constrained_: return OpCodes.Constrained;
           case OperationCode.Conv_I: return OpCodes.Conv_I;
           case OperationCode.Conv_I1: return OpCodes.Conv_I1;
           case OperationCode.Conv_I2: return OpCodes.Conv_I2;
@@ -1299,7 +1374,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
           case OperationCode.Not: return OpCodes.Not;
           case OperationCode.Or: return OpCodes.Or;
           case OperationCode.Pop: return OpCodes.Pop;
-          //case OperationCode.Readonly_: return OpCodes.Readonly_;
+          case OperationCode.Readonly_: return OpCodes.Readonly;
           case OperationCode.Refanytype: return OpCodes.Refanytype;
           case OperationCode.Refanyval: return OpCodes.Refanyval;
           case OperationCode.Rem: return OpCodes.Rem;
@@ -1342,12 +1417,12 @@ namespace Microsoft.Cci.ReflectionEmitter {
           case OperationCode.Sub_Ovf: return OpCodes.Sub_Ovf;
           case OperationCode.Sub_Ovf_Un: return OpCodes.Sub_Ovf_Un;
           case OperationCode.Switch: return OpCodes.Switch;
-          //case OperationCode.Tail_: return OpCodes.Tail_;
+          case OperationCode.Tail_: return OpCodes.Tailcall;
           case OperationCode.Throw: return OpCodes.Throw;
-          //case OperationCode.Unaligned_: return OpCodes.Unaligned_;
+          case OperationCode.Unaligned_: return OpCodes.Unaligned;
           case OperationCode.Unbox: return OpCodes.Unbox;
           case OperationCode.Unbox_Any: return OpCodes.Unbox_Any;
-          //case OperationCode.Volatile_: return OpCodes.Volatile_;
+          case OperationCode.Volatile_: return OpCodes.Volatile;
           case OperationCode.Xor: return OpCodes.Xor;
           default: return OpCodes.Prefix1; //a dummy
         }
@@ -1358,6 +1433,62 @@ namespace Microsoft.Cci.ReflectionEmitter {
         if ((parameterDefinition.ContainingSignature.CallingConvention & CallingConvention.HasThis) != 0)
           parameterIndex++;
         return parameterIndex;
+      }
+
+    }
+
+    /// <summary>
+    /// If given a type definition that has an uncreated type builder associated with it, 
+    /// this traverser first attempts to create all types referenced by the type in its base
+    /// class and interfaces, then it creates the type. This does not work when there are
+    /// cyclic dependencies.
+    /// </summary>
+    class TypeCreator : MetadataTraverser {
+
+      internal TypeCreator(DynamicLoader loader) {
+        this.loader = loader;
+      }
+
+      DynamicLoader loader;
+
+      private void TraverseBaseTypes(ITypeDefinition typeDefinition) {
+        foreach (var baseClass in typeDefinition.BaseClasses)
+          this.Traverse(baseClass);
+        foreach (var interf in typeDefinition.Interfaces)
+          this.Traverse(interf);
+      }
+
+      public override void TraverseChildren(INamespaceTypeDefinition namespaceTypeDefinition) {
+        object builder;
+        if (!this.loader.builderMap.TryGetValue(namespaceTypeDefinition, out builder)) return;
+        this.loader.builderMap.Remove(namespaceTypeDefinition);
+        var typeBuilder = builder as TypeBuilder;
+        if (typeBuilder == null) return;
+        this.TraverseBaseTypes(namespaceTypeDefinition);
+        var type = typeBuilder.CreateType();
+        this.loader.mapper.DefineMapping(namespaceTypeDefinition, type);
+        this.Traverse(namespaceTypeDefinition.NestedTypes);
+      }
+
+      public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
+        this.TraverseChildren(namespaceTypeReference.ResolvedType);
+      }
+
+      public override void TraverseChildren(INestedTypeDefinition nestedTypeDefinition) {
+        object builder;
+        if (!this.loader.builderMap.TryGetValue(nestedTypeDefinition, out builder)) return;
+        this.loader.builderMap.Remove(nestedTypeDefinition);
+        var typeBuilder = builder as TypeBuilder;
+        if (typeBuilder == null) return;
+        this.TraverseBaseTypes(nestedTypeDefinition);
+        var type = typeBuilder.CreateType();
+        this.loader.mapper.DefineMapping(nestedTypeDefinition, type);
+        this.Traverse(nestedTypeDefinition.NestedTypes);
+      }
+
+      public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
+        this.Traverse(nestedTypeReference.ContainingType);
+        this.TraverseChildren(nestedTypeReference.ResolvedType);
       }
 
     }
