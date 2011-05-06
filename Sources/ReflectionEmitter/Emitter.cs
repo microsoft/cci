@@ -1451,11 +1451,19 @@ namespace Microsoft.Cci.ReflectionEmitter {
 
       DynamicLoader loader;
 
-      private void TraverseBaseTypes(ITypeDefinition typeDefinition) {
+      private void CreateTypesThatNeedToBeLoadedBeforeLoading(ITypeDefinition typeDefinition) {
+        if (typeDefinition.IsGeneric) {
+          foreach (var genPar in typeDefinition.GenericParameters)
+            this.Traverse(genPar);
+        }
         foreach (var baseClass in typeDefinition.BaseClasses)
           this.Traverse(baseClass);
         foreach (var interf in typeDefinition.Interfaces)
           this.Traverse(interf);
+        foreach (var field in typeDefinition.Fields) {
+          if (field.Type.IsValueType)
+            this.Traverse(field.Type);
+        }
       }
 
       public override void TraverseChildren(INamespaceTypeDefinition namespaceTypeDefinition) {
@@ -1464,7 +1472,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.loader.builderMap.Remove(namespaceTypeDefinition);
         var typeBuilder = builder as TypeBuilder;
         if (typeBuilder == null) return;
-        this.TraverseBaseTypes(namespaceTypeDefinition);
+        this.CreateTypesThatNeedToBeLoadedBeforeLoading(namespaceTypeDefinition);
         var type = typeBuilder.CreateType();
         this.loader.mapper.DefineMapping(namespaceTypeDefinition, type);
         this.Traverse(namespaceTypeDefinition.NestedTypes);
@@ -1480,7 +1488,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.loader.builderMap.Remove(nestedTypeDefinition);
         var typeBuilder = builder as TypeBuilder;
         if (typeBuilder == null) return;
-        this.TraverseBaseTypes(nestedTypeDefinition);
+        this.CreateTypesThatNeedToBeLoadedBeforeLoading(nestedTypeDefinition);
         var type = typeBuilder.CreateType();
         this.loader.mapper.DefineMapping(nestedTypeDefinition, type);
         this.Traverse(nestedTypeDefinition.NestedTypes);
