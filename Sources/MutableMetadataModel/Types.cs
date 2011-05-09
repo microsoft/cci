@@ -782,10 +782,12 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     private ITypeDefinition GetEffectiveBaseClass() {
       ITypeDefinition mostDerivedBaseClass = this.PlatformType.SystemObject.ResolvedType;
-      foreach (ITypeReference constraint in this.Constraints) {
-        ITypeDefinition constraintType = constraint.ResolvedType;
-        if (constraintType.IsClass && TypeHelper.Type1DerivesFromType2(constraintType, mostDerivedBaseClass))
-          mostDerivedBaseClass = constraintType;
+      if (this.Constraints != null) {
+        foreach (ITypeReference constraint in this.Constraints) {
+          ITypeDefinition constraintType = constraint.ResolvedType;
+          if (constraintType.IsClass && TypeHelper.Type1DerivesFromType2(constraintType, mostDerivedBaseClass))
+            mostDerivedBaseClass = constraintType;
+        }
       }
       return mostDerivedBaseClass;
     }
