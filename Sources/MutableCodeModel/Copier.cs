@@ -1802,8 +1802,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       var mutableCopy = this.shallowCopier.Copy(catchClause);
       mutableCopy.ExceptionType = this.Copy(mutableCopy.ExceptionType);
       if (mutableCopy.ExceptionContainer != Dummy.LocalVariable) {
-        mutableCopy.ExceptionContainer = this.Copy(mutableCopy.ExceptionContainer);
-        this.LocalsInsideCone.Add(catchClause.ExceptionContainer, mutableCopy.ExceptionContainer);
+        var copy = this.GetExistingCopyIfInsideCone(mutableCopy.ExceptionContainer); //allow catch clauses to share the same local
+        if (copy == mutableCopy.ExceptionContainer) {
+          mutableCopy.ExceptionContainer = this.Copy(mutableCopy.ExceptionContainer);
+          this.LocalsInsideCone.Add(catchClause.ExceptionContainer, mutableCopy.ExceptionContainer);
+        }
       }
       if (mutableCopy.FilterCondition != null)
         mutableCopy.FilterCondition = this.Copy(mutableCopy.FilterCondition);
