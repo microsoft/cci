@@ -1752,7 +1752,49 @@ namespace Microsoft.Cci {
     /// <param name="resourceUseStatement">The resource use statement.</param>
     public override void TraverseChildren(IResourceUseStatement resourceUseStatement) {
       this.EmitSequencePoint(resourceUseStatement.Locations);
-      base.TraverseChildren(resourceUseStatement);
+      var systemIDisposable = new NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
+        this.host.NameTable.GetNameFor("IDisposable"), 0, isEnum: false, isValueType: false, typeCode: PrimitiveTypeCode.NotPrimitive);
+      var dispose = new MethodReference(this.host, systemIDisposable, CallingConvention.Default, this.host.PlatformType.SystemVoid,
+        this.host.NameTable.GetNameFor("Dispose"), 0, Enumerable<IParameterTypeInformation>.Empty);
+
+      //Get resource into a local
+      ILocalDefinition resourceLocal;
+      var localDeclaration = resourceUseStatement.ResourceAcquisitions as ILocalDeclarationStatement;
+      if (localDeclaration != null) {
+        resourceLocal = localDeclaration.LocalVariable;
+        this.Traverse(localDeclaration.InitialValue);
+      } else {
+        var expressionStatement = (IExpressionStatement)resourceUseStatement.ResourceAcquisitions;
+        this.Traverse(expressionStatement.Expression);
+        resourceLocal = new TemporaryVariable(systemIDisposable, this.method);
+      }
+      this.VisitAssignmentTo(resourceLocal);
+
+      //try
+      var savedCurrentTryCatch = this.currentTryCatch;
+      this.currentTryCatch = resourceUseStatement;
+      var savedCurrentTryCatchFinallyEnd = this.currentTryCatchFinallyEnd;
+      this.currentTryCatchFinallyEnd = new ILGeneratorLabel();
+      this.generator.BeginTryBody();
+      this.Traverse(resourceUseStatement.Body);
+      if (!this.lastStatementWasUnconditionalTransfer)
+        this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
+
+      //finally
+      this.generator.BeginFinallyBlock();
+      var endOfFinally = new ILGeneratorLabel();
+      if (!resourceLocal.Type.IsValueType) {
+        this.generator.Emit(OperationCode.Ldloc, resourceLocal);
+        this.generator.Emit(OperationCode.Brfalse_S, endOfFinally);
+      }
+      this.generator.Emit(OperationCode.Ldloc, resourceLocal);
+      this.generator.Emit(OperationCode.Callvirt, dispose);
+      this.generator.MarkLabel(endOfFinally);
+      this.generator.Emit(OperationCode.Endfinally);
+      this.generator.EndTryBody();
+      this.generator.MarkLabel(this.currentTryCatchFinallyEnd);
+      this.currentTryCatchFinallyEnd = savedCurrentTryCatchFinallyEnd;
+      this.currentTryCatch = savedCurrentTryCatch;
       this.lastStatementWasUnconditionalTransfer = false;
     }
 
