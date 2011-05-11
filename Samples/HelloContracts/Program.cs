@@ -90,19 +90,22 @@ namespace HelloContracts {
 
           using (pdbReader) {
 
+            ISourceLocationProvider sourceLocationProvider = pdbReader;
+
             // Construct a Code Model from the Metadata model via decompilation
             var mutableModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
+            ILocalScopeProvider localScopeProvider = new Decompiler.LocalScopeProvider(pdbReader);
 
             // Extract contracts (side effect: removes them from the method bodies)
-            var contractProvider = Microsoft.Cci.MutableContracts.ContractHelper.ExtractContracts(host, mutableModule, pdbReader, pdbReader);
+            var contractProvider = Microsoft.Cci.MutableContracts.ContractHelper.ExtractContracts(host, mutableModule, pdbReader, localScopeProvider);
 
             // Inject non-null postconditions
             if (options.inject) {
-              new NonNullInjector(host, contractProvider).Visit(mutableModule);
+              new NonNullInjector(host, contractProvider).Traverse(mutableModule);
             }
 
             // Put the contracts back in as method calls at the beginning of each method
-            Microsoft.Cci.MutableContracts.ContractHelper.InjectContractCalls(host, mutableModule, contractProvider, pdbReader);
+            Microsoft.Cci.MutableContracts.ContractHelper.InjectContractCalls(host, mutableModule, contractProvider, sourceLocationProvider);
 
             // Write out the resulting module. Each method's corresponding IL is produced
             // lazily using CodeModelToILConverter via the delegate that the mutator stored in the method bodies.
@@ -110,8 +113,8 @@ namespace HelloContracts {
             if (pdbReader == null) {
               PeWriter.WritePeToStream(mutableModule, host, peStream);
             } else {
-              using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", pdbReader)) {
-                PeWriter.WritePeToStream(mutableModule, host, peStream, pdbReader, pdbReader, pdbWriter);
+              using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", sourceLocationProvider)) {
+                PeWriter.WritePeToStream(mutableModule, host, peStream, sourceLocationProvider, localScopeProvider, pdbWriter);
               }
             }
           }
@@ -277,7 +280,7 @@ namespace HelloContracts {
     #endregion
   }
 
-  class NonNullInjector : BaseCodeTraverser {
+  class NonNullInjector : CodeTraverser {
 
     IMetadataHost host;
     Microsoft.Cci.MutableContracts.ContractProvider contractProvider;
@@ -289,7 +292,7 @@ namespace HelloContracts {
       this.contractProvider = contractProvider;
     }
 
-    public override void Visit(IMethodDefinition method) {
+    public override void TraverseChildren(IMethodDefinition method) {
       if (!MemberHelper.IsVisibleOutsideAssembly(method)) return;
       var returnType = method.Type;
       if (returnType == this.host.PlatformType.SystemVoid
@@ -319,7 +322,7 @@ namespace HelloContracts {
       }
       this.contractProvider.AssociateMethodWithContract(method, newContract);
 
-      base.Visit(method);
+      base.TraverseChildren(method);
     }
   }
 }
