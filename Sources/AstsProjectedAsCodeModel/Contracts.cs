@@ -267,6 +267,12 @@ namespace Microsoft.Cci.Ast {
         this.invariants = new List<LoopInvariant>(template.invariants);
       else
         this.invariants = template.invariants;
+      if (template.writes != null)
+        this.writes = new List<Expression>(template.writes);
+      if (template.variants != EmptyListOfVariants)
+        this.variants = new List<Expression>(template.variants);
+      else
+        this.variants = template.variants;
     }
 
     /// <summary>
@@ -290,6 +296,10 @@ namespace Microsoft.Cci.Ast {
       bool result = false;
       foreach (LoopInvariant invariant in this.Invariants)
         result |= invariant.HasErrors;
+      foreach (var variant in this.variants)
+        result |= variant.HasErrors;
+      foreach (var writes in this.writes)
+        result |= writes.HasErrors;
       return result;
     }
 
@@ -325,6 +335,8 @@ namespace Microsoft.Cci.Ast {
         loopInvariant.SetContainingExpression(containingExpression);
       foreach (Expression writes in this.writes)
         writes.SetContainingExpression(containingExpression);
+      foreach (var variant in this.variants)
+        variant.SetContainingExpression(containingExpression);
     }
 
     private IEnumerable<IExpression> GetWrites() {
@@ -726,6 +738,9 @@ namespace Microsoft.Cci.Ast {
         if (write.ProjectAsIExpression() is ICompileTimeConstant)
           this.containingBlock.CompilationPart.Helper.ReportError(new AstErrorMessage(write, Error.ConstInReadsOrWritesClause, write.SourceLocation.Source));
       }
+      foreach(Expression variant in this.variants) {
+        result |= variant.HasErrors || ErrorForOutParameterReporter.CheckAndReturnTrueIfFound(variant, this.containingBlock.CompilationPart.Helper);
+      }
       foreach (Expression alloc in this.allocates)
         result |= alloc.HasErrors;
       return result;
@@ -772,6 +787,8 @@ namespace Microsoft.Cci.Ast {
         except.SetContainingExpression(containingExpression);
       foreach (Expression write in this.writes)
         write.SetContainingExpression(containingExpression);
+      foreach (Expression variant in this.variants)
+        variant.SetContainingExpression(containingExpression);
     }
 
     #region IObjectWithLocations Members
