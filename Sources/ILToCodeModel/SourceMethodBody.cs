@@ -411,10 +411,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (currentOperation.OperationCode == OperationCode.Ldflda || currentOperation.OperationCode == OperationCode.Ldvirtftn)
         addressableExpression.Instance = this.PopOperandStack();
       if (currentOperation.OperationCode == OperationCode.Ldloca || currentOperation.OperationCode == OperationCode.Ldloca_S) {
-        this.numberOfReferences[currentOperation.Value] =
-            this.numberOfReferences.ContainsKey(currentOperation.Value) ?
-            this.numberOfReferences[currentOperation.Value] + 1 :
-            1;
+        var local = (ILocalDefinition)currentOperation.Value;
+        this.numberOfReferences[local] = this.numberOfReferences.ContainsKey(local) ? this.numberOfReferences[local] + 1 : 1;
+        //Treat this as an assignment as well, so that the local does not get deleted because it contains a constant and has only one assignment to it.
+        this.numberOfAssignments[local] = this.numberOfAssignments.ContainsKey(local) ? this.numberOfAssignments[local] + 1 : 1;
       }
       return new AddressOf() { Expression = addressableExpression };
     }
