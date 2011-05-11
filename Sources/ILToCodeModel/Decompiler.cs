@@ -230,17 +230,17 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (mutableBody.privateHelperTypesToRemove != null) {
         denormalize = true;
         foreach (var helperType in mutableBody.privateHelperTypesToRemove)
-          this.helperTypes.Add(helperType.InternedKey, helperType);
+          this.helperTypes[helperType.InternedKey] = helperType;
       }
       if (mutableBody.privateHelperMethodsToRemove != null) {
         denormalize = true;
         foreach (var helperMethod in mutableBody.privateHelperMethodsToRemove.Values)
-          this.helperMethods.Add(helperMethod.InternedKey, helperMethod);
+          this.helperMethods[helperMethod.InternedKey] = helperMethod;
       }
       if (mutableBody.privateHelperFieldsToRemove != null) {
         denormalize = true;
         foreach (var helperField in mutableBody.privateHelperFieldsToRemove.Values)
-          this.helperFields.Add(helperField, helperField);
+          this.helperFields[helperField] = helperField;
       }
       if (denormalize) {
         var mutableMethod = (MethodDefinition)mutableBody.MethodDefinition;
