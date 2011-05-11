@@ -175,7 +175,9 @@ namespace Microsoft.Cci {
     /// Returns zero or more local constant definitions that are local to the given scope.
     /// </summary>
     public virtual IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
-      return Enumerable<ILocalDefinition>.Empty;
+      var ilGeneratorScope = scope as ILGeneratorScope;
+      if (ilGeneratorScope == null) return Enumerable<ILocalDefinition>.Empty;
+      return ilGeneratorScope.Constants;
     }
 
     /// <summary>
