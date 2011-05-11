@@ -209,7 +209,9 @@ namespace Microsoft.Cci {
     /// Begins a lexical scope.
     /// </summary>
     public void BeginScope() {
-      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable, this.method);
+      var startLabel = new ILGeneratorLabel();
+      this.MarkLabel(startLabel);
+      ILGeneratorScope scope = new ILGeneratorScope(startLabel, this.host.NameTable, this.method);
       this.scopeStack.Push(scope);
       this.scopes.Add(scope);
     }
@@ -218,7 +220,9 @@ namespace Microsoft.Cci {
     /// Begins a lexical scope.
     /// </summary>
     public void BeginScope(uint numberOfIteratorLocalsInScope) {
-      ILGeneratorScope scope = new ILGeneratorScope(this.offset, this.host.NameTable, this.method);
+      var startLabel = new ILGeneratorLabel();
+      this.MarkLabel(startLabel);
+      ILGeneratorScope scope = new ILGeneratorScope(startLabel, this.host.NameTable, this.method);
       this.scopeStack.Push(scope);
       this.scopes.Add(scope);
       if (numberOfIteratorLocalsInScope == 0) return;
@@ -468,8 +472,11 @@ namespace Microsoft.Cci {
     /// Ends a lexical scope.
     /// </summary>
     public void EndScope() {
-      if (this.scopeStack.Count > 0)
-        this.scopeStack.Pop().CloseScope(this.offset);
+      if (this.scopeStack.Count > 0) {
+        var endLabel = new ILGeneratorLabel();
+        this.MarkLabel(endLabel);
+        this.scopeStack.Pop().CloseScope(endLabel);
+      }
     }
 
     private ILocation GetCurrentSequencePoint() {
@@ -876,16 +883,18 @@ namespace Microsoft.Cci {
   /// </summary>
   public class ILGeneratorScope : ILocalScope, INamespaceScope {
 
-    internal ILGeneratorScope(uint offset, INameTable nameTable, IMethodDefinition containingMethod) {
-      this.offset = offset;
+    internal ILGeneratorScope(ILGeneratorLabel startLabel, INameTable nameTable, IMethodDefinition containingMethod) {
+      this.startLabel = startLabel;
       this.nameTable = nameTable;
       this.methodDefinition = containingMethod;
     }
 
-    internal void CloseScope(uint offset) {
-      this.length = offset - this.offset;
+    internal void CloseScope(ILGeneratorLabel endLabel) {
+      this.endLabel = endLabel;
     }
 
+    ILGeneratorLabel startLabel;
+    ILGeneratorLabel endLabel;
 
     /// <summary>
     /// The local definitions (constants) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
@@ -901,9 +910,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public uint Length {
-      get { return this.length; }
+      get { return this.endLabel.Offset - this.startLabel.Offset; }
     }
-    uint length;
 
     /// <summary>
     /// The local definitions (variables) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
@@ -928,9 +936,8 @@ namespace Microsoft.Cci {
     /// The offset of the first operation in the scope.
     /// </summary>
     public uint Offset {
-      get { return this.offset; }
+      get { return this.startLabel.Offset; }
     }
-    readonly uint offset;
 
     /// <summary>
     /// The namespaces that are used (imported) into this scope. (A debugger can use this when evaluating expressions in a program
