@@ -735,6 +735,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<string, AnonymousDelegate> cachedDelegateFieldsOrLocals;
     static string CachedDelegateId = "CachedAnonymousMethodDelegate";
 
+    public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
+      return anonymousDelegate;
+    }
+
     public override IExpression Visit(BoundExpression boundExpression) {
       var fieldReference = boundExpression.Definition as IFieldReference;
       if (fieldReference != null) {
