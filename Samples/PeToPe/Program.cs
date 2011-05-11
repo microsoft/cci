@@ -42,13 +42,18 @@ namespace PeToPe {
           //Construct a Code Model from the Metadata model via decompilation
           module = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
 
-          //Create a mutating visitor for the CodeModel and run it over the module, producing a copy that could be different if the mutator
-          //were a subclass that made changes during the copy process.
-          var mutator = new CodeMutatingVisitor(host, pdbReader);
-          module = mutator.Visit(module);
+          //Get a mutable copy of the Code Model
+          var copier = new CodeDeepCopier(host, pdbReader);
+          var mutableModule = copier.Copy(module);
 
-          //Write out the normalized Code Model, traversing it as the Metadata Model it also is.
-          //This lazily uses CodeModelToILConverter, via the delegate that the mutator stored in the method bodies, to compile method bodies to IL.
+          //Rewrite the mutable Code Model
+          var rewriter = new CodeRewriter(host); //In a real application CodeRewriter would be a subclass that actually does something.
+          module = rewriter.Rewrite(mutableModule);
+
+          //Write out the Code Model by traversing it as the Metadata Model that it also is.
+          //Note that the decompiled method bodies know how to compile themselves back into IL
+          //and that they have to be able to this since the rewrite step above might have modified the Code Model
+          //and thus have invalidated the original IL from which the unrewritten Code Model was constructed.
           Stream peStream = File.Create(module.Location + ".pe");
           if (pdbReader == null) {
             PeWriter.WritePeToStream(module, host, peStream);

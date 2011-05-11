@@ -23,8 +23,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
-    public CodeShallowCopier(IMetadataHost targetHost) 
+    /// <param name="sourceLocationProvider"></param>
+    public CodeShallowCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null)
       : base(targetHost) {
+      this.sourceLocationProvider = sourceLocationProvider;
     }
 
     /// <summary>
@@ -32,12 +34,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
     /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
-    public CodeShallowCopier(IMetadataHost targetHost, IUnit targetUnit)
+    /// <param name="sourceLocationProvider"></param>
+    public CodeShallowCopier(IMetadataHost targetHost, IUnit targetUnit, ISourceLocationProvider sourceLocationProvider = null)
       : base(targetHost, targetUnit) {
+      this.sourceLocationProvider = sourceLocationProvider;
     }
 
+    ISourceLocationProvider/*?*/ sourceLocationProvider;
+
     CodeDispatcher Dispatcher {
-      get { 
+      get {
         if (this.dispatcher == null)
           this.dispatcher = new CodeDispatcher() { copier = this };
         return this.dispatcher;
@@ -988,7 +994,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="sourceMethodBody"></param>
     public SourceMethodBody Copy(ISourceMethodBody sourceMethodBody) {
-      var copy = new SourceMethodBody(this.targetHost, null);
+      var copy = new SourceMethodBody(this.targetHost, this.sourceLocationProvider);
       copy.Block = sourceMethodBody.Block;
       copy.LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed;
       copy.MethodDefinition = sourceMethodBody.MethodDefinition;
@@ -1149,8 +1155,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
-    public CodeDeepCopier(IMetadataHost targetHost)
-      : this(targetHost, new CodeShallowCopier(targetHost)) {
+    /// <param name="sourceLocationProvider"></param>
+    public CodeDeepCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null)
+      : this(targetHost, new CodeShallowCopier(targetHost, sourceLocationProvider)) {
     }
 
     /// <summary>
@@ -1158,8 +1165,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
     /// <param name="targetUnit">The unit of metadata into which copies made by this copier will be inserted.</param>
-    public CodeDeepCopier(IMetadataHost targetHost, IUnit targetUnit)
-      : this(targetHost, new CodeShallowCopier(targetHost, targetUnit)) {
+    /// <param name="sourceLocationProvider"></param>
+    public CodeDeepCopier(IMetadataHost targetHost, IUnit targetUnit, ISourceLocationProvider sourceLocationProvider = null)
+      : this(targetHost, new CodeShallowCopier(targetHost, targetUnit, sourceLocationProvider)) {
     }
 
     /// <summary>
@@ -1178,7 +1186,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.dispatcher == null)
           this.dispatcher = new CodeDispatcher() { copier = this };
-        return dispatcher; 
+        return dispatcher;
       }
     }
     CodeDispatcher dispatcher;
@@ -1538,10 +1546,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     private Dictionary<ILocalDefinition, ILocalDefinition> LocalsInsideCone {
-      get { 
+      get {
         if (this.localsInsideCone == null)
           this.localsInsideCone = new Dictionary<ILocalDefinition, ILocalDefinition>();
-        return this.localsInsideCone; 
+        return this.localsInsideCone;
       }
     }
     Dictionary<ILocalDefinition, ILocalDefinition> localsInsideCone;
@@ -4973,7 +4981,7 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
       get {
         if (this.dispatcher == null)
           this.dispatcher = new ContractElementDispatcher() { copier = this };
-        return this.dispatcher; 
+        return this.dispatcher;
       }
     }
     class ContractElementDispatcher : CodeVisitor, ICodeAndContractVisitor {
