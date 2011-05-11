@@ -1035,6 +1035,23 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns an event of the given declaring type that has the given name.
+    /// If no such event can be found, Dummy.Event is returned.
+    /// </summary>
+    /// <param name="declaringType">The type thats declares the field.</param>
+    /// <param name="eventName">The name of the event.</param>
+    public static IEventDefinition GetEvent(ITypeDefinition declaringType, IName eventName) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(eventName != null);
+
+      foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(eventName, false)) {
+        IEventDefinition/*?*/ eventDef = member as IEventDefinition;
+        if (eventDef != null) return eventDef;
+      }
+      return Dummy.Event;
+    }
+
+    /// <summary>
     /// Returns a field of the given declaring type that has the given name.
     /// If no such field can be found, Dummy.Field is returned.
     /// </summary>
