@@ -793,6 +793,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="catchClause">The catch clause.</param>
     public override void TraverseChildren(ICatchClause catchClause) {
+      this.generator.BeginScope(0);
       if (catchClause.FilterCondition != null) {
         this.generator.BeginFilterBlock();
         this.Traverse(catchClause.FilterCondition);
@@ -801,13 +802,15 @@ namespace Microsoft.Cci {
         this.generator.BeginCatchBlock(catchClause.ExceptionType);
       }
       this.StackSize++;
-      if (catchClause.ExceptionContainer != Dummy.LocalVariable)
+      if (catchClause.ExceptionContainer != Dummy.LocalVariable) {
+        this.generator.AddVariableToCurrentScope(catchClause.ExceptionContainer);
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
-      else
+      } else
         this.generator.Emit(OperationCode.Pop);
       this.Traverse(catchClause.Body);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
+      this.generator.EndScope();
       this.lastStatementWasUnconditionalTransfer = false;
     }
 
