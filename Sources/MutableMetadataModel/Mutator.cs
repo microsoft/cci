@@ -632,7 +632,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IModuleReference Rewrite(IModuleReference moduleReference) {
       var mutableModuleReference = moduleReference as ModuleReference;
-      if (mutableModuleReference == null) return moduleReference;
+      if (mutableModuleReference == null || mutableModuleReference.IsFrozen) return moduleReference;
       IReference result;
       if (this.referenceRewrites.TryGetValue(mutableModuleReference, out result)) return (IModuleReference)result;
       this.referenceRewrites[mutableModuleReference] = mutableModuleReference;
