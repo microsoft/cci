@@ -4882,7 +4882,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual IExpression Visit(Conversion conversion) {
       conversion.ValueToConvert = Visit(conversion.ValueToConvert);
-      conversion.Type = this.Visit(conversion.Type);
+      conversion.TypeAfterConversion = this.Visit(conversion.TypeAfterConversion);
       return conversion;
     }
 
