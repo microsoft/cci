@@ -251,7 +251,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="invariants">A possibly empty or null list of loop invariants.</param>
     /// <param name="writes">A possibly empty list of expressions that each represents a set of memory locations that may be written to by the body of the loop.</param>
     /// <param name="variants">A possibly empty list or null list of loop variants.</param>
-    public LoopContract(IEnumerable<LoopInvariant>/*?*/ invariants, IEnumerable<Expression>/*?*/ writes, IEnumerable<LoopVariant>/*?*/ variants)
+    public LoopContract(IEnumerable<LoopInvariant>/*?*/ invariants, IEnumerable<Expression>/*?*/ writes, IEnumerable<Expression>/*?*/ variants)
     {
         this.invariants = invariants == null ? EmptyListOfInvariants : invariants;
         this.writes = writes;
@@ -301,7 +301,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     private static readonly IEnumerable<LoopInvariant> EmptyListOfInvariants = Enumerable<LoopInvariant>.Empty;
-    private static readonly IEnumerable<LoopVariant> EmptyListOfVariants = Enumerable<LoopVariant>.Empty;
+    private static readonly IEnumerable<Expression> EmptyListOfVariants = Enumerable<Expression>.Empty;
 
     /// <summary>
     /// Makes a copy of this contract, changing the containing block to the given block.
@@ -346,10 +346,13 @@ namespace Microsoft.Cci.Ast {
       /// <summary>
     /// A possibly empty list of loop variants.
     /// </summary>
-    public IEnumerable<ILoopVariant> Variants {
-      get { return IteratorHelper.GetConversionEnumerable<LoopVariant, ILoopVariant>(this.variants); }
+    public IEnumerable<IExpression> Variants {
+      get {
+        foreach (Expression e in variants)
+          yield return e.ProjectAsIExpression();
+      }
     }
-    readonly IEnumerable<LoopVariant> variants;
+    readonly IEnumerable<Expression> variants;
 
     #region IObjectWithLocations Members
 
@@ -434,70 +437,6 @@ namespace Microsoft.Cci.Ast {
 
   }
 
-    /// <summary>
-  /// A condition that must be true at the start of every iteration of a loop.
-  /// </summary>
-  public class LoopVariant : Variant, ILoopVariant {
-    /// <summary>
-    /// Allocates a measure that must decrease in every nonterminal iteration of a loop.
-    /// </summary>
-    /// <param name="measure">The measure that must decrease.</param>
-    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
-    public LoopVariant(Expression measure, ISourceLocation sourceLocation)
-      : base(measure, sourceLocation) {
-    }
-
-    /// <summary>
-    /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
-    /// </summary>
-    /// <param name="containingBlock">The containing block of the copied variant. This should be different from the containing block of the template variant.</param>
-    /// <param name="template">The statement to copy.</param>
-    private LoopVariant(BlockStatement containingBlock, LoopVariant template)
-      : base(containingBlock, template) {
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(ILoopInvariant).
-    /// </summary>
-    public virtual void Dispatch(ICodeAndContractVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(LoopInvariant).
-    /// </summary>
-    public override void Dispatch(SourceVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// Makes a copy of this invariant, changing the Condition.ContainingBlock to the given block.
-    /// </summary>
-    public LoopVariant MakeCopyFor(BlockStatement containingBlock)
-      //^^ ensures result.GetType() == this.GetType();
-    {
-      if (this.Condition.ContainingBlock == containingBlock) return this;
-      return new LoopVariant(containingBlock, this);
-    }
-
-    /// <summary>
-    /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
-    /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
-    /// care not to call any other methods or property/event accessors on the object until after this method has been called.
-    /// </summary>
-    public void SetContainingExpression(Expression containingExpression) {
-      this.Condition.SetContainingExpression(containingExpression);
-    }
-
-    #region ILoopVariant Members
-
-    IExpression IContractElement.Condition {
-      get { return this.ConvertedCondition.ProjectAsIExpression(); }
-    }
-
-    #endregion
-
-  }
   /// <summary>
   /// A collection of collections of objects that augment the type signature of a method with additional information
   /// that describes the contract between calling method and called method.
@@ -529,7 +468,7 @@ namespace Microsoft.Cci.Ast {
       this.preconditions = preconditions==null ? EmptyListOfPreconditions:preconditions;
       this.reads = reads==null ? EmptyListOfExpressions:reads;
       this.thrownExceptions = thrownExceptions==null ? EmptyListOfThrownExceptions:thrownExceptions;
-      this.variants = EmptyListOfVariants;
+      this.variants = EmptyListOfExpressions;
       this.writes = writes==null ? EmptyListOfExpressions:writes;
       this.isPure = isPure;
     }
@@ -551,7 +490,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="variants">A possibly empty list of variants, each of which is decreased in each call from the method.</param>
     public MethodContract(IEnumerable<Expression>/*?*/ allocates, IEnumerable<Expression>/*?*/ frees, IEnumerable<AddressableExpression>/*?*/ modifiedVariables,
       IEnumerable<Postcondition>/*?*/ postconditions, IEnumerable<Precondition>/*?*/ preconditions, IEnumerable<Expression>/*?*/ reads,
-      IEnumerable<ThrownException>/*?*/ thrownExceptions, IEnumerable<Expression>/*?*/ writes, bool isPure, IEnumerable<MethodVariant>/*?*/ variants)
+      IEnumerable<ThrownException>/*?*/ thrownExceptions, IEnumerable<Expression>/*?*/ writes, bool isPure, IEnumerable<Expression>/*?*/ variants)
     {
         this.allocates = allocates == null ? EmptyListOfExpressions : allocates;
         this.frees = frees == null ? EmptyListOfExpressions : frees;
@@ -561,7 +500,7 @@ namespace Microsoft.Cci.Ast {
         this.preconditions = preconditions == null ? EmptyListOfPreconditions : preconditions;
         this.reads = reads == null ? EmptyListOfExpressions : reads;
         this.thrownExceptions = thrownExceptions == null ? EmptyListOfThrownExceptions : thrownExceptions;
-        this.variants = variants == null ? EmptyListOfVariants : variants;
+        this.variants = variants == null ? EmptyListOfExpressions : variants;
         this.writes = writes == null ? EmptyListOfExpressions : writes;
         this.isPure = isPure;
     }
@@ -579,7 +518,7 @@ namespace Microsoft.Cci.Ast {
       this.reads = EmptyListOfExpressions;
       this.thrownExceptions = EmptyListOfThrownExceptions;
       this.writes = EmptyListOfExpressions;
-      this.variants = EmptyListOfVariants;
+      this.variants = EmptyListOfExpressions;
       this.isPure = false;
     }
 
@@ -621,8 +560,8 @@ namespace Microsoft.Cci.Ast {
         this.writes = new List<Expression>(template.writes);
       else
         this.writes = template.writes;
-      if (template.variants != EmptyListOfVariants)
-          this.variants = new List<MethodVariant>(template.variants);
+      if (template.variants != EmptyListOfExpressions)
+        this.variants = new List<Expression>(template.variants);
       else
           this.variants = template.variants;
       this.isPure = template.isPure;
@@ -737,15 +676,14 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A possibly empty list of postconditions that are established by the called method.
     /// </summary>
-    public IEnumerable<IMethodVariant> Variants
+    public IEnumerable<IExpression> Variants
     {
-        get
-        {
-            foreach (IMethodVariant variant in this.variants)
-                yield return variant;
-        }
+      get {
+        foreach (Expression variant in this.variants)
+          yield return variant.ProjectAsIExpression();
+      }
     }
-    readonly IEnumerable<MethodVariant> variants;
+    readonly IEnumerable<Expression> variants;
     
       /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
@@ -798,7 +736,6 @@ namespace Microsoft.Cci.Ast {
     private static readonly IEnumerable<Postcondition> EmptyListOfPostconditions = Enumerable<Postcondition>.Empty;
     private static readonly IEnumerable<AddressableExpression> EmptyListOfTargetExpressions = Enumerable<AddressableExpression>.Empty;
     private static readonly IEnumerable<ThrownException> EmptyListOfThrownExceptions = Enumerable<ThrownException>.Empty;
-    private static readonly IEnumerable<MethodVariant> EmptyListOfVariants = Enumerable<MethodVariant>.Empty;
 
     /// <summary>
     /// Makes a copy of this contract, changing the containing block to the given block.
@@ -983,69 +920,6 @@ namespace Microsoft.Cci.Ast {
       }
     }
     bool isModel;
-  }
-
-  /// <summary>
-  /// A measure which is decreased in calls from the method.
-  /// </summary>
-  public sealed class MethodVariant : MethodContractItem, IMethodVariant
-  {
-
-    /// <summary>
-    /// Allocates a method variant.
-    /// </summary>
-    /// <param name="condition">The condition that must be true at the end of the method that is associated with this Postcondition instance.</param>
-    /// <param name="sourceLocation">The source location corresponding to the newly allocated source item.</param>
-    public MethodVariant(Expression condition, ISourceLocation sourceLocation)
-      : base(condition, sourceLocation)
-    {
-    }
-
-    /// <summary>
-    /// A copy constructor that allocates an instance that is the same as the given template, except for its containing block.
-    /// </summary>
-    /// <param name="containingBlock">The containing block of the copied postcondition. This should be different from the containing block of the template postcondition.</param>
-    /// <param name="template">The statement to copy.</param>
-    private MethodVariant(BlockStatement containingBlock, MethodVariant template)
-      : base(containingBlock, template)
-    {
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(IPostcondition).
-    /// </summary>
-    public void Dispatch(ICodeAndContractVisitor visitor)
-    {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(Postcondition).
-    /// </summary>
-    public override void Dispatch(SourceVisitor visitor)
-    {
-      visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// Makes a copy of this post condition, changing the containing block to the given block.
-    /// </summary>
-    public MethodVariant MakeCopyFor(BlockStatement containingBlock)
-    //^^ ensures result.GetType() == this.GetType();
-    {
-      if (this.Condition.ContainingBlock == containingBlock) return this;
-      return new MethodVariant(containingBlock, this);
-    }
-
-    #region IPostcondition Members
-
-    IExpression IContractElement.Condition
-    {
-      get { return this.ConvertedCondition.ProjectAsIExpression(); }
-    }
-
-    #endregion
-
   }
 
   /// <summary>

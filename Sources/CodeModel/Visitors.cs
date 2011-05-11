@@ -5759,19 +5759,9 @@ namespace Microsoft.Cci.Contracts {
     void Visit(ILoopInvariant loopInvariant);
 
     /// <summary>
-    /// Performs some computation with the given loop invariant.
-    /// </summary>
-    void Visit(ILoopVariant loopVariant);
-
-    /// <summary>
     /// Performs some computation with the given method contract.
     /// </summary>
     void Visit(IMethodContract methodContract);
-
-    /// <summary>
-    /// Performs some computation with the given method contract.
-    /// </summary>
-    void Visit(IMethodVariant methodVariant);
 
     /// <summary>
     /// Performs some computation with the given postCondition.
@@ -5837,23 +5827,9 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Visits the given loop variant.
-    /// </summary>
-    public virtual void Visit(ILoopVariant loopVariant) {
-      this.Visit((IContractElement)loopVariant);
-    }
-
-    /// <summary>
     /// Visits the given method contract.
     /// </summary>
     public virtual void Visit(IMethodContract methodContract) {
-    }
-
-    /// <summary>
-    /// Visits the given variant.
-    /// </summary>
-    public virtual void Visit(IMethodVariant variant) {
-      this.Visit((IContractElement)variant);
     }
 
     /// <summary>
@@ -5943,14 +5919,6 @@ namespace Microsoft.Cci.Contracts {
         this.traverser.Traverse(loopInvariant);
       }
 
-      public void Visit(ILoopVariant loopVariant) {
-        this.traverser.Traverse(loopVariant);
-      }
-
-      public void Visit(IMethodVariant methodVariant) {
-        this.traverser.Traverse(methodVariant);
-      }
-
       public void Visit(IPostcondition postCondition) {
         this.traverser.Traverse(postCondition);
       }
@@ -6018,16 +5986,6 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Traverses the enumeration of loop variants.
-    /// </summary>
-    public virtual void Traverse(IEnumerable<ILoopVariant> loopVariants) {
-      foreach (var loopVariant in loopVariants) {
-        if (this.StopTraversal) return;
-        this.Traverse(loopVariant);
-      }
-    }
-
-    /// <summary>
     /// Traverses the enumeration of post conditions.
     /// </summary>
     public virtual void Traverse(IEnumerable<IPostcondition> postConditions) {
@@ -6068,16 +6026,6 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Traverses the enumeration of post conditions.
-    /// </summary>
-    public virtual void Traverse(IEnumerable<IMethodVariant> variants) {
-      foreach (var variant in variants) {
-        this.Traverse(variant);
-        if (this.StopTraversal) return;
-      }
-    }
-
-    /// <summary>
     /// Traverses the loop contract.
     /// </summary>
     public void Traverse(ILoopContract loopContract) {
@@ -6100,17 +6048,6 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Traverses the loop variant.
-    /// </summary>
-    public void Traverse(ILoopVariant loopVariant) {
-      if (this.preorderVisitor != null) this.preorderVisitor.Visit(loopVariant);
-      if (this.StopTraversal) return;
-      this.TraverseChildren(loopVariant);
-      if (this.StopTraversal) return;
-      if (this.postorderVisitor != null) this.postorderVisitor.Visit(loopVariant);
-    }
-
-    /// <summary>
     /// Traverses the method contract.
     /// </summary>
     public void Traverse(IMethodContract methodContract) {
@@ -6119,17 +6056,6 @@ namespace Microsoft.Cci.Contracts {
       this.TraverseChildren(methodContract);
       if (this.postorderVisitor != null) this.postorderVisitor.Visit(methodContract);
       if (this.StopTraversal) return;
-    }
-
-    /// <summary>
-    /// Traverses the method variant.
-    /// </summary>
-    public void Traverse(IMethodVariant variant) {
-      if (this.preorderVisitor != null) this.preorderVisitor.Visit(variant);
-      if (this.StopTraversal) return;
-      this.TraverseChildren(variant);
-      if (this.StopTraversal) return;
-      if (this.postorderVisitor != null) this.postorderVisitor.Visit(variant);
     }
 
     /// <summary>
@@ -6220,13 +6146,6 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Traverses the children of the loop variant.
-    /// </summary>
-    public virtual void TraverseChildren(ILoopVariant loopVariant) {
-      this.TraverseChildren((IContractElement)loopVariant);
-    }
-
-    /// <summary>
     /// Traverses the children of the method call.
     /// </summary>
     public override void TraverseChildren(IMethodCall methodCall) {
@@ -6269,13 +6188,6 @@ namespace Microsoft.Cci.Contracts {
       IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(method);
       if (methodContract != null)
         this.Traverse(methodContract);
-    }
-
-    /// <summary>
-    /// Traverses the children of the method variant.
-    /// </summary>
-    public virtual void TraverseChildren(IMethodVariant variant) {
-      this.TraverseChildren((IContractElement)variant);
     }
 
     /// <summary>
@@ -6462,35 +6374,6 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Traverses the given list of loop variants.
-    /// </summary>
-    public virtual void Visit(IEnumerable<ILoopVariant> loopVariants)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(loopVariants);
-      foreach (var loopVariant in loopVariants)
-        this.Visit(loopVariant);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
-    /// Traverses the given loop variant.
-    /// </summary>
-    public virtual void Visit(ILoopVariant loopVariant)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(loopVariant);
-      this.Visit(loopVariant.Condition);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
     /// Traverses the given method contract.
     /// </summary>
     public virtual void Visit(IMethodContract methodContract)
@@ -6538,35 +6421,6 @@ namespace Microsoft.Cci.Contracts {
       this.Visit(postCondition.Condition);
       if (postCondition.Description != null)
         this.Visit(postCondition.Description);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
-    /// Traverses the given list of post conditions.
-    /// </summary>
-    public virtual void Visit(IEnumerable<IMethodVariant> variants)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(variants);
-      foreach (var variant in variants)
-        this.Visit(variant);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
-    /// Traverses the given variant.
-    /// </summary>
-    public virtual void Visit(IMethodVariant variant)
-      //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(variant);
-      this.Visit(variant.Condition);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
       this.path.Pop();
     }
@@ -6767,21 +6621,9 @@ namespace Microsoft.Cci.Contracts {
     }
 
     /// <summary>
-    /// Visits the given loop variant.
-    /// </summary>
-    public virtual void Visit(ILoopVariant loopVariant) {
-    }
-
-    /// <summary>
     /// Visits the given method contract.
     /// </summary>
     public virtual void Visit(IMethodContract methodContract) {
-    }
-
-    /// <summary>
-    /// Visits the given variant.
-    /// </summary>
-    public virtual void Visit(IMethodVariant variant) {
     }
 
     /// <summary>

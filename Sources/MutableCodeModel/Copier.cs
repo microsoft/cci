@@ -4834,14 +4834,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
         this.result = this.copier.Copy(loopInvariant);
       }
 
-      public void Visit(ILoopVariant loopVariant) {
-        this.result = this.copier.Copy(loopVariant);
-      }
-
-      public void Visit(IMethodVariant methodVariant) {
-        this.result = this.copier.Copy(methodVariant);
-      }
-
       public void Visit(IPostcondition postCondition) {
         this.result = this.copier.Copy(postCondition);
       }
@@ -4896,24 +4888,10 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Makes a shallow copy of the given loop variant.
-    /// </summary>
-    public virtual LoopVariant Copy(ILoopVariant loopVariant) {
-      return new LoopVariant(loopVariant);
-    }
-
-    /// <summary>
     /// Makes a shallow copy of the given method contract.
     /// </summary>
     public virtual MethodContract Copy(IMethodContract methodContract) {
       return new MethodContract(methodContract);
-    }
-
-    /// <summary>
-    /// Makes a shallow copy of the given variant.
-    /// </summary>
-    public virtual MethodVariant Copy(IMethodVariant variant) {
-      return new MethodVariant(variant);
     }
 
     /// <summary>
@@ -4994,14 +4972,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
 
       public void Visit(ILoopInvariant loopInvariant) {
         this.result = this.copier.Copy(loopInvariant);
-      }
-
-      public void Visit(ILoopVariant loopVariant) {
-        this.result = this.copier.Copy(loopVariant);
-      }
-
-      public void Visit(IMethodVariant methodVariant) {
-        this.result = this.copier.Copy(methodVariant);
       }
 
       public void Visit(IPostcondition postCondition) {
@@ -5089,16 +5059,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Makes a deep copy of the given list of loop variants.
-    /// </summary>
-    private List<ILoopVariant> Copy(List<ILoopVariant> loopVariants) {
-      if (loopVariants == null) return null;
-      for (int i = 0, n = loopVariants.Count; i < n; i++)
-        loopVariants[i] = this.Copy(loopVariants[i]);
-      return loopVariants;
-    }
-
-    /// <summary>
     /// Makes a deep copy of the given list of method definitions.
     /// </summary>
     private List<IMethodDefinition> Copy(List<IMethodDefinition> methods) {
@@ -5149,16 +5109,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Makes a deep copy of the given list of post conditions.
-    /// </summary>
-    public List<IMethodVariant> Copy(List<IMethodVariant> variants) {
-      if (variants == null) return null;
-      for (int i = 0, n = variants.Count; i < n; i++)
-        variants[i] = this.Copy(variants[i]);
-      return variants;
-    }
-
-    /// <summary>
     /// Makes a deep copy of the given contract element.
     /// </summary>
     /// <param name="contractElement"></param>
@@ -5188,15 +5138,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Makes a deep copy of the given loop variant.
-    /// </summary>
-    public LoopVariant Copy(ILoopVariant loopVariant) {
-      var mutableCopy = this.shallowCopier.Copy(loopVariant);
-      this.Copy((ContractElement)mutableCopy);
-      return mutableCopy;
-    }
-
-    /// <summary>
     /// Makes a deep copy of the given method contract.
     /// </summary>
     public MethodContract Copy(IMethodContract methodContract) {
@@ -5209,15 +5150,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
       mutableCopy.Reads = this.Copy(mutableCopy.Reads);
       mutableCopy.ThrownExceptions = this.Copy(mutableCopy.ThrownExceptions);
       mutableCopy.Writes = this.Copy(mutableCopy.Writes);
-      return mutableCopy;
-    }
-
-    /// <summary>
-    /// Makes a deep copy of the given variant.
-    /// </summary>
-    public MethodVariant Copy(IMethodVariant variant) {
-      var mutableCopy = this.shallowCopier.Copy(variant);
-      this.Copy((ContractElement)mutableCopy);
       return mutableCopy;
     }
 

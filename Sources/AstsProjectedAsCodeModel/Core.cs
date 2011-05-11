@@ -4093,10 +4093,6 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public abstract void Visit(LoopInvariant loopInvariant);
     /// <summary>
-    /// Performs some computation with the given loop variant.
-    /// </summary>
-    public abstract void Visit(LoopVariant loopVariant);
-    /// <summary>
     /// Performs some computation with the given make typed reference expression.
     /// </summary>
     public abstract void Visit(MakeTypedReference makeTypedReference);
@@ -4124,10 +4120,6 @@ namespace Microsoft.Cci.Ast {
     /// Performs some computation with the given method group.
     /// </summary>
     public abstract void Visit(MethodGroup methodGroup);
-    /// <summary>
-    /// Performs some computation with the given method group.
-    /// </summary>
-    public abstract void Visit(MethodVariant methodVariant);
     /// <summary>
     /// Performs some computation with the given modulus expression.
     /// </summary>
@@ -6113,20 +6105,6 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
-    /// Performs some computation with the given loop invariant.
-    /// </summary>
-    public override void Visit(LoopVariant loopVariant)
-    //^ ensures this.path.Count == old(this.path.Count);
-    {
-        if (this.stopTraversal) return;
-        //^ int oldCount = this.path.Count;
-        this.path.Push(loopVariant);
-        this.VisitExpression(loopVariant.Condition);
-        //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
-        this.path.Pop();
-    }
-
-    /// <summary>
     /// Performs some computation with the given make typed reference expression.
     /// </summary>
     public override void Visit(MakeTypedReference makeTypedReference)
@@ -6219,20 +6197,6 @@ namespace Microsoft.Cci.Ast {
       this.path.Push(methodGroup);
       this.VisitExpression(methodGroup.Selector);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
-      this.path.Pop();
-    }
-
-    /// <summary>
-    /// Performs some computation with the given method variant.
-    /// </summary>
-    public override void Visit(MethodVariant variant)
-    //^ ensures this.path.Count == old(this.path.Count);
-    {
-      if (this.stopTraversal) return;
-      //^ int oldCount = this.path.Count;
-      this.path.Push(variant);
-      this.VisitExpression(variant.Condition);
-      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
     }
     

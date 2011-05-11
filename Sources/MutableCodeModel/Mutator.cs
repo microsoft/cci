@@ -7008,16 +7008,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Rewrites the given loop variant.
-    /// </summary>
-    public virtual ILoopVariant Rewrite(ILoopVariant loopVariant) {
-      var mutableLoopVariant = loopVariant as LoopVariant;
-      if (mutableLoopVariant == null) return loopVariant;
-      this.RewriteChildren(mutableLoopVariant);
-      return mutableLoopVariant;
-    }
-
-    /// <summary>
     /// Rewrites the given method contract.
     /// </summary>
     public virtual IMethodContract Rewrite(IMethodContract methodContract) {
@@ -7025,16 +7015,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
       if (mutableMethodContract == null) return methodContract;
       this.RewriteChildren(mutableMethodContract);
       return mutableMethodContract;
-    }
-
-    /// <summary>
-    /// Rewrites the given method variant.
-    /// </summary>
-    public virtual IMethodVariant Rewrite(IMethodVariant methodVariant) {
-      var mutableMethodVariant = methodVariant as MethodVariant;
-      if (mutableMethodVariant == null) return methodVariant;
-      this.RewriteChildren(mutableMethodVariant);
-      return mutableMethodVariant;
     }
 
     /// <summary>
@@ -7167,16 +7147,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Rewrites the given list of loop variants.
-    /// </summary>
-    public virtual List<ILoopVariant>/*?*/ Rewrite(List<ILoopVariant>/*?*/ loopVariants) {
-      if (loopVariants == null) return null;
-      for (int i = 0, n = loopVariants.Count; i < n; i++)
-        loopVariants[i] = this.Rewrite(loopVariants[i]);
-      return loopVariants;
-    }
-
-    /// <summary>
     /// Rewrites the given list of post conditions.
     /// </summary>
     public virtual List<IPostcondition>/*?*/ Rewrite(List<IPostcondition>/*?*/ postConditions) {
@@ -7217,16 +7187,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Rewrites the given list of post conditions.
-    /// </summary>
-    public virtual List<IMethodVariant>/*?*/ Rewrite(List<IMethodVariant>/*?*/ variants) {
-      if (variants == null) return null;
-      for (int i = 0, n = variants.Count; i < n; i++)
-        variants[i] = this.Rewrite(variants[i]);
-      return variants;
-    }
-
-    /// <summary>
     /// Called from the type specific rewrite method to rewrite the common part of all contract elments.
     /// </summary>
     /// <param name="contractElement"></param>
@@ -7253,13 +7213,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     }
 
     /// <summary>
-    /// Rewrites the children of the given loop variant.
-    /// </summary>
-    public virtual void RewriteChildren(LoopVariant loopVariant) {
-      this.RewriteChildren((ContractElement)loopVariant);
-    }
-
-    /// <summary>
     /// Rewrites the children of the given method contract.
     /// </summary>
     public virtual void RewriteChildren(MethodContract methodContract) {
@@ -7271,13 +7224,6 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
       methodContract.Reads = this.Rewrite(methodContract.Reads);
       methodContract.ThrownExceptions = this.Rewrite(methodContract.ThrownExceptions);
       methodContract.Writes = this.Rewrite(methodContract.Writes);
-    }
-
-    /// <summary>
-    /// Rewrites the children of the given method variant.
-    /// </summary>
-    public virtual void RewriteChildren(MethodVariant methodVariant) {
-      this.RewriteChildren((ContractElement)methodVariant);
     }
 
     /// <summary>

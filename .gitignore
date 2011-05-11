@@ -1,9 +1,4 @@
 Metadata/
-Sources/AstsProjectedAsCodeModel/bin/
-Sources/AstsProjectedAsCodeModel/obj/
-Sources/CodeModel/bin/
-Sources/CodeModel/obj/
-Sources/CodeModelToIL/bin/
-Sources/CodeModelToIL/obj/
-Sources/MutableCodeModel/bin/
-Sources/MutableCodeModel/obj/
+bin
+obj
+*.suo

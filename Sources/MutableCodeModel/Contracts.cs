@@ -210,7 +210,7 @@ namespace Microsoft.Cci.MutableContracts {
     public LoopContract() {
       this.invariants = new List<ILoopInvariant>();
       this.locations = new List<ILocation>(1);
-      this.variants = new List<ILoopVariant>();
+      this.variants = new List<IExpression>();
     }
 
     /// <summary>
@@ -222,7 +222,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.locations = new List<ILocation>(loopContract.Locations);
       if (loopContract.Writes != null)
         this.writes = new List<IExpression>(loopContract.Writes);
-      this.variants = new List<ILoopVariant>(loopContract.Variants);
+      this.variants = new List<IExpression>(loopContract.Variants);
     }
 
     /// <summary>
@@ -247,11 +247,11 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// A possibly empty list of loop variants.
     /// </summary>
-    public List<ILoopVariant> Variants {
+    public List<IExpression> Variants {
       get { return this.variants; }
       set { this.variants = value; }
     }
-    List<ILoopVariant> variants;
+    List<IExpression> variants;
 
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the loop.
@@ -275,7 +275,7 @@ namespace Microsoft.Cci.MutableContracts {
       get { return this.Writes == null ? null : this.Writes.AsReadOnly(); }
     }
 
-    IEnumerable<ILoopVariant> ILoopContract.Variants {
+    IEnumerable<IExpression> ILoopContract.Variants {
       get { return this.Variants.AsReadOnly(); }
     }
     #endregion
@@ -287,35 +287,6 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     #endregion
-  }
-
-  /// <summary>
-  /// A measure that must be reduced in every nonterminal iteration of a loop
-  /// </summary>
-  public sealed class LoopVariant : ContractElement, ILoopVariant {
-
-    /// <summary>
-    /// Creates a fresh loop variant.
-    /// </summary>
-    public LoopVariant() {
-    }
-
-    /// <summary>
-    /// Creates a loop variant that shares all of the information in <paramref name="loopVariant"/>.
-    /// </summary>
-    /// <param name="loopVariant"></param>
-    public LoopVariant(ILoopVariant loopVariant)
-      : base(loopVariant) {
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(ILoopVariant).
-    /// </summary>
-    /// <param name="visitor"></param>
-    public override void Dispatch(ICodeAndContractVisitor visitor) {
-      visitor.Visit(this);
-    }
-
   }
 
   /// <summary>
@@ -367,7 +338,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.reads = new List<IExpression>();
       this.thrownExceptions = new List<IThrownException>();
       this.writes = new List<IExpression>();
-      this.variants = new List<IMethodVariant>();
+      this.variants = new List<IExpression>();
       this.isPure = false;
     }
 
@@ -385,7 +356,7 @@ namespace Microsoft.Cci.MutableContracts {
       this.preconditions = new List<IPrecondition>(methodContract.Preconditions);
       this.reads = new List<IExpression>(methodContract.Reads);
       this.thrownExceptions = new List<IThrownException>(methodContract.ThrownExceptions);
-      this.variants = new List<IMethodVariant>(methodContract.Variants);
+      this.variants = new List<IExpression>(methodContract.Variants);
       this.writes = new List<IExpression>(methodContract.Writes);
       this.isPure = methodContract.IsPure;
     }
@@ -474,11 +445,12 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
-    public List<IMethodVariant> Variants {
+    public List<IExpression> Variants
+    {
       get { return this.variants; }
       set { this.variants = value; }
     }
-    List<IMethodVariant> variants;
+    List<IExpression> variants;
 
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
@@ -529,7 +501,7 @@ namespace Microsoft.Cci.MutableContracts {
       get { return this.ThrownExceptions.AsReadOnly(); }
     }
 
-    IEnumerable<IMethodVariant> IMethodContract.Variants {
+    IEnumerable<IExpression> IMethodContract.Variants {
       get { return this.Variants.AsReadOnly(); }
     }
 
@@ -546,36 +518,6 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     #endregion
-  }
-
-  /// <summary>
-  /// A measure that must be decrease in every call from the method.
-  /// </summary>
-  public sealed class MethodVariant : ContractElement, IMethodVariant {
-
-    /// <summary>
-    /// Creates a fresh method variant.
-    /// </summary>
-    public MethodVariant()
-      : base() {
-    }
-
-    /// <summary>
-    /// Creates a method variant that shares all of the information in <paramref name="methodVariant"/>
-    /// </summary>
-    /// <param name="methodVariant"></param>
-    public MethodVariant(IMethodVariant methodVariant)
-      : base(methodVariant) {
-    }
-
-    /// <summary>
-    /// Calls visitor.Visit(IMethodVariant).
-    /// </summary>
-    /// <param name="visitor"></param>
-    public override void Dispatch(ICodeAndContractVisitor visitor) {
-      visitor.Visit(this);
-    }
-
   }
 
   /// <summary>

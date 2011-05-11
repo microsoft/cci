@@ -406,7 +406,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// A possibly empty list of loop variants.
     /// </summary>
-    IEnumerable<ILoopVariant> Variants { get; }
+    IEnumerable<IExpression> Variants { get; }
 
   }
 
@@ -414,12 +414,6 @@ namespace Microsoft.Cci.Contracts {
   /// A condition that must be true at the start of every iteration of a loop.
   /// </summary>
   public interface ILoopInvariant : IContractElement {
-  }
-
-  /// <summary>
-  /// A measure that must be reduced in every nonterminal iteration of a loop
-  /// </summary>
-  public interface ILoopVariant : IContractElement {
   }
 
   /// <summary>
@@ -476,7 +470,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// A possibly empty list of expressions that each represents a measure that goes down on every method call invoked by the called method.
     /// </summary>
-    IEnumerable<IMethodVariant> Variants { get; }
+    IEnumerable<IExpression> Variants { get; }
 
     /// <summary>
     /// True if the method has no observable side-effect on program state and hence this method is safe to use in a contract,
@@ -510,12 +504,6 @@ namespace Microsoft.Cci.Contracts {
   /// A condition that must be true at the end of a method.
   /// </summary>
   public interface IPostcondition : IContractElement {
-  }
-
-  /// <summary>
-  /// A measure that must be decrease in every call from the method.
-  /// </summary>
-  public interface IMethodVariant : IContractElement {
   }
 
   /// <summary>
@@ -722,8 +710,9 @@ namespace Microsoft.Cci.Contracts {
       get { return Enumerable<IExpression>.Empty; }
     }
 
-    public IEnumerable<IMethodVariant> Variants {
-      get { return Enumerable<IMethodVariant>.Empty; }
+    public IEnumerable<IExpression> Variants
+    {
+      get { return Enumerable<IExpression>.Empty; }
     }
 
     public bool IsPure {
