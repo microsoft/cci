@@ -337,7 +337,7 @@ namespace Microsoft.Cci {
     IStatement Body { get; }
 
     /// <summary>
-    /// Statements to initialize local definitions with the resources to use.
+    /// Either an IExpression statement whose expression of type IDisposable, or an ILocalDeclarationStatement whose variable is initialized and of type IDisposable.
     /// </summary>
     IStatement ResourceAcquisitions { get; }
 
