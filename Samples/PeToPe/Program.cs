@@ -17,7 +17,7 @@ namespace PeToPe {
   class Program {
     static void Main(string[] args) {
       if (args == null || args.Length == 0) {
-        Console.WriteLine("usage: PeToPe [path]fileName.ext [decompile]");
+        Console.WriteLine("usage: PeToPe [path]fileName.ext");
         return;
       }
 
@@ -34,13 +34,30 @@ namespace PeToPe {
           Stream pdbStream = File.OpenRead(pdbFile);
           pdbReader = new PdbReader(pdbStream, host);
         }
+
         using (pdbReader) {
-          Stream peStream = File.Create(module.Location + ".pe");
+          //Make a mutable copy of the module.
+          var copier = new MetadataDeepCopier(host);
+          var mutableModule = copier.Copy(module);
+
+          //Traverse the module. In a real application the MetadataVisitor and/or the MetadataTravers will be subclasses
+          //and the traversal will gather information to use during rewriting.
+          var traverser = new MetadataTraverser() { PreorderVisitor = new MetadataVisitor(), TraverseIntoMethodBodies = true };
+          traverser.Traverse(mutableModule);
+
+          //Rewrite the mutable copy. In a real application the rewriter would be a subclass of MetadataRewriter that actually does something.
+          var rewriter = new MetadataRewriter(host);
+          var rewrittenModule = rewriter.Rewrite(mutableModule); 
+
+          //Write out rewritten module.
+          Stream peStream = File.Create(rewrittenModule.Location + ".pe");
           if (pdbReader == null) {
-            PeWriter.WritePeToStream(module, host, peStream);
+            PeWriter.WritePeToStream(rewrittenModule, host, peStream);
           } else {
-            using (var pdbWriter = new PdbWriter(module.Location + ".pdb", pdbReader)) {
-              PeWriter.WritePeToStream(module, host, peStream, pdbReader, pdbReader, pdbWriter);
+            //Note that the default copier and rewriter preserves the locations collections, so the original pdbReader is still a valid ISourceLocationProvider.
+            //However, if IL instructions were rewritten, the pdbReader will no longer be an accurate ILocalScopeProvider
+            using (var pdbWriter = new PdbWriter(rewrittenModule.Location + ".pdb", pdbReader)) {
+              PeWriter.WritePeToStream(rewrittenModule, host, peStream, pdbReader, pdbReader, pdbWriter);
             }
           }
         }
