@@ -3354,7 +3354,7 @@ namespace Microsoft.Cci.Ast {
     public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
       var mbody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
       if (mbody == null) return emptyLocalScopes;
-      return mbody.GetIteratorScopes();
+      return mbody.IteratorScopes;
     }
 
     /// <summary>

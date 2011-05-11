@@ -4142,6 +4142,16 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+    /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+    /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+    /// is for the y.
+    /// </summary>
+    public IEnumerable<INamespaceScope> GetNamespaceScopes() {
+      return this.generator.GetNamespaceScopes();
+    }
+
+    /// <summary>
     /// Returns the IL operations that correspond to the statements that have been converted to IL by this converter.
     /// </summary>
     public IEnumerable<IOperation> GetOperations() {

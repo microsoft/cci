@@ -40,7 +40,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
+    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount) {
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
       this.iteratorLocalCount = iteratorLocalCount;
@@ -86,6 +86,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       IEnumerable<ILocalDefinition> localVariables;
       ushort maxStack;
       IEnumerable<ILocalScope> iteratorScopes;
+      IEnumerable<ILocalScope> localScopes;
+      IEnumerable<INamespaceScope> namespaceScopes;
       IEnumerable<IOperation> operations;
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
@@ -103,8 +105,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.iteratorLocalCount);
         converter.ConvertToIL(this.Block);
         iteratorScopes = converter.GetIteratorScopes();
+        localScopes = converter.GetLocalScopes();
         localVariables = converter.GetLocalVariables();
         maxStack = converter.MaximumStackSizeNeeded;
+        namespaceScopes = converter.GetNamespaceScopes();
         operations = converter.GetOperations();
         operationExceptionInformation = converter.GetOperationExceptionInformation();
       } else {
@@ -118,9 +122,11 @@ namespace Microsoft.Cci.MutableCodeModel {
         var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider);
         var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, mutableBlock);
         normalizedBody.isNormalized = true;
-        iteratorScopes = normalizedBody.iteratorScopes;
+        iteratorScopes = normalizedBody.IteratorScopes;
+        localScopes = normalizedBody.LocalScopes;
         localVariables = normalizedBody.LocalVariables;
         maxStack = normalizedBody.MaxStack;
+        namespaceScopes = normalizedBody.NamespaceScopes;
         operations = normalizedBody.Operations;
         operationExceptionInformation = normalizedBody.OperationExceptionInformation;
         if (privateHelperTypes == null)
@@ -133,8 +139,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.ilWasGenerated) return;
         this.ilWasGenerated = true;
         this.iteratorScopes = iteratorScopes;
+        this.localScopes = localScopes;
         this.localVariables = localVariables;
         this.maxStack = maxStack;
+        this.namespaceScopes = namespaceScopes;
         this.operations = operations;
         this.operationExceptionInformation = operationExceptionInformation;
         this.privateHelperTypes = privateHelperTypes;
@@ -156,17 +164,39 @@ namespace Microsoft.Cci.MutableCodeModel {
     IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
 
     /// <summary>
+    /// True if the method body is an iterator.
+    /// </summary>
+    public bool IsIterator {
+      get {
+        return this.iteratorLocalCount != null;
+      }
+    }
+
+    /// <summary>
     /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
     /// The scopes are returned by the MoveNext method of the object returned by the iterator method.
     /// The index of the scope corresponds to the index of the local. Specifically local scope i corresponds
     /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
     /// calls to MoveNext.
     /// </summary>
-    public IEnumerable<ILocalScope> GetIteratorScopes() {
-      return this.iteratorScopes;
+    public IEnumerable<ILocalScope> IteratorScopes {
+      get {
+        if (!this.ilWasGenerated) this.GenerateIL();
+        return this.iteratorScopes;
+      }
     }
-    IEnumerable<ILocalScope> iteratorScopes = emptyLocalScopes;
-    static IEnumerable<ILocalScope> emptyLocalScopes = Enumerable<ILocalScope>.Empty;
+    IEnumerable<ILocalScope> iteratorScopes;
+
+    /// <summary>
+    /// Returns zero or more local (block) scopes into which the CLR IL operations in the given method body is organized.
+    /// </summary>
+    public IEnumerable<ILocalScope> LocalScopes {
+      get {
+        if (!this.ilWasGenerated) this.GenerateIL();
+        return this.localScopes;
+      }
+    }
+    IEnumerable<ILocalScope> localScopes;
 
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.
@@ -211,6 +241,17 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.methodDefinition = value; }
     }
     IMethodDefinition methodDefinition;
+
+    /// <summary>
+    /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+    /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+    /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+    /// is for the y.
+    /// </summary>
+    public IEnumerable<INamespaceScope> NamespaceScopes {
+      get { return this.namespaceScopes; }
+    }
+    IEnumerable<INamespaceScope> namespaceScopes;
 
     /// <summary>
     /// A list CLR IL operations that implement this method body.
@@ -263,6 +304,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+
   }
 
 }

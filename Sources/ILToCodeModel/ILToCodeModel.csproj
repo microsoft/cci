@@ -53,6 +53,10 @@
     <Compile Include="Unstacker.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Metadata\Sources\ILGenerator\ILGenerator.csproj">
+      <Project>{08156C78-403A-4112-AD81-8646AC51CD2F}</Project>
+      <Name>ILGenerator</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\metadata\Sources\MetadataHelper\MetadataHelper.csproj">
       <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
       <Name>MetadataHelper</Name>

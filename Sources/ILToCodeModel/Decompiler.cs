@@ -82,6 +82,99 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
+    /// <summary>
+    /// An object that can provide information about the local scopes of a method.
+    /// </summary>
+    public class LocalScopeProvider : ILocalScopeProvider {
+
+      /// <summary>
+      /// An object that can provide information about the local scopes of a method.
+      /// </summary>
+      /// <param name="originalLocalScopeProvider">The local scope provider to use for methods that have not been decompiled.</param>
+      public LocalScopeProvider(ILocalScopeProvider originalLocalScopeProvider) {
+        this.originalLocalScopeProvider = originalLocalScopeProvider;
+      }
+
+      ILocalScopeProvider originalLocalScopeProvider;
+
+      #region ILocalScopeProvider Members
+
+      /// <summary>
+      /// Returns zero or more local (block) scopes, each defining an IL range in which an iterator local is defined.
+      /// The scopes are returned by the MoveNext method of the object returned by the iterator method.
+      /// The index of the scope corresponds to the index of the local. Specifically local scope i corresponds
+      /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
+      /// calls to MoveNext.
+      /// </summary>
+      /// <param name="methodBody"></param>
+      /// <returns></returns>
+      public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
+        var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
+        if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetIteratorScopes(methodBody);
+        return sourceMethodBody.IteratorScopes;
+      }
+
+      /// <summary>
+      /// Returns zero or more local (block) scopes into which the CLR IL operations in the given method body is organized.
+      /// </summary>
+      /// <param name="methodBody"></param>
+      /// <returns></returns>
+      public IEnumerable<ILocalScope> GetLocalScopes(IMethodBody methodBody) {
+        var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
+        if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetLocalScopes(methodBody);
+        return sourceMethodBody.LocalScopes;
+      }
+
+      /// <summary>
+      /// Returns zero or more namespace scopes into which the namespace type containing the given method body has been nested.
+      /// These scopes determine how simple names are looked up inside the method body. There is a separate scope for each dotted
+      /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
+      /// is for the y.
+      /// </summary>
+      /// <param name="methodBody"></param>
+      /// <returns></returns>
+      public IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
+        var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
+        if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetNamespaceScopes(methodBody);
+        return sourceMethodBody.NamespaceScopes;
+      }
+
+      /// <summary>
+      /// Returns zero or more local constant definitions that are local to the given scope.
+      /// </summary>
+      /// <param name="scope"></param>
+      /// <returns></returns>
+      public IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
+        var generatorScope = scope as ILGeneratorScope;
+        if (generatorScope == null) return this.originalLocalScopeProvider.GetConstantsInScope(scope);
+        return generatorScope.Constants;
+      }
+
+      /// <summary>
+      /// Returns zero or more local variable definitions that are local to the given scope.
+      /// </summary>
+      /// <param name="scope"></param>
+      /// <returns></returns>
+      public IEnumerable<ILocalDefinition> GetVariablesInScope(ILocalScope scope) {
+        var generatorScope = scope as ILGeneratorScope;
+        if (generatorScope == null) return this.originalLocalScopeProvider.GetVariablesInScope(scope);
+        return generatorScope.Locals;
+      }
+
+      /// <summary>
+      /// Returns true if the method body is an iterator.
+      /// </summary>
+      /// <param name="methodBody"></param>
+      /// <returns></returns>
+      public bool IsIterator(IMethodBody methodBody) {
+        var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
+        if (sourceMethodBody == null) return this.originalLocalScopeProvider.IsIterator(methodBody);
+        return sourceMethodBody.IsIterator;
+      }
+
+      #endregion
+    }
+
   }
 
   /// <summary>
