@@ -215,10 +215,13 @@ namespace Microsoft.Cci.Immutable {
     }
 
     /// <summary>
-    /// Gives the alias for the type
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
     /// </summary>
-    public IAliasForType AliasForType {
-      get { return Dummy.AliasForType; }
+    public abstract IAliasForType AliasForType {
+      get;
     }
 
     /// <summary>
@@ -449,6 +452,21 @@ namespace Microsoft.Cci.Immutable {
     }
 
     /// <summary>
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
+    /// </summary>
+    public override IAliasForType AliasForType {
+      get {
+        if (this.aliasForType == null)
+          this.resolvedType = this.GetResolvedType(); //also fills in this.aliasForType
+        return this.aliasForType;
+      }
+    }
+    IAliasForType/*?*/ aliasForType;
+
+    /// <summary>
     /// The namespace that contains the referenced type.
     /// </summary>
     public IUnitNamespaceReference ContainingUnitNamespace {
@@ -514,9 +532,19 @@ namespace Microsoft.Cci.Immutable {
     /// The namespace type this reference resolves to.
     /// </summary>
     private INamespaceTypeDefinition GetResolvedType() {
-      foreach (INamespaceMember nsMember in this.ContainingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.Name, false)) {
-        INamespaceTypeDefinition/*?*/ nsTypeDef = nsMember as INamespaceTypeDefinition;
-        if (nsTypeDef != null) return nsTypeDef;
+      this.aliasForType = Dummy.AliasForType;
+      foreach (INamespaceMember member in this.ContainingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
+        var nsTypeDef = member as INamespaceTypeDefinition;
+        if (nsTypeDef != null) {
+          if (nsTypeDef.GenericParameterCount == this.GenericParameterCount) return nsTypeDef;
+        } else {
+          var nsAlias = member as INamespaceAliasForType;
+          if (nsAlias != null && nsAlias.AliasedType.GenericParameterCount == this.GenericParameterCount) this.aliasForType = nsAlias;
+        }
+      }
+      if (this.aliasForType != null) {
+        var resolvedType = this.aliasForType.AliasedType.ResolvedType as INamespaceTypeDefinition;
+        if (resolvedType != null && resolvedType.GenericParameterCount == this.GenericParameterCount) return resolvedType;
       }
       return Dummy.NamespaceTypeDefinition;
     }

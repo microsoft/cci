@@ -1759,7 +1759,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override IAliasForType AliasForType {
       get {
         if (this.aliasForType == null)
-          this.Resolve();
+          this.resolvedType = this.Resolve(); //Also initializes this.aliasForType
         return this.aliasForType;
       }
     }
@@ -1799,26 +1799,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     ushort genericParameterCount;
 
+    /// <summary>
+    /// The namespace type this reference resolves to.
+    /// </summary>
     private INamespaceTypeDefinition Resolve() {
       Contract.Ensures(this.IsFrozen);
       this.isFrozen = true;
       this.aliasForType = Dummy.AliasForType;
       foreach (INamespaceMember member in this.ContainingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
-        INamespaceTypeDefinition/*?*/ nsType = member as INamespaceTypeDefinition;
-        if (nsType != null && nsType.GenericParameterCount == this.genericParameterCount) return nsType;
-      }
-      var assembly = this.ContainingUnitNamespace.ResolvedUnitNamespace.Unit as IAssembly;
-      if (assembly != null) {
-        foreach (var alias in assembly.ExportedTypes) {
-          var nsAlias = alias as INamespaceAliasForType;
-          if (nsAlias == null) continue;
-          if (nsAlias.Name.UniqueKey != this.Name.UniqueKey) continue;
-          if (!UnitHelper.UnitNamespacesAreEquivalent((IUnitNamespaceReference)nsAlias.ContainingNamespace, this.ContainingUnitNamespace)) continue;
-          this.aliasForType = nsAlias;
-          var resolvedType = nsAlias.AliasedType.ResolvedType as INamespaceTypeDefinition;
-          if (resolvedType != null) return resolvedType;
-          break;
+        var nsTypeDef = member as INamespaceTypeDefinition;
+        if (nsTypeDef != null) {
+          if (nsTypeDef.GenericParameterCount == this.GenericParameterCount) return nsTypeDef;
+        } else {
+          var nsAlias = member as INamespaceAliasForType;
+          if (nsAlias != null && nsAlias.AliasedType.GenericParameterCount == this.GenericParameterCount) this.aliasForType = nsAlias;
         }
+      }
+      if (this.aliasForType != null) {
+        var resolvedType = this.aliasForType.AliasedType.ResolvedType as INamespaceTypeDefinition;
+        if (resolvedType != null && resolvedType.GenericParameterCount == this.GenericParameterCount) return resolvedType;
       }
       return Dummy.NamespaceTypeDefinition;
     }
