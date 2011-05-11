@@ -211,11 +211,10 @@ namespace Microsoft.Cci {
       }
       IMethodReference/*?*/ method = container as IMethodReference;
       if (method != null) {
-        if (instance != null)
+        if (instance != null) {
           this.Traverse(instance);
-        if (method.ResolvedMethod.IsVirtual) //TODO: need a way to do this without resolving the method
           this.generator.Emit(OperationCode.Ldvirtftn, method);
-        else
+        } else
           this.generator.Emit(OperationCode.Ldftn, method);
         return;
       }
@@ -1030,7 +1029,7 @@ namespace Microsoft.Cci {
         platformType.SystemVoid, this.host.NameTable.Ctor, 0, platformType.SystemObject, platformType.SystemIntPtr);
       if (createDelegateInstance.Instance != null) {
         this.Traverse(createDelegateInstance.Instance);
-        if (createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod.IsVirtual) {
+        if (createDelegateInstance.IsVirtualDelegate) {
           this.generator.Emit(OperationCode.Dup);
           this.StackSize++;
           this.generator.Emit(OperationCode.Ldvirtftn, createDelegateInstance.MethodToCallViaDelegate);

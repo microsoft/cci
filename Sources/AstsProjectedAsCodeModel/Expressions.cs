@@ -7265,6 +7265,13 @@ namespace Microsoft.Cci.Ast {
     readonly Expression/*?*/ instance;
 
     /// <summary>
+    /// True if the delegate encapsulates a virtual method.
+    /// </summary>
+    public bool IsVirtualDelegate {
+      get { return this.methodToCallViaDelegate.IsVirtual; }
+    }
+
+    /// <summary>
     /// Makes a copy of this expression, changing the ContainingBlock to the given block.
     /// </summary>
     //^ [MustOverride]

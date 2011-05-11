@@ -546,6 +546,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (aexpr != null && aexpr.Expression.Definition is IMethodReference) {
           CreateDelegateInstance createDel = new CreateDelegateInstance();
           createDel.Instance = createObjectInstance.Arguments[0];
+          createDel.IsVirtualDelegate = aexpr.Expression.Instance != null;
           createDel.MethodToCallViaDelegate = (IMethodReference)aexpr.Expression.Definition;
           createDel.Locations = createObjectInstance.Locations;
           createDel.Type = createObjectInstance.Type;

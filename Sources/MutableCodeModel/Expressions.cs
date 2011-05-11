@@ -1251,6 +1251,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public CreateDelegateInstance() {
       this.instance = null;
+      this.IsVirtualDelegate = false;
       this.methodToCallViaDelegate = Dummy.MethodReference;
     }
 
@@ -1261,6 +1262,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public CreateDelegateInstance(ICreateDelegateInstance createDelegateInstance)
       : base(createDelegateInstance) {
       this.instance = createDelegateInstance.Instance;
+      this.isVirtualDelegate = createDelegateInstance.IsVirtualDelegate;
       this.methodToCallViaDelegate = createDelegateInstance.MethodToCallViaDelegate;
     }
 
@@ -1283,6 +1285,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     IExpression/*?*/ instance;
+
+    /// <summary>
+    /// True if the delegate encapsulates a virtual method.
+    /// </summary>
+    public bool IsVirtualDelegate {
+      get { return this.isVirtualDelegate; }
+      set { this.isVirtualDelegate = value; }
+    }
+    bool isVirtualDelegate;
 
     /// <summary>
     /// The method that is to be be called when the delegate instance is invoked.

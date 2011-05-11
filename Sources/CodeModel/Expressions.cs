@@ -420,15 +420,17 @@ namespace Microsoft.Cci {
   /// If the method is an instance method, then this.Instance specifies the expression that results in the instance on which the 
   /// method will be called.
   /// </summary>
-  public interface ICreateDelegateInstance : IExpression {
+  public partial interface ICreateDelegateInstance : IExpression {
 
     /// <summary>
     /// An expression that evaluates to the instance (if any) on which this.MethodToCallViaDelegate must be called (via the delegate).
     /// </summary>
-    IExpression/*?*/ Instance {
-      get;
-      //^ ensures this.MethodToCallViaDelegate.ResolvedMethod.IsStatic <==> result == null;
-    }
+    IExpression/*?*/ Instance { get; }
+
+    /// <summary>
+    /// True if the delegate encapsulates a virtual method.
+    /// </summary>
+    bool IsVirtualDelegate { get; }
 
     /// <summary>
     /// The method that is to be be called when the delegate instance is invoked.
@@ -436,6 +438,56 @@ namespace Microsoft.Cci {
     IMethodReference MethodToCallViaDelegate { get; }
 
   }
+
+  #region ICreateDelegateInstance contract binding
+  [ContractClass(typeof(ICreateDelegateInstanceContract))]
+  public partial interface ICreateDelegateInstance {
+
+  }
+
+  [ContractClassFor(typeof(ICreateDelegateInstance))]
+  abstract class ICreateDelegateInstanceContract : ICreateDelegateInstance {
+    #region ICreateDelegateInstance Members
+
+    public IExpression Instance {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsVirtualDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMethodReference MethodToCallViaDelegate {
+      get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IExpression Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// An expression that invokes an object constructor.
@@ -527,7 +579,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { throw new NotImplementedException();  }
+      get { throw new NotImplementedException(); }
     }
   }
 
