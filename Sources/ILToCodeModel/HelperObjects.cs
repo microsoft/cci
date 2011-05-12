@@ -154,7 +154,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="methodDefinition"></param>
     /// <returns></returns>
     internal static IMethodBody GetMethodBodyFromUnspecializedVersion(IMethodDefinition methodDefinition) {
-      if (!methodDefinition.Body.Equals(Dummy.MethodBody)) return methodDefinition.Body;
       IGenericMethodInstance genericMethodInstance = methodDefinition as IGenericMethodInstance;
       if (genericMethodInstance != null)
         return GetMethodBodyFromUnspecializedVersion(genericMethodInstance.GenericMethod.ResolvedMethod);
