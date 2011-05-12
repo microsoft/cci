@@ -558,7 +558,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         MethodToCallViaDelegate = method,
         Type = anonymousDelegate.Type
       };
-      if ((method.CallingConvention & CallingConvention.HasThis) != 0) {
+      if (!method.IsStatic) {
         if (method.ContainingType == this.currentClosureInstance)
           createDelegate.Instance = this.currentClosureObject;
         else //non static peer method

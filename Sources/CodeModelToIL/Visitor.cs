@@ -156,8 +156,7 @@ namespace Microsoft.Cci {
     /// </summary>
     private static ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
       ushort parameterIndex = parameterDefinition.Index;
-      if ((parameterDefinition.ContainingSignature.CallingConvention & CallingConvention.HasThis) != 0)
-        parameterIndex++;
+      if (!parameterDefinition.ContainingSignature.IsStatic) parameterIndex++;
       return parameterIndex;
     }
 

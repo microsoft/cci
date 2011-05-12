@@ -754,7 +754,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       result.Arguments.Reverse();
       result.IsVirtualCall = currentOperation.OperationCode == OperationCode.Callvirt;
       result.MethodToCall = methodRef;
-      if ((methodRef.CallingConvention & CallingConvention.HasThis) != 0)
+      if (!methodRef.IsStatic)
         result.ThisArgument = this.PopOperandStack();
       else
         result.IsStaticCall = true;

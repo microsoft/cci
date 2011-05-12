@@ -3903,6 +3903,13 @@ namespace Microsoft.Cci.Ast {
       get { return CallingConvention.Default; }
     }
 
+    /// <summary>
+    /// True if the referenced method or property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return true; }
+    }
+
     #endregion
 
     #region IPropertyDefinition Members
@@ -4006,6 +4013,13 @@ namespace Microsoft.Cci.Ast {
     /// <value></value>
     public CallingConvention CallingConvention {
       get { return CallingConvention.Default; }
+    }
+
+    /// <summary>
+    /// True if the referenced method or property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return true; }
     }
 
     #region ISignature Members

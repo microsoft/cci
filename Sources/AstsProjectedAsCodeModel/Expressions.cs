@@ -1742,6 +1742,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if the referenced method or property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return false; } //TODO: if the delegate captures nothing, it can be static
+    }
+
+    /// <summary>
     /// Makes a copy of this expression, changing the ContainingBlock to the given block.
     /// </summary>
     /// <param name="containingBlock"></param>
@@ -2021,6 +2028,13 @@ namespace Microsoft.Cci.Ast {
     /// <value></value>
     public CallingConvention CallingConvention {
       get { return CallingConvention.HasThis; }
+    }
+
+    /// <summary>
+    /// True if the referenced method or property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return false; }
     }
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
