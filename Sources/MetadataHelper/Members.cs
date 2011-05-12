@@ -2416,6 +2416,85 @@ namespace Microsoft.Cci.Immutable {
   }
 
   /// <summary>
+  /// Models an explicit implementation or override of a base class virtual method or an explicit implementation of an interface method
+  /// in the case of a generic type instance.
+  /// </summary>
+  public class SpecializedMethodImplementation : IMethodImplementation {
+
+    /// <summary>
+    /// Models an explicit implementation or override of a base class virtual method or an explicit implementation of an interface method
+    /// in the case of a generic type instance.
+    /// </summary>
+    /// <param name="containingType">The type that is explicitly implementing or overriding the base class virtual method or explicitly implementing an interface method.</param>
+    /// <param name="unspecializedVersion">The method implementation as defined by the original unspecialized generic (template) type. No type parameters have been substituted in this version.</param>
+    /// <param name="internFactory">The intern factory to use for computing the interned identity of this type and any types and members referenced by it.</param>
+    public SpecializedMethodImplementation(ITypeDefinition containingType, IMethodImplementation unspecializedVersion, IInternFactory internFactory) {
+      this.unspecializedVersion = unspecializedVersion;
+      this.containingType = containingType;
+      this.internFactory = internFactory;
+    }
+
+    /// <summary>
+    /// The type that is explicitly implementing or overriding the base class virtual method or explicitly implementing an interface method.
+    /// </summary>
+    public ITypeDefinition ContainingType {
+      get { return this.containingType; }
+    }
+    ITypeDefinition containingType;
+
+    /// <summary>
+    /// Calls the visitor.Visit(IMethodImplementation).
+    /// </summary>
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// A reference to the method whose implementation is being provided or overridden.
+    /// </summary>
+    public IMethodReference ImplementedMethod {
+      get {
+        if (this.implementedMethod == null) {
+          var containingTypeForImplemented = 
+            TypeHelper.SpecializeTypeReference(this.unspecializedVersion.ImplementedMethod.ContainingType, this.containingType, this.internFactory);
+          this.implementedMethod = new SpecializedMethodReference(containingTypeForImplemented, this.unspecializedVersion.ImplementedMethod, this.internFactory);
+        }
+        return this.implementedMethod;
+      }
+    }
+    IMethodReference/*?*/ implementedMethod;
+
+    /// <summary>
+    /// A reference to the method that provides the implementation.
+    /// </summary>
+    public IMethodReference ImplementingMethod {
+      get {
+        if (this.implementingMethod == null) {
+          var containingTypeForImplementing = 
+            TypeHelper.SpecializeTypeReference(this.unspecializedVersion.ImplementingMethod.ContainingType, this.containingType, this.internFactory);
+          this.implementingMethod = new SpecializedMethodReference(this.ContainingType, this.unspecializedVersion.ImplementingMethod, this.internFactory);
+        }
+        return this.implementingMethod;
+      }
+    }
+    IMethodReference/*?*/ implementingMethod;
+
+    /// <summary>
+    /// The intern factory to use for computing the interned identity of this type and any types and members referenced by it.
+    /// </summary>
+    IInternFactory internFactory;
+
+    /// <summary>
+    /// The method implementation as defined by the original generic (template) type. No type parameters have been substituted in this version.
+    /// </summary>
+    public IMethodImplementation UnspecializedVersion {
+      get { return this.unspecializedVersion; }
+    }
+    IMethodImplementation unspecializedVersion;
+
+  }
+
+  /// <summary>
   /// A reference to a method of a generic type instance or one of its nested types.
   /// It is specialized because any occurrences of the type parameters have been replaced with the corresponding type arguments from the instance.
   /// </summary>

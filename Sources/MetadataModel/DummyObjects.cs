@@ -2492,7 +2492,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsStatic {
-      get { return false; }
+      get { return true; }
     }
 
     public bool IsSynchronized {

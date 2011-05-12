@@ -439,7 +439,10 @@ namespace Microsoft.Cci.Immutable {
     }
 
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return Enumerable<IMethodImplementation>.Empty; }
+      get {
+        foreach (var methodImplementation in this.GenericType.ResolvedType.ExplicitImplementationOverrides)
+          yield return new SpecializedMethodImplementation(this, methodImplementation, this.InternFactory);
+      }
     }
 
     public IEnumerable<ITypeReference> GenericArguments {
@@ -2795,7 +2798,10 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
-      get { return Enumerable<IMethodImplementation>.Empty; }
+      get {
+        foreach (var methodImplementation in this.UnspecializedVersion.ExplicitImplementationOverrides)
+          yield return new SpecializedMethodImplementation(this, methodImplementation, this.InternFactory);
+      }
     }
 
     /// <summary>

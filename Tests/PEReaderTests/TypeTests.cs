@@ -1095,6 +1095,21 @@ namespace ModuleReaderTests {
   .flags class reftype
   .pack 0
   .size 0
+  .override instance bool[mscorlib]System.Collections.IList::Contains([mscorlib]System.Object) with instance bool[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.Contains([mscorlib]System.Object)
+  .override instance bool[mscorlib]System.Collections.Generic.ICollection`1<int32>::get_IsReadOnly() with instance bool[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.Generic.ICollection<T>.get_IsReadOnly()
+  .override instance bool[mscorlib]System.Collections.IList::get_IsReadOnly() with instance bool[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.get_IsReadOnly()
+  .override instance bool[mscorlib]System.Collections.ICollection::get_IsSynchronized() with instance bool[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.ICollection.get_IsSynchronized()
+  .override instance[mscorlib]System.Object[mscorlib]System.Collections.ICollection::get_SyncRoot() with instance[mscorlib]System.Object[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.ICollection.get_SyncRoot()
+  .override instance[mscorlib]System.Object[mscorlib]System.Collections.IList::get_Item(int32) with instance[mscorlib]System.Object[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.get_Item(int32)
+  .override instance void[mscorlib]System.Collections.IList::set_Item(int32,[mscorlib]System.Object) with instance void[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.set_Item(int32,[mscorlib]System.Object)
+  .override instance int32[mscorlib]System.Collections.IList::Add([mscorlib]System.Object) with instance int32[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.Add([mscorlib]System.Object)
+  .override instance bool[mscorlib]System.Collections.IList::get_IsFixedSize() with instance bool[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.get_IsFixedSize()
+  .override instance void[mscorlib]System.Collections.ICollection::CopyTo([mscorlib]System.Array,int32) with instance void[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.ICollection.CopyTo([mscorlib]System.Array,int32)
+  .override instance[mscorlib]System.Collections.Generic.IEnumerator`1<!0>[mscorlib]System.Collections.Generic.IEnumerable`1<int32>::GetEnumerator() with instance[mscorlib]System.Collections.Generic.IEnumerator`1<int32>[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
+  .override instance[mscorlib]System.Collections.IEnumerator[mscorlib]System.Collections.IEnumerable::GetEnumerator() with instance[mscorlib]System.Collections.IEnumerator[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IEnumerable.GetEnumerator()
+  .override instance int32[mscorlib]System.Collections.IList::IndexOf([mscorlib]System.Object) with instance int32[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.IndexOf([mscorlib]System.Object)
+  .override instance void[mscorlib]System.Collections.IList::Insert(int32,[mscorlib]System.Object) with instance void[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.Insert(int32,[mscorlib]System.Object)
+  .override instance void[mscorlib]System.Collections.IList::Remove([mscorlib]System.Object) with instance void[mscorlib]System.Collections.Generic.List`1<int32>::System.Collections.IList.Remove([mscorlib]System.Object)
 }
 ";
       return result.Equals(stringPaper.Content);

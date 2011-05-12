@@ -1099,7 +1099,7 @@ namespace ModuleReaderTests {
       if (genericMethodInst != null) {
         methodReference = genericMethodInst.GenericMethod;
       }
-      if (methodReference.ResolvedMethod.IsStatic) {
+      if ((methodReference.CallingConvention & CallingConvention.HasThis) == 0) {
         this.ILDasmPaper.Keyword("static");
       } else {
         this.ILDasmPaper.Keyword("instance");
