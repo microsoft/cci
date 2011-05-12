@@ -1919,6 +1919,222 @@ namespace Microsoft.Cci.Immutable {
     #endregion
   }
 
+  internal class SpecializedLocalDefinition : ILocalDefinition {
+
+    internal SpecializedLocalDefinition(ILocalDefinition unspecializedLocal, IMethodDefinition containingMethod, ITypeReference type) {
+      this.unspecializedLocal = unspecializedLocal;
+      this.containingMethod = containingMethod;
+      this.type = type;
+    }
+
+    ILocalDefinition unspecializedLocal;
+    IMethodDefinition containingMethod;
+    ITypeReference type;
+
+    #region ILocalDefinition Members
+
+    public IMetadataConstant CompileTimeValue {
+      get { return this.unspecializedLocal.CompileTimeValue; }
+    }
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return this.unspecializedLocal.CustomModifiers; }
+    }
+
+    public bool IsConstant {
+      get { return this.unspecializedLocal.IsConstant; }
+    }
+
+    public bool IsModified {
+      get { return this.unspecializedLocal.IsModified; }
+    }
+
+    public bool IsPinned {
+      get { return this.unspecializedLocal.IsPinned; }
+    }
+
+    public bool IsReference {
+      get { return this.unspecializedLocal.IsReference; }
+    }
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.containingMethod; }
+    }
+
+    public ITypeReference Type {
+      get { return this.type; }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { return this.unspecializedLocal.Name; }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { return this.unspecializedLocal.Locations; }
+    }
+
+    #endregion
+  }
+
+  internal class SpecializedMethodBody : IMethodBody {
+
+    internal SpecializedMethodBody(IMethodBody unspecializedBody, IMethodDefinition containingMethod, IInternFactory internFactory) {
+      this.unspecializedBody = unspecializedBody;
+      this.containingMethod = containingMethod;
+      this.internFactory = internFactory;
+    }
+
+    IMethodBody unspecializedBody;
+    IMethodDefinition containingMethod;
+    IInternFactory internFactory;
+
+    #region IMethodBody Members
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
+      get {
+        if (this.operationExceptionInformation == null)
+          this.MapBody();
+        return this.operationExceptionInformation;
+      }
+    }
+    IEnumerable<IOperationExceptionInformation>/*?*/ operationExceptionInformation;
+
+    public bool LocalsAreZeroed {
+      get { return this.unspecializedBody.LocalsAreZeroed; }
+    }
+
+    public IEnumerable<ILocalDefinition> LocalVariables {
+      get {
+        if (this.localVariables == null)
+          this.MapBody();
+        return this.localVariables;
+      }
+    }
+    IEnumerable<ILocalDefinition>/*?*/ localVariables;
+
+    private void MapBody() {
+      lock (this) {
+        if (this.localVariables != null) return;
+        var map = new Dictionary<object, object>();
+        var specializedParEnum = this.MethodDefinition.Parameters.GetEnumerator();
+        var unspecializedParEnum = this.unspecializedBody.MethodDefinition.Parameters.GetEnumerator();
+        while (specializedParEnum.MoveNext() && unspecializedParEnum.MoveNext())
+          map.Add(unspecializedParEnum.Current, specializedParEnum.Current);
+
+        var specializedLocals = new List<ILocalDefinition>(this.unspecializedBody.LocalVariables);
+        for (int i = 0, n = specializedLocals.Count; i < n; i++) {
+          var unspecializedLocal = specializedLocals[i];
+          var specializedType = this.Specialize(unspecializedLocal.Type, map);
+          var specializedLocal = new SpecializedLocalDefinition(unspecializedLocal, this.containingMethod, specializedType);
+          specializedLocals[i] = specializedLocal;
+          map.Add(unspecializedLocal, specializedLocal);
+        }
+        this.localVariables = specializedLocals.AsReadOnly();
+
+        var specializedOperations = new List<IOperation>(this.unspecializedBody.Operations);
+        for (int i = 0, n = specializedOperations.Count; i < n; i++) {
+          var unspecializedOperation = specializedOperations[i];
+          var specializedObject = this.Specialize(unspecializedOperation.Value, map);
+          if (specializedObject != unspecializedOperation.Value) {
+            var specializedOperation = new SpecializedOperation(unspecializedOperation, specializedObject);
+            specializedOperations[i] = specializedOperation;
+          }
+        }
+        this.operations = specializedOperations.AsReadOnly();
+
+        var specializedOperationExceptionInformation = new List<IOperationExceptionInformation>(this.unspecializedBody.OperationExceptionInformation);
+        for (int i = 0, n = specializedOperationExceptionInformation.Count; i < n; i++) {
+          var unspecializedOperationException = specializedOperationExceptionInformation[i];
+          var specializedType = this.Specialize(unspecializedOperationException.ExceptionType, map);
+          if (specializedType != unspecializedOperationException.ExceptionType) {
+            var specializedOperationException = new SpecializedOperationExceptionInformation(unspecializedOperationException, specializedType);
+            specializedOperationExceptionInformation[i] = specializedOperationException;
+          }
+        }
+        this.operationExceptionInformation = specializedOperationExceptionInformation.AsReadOnly();
+      }
+    }
+
+    ITypeReference Specialize(ITypeReference unspecializedType, Dictionary<object, object> map) {
+      object cachedResult;
+      if (map.TryGetValue(unspecializedType, out cachedResult)) return (ITypeReference)cachedResult;
+      ITypeReference specializedType = TypeHelper.SpecializeTypeReference(unspecializedType, this.containingMethod, this.internFactory);
+      map.Add(unspecializedType, specializedType);
+      return specializedType;
+    }
+
+    object Specialize(object unspecialized, Dictionary<object, object> map) {
+      if (unspecialized == null) return null;
+      object specialized;
+      if (map.TryGetValue(unspecialized, out specialized)) return specialized;
+      var typeReference = unspecialized as ITypeReference;
+      if (typeReference != null)
+        specialized = TypeHelper.SpecializeTypeReference(typeReference, this.containingMethod, this.internFactory);
+      else {
+        var fieldReference = unspecialized as IFieldReference;
+        if (fieldReference != null)
+          specialized = new SpecializedFieldReference(this.containingMethod.ContainingType, fieldReference, this.internFactory);
+        else {
+          var methodReference = unspecialized as IMethodReference;
+          if (methodReference != null)
+            specialized = new SpecializedMethodReference(this.containingMethod.ContainingType, methodReference, this.internFactory);
+          else
+            return unspecialized;
+        }
+      }
+      map.Add(unspecialized, specialized);
+      return specialized;
+    }
+
+    public ushort MaxStack {
+      get { return this.unspecializedBody.MaxStack; }
+    }
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.containingMethod; }
+    }
+
+    public IEnumerable<IOperation> Operations {
+      get {
+        if (this.operations == null)
+          this.MapBody();
+        return this.operations;
+      }
+    }
+    IEnumerable<IOperation>/*?*/ operations;
+
+    public IEnumerable<ITypeDefinition> PrivateHelperTypes {
+      get {
+        if (this.privateHelperTypes == null) {
+          if (IteratorHelper.EnumerableIsEmpty(this.unspecializedBody.PrivateHelperTypes))
+            this.privateHelperTypes = Enumerable<ITypeDefinition>.Empty;
+          else {
+            var specializedTypes = new List<ITypeDefinition>(this.unspecializedBody.PrivateHelperTypes);
+            for (int i = 0, n = specializedTypes.Count; i < n; i++)
+              specializedTypes[i] = TypeHelper.SpecializeTypeReference(specializedTypes[i], this.containingMethod, this.internFactory).ResolvedType;
+            this.privateHelperTypes = specializedTypes.AsReadOnly();
+          }
+        }
+        return this.privateHelperTypes;
+      }
+    }
+    IEnumerable<ITypeDefinition>/*?*/ privateHelperTypes;
+
+    #endregion
+  }
+
   /// <summary>
   /// 
   /// </summary>
@@ -1941,8 +2157,19 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IMethodBody Body {
-      get { return Dummy.MethodBody; }
+      get {
+        var result = this.body == null ? null : this.body.Target as IMethodBody;
+        if (result == null) {
+          result = new SpecializedMethodBody(this.UnspecializedVersion.Body, this, this.ContainingGenericTypeInstance.InternFactory);
+          if (this.body == null)
+            this.body = new WeakReference(result);
+          else
+            this.body.Target = result;
+        }
+        return result;
+      }
     }
+    WeakReference/*?*/ body;
 
     /// <summary>
     /// Calling convention of the signature.
@@ -2762,6 +2989,80 @@ namespace Microsoft.Cci.Immutable {
       return MemberHelper.GetMethodSignature(this,
         NameFormattingOptions.ReturnType|NameFormattingOptions.Signature|NameFormattingOptions.TypeParameters|NameFormattingOptions.TypeConstraints);
     }
+  }
+
+  internal class SpecializedOperation : IOperation {
+
+    internal SpecializedOperation(IOperation unspecializedOperation, object specializedValue) {
+      this.unspecializedOperation = unspecializedOperation;
+      this.specializedValue = specializedValue;
+    }
+
+    IOperation unspecializedOperation;
+    object specializedValue;
+
+    #region IOperation Members
+
+    public OperationCode OperationCode {
+      get { return this.unspecializedOperation.OperationCode; }
+    }
+
+    public uint Offset {
+      get { return this.unspecializedOperation.Offset; }
+    }
+
+    public ILocation Location {
+      get { return this.unspecializedOperation.Location; }
+    }
+
+    public object Value {
+      get { return this.specializedValue; }
+    }
+
+    #endregion
+  }
+
+  internal class SpecializedOperationExceptionInformation : IOperationExceptionInformation {
+
+    internal SpecializedOperationExceptionInformation(IOperationExceptionInformation unspecializedVersion, ITypeReference specialziedExceptionType) {
+      this.unspecializedVersion = unspecializedVersion;
+      this.specialziedExceptionType = specialziedExceptionType;
+    }
+
+    IOperationExceptionInformation unspecializedVersion;
+    ITypeReference specialziedExceptionType;
+
+    #region IOperationExceptionInformation Members
+
+    public HandlerKind HandlerKind {
+      get { return this.unspecializedVersion.HandlerKind; }
+    }
+
+    public ITypeReference ExceptionType {
+      get { return this.specialziedExceptionType; }
+    }
+
+    public uint TryStartOffset {
+      get { return this.unspecializedVersion.TryStartOffset; }
+    }
+
+    public uint TryEndOffset {
+      get { return this.unspecializedVersion.TryEndOffset; }
+    }
+
+    public uint FilterDecisionStartOffset {
+      get { return this.unspecializedVersion.FilterDecisionStartOffset; }
+    }
+
+    public uint HandlerStartOffset {
+      get { return this.unspecializedVersion.HandlerStartOffset; }
+    }
+
+    public uint HandlerEndOffset {
+      get { return this.unspecializedVersion.HandlerEndOffset; }
+    }
+
+    #endregion
   }
 
   /// <summary>

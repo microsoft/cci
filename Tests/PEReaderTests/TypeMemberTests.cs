@@ -458,6 +458,19 @@ namespace ModuleReaderTests {
       string result =
 @".method public hidebysig specialname instance explicit default int32 get_propT()cil managed
 {
+  .maxstack 1
+  .locals init(
+    int32  V_0,
+    int32  V_1
+  )
+  IL_0000:  nop
+  IL_0001:  ldloca.s V_1
+  IL_0003:  initobj int32
+  IL_0009:  ldloc.1
+  IL_000a:  stloc.0
+  IL_000b:  br.s IL_000d
+  IL_000d:  ldloc.0
+  IL_000e:  ret
 }
 ";
       return result.Equals(stringPaper.Content);
