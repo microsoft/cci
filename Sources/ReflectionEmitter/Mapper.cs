@@ -177,7 +177,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
     }
 
     private bool CallingConventionsMatch(MethodBase methodBase, IMethodReference methodReference) {
-      if (methodBase.IsStatic && (methodReference.CallingConvention & CallingConvention.HasThis) != 0) return false;
+      if (methodBase.IsStatic && !methodReference.IsStatic) return false;
       switch (methodBase.CallingConvention&(CallingConventions)3) {
         case CallingConventions.Any:
           if ((methodReference.CallingConvention&(CallingConvention)7) != CallingConvention.Default && 
@@ -203,7 +203,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       var parameterCount = methodReference.ParameterCount;
       var parameters = new IParameterTypeInformation[parameterCount];
       int i = 0; foreach (var par in methodReference.Parameters) parameters[i++] = par;
-      var referencedMethodIsStatic = (methodReference.CallingConvention & CallingConvention.HasThis) == 0;
+      var referencedMethodIsStatic = methodReference.IsStatic;
       foreach (var member in members) {
         var method = member as MethodInfo;
         if (method == null || !method.IsGenericMethodDefinition) continue;

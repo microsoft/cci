@@ -798,6 +798,13 @@ namespace Microsoft.Cci.Immutable {
       }
     }
 
+    /// <summary>
+    /// True if the referenced method does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return this.GenericMethod.IsStatic; }
+    }
+
     #region INamedEntity Members
 
     /// <summary>
@@ -2564,6 +2571,13 @@ namespace Microsoft.Cci.Immutable {
     }
 
     /// <summary>
+    /// True if the referenced method does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return this.UnspecializedVersion.IsStatic; }
+    }
+
+    /// <summary>
     /// The number of required parameters of the method.
     /// </summary>
     public ushort ParameterCount {
@@ -3432,6 +3446,13 @@ namespace Microsoft.Cci.Immutable {
     #endregion
 
     #region ISignature Members
+
+    /// <summary>
+    /// True if the referenced property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return (this.CallingConvention & CallingConvention.HasThis) == 0; }
+    }
 
     /// <summary>
     /// Custom attributes associated with the property's return value.

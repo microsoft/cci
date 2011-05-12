@@ -1170,8 +1170,7 @@ namespace Microsoft.Cci {
 
     private static ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
       ushort parameterIndex = (ushort)parameterDefinition.Index;
-      if ((parameterDefinition.ContainingSignature.CallingConvention & CallingConvention.HasThis) != 0)
-        parameterIndex++;
+      if (!parameterDefinition.ContainingSignature.IsStatic) parameterIndex++;
       return parameterIndex;
     }
 
@@ -3261,7 +3260,7 @@ namespace Microsoft.Cci {
           case OperationCode.Brfalse:
           case OperationCode.Brtrue:
           case OperationCode.Leave:
-            //^ assume operation.Value is int;
+            //^ assume operation.Value is uint;
             writer.WriteInt((int)((uint)operation.Value-mbody.Position-4)); break;
           case OperationCode.Beq_S:
           case OperationCode.Bge_S:
@@ -3277,7 +3276,7 @@ namespace Microsoft.Cci {
           case OperationCode.Brfalse_S:
           case OperationCode.Brtrue_S:
           case OperationCode.Leave_S:
-            //^ assume operation.Value is int;
+            //^ assume operation.Value is uint;
             writer.WriteSbyte((sbyte)((uint)operation.Value-mbody.Position-1)); break;
           case OperationCode.Box:
           case OperationCode.Castclass:
@@ -4565,6 +4564,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsGeneric {
+      get { return false; }
+    }
+
+    public bool IsStatic {
       get { return false; }
     }
 

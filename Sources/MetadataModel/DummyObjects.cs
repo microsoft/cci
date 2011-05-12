@@ -2696,6 +2696,10 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    public bool IsStatic {
+      get { return true; }
+    }
+
     public ushort ParameterCount {
       get { return 0; }
     }
@@ -5013,6 +5017,10 @@ namespace Microsoft.Cci {
 
     #region ISignature Members
 
+    public bool IsStatic {
+      get { return true; }
+    }
+
     public IEnumerable<IParameterDefinition> Parameters {
       get { return Enumerable<IParameterDefinition>.Empty; }
     }
@@ -5038,7 +5046,7 @@ namespace Microsoft.Cci {
     }
 
     public CallingConvention CallingConvention {
-      get { return CallingConvention.C; }
+      get { return CallingConvention.Default; }
     }
 
     #endregion
@@ -6664,7 +6672,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsStatic {
-      get { return false; }
+      get { return true; }
     }
 
     public bool IsSynchronized {
@@ -6889,6 +6897,10 @@ namespace Microsoft.Cci {
     #endregion
 
     #region ISignature Members
+
+    public bool IsStatic {
+      get { return true; }
+    }
 
     public IEnumerable<IParameterDefinition> Parameters {
       get { return Enumerable<IParameterDefinition>.Empty; }
@@ -7738,7 +7750,7 @@ namespace Microsoft.Cci {
     }
 
     public bool IsStatic {
-      get { return false; }
+      get { return true; }
     }
 
     public bool IsSynchronized {

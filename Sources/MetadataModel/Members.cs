@@ -224,26 +224,26 @@ namespace Microsoft.Cci {
 
     public IMetadataConstant CompileTimeValue {
       get {
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public ISectionBlock FieldMapping {
       get {
         Contract.Requires(this.IsMapped);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public bool IsBitField {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        throw new NotImplementedException();
       }
     }
 
     public bool IsCompileTimeConstant {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        throw new NotImplementedException();
       }
     }
 
@@ -259,47 +259,47 @@ namespace Microsoft.Cci {
     }
 
     public bool IsNotSerialized {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        throw new NotImplementedException();
       }
     }
 
     public bool IsReadOnly {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        throw new NotImplementedException();
       }
     }
 
     public bool IsRuntimeSpecial {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        throw new NotImplementedException();
       }
     }
 
     public bool IsSpecialName {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        throw new NotImplementedException();
       }
     }
 
     public IMarshallingInformation MarshallingInformation {
       get {
         Contract.Requires(this.IsMarshalledExplicitly);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public uint Offset {
       get {
         Contract.Requires(this.ContainingTypeDefinition.Layout == LayoutKind.Explicit);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public int SequenceNumber {
       get {
         Contract.Requires(this.ContainingTypeDefinition.Layout == LayoutKind.Sequential);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -871,12 +871,6 @@ namespace Microsoft.Cci {
     bool IsSpecialName { get; }
 
     /// <summary>
-    /// True if the method does not require an instance of its declaring type as its first argument.
-    /// </summary>
-    bool IsStatic { get; }
-    //^ result <==> (this.CallingConvention & CallingConvention.HasThis) = 0;
-
-    /// <summary>
     /// True if the method is a static constructor.
     /// </summary>
     bool IsStaticConstructor { get; }
@@ -1050,14 +1044,6 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
-    public bool IsStatic {
-      get {
-        Contract.Ensures(!Contract.Result<bool>() || (this.CallingConvention & CallingConvention.HasThis) == 0);
-        Contract.Ensures(Contract.Result<bool>() || (this.CallingConvention & CallingConvention.HasThis) != 0);
-        throw new NotImplementedException(); 
-      }
-    }
-
     public bool IsStaticConstructor {
       get { throw new NotImplementedException(); }
     }
@@ -1191,6 +1177,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
       get { throw new NotImplementedException(); }
     }
 
@@ -1390,6 +1380,10 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
     public IEnumerable<IParameterDefinition> Parameters {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IParameterDefinition>>() != null);
@@ -1499,6 +1493,12 @@ namespace Microsoft.Cci {
     CallingConvention CallingConvention { get; }
 
     /// <summary>
+    /// True if the referenced method or property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    bool IsStatic { get; }
+    //^ result <==> (this.CallingConvention & CallingConvention.HasThis) = 0;
+
+    /// <summary>
     /// The parameters forming part of this signature.
     /// </summary>
     IEnumerable<IParameterTypeInformation> Parameters { get; }
@@ -1532,6 +1532,14 @@ namespace Microsoft.Cci {
   abstract class ISignatureContract : ISignature {
     public CallingConvention CallingConvention {
       get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || (this.CallingConvention & CallingConvention.HasThis) == 0);
+        Contract.Ensures(Contract.Result<bool>() || (this.CallingConvention & CallingConvention.HasThis) != 0);
+        throw new NotImplementedException();
+      }
     }
 
     public IEnumerable<IParameterTypeInformation> Parameters {
@@ -1870,6 +1878,12 @@ namespace Microsoft.Cci {
 
     public bool IsGeneric {
       get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get {
+        throw new NotImplementedException();
+      }
     }
 
     public ushort ParameterCount {

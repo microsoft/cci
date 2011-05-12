@@ -1099,7 +1099,7 @@ namespace ModuleReaderTests {
       if (genericMethodInst != null) {
         methodReference = genericMethodInst.GenericMethod;
       }
-      if ((methodReference.CallingConvention & CallingConvention.HasThis) == 0) {
+      if (methodReference.IsStatic) {
         this.ILDasmPaper.Keyword("static");
       } else {
         this.ILDasmPaper.Keyword("instance");
@@ -1688,7 +1688,7 @@ namespace ModuleReaderTests {
         this.ILDasmPaper.Keyword("specialname");
       if (propertyDefinition.IsRuntimeSpecial)
         this.ILDasmPaper.Keyword("rtspecialname");
-      if ((propertyDefinition.CallingConvention & CallingConvention.HasThis) == CallingConvention.HasThis)
+      if (!propertyDefinition.IsStatic)
         this.ILDasmPaper.Keyword("instance");
       if ((propertyDefinition.CallingConvention & CallingConvention.ExplicitThis) == CallingConvention.ExplicitThis)
         this.ILDasmPaper.Keyword("explicit");

@@ -461,6 +461,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     CallingConvention callingConvention;
 
     /// <summary>
+    /// True if the referenced function does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return (this.CallingConvention & CallingConvention.HasThis) == 0; }
+    }
+
+    /// <summary>
     /// Calls visitor.Visit(IFunctionPointerTypeReference).
     /// </summary>
     public override void DispatchAsReference(IMetadataVisitor visitor) {

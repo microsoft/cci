@@ -2301,6 +2301,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// True if the referenced method does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return (this.CallingConvention & CallingConvention.HasThis) == 0; }
+    }
+
+    /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
     /// </summary>
     /// <value></value>
@@ -3055,6 +3062,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// True if the referenced property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return (this.CallingConvention & CallingConvention.HasThis) == 0; }
+    }
+
+    /// <summary>
     /// The parameters forming part of this signature.
     /// </summary>
     /// <value></value>
@@ -3222,6 +3236,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.callingConvention = value; }
     }
     CallingConvention callingConvention;
+
+    /// <summary>
+    /// True if the referenced method or property does not require an instance of its declaring type as its first argument.
+    /// </summary>
+    public bool IsStatic {
+      get { return (this.CallingConvention & CallingConvention.HasThis) == 0; }
+    }
 
     /// <summary>
     /// The parameters forming part of this signature.

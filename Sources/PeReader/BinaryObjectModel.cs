@@ -2699,6 +2699,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region ISignature Members
 
+    public bool IsStatic {
+      get { return (this.CallingConvention & CallingConvention.HasThis) == 0; }
+    }
+
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
       get {
         return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters);
@@ -3037,6 +3041,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           this.InitMethodSignature();
         }
         return this.genericParameterCount > 0;
+      }
+    }
+
+    public bool IsStatic {
+      get {
+        if (this.returnCustomModifiers == null) {
+          this.InitMethodSignature();
+        }
+        return (this.CallingConvention & Cci.CallingConvention.HasThis) == 0;
       }
     }
 

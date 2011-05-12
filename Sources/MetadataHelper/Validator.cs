@@ -345,8 +345,7 @@ namespace Microsoft.Cci {
         this.Visit((ITypeReference)functionPointerTypeReference);
         if (functionPointerTypeReference.Type is Dummy)
           this.ReportError(MetadataError.IncompleteNode, functionPointerTypeReference, "Type");
-        if ((functionPointerTypeReference.CallingConvention & CallingConvention.ExplicitThis) != 0 && 
-        (functionPointerTypeReference.CallingConvention & CallingConvention.HasThis) == 0)
+        if ((functionPointerTypeReference.CallingConvention & CallingConvention.ExplicitThis) != 0 && functionPointerTypeReference.IsStatic)
           this.ReportError(MetadataError.MethodsCalledWithExplicitThisParametersMustNotBeStatic, functionPointerTypeReference);
       }
 

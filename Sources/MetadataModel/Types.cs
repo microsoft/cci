@@ -385,6 +385,10 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
     public IPlatformType PlatformType {
       get { throw new NotImplementedException(); }
     }
@@ -2053,7 +2057,7 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
-  /// Models an explicit implemenation or override of a base class virtual method or an explicit implementation of an interface method.
+  /// Models an explicit implementation or override of a base class virtual method or an explicit implementation of an interface method.
   /// </summary>
   public interface IMethodImplementation {
 
