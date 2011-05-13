@@ -73,6 +73,10 @@ namespace Microsoft.Cci.Ast {
       get { return false; }
     }
 
+    public bool IsAggressivelyInlined {
+      get { return false; }
+    }
+
     public bool IsCil {
       get { return false; }
     }
@@ -1731,6 +1735,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if the the runtime is requested to inline this method.
+    /// </summary>
+    public bool IsAggressivelyInlined {
+      get { return false; }
+    }
+
+    /// <summary>
     /// True if the method is implemented in the CLI Common Intermediate Language.
     /// </summary>
     /// <value></value>
@@ -3082,6 +3093,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public bool IsAccessCheckedOnOverride {
       get { return this.declaration.IsAccessCheckedOnOverride; }
+    }
+
+    /// <summary>
+    /// True if the the runtime is requested to inline this method.
+    /// </summary>
+    public bool IsAggressivelyInlined {
+      get { return false; }
     }
 
     /// <summary>
