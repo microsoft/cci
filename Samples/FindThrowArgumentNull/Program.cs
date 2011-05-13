@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using Microsoft.Cci;
+using Microsoft.Cci.Immutable;
 
 namespace FindThrowPlatformType {
   class Program {
