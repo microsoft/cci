@@ -60,7 +60,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly.
     /// </summary>
-    IEnumerable<IAliasForType> ExportedTypes { get; }
+    IEnumerable<IAliasForType> ExportedTypes { get; } //TODO: shouldn't these be just namespace type aliases?
 
     //TODO: introduce a separate collection for forwarded types.
 
@@ -83,13 +83,6 @@ namespace Microsoft.Cci {
     IEnumerable<IModule> MemberModules { get; }
 
     /// <summary>
-    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of this assembly. Empty if not specified.
-    /// This value is used by the loader to decrypt an encrypted hash value stored in the assembly, which it then compares with a freshly computed hash value
-    /// in order to verify the integrity of the assembly.
-    /// </summary>
-    IEnumerable<byte> PublicKey { get; }
-
-    /// <summary>
     /// A list of named byte sequences persisted with the assembly and used during execution, typically via .NET Framework helper classes.
     /// </summary>
     IEnumerable<IResourceReference> Resources { get; }
@@ -108,7 +101,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -116,7 +109,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IAliasForType>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IAliasForType>>(), x => x != null));
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -136,14 +129,19 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IModule>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IModule>>(), x => x != null));
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<byte> HashValue {
+      get {
+        throw new NotImplementedException();
       }
     }
 
     public IEnumerable<byte> PublicKey {
       get {
-        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -151,7 +149,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IResourceReference>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IResourceReference>>(), x => x != null));
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -159,7 +157,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ISecurityAttribute>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ISecurityAttribute>>(), x => x != null));
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -423,6 +421,11 @@ namespace Microsoft.Cci {
     string Culture { get; }
 
     /// <summary>
+    /// The encrypted SHA1 hash of the persisted form of the referenced assembly.
+    /// </summary>
+    IEnumerable<byte> HashValue { get; }
+
+    /// <summary>
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     bool IsRetargetable { get; }
@@ -432,6 +435,13 @@ namespace Microsoft.Cci {
     /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
     /// </summary>
     bool ContainsForeignTypes { get; }
+
+    /// <summary>
+    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of the referenced assembly. Empty if not specified.
+    /// This value is used by the loader to decrypt an encrypted hash value stored in the assembly, which it then compares with a freshly computed hash value
+    /// in order to verify the integrity of the assembly.
+    /// </summary>
+    IEnumerable<byte> PublicKey { get; }
 
     /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
@@ -483,6 +493,13 @@ namespace Microsoft.Cci {
       }
     }
 
+    public IEnumerable<byte> HashValue {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
     public bool IsRetargetable {
       get {
         throw new NotImplementedException();
@@ -491,6 +508,13 @@ namespace Microsoft.Cci {
 
     public bool ContainsForeignTypes {
       get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<byte> PublicKey {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
         throw new NotImplementedException();
       }
     }
@@ -505,7 +529,7 @@ namespace Microsoft.Cci {
     public Version Version {
       get {
         Contract.Ensures(Contract.Result<Version>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -671,7 +695,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// EFI Byte Code
     /// </summary>
-    EBC = 0x0EBC, 
+    EBC = 0x0EBC,
     /// <summary>
     /// AMD64 (K8)
     /// </summary>
@@ -967,35 +991,35 @@ namespace Microsoft.Cci {
     public AssemblyIdentity ContractAssemblySymbolicIdentity {
       get {
         Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public AssemblyIdentity CoreAssemblySymbolicIdentity {
       get {
         Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public IPlatformType PlatformType {
       get {
         Contract.Ensures(Contract.Result<IPlatformType>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public string Location {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public IRootUnitNamespace UnitNamespaceRoot {
       get {
         Contract.Ensures(Contract.Result<IRootUnitNamespace>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -1003,7 +1027,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IUnitReference>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IUnitReference>>(), x => x != null));
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
@@ -1136,7 +1160,7 @@ namespace Microsoft.Cci {
     public string Location {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        return this.location; 
+        return this.location;
       }
     }
     readonly string location;
@@ -1222,7 +1246,7 @@ namespace Microsoft.Cci {
     public string Culture {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        return this.culture; 
+        return this.culture;
       }
     }
     readonly string culture;

@@ -3093,7 +3093,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     internal MetadataStreamKind MetadataStreamKind;
     MemoryBlock MetadataTableStream;
     internal MemoryReader ResourceMemoryReader;
-    //    internal MemoryBlock StrongNameSignature;
+    internal MemoryBlock StrongNameSignature;
     string MetadataStreamName {
       get {
         if (this.MetadataStreamKind == MetadataStreamKind.Compressed) {
@@ -3309,7 +3309,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       }
       this.ReaderState = ReaderState.CORModule;
       this.ResourceMemoryReader = new MemoryReader(this.DirectoryToMemoryBlock(this.COR20Header.ResourcesDirectory));
-      //this.StrongNameSignature = this.DirectoryToMemoryBlock(this.COR20Header.StrongNameSignatureDirectory);
+      this.StrongNameSignature = this.DirectoryToMemoryBlock(this.COR20Header.StrongNameSignatureDirectory);
       return true;
     }
     #endregion Methods [CORModule]

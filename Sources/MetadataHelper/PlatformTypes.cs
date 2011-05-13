@@ -116,6 +116,13 @@ namespace Microsoft.Cci.Immutable {
     bool containsForeignTypes;
 
     /// <summary>
+    /// The encrypted SHA1 hash of the persisted form of the referenced assembly.
+    /// </summary>
+    public IEnumerable<byte> HashValue {
+      get { return Enumerable<byte>.Empty; }
+    }
+
+    /// <summary>
     /// A potentially empty collection of locations that correspond to this AssemblyReference instance.
     /// </summary>
     public IEnumerable<ILocation> Locations {
@@ -134,6 +141,15 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     public IName Name {
       get { return this.AssemblyIdentity.Name; }
+    }
+
+    /// <summary>
+    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of the referenced assembly. Empty if not specified.
+    /// This value is used by the loader to decrypt an encrypted hash value stored in the assembly, which it then compares with a freshly computed hash value
+    /// in order to verify the integrity of the assembly.
+    /// </summary>
+    public IEnumerable<byte> PublicKey {
+      get { return Enumerable<byte>.Empty; }
     }
 
     /// <summary>

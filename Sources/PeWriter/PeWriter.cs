@@ -1825,22 +1825,33 @@ namespace Microsoft.Cci {
 
     private void PopulateAssemblyRefTableRows() {
       foreach (var assemblyRef in this.assemblyRefList) {
+        bool isAssemblyDef = assemblyRef is IAssembly;
         AssemblyRefTableRow r = new AssemblyRefTableRow();
         r.Version = assemblyRef.Version;
-        if (IteratorHelper.EnumerableIsNotEmpty(assemblyRef.PublicKeyToken))
-          r.PublicKeyToken = this.GetBlobIndex(new List<byte>(assemblyRef.PublicKeyToken).ToArray());
+        if (!isAssemblyDef && IteratorHelper.EnumerableIsNotEmpty(assemblyRef.PublicKey)) {
+          r.HasPublicKey = true;
+          r.PublicKeyOrToken = this.GetBlobIndex(new List<byte>(assemblyRef.PublicKey).ToArray());
+        } else if (IteratorHelper.EnumerableIsNotEmpty(assemblyRef.PublicKeyToken))
+          r.PublicKeyOrToken = this.GetBlobIndex(new List<byte>(assemblyRef.PublicKeyToken).ToArray());
         else
-          r.PublicKeyToken = 0;
+          r.PublicKeyOrToken = 0;
         r.Name = this.GetStringIndex(assemblyRef.Name.Value);
         r.Culture = this.GetStringIndex(assemblyRef.Culture);
         r.IsRetargetable = assemblyRef.IsRetargetable;
         r.ContainsForeignTypes = assemblyRef.ContainsForeignTypes;
+        if (!isAssemblyDef && IteratorHelper.EnumerableIsNotEmpty(assemblyRef.HashValue))
+          r.HashValue = this.GetBlobIndex(new List<byte>(assemblyRef.HashValue).ToArray());
+        else
+          r.HashValue = 0;
         this.assemblyRefTable.Add(r);
       }
       this.tableSizes[(uint)TableIndices.AssemblyRef] = (uint)this.assemblyRefTable.Count;
     }
 
-    struct AssemblyRefTableRow { public Version Version; public uint PublicKeyToken; public StringIdx Name; public StringIdx Culture; public bool IsRetargetable; public bool ContainsForeignTypes; }
+    struct AssemblyRefTableRow {
+      public Version Version; public uint PublicKeyOrToken; public StringIdx Name; public StringIdx Culture;
+      public uint HashValue; public bool HasPublicKey; public bool IsRetargetable; public bool ContainsForeignTypes;
+    }
     List<AssemblyRefTableRow> assemblyRefTable = new List<AssemblyRefTableRow>();
 
     private void PopulateAssemblyTableRows() {
@@ -2929,17 +2940,16 @@ namespace Microsoft.Cci {
         writer.WriteUshort((ushort)assemblyRef.Version.Minor);
         writer.WriteUshort((ushort)assemblyRef.Version.Build);
         writer.WriteUshort((ushort)assemblyRef.Version.Revision);
-        //flags: reference has token, not full public key
-        uint flags = 0;
+        uint flags = assemblyRef.HasPublicKey ? 1u : 0u;
         if (assemblyRef.IsRetargetable)
           flags |= 0x100;
         if (assemblyRef.ContainsForeignTypes)
           flags |= 0x200;
         writer.WriteUint(flags);
-        SerializeIndex(writer, assemblyRef.PublicKeyToken, this.blobIndexSize);
+        SerializeIndex(writer, assemblyRef.PublicKeyOrToken, this.blobIndexSize);
         this.SerializeIndex(writer, assemblyRef.Name, this.stringIndexSize);
         this.SerializeIndex(writer, assemblyRef.Culture, this.stringIndexSize);
-        SerializeIndex(writer, 0, this.blobIndexSize); //hash of referenced assembly. Omitted.
+        SerializeIndex(writer, assemblyRef.HashValue, this.blobIndexSize);
       }
     }
 

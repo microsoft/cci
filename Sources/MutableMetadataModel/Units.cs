@@ -31,6 +31,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.exportedTypes = null;
       this.flags = 0;
       this.files = null;
+      this.hashValue = Enumerable<byte>.Empty;
       this.memberModules = null;
       this.moduleName = Dummy.Name;
       this.publicKey = null;
@@ -60,6 +61,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.files = new List<IFileReference>(assembly.Files);
       else
         this.files = null;
+      this.hashValue = assembly.HashValue;
       if (IteratorHelper.EnumerableIsNotEmpty(assembly.MemberModules))
         this.memberModules = new List<IModule>(assembly.MemberModules);
       else
@@ -374,12 +376,21 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this; }
     }
 
-    IEnumerable<byte> IAssembly.PublicKey {
+    IEnumerable<byte> IAssemblyReference.PublicKey {
       get {
         if (this.PublicKey == null) return Enumerable<byte>.Empty;
         return this.PublicKey.AsReadOnly();
       }
     }
+
+    /// <summary>
+    /// The encrypted SHA1 hash of the persisted form of the assembly.
+    /// </summary>
+    public IEnumerable<byte> HashValue {
+      get { return this.hashValue; }
+      set { this.hashValue = value; }
+    }
+    IEnumerable<byte> hashValue;
 
     /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
@@ -412,9 +423,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Ensures(!this.IsFrozen);
       this.aliases = null;
       this.resolvedAssembly = null;
-      this.culture = string.Empty;
-      this.isRetargetable = false;
       this.containsForeignTypes = false;
+      this.culture = string.Empty;
+      this.hashValue = Enumerable<byte>.Empty;
+      this.isRetargetable = false;
+      this.publicKey = null;
       this.publicKeyToken = null;
       this.version = new Version(0, 0);
       this.ModuleIdentity = this.assemblyIdentity = Dummy.Assembly.AssemblyIdentity;
@@ -434,12 +447,17 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.aliases = null;
       this.resolvedAssembly = null;
       this.culture = assemblyReference.Culture;
+      this.hashValue = assemblyReference.HashValue;
       this.isRetargetable = assemblyReference.IsRetargetable;
       this.containsForeignTypes = assemblyReference.ContainsForeignTypes;
-      if (IteratorHelper.EnumerableIsNotEmpty(assemblyReference.PublicKeyToken))
-        this.publicKeyToken = new List<byte>(assemblyReference.PublicKeyToken);
-      else
-        this.publicKeyToken = null;
+      if (IteratorHelper.EnumerableIsNotEmpty(assemblyReference.PublicKey))
+        this.publicKey = assemblyReference.PublicKey;
+      else {
+        if (IteratorHelper.EnumerableIsNotEmpty(assemblyReference.PublicKeyToken))
+          this.publicKeyToken = new List<byte>(assemblyReference.PublicKeyToken);
+        else
+          this.publicKeyToken = null;
+      }
       this.version = assemblyReference.Version;
       this.ModuleIdentity = this.assemblyIdentity = assemblyReference.AssemblyIdentity;
       this.unifiedAssemblyIdentity = assemblyReference.UnifiedAssemblyIdentity;
@@ -535,14 +553,47 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool containsForeignTypes;
 
     /// <summary>
+    /// The encrypted SHA1 hash of the persisted form of the referenced assembly.
+    /// </summary>
+    public IEnumerable<byte> HashValue {
+      get { return this.hashValue; }
+      set { this.hashValue = value; }
+    }
+    IEnumerable<byte> hashValue;
+
+    /// <summary>
+    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of the referenced assembly. Null if not specified.
+    /// This value is used by the loader to decrypt HashValue which it then compares with a freshly computed hash value to verify the
+    /// integrity of the assembly.
+    /// </summary>
+    public IEnumerable<byte> PublicKey {
+      get {
+        return this.publicKey??Enumerable<byte>.Empty;
+      }
+      set {
+        Contract.Requires(!this.IsFrozen);
+        this.publicKey = value;
+        this.assemblyIdentity = null;
+        this.publicKeyToken = null;
+      }
+    }
+    IEnumerable<byte>/*?*/ publicKey;
+
+    /// <summary>
     /// The hashed 8 bytes of the public key of the referenced assembly. This is empty if the referenced assembly does not have a public key.
     /// </summary>
     /// <value></value>
     public List<byte>/*?*/ PublicKeyToken {
-      get { return this.publicKeyToken; }
+      get {
+        if (this.publicKeyToken == null && this.publicKey != null)
+          this.publicKeyToken = new List<byte>(UnitHelper.ComputePublicKeyToken(this.PublicKey));
+        return this.publicKeyToken;
+      }
       set {
         Contract.Requires(!this.IsFrozen);
         this.publicKeyToken = value;
+        this.publicKey = null;
+        this.assemblyIdentity = null;
       }
     }
     List<byte>/*?*/ publicKeyToken;

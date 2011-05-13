@@ -987,6 +987,10 @@ namespace Microsoft.Cci {
       get { return this; }
     }
 
+    public IEnumerable<byte> HashValue {
+      get { return Enumerable<byte>.Empty; }
+    }
+
     public IEnumerable<byte> PublicKeyToken {
       get { return Enumerable<byte>.Empty; }
     }
@@ -5870,6 +5874,14 @@ namespace Microsoft.Cci {
 
     public string Culture {
       get { return string.Empty; }
+    }
+
+    public IEnumerable<byte> HashValue {
+      get { return Enumerable<byte>.Empty; }
+    }
+
+    public IEnumerable<byte> PublicKey {
+      get { return Enumerable<byte>.Empty; }
     }
 
     public IEnumerable<byte> PublicKeyToken {

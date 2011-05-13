@@ -600,9 +600,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.GetEnumberableForExportedTypes(); }
     }
 
-    //public IEnumerable<byte> StrongNameSignature {
-    //  get { return this.PEFileToObjectModel.GetStrongNameSignature(); }
-    //}
+    public IEnumerable<byte> HashValue {
+      get { return new EnumberableMemoryBlockWrapper(this.PEFileToObjectModel.PEFileReader.StrongNameSignature); }
+    }
 
     IEnumerable<IResourceReference> IAssembly.Resources {
       get {
@@ -635,7 +635,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return (uint)this.AssemblyFlags; }
     }
 
-    IEnumerable<byte> IAssembly.PublicKey {
+    IEnumerable<byte> IAssemblyReference.PublicKey {
       get {
         return IteratorHelper.GetReadonly(this.publicKey);
       }
@@ -930,6 +930,23 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     string IAssemblyReference.Culture {
       get { return this.AssemblyIdentity.Culture; }
+    }
+
+    IEnumerable<byte> IAssemblyReference.HashValue {
+      get {
+        var hashBlob = this.PEFileToObjectModel.PEFileReader.AssemblyRefTable[this.AssemblyRefRowId].HashValue;
+        if (hashBlob == 0) return Enumerable<byte>.Empty;
+        return IteratorHelper.GetReadonly(this.PEFileToObjectModel.PEFileReader.BlobStream[hashBlob]);
+      }
+    }
+
+    IEnumerable<byte> IAssemblyReference.PublicKey {
+      get {
+        if ((this.AssemblyFlags & PEFileFlags.AssemblyFlags.PublicKey) == 0) return Enumerable<byte>.Empty;
+        var keyOrTokBlob = this.PEFileToObjectModel.PEFileReader.AssemblyRefTable[this.AssemblyRefRowId].PublicKeyOrToken;
+        if (keyOrTokBlob == 0) return Enumerable<byte>.Empty;
+        return IteratorHelper.GetReadonly(this.PEFileToObjectModel.PEFileReader.BlobStream[keyOrTokBlob]);
+      }
     }
 
     IEnumerable<byte> IAssemblyReference.PublicKeyToken {
