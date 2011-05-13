@@ -42,8 +42,9 @@ namespace ILMutator {
           Console.WriteLine("Could not load the PDB file for '" + module.Name.Value + "' . Proceeding anyway.");
         }
         using (pdbReader) {
+          var localScopeProvider = pdbReader == null ? null : new ILGenerator.LocalScopeProvider(pdbReader);
           ILMutator mutator = new ILMutator(host, pdbReader);
-          module = mutator.Visit(module);
+          module = mutator.Rewrite(module);
 
           string outputPath;
           if (args.Length == 2)
@@ -53,10 +54,8 @@ namespace ILMutator {
 
           var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
 
-          // Need to not pass in a local scope provider until such time as we have one that will use the mutator
-          // to remap things (like the type of a scope constant) from the original assembly to the mutated one.
           using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
-            PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, null, pdbWriter);
+            PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, localScopeProvider, pdbWriter);
           }
         }
         return 0; // success
@@ -71,13 +70,13 @@ namespace ILMutator {
   /// This is meant to distinguish programmer-defined locals from
   /// those introduced by the compiler.
   /// </summary>
-  public class ILMutator : MutatingVisitor {
+  public class ILMutator : MetadataRewriter {
 
     PdbReader/*?*/ pdbReader = null;
     IMethodReference consoleDotWriteLine;
 
     public ILMutator(IMetadataHost host, PdbReader/*?*/ pdbReader)
-      : base(host, true) {
+      : base(host) {
       this.pdbReader = pdbReader;
       #region Get reference to Console.WriteLine
       var nameTable = host.NameTable;
@@ -100,21 +99,30 @@ namespace ILMutator {
     }
 
     List<ILocalDefinition> currentLocals;
-    public override MethodBody Mutate(MethodBody methodBody) {
-      IMethodDefinition currentMethod = this.GetCurrentMethod();
-      methodBody.MethodDefinition = currentMethod;
-      this.currentLocals = new List<ILocalDefinition>(methodBody.LocalVariables??Enumerable<ILocalDefinition>.Empty);
+    ILGenerator currentGenerator;
+    IEnumerator<ILocalScope>/*?*/ scopeEnumerator;
+    bool scopeEnumeratorIsValid;
+    Stack<ILocalScope> scopeStack = new Stack<ILocalScope>();
+
+    public override IMethodBody Rewrite(IMethodBody methodBody) {
+      base.Rewrite(methodBody);
+      var newBody = new ILGeneratorMethodBody(this.currentGenerator, methodBody.LocalsAreZeroed, (ushort)(methodBody.MaxStack+1));
+      newBody.MethodDefinition = methodBody.MethodDefinition;
+      return newBody;
+    }
+
+    public override void RewriteChildren(MethodBody methodBody) {
+      this.currentLocals = methodBody.LocalVariables;
 
       try {
         ProcessOperations(methodBody);
       } catch (ILMutatorException) {
         Console.WriteLine("Internal error during IL mutation for the method '{0}'.",
-          MemberHelper.GetMemberSignature(currentMethod, NameFormattingOptions.SmartTypeName));
+          MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName));
       } finally {
         this.currentLocals = null;
       }
 
-      return methodBody;
     }
 
     private void ProcessOperations(MethodBody methodBody) {
@@ -123,6 +131,16 @@ namespace ILMutator {
       int count = methodBody.Operations.Count;
 
       ILGenerator generator = new ILGenerator(this.host, methodBody.MethodDefinition);
+      if (this.pdbReader != null) {
+        foreach (var ns in this.pdbReader.GetNamespaceScopes(methodBody)) {
+          foreach (var uns in ns.UsedNamespaces)
+            generator.UseNamespace(uns.NamespaceName.Value);
+        }
+      }
+
+      this.currentGenerator = generator;
+      this.scopeEnumerator = this.pdbReader == null ? null : this.pdbReader.GetLocalScopes(methodBody).GetEnumerator();
+      this.scopeEnumeratorIsValid = this.scopeEnumerator != null && this.scopeEnumerator.MoveNext();
 
       var methodName = MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName);
 
@@ -198,9 +216,7 @@ namespace ILMutator {
       for (int i = 0; i < count; i++) {
         IOperation op = operations[i];
         ILGeneratorLabel label;
-        if (op.Location is IILLocation) {
-          generator.MarkSequencePoint(op.Location);
-        }
+        this.EmitDebugInformationFor(op);
         #region Mark operation if it is a label for a branch
         if (offset2Label.TryGetValue(op.Offset, out label)) {
           generator.MarkLabel(label);
@@ -320,7 +336,7 @@ namespace ILMutator {
               case TypeCode.Object:
                 IFieldReference fieldReference = op.Value as IFieldReference;
                 if (fieldReference != null) {
-                  generator.Emit(op.OperationCode, this.Visit(fieldReference));
+                  generator.Emit(op.OperationCode, this.Rewrite(fieldReference));
                   break;
                 }
                 ILocalDefinition localDefinition = op.Value as ILocalDefinition;
@@ -330,7 +346,7 @@ namespace ILMutator {
                 }
                 IMethodReference methodReference = op.Value as IMethodReference;
                 if (methodReference != null) {
-                  generator.Emit(op.OperationCode, this.Visit(methodReference));
+                  generator.Emit(op.OperationCode, this.Rewrite(methodReference));
                   break;
                 }
                 IParameterDefinition parameterDefinition = op.Value as IParameterDefinition;
@@ -345,7 +361,7 @@ namespace ILMutator {
                 }
                 ITypeReference typeReference = op.Value as ITypeReference;
                 if (typeReference != null) {
-                  generator.Emit(op.OperationCode, this.Visit(typeReference));
+                  generator.Emit(op.OperationCode, this.Rewrite(typeReference));
                   break;
                 }
                 throw new ILMutatorException("Should never get here: no other IOperation argument types should exist");
@@ -381,15 +397,38 @@ namespace ILMutator {
       }
       while (generator.InTryBody)
         generator.EndTryBody();
+      while (this.scopeStack.Count > 0) {
+        this.currentGenerator.EndScope();
+        this.scopeStack.Pop();
+      }
       #endregion Pass 2: Emit each operation, along with labels
 
-      #region Retrieve the operations (and the exception information) from the generator
-      generator.AdjustBranchSizesToBestFit();
-      methodBody.OperationExceptionInformation = new List<IOperationExceptionInformation>(generator.GetOperationExceptionInformation());
-      methodBody.Operations = new List<IOperation>(generator.GetOperations());
-      #endregion Retrieve the operations (and the exception information) from the generator
-      methodBody.MaxStack++;
+    }
 
+    private void EmitDebugInformationFor(IOperation operation) {
+      this.currentGenerator.MarkSequencePoint(operation.Location);
+      if (this.scopeEnumerator == null) return;
+      ILocalScope/*?*/ currentScope = null;
+      while (this.scopeStack.Count > 0) {
+        currentScope = this.scopeStack.Peek();
+        if (operation.Offset < currentScope.Offset+currentScope.Length) break;
+        this.scopeStack.Pop();
+        this.currentGenerator.EndScope();
+        currentScope = null;
+      }
+      while (this.scopeEnumeratorIsValid) {
+        currentScope = this.scopeEnumerator.Current;
+        if (currentScope.Offset <= operation.Offset && operation.Offset < currentScope.Offset+currentScope.Length) {
+          this.scopeStack.Push(currentScope);
+          this.currentGenerator.BeginScope();
+          foreach (var local in this.pdbReader.GetVariablesInScope(currentScope))
+            this.currentGenerator.AddVariableToCurrentScope(local);
+          foreach (var constant in this.pdbReader.GetConstantsInScope(currentScope))
+            this.currentGenerator.AddConstantToCurrentScope(constant);
+          this.scopeEnumeratorIsValid = this.scopeEnumerator.MoveNext();
+        } else
+          break;
+      }
     }
 
     private void EmitStoreLocal(ILGenerator generator, IOperation op) {
