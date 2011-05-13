@@ -1421,6 +1421,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.IsNativeCode = methodDefinition.IsNativeCode;
       this.IsNewSlot = methodDefinition.IsNewSlot;
       this.IsNeverInlined = methodDefinition.IsNeverInlined;
+      this.IsAggressivelyInlined = methodDefinition.IsAggressivelyInlined;
       this.IsNeverOptimized = methodDefinition.IsNeverOptimized;
       this.IsPlatformInvoke = methodDefinition.IsPlatformInvoke;
       this.IsRuntimeImplemented = methodDefinition.IsRuntimeImplemented;
@@ -1593,16 +1594,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// True if the method is implemented in the CLI Common Intermediate Language.
+    /// True if the the runtime is asked to inline this method.
     /// </summary>
     /// <value></value>
-    public bool IsCil {
+    public bool IsAggressivelyInlined {
       get { return (this.flags & 0x02000000) != 0; }
       set {
         if (value)
           this.flags |= 0x02000000;
         else
           this.flags &= ~0x02000000;
+      }
+    }
+
+    /// <summary>
+    /// True if the method is implemented in the CLI Common Intermediate Language.
+    /// </summary>
+    /// <value></value>
+    public bool IsCil {
+      get { return (this.flags & 0x01000000) != 0; }
+      set {
+        if (value)
+          this.flags |= 0x01000000;
+        else
+          this.flags &= ~0x01000000;
       }
     }
 

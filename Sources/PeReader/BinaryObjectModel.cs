@@ -1936,6 +1936,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return (this.MethodImplFlags & MethodImplFlags.NoOptimization) == MethodImplFlags.NoOptimization; }
     }
 
+    public bool IsAggressivelyInlined {
+      get { return (this.MethodImplFlags & MethodImplFlags.AggressiveInlining) == MethodImplFlags.AggressiveInlining; }
+    }
+
     public bool IsPlatformInvoke {
       get { return (this.MethodFlags & MethodFlags.PInvokeInterop) == MethodFlags.PInvokeInterop; }
     }

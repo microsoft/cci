@@ -93,7 +93,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     NoIsolation = 0x0200,   // Image understands isolation and doesn't want it
     NoSEH = 0x0400,         // Image does not use SEH.  No SE handler may reside in this image
     NoBind = 0x0800,        // Do not bind this image.
-    //                      0x1000     // Reserved.
+    AppContainer = 0x1000,  // The image must run inside an AppContainer
     WDM_Driver = 0x2000,    // Driver uses WDM model
     //                      0x4000     // Reserved.
     TerminalServerAware = 0x8000,
@@ -633,6 +633,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     Synchronized = 0x0020,
     NoOptimization = 0x0040,
     PreserveSigInterop = 0x0080,
+    AggressiveInlining = 0x0100,
     InternalCall = 0x1000,
 
   }

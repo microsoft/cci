@@ -347,6 +347,14 @@ namespace Microsoft.Cci.Immutable {
     }
 
     /// <summary>
+    /// True if the runtime is requested to inline this method.
+    /// </summary>
+    /// <value></value>
+    public bool IsAggressivelyInlined {
+      get { return this.GenericMethod.IsAggressivelyInlined; }
+    }
+
+    /// <summary>
     /// True if the runtime is not allowed to optimize this method.
     /// </summary>
     /// <value></value>
@@ -2430,6 +2438,14 @@ namespace Microsoft.Cci.Immutable {
     /// <value></value>
     public bool IsNeverInlined {
       get { return this.UnspecializedVersion.IsNeverInlined; }
+    }
+
+    /// <summary>
+    /// True if the runtime is requested to inline this method.
+    /// </summary>
+    /// <value></value>
+    public bool IsAggressivelyInlined {
+      get { return this.UnspecializedVersion.IsAggressivelyInlined; }
     }
 
     /// <summary>

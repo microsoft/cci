@@ -2467,6 +2467,10 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    public bool IsAggressivelyInlined {
+      get { return false; }
+    }
+
     public bool IsNeverOptimized {
       get { return false; }
     }
@@ -6655,6 +6659,10 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    public bool IsAggressivelyInlined {
+      get { return false; }
+    }
+
     public bool IsNeverOptimized {
       get { return false; }
     }
@@ -7730,6 +7738,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsNeverInlined {
+      get { return false; }
+    }
+
+    public bool IsAggressivelyInlined {
       get { return false; }
     }
 

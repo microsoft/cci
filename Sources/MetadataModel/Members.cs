@@ -793,6 +793,11 @@ namespace Microsoft.Cci {
     bool IsAccessCheckedOnOverride { get; }
 
     /// <summary>
+    /// True if the the runtime is requested to inline this method.
+    /// </summary>
+    bool IsAggressivelyInlined { get; }
+
+    /// <summary>
     /// True if the method is implemented in the CLI Common Intermediate Language.
     /// </summary>
     bool IsCil { get; }
@@ -1013,6 +1018,10 @@ namespace Microsoft.Cci {
     }
 
     public bool IsNeverInlined {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAggressivelyInlined {
       get { throw new NotImplementedException(); }
     }
 

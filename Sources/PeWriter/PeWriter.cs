@@ -1146,6 +1146,7 @@ namespace Microsoft.Cci {
       if (methodDef.IsSynchronized) result |= 0x0020;
       if (methodDef.IsNeverOptimized) result |= 0x0040;
       if (methodDef.PreserveSignature) result |= 0x0080;
+      if (methodDef.IsAggressivelyInlined) result |= 0x0100;
       if (methodDef.IsRuntimeInternal) result |= 0x1000;
       return result;
     }
