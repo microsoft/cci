@@ -154,6 +154,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The encrypted SHA1 hash of the persisted form of the referenced assembly.
+    /// </summary>
+    public IEnumerable<byte> HashValue {
+      get { return Enumerable<byte>.Empty; }
+    }
+
+    /// <summary>
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public virtual bool IsRetargetable {
@@ -306,6 +313,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The encrypted SHA1 hash of the persisted form of the referenced assembly.
+    /// </summary>
+    public IEnumerable<byte> HashValue {
+      get { return this.ResolvedAssembly.HashValue; }
+    }
+
+    /// <summary>
     /// True if the implementation of the referenced assembly used at runtime is not expected to match the version seen at compile time.
     /// </summary>
     public virtual bool IsRetargetable {
@@ -313,12 +327,19 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The public part of the key used to encrypt the SHA1 hash over the persisted form of the referenced assembly. Empty if not specified.
+    /// This value is used by the loader to decrypt an encrypted hash value stored in the assembly, which it then compares with a freshly computed hash value
+    /// in order to verify the integrity of the assembly.
+    /// </summary>
+    public IEnumerable<byte> PublicKey {
+      get { return this.ResolvedAssembly.PublicKey; }
+    }
+
+    /// <summary>
     /// The hashed 8 bytes of the public key called public key token of the referenced assembly. This is non empty of the referenced assembly is strongly signed.
     /// </summary>
     public IEnumerable<byte> PublicKeyToken {
-      get {
-        return UnitHelper.ComputePublicKeyToken(this.ResolvedAssembly.PublicKey);
-      }
+      get { return this.ResolvedAssembly.PublicKeyToken; }
     }
 
     /// <summary>
