@@ -868,17 +868,28 @@ namespace Microsoft.Cci {
       Contract.Ensures(Contract.Result<string>() != null);
 
       StringBuilder sb = new StringBuilder();
-      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
-        sb.Append("E:");
+      if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
+        sb.Append(this.GetVisibility(eventDef));
+        sb.Append(' ');
       }
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
+        sb.Append("E:");
+      if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+        sb.Append("event ");
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(eventDef.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(this.typeNameFormatter.GetTypeName(eventDef.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
         sb.Append(".");
       }
+      var eventName = eventDef.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) eventName = this.typeNameFormatter.EscapeKeyword(eventName);
+      if ((formattingOptions & NameFormattingOptions.OmitImplementedInterface) != 0) {
+        int dotPos = eventName.IndexOf('.');
+        if (dotPos > 0 && dotPos < eventName.Length-1) eventName = eventName.Substring(dotPos+1, eventName.Length-dotPos-1);
+      }
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
-        sb.Append(this.MapToDocumentationIdName(eventDef.Name.Value));
+        sb.Append(this.MapToDocumentationIdName(eventName));
       } else {
-        sb.Append(eventDef.Name.Value);
+        sb.Append(eventName);
       }
       return sb.ToString();
     }
@@ -892,17 +903,38 @@ namespace Microsoft.Cci {
       Contract.Ensures(Contract.Result<string>() != null);
 
       StringBuilder sb = new StringBuilder();
-      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
-        sb.Append("F:");
+      if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
+        sb.Append(this.GetVisibility(field.ResolvedField));
+        sb.Append(' ');
       }
+      if ((formattingOptions & NameFormattingOptions.Modifiers) != 0) {
+        if (field.IsStatic) sb.Append("static ");
+        if (field.IsModified && (formattingOptions & NameFormattingOptions.OmitCustomModifiers) == 0) {
+          foreach (ICustomModifier modifier in field.CustomModifiers) {
+            sb.Append(modifier.IsOptional ? " optmod " : " reqmod ");
+            sb.Append(this.typeNameFormatter.GetTypeName(modifier.Modifier, formattingOptions));
+          }
+          sb.Append(' ');
+        }
+      }
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
+        sb.Append("F:");
+      else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+        sb.Append("field ");
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(field.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(this.typeNameFormatter.GetTypeName(field.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
         sb.Append(".");
       }
+      var fieldName = field.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) fieldName = this.typeNameFormatter.EscapeKeyword(fieldName);
+      if ((formattingOptions & NameFormattingOptions.OmitImplementedInterface) != 0) {
+        int dotPos = fieldName.IndexOf('.');
+        if (dotPos > 0 && dotPos < fieldName.Length-1) fieldName = fieldName.Substring(dotPos+1, fieldName.Length-dotPos-1);
+      }
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
-        sb.Append(this.MapToDocumentationIdName(field.Name.Value));
+        sb.Append(this.MapToDocumentationIdName(fieldName));
       } else {
-        sb.Append(field.Name.Value);
+        sb.Append(fieldName);
       }
       return sb.ToString();
     }
@@ -939,6 +971,23 @@ namespace Microsoft.Cci {
       Contract.Ensures(Contract.Result<string>() != null);
 
       StringBuilder sb = new StringBuilder();
+      if ((formattingOptions & NameFormattingOptions.Modifiers) != 0) {
+        if (method.IsStatic) sb.Append("static ");
+        if (method.ResolvedMethod.IsAbstract) sb.Append("abstract ");
+        if (method.ResolvedMethod.IsExternal) sb.Append("external ");
+        if (method.ResolvedMethod.IsNewSlot) sb.Append("new ");
+        if (method.ResolvedMethod.IsSealed) sb.Append("sealed ");
+        if (method.ResolvedMethod.IsVirtual) sb.Append("virtual ");
+      }
+      if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
+        sb.Append(this.GetVisibility(method.ResolvedMethod));
+        sb.Append(' ');
+      }
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
+        sb.Append("M:");
+      } else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0) {
+        sb.Append("method ");
+      }
       this.AppendReturnTypeSignature(method, formattingOptions, sb);
       this.AppendMethodName(method, formattingOptions, sb);
       IGenericMethodInstanceReference/*?*/ genericMethodInstance = method as IGenericMethodInstanceReference;
@@ -949,7 +998,7 @@ namespace Microsoft.Cci {
       this.AppendMethodParameters(method, formattingOptions, sb);
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 && method.ResolvedMethod.IsSpecialName && (method.Name.Value.Contains("op_Explicit") || method.Name.Value.Contains("op_Implicit"))) {
         sb.Append('~');
-        sb.Append(this.typeNameFormatter.GetTypeName(method.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(this.typeNameFormatter.GetTypeName(method.Type, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
       }
       return sb.ToString();
     }
@@ -966,6 +1015,20 @@ namespace Microsoft.Cci {
       this.AppendPropertyName(property, formattingOptions, sb);
       this.AppendPropertyParameters(property.Parameters, formattingOptions, sb);
       return sb.ToString();
+    }
+
+    /// <summary>
+    /// Returns a C#-like string that corresponds to the visibilty of the member (i.e. "public", "protected", "private" and so on).
+    /// </summary>
+    public virtual string GetVisibility(ITypeDefinitionMember typeDefinitionMember) {
+      switch (typeDefinitionMember.Visibility) {
+        case TypeMemberVisibility.Assembly: return "internal";
+        case TypeMemberVisibility.Family: return "protected";
+        case TypeMemberVisibility.FamilyAndAssembly: return "protected and internal";
+        case TypeMemberVisibility.FamilyOrAssembly: return "protected internal";
+        case TypeMemberVisibility.Public: return "public";
+        default: return "private";
+      }
     }
 
     /// <summary>
@@ -1001,9 +1064,9 @@ namespace Microsoft.Cci {
         sb.Append("<");
         bool first = true;
         string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
-        foreach (ITypeReference argument in method.ResolvedMethod.GenericParameters) {
+        foreach (var parameter in method.ResolvedMethod.GenericParameters) {
           if (first) first = false; else sb.Append(delim);
-          sb.Append(this.typeNameFormatter.GetTypeName(argument, formattingOptions));
+          sb.Append(this.typeNameFormatter.GetTypeName(parameter, formattingOptions));
         }
         sb.Append(">");
       }
@@ -1030,6 +1093,24 @@ namespace Microsoft.Cci {
         sb.Append("__arglist");
       }
       sb.Append(')');
+      if ((formattingOptions & NameFormattingOptions.MethodConstraints) != 0) {
+        foreach (var parameter in method.ResolvedMethod.GenericParameters) {
+          sb.Append(" where ");
+          sb.Append(parameter.Name.Value);
+          sb.Append(" : ");
+          first = true;
+          if (parameter.MustBeReferenceType) { sb.Append("class"); first = false; }
+          if (parameter.MustBeValueType) { sb.Append("struct"); first = false; }
+          foreach (var constraint in parameter.Constraints) {
+            if (!first) { sb.Append(delim); first = false; }
+            sb.Append(this.typeNameFormatter.GetTypeName(constraint, NameFormattingOptions.None));
+          }
+          if (parameter.MustHaveDefaultConstructor) {
+            if (!first) sb.Append(delim);
+            sb.Append("new ()");
+          }
+        }
+      }
     }
 
     /// <summary>
@@ -1039,15 +1120,17 @@ namespace Microsoft.Cci {
       Contract.Requires(method != null);
       Contract.Requires(sb != null);
 
-      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
-        sb.Append("M:");
-      }
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
         sb.Append('.');
       }
       // Special name translation
       string methodName = method.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.OmitImplementedInterface) != 0) {
+        int dotPos = methodName.IndexOf('.');
+        if (dotPos > 0 && dotPos < methodName.Length-1) methodName = methodName.Substring(dotPos+1, methodName.Length-dotPos-1);
+      }
+      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) methodName = this.typeNameFormatter.EscapeKeyword(methodName);
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) methodName = this.MapToDocumentationIdName(methodName);
       if (method.ResolvedMethod.IsSpecialName && (formattingOptions & NameFormattingOptions.PreserveSpecialNames) == 0) {
         if (methodName.StartsWith("get_")) {
@@ -1078,7 +1161,7 @@ namespace Microsoft.Cci {
         else if (def.IsParameterArray) sb.Append("params ");
         else if (def.IsByReference) sb.Append("ref ");
       }
-      sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+      sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
       if (def != null && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
         if (def.IsByReference) sb.Append("@");
       }
@@ -1095,18 +1178,43 @@ namespace Microsoft.Cci {
       Contract.Requires(property != null);
       Contract.Requires(sb != null);
 
-      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0) {
-        sb.Append("P:");
+      if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
+        sb.Append(this.GetVisibility(property));
+        sb.Append(' ');
       }
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
+        sb.Append("P:");
+      else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+        sb.Append("property ");
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(property.ContainingType, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+        sb.Append(this.typeNameFormatter.GetTypeName(property.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
         sb.Append(".");
       }
-      //TODO: if property name appears in a default members attribute of the containing type and not PreserveSpecialNames, use "this"
+      var propertyName = property.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) propertyName = this.typeNameFormatter.EscapeKeyword(propertyName);
+      if ((formattingOptions & NameFormattingOptions.OmitImplementedInterface) != 0) {
+        int dotPos = propertyName.IndexOf('.');
+        if (dotPos > 0 && dotPos < propertyName.Length-1) propertyName = propertyName.Substring(dotPos+1, propertyName.Length-dotPos-1);
+      }
+      if ((formattingOptions & NameFormattingOptions.PreserveSpecialNames) == 0) {
+        foreach (var attribute in property.ContainingTypeDefinition.Attributes) {
+          if (!IteratorHelper.EnumerableHasLength(attribute.Arguments, 1)) continue;
+          var mdConst = IteratorHelper.First(attribute.Arguments) as IMetadataConstant;
+          if (mdConst == null || mdConst.Value == null || !mdConst.Value.Equals(propertyName)) continue;
+          var nsType = attribute.Type as INamespaceTypeReference;
+          if (nsType == null) continue;
+          if (nsType.Name.Value != "DefaultMemberAttribute") continue;
+          var ns = nsType.ContainingUnitNamespace as INestedUnitNamespaceReference;
+          if (ns == null) continue;
+          if (ns.Name.Value != "Reflection") continue;
+          propertyName = "this";
+          break;
+        }
+      }
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
-        sb.Append(this.MapToDocumentationIdName(property.Name.Value));
+        sb.Append(this.MapToDocumentationIdName(propertyName));
       } else {
-        sb.Append(property.Name.Value);
+        sb.Append(propertyName);
       }
     }
 
@@ -1137,6 +1245,16 @@ namespace Microsoft.Cci {
       Contract.Requires(sb != null);
 
       if ((formattingOptions & NameFormattingOptions.ReturnType) == 0) return;
+      if ((formattingOptions & NameFormattingOptions.Modifiers) != 0) {
+        if (sig.ReturnValueIsModified && (formattingOptions & NameFormattingOptions.OmitCustomModifiers) == 0) {
+          foreach (ICustomModifier modifier in sig.ReturnValueCustomModifiers) {
+            sb.Append(modifier.IsOptional ? " optmod " : " reqmod ");
+            sb.Append(this.typeNameFormatter.GetTypeName(modifier.Modifier, formattingOptions));
+          }
+          sb.Append(' ');
+        }
+        if (sig.ReturnValueIsByRef) sb.Append("ref ");
+      }
       sb.Append(this.typeNameFormatter.GetTypeName(sig.Type, formattingOptions));
       sb.Append(' ');
     }

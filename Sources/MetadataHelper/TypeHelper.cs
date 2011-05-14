@@ -422,12 +422,14 @@ namespace Microsoft.Cci {
     Signature=ReturnType << 1,
 
     /// <summary>
-    /// Inlcude the name of the containing type only if it is needed becuase of ambiguity or hiding. Include only as much as is needed to resolve this.
+    /// Include the name of the containing type only if it is needed because of ambiguity or hiding. Include only as much as is needed to resolve this.
+    /// Please note: this needs source level information to implement. The default formatters in MetdataHelper ignore this bit.
     /// </summary>
     SmartTypeName=Signature << 1,
 
     /// <summary>
-    /// Inlcude the name of the containing namespace only if it is needed becuase of ambiguity or hiding. Include only as much as is needed to resolve this.
+    /// Include the name of the containing namespace only if it is needed because of ambiguity or hiding. Include only as much as is needed to resolve this.
+    /// Please note: this needs source level information to implement. The default formatters in MetdataHelper ignore this bit.
     /// </summary>
     SmartNamespaceName=SmartTypeName << 1,
 
@@ -1032,23 +1034,6 @@ namespace Microsoft.Cci {
       IArrayTypeReference/*?*/ arrayTypeReference = typeReference as IArrayTypeReference;
       if (arrayTypeReference != null) return TypeHelper.GetDefiningUnitReference(arrayTypeReference.ElementType);
       return null;
-    }
-
-    /// <summary>
-    /// Returns an event of the given declaring type that has the given name.
-    /// If no such event can be found, Dummy.Event is returned.
-    /// </summary>
-    /// <param name="declaringType">The type thats declares the field.</param>
-    /// <param name="eventName">The name of the event.</param>
-    public static IEventDefinition GetEvent(ITypeDefinition declaringType, IName eventName) {
-      Contract.Requires(declaringType != null);
-      Contract.Requires(eventName != null);
-
-      foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(eventName, false)) {
-        IEventDefinition/*?*/ eventDef = member as IEventDefinition;
-        if (eventDef != null) return eventDef;
-      }
-      return Dummy.Event;
     }
 
     /// <summary>
@@ -2200,19 +2185,38 @@ namespace Microsoft.Cci {
       Contract.Requires(typeName != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
+      string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
       if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0 && genericParameterCount > 0 && type.ResolvedType != Dummy.Type) {
         StringBuilder sb = new StringBuilder(typeName);
         sb.Append("<");
         if ((formattingOptions & NameFormattingOptions.EmptyTypeParameterList) == 0) {
           bool first = true;
-          foreach (ITypeReference parameter in type.ResolvedType.GenericParameters) {
-            if (!first) sb.Append(","); first = false;
+          foreach (var parameter in type.ResolvedType.GenericParameters) {
+            if (!first) { sb.Append(delim); first = false; }
             sb.Append(this.GetTypeName(parameter, formattingOptions));
           }
         } else {
           sb.Append(',', genericParameterCount - 1);
         }
         sb.Append(">");
+        if ((formattingOptions & NameFormattingOptions.TypeConstraints) != 0) {
+          foreach (var parameter in type.ResolvedType.GenericParameters) {
+            sb.Append(" where ");
+            sb.Append(parameter.Name.Value);
+            sb.Append(" : ");
+            bool first = true;
+            if (parameter.MustBeReferenceType) { sb.Append("class"); first = false; }
+            if (parameter.MustBeValueType) { sb.Append("struct"); first = false; }
+            foreach (var constraint in parameter.Constraints) {
+              if (!first) { sb.Append(delim); first = false; }
+              sb.Append(this.GetTypeName(constraint, NameFormattingOptions.None));
+            }
+            if (parameter.MustHaveDefaultConstructor) {
+              if (!first) { sb.Append(delim); }
+              sb.Append("new ()");
+            }
+          }
+        }
         typeName = sb.ToString();
       } else if ((formattingOptions & NameFormattingOptions.UseGenericTypeNameSuffix) != 0 && genericParameterCount > 0) {
         typeName = typeName + "`" + genericParameterCount;
@@ -2280,6 +2284,91 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// If the name matches a C# keyword, return "@"+name
+    /// </summary>
+    public virtual string EscapeKeyword(string name) {
+      switch (name) {
+        case "abstract": return "@abstract";
+        case "as": return "@as";
+        case "base": return "@base";
+        case "bool": return "@bool";
+        case "break": return "@break";
+        case "byte": return "@byte";
+        case "case": return "@case";
+        case "catch": return "@catch";
+        case "char": return "@char";
+        case "checked": return "@checked";
+        case "class": return "@class";
+        case "const": return "@const";
+        case "continue": return "@continue";
+        case "decimal": return "@decimal";
+        case "default": return "@default";
+        case "delegate": return "@delegate";
+        case "do": return "@do";
+        case "double": return "@double";
+        case "explicit": return "@explicit";
+        case "event": return "@event";
+        case "extern": return "@extern";
+        case "else": return "@else";
+        case "enum": return "@enum";
+        case "false": return "@false";
+        case "finally": return "@finally";
+        case "fixed": return "@fixed";
+        case "float": return "@float";
+        case "for": return "@for";
+        case "foreach": return "@foreach";
+        case "goto": return "@goto";
+        case "if": return "@if";
+        case "in": return "@in";
+        case "int": return "@int";
+        case "interface": return "@interface";
+        case "internal": return "@internal";
+        case "is": return "@is";
+        case "lock": return "@lock";
+        case "long": return "@long";
+        case "new": return "@new";
+        case "null": return "@null";
+        case "namespace": return "@namespace";
+        case "object": return "@object";
+        case "operator": return "@operator";
+        case "out": return "@out";
+        case "override": return "@override";
+        case "params": return "@params";
+        case "private": return "@private";
+        case "protected": return "@protected";
+        case "public": return "@public";
+        case "readonly": return "@readonly";
+        case "ref": return "@ref";
+        case "return": return "@return";
+        case "switch": return "@switch";
+        case "struct": return "@struct";
+        case "sbyte": return "@sbyte";
+        case "sealed": return "@sealed";
+        case "short": return "@short";
+        case "sizeof": return "@sizeof";
+        case "stackalloc": return "@stackalloc";
+        case "static": return "@static";
+        case "string": return "@string";
+        case "this": return "@this";
+        case "throw": return "@throw";
+        case "true": return "@true";
+        case "try": return "@try";
+        case "typeof": return "@typeof";
+        case "uint": return "@uint";
+        case "ulong": return "@ulong";
+        case "unchecked": return "@unchecked";
+        case "unsafe": return "@unsafe";
+        case "ushort": return "@ushort";
+        case "using": return "@using";
+        case "virtual": return "@virtual";
+        case "volatile": return "@volatile";
+        case "void": return "@void";
+        case "while": return "@while";
+      }
+      return name;
+    }
+
+    /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
     [Pure]
@@ -2341,13 +2430,20 @@ namespace Microsoft.Cci {
       Contract.Requires(nsType != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      string tname = this.AddGenericParametersIfNeeded(nsType, nsType.GenericParameterCount, formattingOptions, nsType.Name.Value);
+      var tname = nsType.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) tname = this.EscapeKeyword(tname);
+      if ((formattingOptions & NameFormattingOptions.SupressAttributeSuffix) != 0 &&
+      AttributeHelper.IsAttributeType(nsType.ResolvedType) & tname.EndsWith("Attribute"))
+        tname = tname.Substring(0, tname.Length-9);
+      tname = this.AddGenericParametersIfNeeded(nsType, nsType.GenericParameterCount, formattingOptions, tname);
       if ((formattingOptions & NameFormattingOptions.OmitContainingNamespace) == 0 && !(nsType.ContainingUnitNamespace is IRootUnitNamespaceReference))
         tname = this.GetNamespaceName(nsType.ContainingUnitNamespace, formattingOptions) + "." + tname;
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
         tname = "T:" + tname;
-      if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+      else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
         tname = this.GetTypeKind(nsType) + " " + tname;
+      if ((formattingOptions & NameFormattingOptions.Visibility) != 0)
+        tname = (nsType.ResolvedType.IsPublic ? "public " : "internal ") + tname;
       return tname;
     }
 
@@ -2395,13 +2491,20 @@ namespace Microsoft.Cci {
       Contract.Requires(nestedType != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      string tname = this.AddGenericParametersIfNeeded(nestedType, nestedType.GenericParameterCount, formattingOptions, nestedType.Name.Value);
+      var tname = nestedType.Name.Value;
+      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) tname = this.EscapeKeyword(tname);
+      if ((formattingOptions & NameFormattingOptions.SupressAttributeSuffix) != 0 &&
+      AttributeHelper.IsAttributeType(nestedType.ResolvedType) & tname.EndsWith("Attribute"))
+        tname = tname.Substring(0, tname.Length-9);
+      tname = this.AddGenericParametersIfNeeded(nestedType, nestedType.GenericParameterCount, formattingOptions, tname);
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
         string delim = ((formattingOptions & NameFormattingOptions.UseReflectionStyleForNestedTypeNames) == 0) ? "." : "+";
         tname = this.GetTypeName(nestedType.ContainingType, formattingOptions & ~NameFormattingOptions.MemberKind) + delim + tname;
       }
       if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
         tname = this.GetTypeKind(nestedType) + " " + tname;
+      if ((formattingOptions & NameFormattingOptions.Visibility) != 0)
+        tname = this.GetVisibility(nestedType.ResolvedType) + " " + tname;
       return tname;
     }
 
@@ -2474,16 +2577,31 @@ namespace Microsoft.Cci {
     /// Returns a C#-like string that identifies the kind of the given type definition. For example, "class" or "delegate".
     /// </summary>
     [Pure]
-    protected virtual string GetTypeKind(ITypeReference type) {
-      Contract.Requires(type != null);
+    protected virtual string GetTypeKind(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      ITypeDefinition typeDefinition = type.ResolvedType;
+      if (typeReference.IsEnum) return "enum";
+      if (typeReference.IsValueType) return "struct";
+      ITypeDefinition typeDefinition = typeReference.ResolvedType;
       if (typeDefinition.IsDelegate) return "delegate";
-      if (typeDefinition.IsEnum) return "enum";
       if (typeDefinition.IsInterface) return "interface";
-      if (type.IsValueType) return "struct";
-      return "class";
+      if (typeDefinition.IsClass) return "class";
+      return "type";
+    }
+
+    /// <summary>
+    /// Returns a C#-like string that corresponds to the visibilty of the type (i.e. "public", "protected", "private" and so on).
+    /// </summary>
+    public virtual string GetVisibility(INestedTypeDefinition nestedType) {
+      switch (nestedType.Visibility) {
+        case TypeMemberVisibility.Assembly: return "internal";
+        case TypeMemberVisibility.Family: return "protected";
+        case TypeMemberVisibility.FamilyAndAssembly: return "protected and internal";
+        case TypeMemberVisibility.FamilyOrAssembly: return "protected internal";
+        case TypeMemberVisibility.Public: return "public";
+        default: return "private";
+      }
     }
 
     /// <summary>
@@ -2534,8 +2652,7 @@ namespace Microsoft.Cci {
         string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
         foreach (ITypeReference argument in genericTypeInstance.GenericArguments) {
           if (first) first = false; else sb.Append(delim);
-          // The member kind suffix should not be applied to generic arguments.
-          sb.Append(this.GetTypeName(argument, formattingOptions & ~NameFormattingOptions.DocumentationIdMemberKind));
+          sb.Append(this.GetTypeName(argument, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
         }
         if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append("}"); else sb.Append(">");
         return sb.ToString();
