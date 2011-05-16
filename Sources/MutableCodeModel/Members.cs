@@ -116,8 +116,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         var mutableBlock = new CodeDeepCopier(this.host).Copy(this.Block);
         if (checker.foundAnonymousDelegate) {
           var remover = new AnonymousDelegateRemover(this.host, this.sourceLocationProvider);
-          remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock);
-          privateHelperTypes = remover.closureClasses;
+          privateHelperTypes = new List<ITypeDefinition>(remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock));
         }
         var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider);
         var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, mutableBlock);

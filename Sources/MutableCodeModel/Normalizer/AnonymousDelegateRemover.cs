@@ -161,11 +161,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// When given a method definition and a block of statements that represents the Block property of the body of the method
     /// this method returns a semantically equivalent SourceMethod with a body that no longer has any anonymous delegate expressions.
     /// The given block of statements is mutated in place.
+    /// Any types that get defined in order to implement the body semantics are returned (null if no such types are defined).
     /// </summary>
     /// <param name="method">The method containing the block that is to be rewritten.</param>
     /// <param name="body">The block to be rewritten. 
     /// The entire tree rooted at the block must be mutable and the nodes must not be shared with anything else.</param>
-    public void RemoveAnonymousDelegates(IMethodDefinition method, BlockStatement body) {
+    public ICollection<ITypeDefinition>/*?*/ RemoveAnonymousDelegates(IMethodDefinition method, BlockStatement body) {
       this.method = method;
       var finder = new CapturedParameterAndLocalFinder();
       finder.TraverseChildren(body);
@@ -194,6 +195,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       } else {
         this.RewriteChildren(body);
       }
+      return this.closureClasses == null ? null : this.closureClasses.AsReadOnly();
     }
 
     /// <summary>
