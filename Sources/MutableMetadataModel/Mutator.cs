@@ -266,7 +266,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
       var mutableAssemblyReference = assemblyReference as AssemblyReference;
-      if (mutableAssemblyReference == null) return assemblyReference;
+      if (mutableAssemblyReference == null || mutableAssemblyReference.IsFrozen) return assemblyReference;
       IReference result;
       if (this.referenceRewrites.TryGetValue(mutableAssemblyReference, out result)) return (IAssemblyReference)result;
       this.referenceRewrites[mutableAssemblyReference] = mutableAssemblyReference;
