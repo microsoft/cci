@@ -1162,8 +1162,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         foreach (IAssemblyReference assemblyReference in this.AssemblyReferences)
           yield return assemblyReference;
-        foreach (IModuleReference moduleReference in this.ModuleReferences)
-          yield return moduleReference;
+        if (this.ModuleReferences != null) {
+          foreach (IModuleReference moduleReference in this.ModuleReferences)
+            yield return moduleReference;
+        }
       }
     }
 
