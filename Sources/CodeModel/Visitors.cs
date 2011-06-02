@@ -793,7 +793,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="logicalNot"></param>
     public virtual void Visit(ILogicalNot logicalNot) {
-      this.Visit((IExpression)logicalNot);
+      this.Visit((IUnaryOperation)logicalNot);
     }
 
     /// <summary>
@@ -857,7 +857,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="onesComplement"></param>
     public virtual void Visit(IOnesComplement onesComplement) {
-      this.Visit((IExpression)onesComplement);
+      this.Visit((IUnaryOperation)onesComplement);
     }
 
     /// <summary>

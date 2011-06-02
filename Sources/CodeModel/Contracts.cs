@@ -710,8 +710,7 @@ namespace Microsoft.Cci.Contracts {
       get { return Enumerable<IExpression>.Empty; }
     }
 
-    public IEnumerable<IExpression> Variants
-    {
+    public IEnumerable<IExpression> Variants {
       get { return Enumerable<IExpression>.Empty; }
     }
 

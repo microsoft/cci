@@ -445,8 +445,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that may be written to by the called method.
     /// </summary>
-    public List<IExpression> Variants
-    {
+    public List<IExpression> Variants {
       get { return this.variants; }
       set { this.variants = value; }
     }

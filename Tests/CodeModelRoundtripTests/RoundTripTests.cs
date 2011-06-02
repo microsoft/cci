@@ -916,7 +916,7 @@ class NameChanger : CodeRewriter {
       if (TypeHelper.GetDefiningUnitReference(namespaceTypeReference) != this.assembly) return namespaceTypeReference;
       var mutableNamespaceTypeReference = namespaceTypeReference as Microsoft.Cci.MutableCodeModel.NamespaceTypeReference;
       if (mutableNamespaceTypeReference == null || mutableNamespaceTypeReference.IsFrozen) return namespaceTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableNamespaceTypeReference, out result)) return (INamespaceTypeReference)result;
       this.referenceRewrites[mutableNamespaceTypeReference] = mutableNamespaceTypeReference;
       mutableNamespaceTypeReference.Name = this.host.NameTable.GetNameFor(this.pattern.Replace(namespaceTypeReference.Name.Value, this.evaluator));

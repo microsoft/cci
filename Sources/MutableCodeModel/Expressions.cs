@@ -377,6 +377,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.returnValueCustomModifiers.AsReadOnly(); }
     }
 
+    ITypeReference ISignature.Type {
+      get { return this.ReturnType; }
+    }
+
     #endregion
   }
 

@@ -725,7 +725,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IStackArrayCreate stackArrayCreate) {
       base.TraverseChildren(stackArrayCreate);
-      ((StackArrayCreate)stackArrayCreate).Type = Immutable.Vector.GetVector(stackArrayCreate.ElementType, this.host.InternFactory);
+      ((StackArrayCreate)stackArrayCreate).Type = this.platformType.SystemIntPtr;
     }
 
     public override void TraverseChildren(ISubtraction subtraction) {
