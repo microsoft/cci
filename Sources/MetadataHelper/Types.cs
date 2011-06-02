@@ -338,10 +338,8 @@ namespace Microsoft.Cci.Immutable {
     readonly IEnumerable<IParameterTypeInformation> parameters;
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get
-        //^^ requires this.ReturnValueIsModified;
-      {
-        //^ assume this.returnValueCustomModifiers != null;
+      get {
+        if (this.returnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty; //shouldn't get here if the precondition is respected.
         return this.returnValueCustomModifiers;
       }
     }
@@ -366,6 +364,10 @@ namespace Microsoft.Cci.Immutable {
     }
 
     #region ISignature Members
+
+    bool ISignature.IsStatic {
+      get { return this.IsStatic; }
+    }
 
     ITypeReference ISignature.Type {
       get { return this.Type; }
@@ -824,6 +826,16 @@ namespace Microsoft.Cci.Immutable {
 
     IEnumerable<ISecurityAttribute> ITypeDefinition.SecurityAttributes {
       get { return Enumerable<ISecurityAttribute>.Empty; }
+    }
+
+    #endregion
+
+    #region IContainer<ITypeDefinitionMember>
+
+    IEnumerable<ITypeDefinitionMember> IContainer<ITypeDefinitionMember>.Members {
+      get {
+        return this.Members;
+      }
     }
 
     #endregion
@@ -3220,6 +3232,16 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     public void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit((ISpecializedNestedTypeReference)this);
+    }
+
+    #endregion
+
+    #region IContainer<ITypeDefinitionMember>
+
+    IEnumerable<ITypeDefinitionMember> IContainer<ITypeDefinitionMember>.Members {
+      get {
+        return this.Members;
+      }
     }
 
     #endregion

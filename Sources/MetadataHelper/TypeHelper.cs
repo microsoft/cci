@@ -2209,7 +2209,7 @@ namespace Microsoft.Cci {
         if ((formattingOptions & NameFormattingOptions.EmptyTypeParameterList) == 0) {
           bool first = true;
           foreach (var parameter in type.ResolvedType.GenericParameters) {
-            if (!first) { sb.Append(delim); first = false; }
+            if (first) first = false; else sb.Append(delim);
             sb.Append(this.GetTypeName(parameter, formattingOptions));
           }
         } else {
@@ -2218,6 +2218,7 @@ namespace Microsoft.Cci {
         sb.Append(">");
         if ((formattingOptions & NameFormattingOptions.TypeConstraints) != 0) {
           foreach (var parameter in type.ResolvedType.GenericParameters) {
+            if (!parameter.MustBeReferenceType && !parameter.MustBeValueType && !parameter.MustHaveDefaultConstructor && IteratorHelper.EnumerableIsEmpty(parameter.Constraints)) continue;
             sb.Append(" where ");
             sb.Append(parameter.Name.Value);
             sb.Append(" : ");
@@ -2225,7 +2226,7 @@ namespace Microsoft.Cci {
             if (parameter.MustBeReferenceType) { sb.Append("class"); first = false; }
             if (parameter.MustBeValueType) { sb.Append("struct"); first = false; }
             foreach (var constraint in parameter.Constraints) {
-              if (!first) { sb.Append(delim); first = false; }
+              if (first) first = false; else sb.Append(delim);
               sb.Append(this.GetTypeName(constraint, NameFormattingOptions.None));
             }
             if (parameter.MustHaveDefaultConstructor) {
@@ -2516,7 +2517,7 @@ namespace Microsoft.Cci {
       tname = this.AddGenericParametersIfNeeded(nestedType, nestedType.GenericParameterCount, formattingOptions, tname);
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
         string delim = ((formattingOptions & NameFormattingOptions.UseReflectionStyleForNestedTypeNames) == 0) ? "." : "+";
-        tname = this.GetTypeName(nestedType.ContainingType, formattingOptions & ~NameFormattingOptions.MemberKind) + delim + tname;
+        tname = this.GetTypeName(nestedType.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.Visibility|NameFormattingOptions.TypeConstraints)) + delim + tname;
       }
       if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
         tname = this.GetTypeKind(nestedType) + " " + tname;

@@ -28,7 +28,55 @@ namespace Microsoft.Cci {
     /// <summary>
     /// An empty enumerable of element type T.
     /// </summary>
-    public static IEnumerable<T> Empty = new T[0];
+    public static IEnumerable<T> Empty = new EmptyEnumerable();
+
+    sealed class EmptyEnumerable : IEnumerable<T>, IEnumerator<T> {
+      #region IEnumerable<T> Members
+
+      public IEnumerator<T> GetEnumerator() {
+        return this;
+      }
+
+      #endregion
+
+      #region IEnumerable Members
+
+      IEnumerator IEnumerable.GetEnumerator() {
+        return this;
+      }
+
+      #endregion
+
+      #region IEnumerator<T> Members
+
+      public T Current {
+        get { throw new InvalidOperationException(); }
+      }
+
+      #endregion
+
+      #region IDisposable Members
+
+      public void Dispose() {
+      }
+
+      #endregion
+
+      #region IEnumerator Members
+
+      object IEnumerator.Current {
+        get { throw new InvalidOperationException(); }
+      }
+
+      public bool MoveNext() {
+        return false;
+      }
+
+      public void Reset() {
+      }
+
+      #endregion
+    }
   }
 
   /// <summary>
@@ -97,12 +145,12 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <typeparam name="T">The element type of the array.</typeparam>
     /// <param name="array">The array to wrap. May be null.</param>
-    public static IEnumerable<T> GetReadonly<T>(T[]/*?*/ array) {
+    public static IEnumerable<T>/*?*/ GetReadonly<T>(T[]/*?*/ array) {
       if (array == null) return null;
       return new ReaonlyOnlyArrayWrapper<T>(array);
     }
 
-    sealed class ReaonlyOnlyArrayWrapper<T> : IEnumerable<T> {
+    sealed class ReaonlyOnlyArrayWrapper<T> : ICollection<T> {
 
       internal ReaonlyOnlyArrayWrapper(T[] array) {
         this.array = array;
@@ -111,13 +159,88 @@ namespace Microsoft.Cci {
       T[] array;
 
       public IEnumerator<T> GetEnumerator() {
-        return ((IEnumerable<T>)this.array).GetEnumerator();
+        return new Enumerator(this.array);
       }
 
       IEnumerator IEnumerable.GetEnumerator() {
-        return this.array.GetEnumerator();
+        return this.GetEnumerator();
       }
 
+      struct Enumerator : IEnumerator<T> {
+
+        internal Enumerator(T[] array) {
+          this.array = array;
+          this.index = -1;
+        }
+
+        T[] array;
+        int index;
+
+        #region IEnumerator<T> Members
+
+        public T Current {
+          get { return this.array[this.index]; }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose() {
+        }
+
+        #endregion
+
+        #region IEnumerator Members
+
+        object IEnumerator.Current {
+          get { return this.Current; }
+        }
+
+        public bool MoveNext() {
+          return ++this.index < this.array.Length;
+        }
+
+        public void Reset() {
+        }
+
+        #endregion
+      }
+
+
+      #region ICollection<T> Members
+
+      public void Add(T item) {
+        throw new InvalidOperationException();
+      }
+
+      public void Clear() {
+        throw new InvalidOperationException();
+      }
+
+      public bool Contains(T item) {
+        foreach (var elem in this.array) if (elem.Equals(item)) return true;
+        return false;
+      }
+
+      public void CopyTo(T[] array, int arrayIndex) {
+        for (int i = 0, n = this.array.Length; i < n; i++)
+          array[i+arrayIndex] = this.array[i];
+      }
+
+      public int Count {
+        get { return this.array.Length; }
+      }
+
+      public bool IsReadOnly {
+        get { return true; }
+      }
+
+      public bool Remove(T item) {
+        throw new InvalidOperationException();
+      }
+
+      #endregion
     }
 
     /// <summary>
@@ -215,10 +338,11 @@ namespace Microsoft.Cci {
     /// Returns the number of elements in the given enumerable. A null enumerable is allowed and results in 0.
     /// </summary>
     [Pure]
-    public static uint EnumerableCount<T>(IEnumerable<T>/*?*/ enumerable)
-      //^ ensures result >= 0;
-    {
+    public static uint EnumerableCount<T>(IEnumerable<T>/*?*/ enumerable) {
+      Contract.Ensures(Contract.Result<uint>() >= 0);
       if (enumerable == null) return 0;
+      var collection = enumerable as ICollection<T>;
+      if (collection != null) return (uint)collection.Count;
       uint result = 0;
       IEnumerator<T> enumerator = enumerable.GetEnumerator();
       while (enumerator.MoveNext()) result++;
@@ -232,6 +356,8 @@ namespace Microsoft.Cci {
     [Pure]
     public static bool EnumerableHasLength<T>(IEnumerable<T>/*?*/ enumerable, ulong length) {
       if (enumerable == null) return (length == 0);
+      var collection = enumerable as ICollection<T>;
+      if (collection != null) return length == (ulong)collection.Count;
       IEnumerator<T> enumerator = enumerable.GetEnumerator();
       while (length > 0) {
         if (!enumerator.MoveNext()) return false;

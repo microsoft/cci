@@ -513,7 +513,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Exception information of the method body expressed in terms of offsets in CLR IL.
   /// </summary>
-  public interface IOperationExceptionInformation {
+  public partial interface IOperationExceptionInformation {
     /// <summary>
     /// Handler kind for this SEH info
     /// </summary>
@@ -550,6 +550,51 @@ namespace Microsoft.Cci {
     /// </summary>
     uint HandlerEndOffset { get; }
   }
+
+  #region IOperationExceptionInformation contract binding
+  [ContractClass(typeof(IOperationExceptionInformationContract))]
+  public partial interface IOperationExceptionInformation {
+
+  }
+
+  [ContractClassFor(typeof(IOperationExceptionInformation))]
+  abstract class IOperationExceptionInformationContract : IOperationExceptionInformation {
+    #region IOperationExceptionInformation Members
+
+    public HandlerKind HandlerKind {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ExceptionType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint TryStartOffset {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint TryEndOffset {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint FilterDecisionStartOffset {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint HandlerStartOffset {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint HandlerEndOffset {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// An object that represents a local variable or constant.
@@ -675,7 +720,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
   /// </summary>
-  public interface IMethodBody {
+  public partial interface IMethodBody {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -684,24 +729,10 @@ namespace Microsoft.Cci {
     /// </summary>
     void Dispatch(IMetadataVisitor visitor);
 
-    ///// <summary>
-    ///// Returns the IL operation that is located at the given offset. If no operation exists the given offset, Dummy.Operation is returned.
-    ///// The offset of the operation that follows the operation at the given offset is returned as the value of the second parameter.
-    ///// If the given offset is invalid, or is the offset of the last operation in the method body, offsetOfNextOperation will be set to -1.
-    ///// </summary>
-    ///// <param name="offset">The offset of the operation to be returned by this method.</param>
-    ///// <param name="offsetOfNextOperation">The offset of the operation that follows the one returned by this method. If no such operation exists, the value is -1.</param>
-    //IOperation GetOperationAt(int offset, out int offsetOfNextOperation);
-    ////^ requires 0 <= offset;
-    ////^ ensures offsetOfNextOperation == -1 || offsetOfNextOperation > offset;
-
     /// <summary>
     /// A list exception data within the method body IL.
     /// </summary>
-    IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
-      get;
-      //^ requires !this.MethodDefinition.IsAbstract && !this.MethodDefinition.IsExternal && this.MethodDefinition.IsCil;
-    }
+    IEnumerable<IOperationExceptionInformation> OperationExceptionInformation { get; }
 
     /// <summary>
     /// True if the locals are initialized by zeroeing the stack upon method entry.
@@ -717,17 +748,12 @@ namespace Microsoft.Cci {
     /// The definition of the method whose body this is.
     /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.
     /// </summary>
-    IMethodDefinition MethodDefinition {
-      get;
-    }
+    IMethodDefinition MethodDefinition { get; }
 
     /// <summary>
     /// A list CLR IL operations that implement this method body.
     /// </summary>
-    IEnumerable<IOperation> Operations {
-      get;
-      //^ requires !this.MethodDefinition.IsAbstract && !this.MethodDefinition.IsExternal && this.MethodDefinition.IsCil;
-    }
+    IEnumerable<IOperation> Operations { get; }
 
     /// <summary>
     /// The maximum number of elements on the evaluation stack during the execution of the method.
@@ -743,6 +769,75 @@ namespace Microsoft.Cci {
     IEnumerable<ITypeDefinition> PrivateHelperTypes { get; }
 
   }
+
+  #region IMethodBody contract binding
+  [ContractClass(typeof(IMethodBodyContract))]
+  public partial interface IMethodBody {
+
+  }
+
+  [ContractClassFor(typeof(IMethodBody))]
+  abstract class IMethodBodyContract : IMethodBody {
+    #region IMethodBody Members
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      Contract.Requires(visitor != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IOperationExceptionInformation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IOperationExceptionInformation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool LocalsAreZeroed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ILocalDefinition> LocalVariables {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ILocalDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ILocalDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public IMethodDefinition MethodDefinition {
+      get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IOperation> Operations {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IOperation>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IOperation>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort MaxStack {
+      get {
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<ITypeDefinition> PrivateHelperTypes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ITypeDefinition>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeDefinition>>(), x => x != null));
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// This interface models the metadata representation of a method.

@@ -20,9 +20,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
 
   internal sealed class MethodBody : IMethodBody {
     internal readonly MethodDefinition MethodDefinition;
-    internal EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition> LocalVariables;
-    EnumerableArrayWrapper<CilInstruction, IOperation> cilInstructions;
-    EnumerableArrayWrapper<CilExceptionInformation, IOperationExceptionInformation> cilExceptionInformation;
+    internal ILocalDefinition[]/*?*/ LocalVariables;
+    IEnumerable<IOperation>/*?*/ cilInstructions;
+    IEnumerable<IOperationExceptionInformation>/*?*/ cilExceptionInformation;
     internal readonly bool IsLocalsInited;
     internal readonly ushort StackSize;
 
@@ -33,26 +33,20 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     ) {
       this.MethodDefinition = methodDefinition;
       this.IsLocalsInited = isLocalsInited;
-      this.LocalVariables = ILReader.EmptyLocalVariables;
+      this.LocalVariables = null;
       this.StackSize = stackSize;
     }
 
-    internal void SetLocalVariables(
-      EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition> localVariables
-    ) {
+    internal void SetLocalVariables(ILocalDefinition[] localVariables) {
       this.LocalVariables = localVariables;
     }
 
-    internal void SetCilInstructions(
-      EnumerableArrayWrapper<CilInstruction, IOperation> cilInstructions
-    ) {
-      this.cilInstructions = cilInstructions;
+    internal void SetCilInstructions(IOperation[] cilInstructions) {
+      this.cilInstructions = IteratorHelper.GetReadonly(cilInstructions);
     }
 
-    internal void SetExceptionInformation(
-      EnumerableArrayWrapper<CilExceptionInformation, IOperationExceptionInformation> cilExceptionInformation
-    ) {
-      this.cilExceptionInformation = cilExceptionInformation;
+    internal void SetExceptionInformation(IOperationExceptionInformation[] cilExceptionInformation) {
+      this.cilExceptionInformation = IteratorHelper.GetReadonly(cilExceptionInformation);
     }
 
     #region IMethodBody Members
@@ -66,7 +60,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     IEnumerable<ILocalDefinition> IMethodBody.LocalVariables {
-      get { return this.LocalVariables; }
+      get {
+        if (this.LocalVariables == null) return Enumerable<ILocalDefinition>.Empty;
+        return IteratorHelper.GetReadonly(this.LocalVariables);
+      }
     }
 
     bool IMethodBody.LocalsAreZeroed {
@@ -74,7 +71,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     public IEnumerable<IOperation> Operations {
-      get { return this.cilInstructions; }
+      get {
+        if (this.cilInstructions == null) return Enumerable<IOperation>.Empty;
+        return this.cilInstructions;
+      }
     }
 
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
@@ -86,7 +86,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
-      get { return this.cilExceptionInformation; }
+      get {
+        if (this.cilExceptionInformation == null) return Enumerable<IOperationExceptionInformation>.Empty;
+        return this.cilExceptionInformation;
+      }
     }
 
     #endregion
@@ -95,28 +98,22 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
 
   internal sealed class LocalVariableDefinition : ILocalDefinition {
 
-    readonly MethodBody MethodBody;
-    readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> CustomModifiers;
-    readonly bool IsPinned;
-    readonly bool IsReference;
-    readonly uint Index;
-    readonly ITypeReference TypeReference;
-
-    internal LocalVariableDefinition(
-      MethodBody methodBody,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> customModifiers,
-      bool isPinned,
-      bool isReference,
-      uint index,
-      ITypeReference typeReference
-    ) {
-      this.MethodBody = methodBody;
-      this.CustomModifiers = customModifiers;
-      this.IsPinned = isPinned;
-      this.IsReference = isReference;
-      this.Index = index;
-      this.TypeReference = typeReference;
+    internal LocalVariableDefinition(MethodBody methodBody, IEnumerable<ICustomModifier>/*?*/ customModifiers, bool isPinned,
+      bool isReference, uint index, ITypeReference typeReference) {
+      this.methodBody = methodBody;
+      this.customModifiers = customModifiers;
+      this.isPinned = isPinned;
+      this.isReference = isReference;
+      this.index = index;
+      this.typeReference = typeReference;
     }
+
+    readonly MethodBody methodBody;
+    readonly IEnumerable<ICustomModifier>/*?*/ customModifiers;
+    readonly bool isPinned;
+    readonly bool isReference;
+    readonly uint index;
+    readonly ITypeReference typeReference;
 
     public override string ToString() {
       return this.Name.Value;
@@ -129,7 +126,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     IEnumerable<ICustomModifier> ILocalDefinition.CustomModifiers {
-      get { return this.CustomModifiers; }
+      get {
+        if (this.customModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.customModifiers;
+      }
     }
 
     bool ILocalDefinition.IsConstant {
@@ -137,31 +137,31 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     bool ILocalDefinition.IsModified {
-      get { return this.CustomModifiers.RawArray.Length > 0; }
+      get { return this.customModifiers != null; }
     }
 
     bool ILocalDefinition.IsPinned {
-      get { return this.IsPinned; }
+      get { return this.isPinned; }
     }
 
     bool ILocalDefinition.IsReference {
-      get { return this.IsReference; }
+      get { return this.isReference; }
     }
 
     public IEnumerable<ILocation> Locations {
       get {
-        MethodBodyLocation mbLoc = new MethodBodyLocation(new MethodBodyDocument(this.MethodBody.MethodDefinition), this.Index);
+        MethodBodyLocation mbLoc = new MethodBodyLocation(new MethodBodyDocument(this.methodBody.MethodDefinition), this.index);
         return IteratorHelper.GetSingletonEnumerable<ILocation>(mbLoc);
       }
     }
 
     public IMethodDefinition MethodDefinition {
-      get { return this.MethodBody.MethodDefinition; }
+      get { return this.methodBody.MethodDefinition; }
     }
 
     public ITypeReference Type {
       get {
-        return this.TypeReference;
+        return this.typeReference;
       }
     }
 
@@ -172,7 +172,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     public IName Name {
       get {
         if (this.name == null)
-          this.name = this.MethodBody.MethodDefinition.PEFileToObjectModel.NameTable.GetNameFor("local_" + this.Index);
+          this.name = this.methodBody.MethodDefinition.PEFileToObjectModel.NameTable.GetNameFor("local_" + this.index);
         return this.name;
       }
     }
@@ -182,17 +182,16 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
 
   }
 
-  internal sealed class CilInstruction : IOperation {
+  internal sealed class CilInstruction : IOperation, IILLocation {
     internal readonly OperationCode CilOpCode;
-    internal readonly MethodBodyLocation Location;
+    MethodBodyDocument document;
+    uint offset;
     internal readonly object/*?*/ Value;
-    internal CilInstruction(
-      OperationCode cilOpCode,
-      MethodBodyLocation location,
-      object/*?*/ value
-    ) {
+
+    internal CilInstruction(OperationCode cilOpCode, MethodBodyDocument document, uint offset, object/*?*/ value) {
       this.CilOpCode = cilOpCode;
-      this.Location = location;
+      this.document = document;
+      this.offset = offset;
       this.Value = value;
     }
 
@@ -203,15 +202,35 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     uint IOperation.Offset {
-      get { return this.Location.Offset; }
+      get { return this.offset; }
     }
 
     ILocation IOperation.Location {
-      get { return this.Location; }
+      get { return this; }
     }
 
     object/*?*/ IOperation.Value {
       get { return this.Value; }
+    }
+
+    #endregion
+
+    #region IILLocation Members
+
+    public IMethodDefinition MethodDefinition {
+      get { return this.document.method; }
+    }
+
+    uint IILLocation.Offset {
+      get { return this.offset; }
+    }
+
+    #endregion
+
+    #region ILocation Members
+
+    public IDocument Document {
+      get { return this.document; }
     }
 
     #endregion
@@ -278,15 +297,13 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
   }
 
   internal sealed class LocalVariableSignatureConverter : SignatureConverter {
-    internal readonly EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition> LocalVariables;
+    internal readonly ILocalDefinition[] LocalVariables;
     readonly MethodBody OwningMethodBody;
 
-    LocalVariableDefinition GetLocalVariable(
-      uint index
-    ) {
+    LocalVariableDefinition GetLocalVariable(uint index) {
       bool isPinned = false;
       bool isByReferenece = false;
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> customModifiers = TypeCache.EmptyCustomModifierArray;
+      IEnumerable<ICustomModifier>/*?*/ customModifiers = null;
       byte currByte = this.SignatureMemoryReader.PeekByte(0);
       ITypeReference/*?*/ typeReference;
       if (currByte == ElementType.TypedReference) {
@@ -302,14 +319,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
         typeReference = this.GetTypeReference();
       }
       if (typeReference == null) typeReference = Dummy.TypeReference;
-      return new LocalVariableDefinition(
-        this.OwningMethodBody,
-        customModifiers,
-        isPinned,
-        isByReferenece,
-        index,
-        typeReference
-      );
+      return new LocalVariableDefinition(this.OwningMethodBody, customModifiers, isPinned, isByReferenece, index, typeReference);
     }
 
     internal LocalVariableSignatureConverter(
@@ -328,25 +338,22 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       for (int i = 0; i < locVarCount; ++i) {
         locVarArr[i] = this.GetLocalVariable((uint)i);
       }
-      this.LocalVariables = new EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition>(locVarArr, Dummy.LocalVariable);
+      this.LocalVariables = locVarArr;
     }
   }
 
   internal sealed class StandAloneMethodSignatureConverter : SignatureConverter {
     internal readonly byte FirstByte;
-    internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers;
+    internal readonly IEnumerable<ICustomModifier>/*?*/ ReturnCustomModifiers;
     internal readonly ITypeReference/*?*/ ReturnTypeReference;
     internal readonly bool IsReturnByReference;
-    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
-    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
-    internal StandAloneMethodSignatureConverter(
-      PEFileToObjectModel peFileToObjectModel,
-      MethodDefinition moduleMethodDef,
-      MemoryReader signatureMemoryReader
-    )
+    internal readonly IEnumerable<IParameterTypeInformation> RequiredParameters;
+    internal readonly IEnumerable<IParameterTypeInformation> VarArgParameters;
+
+    internal StandAloneMethodSignatureConverter(PEFileToObjectModel peFileToObjectModel, MethodDefinition moduleMethodDef, MemoryReader signatureMemoryReader)
       : base(peFileToObjectModel, signatureMemoryReader, moduleMethodDef) {
-      this.RequiredParameters = TypeCache.EmptyParameterInfoArray;
-      this.VarArgParameters = TypeCache.EmptyParameterInfoArray;
+      this.RequiredParameters = Enumerable<IParameterTypeInformation>.Empty;
+      this.VarArgParameters = Enumerable<IParameterTypeInformation>.Empty;
       //  TODO: Check minimum required size of the signature...
       this.FirstByte = this.SignatureMemoryReader.ReadByte();
       int paramCount = this.SignatureMemoryReader.ReadCompressedUInt32();
@@ -368,11 +375,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       }
       if (paramCount > 0) {
         IParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
-        if (reqModuleParamArr.Length > 0)
-          this.RequiredParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
+        if (reqModuleParamArr.Length > 0) this.RequiredParameters = IteratorHelper.GetReadonly(reqModuleParamArr);
         IParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - reqModuleParamArr.Length);
-        if (varArgModuleParamArr.Length > 0)
-          this.VarArgParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
+        if (varArgModuleParamArr.Length > 0) this.VarArgParameters = IteratorHelper.GetReadonly(varArgModuleParamArr);
       }
     }
   }
@@ -406,7 +411,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
 
     bool LoadLocalSignature() {
-      EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition> localVariables = ILReader.EmptyLocalVariables;
       uint locVarRID = this.MethodIL.LocalSignatureToken & TokenTypeIds.RIDMask;
       if (locVarRID != 0x00000000) {
         StandAloneSigRow sigRow = this.PEFileToObjectModel.PEFileReader.StandAloneSigTable[locVarRID];
@@ -416,9 +420,8 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
         MemoryReader memoryReader = new MemoryReader(signatureMemoryBlock);
         //  TODO: Check if this is really local var signature there.
         LocalVariableSignatureConverter locVarSigConv = new LocalVariableSignatureConverter(this.PEFileToObjectModel, this.MethodBody, memoryReader);
-        localVariables = locVarSigConv.LocalVariables;
+        this.MethodBody.SetLocalVariables(locVarSigConv.LocalVariables);
       }
-      this.MethodBody.SetLocalVariables(localVariables);
       return true;
     }
 
@@ -432,9 +435,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       return this.PEFileToObjectModel.PEFileReader.UserStringStream[token & TokenTypeIds.RIDMask];
     }
 
-    FunctionPointerType/*?*/ GetStandAloneMethodSignature(
-      uint standAloneMethodToken
-    ) {
+    FunctionPointerType/*?*/ GetStandAloneMethodSignature(uint standAloneMethodToken) {
       StandAloneSigRow sigRow = this.PEFileToObjectModel.PEFileReader.StandAloneSigTable[standAloneMethodToken & TokenTypeIds.RIDMask];
       uint signatureBlobOffset = sigRow.Signature;
       //  TODO: error checking offset in range
@@ -450,16 +451,11 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
 
     IParameterDefinition/*?*/ GetParameter(uint rawParamNum) {
       if (!this.MethodDefinition.IsStatic) {
-        if (rawParamNum == 0) {
-          //  this
-          return null;
-        } else {
-          rawParamNum--;
-        }
+        if (rawParamNum == 0) return null; //this
+        rawParamNum--;
       }
-      IParameterDefinition[] mpa = this.MethodDefinition.RequiredModuleParameters.RawArray;
-      if (rawParamNum < mpa.Length)
-        return mpa[rawParamNum];
+      IParameterDefinition[] mpa = this.MethodDefinition.RequiredModuleParameters;
+      if (mpa != null && rawParamNum < mpa.Length) return mpa[rawParamNum];
       //  Error...
       return Dummy.ParameterDefinition;
     }
@@ -467,8 +463,8 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     ILocalDefinition GetLocal(
       uint rawLocNum
     ) {
-      LocalVariableDefinition[] locVarDef = this.MethodBody.LocalVariables.RawArray;
-      if (rawLocNum < locVarDef.Length)
+      var locVarDef = this.MethodBody.LocalVariables;
+      if (locVarDef != null && rawLocNum < locVarDef.Length)
         return locVarDef[rawLocNum];
       //  Error...
       return Dummy.LocalVariable;
@@ -517,7 +513,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     bool PopulateCilInstructions() {
       MethodBodyDocument document = new MethodBodyDocument(this.MethodDefinition);
       MemoryReader memReader = new MemoryReader(this.MethodIL.EncodedILMemoryBlock);
-      List<CilInstruction> instrList = new List<CilInstruction>();
+      var numInstructions = CountCilInstructions(memReader);
+      if (numInstructions == 0) return true;
+      CilInstruction[] instrList = new CilInstruction[numInstructions];
+      int instructionNumber = 0;
       while (memReader.NotEndOfBytes) {
         object/*?*/ value = null;
         uint offset = (uint)memReader.Offset;
@@ -717,7 +716,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
               IArrayTypeReference/*?*/ arrayType = methodReference.ContainingType as IArrayTypeReference;
               if (arrayType != null) {
                 // For Get(), Set() and Address() on arrays, the runtime provides method implementations.
-                // Hence, CCI2 replaces these with pseudo instrcutions Array_Set, Array_Get and Array_Addr.
+                // Hence, CCI2 replaces these with pseudo instructions Array_Set, Array_Get and Array_Addr.
                 // All other methods on arrays will not use pseudo instruction and will have methodReference as their operand. 
                 if (methodReference.Name.UniqueKey == this.PEFileToObjectModel.NameTable.Set.UniqueKey) {
                   cilOpCode = OperationCode.Array_Set;
@@ -947,18 +946,122 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             this.PEFileToObjectModel.PEFileReader.ErrorContainer.AddILError(this.MethodDefinition, offset, MetadataReaderErrorKind.UnknownILInstruction);
             break;
         }
-        MethodBodyLocation location = new MethodBodyLocation(document, offset);
-        instrList.Add(new CilInstruction(cilOpCode, location, value));
+        instrList[instructionNumber++] = new CilInstruction(cilOpCode, document, offset, value);
       }
-      this.MethodBody.SetCilInstructions(new EnumerableArrayWrapper<CilInstruction, IOperation>(instrList.ToArray(), Dummy.Operation));
+      this.MethodBody.SetCilInstructions(instrList);
       return true;
     }
 
+    static int CountCilInstructions(MemoryReader memReader) {
+      int count = 0;
+      while (memReader.NotEndOfBytes) {
+        count++;
+        OperationCode cilOpCode = memReader.ReadOpcode();
+        switch (cilOpCode) {
+          case OperationCode.Ldarg_S:
+          case OperationCode.Ldarga_S:
+          case OperationCode.Starg_S:
+          case OperationCode.Ldloc_S:
+          case OperationCode.Ldloca_S:
+          case OperationCode.Stloc_S:
+          case OperationCode.Ldc_I4_S:
+          case OperationCode.Br_S:
+          case OperationCode.Brfalse_S:
+          case OperationCode.Brtrue_S:
+          case OperationCode.Beq_S:
+          case OperationCode.Bge_S:
+          case OperationCode.Bgt_S:
+          case OperationCode.Ble_S:
+          case OperationCode.Blt_S:
+          case OperationCode.Bne_Un_S:
+          case OperationCode.Bge_Un_S:
+          case OperationCode.Bgt_Un_S:
+          case OperationCode.Ble_Un_S:
+          case OperationCode.Blt_Un_S:
+          case OperationCode.Leave_S:
+          case OperationCode.Unaligned_:
+          case OperationCode.No_:
+            memReader.SkipBytes(1);
+            break;
+          case OperationCode.Ldarg:
+          case OperationCode.Ldarga:
+          case OperationCode.Starg:
+          case OperationCode.Ldloc:
+          case OperationCode.Ldloca:
+          case OperationCode.Stloc:
+            memReader.SkipBytes(2);
+            break;
+          case OperationCode.Ldc_I4:
+          case OperationCode.Jmp:
+          case OperationCode.Call:
+          case OperationCode.Calli:
+          case OperationCode.Br:
+          case OperationCode.Brfalse:
+          case OperationCode.Brtrue:
+          case OperationCode.Beq:
+          case OperationCode.Bge:
+          case OperationCode.Bgt:
+          case OperationCode.Ble:
+          case OperationCode.Blt:
+          case OperationCode.Bne_Un:
+          case OperationCode.Bge_Un:
+          case OperationCode.Bgt_Un:
+          case OperationCode.Ble_Un:
+          case OperationCode.Blt_Un:
+          case OperationCode.Callvirt:
+          case OperationCode.Cpobj:
+          case OperationCode.Ldobj:
+          case OperationCode.Ldstr:
+          case OperationCode.Newobj:
+          case OperationCode.Castclass:
+          case OperationCode.Isinst:
+          case OperationCode.Unbox:
+          case OperationCode.Ldfld:
+          case OperationCode.Ldflda:
+          case OperationCode.Stfld:
+          case OperationCode.Ldsfld:
+          case OperationCode.Ldsflda:
+          case OperationCode.Stsfld:
+          case OperationCode.Stobj:
+          case OperationCode.Box:
+          case OperationCode.Newarr:
+          case OperationCode.Ldelema:
+          case OperationCode.Ldelem:
+          case OperationCode.Stelem:
+          case OperationCode.Unbox_Any:
+          case OperationCode.Refanyval:
+          case OperationCode.Mkrefany:
+          case OperationCode.Ldtoken:
+          case OperationCode.Leave:
+          case OperationCode.Ldftn:
+          case OperationCode.Ldvirtftn:
+          case OperationCode.Initobj:
+          case OperationCode.Constrained_:
+          case OperationCode.Sizeof:
+          case OperationCode.Ldc_R4:
+            memReader.SkipBytes(4);
+            break;
+          case OperationCode.Ldc_I8:
+          case OperationCode.Ldc_R8:
+            memReader.SkipBytes(8);
+            break;
+          case OperationCode.Switch:
+            int numTargets = (int)memReader.ReadUInt32();
+            memReader.SkipBytes(4*numTargets);
+            break;
+          default:
+            break;
+        }
+      }
+      memReader.SeekOffset(0);
+      return count;
+    }
     bool PopulateExceptionInformation() {
-      List<CilExceptionInformation> excepList = new List<CilExceptionInformation>();
       SEHTableEntry[]/*?*/ sehTable = this.MethodIL.SEHTable;
       if (sehTable != null) {
-        for (int i = 0; i < sehTable.Length; ++i) {
+        int n = sehTable.Length;
+        var exceptions = new IOperationExceptionInformation[n];
+        for (int i = 0; i < n; i++) {
           SEHTableEntry sehTableEntry = sehTable[i];
           int sehFlag = (int)sehTableEntry.SEHFlags;
           int handlerKindIndex = sehFlag >= ILReader.HandlerKindMap.Length ? ILReader.HandlerKindMap.Length - 1 : sehFlag;
@@ -982,20 +1085,10 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             exceptionType = this.PEFileToObjectModel.SystemObject;
             filterDecisionStart = sehTableEntry.ClassTokenOrFilterOffset;
           }
-          excepList.Add(
-            new CilExceptionInformation(
-              handlerKind,
-              exceptionType,
-              tryStart,
-              tryEnd,
-              filterDecisionStart,
-              handlerStart,
-              handlerEnd
-            )
-          );
+          exceptions[i] = new CilExceptionInformation(handlerKind, exceptionType, tryStart, tryEnd, filterDecisionStart, handlerStart, handlerEnd);
         }
+        this.MethodBody.SetExceptionInformation(exceptions);
       }
-      this.MethodBody.SetExceptionInformation(new EnumerableArrayWrapper<CilExceptionInformation, IOperationExceptionInformation>(excepList.ToArray(), Dummy.OperationExceptionInformation));
       return true;
     }
 
@@ -1065,7 +1158,7 @@ namespace Microsoft.Cci.MetadataReader {
   /// <summary>
   /// Represents a location in IL operation stream.
   /// </summary>
-  public sealed class MethodBodyLocation : IILLocation {
+  internal sealed class MethodBodyLocation : IILLocation {
 
     /// <summary>
     /// Allocates an object that represents a location in IL operation stream.

@@ -160,6 +160,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.ResolvedType; }
     }
 
+    IPlatformType ITypeReference.PlatformType {
+      get { return this.PlatformType; }
+    }
+
     public PrimitiveTypeCode TypeCode {
       get { return TypeCache.PrimitiveTypeCodeConv[(int)this.signatureTypeCode]; }
     }
@@ -248,19 +252,16 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class ModifiedTypeReference : ITypeReference, IModifiedTypeReference {
-    internal readonly PEFileToObjectModel PEFileToObjectModel;
-    internal readonly ITypeReference UnderlyingModuleTypeReference;
-    internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ModuleCustomModifiers;
 
-    internal ModifiedTypeReference(
-      PEFileToObjectModel peFileToObjectModel,
-      ITypeReference underlyingModuleTypeReference,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers
-    ) {
-      this.PEFileToObjectModel = peFileToObjectModel;
-      this.UnderlyingModuleTypeReference = underlyingModuleTypeReference;
-      this.ModuleCustomModifiers = moduleCustomModifiers;
+    internal ModifiedTypeReference(PEFileToObjectModel peFileToObjectModel, ITypeReference unmodifiedType, IEnumerable<ICustomModifier>/*?*/ customModifiers) {
+      this.peFileToObjectModel = peFileToObjectModel;
+      this.unmodifiedType = unmodifiedType;
+      this.customModifiers = customModifiers;
     }
+
+    readonly PEFileToObjectModel peFileToObjectModel;
+    readonly ITypeReference unmodifiedType;
+    readonly IEnumerable<ICustomModifier>/*?*/ customModifiers;
 
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -273,16 +274,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region ITypeReference Members
 
     public IPlatformType PlatformType {
-      get { return this.PEFileToObjectModel.PlatformType; }
+      get { return this.peFileToObjectModel.PlatformType; }
     }
 
     public PrimitiveTypeCode TypeCode {
-      get { return this.UnderlyingModuleTypeReference.TypeCode; }
+      get { return this.unmodifiedType.TypeCode; }
     }
-
-    #endregion
-
-    #region ITypeReference Members
 
     public bool IsAlias {
       get { return false; }
@@ -293,21 +290,21 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsEnum {
-      get { return this.UnderlyingModuleTypeReference.IsEnum; }
+      get { return this.unmodifiedType.IsEnum; }
     }
 
     public bool IsValueType {
-      get { return this.UnderlyingModuleTypeReference.IsValueType; }
+      get { return this.unmodifiedType.IsValueType; }
     }
 
     public ITypeDefinition ResolvedType {
-      get { return this.UnderlyingModuleTypeReference.ResolvedType; }
+      get { return this.unmodifiedType.ResolvedType; }
     }
 
     public uint InternedKey {
       get {
         if (this.internedKey == 0) {
-          this.internedKey = this.PEFileToObjectModel.InternFactory.GetTypeReferenceInternedKey(this);
+          this.internedKey = this.peFileToObjectModel.InternFactory.GetTypeReferenceInternedKey(this);
         }
         return this.internedKey;
       }
@@ -331,11 +328,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region IModifiedTypeReference Members
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return this.ModuleCustomModifiers; }
+      get { return this.customModifiers??Enumerable<ICustomModifier>.Empty; }
     }
 
     public ITypeReference UnmodifiedType {
-      get { return this.UnderlyingModuleTypeReference; }
+      get { return this.unmodifiedType; }
     }
 
     #endregion
@@ -928,6 +925,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
     uint internedKey;
 
+    IPlatformType ITypeReference.PlatformType {
+      get { return this.PlatformType; }
+    }
+
     public abstract PrimitiveTypeCode TypeCode {
       get;
     }
@@ -1347,6 +1348,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
+    IPlatformType ITypeReference.PlatformType {
+      get { return this.PlatformType; }
+    }
+
     #endregion
   }
 
@@ -1456,9 +1461,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.ContainerState != ContainerState.Loaded) {
           this.LoadMembers();
         }
-        return this.PEFileToObjectModel.GetNestedTypesOfType(this);
+        return this.nestedTypes;
       }
     }
+    internal IEnumerable<INestedTypeDefinition> nestedTypes = Enumerable<INestedTypeDefinition>.Empty;
 
     public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
       get {
@@ -1738,6 +1744,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
     uint internedKey;
+
+    IPlatformType ITypeReference.PlatformType {
+      get { return this.PlatformType; }
+    }
 
     #endregion
 
@@ -3140,6 +3150,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
     uint internedKey;
 
+    IPlatformType ITypeReference.PlatformType {
+      get { return this.PlatformType; }
+    }
+
     #endregion
 
   }
@@ -3689,24 +3703,20 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal abstract class Parameter : MetadataDefinitionObject, IParameterDefinition {
-    protected readonly ushort ParameterIndex;
-    internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ModuleCustomModifiers;
-    internal readonly ITypeReference/*?*/ TypeReference;
-    readonly ISignature ContainingSignatureDefinition;
 
-    internal Parameter(
-      PEFileToObjectModel peFileToObjectModel,
-      int parameterIndex,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers,
-      ITypeReference/*?*/ typeReference,
-      ISignature containingSignatureDefinition
-    )
+    internal Parameter(PEFileToObjectModel peFileToObjectModel, int index, IEnumerable<ICustomModifier>/*?*/ customModifiers,
+      ITypeReference/*?*/ type, ISignature containingSignature)
       : base(peFileToObjectModel) {
-      this.ParameterIndex = (ushort)parameterIndex;
-      this.ModuleCustomModifiers = moduleCustomModifiers;
-      this.TypeReference = typeReference;
-      this.ContainingSignatureDefinition = containingSignatureDefinition;
+      this.index = (ushort)index;
+      this.customModifiers = customModifiers;
+      this.type = type;
+      this.containingSignature = containingSignature;
     }
+
+    readonly ushort index;
+    readonly IEnumerable<ICustomModifier>/*?*/ customModifiers;
+    readonly ITypeReference/*?*/ type;
+    readonly ISignature containingSignature;
 
     public override string ToString() {
       return this.Name.Value;
@@ -3715,15 +3725,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region IParameterDefinition Members
 
     public ISignature ContainingSignature {
-      get {
-        return this.ContainingSignatureDefinition;
-      }
+      get { return this.containingSignature; }
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get {
-        return this.ModuleCustomModifiers;
-      }
+      get { return this.customModifiers??Enumerable<ICustomModifier>.Empty; }
     }
 
     public abstract IMetadataConstant DefaultValue { get; }
@@ -3745,7 +3751,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     [Pure]
     public abstract bool IsMarshalledExplicitly { get; }
 
-    public bool IsModified { get { return this.ModuleCustomModifiers.RawArray.Length > 0; } }
+    public bool IsModified { get { return this.customModifiers != null; } }
 
     public abstract bool IsOptional { get; }
 
@@ -3758,11 +3764,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public abstract ITypeReference ParamArrayElementType { get; }
 
     public ITypeReference Type {
-      get {
-        if (this.TypeReference == null)
-          return Dummy.TypeReference;
-        return this.TypeReference;
-      }
+      get { return this.type??Dummy.TypeReference; }
     }
 
     #endregion
@@ -3776,7 +3778,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region IParameterListEntry Members
 
     public ushort Index {
-      get { return this.ParameterIndex; }
+      get { return this.index; }
     }
 
     #endregion
@@ -3792,36 +3794,31 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class ParameterInfo : MetadataObject, IParameterTypeInformation {
-    internal readonly ushort ParameterIndex;
-    internal readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> ModuleCustomModifiers;
-    internal readonly ITypeReference/*?*/ TypeReference;
-    readonly ISignature ContainingSignatureDefinition;
-    readonly bool isByReference;
 
-    internal ParameterInfo(
-      PEFileToObjectModel peFileToObjectModel,
-      int parameterIndex,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers,
-      ITypeReference/*?*/ typeReference,
-      ISignature containingSignatureDefinition,
-      bool isByReference
-    )
+    internal ParameterInfo(PEFileToObjectModel peFileToObjectModel, int parameterIndex, IEnumerable<ICustomModifier>/*?*/ moduleCustomModifiers,
+      ITypeReference/*?*/ typeReference, ISignature containingSignatureDefinition, bool isByReference)
       : base(peFileToObjectModel) {
-      this.ParameterIndex = (ushort)parameterIndex;
-      this.ModuleCustomModifiers = moduleCustomModifiers;
-      this.TypeReference = typeReference;
-      this.ContainingSignatureDefinition = containingSignatureDefinition;
+      this.index = (ushort)parameterIndex;
+      this.customModifiers = moduleCustomModifiers;
+      this.type = typeReference;
+      this.containingSignature = containingSignatureDefinition;
       this.isByReference = isByReference;
     }
+
+    readonly ushort index;
+    readonly IEnumerable<ICustomModifier>/*?*/ customModifiers;
+    readonly ITypeReference/*?*/ type;
+    readonly ISignature containingSignature;
+    readonly bool isByReference;
 
     #region IParameterTypeInformation Members
 
     public ISignature ContainingSignature {
-      get { return this.ContainingSignatureDefinition; }
+      get { return this.containingSignature; }
     }
 
     public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return this.ModuleCustomModifiers; }
+      get { return this.customModifiers??Enumerable<ICustomModifier>.Empty; }
     }
 
     public bool IsByReference {
@@ -3829,11 +3826,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool IsModified {
-      get { return this.ModuleCustomModifiers.RawArray.Length > 0; }
+      get { return this.customModifiers != null; }
     }
 
     public ITypeReference Type {
-      get { return this.TypeReference; }
+      get { return this.type; }
     }
 
     #endregion
@@ -3841,7 +3838,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region IParameterListEntry Members
 
     public ushort Index {
-      get { return this.ParameterIndex; }
+      get { return this.index; }
     }
 
     #endregion
@@ -3863,18 +3860,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ParamFlags ParameterFlags;
     IName ParameterName;
     uint ParamRowId;
-    internal ParameterWithMetadata(
-      PEFileToObjectModel peFileToObjectModel,
-      int parameterIndex,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers,
-      ITypeReference/*?*/ typeReference,
-      ISignature containingSignatureDefinition,
-      bool isByReference,
-      bool possibleParamArray,  //  Means that this is last parameter && type is array...
-      uint paramRowId,
-      IName parameterName,
-      ParamFlags parameterFlags
-    )
+
+    internal ParameterWithMetadata(PEFileToObjectModel peFileToObjectModel, int parameterIndex, IEnumerable<ICustomModifier>/*?*/ moduleCustomModifiers,
+      ITypeReference/*?*/ typeReference, ISignature containingSignatureDefinition, bool isByReference, bool possibleParamArray,  //  Means that this is last parameter && type is array...
+      uint paramRowId, IName parameterName, ParamFlags parameterFlags)
       : base(peFileToObjectModel, parameterIndex, moduleCustomModifiers, typeReference, containingSignatureDefinition) {
       this.ParameterName = parameterName;
       if (isByReference) {
@@ -3936,7 +3925,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override ITypeReference ParamArrayElementType {
       get {
-        IArrayTypeReference/*?*/ arrayTypeReference = this.TypeReference as IArrayTypeReference;
+        IArrayTypeReference/*?*/ arrayTypeReference = this.Type as IArrayTypeReference;
         if (arrayTypeReference == null || !arrayTypeReference.IsVector)
           return Dummy.TypeReference;
         return arrayTypeReference.ElementType;
@@ -3949,18 +3938,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class ParameterWithoutMetadata : Parameter {
-    readonly bool isByReference;
-    internal ParameterWithoutMetadata(
-      PEFileToObjectModel peFileToObjectModel,
-      int parameterIndex,
-      EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers,
-      ITypeReference/*?*/ typeReference,
-      ISignature containingSignatureDefinition,
-      bool isByReference
-    )
-      : base(peFileToObjectModel, parameterIndex, moduleCustomModifiers, typeReference, containingSignatureDefinition) {
+
+    internal ParameterWithoutMetadata(PEFileToObjectModel peFileToObjectModel, int index, IEnumerable<ICustomModifier>/*?*/ moduleCustomModifiers,
+      ITypeReference/*?*/ typeReference, ISignature containingSignature, bool isByReference)
+      : base(peFileToObjectModel, index, moduleCustomModifiers, typeReference, containingSignature) {
       this.isByReference = isByReference;
     }
+
+    readonly bool isByReference;
 
     internal override uint TokenValue {
       get { return 0xFFFFFFFF; }
@@ -3982,7 +3967,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return false; }
     }
 
-    [Pure]
     public override bool IsMarshalledExplicitly {
       get { return false; }
     }
@@ -4196,7 +4180,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal sealed class TypeCache {
     internal readonly static EnumerableArrayWrapper<Module, IModule> EmptyModuleArray = new EnumerableArrayWrapper<Module, IModule>(new Module[0], Dummy.Module);
-    internal static readonly EnumerableArrayWrapper<CustomModifier, ICustomModifier> EmptyCustomModifierArray = new EnumerableArrayWrapper<CustomModifier, ICustomModifier>(new CustomModifier[0], Dummy.CustomModifier);
     internal static readonly EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> EmptyParameterArray = new EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>(new IParameterDefinition[0], Dummy.ParameterDefinition);
     internal static readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> EmptyParameterInfoArray = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(new IParameterTypeInformation[0], Dummy.ParameterTypeInformation);
     internal static readonly EnumerableArrayWrapper<ITypeReference/*?*/, ITypeReference> EmptyTypeArray = new EnumerableArrayWrapper<ITypeReference/*?*/, ITypeReference>(new ITypeReference/*?*/[0], Dummy.TypeReference);

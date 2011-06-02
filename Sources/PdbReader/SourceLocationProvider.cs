@@ -66,7 +66,7 @@ namespace Microsoft.Cci {
       foreach (ILocation location in locations) {
         IPrimarySourceLocation/*?*/ psloc = location as IPrimarySourceLocation;
         if (psloc != null) yield return psloc;
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
         if (mbLocation != null) {
           psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, true);
           if (psloc != null) yield return psloc;
@@ -82,7 +82,7 @@ namespace Microsoft.Cci {
       foreach (ILocation location in locations) {
         IPrimarySourceLocation/*?*/ psloc = location as IPrimarySourceLocation;
         if (psloc != null) yield return psloc;
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
         if (mbLocation != null) {
           psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, false);
           if (psloc != null) yield return psloc;
@@ -100,7 +100,7 @@ namespace Microsoft.Cci {
       if (psloc != null)
         yield return psloc;
       else {
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
         if (mbLocation != null) {
           psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, true);
           if (psloc != null) yield return psloc;
@@ -117,7 +117,7 @@ namespace Microsoft.Cci {
       if (psloc != null)
         yield return psloc;
       else {
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
         if (mbLocation != null) {
           psloc = this.MapMethodBodyLocationToSourceLocation(mbLocation, false);
           if (psloc != null) yield return psloc;
@@ -134,7 +134,7 @@ namespace Microsoft.Cci {
       if (pdbFunction != null) {
         uint index = 0;
         foreach (ILocation location in localDefinition.Locations) {
-          MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+          IILLocation/*?*/ mbLocation = location as IILLocation;
           if (mbLocation != null) {
             index = mbLocation.Offset;
             break;
@@ -159,7 +159,7 @@ namespace Microsoft.Cci {
       if (pdbFunction != null) {
         uint index = 0;
         foreach (ILocation location in localDefinition.Locations) {
-          MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+          IILLocation/*?*/ mbLocation = location as IILLocation;
           if (mbLocation != null) {
             index = mbLocation.Offset;
             break;
@@ -226,8 +226,11 @@ namespace Microsoft.Cci {
 
     private static uint GetTokenFor(IMethodBody methodBody) {
       foreach (ILocation location in methodBody.MethodDefinition.Locations) {
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
-        if (mbLocation != null) return mbLocation.Document.MethodToken;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
+        if (mbLocation != null) {
+          var doc = mbLocation.Document as MethodBodyDocument;
+          if (doc != null) return doc.MethodToken;
+        }
       }
       return 0;
     }
@@ -235,10 +238,13 @@ namespace Microsoft.Cci {
     private PdbFunction GetPdbFunctionFor(ILocalDefinition localDefinition) {
       PdbFunction/*?*/ result = null;
       foreach (ILocation location in localDefinition.Locations) {
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
         if (mbLocation != null) {
-          this.pdbFunctionMap.TryGetValue(mbLocation.Document.MethodToken, out result);
-          break;
+          var doc = mbLocation.Document as MethodBodyDocument;
+          if (doc != null) {
+            this.pdbFunctionMap.TryGetValue(doc.MethodToken, out result);
+            break;
+          }
         }
       }
       return result;
@@ -346,16 +352,17 @@ namespace Microsoft.Cci {
     /// <param name="location1">A document location. Typically one obtained from the PdbReader.</param>
     /// <param name="location2">A document location. Typically one obtained from the PdbReader.</param>
     public ILocation LocationWithSmallerOffset(ILocation location1, ILocation location2) {
-      var smbl = location2 as MethodBodyLocation;
+      var smbl = location2 as IILLocation;
       if (smbl == null) return location1;
-      var tmbl = location1 as MethodBodyLocation;
+      var tmbl = location1 as IILLocation;
       if (tmbl == null || tmbl.Offset > smbl.Offset) return location2;
       return location1;
     }
 
-    private IPrimarySourceLocation/*?*/ MapMethodBodyLocationToSourceLocation(MethodBodyLocation mbLocation, bool exact) {
+    private IPrimarySourceLocation/*?*/ MapMethodBodyLocationToSourceLocation(IILLocation mbLocation, bool exact) {
       PdbFunction/*?*/ pdbFunction;
-      if (!this.pdbFunctionMap.TryGetValue(mbLocation.Document.MethodToken, out pdbFunction)) return null;
+      var doc = mbLocation.Document as MethodBodyDocument;
+      if (doc == null || !this.pdbFunctionMap.TryGetValue(doc.MethodToken, out pdbFunction)) return null;
       if (pdbFunction.lines == null) return null;
       foreach (PdbLines pdbLines in pdbFunction.lines) {
         PdbSource pdbSourceFile = pdbLines.file;
@@ -711,14 +718,17 @@ namespace Microsoft.Cci {
 
     private ITypeReference GetTypeForConstant() {
       foreach (ILocation location in this.methodDefinition.Locations) {
-        MethodBodyLocation/*?*/ mbLocation = location as MethodBodyLocation;
+        IILLocation/*?*/ mbLocation = location as IILLocation;
         if (mbLocation != null) {
-          ITypeReference result = mbLocation.Document.GetTypeFromToken(this.pdbConstant.token);
-          if (result == Dummy.TypeReference) {
-            //TODO: error
-            continue;
+          var doc = mbLocation.Document as MethodBodyDocument;
+          if (doc != null) {
+            ITypeReference result = doc.GetTypeFromToken(this.pdbConstant.token);
+            if (result == Dummy.TypeReference) {
+              //TODO: error
+              continue;
+            }
+            return result;
           }
-          return result;
         }
       }
       IPlatformType platformType = this.methodDefinition.Type.PlatformType;

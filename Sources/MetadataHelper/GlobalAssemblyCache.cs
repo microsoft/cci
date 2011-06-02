@@ -67,7 +67,7 @@ namespace Microsoft.Cci {
           //^ assume currentName != null;
           AssemblyName assemblyName = new AssemblyName(currentName);
           string/*?*/ scheme = codeBaseUri.Scheme;
-          if (scheme != null && assemblyName.CodeBase.StartsWith(scheme)) {
+          if (scheme != null && assemblyName.CodeBase.StartsWith(scheme, StringComparison.OrdinalIgnoreCase)) {
             try {
               Uri foundUri = new Uri(assemblyName.CodeBase);
               if (codeBaseUri.Equals(foundUri)) return true;
@@ -118,7 +118,7 @@ namespace Microsoft.Cci {
           AssemblyName cn = new AssemblyName(currentName);
           if (assemblyIdentity.Equals(new AssemblyIdentity(metadataHost.NameTable.GetNameFor(cn.Name), cn.Culture, cn.Version, cn.PublicKeyToken, ""))) {
             string codeBase = cn.CodeBase;
-            if (codeBase != null && codeBase.StartsWith("file://")) {
+            if (codeBase != null && codeBase.StartsWith("file://", StringComparison.OrdinalIgnoreCase)) {
               Uri u = new Uri(codeBase, UriKind.Absolute);
               return u.LocalPath;
             }

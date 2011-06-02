@@ -309,18 +309,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class SecurityCustomAttribute : ICustomAttribute {
     internal readonly SecurityAttribute ContainingSecurityAttribute;
     internal readonly IMethodReference ConstructorReference;
-    internal readonly EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> Arguments;
     internal readonly EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> NamedArguments;
 
     internal SecurityCustomAttribute(
       SecurityAttribute containingSecurityAttribute,
       IMethodReference constructorReference,
-      EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> arguments,
       EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments
     ) {
       this.ContainingSecurityAttribute = containingSecurityAttribute;
       this.ConstructorReference = constructorReference;
-      this.Arguments = arguments;
       this.NamedArguments = namedArguments;
     }
 
@@ -328,7 +325,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region ICustomAttribute Members
 
     IEnumerable<IMetadataExpression> ICustomAttribute.Arguments {
-      get { return this.Arguments; }
+      get { return Enumerable<IMetadataExpression>.Empty; }
     }
 
     public IMethodReference Constructor {
@@ -353,7 +350,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class SecurityAttribute : MetadataObject, ISecurityAttribute {
     internal readonly SecurityAction Action;
     internal readonly uint DeclSecurityRowId;
-    EnumerableArrayWrapper<SecurityCustomAttribute, ICustomAttribute>/*?*/ SecurityCustomAttributes;
 
     internal SecurityAttribute(
       PEFileToObjectModel peFileToObjectModel,
@@ -377,19 +373,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.Permission | this.DeclSecurityRowId; }
     }
 
+    protected override IEnumerable<ICustomAttribute> GetAttributes() {
+      return this.PEFileToObjectModel.GetSecurityAttributeData(this);
+    }
+
     #region ISecurityAttribute Members
 
     SecurityAction ISecurityAttribute.Action {
       get { return this.Action; }
-    }
-
-    IEnumerable<ICustomAttribute> ISecurityAttribute.Attributes {
-      get {
-        if (this.SecurityCustomAttributes == null) {
-          this.SecurityCustomAttributes = this.PEFileToObjectModel.GetSecurityAttributeData(this);
-        }
-        return this.SecurityCustomAttributes;
-      }
     }
 
     #endregion
@@ -1396,7 +1387,7 @@ namespace Microsoft.Cci.MetadataReader {
 
   internal sealed class CustomAttributeDecoder : AttributeDecoder {
     internal readonly ICustomAttribute CustomAttribute;
-    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId, 
+    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId,
       IMethodReference attributeConstructor)
       : base(peFileToObjectModel, signatureMemoryReader) {
       this.CustomAttribute = Dummy.CustomAttribute;
@@ -1460,7 +1451,7 @@ namespace Microsoft.Cci.MetadataReader {
   }
 
   internal sealed class SecurityAttributeDecoder20 : AttributeDecoder {
-    internal readonly EnumerableArrayWrapper<SecurityCustomAttribute, ICustomAttribute> SecurityAttributes;
+    internal readonly IEnumerable<ICustomAttribute> SecurityAttributes;
     SecurityCustomAttribute/*?*/ ReadSecurityAttribute(SecurityAttribute securityAttribute) {
       string/*?*/ typeNameStr = this.GetSerializedString();
       if (typeNameStr == null)
@@ -1521,30 +1512,25 @@ namespace Microsoft.Cci.MetadataReader {
       EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments = TypeCache.EmptyNamedArgumentList;
       if (namedArgumentArray != null)
         namedArguments = new EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument>(namedArgumentArray, Dummy.NamedArgument);
-      return new SecurityCustomAttribute(securityAttribute, ctorReference, TypeCache.EmptyExpressionList, namedArguments);
+      return new SecurityCustomAttribute(securityAttribute, ctorReference, namedArguments);
     }
-    internal SecurityAttributeDecoder20(
-      PEFileToObjectModel peFileToObjectModel,
-      MemoryReader signatureMemoryReader,
-      SecurityAttribute securityAttribute
-    )
+
+    internal SecurityAttributeDecoder20(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, SecurityAttribute securityAttribute)
       : base(peFileToObjectModel, signatureMemoryReader) {
-      this.SecurityAttributes = TypeCache.EmptySecurityAttributes;
+      this.SecurityAttributes = Enumerable<ICustomAttribute>.Empty;
       byte prolog = this.SignatureMemoryReader.ReadByte();
-      if (prolog != SerializationType.SecurityAttribute20Start) {
-        return;
-      }
+      if (prolog != SerializationType.SecurityAttribute20Start) return;
       int numberOfAttributes = this.SignatureMemoryReader.ReadCompressedUInt32();
-      SecurityCustomAttribute[] securityCustomAttributes = new SecurityCustomAttribute[numberOfAttributes];
+      var securityCustomAttributes = new ICustomAttribute[numberOfAttributes];
       for (int i = 0; i < numberOfAttributes; ++i) {
-        SecurityCustomAttribute/*?*/ secAttr = this.ReadSecurityAttribute(securityAttribute);
+        var secAttr = this.ReadSecurityAttribute(securityAttribute);
         if (secAttr == null) {
           //  MDError...
           return;
         }
         securityCustomAttributes[i] = secAttr;
       }
-      this.SecurityAttributes = new EnumerableArrayWrapper<SecurityCustomAttribute, ICustomAttribute>(securityCustomAttributes, Dummy.CustomAttribute);
+      this.SecurityAttributes = IteratorHelper.GetReadonly(securityCustomAttributes);
     }
   }
 }

@@ -1095,6 +1095,7 @@ namespace Microsoft.Cci {
       sb.Append(')');
       if ((formattingOptions & NameFormattingOptions.MethodConstraints) != 0) {
         foreach (var parameter in method.ResolvedMethod.GenericParameters) {
+          if (!parameter.MustBeReferenceType && !parameter.MustBeValueType && !parameter.MustHaveDefaultConstructor && IteratorHelper.EnumerableIsEmpty(parameter.Constraints)) continue;
           sb.Append(" where ");
           sb.Append(parameter.Name.Value);
           sb.Append(" : ");
@@ -1121,7 +1122,8 @@ namespace Microsoft.Cci {
       Contract.Requires(sb != null);
 
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
+        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType,
+          formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind|NameFormattingOptions.TypeConstraints)));
         sb.Append('.');
       }
       // Special name translation
@@ -1133,11 +1135,11 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) methodName = this.typeNameFormatter.EscapeKeyword(methodName);
       if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) methodName = this.MapToDocumentationIdName(methodName);
       if (method.ResolvedMethod.IsSpecialName && (formattingOptions & NameFormattingOptions.PreserveSpecialNames) == 0) {
-        if (methodName.StartsWith("get_")) {
+        if (methodName.StartsWith("get_", StringComparison.Ordinal)) {
           //^ assume methodName.Length >= 4;
           sb.Append(methodName.Substring(4));
           sb.Append(".get");
-        } else if (methodName.StartsWith("set_")) {
+        } else if (methodName.StartsWith("set_", StringComparison.Ordinal)) {
           //^ assume methodName.Length >= 4;
           sb.Append(methodName.Substring(4));
           sb.Append(".set");

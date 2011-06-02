@@ -220,7 +220,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A map from reference to rewritten reference. Can be used to avoid rewriting the same reference more than once.
     /// </summary>
-    protected Dictionary<IReference, IReference> referenceRewrites = new Dictionary<IReference, IReference>();
+    protected Hashtable<IReference, object> referenceRewrites = new Hashtable<IReference, object>();
 
     /// <summary>
     /// Rewrites the alias for type
@@ -244,7 +244,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IArrayTypeReference Rewrite(IArrayTypeReference arrayTypeReference) {
       var mutableArrayTypeReference = arrayTypeReference as ArrayTypeReference;
       if (mutableArrayTypeReference == null || mutableArrayTypeReference.IsFrozen) return arrayTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableArrayTypeReference, out result)) return (IArrayTypeReference)result;
       this.referenceRewrites[mutableArrayTypeReference] = mutableArrayTypeReference;
       this.RewriteChildren(mutableArrayTypeReference);
@@ -267,7 +267,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
       var mutableAssemblyReference = assemblyReference as AssemblyReference;
       if (mutableAssemblyReference == null || mutableAssemblyReference.IsFrozen) return assemblyReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableAssemblyReference, out result)) return (IAssemblyReference)result;
       this.referenceRewrites[mutableAssemblyReference] = mutableAssemblyReference;
       this.RewriteChildren(mutableAssemblyReference);
@@ -346,7 +346,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(!(fieldReference is ISpecializedFieldReference));
       var mutableFieldReference = fieldReference as FieldReference;
       if (mutableFieldReference == null || mutableFieldReference.IsFrozen) return fieldReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableFieldReference, out result)) return (IFieldReference)result;
       this.referenceRewrites[mutableFieldReference] = mutableFieldReference;
       this.RewriteChildren(mutableFieldReference);
@@ -369,7 +369,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IFunctionPointerTypeReference Rewrite(IFunctionPointerTypeReference functionPointerTypeReference) {
       var mutableFunctionPointerTypeReference = functionPointerTypeReference as FunctionPointerTypeReference;
       if (mutableFunctionPointerTypeReference == null) return functionPointerTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableFunctionPointerTypeReference, out result)) return (IFunctionPointerTypeReference)result;
       this.referenceRewrites[mutableFunctionPointerTypeReference] = mutableFunctionPointerTypeReference;
       this.RewriteChildren(mutableFunctionPointerTypeReference);
@@ -381,8 +381,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IGenericMethodInstanceReference Rewrite(IGenericMethodInstanceReference genericMethodInstanceReference) {
       var mutableGenericMethodInstanceReference = genericMethodInstanceReference as GenericMethodInstanceReference;
-      if (mutableGenericMethodInstanceReference == null) return genericMethodInstanceReference;
-      IReference result;
+      if (mutableGenericMethodInstanceReference == null || mutableGenericMethodInstanceReference.IsFrozen) return genericMethodInstanceReference;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableGenericMethodInstanceReference, out result)) return (IGenericMethodInstanceReference)result;
       this.referenceRewrites[mutableGenericMethodInstanceReference] = mutableGenericMethodInstanceReference;
       this.RewriteChildren(mutableGenericMethodInstanceReference);
@@ -405,7 +405,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
       var mutableGenericMethodInstanceReference = genericMethodParameterReference as GenericMethodParameterReference;
       if (mutableGenericMethodInstanceReference == null || mutableGenericMethodInstanceReference.IsFrozen) return genericMethodParameterReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableGenericMethodInstanceReference, out result)) return (IGenericMethodParameterReference)result;
       this.referenceRewrites[mutableGenericMethodInstanceReference] = mutableGenericMethodInstanceReference;
       this.RewriteChildren(mutableGenericMethodInstanceReference);
@@ -418,7 +418,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual ITypeReference Rewrite(IGenericTypeInstanceReference genericTypeInstanceReference) {
       var mutableGenericTypeInstanceReference = genericTypeInstanceReference as GenericTypeInstanceReference;
       if (mutableGenericTypeInstanceReference == null || mutableGenericTypeInstanceReference.IsFrozen) return genericTypeInstanceReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableGenericTypeInstanceReference, out result)) return (IGenericTypeInstanceReference)result;
       this.referenceRewrites[mutableGenericTypeInstanceReference] = mutableGenericTypeInstanceReference;
       this.RewriteChildren(mutableGenericTypeInstanceReference);
@@ -441,7 +441,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual ITypeReference Rewrite(IGenericTypeParameterReference genericTypeParameterReference) {
       var mutableGenericTypeParameterReference = genericTypeParameterReference as GenericTypeParameterReference;
       if (mutableGenericTypeParameterReference == null || mutableGenericTypeParameterReference.IsFrozen) return genericTypeParameterReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableGenericTypeParameterReference, out result)) return (IGenericTypeParameterReference)result;
       this.referenceRewrites[mutableGenericTypeParameterReference] = mutableGenericTypeParameterReference;
       this.RewriteChildren(mutableGenericTypeParameterReference);
@@ -484,7 +484,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IManagedPointerTypeReference Rewrite(IManagedPointerTypeReference managedPointerTypeReference) {
       var mutableManagedPointerTypeReference = managedPointerTypeReference as ManagedPointerTypeReference;
       if (mutableManagedPointerTypeReference == null || mutableManagedPointerTypeReference.IsFrozen) return managedPointerTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableManagedPointerTypeReference, out result)) return (IManagedPointerTypeReference)result;
       this.referenceRewrites[mutableManagedPointerTypeReference] = mutableManagedPointerTypeReference;
       this.RewriteChildren(mutableManagedPointerTypeReference);
@@ -595,7 +595,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(!(methodReference is ISpecializedMethodReference));
       var mutableMethodReference = methodReference as MethodReference;
       if (mutableMethodReference == null || mutableMethodReference.IsFrozen) return methodReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableMethodReference, out result)) return (IMethodReference)result;
       this.referenceRewrites[mutableMethodReference] = mutableMethodReference;
       this.RewriteChildren(mutableMethodReference);
@@ -608,7 +608,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IModifiedTypeReference Rewrite(IModifiedTypeReference modifiedTypeReference) {
       var mutableModifiedTypeReference = modifiedTypeReference as ModifiedTypeReference;
       if (mutableModifiedTypeReference == null || mutableModifiedTypeReference.IsFrozen) return modifiedTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableModifiedTypeReference, out result)) return (IModifiedTypeReference)result;
       this.referenceRewrites[mutableModifiedTypeReference] = mutableModifiedTypeReference;
       this.RewriteChildren(mutableModifiedTypeReference);
@@ -633,7 +633,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IModuleReference Rewrite(IModuleReference moduleReference) {
       var mutableModuleReference = moduleReference as ModuleReference;
       if (mutableModuleReference == null || mutableModuleReference.IsFrozen) return moduleReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableModuleReference, out result)) return (IModuleReference)result;
       this.referenceRewrites[mutableModuleReference] = mutableModuleReference;
       this.RewriteChildren(mutableModuleReference);
@@ -698,7 +698,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual INamespaceTypeReference Rewrite(INamespaceTypeReference namespaceTypeReference) {
       var mutableNamespaceTypeReference = namespaceTypeReference as NamespaceTypeReference;
       if (mutableNamespaceTypeReference == null || mutableNamespaceTypeReference.IsFrozen) return namespaceTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableNamespaceTypeReference, out result)) return (INamespaceTypeReference)result;
       this.referenceRewrites[mutableNamespaceTypeReference] = mutableNamespaceTypeReference;
       this.RewriteChildren(mutableNamespaceTypeReference);
@@ -740,7 +740,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(!(nestedTypeReference is ISpecializedNestedTypeReference));
       var mutableNestedTypeReference = nestedTypeReference as NestedTypeReference;
       if (mutableNestedTypeReference == null || mutableNestedTypeReference.IsFrozen) return nestedTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableNestedTypeReference, out result)) return (INestedTypeReference)result;
       this.referenceRewrites[mutableNestedTypeReference] = mutableNestedTypeReference;
       this.RewriteChildren(mutableNestedTypeReference);
@@ -763,7 +763,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual INestedUnitNamespaceReference Rewrite(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
       var mutableReference = nestedUnitNamespaceReference as NestedUnitNamespaceReference;
       if (mutableReference == null || mutableReference.IsFrozen) return nestedUnitNamespaceReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableReference, out result)) return (INestedUnitNamespaceReference)result;
       this.referenceRewrites[mutableReference] = mutableReference;
       this.RewriteChildren(mutableReference);
@@ -826,7 +826,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IPointerTypeReference Rewrite(IPointerTypeReference pointerTypeReference) {
       var mutablePointerTypeReference = pointerTypeReference as PointerTypeReference;
       if (mutablePointerTypeReference == null || mutablePointerTypeReference.IsFrozen) return pointerTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutablePointerTypeReference, out result)) return (IPointerTypeReference)result;
       this.referenceRewrites[mutablePointerTypeReference] = mutablePointerTypeReference;
       this.RewriteChildren(mutablePointerTypeReference);
@@ -870,7 +870,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IRootUnitNamespaceReference Rewrite(IRootUnitNamespaceReference rootUnitNamespaceReference) {
       var mutableRootUnitNamespaceReference = rootUnitNamespaceReference as RootUnitNamespaceReference;
       if (mutableRootUnitNamespaceReference == null || mutableRootUnitNamespaceReference.IsFrozen) return rootUnitNamespaceReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableRootUnitNamespaceReference, out result)) return (IRootUnitNamespaceReference)result;
       this.referenceRewrites[mutableRootUnitNamespaceReference] = mutableRootUnitNamespaceReference;
       this.RewriteChildren(mutableRootUnitNamespaceReference);
@@ -893,7 +893,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual ISpecializedFieldReference Rewrite(ISpecializedFieldReference specializedFieldReference) {
       var mutableSpecializedFieldReference = specializedFieldReference as SpecializedFieldReference;
       if (mutableSpecializedFieldReference == null || mutableSpecializedFieldReference.IsFrozen) return specializedFieldReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableSpecializedFieldReference, out result)) return (ISpecializedFieldReference)result;
       this.referenceRewrites[mutableSpecializedFieldReference] = mutableSpecializedFieldReference;
       this.RewriteChildren(mutableSpecializedFieldReference);
@@ -906,7 +906,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IMethodReference Rewrite(ISpecializedMethodReference specializedMethodReference) {
       var mutableSpecializedMethodReference = specializedMethodReference as SpecializedMethodReference;
       if (mutableSpecializedMethodReference == null || mutableSpecializedMethodReference.IsFrozen) return specializedMethodReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableSpecializedMethodReference, out result)) return (IMethodReference)result;
       this.referenceRewrites[mutableSpecializedMethodReference] = mutableSpecializedMethodReference;
       this.RewriteChildren(mutableSpecializedMethodReference);
@@ -919,7 +919,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual INestedTypeReference Rewrite(ISpecializedNestedTypeReference specializedNestedTypeReference) {
       var mutableSpecializedNestedTypeReference = specializedNestedTypeReference as SpecializedNestedTypeReference;
       if (mutableSpecializedNestedTypeReference == null || mutableSpecializedNestedTypeReference.IsFrozen) return specializedNestedTypeReference;
-      IReference result;
+      object result;
       if (this.referenceRewrites.TryGetValue(mutableSpecializedNestedTypeReference, out result)) return (ISpecializedNestedTypeReference)result;
       this.referenceRewrites[mutableSpecializedNestedTypeReference] = mutableSpecializedNestedTypeReference;
       this.RewriteChildren(mutableSpecializedNestedTypeReference);

@@ -45,13 +45,23 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public virtual IEnumerable<ICustomAttribute> Attributes {
       get {
-        uint customAttributeRowIdStart;
-        uint customAttributeRowIdEnd;
-        this.PEFileToObjectModel.GetCustomAttributeInfo(this, out customAttributeRowIdStart, out customAttributeRowIdEnd);
-        for (uint customAttributeIter = customAttributeRowIdStart; customAttributeIter < customAttributeRowIdEnd; ++customAttributeIter) {
-          yield return this.PEFileToObjectModel.GetCustomAttributeAtRow(this, this.TokenValue, customAttributeIter);
-        }
+        if (this.attributes == null)
+          this.attributes = this.GetAttributes();
+        return this.attributes;
       }
+    }
+    IEnumerable<ICustomAttribute>/*?*/ attributes;
+
+    protected virtual IEnumerable<ICustomAttribute> GetAttributes() {
+      uint customAttributeRowIdStart;
+      uint customAttributeRowIdEnd;
+      this.PEFileToObjectModel.GetCustomAttributeInfo(this, out customAttributeRowIdStart, out customAttributeRowIdEnd);
+      if (customAttributeRowIdStart == customAttributeRowIdEnd) return Enumerable<ICustomAttribute>.Empty;
+      uint count = customAttributeRowIdEnd - customAttributeRowIdStart;
+      ICustomAttribute[] attributes = new ICustomAttribute[count];
+      for (uint i = 0; i < count; i++)
+        attributes[i] = this.PEFileToObjectModel.GetCustomAttributeAtRow(this, this.TokenValue, customAttributeRowIdStart+i);
+      return IteratorHelper.GetReadonly(attributes);
     }
 
     public abstract void Dispatch(IMetadataVisitor visitor);
@@ -1256,6 +1266,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #endregion
+
+    #region INamedEntity
+
+    IName INamedEntity.Name { get { return this.Name; } }
+
+    #endregion
   }
 
   #endregion  Namespace Level Object Model
@@ -1337,7 +1353,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal class FieldDefinition : TypeMember, IFieldDefinition {
     internal readonly uint FieldDefRowId;
     FieldFlags FieldFlags;
-    EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ moduleCustomModifiers;
+    IEnumerable<ICustomModifier>/*?*/ customModifiers;
     ITypeReference/*?*/ fieldType;
     //^ invariant ((this.FieldFlags & FieldFlags.FieldLoaded) == FieldFlags.FieldLoaded) ==> this.FieldType != null;
 
@@ -1372,7 +1388,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldSignature(this);
           this.fieldType = fieldSignature.TypeReference;
-          this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
+          this.customModifiers = fieldSignature.customModifiers;
           this.FieldFlags |= FieldFlags.FieldLoaded;
         }
       }
@@ -1511,19 +1527,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IEnumerable<ICustomModifier> CustomModifiers {
       get {
-        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
-          this.InitFieldSignature();
-        }
-        return this.moduleCustomModifiers;
+        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) this.InitFieldSignature();
+        return this.customModifiers??Enumerable<ICustomModifier>.Empty;
       }
     }
 
     public bool IsModified {
       get {
-        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
-          this.InitFieldSignature();
-        }
-        return this.moduleCustomModifiers.RawArray.Length > 0;
+        if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) this.InitFieldSignature();
+        return this.customModifiers != null;
       }
     }
 
@@ -1766,23 +1778,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal readonly uint MethodDefRowId;
     internal MethodFlags MethodFlags;
     internal MethodImplFlags MethodImplFlags;
-    EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnCustomModifiers;
+    IEnumerable<ICustomModifier>/*?*/ returnValueCustomModifiers;
     ITypeReference/*?*/ returnType;
     byte FirstSignatureByte;
-    EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>/*?*/ moduleParameters;
+    IParameterDefinition[]/*?*/ moduleParameters;
     ReturnParameter/*?*/ returnParameter;
-    //^ invariant this.returnCustomModifiers != null ==> this.returnType != null;
-    //^ invariant this.returnCustomModifiers != null ==> this.moduleParameters != null;
-    //^ invariant this.returnCustomModifiers != null ==> this.returnParameter != null;
 
-    internal MethodDefinition(
-      PEFileToObjectModel peFileToObjectModel,
-      IName memberName,
-      TypeBase parentModuleType,
-      uint methodDefRowId,
-      MethodFlags methodFlags,
-      MethodImplFlags methodImplFlags
-    )
+    internal MethodDefinition(PEFileToObjectModel peFileToObjectModel, IName memberName, TypeBase parentModuleType,
+      uint methodDefRowId, MethodFlags methodFlags, MethodImplFlags methodImplFlags)
       : base(peFileToObjectModel, memberName, parentModuleType) {
       this.MethodDefRowId = methodDefRowId;
       this.MethodFlags = methodFlags;
@@ -1828,20 +1831,21 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       Contract.Ensures(this.returnType != null);
       Contract.Ensures(this.returnParameter != null);
       lock (this) {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           MethodDefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodSignature(this);
           this.returnType = methodSignature.ReturnTypeReference??Dummy.TypeReference;
           this.FirstSignatureByte = methodSignature.FirstByte;
           this.moduleParameters = methodSignature.Parameters;
           this.returnParameter = methodSignature.ReturnParameter;
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
+          this.returnValueCustomModifiers = methodSignature.ReturnCustomModifiers;
         }
       }
     }
 
     public override IEnumerable<ILocation> Locations {
       get {
-        yield return new MethodBodyLocation(new MethodBodyDocument(this), 0);
+        MethodBodyLocation mbLoc = new MethodBodyLocation(new MethodBodyDocument(this), 0);
+        return IteratorHelper.GetSingletonEnumerable<ILocation>(mbLoc);
       }
     }
 
@@ -1853,7 +1857,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool AcceptsExtraArguments {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         return SignatureHeader.IsVarArgCallSignature(this.FirstSignatureByte);
@@ -1884,7 +1888,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool HasExplicitThisParameter {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         return SignatureHeader.IsExplicitThis(this.FirstSignatureByte);
@@ -2013,22 +2017,25 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IEnumerable<IParameterDefinition> Parameters {
       get {
-        return this.RequiredModuleParameters;
+        if (this.parameters == null)
+          this.parameters = IteratorHelper.GetReadonly(this.RequiredModuleParameters)??Enumerable<IParameterDefinition>.Empty;
+        return this.parameters;
       }
     }
+    IEnumerable<IParameterDefinition> parameters;
 
     public ushort ParameterCount {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           return this.PEFileToObjectModel.GetMethodParameterCount(this);
         }
-        return (ushort)this.moduleParameters.RawArray.Length;
+        return (ushort)(this.moduleParameters == null ? 0 : this.moduleParameters.Length);
       }
     }
 
     public IEnumerable<ICustomAttribute> ReturnValueAttributes {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         //^ assert this.returnParameter != null;
@@ -2068,15 +2075,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
     }
 
-    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get {
-        return this.ReturnCustomModifiers;
-      }
-    }
-
     public bool ReturnValueIsByRef {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         return (this.returnParameter.ReturnParamFlags & ParamFlags.ByReference) == ParamFlags.ByReference;
@@ -2085,13 +2086,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool ReturnValueIsModified {
       get {
-        return this.ReturnCustomModifiers.RawArray.Length > 0;
+        if (this.returnType == null) this.InitMethodSignature();
+        return this.returnValueCustomModifiers != null;
       }
     }
 
     public ITypeReference Type {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         return this.returnType;
@@ -2100,7 +2102,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public CallingConvention CallingConvention {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         return (CallingConvention)this.FirstSignatureByte;
@@ -2115,35 +2117,21 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.OwningModuleType; }
     }
 
-    public EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers {
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get {
-        if (this.returnCustomModifiers == null) {
-          this.InitMethodSignature();
-        }
-        //^ assert this.returnCustomModifiers != null;
-        return this.returnCustomModifiers;
+        if (this.returnType == null) this.InitMethodSignature();
+        return this.returnValueCustomModifiers??Enumerable<ICustomModifier>.Empty;
       }
     }
 
-    public EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> RequiredModuleParameters {
+    internal IParameterDefinition[]/*?*/ RequiredModuleParameters {
       get {
-        if (this.returnCustomModifiers == null) {
+        if (this.returnType == null) {
           this.InitMethodSignature();
         }
         //^ assert this.moduleParameters != null;
         return this.moduleParameters;
       }
-    }
-
-    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
-      get {
-        return new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(
-          this.RequiredModuleParameters.RawArray, Dummy.ParameterTypeInformation);
-      }
-    }
-
-    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
-      get { return TypeCache.EmptyParameterInfoArray; }
     }
 
     #endregion
@@ -2229,6 +2217,26 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit((IMethodReference)this);
     }
 
+    #region IMethodDefinition
+
+    IEnumerable<IGenericMethodParameter> IMethodDefinition.GenericParameters {
+      get {
+        return this.GenericParameters;
+      }
+    }
+
+    #endregion
+
+    #region IMethodReference
+
+    ushort IMethodReference.GenericParameterCount {
+      get {
+        return this.GenericParameterCount;
+      }
+    }
+
+    #endregion
+
     #region INamespaceMember Members
 
     public INamespaceDefinition ContainingNamespace {
@@ -2256,6 +2264,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #endregion
+
   }
 
   internal class GenericMethod : MethodDefinition {
@@ -2350,6 +2359,26 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override void DispatchAsReference(IMetadataVisitor visitor) {
       visitor.Visit((IMethodReference)this);
     }
+
+    #region IMethodDefinition
+
+    IEnumerable<IGenericMethodParameter> IMethodDefinition.GenericParameters {
+      get {
+        return this.GenericParameters;
+      }
+    }
+
+    #endregion
+
+    #region IMethodReference
+
+    ushort IMethodReference.GenericParameterCount {
+      get {
+        return this.GenericParameterCount;
+      }
+    }
+
+    #endregion
 
     #region INamespaceMember Members
 
@@ -2562,24 +2591,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal readonly uint PropertyRowId;
     PropertyFlags PropertyFlags;
     byte FirstSignatureByte;
-    EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnModuleCustomModifiers;
+    IEnumerable<ICustomModifier>/*?*/ returnValueCustomModifiers;
     ITypeReference/*?*/ returnType;
-    EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>/*?*/ moduleParameters;
+    IEnumerable<IParameterDefinition>/*?*/ parameters;
     IMethodDefinition/*?*/ getterMethod;
     IMethodDefinition/*?*/ setterMethod;
     TypeMemberVisibility visibility;
-    //^ invariant this.ReturnModuleCustomModifiers != null ==> this.ReturnType != null;
-    //^ invariant this.ReturnModuleCustomModifiers != null ==> this.ModuleParameters != null;
 
-    //^ [NotDelayed]
-    internal PropertyDefinition(
-      PEFileToObjectModel peFileToObjectModel,
-      IName memberName,
-      TypeBase parentModuleType,
-      uint propertyRowId,
-      PropertyFlags propertyFlags
-    )
-      : base(peFileToObjectModel, memberName, parentModuleType) {
+    internal PropertyDefinition(PEFileToObjectModel peFileToObjectModel, IName memberName, TypeBase containingType, uint propertyRowId, PropertyFlags propertyFlags)
+      : base(peFileToObjectModel, memberName, containingType) {
       this.PropertyRowId = propertyRowId;
       this.PropertyFlags = propertyFlags;
       this.visibility = TypeMemberVisibility.Mask;
@@ -2614,45 +2634,35 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       //^ ensures this.ReturnModuleCustomModifiers != null;
     {
       lock (this) {
-        if (this.returnModuleCustomModifiers == null) {
+        if (this.returnValueCustomModifiers == null) {
           PropertySignatureConverter propertySignature = this.PEFileToObjectModel.GetPropertySignature(this);
-          this.FirstSignatureByte = propertySignature.FirstByte;
-          this.returnModuleCustomModifiers = propertySignature.ReturnCustomModifiers;
-          this.returnType = propertySignature.ReturnTypeReference;
-          this.moduleParameters = propertySignature.Parameters;
-          if (propertySignature.ReturnValueIsByReference)
+          this.FirstSignatureByte = propertySignature.firstByte;
+          this.returnValueCustomModifiers = propertySignature.returnCustomModifiers??Enumerable<ICustomModifier>.Empty;
+          this.returnType = propertySignature.type;
+          this.parameters = propertySignature.parameters;
+          if (propertySignature.returnValueIsByReference)
             this.PropertyFlags |= PropertyFlags.ReturnValueIsByReference;
         }
       }
     }
 
-    internal EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnModuleCustomModifiers {
+    internal IEnumerable<ICustomModifier> ReturnModuleCustomModifiers {
       get {
-        if (this.returnModuleCustomModifiers == null) {
+        if (this.returnValueCustomModifiers == null) {
           this.InitPropertySignature();
         }
         //^ assert this.returnModuleCustomModifiers != null;
-        return this.returnModuleCustomModifiers;
+        return this.returnValueCustomModifiers;
       }
     }
 
     internal ITypeReference ReturnType {
       get {
-        if (this.returnModuleCustomModifiers == null) {
+        if (this.returnValueCustomModifiers == null) {
           this.InitPropertySignature();
         }
         //^ assert this.returnType != null;
         return this.returnType;
-      }
-    }
-
-    internal EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> ModuleParameters {
-      get {
-        if (this.returnModuleCustomModifiers == null) {
-          this.InitPropertySignature();
-        }
-        //^ assert this.moduleParameters != null;
-        return this.moduleParameters;
       }
     }
 
@@ -2708,7 +2718,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IEnumerable<IParameterDefinition> Parameters {
       get {
-        return this.ModuleParameters;
+        if (this.returnValueCustomModifiers == null) {
+          this.InitPropertySignature();
+        }
+        //^ assert this.moduleParameters != null;
+        return this.parameters;
       }
     }
 
@@ -2738,7 +2752,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool ReturnValueIsByRef {
       get {
-        if (this.returnModuleCustomModifiers == null) {
+        if (this.returnValueCustomModifiers == null) {
           this.InitPropertySignature();
         }
         return (this.PropertyFlags & PropertyFlags.ReturnValueIsByReference) != 0;
@@ -2746,7 +2760,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool ReturnValueIsModified {
-      get { return this.ReturnModuleCustomModifiers.RawArray.Length > 0; }
+      get { return IteratorHelper.EnumerableIsNotEmpty(this.ReturnModuleCustomModifiers); }
     }
 
     public ITypeReference Type {
@@ -2761,7 +2775,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public CallingConvention CallingConvention {
       get {
-        if (this.returnModuleCustomModifiers == null) {
+        if (this.returnValueCustomModifiers == null) {
           this.InitPropertySignature();
         }
         return (CallingConvention)(this.FirstSignatureByte&~0x08);
@@ -2847,7 +2861,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal class FieldReference : MemberReference, IFieldReference {
     protected bool signatureLoaded;
-    protected EnumerableArrayWrapper<CustomModifier, ICustomModifier> moduleCustomModifiers;
+    protected IEnumerable<ICustomModifier>/*?*/ customModifiers;
     protected ITypeReference/*?*/ typeReference;
     internal bool isStatic;
     internal FieldReference(
@@ -2868,7 +2882,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     {
       FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldRefSignature(this);
       this.typeReference = fieldSignature.TypeReference;
-      this.moduleCustomModifiers = fieldSignature.ModuleCustomModifiers;
+      this.customModifiers = fieldSignature.customModifiers;
       this.signatureLoaded = true;
     }
 
@@ -2904,19 +2918,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IEnumerable<ICustomModifier> CustomModifiers {
       get {
-        if (!this.signatureLoaded) {
-          this.InitFieldSignature();
-        }
-        return this.moduleCustomModifiers;
+        if (!this.signatureLoaded) this.InitFieldSignature();
+        return this.customModifiers??Enumerable<ICustomModifier>.Empty;
       }
     }
 
     public bool IsModified {
       get {
-        if (!this.signatureLoaded) {
-          this.InitFieldSignature();
-        }
-        return this.moduleCustomModifiers.RawArray.Length > 0;
+        if (!this.signatureLoaded) this.InitFieldSignature();
+        return this.customModifiers != null;
       }
     }
 
@@ -2954,7 +2964,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal class MethodReference : MemberReference, IMethodReference {
     internal readonly byte FirstByte;
     protected ushort genericParameterCount;
-    protected EnumerableArrayWrapper<CustomModifier, ICustomModifier>/*?*/ returnCustomModifiers;
+    protected IEnumerable<ICustomModifier>/*?*/ returnCustomModifiers;
     protected ITypeReference/*?*/ returnTypeReference;
     protected bool isReturnByReference;
     protected EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>/*?*/ requiredParameters;
@@ -2984,7 +2994,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           this.isReturnByReference = methodSignature.IsReturnByReference;
           this.requiredParameters = methodSignature.RequiredParameters;
           this.varArgParameters = methodSignature.VarArgParameters;
-          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers;
+          this.returnCustomModifiers = methodSignature.ReturnCustomModifiers??Enumerable<ICustomModifier>.Empty;
         }
       }
     }
@@ -2999,7 +3009,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region IMetadataReaderMethodReference Members
 
-    public EnumerableArrayWrapper<CustomModifier, ICustomModifier> ReturnCustomModifiers {
+    public IEnumerable<ICustomModifier> ReturnCustomModifiers {
       get {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
@@ -3121,7 +3131,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public bool ReturnValueIsModified {
-      get { return this.ReturnCustomModifiers.RawArray.Length > 0; }
+      get { return IteratorHelper.EnumerableIsNotEmpty(this.ReturnCustomModifiers); }
     }
 
     public ITypeReference Type {
@@ -3671,6 +3681,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #region IResourceReference Members
+
+    IEnumerable<ICustomAttribute> IResourceReference.Attributes {
+      get { return this.Attributes; }
+    }
 
     IAssemblyReference IResourceReference.DefiningAssembly {
       get { return this.DefiningAssembly; }

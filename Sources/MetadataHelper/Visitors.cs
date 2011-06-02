@@ -3041,7 +3041,7 @@ namespace Microsoft.Cci {
     /// A table in which we record the traversal of objects that can be reached several times (because they are references or can be referred to)
     /// so that we can avoid traversing them more than once.
     /// </summary>
-    protected Dictionary<object, object> objectsThatHaveAlreadyBeenTraversed = new Dictionary<object, object>();
+    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed = new SetOfObjects(1024*4);
 
     IMetadataVisitor/*?*/ preorderVisitor;
     IMetadataVisitor/*?*/ postorderVisitor;
@@ -3099,8 +3099,7 @@ namespace Microsoft.Cci {
     /// Traverses the array type reference.
     /// </summary>
     public void Traverse(IArrayTypeReference arrayTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(arrayTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(arrayTypeReference, arrayTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(arrayTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(arrayTypeReference); //No need to dispatch. This call is already type specific.
       if (this.stopTraversal) return;
       this.TraverseChildren(arrayTypeReference);
@@ -3124,8 +3123,7 @@ namespace Microsoft.Cci {
     /// Traverses the assembly reference.
     /// </summary>
     public void Traverse(IAssemblyReference assemblyReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(assemblyReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(assemblyReference, assemblyReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(assemblyReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(assemblyReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(assemblyReference);
@@ -3199,8 +3197,7 @@ namespace Microsoft.Cci {
     /// </summary>
     private void TraverseUnspecialized(IFieldReference fieldReference) {
       Contract.Requires(!(fieldReference is ISpecializedFieldReference));
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(fieldReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(fieldReference, fieldReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(fieldReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(fieldReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(fieldReference);
@@ -3223,8 +3220,7 @@ namespace Microsoft.Cci {
     /// Traverses the function pointer type reference.
     /// </summary>
     public void Traverse(IFunctionPointerTypeReference functionPointerTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(functionPointerTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(functionPointerTypeReference, functionPointerTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(functionPointerTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(functionPointerTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(functionPointerTypeReference);
@@ -3236,8 +3232,7 @@ namespace Microsoft.Cci {
     /// Traverses the generic method instance reference.
     /// </summary>
     public void Traverse(IGenericMethodInstanceReference genericMethodInstanceReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(genericMethodInstanceReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(genericMethodInstanceReference, genericMethodInstanceReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(genericMethodInstanceReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(genericMethodInstanceReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(genericMethodInstanceReference);
@@ -3260,8 +3255,7 @@ namespace Microsoft.Cci {
     /// Traverses the generic method parameter reference.
     /// </summary>
     public void Traverse(IGenericMethodParameterReference genericMethodParameterReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(genericMethodParameterReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(genericMethodParameterReference, genericMethodParameterReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(genericMethodParameterReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(genericMethodParameterReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(genericMethodParameterReference);
@@ -3273,8 +3267,7 @@ namespace Microsoft.Cci {
     /// Traverses the generic type instance reference.
     /// </summary>
     public void Traverse(IGenericTypeInstanceReference genericTypeInstanceReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(genericTypeInstanceReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(genericTypeInstanceReference, genericTypeInstanceReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(genericTypeInstanceReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(genericTypeInstanceReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(genericTypeInstanceReference);
@@ -3297,8 +3290,7 @@ namespace Microsoft.Cci {
     /// Traverses the generic type parameter reference.
     /// </summary>
     public void Traverse(IGenericTypeParameterReference genericTypeParameterReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(genericTypeParameterReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(genericTypeParameterReference, genericTypeParameterReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(genericTypeParameterReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(genericTypeParameterReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(genericTypeParameterReference);
@@ -3332,8 +3324,7 @@ namespace Microsoft.Cci {
     /// Traverses the specified local definition.
     /// </summary>
     public void Traverse(ILocalDefinition localDefinition) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(localDefinition)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(localDefinition, localDefinition);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(localDefinition)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(localDefinition);
       if (this.stopTraversal) return;
       this.TraverseChildren(localDefinition);
@@ -3345,8 +3336,7 @@ namespace Microsoft.Cci {
     /// Traverses the managed pointer type reference.
     /// </summary>
     public void Traverse(IManagedPointerTypeReference managedPointerTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(managedPointerTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(managedPointerTypeReference, managedPointerTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(managedPointerTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(managedPointerTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(managedPointerTypeReference);
@@ -3459,8 +3449,7 @@ namespace Microsoft.Cci {
     }
 
     private void TraverseUnspecialized(IMethodReference methodReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(methodReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(methodReference, methodReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(methodReference)) return;
       if (this.preorderVisitor != null) methodReference.DispatchAsReference(this.preorderVisitor);
       if (this.stopTraversal) return;
       this.TraverseChildren(methodReference);
@@ -3472,8 +3461,7 @@ namespace Microsoft.Cci {
     /// Traverses the modified type reference.
     /// </summary>
     public void Traverse(IModifiedTypeReference modifiedTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(modifiedTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(modifiedTypeReference, modifiedTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(modifiedTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(modifiedTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(modifiedTypeReference);
@@ -3506,8 +3494,7 @@ namespace Microsoft.Cci {
         this.Traverse(assemblyReference);
         return;
       }
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(moduleReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(moduleReference, moduleReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(moduleReference)) return;
       if (this.preorderVisitor != null) moduleReference.DispatchAsReference(this.preorderVisitor);
       if (this.stopTraversal) return;
       this.TraverseChildren(moduleReference);
@@ -3555,8 +3542,7 @@ namespace Microsoft.Cci {
     /// Traverses the namespace type reference.
     /// </summary>
     public void Traverse(INamespaceTypeReference namespaceTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(namespaceTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(namespaceTypeReference, namespaceTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(namespaceTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(namespaceTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(namespaceTypeReference);
@@ -3594,8 +3580,7 @@ namespace Microsoft.Cci {
     }
 
     private void TraverseUnspecialized(INestedTypeReference nestedTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(nestedTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(nestedTypeReference, nestedTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(nestedTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(nestedTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(nestedTypeReference);
@@ -3618,8 +3603,7 @@ namespace Microsoft.Cci {
     /// Traverses the specified nested unit namespace reference.
     /// </summary>
     public void Traverse(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(nestedUnitNamespaceReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(nestedUnitNamespaceReference, nestedUnitNamespaceReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(nestedUnitNamespaceReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(nestedUnitNamespaceReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(nestedUnitNamespaceReference);
@@ -3664,8 +3648,7 @@ namespace Microsoft.Cci {
     /// Traverses the parameter definition.
     /// </summary>
     public void Traverse(IParameterDefinition parameterDefinition) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(parameterDefinition)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(parameterDefinition, parameterDefinition);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(parameterDefinition)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(parameterDefinition);
       if (this.stopTraversal) return;
       this.TraverseChildren(parameterDefinition);
@@ -3699,8 +3682,7 @@ namespace Microsoft.Cci {
     /// Traverses the pointer type reference.
     /// </summary>
     public void Traverse(IPointerTypeReference pointerTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(pointerTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(pointerTypeReference, pointerTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(pointerTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(pointerTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(pointerTypeReference);
@@ -3712,8 +3694,7 @@ namespace Microsoft.Cci {
     /// Traverses the property definition.
     /// </summary>
     public void Traverse(IPropertyDefinition propertyDefinition) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(propertyDefinition)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(propertyDefinition, propertyDefinition);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(propertyDefinition)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(propertyDefinition);
       if (this.stopTraversal) return;
       this.TraverseChildren(propertyDefinition);
@@ -3758,8 +3739,7 @@ namespace Microsoft.Cci {
     /// Traverses the specified root unit namespace reference.
     /// </summary>
     public void Traverse(IRootUnitNamespaceReference rootUnitNamespaceReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(rootUnitNamespaceReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(rootUnitNamespaceReference, rootUnitNamespaceReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(rootUnitNamespaceReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(rootUnitNamespaceReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(rootUnitNamespaceReference);
@@ -3782,8 +3762,7 @@ namespace Microsoft.Cci {
     /// Traverses the specialized field reference.
     /// </summary>
     public void Traverse(ISpecializedFieldReference specializedFieldReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(specializedFieldReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(specializedFieldReference, specializedFieldReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(specializedFieldReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(specializedFieldReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(specializedFieldReference);
@@ -3795,8 +3774,7 @@ namespace Microsoft.Cci {
     /// Traverses the specialized method reference.
     /// </summary>
     public void Traverse(ISpecializedMethodReference specializedMethodReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(specializedMethodReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(specializedMethodReference, specializedMethodReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(specializedMethodReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(specializedMethodReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(specializedMethodReference);
@@ -3808,8 +3786,7 @@ namespace Microsoft.Cci {
     /// Traverses the specialized method reference.
     /// </summary>
     public void Traverse(ISpecializedNestedTypeReference specializedNestedTypeReference) {
-      if (this.objectsThatHaveAlreadyBeenTraversed.ContainsKey(specializedNestedTypeReference)) return;
-      this.objectsThatHaveAlreadyBeenTraversed.Add(specializedNestedTypeReference, specializedNestedTypeReference);
+      if (!this.objectsThatHaveAlreadyBeenTraversed.Add(specializedNestedTypeReference)) return;
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(specializedNestedTypeReference);
       if (this.stopTraversal) return;
       this.TraverseChildren(specializedNestedTypeReference);

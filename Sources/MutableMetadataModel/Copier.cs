@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci.MutableCodeModel {
 
@@ -1106,13 +1107,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     class Populator : IMetadataVisitor {
 
-      internal Populator(MetadataShallowCopier shallowCopier, Dictionary<object, object> definitionCache) {
+      internal Populator(MetadataShallowCopier shallowCopier, Hashtable<object, object> definitionCache) {
         this.shallowCopier = shallowCopier;
         this.definitionCache = definitionCache;
       }
 
       MetadataShallowCopier shallowCopier;
-      Dictionary<object, object> definitionCache;
+      Hashtable<object, object> definitionCache;
 
 #pragma warning disable 1591
 
@@ -1388,26 +1389,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       /// Unless a definition is outside the cone to be copied, it must have an entry in this table.
       /// Consult this to find containing definitions.
       /// </summary>
-      internal Dictionary<object, object> DefinitionCache {
+      internal Hashtable<object, object> DefinitionCache {
         get {
           if (this.definitionCache == null)
-            this.definitionCache = new Dictionary<object, object>();
+            this.definitionCache = new Hashtable<object, object>();
           return this.definitionCache;
         }
       }
-      Dictionary<object, object> definitionCache;
+      Hashtable<object, object> definitionCache;
 
       /// <summary>
       /// A cache of references that have already been encountered and copied. Once in the cache, the cached value is just returned unchanged.
       /// </summary>
-      Dictionary<object, object> ReferenceCache {
+      Hashtable<object, object> ReferenceCache {
         get {
           if (this.referenceCache == null)
-            this.referenceCache = new Dictionary<object, object>();
+            this.referenceCache = new Hashtable<object, object>();
           return this.referenceCache;
         }
       }
-      Dictionary<object, object> referenceCache;
+      Hashtable<object, object> referenceCache;
 
       /// <summary>
       /// 

@@ -256,7 +256,7 @@ namespace Microsoft.Cci {
     public static string GetLocalPath(System.Reflection.AssemblyName assemblyName) {
       var loc = assemblyName.CodeBase;
       if (loc == null) loc = "";
-      if (loc.StartsWith("file://")) {
+      if (loc.StartsWith("file://", StringComparison.OrdinalIgnoreCase)) {
         Uri u = new Uri(loc, UriKind.Absolute);
         loc = u.LocalPath;
       }
@@ -1827,10 +1827,10 @@ namespace Microsoft.Cci {
   /// </summary>
   public sealed class NameTable : INameTable {
     //TODO: replace BCL Dictionary with a private implementation that is thread safe and does not need a new list to be allocated for each name
-    Dictionary<string, int> caseInsensitiveTable = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+    Dictionary<string, int> caseInsensitiveTable = new Dictionary<string, int>(1024*16, StringComparer.OrdinalIgnoreCase);
     //^ invariant forall{int i in caseInsensitiveTable.Values; i > 0};
 
-    Dictionary<string, IName> caseSensitiveTable = new Dictionary<string, IName>();
+    Dictionary<string, IName> caseSensitiveTable = new Dictionary<string, IName>(1024*16);
 
     int caseInsensitiveCounter = 1; //^ invariant caseInsensitiveCounter >= 0;
     int caseSensitiveCounter = 3; //^ invariant caseSensitiveCounter >= 0;
