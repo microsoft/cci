@@ -1779,7 +1779,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal MethodFlags MethodFlags;
     internal MethodImplFlags MethodImplFlags;
     IEnumerable<ICustomModifier>/*?*/ returnValueCustomModifiers;
-    ITypeReference/*?*/ returnType;
+    volatile ITypeReference/*?*/ returnType;
     byte FirstSignatureByte;
     IParameterDefinition[]/*?*/ moduleParameters;
     ReturnParameter/*?*/ returnParameter;
