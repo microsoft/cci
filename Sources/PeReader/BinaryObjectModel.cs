@@ -1833,11 +1833,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       lock (this) {
         if (this.returnType == null) {
           MethodDefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodSignature(this);
-          this.returnType = methodSignature.ReturnTypeReference??Dummy.TypeReference;
           this.FirstSignatureByte = methodSignature.FirstByte;
           this.moduleParameters = methodSignature.Parameters;
           this.returnParameter = methodSignature.ReturnParameter;
           this.returnValueCustomModifiers = methodSignature.ReturnCustomModifiers;
+          this.returnType = methodSignature.ReturnTypeReference??Dummy.TypeReference;
         }
       }
     }
