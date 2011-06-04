@@ -454,19 +454,25 @@ namespace Microsoft.Cci {
     UseGenericTypeNameSuffix=TypeParameters << 1,
 
     /// <summary>
-    /// Use '+' instead of '.' to delimit the boundary between a containing type name and a nested type name.
+    /// Prepend "global::" to all namespace type names whose containing namespace is not omitted, including the case where the namespace type name qualifies a nested type name.
     /// </summary>
-    UseReflectionStyleForNestedTypeNames=UseGenericTypeNameSuffix << 1,
+    UseGlobalPrefix=UseGenericTypeNameSuffix << 1,
 
     /// <summary>
-    /// Include the visibility of the member in its name.
+    /// Use '+' instead of '.' to delimit the boundary between a containing type name and a nested type name.
     /// </summary>
-    Visibility=UseReflectionStyleForNestedTypeNames << 1,
+    UseReflectionStyleForNestedTypeNames=UseGlobalPrefix << 1,
 
     /// <summary>
     /// If the type corresponds to a keyword use the keyword rather than the type name.
     /// </summary>
-    UseTypeKeywords=Visibility << 1,
+    UseTypeKeywords=UseReflectionStyleForNestedTypeNames << 1,
+
+    /// <summary>
+    /// Include the visibility of the member in its name.
+    /// </summary>
+    Visibility=UseTypeKeywords << 1,
+
   }
 
   /// <summary>
@@ -2475,9 +2481,12 @@ namespace Microsoft.Cci {
 
       INestedUnitSetNamespace/*?*/ nestedUnitSetNamespace = namespaceDefinition as INestedUnitSetNamespace;
       if (nestedUnitSetNamespace != null) {
-        if (nestedUnitSetNamespace.ContainingNamespace.Name.Value.Length == 0 || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
-          return nestedUnitSetNamespace.Name.Value;
-        else
+        if (nestedUnitSetNamespace.ContainingNamespace.Name.Value.Length == 0 || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0) {
+          if ((formattingOptions & NameFormattingOptions.UseGlobalPrefix) != 0)
+            return "global::"+nestedUnitSetNamespace.Name.Value;
+          else
+            return nestedUnitSetNamespace.Name.Value;
+        } else
           return this.GetNamespaceName(nestedUnitSetNamespace.ContainingUnitSetNamespace, formattingOptions) + "." + nestedUnitSetNamespace.Name.Value;
       }
       return namespaceDefinition.Name.Value;
@@ -2493,9 +2502,12 @@ namespace Microsoft.Cci {
 
       INestedUnitNamespaceReference/*?*/ nestedUnitNamespace = unitNamespace as INestedUnitNamespaceReference;
       if (nestedUnitNamespace != null) {
-        if (nestedUnitNamespace.ContainingUnitNamespace is IRootUnitNamespaceReference || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
-          return nestedUnitNamespace.Name.Value;
-        else
+        if (nestedUnitNamespace.ContainingUnitNamespace is IRootUnitNamespaceReference || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0) {
+          if ((formattingOptions & NameFormattingOptions.UseGlobalPrefix) != 0)
+            return "global::"+nestedUnitNamespace.Name.Value;
+          else
+            return nestedUnitNamespace.Name.Value;
+        } else
           return this.GetNamespaceName(nestedUnitNamespace.ContainingUnitNamespace, formattingOptions) + "." + nestedUnitNamespace.Name.Value;
       }
       return string.Empty;
