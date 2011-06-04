@@ -5302,10 +5302,8 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(IGenericTypeInstanceReference genericTypeInstanceReference) {
       if (this.typeReferenceNeedsToken) {
         this.typeReferenceNeedsToken = false;
-        if (!this.alreadyHasToken.Contains(genericTypeInstanceReference.InternedKey)) {
+        if (this.alreadyHasToken.Add(genericTypeInstanceReference.InternedKey))
           this.peWriter.RecordTypeReference(genericTypeInstanceReference);
-          this.alreadyHasToken.Add(genericTypeInstanceReference.InternedKey);
-        }
       }
       this.TraverseChildren((ITypeReference)genericTypeInstanceReference);
       this.Traverse(genericTypeInstanceReference.GenericType);
@@ -5475,10 +5473,8 @@ namespace Microsoft.Cci {
 
     public override void TraverseChildren(ITypeReference typeReference) {
       if (this.typeReferenceNeedsToken) {
-        if (!this.alreadyHasToken.Contains(typeReference.InternedKey)) {
+        if (this.alreadyHasToken.Add(typeReference.InternedKey))
           this.peWriter.RecordTypeReference(typeReference);
-          this.alreadyHasToken.Add(typeReference.InternedKey);
-        }
       } else {
         //since this traversal of the reference did not need the reference to have a token
         //we have to make sure that we taverse this reference again, in case another traversal
@@ -5486,10 +5482,8 @@ namespace Microsoft.Cci {
         this.objectsThatHaveAlreadyBeenTraversed.Remove(typeReference);
       }
       if (this.traverseAttributes && !(typeReference is ITypeDefinition)) {
-        if (!this.alreadyHasBeenTaversed.Contains(typeReference)) {
+        if (this.alreadyHasBeenTaversed.Add(typeReference))
           this.Traverse(typeReference.Attributes);
-          this.alreadyHasBeenTaversed.Add(typeReference);
-        }
       }
       this.typeReferenceNeedsToken = false;
     }
