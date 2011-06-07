@@ -72,7 +72,6 @@ namespace Microsoft.Cci {
     internal readonly IName Mscorlib;
     internal readonly IName System_Runtime;
     internal readonly IName _Deleted_;
-    internal readonly IName _Module_;
 
     /*^
     #pragma warning disable 2669
@@ -106,7 +105,6 @@ namespace Microsoft.Cci {
       this.Mscorlib = nameTable.GetNameFor("mscorlib");
       this.System_Runtime = nameTable.GetNameFor("System.Runtime");
       this._Deleted_ = nameTable.GetNameFor("_Deleted*");
-      this._Module_ = nameTable.GetNameFor("<Module>");
     }
     /*^
     #pragma warning restore 2669

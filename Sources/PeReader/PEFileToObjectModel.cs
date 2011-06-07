@@ -214,16 +214,7 @@ namespace Microsoft.Cci.MetadataReader {
 
       this.DeclSecurityArray = new ISecurityAttribute/*?*/[peFileReader.DeclSecurityTable.NumberOfRows + 1];
 
-      uint moduleClassTypeDefToken = this.NamespaceTypeTokenTable.Find((uint)this.NameTable.EmptyName.UniqueKey, (uint)peReader._Module_.UniqueKey);
-      _Module_Type/*?*/ _module_ = null;
-      if (moduleClassTypeDefToken != 0 && ((TokenTypeIds.TokenTypeMask & moduleClassTypeDefToken) == TokenTypeIds.TypeDef)) {
-        _module_ = this.Create_Module_Type(moduleClassTypeDefToken & TokenTypeIds.RIDMask);
-      }
-      if (_module_ == null) {
-        //  Error
-        throw new MetadataReaderException("<Module> Type not present");
-      }
-      this._Module_ = _module_;
+      this._Module_ = this.Create_Module_Type();
     }
 
     /*^
@@ -1190,23 +1181,19 @@ namespace Microsoft.Cci.MetadataReader {
       return mt;
     }
 
-    internal _Module_Type/*?*/ Create_Module_Type(
-      uint typeDefRowId
-    )
+    internal _Module_Type/*?*/ Create_Module_Type()
       //^ ensures this.ModuleTypeDefLoadState[typeDefRowId] == LoadState.Loaded;
     {
-      Debug.Assert(typeDefRowId > 0 && typeDefRowId <= this.PEFileReader.TypeDefTable.NumberOfRows);
-      Debug.Assert(this.ModuleTypeDefArray[typeDefRowId] == null);
-      this.ModuleTypeDefLoadState[typeDefRowId] = LoadState.Loading;
-      TypeDefRow typeDefRow = this.PEFileReader.TypeDefTable[typeDefRowId];
-      if (typeDefRow.IsNested || typeDefRow.Namespace != 0) {
-        return null;
+      this.ModuleTypeDefLoadState[1] = LoadState.Loading;
+      TypeDefRow typeDefRow = this.PEFileReader.TypeDefTable[1];
+      if (typeDefRow.IsNested) {
+        //TODO: error
       }
-      IName typeName = this.GetNameFromOffset(typeDefRow.Name);
-      Debug.Assert(typeName.UniqueKey == this.ModuleReader._Module_.UniqueKey);
-      _Module_Type moduleType = new _Module_Type(this, typeName, typeDefRowId, typeDefRow.Flags, this.RootModuleNamespace);
-      this.ModuleTypeDefArray[typeDefRowId] = moduleType;
-      this.ModuleTypeDefLoadState[typeDefRowId] = LoadState.Loaded;
+      var nspace = this.GetNamespaceForNameOffset(typeDefRow.Namespace);
+      var typeName = this.GetNameFromOffset(typeDefRow.Name);
+      _Module_Type moduleType = new _Module_Type(this, typeName, 1, typeDefRow.Flags, nspace);
+      this.ModuleTypeDefArray[1] = moduleType;
+      this.ModuleTypeDefLoadState[1] = LoadState.Loaded;
       return moduleType;
     }
 
