@@ -3512,8 +3512,10 @@ namespace Microsoft.Cci.MetadataReader {
           //  Error...
           continue;
         }
-        if (customModifier != null && customModifierList == null)
+        if (customModifier != null && customModifierList == null) {
           customModifierList = new List<ICustomModifier>(4);
+          customModifierList.Add(customModifier);
+        }
         customModifier = new CustomModifier(header == ElementType.OptionalModifier, typeRef);
         if (customModifierList != null) customModifierList.Add(customModifier);
       }
