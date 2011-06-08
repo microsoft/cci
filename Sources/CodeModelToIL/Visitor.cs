@@ -1168,12 +1168,12 @@ namespace Microsoft.Cci {
       IAssignment/*?*/ assigment = expressionStatement.Expression as IAssignment;
       if (assigment != null) {
         this.VisitAssignment(assigment, true);
-        return;
-      }
-      this.Traverse(expressionStatement.Expression);
-      if (expressionStatement.Expression.Type.TypeCode != PrimitiveTypeCode.Void) {
-        this.generator.Emit(OperationCode.Pop);
-        this.StackSize--;
+      } else {
+        this.Traverse(expressionStatement.Expression);
+        if (expressionStatement.Expression.Type.TypeCode != PrimitiveTypeCode.Void) {
+          this.generator.Emit(OperationCode.Pop);
+          this.StackSize--;
+        }
       }
       this.lastStatementWasUnconditionalTransfer = false;
     }
