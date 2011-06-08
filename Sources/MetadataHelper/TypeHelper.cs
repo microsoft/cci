@@ -889,6 +889,15 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// If the given type is a specialized nested type, return its unspecialized version. Otherwise just return the type itself.
+    /// </summary>
+    public static INestedTypeReference Unspecialize(INestedTypeReference nestedType) {
+      var specializedNestedType = nestedType as ISpecializedNestedTypeReference;
+      if (specializedNestedType != null) return specializedNestedType.UnspecializedVersion;
+      return nestedType;
+    }
+
+    /// <summary>
     /// Returns a TypeMemberVisibility value that is as accessible as possible while being no more accessible than either of the two given visibilities.
     /// </summary>
     [Pure]

@@ -2694,71 +2694,40 @@ namespace Microsoft.Cci.Immutable {
     }
     IEnumerable<ITypeReference>/*?*/ baseClasses;
 
-    /// <summary>
-    /// Returns a copy of the given type reference, but with every reference to a partially specialized version of type parameter 
-    /// defined by the partially specialized version of the targetContainer, or of its parent (if the parent is a SpecializedNestedTypeDefinition 
-    /// and generic) replaced with a reference to the specialized type parameter. 
-    /// </summary>
-    /// <remarks>
-    /// We compute the copy of the nestedType by first copying its ContainingType and looking for the nestedType in the members of the copy.
-    /// For example, to make a copy of Type1[T].Type2 with targetContainer being Outer[A].Mid (which has a specialized type parameter T, which we denote by
-    /// T+), we first copy Type1[T] to Type1[T+] and then look for Type2 in the members of Type1[T+]. 
-    /// </remarks>
-    /// <param name="nestedType">A reference to a nested type to be copied.</param>
-    /// <param name="targetContainer">A specialized nested type definition whose or whose parents' (specialized) type parameters will
-    /// replace the occurrences of matching type parameters in nestedType.</param>
-    /// <param name="internFactory">An intern factory.</param>
     internal static ITypeReference DeepCopyTypeReference(INestedTypeReference nestedType, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       var parentCopy = TypeDefinition.DeepCopyTypeReference(nestedType.ContainingType, targetContainer, internFactory);
       if (parentCopy == nestedType.ContainingType) return nestedType;
-      return TypeHelper.GetNestedType(parentCopy.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+      return new SpecializedNestedTypeReference(TypeHelper.Unspecialize(nestedType), parentCopy, internFactory);
     }
 
     internal static ITypeReference SpecializeTypeReference(INestedTypeReference nestedType, ITypeReference targetContainer, IInternFactory internFactory) {
       var parentCopy = TypeHelper.SpecializeTypeReference(nestedType.ContainingType, targetContainer, internFactory);
       if (parentCopy == nestedType.ContainingType) return nestedType;
-      return TypeHelper.GetNestedType(parentCopy.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+      return new SpecializedNestedTypeReference(TypeHelper.Unspecialize(nestedType), parentCopy, internFactory);
     }
 
     internal static ITypeReference SpecializeTypeReference(INestedTypeReference nestedType, IMethodReference targetContainer, IInternFactory internFactory) {
       var parentCopy = TypeHelper.SpecializeTypeReference(nestedType.ContainingType, targetContainer, internFactory);
       if (parentCopy == nestedType.ContainingType) return nestedType;
-      return TypeHelper.GetNestedType(parentCopy.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+      return new SpecializedNestedTypeReference(TypeHelper.Unspecialize(nestedType), parentCopy, internFactory);
     }
 
-    /// <summary>
-    /// Make a copy of the nested type, with every reference to a (partially specialized version of) generic parameter defined in the 
-    /// partially specialized version of specializedMethodReference or its containing specialized nested type replaced with the specialized 
-    /// version of the generic parameter defined in either specializedMethodReference or its containing specialized nested type. 
-    /// </summary>
     internal static ITypeReference DeepCopyTypeReferenceWRTSpecializedMethod(INestedTypeReference nestedType, ISpecializedMethodReference specializedMethodReference, IInternFactory internFactory) {
       var specializedParent = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(nestedType.ContainingType, specializedMethodReference, internFactory);
       if (specializedParent == nestedType.ContainingType) return nestedType;
-      return TypeHelper.GetNestedType(specializedParent.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+      return new SpecializedNestedTypeReference(TypeHelper.Unspecialize(nestedType), specializedParent, internFactory);
     }
 
-    /// <summary>
-    /// Return a copy of the given nestedType, but with every reference to a generic method parameter replaced with corresponding types in genericMethodInstance's
-    /// GenericArguments. 
-    /// </summary>
     internal static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(INestedTypeReference nestedType, IGenericMethodInstanceReference genericMethodInstance, IInternFactory internFactory) {
       var specializedParent = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(nestedType.ContainingType, genericMethodInstance, internFactory);
       if (specializedParent == nestedType.ContainingType) return nestedType;
-      return TypeHelper.GetNestedType(specializedParent.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+      return new SpecializedNestedTypeReference(TypeHelper.Unspecialize(nestedType), specializedParent, internFactory);
     }
-    /// <summary>
-    /// If the given unspecialized type reference is a constructed nested type, then return a new instance (if necessary)
-    /// in which all refererences to the type parameters of containingTypeInstance.GenericType have been replaced with the 
-    /// corresponding values from containingTypeInstance.GenericArguments. 
-    /// 
-    /// We compute the nested type by looking it up in the specailized version of its containing type. For example, to specialize Type1[T].Type2
-    /// to Type1[int].Type2, w.r.t. to the current containing instance X[int], we first specialize Type1[T] to Type1[int] and then look for and
-    /// return its member Type2.
-    /// </summary>
+
     internal static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(INestedTypeReference nestedType, IGenericTypeInstanceReference containingTypeInstance, IInternFactory internFactory) {
       var specializedParent = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(nestedType.ContainingType, containingTypeInstance, internFactory);
       if (specializedParent == nestedType.ContainingType) return nestedType;
-      return TypeHelper.GetNestedType(specializedParent.ResolvedType, nestedType.Name, nestedType.GenericParameterCount);
+      return new SpecializedNestedTypeReference(TypeHelper.Unspecialize(nestedType), specializedParent, internFactory);
     }
 
     /// <summary>
