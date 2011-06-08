@@ -533,7 +533,7 @@ namespace Microsoft.Cci {
     /// Such units can then be discovered by clients via GetUnit. 
     /// </summary>
     /// <param name="unit">The unit to register.</param>
-    protected void RegisterAsLatest(IUnit unit) {
+    public void RegisterAsLatest(IUnit unit) {
       lock (GlobalLock.LockingObject) {
         this.unitCache[unit.UnitIdentity] = unit;
       }
@@ -543,7 +543,7 @@ namespace Microsoft.Cci {
     /// Removes the unit with the given identity.
     /// Returns true iff the unitIdentity is found in the loaded units.
     /// </summary>
-    protected bool RemoveUnit(UnitIdentity unitIdentity) {
+    public bool RemoveUnit(UnitIdentity unitIdentity) {
       lock (GlobalLock.LockingObject) {
         return this.unitCache.Remove(unitIdentity);
       }
