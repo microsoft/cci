@@ -1551,7 +1551,11 @@ namespace Microsoft.Cci {
       IFieldReference fieldReference
     ) {
       uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(fieldReference.ContainingType);
-      uint fieldTypeInternedId = this.GetTypeReferenceInternId(fieldReference.Type);
+      uint fieldTypeInternedId;
+      if (fieldReference.IsModified)
+        fieldTypeInternedId = this.GetModifiedTypeReferenceInternId(fieldReference.Type, fieldReference.CustomModifiers);
+      else
+        fieldTypeInternedId = this.GetTypeReferenceInternId(fieldReference.Type);
       uint fieldNameId = (uint)fieldReference.Name.UniqueKey;
       var fieldsForType = this.FieldReferenceHashtable.Find(containingTypeReferenceInternedId);
       if (fieldsForType == null) {

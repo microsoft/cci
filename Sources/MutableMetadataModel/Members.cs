@@ -348,13 +348,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The referenced field has custom modifiers.
     /// </summary>
     public bool IsModified {
-      get { return (this.flags & 0x20000000) != 0; }
-      set {
-        if (value)
-          this.flags |= 0x20000000;
-        else
-          this.flags &= ~0x20000000;
-      }
+      get { return this.CustomModifiers != null && this.CustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -636,13 +630,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The referenced field has custom modifiers.
     /// </summary>
     public bool IsModified {
-      get { return this.isModified; }
-      set {
-        Contract.Requires(!this.IsFrozen);
-        this.isModified = value;
-      }
+      get { return this.CustomModifiers != null && this.CustomModifiers.Count > 0; }
     }
-    bool isModified;
 
     /// <summary>
     /// This field is static (shared by all instances of its declaring type).
