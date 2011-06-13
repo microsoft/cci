@@ -8,7 +8,7 @@
     <ProjectGuid>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Cci</RootNamespace>
+    <RootNamespace>Microsoft.Cci.MetadataHelper</RootNamespace>
     <AssemblyName>Microsoft.Cci.MetadataHelper</AssemblyName>
     <SccProjectName>
     </SccProjectName>
