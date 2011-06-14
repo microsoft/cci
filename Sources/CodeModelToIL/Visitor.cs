@@ -1934,11 +1934,6 @@ namespace Microsoft.Cci {
     }
 
     private void GenerateSwitchInstruction(IEnumerable<ISwitchCase> switchCases, uint maxValue) {
-      ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
-      this.currentBreakTarget = new ILGeneratorLabel();
-      if (this.currentTryCatch != null) {
-        this.mostNestedTryCatchFor.Add(this.currentBreakTarget, this.currentTryCatch);
-      }
       ILGeneratorLabel[] labels = new ILGeneratorLabel[maxValue+1];
       ILGeneratorLabel defaultLabel = new ILGeneratorLabel();
       for (uint i = 0; i <= maxValue; i++) labels[i] = defaultLabel;
@@ -1957,10 +1952,13 @@ namespace Microsoft.Cci {
       }
       this.generator.Emit(OperationCode.Switch, labels);
       this.generator.Emit(OperationCode.Br, defaultLabel);
+      ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       if (!foundDefault)
         this.currentBreakTarget = defaultLabel;
       else
         this.currentBreakTarget = new ILGeneratorLabel();
+      if (this.currentTryCatch != null)
+        this.mostNestedTryCatchFor.Add(this.currentBreakTarget, this.currentTryCatch);
       foreach (ISwitchCase switchCase in switchCases) {
         this.generator.MarkLabel(labelFor[switchCase]);
         this.Traverse(switchCase);
