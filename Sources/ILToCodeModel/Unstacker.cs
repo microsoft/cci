@@ -149,6 +149,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (pop != null) {
         if (this.operandStack.Count > 0) {
           var local = this.operandStack.Pop();
+          if (pop.Type.TypeCode == PrimitiveTypeCode.Boolean && local.Type != Dummy.TypeReference) {
+            return new NotEquality() {
+              LeftOperand = new BoundExpression() { Definition = local },
+              RightOperand = new DefaultValue() { DefaultValueType = local.Type },
+              Type = pop.Type
+            };
+          }
           if (pop.Type != Dummy.TypeReference)
             local.Type = pop.Type;
           this.body.numberOfReferences[local]++;
@@ -233,7 +240,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.block.LocalVariables == null) this.block.LocalVariables = new List<ILocalDefinition>();
         this.block.LocalVariables.Add(temp);
         this.body.numberOfAssignments.Add(temp, 1);
-        return new ExpressionStatement() { 
+        return new ExpressionStatement() {
           Expression = new Assignment() { Target = new TargetExpression() { Definition = temp }, Source = push.ValueToPush },
           Locations = push.Locations
         };
@@ -270,9 +277,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         IStatement newStatement;
-        
+
         newStatement = this.Visit(statement);
-        
+
         if (newStatement is IBlockStatement && !(statement is IBlockStatement))
           newList.AddRange(((IBlockStatement)newStatement).Statements);
         else
