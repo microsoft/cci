@@ -1913,7 +1913,7 @@ namespace Microsoft.Cci {
       /// </summary>
       public string Message {
         get {
-          System.Resources.ResourceManager resourceManager = new System.Resources.ResourceManager("Microsoft.Cci.MetadataHelper", typeof(ErrorMessage).Assembly);
+          System.Resources.ResourceManager resourceManager = new System.Resources.ResourceManager("Microsoft.Cci.MetadataHelper.ErrorMessages", typeof(ErrorMessage).Assembly);
           string messageKey = this.Error.ToString();
           string/*?*/ localizedString = null;
           try {
