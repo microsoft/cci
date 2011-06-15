@@ -579,7 +579,7 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ILocation> Locations {
-      get { throw new NotImplementedException(); }
+      get { throw new NotImplementedException();  }
     }
   }
 

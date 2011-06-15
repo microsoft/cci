@@ -759,9 +759,12 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IStatement Visit(ConditionalStatement conditionalStatement) {
-      var boundExpression = conditionalStatement.Condition as IBoundExpression;
-      var logicalNot = conditionalStatement.Condition as ILogicalNot;
-      if (logicalNot != null) boundExpression = logicalNot.Operand as IBoundExpression;
+      var condition = conditionalStatement.Condition;
+      var logicalNot = condition as ILogicalNot;
+      if (logicalNot != null) condition = logicalNot.Operand;
+      var equal = condition as IEquality;
+      if (equal != null && equal.RightOperand is IDefaultValue) condition = equal.LeftOperand;
+      var boundExpression = condition as IBoundExpression;
       if (boundExpression != null) {
         var locations = conditionalStatement.Locations;
         var fieldReference = boundExpression.Definition as IFieldReference;

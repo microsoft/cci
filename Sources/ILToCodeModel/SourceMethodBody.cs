@@ -688,6 +688,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           condition = this.ParseBinaryOperation(new NotEquality());
           break;
       }
+      condition.Type = this.platformType.SystemBoolean;
       if (this.host.PreserveILLocations) {
         condition.Locations.Add(currentOperation.Location);
       }
@@ -758,6 +759,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         result.ThisArgument = this.PopOperandStack();
       else
         result.IsStaticCall = true;
+      result.Type = methodRef.Type;
       this.sawTailCall = false;
       return result;
     }
@@ -1482,6 +1484,18 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Statement ParseUnaryConditionalBranch(IOperation currentOperation) {
       Expression condition = this.PopOperandStack();
+      var castIfPossible = condition as CastIfPossible;
+      if (castIfPossible != null) {
+        condition = new CheckIfInstance() {
+          Locations = castIfPossible.Locations,
+          Operand = castIfPossible.ValueToCast,
+          TypeToCheck = castIfPossible.TargetType,
+        };
+      } else if (condition.Type != Dummy.TypeReference && condition.Type.TypeCode != PrimitiveTypeCode.Boolean) {
+        var defaultValue = new DefaultValue() { DefaultValueType = condition.Type, Type = condition.Type };
+        condition = new NotEquality() { LeftOperand = condition, RightOperand = defaultValue };
+      }
+      condition.Type = this.platformType.SystemBoolean;
       GotoStatement gotoStatement = MakeGoto(currentOperation);
       ConditionalStatement ifStatement = new ConditionalStatement();
       ifStatement.Condition = condition;

@@ -2162,7 +2162,11 @@ namespace Microsoft.Cci.MutableCodeModel {
             var arrayIndexer = targetExpression.Definition as IArrayIndexer;
             if (arrayIndexer != null) {
               targetExpression.Definition = this.Rewrite(arrayIndexer);
-              return; //do not rewrite Instance again.
+              arrayIndexer = targetExpression.Definition as IArrayIndexer;
+              if (arrayIndexer != null) {
+                targetExpression.Instance = arrayIndexer.IndexedObject;
+                return;
+              }
             } else {
               var addressDereference = targetExpression.Definition as IAddressDereference;
               if (addressDereference != null)
